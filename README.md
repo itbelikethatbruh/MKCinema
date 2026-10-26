@@ -34,10 +34,10 @@ MKCinema ships no titles, channels or streams of its own. Catalogues come from C
 
 | Platform | Download | Requirements |
 |---|---|---|
-| **Android** | [MKCinema.apk](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.apk) | Android 7 or later |
-| **Windows** | [MKCinema.exe](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.exe) | Windows 10 or 11, 64-bit |
-| **macOS** | [MKCinema-1.0.dmg](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema-1.0.dmg) | macOS 11 or later, Intel and Apple silicon |
-| **Linux** | [.deb](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/mkcinema_1.0_amd64.deb) · [.tar.gz](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/mkcinema-1.0-linux-x86_64.tar.gz) | x86-64 with WebKitGTK 4.1 |
+| **Android** | [MKCinema.apk](https://mkcinema-site.pages.dev/download/MKCinema.apk) | Android 7 or later |
+| **Windows** | [MKCinema.exe](https://mkcinema-site.pages.dev/download/MKCinema.exe) | Windows 10 or 11, 64-bit |
+| **macOS** | [MKCinema-1.0.dmg](https://mkcinema-site.pages.dev/download/MKCinema-1.0.dmg) | macOS 11 or later, Intel and Apple silicon |
+| **Linux** | [.deb](https://mkcinema-site.pages.dev/download/mkcinema_1.0_amd64.deb) · [.tar.gz](https://mkcinema-site.pages.dev/download/mkcinema-1.0-linux-x86_64.tar.gz) | x86-64 with WebKitGTK 4.1 |
 | **Web** | [mkcinema.pages.dev](https://mkcinema.pages.dev) | Chrome, Edge, Firefox or Safari |
 
 Every app opens the same MKCinema in its own window, so it always runs the latest version. Sign in with email and your library, progress, addons and settings follow you between devices.

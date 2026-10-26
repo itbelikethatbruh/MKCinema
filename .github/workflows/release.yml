@@ -1,8 +1,14 @@
 name: Release
 
-# Pushing a tag like v1.0 publishes a GitHub release with the app files from site/download
-# and the notes in .github/release/<tag>.md.
+# Publishes a GitHub release with the app files from site/download and the notes in
+# .github/release/<tag>.md. Run it from Actions › Release › Run workflow, or push a tag like v1.0.
 on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag
+        default: v1.0
+        required: true
   push:
     tags: ["v*"]
 
@@ -17,8 +23,8 @@ jobs:
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           notes=".github/release/${TAG}.md"
           [ -f "$notes" ] || notes=/dev/null
-          gh release create "$TAG" --title "MKCinema ${TAG#v}" --notes-file "$notes" --verify-tag site/download/*
+          gh release create "$TAG" --target "$GITHUB_SHA" --title "MKCinema ${TAG#v}" --notes-file "$notes" site/download/*
