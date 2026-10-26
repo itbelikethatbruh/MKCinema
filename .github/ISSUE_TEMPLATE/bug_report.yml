@@ -1,0 +1,39 @@
+name: Bug report
+description: Something in MKCinema doesn't work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting! Please don't include debrid keys, passwords or addon links that contain keys.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Where does it happen?
+      multiple: true
+      options: [Web (browser), Android app, Windows app, Mac app, Linux app, Website]
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser or OS version
+      placeholder: e.g. Pixel 8, Android 15, Chrome 130
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Tap ...
+        3. See ...
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots or console errors

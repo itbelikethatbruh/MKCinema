@@ -1,0 +1,8 @@
+# Android signing key: never commit
+android/keystore/
+*.jks
+*.keystore
+build/
+node_modules/
+.env
+*.syso

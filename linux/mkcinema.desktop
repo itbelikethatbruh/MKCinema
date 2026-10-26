@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=MKCinema
+GenericName=Media player
+Comment=Your Stremio addons in a premium cinema
+Exec=mkcinema %U
+Icon=mkcinema
+Terminal=false
+Categories=AudioVideo;Video;Player;
+StartupWMClass=mkcinema
+Keywords=movies;series;stremio;player;

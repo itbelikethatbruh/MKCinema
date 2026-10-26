@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="noir">#000000</color>
+    <style name="Noir" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/noir</item>
+        <item name="android:statusBarColor">@color/noir</item>
+        <item name="android:navigationBarColor">@color/noir</item>
+        <item name="android:colorAccent">#d9d4c7</item>
+    </style>
+</resources>

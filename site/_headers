@@ -1,0 +1,20 @@
+/download/*.apk
+  Content-Type: application/vnd.android.package-archive
+  Content-Disposition: attachment; filename="MKCinema.apk"
+  Cache-Control: no-cache
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+/download/*.exe
+  Content-Type: application/vnd.microsoft.portable-executable
+  Content-Disposition: attachment; filename="MKCinema.exe"
+  Cache-Control: no-cache
+/download/*.dmg
+  Content-Type: application/x-apple-diskimage
+  Cache-Control: no-cache
+/download/*.deb
+  Content-Type: application/vnd.debian.binary-package
+  Cache-Control: no-cache
+/download/*.tar.gz
+  Content-Type: application/gzip
+  Cache-Control: no-cache

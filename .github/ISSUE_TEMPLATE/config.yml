@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Open MKCinema
+    url: https://mkcinema.pages.dev
+    about: Try the latest version in your browser.
+  - name: Security problem
+    url: https://github.com/itbelikethatbruh/MKCinema/security/advisories/new
+    about: Report vulnerabilities privately.
