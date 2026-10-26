@@ -1,0 +1,24 @@
+name: Release
+
+# Pushing a tag like v1.0 publishes a GitHub release with the app files from site/download
+# and the notes in .github/release/<tag>.md.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          notes=".github/release/${TAG}.md"
+          [ -f "$notes" ] || notes=/dev/null
+          gh release create "$TAG" --title "MKCinema ${TAG#v}" --notes-file "$notes" --verify-tag site/download/*
