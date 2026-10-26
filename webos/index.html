@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MKCinema</title>
+<style>
+html,body{margin:0;height:100%;background:#000;color:#f2f2f3;font:28px system-ui,sans-serif}
+#off{height:100%;display:none;place-items:center;text-align:center}
+#off h1{font:500 56px Georgia,serif;margin:0 0 16px}
+#off p{color:#bdbdc5;margin:0 0 40px}
+#off button{font:600 28px system-ui,sans-serif;padding:18px 40px;border:0;border-radius:999px;background:#e9e6de;color:#0b0b0c}
+#off button:focus{outline:3px solid #fff;outline-offset:6px}
+</style>
+</head>
+<body>
+<!-- MKCinema for LG webOS: opens the web app full screen. -->
+<div id="off"><div><h1>You're offline</h1><p>MKCinema needs a connection to load. Check your network, then try again.</p><button id="retry">Try again</button></div></div>
+<script>
+var HOME = 'https://mkcinema.pages.dev/';
+function go() {
+  if (navigator.onLine === false) {
+    document.getElementById('off').style.display = 'grid';
+    document.getElementById('retry').focus();
+    return;
+  }
+  location.replace(HOME);
+}
+document.getElementById('retry').onclick = go;
+document.addEventListener('keydown', function (e) {
+  if (e.keyCode === 13) go();
+  if (e.keyCode === 461 && window.webOS && webOS.platformBack) webOS.platformBack();
+});
+go();
+</script>
+</body>
+</html>

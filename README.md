@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/itbelikethatbruh/MKCinema?style=for-the-badge&labelColor=0a0a0b&color=d9d4c7&label=release"></a>
   <a href="LICENSE"><img alt="License: GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-d9d4c7?style=for-the-badge&labelColor=0a0a0b"></a>
-  <img alt="Platforms" src="https://img.shields.io/badge/Android%20·%20Windows%20·%20macOS%20·%20Linux%20·%20Web-ececee?style=for-the-badge&labelColor=0a0a0b&label=platforms">
+  <img alt="Platforms" src="https://img.shields.io/badge/Android%20·%20Android%20TV%20·%20Fire%20TV%20·%20LG%20webOS%20·%20Windows%20·%20macOS%20·%20Linux%20·%20Web-ececee?style=for-the-badge&labelColor=0a0a0b&label=platforms">
   <a href="https://mkcinema-site.pages.dev/#support"><img alt="Donate with PayPal" src="https://img.shields.io/badge/donate-PayPal-d9d4c7?style=for-the-badge&labelColor=0a0a0b&logo=paypal&logoColor=white"></a>
 </p>
 
@@ -35,6 +35,8 @@ MKCinema ships no titles, channels or streams of its own. Catalogues come from C
 | Platform | Download | Requirements |
 |---|---|---|
 | **Android** | [MKCinema.apk](https://mkcinema-site.pages.dev/download/MKCinema.apk) | Android 7 or later |
+| **Android TV, Google TV, Fire TV** | [MKCinema-TV.apk](https://mkcinema-site.pages.dev/download/MKCinema-TV.apk) (short link for Downloader: `mkcinema-site.pages.dev/tv`) | Android TV 7 or later |
+| **LG webOS** (beta) | [com.mkcinema.app_1.1.0_all.ipk](https://mkcinema-site.pages.dev/download/com.mkcinema.app_1.1.0_all.ipk) | webOS 4 or later, Developer Mode or Homebrew Channel |
 | **Windows** | [MKCinema.exe](https://mkcinema-site.pages.dev/download/MKCinema.exe) | Windows 10 or 11, 64-bit |
 | **macOS** | [MKCinema-1.0.dmg](https://mkcinema-site.pages.dev/download/MKCinema-1.0.dmg) | macOS 11 or later, Intel and Apple silicon |
 | **Linux** | [.deb](https://mkcinema-site.pages.dev/download/mkcinema_1.0_amd64.deb) · [.tar.gz](https://mkcinema-site.pages.dev/download/mkcinema-1.0-linux-x86_64.tar.gz) | x86-64 with WebKitGTK 4.1 |
@@ -43,7 +45,7 @@ MKCinema ships no titles, channels or streams of its own. Catalogues come from C
 Every app opens the same MKCinema in its own window, so it always runs the latest version. Sign in with email and your library, progress, addons and settings follow you between devices.
 
 > [!NOTE]
-> The Windows and Mac apps are not code-signed by Microsoft or Apple yet. On Windows, click **More info › Run anyway** the first time. On a Mac, open the app once, then go to **System Settings › Privacy & Security › Open Anyway**. Android asks you to allow installs from your browser. Only download MKCinema from this repository or [the website](https://mkcinema-site.pages.dev).
+> The Windows and Mac apps are not code-signed by Microsoft or Apple yet. On Windows, click **More info › Run anyway** the first time. On a Mac, open the app once, then go to **System Settings › Privacy & Security › Open Anyway**. Android asks you to allow installs from your browser; on a TV, allow the Downloader app instead. LG TVs only install store apps, so the webOS package needs Developer Mode. Samsung (Tizen) isn't supported yet because Samsung requires apps to be signed through its developer program. Only download MKCinema from this repository or [the website](https://mkcinema-site.pages.dev).
 
 ## Features
 
@@ -99,7 +101,7 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 </tr>
 <tr>
 <td align="center"><sub>Addon Studio: design a Stremio addon visually</sub></td>
-<td align="center"><sub>Apps for Android, Windows, Mac and Linux</sub></td>
+<td align="center"><sub>Apps for Android, Smart TVs, Windows, Mac and Linux</sub></td>
 </tr>
 </table>
 
@@ -129,7 +131,8 @@ flowchart LR
 |---|---|
 | [`app/`](app) | The web app (`index.html`), PWA files, the companion server (`mkcinema-server.js`), the Supabase schema (`supabase.sql`) and the debrid relay Edge Function. See [`app/README.md`](app/README.md). |
 | [`site/`](site) | The website at [mkcinema-site.pages.dev](https://mkcinema-site.pages.dev). |
-| [`android/`](android) | Android app: a full-screen WebView with intent hand-off to video players. |
+| [`android/`](android) | Android, Android TV, Google TV and Fire TV app: a full-screen WebView with intent hand-off to video players, a TV launcher banner and remote control support. `MKCinema.apk` and `MKCinema-TV.apk` are the same file. |
+| [`webos/`](webos) | LG webOS app (beta): a hosted web app package. See [`webos/README.md`](webos/README.md). |
 | [`windows/`](windows) | Windows app: Go and Microsoft Edge WebView2. |
 | [`mac/`](mac) | Mac app: WKWebView through JavaScript for Automation, packaged as a .dmg. |
 | [`linux/`](linux) | Linux app: C and WebKitGTK 4.1, packaged as .deb and .tar.gz. |
@@ -164,6 +167,16 @@ ANDROID_HOME=~/Android/Sdk sh build.sh   # writes build/MKCinema.apk
 ```
 
 Change `package` in `AndroidManifest.xml` for your own fork so it doesn't clash with official releases.
+</details>
+
+<details>
+<summary><b>LG webOS</b></summary>
+
+```sh
+npx @webos-tools/cli ares-package webos -o build   # writes build/com.mkcinema.app_1.1.0_all.ipk
+```
+
+Install it on a TV in Developer Mode with `ares-install`. See [`webos/README.md`](webos/README.md).
 </details>
 
 <details>
