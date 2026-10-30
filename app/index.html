@@ -7996,6 +7996,7 @@ const AudioLang = {
   },
   cycle() {
     const s = P.stream, st = s && this.info.get(s);
+    if (st && st.state === 'ok' && !st.tracks.length) { if (!s._audioTry) this.pick(-1); else toast('Pick a language from the audio menu', 'info'); return true; }
     if (st && st.state === 'ok') { const n = st.tracks[(st.tracks.findIndex((t) => t.i === st.cur) + 1) % st.tracks.length]; this.pick(n.i); return true; }
     if (s && !st) { this.probe(s).then((r) => { if (r.state === 'ok') this.cycle(); else toast('This stream has a single audio track'); }); return true; }
     return false;
