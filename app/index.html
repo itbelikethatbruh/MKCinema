@@ -316,7 +316,7 @@ select.sel option{background:#0c0f1a}
 .seek:hover .trk{height:7px}
 .seek .buf{position:absolute;left:0;top:0;bottom:0;background:rgba(255,255,255,.28)}
 .seek .cur{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--cyan),var(--violet))}
-.seek .knob{position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 12px var(--cyan);transform:translateX(-50%)}
+.seek .knob{position:absolute;left:0;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 12px var(--cyan);transform:translateX(-50%)}
 .seek .tip{position:absolute;bottom:22px;transform:translateX(-50%);font-family:var(--f-mono);font-size:11px;padding:2px 6px;border-radius:6px;background:rgba(0,0,0,.8);display:none}
 .seek:hover .tip{display:block}
 .ctl{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
@@ -847,6 +847,7 @@ select.sel option{background:#0a0a0b}
 .card-sub{color:var(--mute)}
 body.touch-ui.wall .rail>.card,body.touch-ui.wall .row{transform:none}
 body.touch-ui.wall .rail{transform-style:flat}
+body.touch-ui .dock .seg{display:none}
 
 /* Detail, streams, addons */
 .panel-close{background:rgba(0,0,0,.6)}
@@ -867,6 +868,7 @@ body.touch-ui.wall .rail{transform-style:flat}
 .avatar{color:#000;background:var(--plat)}
 .addon,.acct-card,.item-box{background:var(--s1);border-color:var(--line-soft)}
 .addon .logo{color:#fff;background:linear-gradient(160deg,#2a2a2e,#0e0e10);border:1px solid var(--line)}
+.addon img.logo{object-fit:contain;padding:6px;background:#141416}
 .tag-s{background:transparent;border:1px solid var(--line);color:var(--mute)}
 .tag-s.c,.tag-s.v{color:#e4e4e7;background:transparent;border-color:rgba(255,255,255,.22)}
 .tag-s.g{color:var(--gold);background:transparent;border-color:rgba(217,212,199,.35)}
@@ -1037,6 +1039,7 @@ body.hc .row-title small,body.hc .menu h5,body.hc .set-group{letter-spacing:.14e
 .badge-r i{font-style:normal;color:var(--gold)}
 .crit{font-family:var(--f-mono);font-size:12px;padding:2px 8px;border-radius:6px;border:1px solid var(--line);color:var(--ink)}
 .tb.deb{color:#000;background:var(--gold);border-color:var(--gold);font-weight:700}
+.tb.unc{color:#c9c4ba;background:transparent;border-color:rgba(255,255,255,.22)}
 
 /* Spoiler Guard */
 .sg-chip{margin-left:auto;height:30px;font-size:12px}
@@ -1713,6 +1716,28 @@ a.xr-credit:hover{color:#fff}
    motion it still fades in and out (opacity only), so a loading film never looks frozen. */
 .pl-bar{display:none}
 .pl-art{animation-duration:2.4s}
+/* X-Ray (2.7.3): a compact, see-through card in the corner, so most of the picture stays visible */
+.xray{left:max(16px,env(safe-area-inset-left,0px));top:16px;bottom:auto;width:min(330px,calc(100vw - 32px));max-height:calc(100% - 150px);padding:14px 16px 16px;border-radius:18px;border:1px solid rgba(255,255,255,.09);background:rgba(8,8,9,.6);box-shadow:0 24px 60px -24px rgba(0,0,0,.7)}
+@media (hover:hover) and (pointer:fine){.xray{background:rgba(8,8,9,.48);-webkit-backdrop-filter:blur(16px) saturate(1.1);backdrop-filter:blur(16px) saturate(1.1)}}
+.xray h3{margin:10px 0 0;font-size:17px}
+.xray .xr-sub,.xray p,.xray b,.xray small,.xray dt,.xray dd{text-shadow:0 1px 3px rgba(0,0,0,.55)}
+.xr-tabs{gap:16px;margin:10px 0 12px}.xr-tabs button{padding-bottom:8px;font-size:13px}
+.xr-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 8px}
+.xr-ph{border-radius:8px;margin-bottom:4px;border-color:rgba(255,255,255,.08)}
+.xr-p b{font-size:11.5px}.xr-p small{font-size:10.5px}
+.xray h5{margin:14px 0 8px;font-size:10.5px}
+.xr-bio{grid-template-columns:84px minmax(0,1fr);gap:12px}
+.xr-bio h4{font-size:17px}
+.xr-about p,.xr-extract{font-size:13px;line-height:1.55}
+.xr-facts{font-size:12.5px;gap:8px 14px}
+.xr-names{margin:0;font-size:13px;line-height:1.6;color:#d4d4da}
+.xr-wait{margin-top:10px;font-size:12px}
+.xr-credit{margin-top:12px;font-size:11px}
+@media (max-width:760px){
+  .xray{left:10px;right:10px;top:auto;bottom:calc(92px + env(safe-area-inset-bottom,0px));width:auto;max-height:min(32vh,290px);padding:12px 14px 14px;border-radius:16px;border-top:1px solid rgba(255,255,255,.09);background:rgba(8,8,9,.68)}
+  .xr-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:8px 6px}
+}
+@media (max-height:520px){.xray{top:10px;bottom:auto;left:max(10px,env(safe-area-inset-left,0px));right:auto;width:min(300px,42vw);max-height:calc(100% - 128px)}}
 @keyframes plBreath{0%,100%{opacity:.4}50%{opacity:1}}
 @media (prefers-reduced-motion:reduce){.p-load .pl-art{animation:plBreath 2.4s ease-in-out infinite!important;transform:none}}
 body.reduce-motion .p-load .pl-art{animation:plBreath 2.4s ease-in-out infinite!important;transform:none}
@@ -1757,8 +1782,8 @@ body.reduce-motion .p-load .pl-art{animation:plBreath 2.4s ease-in-out infinite!
 <div id="app" class="pre">
   <div class="dock-wrap">
     <nav class="dock glass" aria-label="Main">
-      <div class="brand" aria-label="MKCinema"><svg class="mk" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="55" fill="#050505" stroke="url(#mkRing)" stroke-width="3"/><use href="#mkLetters" fill="url(#mkPlat)" transform="translate(60 60) scale(.8)"/></svg><span class="word">MK<em>Cinema</em></span></div>
-      <div class="tabs" id="tabs" role="tablist">
+      <div class="brand" role="img" aria-label="MKCinema"><svg class="mk" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="55" fill="#050505" stroke="url(#mkRing)" stroke-width="3"/><use href="#mkLetters" fill="url(#mkPlat)" transform="translate(60 60) scale(.8)"/></svg><span class="word">MK<em>Cinema</em></span></div>
+      <div class="tabs" id="tabs">
         <button class="tab on" data-view="home" data-nav type="button" title="Home"><i data-lucide="house"></i><span class="lbl">Home</span></button>
         <button class="tab" data-view="movie" data-nav type="button" title="Movies"><i data-lucide="clapperboard"></i><span class="lbl">Movies</span></button>
         <button class="tab" data-view="series" data-nav type="button" title="Series"><i data-lucide="tv"></i><span class="lbl">Series</span></button>
@@ -2208,7 +2233,7 @@ const CFG_DEFAULTS = {
   // subtitles
   subAuto: true, subLang: 'eng', subSize: 100, subColor: '#ffffff', subBg: 65, subPos: 'bottom', subFont: 'sans', subOutline: true,
   // streams
-  hideP2P: false, browserOnly: false, showTrailers: true, timeout: 15, alwaysProxy: false,
+  hideP2P: false, browserOnly: false, audioOnly: 'eng', showTrailers: true, timeout: 15, alwaysProxy: false,
   // intro, sound, trailers
   cloudSync: true,
   introMode: 'always', sfxVolume: 70, trailerMode: 'embed',
@@ -2294,12 +2319,12 @@ const Store = {
 };
 
 /* ---------------- Toasts ---------------- */
-function toast(msg, kind = 'info', ms = 3600) {
-  // The same message never stacks: a repeat replaces the one on screen, and at most three show at once
+function toast(msg, kind = 'info', ms = 3600, key = '') {
+  // The same message never stacks: a repeat (or one with the same key) replaces the one on screen, and at most three show at once
   const box = $('#toasts');
-  [...box.children].forEach((t) => { if (t.dataset.msg === String(msg)) t.remove(); });
+  [...box.children].forEach((t) => { if (t.dataset.msg === String(msg) || key && t.dataset.key === key) t.remove(); });
   while (box.children.length >= 3) box.firstElementChild.remove();
-  const el = document.createElement('div'); el.dataset.msg = String(msg);
+  const el = document.createElement('div'); el.dataset.msg = String(msg); if (key) el.dataset.key = key;
   el.className = `toast glass-solid ${kind === 'info' ? 't-info' : kind}`;
   el.innerHTML = `<i data-lucide="${kind === 'err' ? 'alert-triangle' : kind === 'ok' ? 'check-circle-2' : 'info'}"></i><span>${esc(msg)}</span>`;
   $('#toasts').appendChild(el); icons();
@@ -2747,8 +2772,10 @@ class StremioEngine {
     return { streams: all, errors, addons: cands.length };
   }
   pickBest(streams, { bingeGroup } = {}) {
-    if (bingeGroup) { const m = streams.find((s) => s.behaviorHints?.bingeGroup === bingeGroup && (s._tel.webReady || s.ytId)); if (m) return m; }
-    return streams.find((s) => s._tel.webReady && !s._tel.isTrailer) || streams.find((s) => s._tel.webReady) || streams.find((s) => s.ytId) || null;
+    // a source the debrid service has not cached yet only plays a "downloading" notice, so it is a last resort
+    const ok = (s) => s._tel.cached !== false;
+    if (bingeGroup) { const m = streams.find((s) => s.behaviorHints?.bingeGroup === bingeGroup && ok(s) && (s._tel.webReady || s.ytId)); if (m) return m; }
+    return streams.find((s) => s._tel.webReady && !s._tel.isTrailer && ok(s)) || streams.find((s) => s._tel.webReady && !s._tel.isTrailer) || streams.find((s) => s._tel.webReady) || streams.find((s) => s.ytId) || null;
   }
 
   /* ---------- Subtitles ---------- */
@@ -2760,10 +2787,40 @@ class StremioEngine {
   /* Any supported subtitle text -> WebVTT: SRT, VTT, ASS/SSA, MicroDVD .sub */
   static toVtt(text, name = '') {
     const t = String(text).replace(/^\uFEFF/, '');
-    if (/^\s*WEBVTT/.test(t)) return t;
-    if (/\[Events\]/i.test(t) || /\.(ass|ssa)$/i.test(name)) return StremioEngine.assToVtt(t);
-    if (/^\s*\{\d+\}\{\d*\}/.test(t)) return StremioEngine.microDvdToVtt(t);
-    return StremioEngine.srtToVtt(t);
+    const raw = /^\s*WEBVTT/.test(t) ? t : /\[Events\]/i.test(t) || /\.(ass|ssa)$/i.test(name) ? StremioEngine.assToVtt(t) : /^\s*\{\d+\}\{\d*\}/.test(t) ? StremioEngine.microDvdToVtt(t) : StremioEngine.srtToVtt(t);
+    return StremioEngine.tidyVtt(raw) || raw;
+  }
+  /* Real-world SRT files often have a blank line holding spaces, a missing blank line, an end time before the start, or a line
+     that lasts minutes. Browsers then keep that line on screen. The cues are read again line by line and written out clean:
+     a cue ends before the next one starts, and none lasts longer than 12 s. */
+  static tidyVtt(text) {
+    const T = /^\s*((?:\d+:)?\d{1,2}:\d{2}[.,]\d{1,3})\s*-->\s*((?:\d+:)?\d{1,2}:\d{2}[.,]\d{1,3})(.*)$/;
+    const sec = (v) => { const p = v.replace(',', '.').split(':').map(Number); return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p[0] * 60 + p[1]; };
+    const lines = String(text).replace(/\r\n?/g, '\n').split('\n'), cues = [];
+    let cur = null;
+    for (let i = 0; i < lines.length; i++) {
+      const m = T.exec(lines[i]);
+      if (m) {
+        // a cue number written right above the timing line belongs to the new cue, not to the old one's text
+        if (cur && cur.text.length && /^\s*\d+\s*$/.test(cur.text[cur.text.length - 1])) cur.text.pop();
+        cur = { s: sec(m[1]), e: sec(m[2]), set: (m[3] || '').trim(), text: [] }; cues.push(cur); continue;
+      }
+      if (!lines[i].trim()) { cur = null; continue; }
+      if (cur) cur.text.push(lines[i].trim());
+    }
+    const out = cues.map((c) => ({ ...c, body: c.text.join('\n').replace(/<(?!\/?(b|i|u)>)[^>]+>/gi, '').trim() })).filter((c) => c.body && isFinite(c.s) && isFinite(c.e)).sort((a, b) => a.s - b.s);
+    if (!out.length) return null;
+    // identical start: one cue with both lines; otherwise a cue stops where the next begins
+    const merged = [];
+    for (const c of out) { const last = merged[merged.length - 1]; if (last && Math.abs(last.s - c.s) < 0.01) { if (last.body !== c.body) last.body += `\n${c.body}`; last.e = Math.max(last.e, c.e); } else merged.push(c); }
+    merged.forEach((c, i) => {
+      const n = merged[i + 1];
+      if (!(c.e > c.s)) c.e = c.s + 3;
+      if (c.e - c.s > 12) c.e = c.s + 12;
+      if (n && c.e > n.s) c.e = Math.max(c.s + 0.2, n.s);
+    });
+    const ok = (v) => /^(line|position|align|size|vertical):\S+$/.test(v);
+    return 'WEBVTT\n\n' + merged.map((c) => `${StremioEngine.vttTime(c.s)} --> ${StremioEngine.vttTime(c.e)}${c.set ? ' ' + c.set.split(/\s+/).filter(ok).join(' ') : ''}\n${c.body}`).join('\n\n') + '\n';
   }
   static vttTime(sec) {
     sec = Math.max(0, sec); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
@@ -3070,6 +3127,8 @@ const queueWall = () => { if (S.wall && !wallRaf) wallRaf = requestAnimationFram
 document.addEventListener('scroll', queueWall, { capture: true, passive: true });
 addEventListener('resize', queueWall);
 function setWall(on) {
+  // the curved wall is desktop only: touch screens keep flat rails (and keep a desktop choice saved for that device)
+  if (TOUCH_UI) { S.wall = false; document.body.classList.remove('wall'); return; }
   S.wall = on; Store.set('wall', on); document.body.classList.toggle('wall', on);
   $('#vWall').classList.toggle('on', on); $('#vRails').classList.toggle('on', !on);
   if (!on) $$('.rail>.card, .row').forEach((c) => { c.style.removeProperty('--arcy'); c.style.removeProperty('--arcz'); c.style.removeProperty('--rowx'); });
@@ -3529,20 +3588,45 @@ const BrowserPlay = {
     return true;
   },
 };
+/* Audio language: a release that only names other languages (Torrentio's flags, ITA, FRENCH, LATINO, HINDI…) is a dub.
+   Untagged releases are usually the original English audio, and MULTi or Dual releases keep the original track, so both stay. */
+const AudioPref = {
+  FLAG: { GB: 'eng', US: 'eng', IT: 'ita', FR: 'fre', ES: 'spa', MX: 'spa', DE: 'ger', RU: 'rus', PT: 'por', BR: 'por', KR: 'kor', JP: 'jpn', CN: 'chi', TW: 'chi', HK: 'chi', IN: 'hin', NL: 'dut', PL: 'pol', CZ: 'cze', HU: 'hun', TR: 'tur', UA: 'ukr', SA: 'ara', TH: 'tha', BG: 'bul', HR: 'hrv', GR: 'gre', SE: 'swe', DK: 'dan', NO: 'nor', FI: 'fin', RO: 'rum', IL: 'heb', VN: 'vie', ID: 'ind' },
+  WORD: [[/\b(eng|english)\b/, 'eng'], [/\b(ita|italian|italiano)\b/, 'ita'], [/\b(french|truefrench|vff|vfq|vfi|vf2?)\b/, 'fre'], [/\b(spa|spanish|castellano|espanol|esp|lat|latino)\b/, 'spa'],
+    [/\b(ger|german|deutsch)\b/, 'ger'], [/\b(rus|russian)\b/, 'rus'], [/\b(hin|hindi)\b/, 'hin'], [/\b(tam|tamil)\b/, 'tam'], [/\b(tel|telugu)\b/, 'tel'], [/\b(kor|korean)\b/, 'kor'],
+    [/\b(jpn|japanese)\b/, 'jpn'], [/\b(por|portuguese|dublado)\b/, 'por'], [/\b(polish|lektor)\b/, 'pol'], [/\b(turkish)\b/, 'tur'], [/\b(arabic)\b/, 'ara']],
+  langs(s) {
+    const bh = s.behaviorHints || {}, text = [s.name, s.title, s.description, bh.filename].filter(Boolean).join(' ');
+    // the film's own name never counts ("The Italian Job" is not a dub); each title word is skipped once, so a later ITALIAN tag still does
+    const own = [D.meta, P.ctx && P.ctx.meta].filter(Boolean).flatMap((m) => String(m.name || '').toLowerCase().split(/[^a-z0-9]+/)).filter((w) => w.length > 2);
+    const strip = (part) => { const left = new Set(own); return String(part).toLowerCase().replace(/[._\-\[\]()+/|]/g, ' ').split(/\s+/).filter((w) => !left.delete(w)).join(' '); };
+    const out = new Set(), T = [s.name, s.title, s.description, bh.filename].filter(Boolean).map(strip).join(' ');
+    for (const m of text.matchAll(/([\u{1F1E6}-\u{1F1FF}])([\u{1F1E6}-\u{1F1FF}])/gu)) { const cc = String.fromCharCode(m[1].codePointAt(0) - 0x1F1E6 + 65, m[2].codePointAt(0) - 0x1F1E6 + 65); out.add(this.FLAG[cc] || cc.toLowerCase()); }
+    if (/🇬🇧|🏴/u.test(text)) out.add('eng');
+    this.WORD.forEach(([re, l]) => { if (re.test(T)) out.add(l); });
+    return { langs: out, multi: /\b(multi|multi audio|dual|dual audio)\b/.test(T) };
+  },
+  ok(s) {
+    const want = CFG.audioOnly; if (!want || want === 'any' || !s._tel || s._tel.isTrailer || s._tel.kind === 'yt') return true;
+    const { langs, multi } = this.langs(s);
+    return !langs.size || langs.has(want) || multi;
+  },
+};
 function visibleStreams(streams) {
-  return streams.filter((s) => !(CFG.hideP2P && s._tel.kind === 'p2p') && !(!CFG.showTrailers && s._tel.isTrailer) && (!CFG.browserOnly || BrowserPlay.ok(s)));
+  return streams.filter((s) => !(CFG.hideP2P && s._tel.kind === 'p2p') && !(!CFG.showTrailers && s._tel.isTrailer) && (!CFG.browserOnly || BrowserPlay.ok(s)) && AudioPref.ok(s));
 }
 const pickBest = (streams, opts) => engine.pickBest(visibleStreams(streams), opts);
 function filterStreams(streams, f) {
   streams = visibleStreams(streams);
   if (f === '4k') return streams.filter((s) => s._tel.res === '4K UHD');
   if (f === 'web') return streams.filter((s) => s._tel.webReady);
+  if (f === 'cached') return streams.filter((s) => s._tel.cached === true);
   if (f.startsWith('addon:')) return streams.filter((s) => s._addon === f.slice(6));
   return streams;
 }
 function filterChips(streams, cur) {
   const addons = [...new Set(visibleStreams(streams).map((s) => s._addon))];
-  const opts = [['all', 'All', filterStreams(streams, 'all').length], ['4k', '4K UHD', filterStreams(streams, '4k').length], ['web', 'Instant Web-Ready', filterStreams(streams, 'web').length], ...addons.map((a) => [`addon:${a}`, a, filterStreams(streams, `addon:${a}`).length])];
+  const opts = [['all', 'All', filterStreams(streams, 'all').length], ['4k', '4K UHD', filterStreams(streams, '4k').length], ['web', 'Instant Web-Ready', filterStreams(streams, 'web').length], ...(filterStreams(streams, 'cached').length ? [['cached', 'Cached', filterStreams(streams, 'cached').length]] : []), ...addons.map((a) => [`addon:${a}`, a, filterStreams(streams, `addon:${a}`).length])];
   return opts.map(([v, l, n]) => `<button class="chip ${cur === v ? 'on' : ''}" type="button" data-nav data-filter="${esc(v)}">${esc(l)} <span class="tag-s">${n}</span></button>`).join('');
 }
 // Release names read like titles ("Project Hail Mary 2026 IMAX …"): dots and underscores become spaces,
@@ -3572,6 +3656,7 @@ function renderStreamsPanel() {
   box.innerHTML = `
     <div class="status-line">${st.pending ? '<span class="spin"></span>' : '<i data-lucide="radar"></i>'}<span>${st.pending ? `Asking ${total} addon${total === 1 ? '' : 's'} in parallel · ${st.answered} answered` : `${total} addon${total === 1 ? '' : 's'} answered`} · ${D.streams.length} stream${D.streams.length === 1 ? '' : 's'}</span></div>
     ${CFG.browserOnly && D.streams.length ? `<div class="status-line bo-line"><i data-lucide="globe"></i><span>Browser only mode: ${D.streams.length - visibleStreams(D.streams).length} source${D.streams.length - visibleStreams(D.streams).length === 1 ? '' : 's'} that need VLC or another player are hidden. Change it in Settings › Playback.</span></div>` : ''}
+    ${(() => { const n = D.streams.filter((x) => !AudioPref.ok(x)).length; return n ? `<div class="status-line bo-line"><i data-lucide="languages"></i><span>${n} source${n === 1 ? '' : 's'} dubbed in other languages ${n === 1 ? 'is' : 'are'} hidden (only ${esc(langName(CFG.audioOnly))} audio). Change it in Settings › Playback.</span></div>` : ''; })()}
     ${st.errors.length ? `<div class="status-line" style="color:var(--bad)"><i data-lucide="alert-triangle"></i><span>${esc(st.errors.slice(0, 3).join(' · '))}</span></div>` : ''}
     <div class="chips" style="margin-bottom:10px">${filterChips(D.streams, D.filter)}</div>
     <div class="streams">${list.map((s) => streamRowHTML(s, D.streams.indexOf(s), { best: s === best })).join('') || (st.pending ? skeletons(0) + '<div class="empty">Waiting for addons…</div>' : '<div class="empty">No streams for this filter. Install more stream addons from the addon manager.</div>')}</div>`;
@@ -3642,7 +3727,7 @@ function loadYouTubeApi() {
   });
   return TR.apiP;
 }
-function trMsg(html) { const m = $('#trMsg'); m.hidden = !html; m.innerHTML = html || ''; $('#trBar').hidden = !!html; icons(); }
+function trMsg(html) { const m = $('#trMsg'); m.hidden = !html; m.innerHTML = html || ''; $('#trBar').hidden = !!html; $('#trSlot').style.visibility = html ? 'hidden' : ''; icons(); }
 function trIcon(id, name) { const b = $(id); if (b.dataset.icon === name) return; b.dataset.icon = name; b.innerHTML = `<i data-lucide="${name}"></i>`; icons(); }
 function trSync() {
   const y = TR.yt; if (!y || !y.getDuration) return;
@@ -3738,7 +3823,9 @@ function magnetOf(s) {
    and desktop players without a scheme (VLC, mpv, MPC on Windows and Linux) get an .m3u playlist the OS opens in them. */
 const PLATFORM = (() => {
   const ua = navigator.userAgent || '';
-  if (/Android/i.test(ua)) return 'android';
+  if (/Android/i.test(ua) || /Android/i.test((navigator.userAgentData || {}).platform || '')) return 'android';
+  // Android Chrome in desktop mode (the default on tablets) claims to be Linux; a Linux desktop almost never has a touch screen
+  if (/Linux/i.test(ua) && !/CrOS/i.test(ua) && navigator.maxTouchPoints > 0) return 'android';
   if (/iPhone|iPad|iPod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) return 'ios';
   if (/Macintosh|Mac OS X/i.test(ua)) return 'mac';
   if (/Windows/i.test(ua)) return 'windows';
@@ -3869,6 +3956,8 @@ async function playStream(ctx, stream, { startAt } = {}) {
   $('#pEpsBtn').hidden = !(ctx.meta.type === 'series' && ctx.meta.videos && ctx.meta.videos.length);
   $('#pNext').hidden = !(ctx.video && nextVideo(ctx.meta, ctx.video));
   teardown();
+  // the bar starts at the real starting point (0 or the resume point), not where the last video left it
+  { const pr = S.progress[key], d0 = pr && pr.d, pct = startAt && d0 > 0 ? clamp(startAt / d0 * 100, 0, 100) : 0; $('#sCur').style.width = `${pct}%`; $('#sKnob').style.left = `${pct}%`; $('#sBuf').style.width = '0%'; $('#pTime').textContent = d0 > 0 ? `${fmtTime(startAt || 0)} / ${fmtTime(d0)}` : fmtTime(startAt || 0); }
   Loader.show(ctx.meta);
   renderSourceDrawer();
   if (ctx.meta.type === 'series' && (!prevCtx || prevCtx.meta.id !== ctx.meta.id)) P.epSeason = ctx.video ? Number(ctx.video.season) : null;
@@ -3982,6 +4071,7 @@ video.addEventListener('play', () => { setPlayIcon(); wakeHud(); });
 video.addEventListener('pause', () => { setPlayIcon(); wakeHud(true); saveProgress(true); });
 video.addEventListener('timeupdate', () => {
   const d = pDur(), t = pNow(), live = !isFinite(d);
+  if (Number.isNaN(d)) return;
   $('#pTime').textContent = live ? `LIVE · ${fmtTime(t)}` : `${fmtTime(t)} / ${fmtTime(d)}`;
   const pct = live ? 100 : (t / d) * 100 || 0;
   if (!P.scrubbing) { $('#sCur').style.width = `${pct}%`; $('#sKnob').style.left = `${pct}%`; }
@@ -4213,6 +4303,7 @@ function clearSubTracks() {
 }
 async function selectSub(i, { auto = false } = {}) {
   clearSubTracks();
+  const pick = P.subPick = (P.subPick || 0) + 1;
   P.curSub = i; renderSubMenu(); if (i < 0) return;
   const s = P.subs[i];
   try {
@@ -4221,6 +4312,9 @@ async function selectSub(i, { auto = false } = {}) {
     else {
       let text = s.text;
       if (text == null) { const res = await fetch(s.url); if (!res.ok) throw new Error(`HTTP ${res.status}`); text = await res.text(); }
+      // another subtitle was picked while this one downloaded: two tracks would both stay on screen
+      if (pick !== P.subPick) return;
+      clearSubTracks();
       const vtt = StremioEngine.toVtt(text, s.fileName || s.url || '');
       const tr = document.createElement('track'); tr.kind = 'subtitles'; tr.label = subLabel(s); tr.srclang = String(s.lang || 'und').slice(0, 3); tr.default = true;
       tr.src = URL.createObjectURL(new Blob([vtt], { type: 'text/vtt' }));
@@ -4228,7 +4322,7 @@ async function selectSub(i, { auto = false } = {}) {
       const show = () => { tr.track.mode = 'showing'; styleCues(); applySubDelay(); };
       tr.addEventListener('load', show); setTimeout(show, 80);
     }
-    if (!auto) toast(`Subtitles: ${subLabel(s)}`, 'ok'); else toast(`Subtitles on: ${subLabel(s)} (change in Settings › Subtitles)`, 'info', 3000);
+    if (!auto) toast(`Subtitles: ${subLabel(s)}`, 'ok'); else toast(`${langName(s.lang)} subtitles on`, 'info', 2400, 'subs');
   } catch (e) { P.curSub = -1; renderSubMenu(); toast(`Could not load those subtitles (${e.message}). The host may block cross-origin requests.`, 'err'); }
 }
 function activeTrack() { return Array.from(video.textTracks).find((t) => t.mode === 'showing'); }
@@ -4281,7 +4375,7 @@ $('#pOpts').onclick = () => { const m = $('#optMenu'); $('#subMenu').hidden = tr
 const cycleSub = () => { if (!P.subs.length) { toast('No subtitles for this stream'); return; } P.subUserChoice = true; const n = P.curSub + 1 >= P.subs.length ? -1 : P.curSub + 1; selectSub(n); if (n < 0) toast('Subtitles off'); };
 const cycleAudio = () => {
   if (P.hls && P.hls.audioTracks.length > 1) { P.hls.audioTrack = (P.hls.audioTrack + 1) % P.hls.audioTracks.length; toast(`Audio: ${P.hls.audioTracks[P.hls.audioTrack].name || langName(P.hls.audioTracks[P.hls.audioTrack].lang)}`); }
-  else toast('This stream has a single audio track');
+  else if (!(typeof AudioLang !== 'undefined' && AudioLang.cycle())) toast('This stream has a single audio track');
 };
 const nudgeSpeed = (d) => { video.playbackRate = d === 0 ? 1 : clamp(Math.round((video.playbackRate + d) * 100) / 100, 0.25, 3); toast(`Speed ${video.playbackRate}×`, 'info', 1200); };
 
@@ -4290,7 +4384,7 @@ const nudgeSpeed = (d) => { video.playbackRate = d === 0 ? 1 : clamp(Math.round(
    ===================================================================== */
 function renderAddons() {
   $('#addonSuggest').innerHTML = SUGGESTED.map((s) => `<button class="chip" type="button" data-nav data-url="${esc(s.url)}"><i data-lucide="plus"></i>${esc(s.name)}</button>`).join('');
-  $$('#addonSuggest [data-url]').forEach((b) => b.addEventListener('click', () => { $('#addonUrl').value = b.dataset.url; $('#addonUrl').focus(); }));
+  $$('#addonSuggest [data-url]').forEach((b) => b.addEventListener('click', () => { $('#addonUrl').value = b.dataset.url; if (!TOUCH_UI) $('#addonUrl').focus(); }));
   $('#addonList').innerHTML = engine.addons.map((a, i) => {
     const m = a.manifest, res = StremioEngine.resources(m);
     return `<div class="addon ${a.enabled ? '' : 'off'}">
@@ -4338,7 +4432,8 @@ $('#proxyTest').onclick = async () => {
     st.className = 'tag-s c'; st.textContent = `online · ${j.name || 'proxy'} ${j.version || ''}`;
   } catch (e) { st.className = 'tag-s r'; st.textContent = 'offline'; }
 };
-$('#openAddons').onclick = () => { renderAddons(); openLayer('addons'); setTimeout(() => $('#addonUrl').focus(), 50); };
+// on phones and tablets a focused field pops the keyboard over the list, so only keyboards-and-mice get the head start
+$('#openAddons').onclick = () => { renderAddons(); openLayer('addons'); if (!TOUCH_UI) setTimeout(() => $('#addonUrl').focus(), 50); };
 
 /* =====================================================================
    Addon Studio UI
@@ -4430,7 +4525,7 @@ const COMMANDS = [
   { label: 'Pick my favorites (taste)', icon: 'wand-sparkles', run: () => openQuickPick() },
   { label: 'Import from Stremio', icon: 'download', run: () => openStremioImport() },
   { label: 'Replay the walkthrough', icon: 'map', run: () => openTour(0) },
-  { label: 'Toggle curved IMAX wall', icon: 'gallery-horizontal', run: () => setWall(!S.wall) },
+  ...(TOUCH_UI ? [] : [{ label: 'Toggle curved IMAX wall', icon: 'gallery-horizontal', run: () => setWall(!S.wall) }]),
   { label: 'Replay intro', icon: 'rotate-ccw', run: () => replayIntro() },
   { label: 'Toggle sound', icon: 'volume-2', run: () => toggleMute() },
 ];
@@ -4594,6 +4689,12 @@ function handleKey(e) {
   const k = e.key, tag = (e.target && e.target.tagName) || '', typing = /INPUT|TEXTAREA|SELECT/.test(tag) && e.target.type !== 'checkbox' && e.target.type !== 'range';
   if ((e.ctrlKey || e.metaKey) && k.toLowerCase() === 'k') { e.preventDefault(); $('#palette').hidden ? openPalette() : closePalette(); return; }
   if (k === 'Escape') { e.preventDefault(); back(); return; }
+  if (e.keyCode === 461 || k === 'GoBack' || k === 'BrowserBack') {
+    e.preventDefault();
+    const open = ['remote', 'castLayer', 'partyLayer', 'player', 'trailer', 'tour', 'stremioImport', 'palette', 'epSheet', 'askLayer', 'tastePick', 'settings', 'addons', 'detail'].some((id) => { const el = $(`#${id}`); return el && !el.hidden; });
+    if (open) back(); else if (/Web0S|webOS/.test(navigator.userAgent)) window.close();
+    return;
+  }
   if (typing) return;
   const playerOpen = !$('#player').hidden, drawer = $('#player .drawer.open') || !$('#dspPop').hidden || !$('#subMenu').hidden || !$('#optMenu').hidden || !$('#pMsg').hidden;
   if (playerOpen && !drawer) {
@@ -4792,7 +4893,7 @@ async function loadAddons() {
 }
 async function boot() {
   icons();
-  setWall(S.wall); setMuteIcon();
+  setWall(S.wall && !TOUCH_UI); setMuteIcon();
   const start = (location.hash || '').replace('#', '');
   const skip = CFG.introMode === 'never' || (CFG.introMode === 'daily' && Store.get('lastIntro', '') === new Date().toDateString());
   if (skip) { layoutWord(); revealApp(true); finishIntro(); } else runIntro();
@@ -5307,7 +5408,7 @@ const TOUR = [
     ['Smart Play', 'Scores every source for quality, format and speed, starts the best one, and quietly switches if it stalls.'],
     ['Watch party', 'Perfect sync with friends, with voice chat that lowers the film while someone talks.'],
     ['Your phone, the remote', 'Scan a code to drive the big screen, or hand a film to your phone at the same second.'],
-    ['Instant debrid', 'Connect TorBox or Real-Debrid and cached sources start in about a second.'],
+    ['Instant debrid', 'Connect the debrid service you use and cached sources start in about a second.'],
     ['Spoiler Guard', 'Unwatched episode titles, stills and synopses stay hidden until you want them.'],
     ['Skip intro, next episode', 'Openings skipped in one tap; the next episode is ready before the credits roll.'],
     ['Night Mode', 'Quiet scenes louder, explosions softer, so nobody reaches for the remote.'],
@@ -5324,7 +5425,7 @@ const TOUR = [
     ['Recommendations', 'Made on your device from your taste', 'Made on their servers from your viewing data'],
   ].map(([k, a, b], n) => `<div class="tw-cr" style="--k:${n}"><span>${k}</span><b>${a}</b><em>${b}</em></div>`).join('')}</div><p class="tour-note">Addons and debrid services are your own choice and may have their own costs.</p></div>` },
   { id: 'taste', html: () => '<span class="eyebrow">Make it yours</span><h2 class="tour-h">Pick at least 3 favorites</h2><p class="tour-sub">Shows, movies or genres. Your "For you" row is built from these, on this device.</p><div id="tourPick"></div>', after: () => { QP.onDone = () => tourGo(1); quickPickHTML($('#tourPick'), { compact: true }); } },
-  { id: 'ready', html: () => `<div class="tour-hero tw tw-end"><span class="tw-kicker">You’re set</span><h2 class="tw-name">Enjoy the show</h2><span class="tw-rule"></span><p>New to this? <b>Get started</b> walks you through VLC, a TorBox key and your first addons in about five minutes. ${Voice.ok ? 'Tap the <b>mic</b> in search to search by voice. ' : ''}You can replay this tour from Settings › Your Picks.</p><div class="actions" style="justify-content:center"><button class="btn btn-prime" type="button" data-tour-guide><i data-lucide="compass"></i>Get started</button><button class="btn btn-ghost" type="button" data-tour-addons><i data-lucide="puzzle"></i>Add addons</button><button class="btn btn-ghost" type="button" data-tour-end>Start watching</button></div></div>` },
+  { id: 'ready', html: () => `<div class="tour-hero tw tw-end"><span class="tw-kicker">You’re set</span><h2 class="tw-name">Enjoy the show</h2><span class="tw-rule"></span><p>New to this? <b>Get started</b> walks you through VLC, a debrid key and your first addons in about five minutes. ${Voice.ok ? 'Tap the <b>mic</b> in search to search by voice. ' : ''}You can replay this tour from Settings › Your Picks.</p><div class="actions" style="justify-content:center"><button class="btn btn-prime" type="button" data-tour-guide><i data-lucide="compass"></i>Get started</button><button class="btn btn-ghost" type="button" data-tour-addons><i data-lucide="puzzle"></i>Add addons</button><button class="btn btn-ghost" type="button" data-tour-end>Start watching</button></div></div>` },
 ];
 let tourIdx = 0;
 function openTour(start = 0) { openLayer('tour'); tourIdx = start; renderTour(); }
@@ -5721,21 +5822,24 @@ const Failover = {
   arm(stream) {
     this.clear();
     const key = P.ctx ? (P.ctx.video ? P.ctx.video.id : P.ctx.meta.id) : '';
-    if (key !== this.key) { this.key = key; this.tried = new Set(); }
+    if (key !== this.key) { this.key = key; this.tried = new Set(); this.hops = 0; }
     this.tried.add(stream);
-    if (!CFG.failover || stream._local || stream._handoff) return;
+    // a TorBox language stream is made on the fly and takes longer to start; it falls back to the original file instead
+    if (!CFG.failover || stream._local || stream._handoff || stream._audioTry) return;
     this.t = setTimeout(() => {
       if (P.stream === stream && !$('#player').hidden && video.readyState < 1 && $('#pMsg').hidden) this.next(stream, 'did not start within 3.5 s', P.startAt || 0);
     }, 3500);
   },
   candidates(failed) {
-    const list = visibleStreams((P.ctx && P.ctx.streams) || []).filter((s) => s._tel && s._tel.webReady && !s._tel.isTrailer && !this.tried.has(s));
+    const list = visibleStreams((P.ctx && P.ctx.streams) || []).filter((s) => s._tel && s._tel.webReady && !s._tel.isTrailer && s._tel.cached !== false && !this.tried.has(s));
     const g = failed && failed.behaviorHints && failed.behaviorHints.bingeGroup;
     return list.sort((a, b) => (g ? ((b.behaviorHints || {}).bingeGroup === g) - ((a.behaviorHints || {}).bingeGroup === g) : 0) || b._tel.score - a._tel.score);
   },
   next(failed, reason, at) {
     const n = this.candidates(failed)[0]; if (!n) return false;
-    toast(`Source ${reason}. Switched to ${n._tel.lines[0] || n._tel.headline || n._addon}`, 'info', 4200);
+    this.hops = (this.hops || 0) + 1;
+    const why = /not supported|blocked|decode/i.test(reason) ? 'won’t play in this browser' : /3\.5 s|start/i.test(reason) ? 'was slow to start' : /stalled/i.test(reason) ? 'stalled' : /cached/i.test(reason) ? 'isn’t cached yet' : 'didn’t work';
+    toast(this.hops > 1 ? `Still looking for a source that plays here… (try ${this.hops + 1})` : `That source ${why}. Trying the next best one…`, 'info', 4200, 'failover');
     playStream(P.ctx, n, { startAt: at != null ? at : pNow() });
     return true;
   },
@@ -5791,7 +5895,7 @@ const Rescue = {
   },
   remuxUrl(stream, t) {
     const bh = stream.behaviorHints || {}, h = bh.proxyHeaders && bh.proxyHeaders.request;
-    return `${String(S.proxy).replace(/\/+$/, '')}/remux?url=${encodeURIComponent(stream.url)}&t=${t.toFixed(2)}${h ? `&headers=${encodeURIComponent(b64json(h))}` : ''}${P.remux && P.remux.hevc ? '&hevc=1' : ''}`;
+    return `${String(S.proxy).replace(/\/+$/, '')}/remux?url=${encodeURIComponent(stream.url)}&t=${t.toFixed(2)}${h ? `&headers=${encodeURIComponent(b64json(h))}` : ''}${P.remux && P.remux.hevc ? '&hevc=1' : ''}${P.remux && P.remux.audio ? `&audio=${P.remux.audio}` : ''}`;
   },
   async start(stream, t) {
     this.active = true; Loader.show(P.ctx && P.ctx.meta);
@@ -5802,7 +5906,7 @@ const Rescue = {
       info = await r.json(); if (!r.ok) throw new Error(info.error || `HTTP ${r.status}`);
     } catch (e) { this.active = false; Loader.hide(); toast(`Audio rescue failed: ${e.message}`, 'err', 6000); return; }
     if (P.stream !== stream) return;
-    P.remux = { offset: t, duration: Number(info.duration) || pDur(), hevc: /hevc|h265/i.test(info.video || '') };
+    P.remux = { offset: t, duration: Number(info.duration) || pDur(), hevc: /hevc|h265/i.test(info.video || ''), audio: this.wantAudio || 0, tracks: info.tracks || null }; this.wantAudio = 0;
     this.load(stream, t);
     $('#rescueBar').hidden = true;
   },
@@ -5974,16 +6078,25 @@ const XRay = {
     $$('[data-xt]', x).forEach((b) => b.addEventListener('click', () => { this.tab = b.dataset.xt; $$('[data-xt]', x).forEach((o) => o.classList.toggle('on', o === b)); this.render(); }));
     this.render();
     // fill in missing portraits a few at a time
-    let i = 0; const next = async () => { while (i < all.length) { const p = all[i++]; if (p.photo) continue; const w = await Wiki.person(p.name); if (w && w.thumb) { p.photo = w.thumb; p.wiki = w; this.paint(all.indexOf(p)); } } };
-    if (all.some((p) => !p.photo)) for (let k = 0; k < 4; k++) next();
+    // people without a portrait stay hidden, so the panel only shows faces
+    let i = 0; this.pending = all.filter((p) => !p.photo).length; const job = this.job = {};
+    const next = async () => { while (i < all.length) { const p = all[i++]; if (p.photo) continue; const w = await Wiki.person(p.name); if (job !== this.job) return; if (w && w.thumb) { p.photo = w.thumb; p.wiki = w; } this.pending--; this.recast(); } };
+    if (this.pending) for (let k = 0; k < 4; k++) next();
   },
   paint(i) { const el = $(`#xray [data-person="${i}"] .xr-ph`), p = [...this.list.cast, ...this.list.crew][i]; if (el && p && p.photo && !$('img', el)) el.innerHTML = `<img src="${esc(p.photo)}" alt="" loading="lazy" onerror="this.remove()">`; },
+  // redraw the cast tab as portraits arrive (merged into one frame), unless an actor page is open
+  recast() { if (this.tab !== 'cast' || this.inPerson || this.raf) return; this.raf = requestAnimationFrame(() => { this.raf = 0; if (this.tab === 'cast' && !this.inPerson && !$('#xray').hidden) this.render(); }); },
   render() {
     const body = $('#xrBody'); if (!body) return;
     const { cast, crew } = this.list, m = P.ctx.meta;
+    this.inPerson = false;
     if (this.tab === 'cast') {
-      body.innerHTML = cast.length || crew.length
-        ? `${cast.length ? `<div class="xr-grid">${cast.map((p, i) => this.face(p, i)).join('')}</div>` : ''}${crew.length ? `<h5>Behind the camera</h5><div class="xr-grid">${crew.map((p, i) => this.face(p, cast.length + i)).join('')}</div>` : ''}<p class="xr-credit">Photos and bios from Wikipedia</p>`
+      const faces = (arr, off) => arr.map((p, i) => [p, off + i]).filter(([p]) => p.photo).map(([p, i]) => this.face(p, i)).join('');
+      const c = faces(cast, 0), w = faces(crew, cast.length), waiting = this.pending > 0;
+      body.innerHTML = c || w
+        ? `${c ? `<div class="xr-grid">${c}</div>` : ''}${w ? `<h5>Behind the camera</h5><div class="xr-grid">${w}</div>` : ''}${waiting ? '<div class="status-line xr-wait"><span class="spin"></span>Finding more faces…</div>' : ''}<p class="xr-credit">Photos and bios from Wikipedia</p>`
+        : waiting ? '<div class="status-line"><span class="spin"></span>Finding cast photos…</div>'
+        : cast.length ? `<p class="xr-names">${esc(cast.slice(0, 8).map((p) => p.name).join(' · '))}</p>`
         : '<p class="xr-sub">This title lists no cast. Your metadata addon did not include one.</p>';
       $$('[data-person]', body).forEach((b) => b.addEventListener('click', () => this.person([...cast, ...crew][Number(b.dataset.person)])));
     } else if (this.tab === 'about') {
@@ -6012,7 +6125,7 @@ const XRay = {
     } catch (e) { /* facts from metadata stay */ }
   },
   async person(p) {
-    const body = $('#xrBody'); if (!body || !p) return;
+    const body = $('#xrBody'); if (!body || !p) return; this.inPerson = true;
     body.innerHTML = `<button type="button" class="xr-back" id="xrBack"><i data-lucide="chevron-left"></i>All cast</button>
       <div class="xr-bio"><span class="xr-ph lg" data-ini="${esc(p.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join(''))}">${p.photo ? `<img src="${esc(p.photo)}" alt="">` : ''}</span><div><h4>${esc(p.name)}</h4>${p.character ? `<p class="xr-as">as ${esc(p.character)}</p>` : p.role !== 'cast' ? `<p class="xr-as">${esc(p.role)}</p>` : ''}<p class="xr-desc" id="xrDesc"></p></div></div>
       <p class="xr-extract" id="xrExtract"><span class="spin"></span></p>
@@ -6832,8 +6945,8 @@ const Vault = {
   },
   relayHelp() {
     return /pages\.dev$/.test(location.hostname)
-      ? 'TorBox and the other debrid services refuse direct calls from a web page, so MKCinema passes them through a small relay, and no relay is switched on for this site yet. The site owner can turn one on (see the README, "Debrid relay").'
-      : 'TorBox and the other debrid services refuse direct calls from a web page, so MKCinema needs its relay: open the app from your MKCinema server, or start mkcinema-server.js and set it as the proxy URL.';
+      ? 'Debrid services refuse direct calls from a web page, so MKCinema passes them through a small relay, and no relay is switched on for this site yet. The site owner can turn one on (see the README, "Debrid relay").'
+      : 'Debrid services refuse direct calls from a web page, so MKCinema needs its relay: open the app from your MKCinema server, or start mkcinema-server.js and set it as the proxy URL.';
   },
   form(obj) { const f = new URLSearchParams(); Object.entries(obj).forEach(([k, v]) => f.append(k, v)); return f; },
   pickFile(files, s, ctx) {
@@ -6872,6 +6985,7 @@ const Vault = {
       if (!t || !(t.download_present || t.download_finished)) throw new Error('TorBox does not have it cached yet. It keeps downloading in your account.');
       const f = this.pickFile(t.files.map((x) => ({ ...x, name: x.name || x.short_name })), s, ctx);
       const dl = await this.call(`${base}/requestdl?token=${encodeURIComponent(key)}&torrent_id=${id}&file_id=${f.id}&redirect=false`, { headers: H });
+      s._tb = { id, fileId: f.id };
       return dl.data;
     }
     if (k === 'ad') {
@@ -6936,13 +7050,20 @@ const Vault = {
     if (k) {
       const inst = Vault.cached.get(String(s.infoHash).toLowerCase());
       t.debrid = k; t.instant = !!inst; t.webReady = true; t.source = `Debrid · ${DEBRID[k].label}`;
-      // undo the "browsers cannot play torrents" penalty and prefer what is already cached
-      t.score += 2000 + 60 + (inst ? 120 : inst === false ? -150 : 0);
+      if (inst != null) t.cached = !!inst;
+      // undo the "browsers cannot play torrents" penalty; what is already cached goes first
+      t.score += 2000 + 60;
+    } else if (s.url) {
+      // debrid addons tag each result: Torrentio "[TB+]" cached, "[TB download]" not yet; Comet and others use ⚡ and ⬇️ or ⏳
+      const n = String(s.name || ''), tag = /\[(RD|TB|AD|PM|DL|OC|ED|PD|PR|EN|DLS)\b[^\]]*\]/i.exec(n);
+      if (tag) t.cached = !/download|⬇|⏳/i.test(tag[0]) && (/\+|⚡/.test(tag[0]) || /⚡/.test(n)) ? true : /download|⬇|⏳/i.test(tag[0]) ? false : undefined;
     }
+    // an uncached file plays as the addon's "being downloaded to debrid" notice, so it goes to the bottom
+    if (t.cached === true) t.score += 500; else if (t.cached === false) t.score -= 1600;
     if (s._debrid) t.source = `Debrid · ${DEBRID[s._debrid].label}`;
     return t;
   };
-  Telemetry.badges = (s, tel, a, c) => `${tel.debrid || s._debrid ? `<span class="tb deb">Debrid${tel.instant || s._debrid ? ' · Instant' : ''}</span>` : ''}${badges(s, tel, a, c)}`;
+  Telemetry.badges = (s, tel, a, c) => `${tel.debrid || s._debrid ? `<span class="tb deb">Debrid${tel.instant || s._debrid ? ' · Instant' : ''}</span>` : tel.cached === true ? '<span class="tb deb">Cached</span>' : ''}${tel.cached === false ? '<span class="tb unc">Not cached</span>' : ''}${badges(s, tel, a, c)}`;
   const fetchStreams = engine.fetchStreams.bind(engine);
   engine.fetchStreams = async function (type, id, onPartial) {
     const r = await fetchStreams(type, id, onPartial);
@@ -6951,6 +7072,7 @@ const Vault = {
   };
   const play = playStream;
   playStream = async function (ctx, stream, opts) {
+    if (stream && stream._tel && stream._tel.cached === false) toast('This source is not cached on your debrid service yet, so it may show a "downloading" notice. Cached sources at the top of the list play right away.', 'info', 6500);
     if (stream && stream.infoHash && !stream.url && stream._tel && stream._tel.debrid) {
       const k = stream._tel.debrid;
       if ($('#player').hidden) openLayer('player');
@@ -7213,8 +7335,8 @@ const Layout = {
     // wait for the intro, the walkthrough and any open panel to be gone
     if (document.body.classList.contains('intro-on') || document.body.classList.contains('locked') || !Store.get('toured', false) || $('.sup-ask')) { setTimeout(() => this.ask(), 2000); return; }
     Store.set('askedFocus', true);
-    const t = document.createElement('div'); t.className = 'focus-ask glass-solid'; t.setAttribute('role', 'dialog');
-    t.innerHTML = `<b>What do you watch most?</b><small>Home puts it first. Change it any time in Settings › Home.</small><div class="inrow">${[['movies-first', 'Movies'], ['series-first', 'Series'], ['both', 'Both']].map(([v, l]) => `<button class="btn ${v === 'both' ? 'btn-ghost' : 'btn-prime'} btn-sm" type="button" data-focus="${v}">${l}</button>`).join('')}</div>`;
+    const t = document.createElement('div'); t.className = 'focus-ask glass-solid'; t.setAttribute('role', 'dialog'); t.setAttribute('aria-label', 'Home layout');
+    t.innerHTML = `<b>What do you watch most?</b><small>Home puts it first. Change it any time in Settings › Home.</small><div class="inrow">${[['movies-first', 'Movies'], ['series-first', 'Series'], ['both', 'Both']].map(([v, l]) => `<button class="btn btn-ghost btn-sm" type="button" data-focus="${v}">${l}</button>`).join('')}</div>`;
     document.body.appendChild(t);
     $$('[data-focus]', t).forEach((b) => b.addEventListener('click', () => { this.set({ focus: b.dataset.focus }); t.remove(); toast('Home layout saved', 'ok'); }));
     setTimeout(() => { if (t.isConnected) t.remove(); }, 30000);
@@ -7243,7 +7365,7 @@ const Support = {
     setTimeout(() => {
       if (!$('#player').hidden || document.body.classList.contains('layer-open') || $('.focus-ask')) return;
       st.at = Date.now(); Store.set('support', st);
-      const t = document.createElement('div'); t.className = 'sup-ask glass-solid'; t.setAttribute('role', 'dialog');
+      const t = document.createElement('div'); t.className = 'sup-ask glass-solid'; t.setAttribute('role', 'dialog'); t.setAttribute('aria-label', 'Support MKCinema');
       t.innerHTML = `<button class="ibtn sup-x" type="button" aria-label="Close"><i data-lucide="x"></i></button><b><i data-lucide="heart"></i>Enjoying MKCinema?</b><small>It is made by ${esc(DONATE.name)} and runs on donations. Thank you for keeping it alive.</small><div class="inrow">${ppBadge(true)}<button class="btn btn-ghost btn-sm" type="button" data-sup="later">Maybe later</button><button class="linkish" type="button" data-sup="never">Don’t ask again</button></div>`;
       document.body.appendChild(t); icons();
       const close = () => t.remove();
@@ -7350,7 +7472,7 @@ const SECTIONS = [
     { key: 'rpdbKey', label: 'RPDB key (optional)', help: 'From ratingposterdb.com. Stays on this device.', type: 'secret', placeholder: 't0-free-rpdb', get: () => Keys.get().rpdb || '', set: (v) => { Keys.set('rpdb', v); rerender(); } },
     { key: 'omdbKey', label: 'Critic scores (OMDb key)', help: 'Adds Rotten Tomatoes and Metacritic scores to title pages. Get a free key at omdbapi.com. Stays on this device.', type: 'secret', get: () => Keys.get().omdb || '', set: (v) => Keys.set('omdb', v) },
     { key: 'cardInfo', label: 'Poster text', help: 'Posters already carry their own titles. "On hover" keeps them clean until you point at one. Phones and tablets cannot hover, so they show the title below.', type: 'seg', options: [['hover', 'On hover'], ['below', 'Below'], ['full', 'On poster']] },
-    { key: 'wall', label: 'Curved IMAX wall', help: 'Bends catalog rows around you instead of flat rails. Desktop only, and heavier while scrolling.', type: 'toggle', get: () => S.wall, set: (v) => setWall(v) },
+    ...(TOUCH_UI ? [] : [{ key: 'wall', label: 'Curved IMAX wall', help: 'Bends catalog rows around you instead of flat rails. Desktop only, and heavier while scrolling.', type: 'toggle', get: () => S.wall, set: (v) => setWall(v) }]),
     { group: 'Layout' },
     { key: 'uiScale', label: 'Interface size', help: 'Raise it for TVs and couch distance.', type: 'range', min: 80, max: 140, step: 5, fmt: pct },
     { key: 'reduceMotion', label: 'Reduce motion', help: 'Turns off animations and the intro.', type: 'toggle' },
@@ -7366,6 +7488,7 @@ const SECTIONS = [
     { key: 'preferFormat', label: 'Preferred format', type: 'select', options: [['any', 'No preference'], ['hls', 'HLS (adaptive)'], ['mp4', 'Direct file (MP4)']] },
     { key: 'resume', label: 'Resume where you left off', type: 'toggle' },
     { key: 'browserOnly', label: 'Browser only mode', help: 'For devices where you cannot install VLC or another player. Lists only sources this browser can play with working picture and sound (H.264 or a codec this device supports, AAC/Opus sound), and torrents only through your debrid service. Fewer sources, but the ones you see play right here.', type: 'toggle' },
+    { key: 'audioOnly', label: 'Audio language', help: 'Hides sources dubbed only in other languages, so Smart Play and auto-switch never pick them. Releases that name no language, or MULTi and Dual Audio releases, stay listed.', type: 'select', options: [['eng', 'English'], ['spa', 'Spanish'], ['fre', 'French'], ['ger', 'German'], ['ita', 'Italian'], ['por', 'Portuguese'], ['hin', 'Hindi'], ['any', 'Any language']] },
     { key: 'failover', label: 'Switch sources automatically', help: 'If a source has not started after 3.5 s, errors, or stalls for 12 s, the next best one takes over at the same spot.', type: 'toggle' },
     { key: 'dsp', label: 'Night Mode audio', help: 'Processes the sound in your browser. Works on every HLS stream and local file, and on other sources when the host allows it or mkcinema-server.js relays it.', type: 'select', options: DSP_ORDER.map((k) => [k, DSP_PRESETS[k].label]), set: (v) => DSP.pick(v) },
     { key: 'skipIntro', label: 'Skip Intro button', help: 'Shows for 8 s when an intro is known: from chapters in the file, AniSkip for anime, or your own skips on earlier episodes. Enter or gamepad A presses it.', type: 'toggle' },
@@ -7571,7 +7694,7 @@ applyAll();
    MKCinema · Get started guide and the settings layout
    ===================================================================== */
 
-/* ---------------- Get started: VLC, a debrid key (TorBox as the easy pick), sources, an account ---------------- */
+/* ---------------- Get started: VLC, a key for whichever debrid service the user has, sources, an account ---------------- */
 const Guide = {
   steps() {
     const vlcPicked = /vlc|m3u/.test(extPlayerId()) || !!Store.get('guideVlc', false);
@@ -7579,7 +7702,7 @@ const Guide = {
   },
   vlcId() { return PLATFORM === 'android' ? 'vlc-android' : PLATFORM === 'ios' ? 'vlc-ios' : 'm3u'; },
   html() {
-    const st = this.steps(), done = Object.values(st).filter(Boolean).length, tb = Vault.cfg().tb || '';
+    const st = this.steps(), done = Object.values(st).filter(Boolean).length, svc = this.svc(), key = Vault.cfg()[svc] || '';
     const step = (n, key, title, body) => `<section class="gs-step${st[key] ? ' done' : ''}"><span class="gs-n">${st[key] ? '<i data-lucide="check"></i>' : n}</span><div class="gs-c"><h4>${title}</h4>${body}</div></section>`;
     return `<div class="gs">
       <div class="gs-prog" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="${done}"><i style="transform:scaleX(${done / 4})"></i></div>
@@ -7588,29 +7711,38 @@ const Guide = {
         <div class="inrow">${vlcButtons({ all: true })}</div>
         <div class="inrow"><button class="btn btn-ghost btn-sm" type="button" id="gsVlcUse"><i data-lucide="external-link"></i>${/vlc|m3u/.test(extPlayerId()) ? 'Streams open in VLC' : 'Always open streams in VLC'}</button></div>
         <small class="gs-note">Prefer playing inside MKCinema? Leave this off. The source list marks files that need VLC with <span class="tb vlc">VLC recommended</span>.</small>`)}
-      ${step(2, 'debrid', 'Connect a debrid account <span class="tag-s g">TorBox recommended</span>', `<p>A debrid service turns the torrent links your addons find into fast, direct streams that start instantly. TorBox is the easiest to set up:</p>
+      ${step(2, 'debrid', 'Connect a debrid account', `<p>A debrid service turns the torrent links your addons find into fast, direct streams that start instantly. MKCinema works with all the major ones, so use whichever you prefer:</p>
         <ol class="gs-list">
-          <li>Make an account at <a href="https://torbox.app" target="_blank" rel="noopener">torbox.app</a> and choose a plan.</li>
-          <li>Open <a href="https://torbox.app/settings" target="_blank" rel="noopener">torbox.app/settings</a> and find <b>API Key</b>. Tap copy.</li>
-          <li>Paste it here and press Test.</li>
+          <li>Pick your service below.</li>
+          <li>Copy your API key from <a href="https://${esc(DEBRID[svc].help.split(' ')[0])}" target="_blank" rel="noopener" id="gsKeyLink">${esc(DEBRID[svc].help)}</a>.</li>
+          <li>Paste it here and press Save and test.</li>
         </ol>
-        <div class="inrow"><input class="inp mono" type="password" id="gsTb" value="${esc(tb)}" placeholder="Paste your TorBox API key" autocomplete="off" spellcheck="false" aria-label="TorBox API key"><button class="btn btn-prime btn-sm" type="button" id="gsTbGo"><i data-lucide="plug-zap"></i>Save and test</button></div>
-        <small class="gs-note" id="gsTbSt">${tb ? 'Key saved.' : ''} Real-Debrid, AllDebrid and Premiumize work too, under Settings › Debrid. Your key ${Account.user && CFG.syncKeys !== false ? 'syncs to your account, readable only by you' : 'stays on this device'}.</small>`)}
+        <div class="inrow"><select class="inp" id="gsSvc" aria-label="Debrid service">${['ad', 'pm', 'rd', 'tb'].map((k) => `<option value="${k}"${k === svc ? ' selected' : ''}>${esc(DEBRID[k].label)}</option>`).join('')}</select></div>
+        <div class="inrow"><input class="inp mono" type="password" id="gsTb" value="${esc(key)}" placeholder="Paste your ${esc(DEBRID[svc].label)} API key" autocomplete="off" spellcheck="false" aria-label="Debrid API key"><button class="btn btn-prime btn-sm" type="button" id="gsTbGo"><i data-lucide="plug-zap"></i>Save and test</button></div>
+        <small class="gs-note" id="gsTbSt">${key ? 'Key saved.' : ''} You can add more services later under Settings › Debrid. Your key ${Account.user && CFG.syncKeys !== false ? 'syncs to your account, readable only by you' : 'stays on this device'}.</small>`)}
       ${step(3, 'addons', 'Add your sources', `<p>MKCinema ships no movies of its own. Stream addons you choose and trust supply the sources, just like Stremio. Install them from the addon manager by pasting their manifest link.</p>
         <div class="inrow"><button class="btn btn-ghost btn-sm" type="button" id="gsAddons"><i data-lucide="puzzle"></i>Open the addon manager</button><button class="btn btn-ghost btn-sm" type="button" id="gsImport"><i data-lucide="download"></i>Import from Stremio</button></div>`)}
       ${step(4, 'account', 'Sign in everywhere', `<p>One account carries your library, progress, addons and keys to every phone, laptop and TV you sign in on.</p>
         <div class="inrow"><button class="btn btn-ghost btn-sm" type="button" id="gsAcct"><i data-lucide="circle-user-round"></i>${Account.user ? 'Signed in' : 'Sign in or create an account'}</button></div>`)}
     </div>`;
   },
+  // the service shown in the debrid step: the one already saved, else the last one picked here, else the first in the list
+  svc() { return Vault.service() || Store.get('guideSvc', '') || 'ad'; },
   bind() {
     const on = (id, fn) => { const el = $(id); if (el) el.onclick = fn; };
+    const sel = $('#gsSvc');
+    if (sel) sel.onchange = () => {
+      const k = sel.value, d = DEBRID[k], inp = $('#gsTb'), a = $('#gsKeyLink');
+      Store.set('guideSvc', k); inp.value = Vault.cfg()[k] || ''; inp.placeholder = `Paste your ${d.label} API key`;
+      if (a) { a.textContent = d.help; a.href = `https://${d.help.split(' ')[0]}`; }
+    };
     $$('.gs a[href*="videolan"], .gs a[href*="play.google"], .gs a[href*="apps.apple"]').forEach((a) => a.addEventListener('click', () => Store.set('guideVlc', true)));
     on('#gsVlcUse', () => { CFG.extPlayers = { ...(CFG.extPlayers || {}), [PLATFORM]: /vlc|m3u/.test(extPlayerId()) ? 'builtin' : this.vlcId() }; saveCfg(); Account.schedule(); toast(/vlc|m3u/.test(extPlayerId()) ? 'Streams now open in VLC. Change it in Settings › Playback.' : 'Streams play inside MKCinema again', 'ok'); renderSettingsBody(); });
     on('#gsTbGo', async () => {
-      const v = $('#gsTb').value.trim(), st = $('#gsTbSt');
-      if (!v) { toast('Paste your TorBox API key first', 'err'); return; }
-      Vault.save('tb', v); st.textContent = 'Checking the key with TorBox…';
-      try { st.textContent = `✓ ${await Vault.test('tb')}`; toast('TorBox connected', 'ok'); setTimeout(() => renderSettingsBody(), 1400); }
+      const k = $('#gsSvc') ? $('#gsSvc').value : this.svc(), d = DEBRID[k], v = $('#gsTb').value.trim(), st = $('#gsTbSt');
+      if (!v) { toast(`Paste your ${d.label} API key first`, 'err'); return; }
+      Vault.save(k, v); st.textContent = `Checking the key with ${d.label}…`;
+      try { st.textContent = `✓ ${await Vault.test(k)}`; toast(`${d.label} connected`, 'ok'); setTimeout(() => renderSettingsBody(), 1400); }
       catch (e) { st.textContent = `✗ ${e.message}. Check that you copied the whole key.`; }
     });
     on('#gsAddons', () => { closeLayer('settings'); $('#openAddons').click(); });
@@ -7638,9 +7770,9 @@ const SET_GROUPS = [
   ['More', ['sound', 'keys', 'data', 'support']],
 ];
 const SET_BLURB = {
-  start: 'VLC, TorBox and your first sources', account: 'Sign in and sync', picks: 'Recommendations made on this device', home: 'Start page and rows',
+  start: 'VLC, debrid and your first sources', account: 'Sign in and sync', picks: 'Recommendations made on this device', home: 'Start page and rows',
   appearance: 'Contrast, posters, ratings', performance: 'Effects and smoothness', playback: 'Player, VLC, skip intro, audio', subtitles: 'Size, colour, language',
-  streams: 'Addons and how sources load', debrid: 'TorBox, Real-Debrid, AllDebrid, Premiumize', sync: 'Scrobble and watchlists', devices: 'Phone remote, watch party, install',
+  streams: 'Addons and how sources load', debrid: 'AllDebrid, Premiumize, Real-Debrid, TorBox', sync: 'Scrobble and watchlists', devices: 'Phone remote, watch party, install',
   sound: 'Intro and soundtrack', keys: 'Keyboard and gamepad', data: 'Setup Cloner, backup, restore', support: 'Keep MKCinema going',
 };
 const SET_PHONE = matchMedia('(max-width: 760px)');
@@ -7741,5 +7873,161 @@ CFG_HOOKS.push((k) => { if (k === 'contrast' && !CFG.contrastChosen) { CFG.contr
 boot();
 Account.init();
 </script>
+<script>
+'use strict';
+/* =====================================================================
+   MKCinema · audio language
+   Chrome, Edge and Android WebView cannot switch the audio tracks inside an MKV or MP4 (only Safari/WebKit exposes
+   video.audioTracks). So MKCinema switches them the way Stremio's streaming server does, outside the browser:
+   - TorBox files: TorBox's own stream (HLS) is made with the chosen audio track (stream/createstream, chosen_audio_index).
+   - Any other file: mkcinema-server.js remuxes it with ffmpeg and maps the chosen track (/remux?audio=N).
+   Otherwise the menu says so and offers VLC.
+   ===================================================================== */
+const AudioLang = {
+  info: new WeakMap(),
+  TB: 'https://api.torbox.app/v1/api',
+  // first value in a nested API reply that passes test (TorBox's stream reply is not documented in detail)
+  dig(o, test, d = 0) {
+    if (!o || typeof o !== 'object' || d > 6) return null;
+    for (const [k, v] of Object.entries(o)) { const r = test(k, v); if (r) return r; }
+    for (const v of Object.values(o)) { const r = this.dig(v, test, d + 1); if (r) return r; }
+    return null;
+  },
+  label(t, n) {
+    if (typeof t === 'string') t = { language: t };
+    const tg = t.tags || {}, lang = t.language || t.lang || t.language_code || tg.language, title = t.title || t.name || t.label || tg.title;
+    const ch = Number(t.channels || t.channel_count), chs = ch === 6 ? '5.1' : ch === 8 ? '7.1' : ch === 2 ? 'Stereo' : ch === 1 ? 'Mono' : '';
+    const ln = lang && lang !== 'und' ? langName(lang) : '';
+    const parts = [ln || title || `Track ${n + 1}`, title && title !== ln && !new RegExp(`^${String(ln).replace(/\W/g, '.')}$`, 'i').test(title) ? title : '', chs, String(t.codec || t.codec_name || '').toUpperCase()];
+    return parts.filter(Boolean).filter((p, i, a) => a.indexOf(p) === i).join(' · ');
+  },
+  tracks(list) { return (Array.isArray(list) ? list : []).map((t, n) => ({ i: n, label: this.label(t || {}, n), def: !!(t && typeof t === 'object' && (t.default || (t.disposition || {}).default)) })); },
+  defIndex(tracks) { const d = tracks.find((t) => t.def); return d ? d.i : 0; },
+  // a lookup that hangs must not leave the menu saying "Checking" forever
+  within(ms, p) { return Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error('no answer in time')), ms))]); },
+  // which TorBox torrent and file this stream is, from MKCinema's own resolve or a Torrentio-style /resolve/torbox/ link
+  async tbRef(s) {
+    const own = Vault.cfg().tb;
+    if (s._tb && own) return { key: own, ...s._tb };
+    const url = s._audioBase || s.url || '', m = url.match(/\/resolve\/torbox\/([^/]+)\/([a-f0-9]{40})(?:\/([^/?#]*))?(?:\/([^/?#]+))?/i);
+    if (!m) return null;
+    const key = decodeURIComponent(m[1]), hash = m[2].toLowerCase(), H = { Authorization: `Bearer ${key}` };
+    const l = await Vault.call(`${this.TB}/torrents/mylist?bypass_cache=true`, { headers: H });
+    const t = (Array.isArray(l.data) ? l.data : [l.data]).find((x) => x && String(x.hash || '').toLowerCase() === hash);
+    if (!t || !(t.files || []).length) throw new Error('this film is not in your TorBox list yet');
+    const name = m[4] ? decodeURIComponent(m[4]) : '', files = t.files.map((x) => ({ ...x, name: x.name || x.short_name }));
+    const f = (name && files.find((x) => String(x.name).split('/').pop() === name || x.short_name === name)) || Vault.pickFile(files, s, P.ctx);
+    return f ? { key, id: t.id, fileId: f.id } : null;
+  },
+  tbErr(e) {
+    const m = String(e && e.message || e);
+    if (/PLAN_RESTRICTED|plan/i.test(m)) return 'your TorBox plan does not include web streaming';
+    if (/BAD_TOKEN|auth/i.test(m)) return 'TorBox did not accept the key';
+    return m;
+  },
+  // TorBox web streaming: createstream gives a presigned token, getstreamdata gives the HLS playlist and the file's tracks
+  async tbStream(ref, idx) {
+    const H = { headers: { Authorization: `Bearer ${ref.key}` } }, m3u8 = (j) => this.dig(j, (k, v) => typeof v === 'string' && (/\.m3u8(\?|$)/i.test(v) || /hls/i.test(k) && /^https?:/i.test(v)) && v);
+    if (!ref.pt) {
+      const c = await Vault.call(`${this.TB}/stream/createstream?id=${ref.id}&file_id=${ref.fileId}&type=torrent&chosen_audio_index=${idx}`, H);
+      ref.pt = this.dig(c, (k, v) => /presigned/i.test(k) && typeof v === 'string' && v) || null;
+      if (!ref.pt) { const hls = m3u8(c); if (hls) return { hls: new URL(hls, 'https://api.torbox.app').href, tracks: this.tracks(this.dig(c, (k, v) => /audio/i.test(k) && Array.isArray(v) && v.length && v)) }; throw new Error(c.detail || c.error || 'TorBox did not start a stream'); }
+    }
+    const j = await Vault.call(`${this.TB}/stream/getstreamdata?presigned_token=${encodeURIComponent(ref.pt)}&token=${encodeURIComponent(ref.key)}&chosen_audio_index=${idx}`, H);
+    const hls = m3u8(j), list = this.dig(j, (k, v) => /audio/i.test(k) && Array.isArray(v) && v.length && v);
+    return { hls: hls ? new URL(hls, 'https://api.torbox.app').href : null, tracks: this.tracks(list) };
+  },
+  async probe(s) {
+    const st = { state: 'loading' }; this.info.set(s, st);
+    try {
+      if (P.remux && P.remux.tracks) Object.assign(st, { via: 'srv', tracks: this.tracks(P.remux.tracks) });
+      if (!st.tracks || st.tracks.length < 2) {
+        const tb = s._debrid === 'tb' || s._tb || /torbox/i.test(s._audioBase || s.url || '');
+        if (tb) {
+          try {
+            const ref = await this.within(25000, this.tbRef(s));
+            if (ref) {
+              const r = await this.within(30000, this.tbStream(ref, 0));
+              if (r.tracks.length) Object.assign(st, { via: 'tb', ref, tracks: r.tracks, hls: r.hls });
+              else if (r.hls) Object.assign(st, { via: 'tb', ref, tracks: [], hls: r.hls, hlsOnly: true });
+            }
+          } catch (e) { st.err = `TorBox: ${this.tbErr(e)}`; }
+        }
+      }
+      if ((!st.tracks || st.tracks.length < 2) && !st.hlsOnly && !s._local && await Rescue.caps()) {
+        const bh = s.behaviorHints || {}, h = bh.proxyHeaders && bh.proxyHeaders.request;
+        const r = await this.within(30000, fetch(`${String(S.proxy).replace(/\/+$/, '')}/remux/probe?url=${encodeURIComponent(s._audioBase || s.url)}${h ? `&headers=${encodeURIComponent(b64json(h))}` : ''}`));
+        const j = await r.json(); if (r.ok && (j.tracks || []).length) { Object.assign(st, { via: 'srv', tracks: this.tracks(j.tracks) }); delete st.err; }
+      }
+    } catch (e) { st.err = st.err || e.message; }
+    st.state = st.tracks && st.tracks.length > 1 || st.hlsOnly ? 'ok' : 'none';
+    if (st.state === 'ok' && st.cur == null) st.cur = s._audio != null ? s._audio : st.via === 'srv' && P.remux ? P.remux.audio || 0 : st.hlsOnly ? -1 : this.defIndex(st.tracks);
+    if (P.stream === s && !$('#optMenu').hidden) renderOptMenu();
+    return st;
+  },
+  section(s) {
+    const st = this.info.get(s), head = '<h5>Audio language</h5>';
+    if (!st) this.probe(s);
+    if (!st || st.state === 'loading') return `${head}<p class="al-note"><span class="spin"></span>Checking the languages in this file…</p>`;
+    if (st.state === 'ok' && st.hlsOnly) return `${head}<button type="button" class="${s._audioTry ? 'on' : ''}" data-alang="-1"><i data-lucide="languages"></i>${s._audioTry ? 'All languages loaded · pick one above' : 'Load every language (TorBox stream)'}</button>`;
+    if (st.state === 'ok') return `${head}${st.tracks.map((t) => `<button type="button" class="${st.cur === t.i ? 'on' : ''}" data-alang="${t.i}"><i data-lucide="audio-lines"></i>${esc(t.label)}</button>`).join('')}`;
+    // the section stays put with the reason, so it never flickers away
+    const one = st.tracks && st.tracks.length === 1;
+    return `${head}<p class="al-note">${one ? `This file has one audio language: ${esc(st.tracks[0].label)}.` : st.err ? `Couldn’t read the languages: ${esc(st.err)}.` : 'This browser can’t switch languages inside this file by itself. Use a TorBox source, run your MKCinema server, or open it in VLC.'}</p>${one ? '' : '<button type="button" data-alretry><i data-lucide="rotate-cw"></i>Try again</button>'}`;
+  },
+  async pick(i) {
+    const s = P.stream, st = s && this.info.get(s); if (!st || st.state !== 'ok' || st.cur === i && !(i === -1 && !s._audioTry)) return;
+    const t = st.tracks.find((x) => x.i === i), at = pNow(); st.cur = i; s._audio = i;
+    toast(i === -1 ? 'Loading TorBox’s stream with every language…' : `Audio: ${t ? t.label : `track ${i + 1}`}…`, 'info', 2600);
+    if (st.via === 'srv') {
+      if (P.remux) { P.remux.audio = i; Rescue.load(s, at); } else { Rescue.wantAudio = i; Rescue.start(s, at); }
+      return;
+    }
+    // TorBox: the original file plays its default track; any other track plays as TorBox's HLS stream
+    if (s._audioBase == null) s._audioBase = s.url;
+    if (i !== -1 && i === this.defIndex(st.tracks)) { s.url = s._audioBase; delete s._audioTry; }
+    else {
+      try { const r = i === -1 ? { hls: st.hls } : await this.within(30000, this.tbStream(st.ref, i)); if (!r.hls) throw new Error('TorBox did not return a stream'); s.url = r.hls; s._audioTry = Date.now(); }
+      catch (e) { toast(`TorBox: ${this.tbErr(e)}`, 'err', 6000); st.cur = st.hlsOnly ? -1 : this.defIndex(st.tracks); s._audio = null; return; }
+    }
+    if (P.stream !== s) return;
+    s._tel = Telemetry.parse(s);
+    playStream(P.ctx, s, { startAt: at });
+  },
+  cycle() {
+    const s = P.stream, st = s && this.info.get(s);
+    if (st && st.state === 'ok') { const n = st.tracks[(st.tracks.findIndex((t) => t.i === st.cur) + 1) % st.tracks.length]; this.pick(n.i); return true; }
+    if (s && !st) { this.probe(s).then((r) => { if (r.state === 'ok') this.cycle(); else toast('This stream has a single audio track'); }); return true; }
+    return false;
+  },
+};
+{
+  const base = renderOptMenu;
+  renderOptMenu = function () {
+    base(); const m = $('#optMenu'), s = P.stream;
+    if (!s || $("[data-audio]", m)) return;
+    const html = AudioLang.section(s); if (!html) return;
+    const h = $$('h5', m).find((x) => x.textContent === 'Aspect ratio');
+    if (h) h.insertAdjacentHTML('beforebegin', html); else m.insertAdjacentHTML('beforeend', html);
+    $$('[data-alang]', m).forEach((b) => b.addEventListener('click', () => { m.hidden = true; AudioLang.pick(Number(b.dataset.alang)); }));
+    const rt = $('[data-alretry]', m); if (rt) rt.onclick = () => { AudioLang.info.delete(s); renderOptMenu(); };
+    icons();
+  };
+  // a TorBox language stream that will not play goes back to the original file instead of skipping to another source
+  const failed = playbackFailed;
+  playbackFailed = function (stream, reason) {
+    if (stream && stream._audioTry && Date.now() - stream._audioTry < 30000 && stream._audioBase) {
+      const at = pNow(); stream.url = stream._audioBase; delete stream._audioTry; stream._audio = null; AudioLang.info.delete(stream); stream._tel = Telemetry.parse(stream);
+      toast('That language stream would not play here, so the original audio is back', 'err', 6000);
+      playStream(P.ctx, stream, { startAt: at }); return;
+    }
+    return failed(stream, reason);
+  };
+}
+</script>
+<style>
+#optMenu .al-note{display:flex;gap:8px;align-items:flex-start;margin:2px 0 8px;font-size:12.5px;line-height:1.45;color:var(--mute)}
+#optMenu .al-note svg{width:14px;height:14px;flex:none;margin-top:2px}
+</style>
 </body>
 </html>
