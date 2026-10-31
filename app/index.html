@@ -1172,6 +1172,13 @@ body.touch-ui .ep.spoil .th img,body.touch-ui .un-th.spoil img{filter:brightness
 .qr-wrap{width:min(260px,70vw);margin:14px auto;padding:12px;border-radius:16px;background:#fff}
 .qr-wrap svg{display:block;width:100%;height:auto}
 .qr-wrap.sm{width:180px}
+.tvl{display:grid;gap:8px;margin-top:8px;padding-top:16px;border-top:1px solid var(--line-soft)}
+.tvl h5{display:flex;align-items:center;gap:8px;margin:0;font-size:14.5px;font-weight:600;color:var(--ink)}
+.tvl h5 .lucide{width:17px;height:17px}
+.tvl .qr-wrap{margin:6px 0}
+.tvl .inrow{margin-top:2px}
+html.tv .tvl .qr-wrap{width:230px}
+body.layer-open .focus-ask{display:none}
 .cast-tabs{display:flex;flex-wrap:wrap;margin-bottom:10px}
 .rm-big{font-size:18px;letter-spacing:.14em;color:var(--ink)}
 .rm-code{text-transform:uppercase;letter-spacing:.3em;font-size:18px;text-align:center}
@@ -4913,8 +4920,8 @@ async function boot() {
   icons();
   S.booted = true;
   const views = ['movie', 'series', 'tv', 'library', 'studio', 'calendar'], first = Layout.get().start;
-  if (views.includes(start)) go(start); else if (views.includes(first) && !/^(play\?|remote=|party=)/.test(start)) go(first); else renderHome();
-  maybeTour();
+  if (views.includes(start)) go(start); else if (views.includes(first) && !/^(play\?|remote=|party=|login=)/.test(start)) go(first); else renderHome();
+  if (!/^login=/.test(start)) maybeTour();
   Deep.handle(); Governor.init(); PWA.init(); Support.maybe();
   setTimeout(() => Layout.ask(), 1500);
   if (navigator.getGamepads && Array.from(navigator.getGamepads()).some(Boolean)) Pad.start();
@@ -5163,11 +5170,13 @@ const Account = {
     return `<div class="acct-card">
       <h4><i data-lucide="log-in"></i>Sign in to MKCinema</h4>
       <p>Your watchlist, progress, addons and settings follow you to every device.</p>
+      ${typeof TvLogin !== 'undefined' && TvLogin.isTV() ? TvLogin.html() : ''}
       <label class="fld"><span>Email</span><input class="inp" id="acc-email" type="email" autocomplete="email" placeholder="you@example.com"></label>
       <label class="fld"><span>Password</span><input class="inp" id="acc-pass" type="password" autocomplete="current-password"></label>
       <div class="inrow"><button class="btn btn-prime" type="button" id="acc-in"><i data-lucide="log-in"></i>Sign in</button>${this.signupOff ? '' : `<button class="btn btn-ghost" type="button" id="acc-up">Create account</button>`}</div>
       ${web ? `<div class="inrow acct-links"><button type="button" class="linkish" id="acc-reset">Forgot password</button></div>` : ''}
       ${c.source === 'settings' ? `<p class="acct-note">Project: <span class="mono">${proj}</span> · <button type="button" class="linkish" id="acc-forget">change</button></p>` : ''}
+      ${typeof TvLogin !== 'undefined' && !TvLogin.isTV() ? TvLogin.html() : ''}
     </div>`;
   },
   bind() {
@@ -5179,6 +5188,7 @@ const Account = {
     on('#acc-in', () => this.signIn()); on('#acc-up', () => this.signUp()); on('#acc-reset', () => this.reset());
     on('#acc-out', () => this.signOut()); on('#acc-sync', () => this.pull().then(() => this.push())); on('#acc-setpass', () => this.newPassword());
     const pass = $('#acc-pass'); if (pass) pass.addEventListener('keydown', (e) => { if (e.key === 'Enter') this.signIn(); });
+    if (typeof TvLogin !== 'undefined') TvLogin.bind();
   },
 };
 /* Any change to synced data schedules an upload */
@@ -6884,12 +6894,104 @@ const Cloner = {
     return { added, removed };
   },
 };
+/* ---------------- Sign in a TV from a phone ----------------
+   The TV shows a QR code with a room code and a one-time key. The phone signs in a fresh session of its own, encrypts
+   the tokens with that key (AES-GCM) and sends them on the room; the TV decrypts them and adopts the session.
+   The key is only ever in the QR code, and the phone's own sign-in is left alone. */
+const TvLogin = {
+  code: '', key: '', bus: null, state: '', t: 0, auto: false,
+  isTV: () => document.documentElement.classList.contains('tv') || /MKCinemaTV|Android TV|GoogleTV|AFT[A-Z]|SMART-TV|SmartTV|Web0S|webOS|Tizen|BRAVIA/i.test(navigator.userAgent),
+  aes: (key) => crypto.subtle.importKey('raw', b64url.dec(key), 'AES-GCM', false, ['encrypt', 'decrypt']),
+  link() { return appLink(`login=${this.code}.${this.key}`); },
+  html() {
+    const st = this.state, head = '<h5><i data-lucide="smartphone"></i>Sign in with your phone</h5>';
+    if (!st) return `<div class="tvl" id="tvl">${head}<p>Scan a code with your phone and sign in there. Handy on a TV, where typing is slow.</p><div class="inrow"><button class="btn btn-ghost btn-sm" type="button" id="tvl-go"><i data-lucide="qr-code"></i>Show QR code</button></div></div>`;
+    if (st === 'unsupported') return `<div class="tvl" id="tvl">${head}<p>This needs MKCinema opened from its web address, such as mkcinema.pages.dev.</p></div>`;
+    if (st === 'expired' || st === 'offline') return `<div class="tvl" id="tvl">${head}<p>${st === 'expired' ? 'That code expired.' : 'Could not reach the sign-in service. Check the connection and try again.'}</p><div class="inrow"><button class="btn btn-ghost btn-sm" type="button" id="tvl-go"><i data-lucide="refresh-cw"></i>New code</button></div></div>`;
+    const line = st === 'connecting' ? 'Getting a code ready…' : st === 'phone' ? 'Phone connected. Finish signing in on your phone.' : 'Scan with your phone camera, then sign in on the phone. The code works for 10 minutes.';
+    return `<div class="tvl" id="tvl">${head}<div class="qr-wrap sm">${QR.svg(this.link())}</div><p>${line}</p></div>`;
+  },
+  paint() { const box = $('#tvl'); if (!box) return; box.outerHTML = this.html(); icons(); this.bind(); },
+  bind() {
+    const go = $('#tvl-go'); if (go) go.onclick = () => this.start();
+    // on a TV the code is the whole point, so it shows straight away
+    if (!this.state && !this.auto && this.isTV() && $('#tvl')) { this.auto = true; this.start(); }
+  },
+  async start() {
+    this.stop();
+    if (!appLink('x') || !(window.crypto && crypto.subtle)) { this.state = 'unsupported'; this.paint(); return; }
+    this.code = roomCode(); this.key = b64url.enc(crypto.getRandomValues(new Uint8Array(16)));
+    this.state = 'connecting'; this.paint();
+    const bus = this.bus = new Bus(`login-${this.code}`, (m) => this.onMsg(m));
+    const ok = await bus.connect(); if (this.bus !== bus) return;
+    this.state = ok ? 'waiting' : 'offline'; if (!ok) this.stop(true); this.paint();
+    this.t = setTimeout(() => { if (this.bus === bus) { this.stop(true); this.state = 'expired'; this.paint(); } }, 10 * 60000);
+  },
+  stop(keepState) { clearTimeout(this.t); if (this.bus) this.bus.close(); this.bus = null; if (!keepState) { this.code = ''; this.key = ''; this.state = ''; } },
+  async onMsg(m) {
+    if (m.t === 'hello') { if (this.state === 'waiting') { this.state = 'phone'; this.paint(); } return; }
+    if (m.t !== 'session' || !this.key) return;
+    const bus = this.bus;
+    try {
+      const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64url.dec(m.iv) }, await this.aes(this.key), b64url.dec(m.data));
+      const tok = JSON.parse(new TextDecoder().decode(plain));
+      if (!Account.client) throw new Error('accounts are not connected on this screen');
+      const { error } = await Account.client.auth.setSession({ access_token: tok.a, refresh_token: tok.r }); if (error) throw error;
+      bus.send({ t: 'done' });
+      setTimeout(() => { this.stop(); Account.render(); }, 1200);
+    } catch (e) { bus.send({ t: 'fail', msg: e.message || String(e) }); toast(`Phone sign-in: ${e.message || e}`, 'err', 7000); }
+  },
+
+  /* The phone: opened from the QR code */
+  async join(code, key) {
+    if (!/^[A-Z0-9]{6}$/.test(code) || !key) { toast('That sign-in code is not complete. Scan it again.', 'err'); return; }
+    const body = $('#castBody'); openLayer('castLayer');
+    const email = (Account.user && Account.user.email) || '';
+    body.innerHTML = `<h2>Sign in your TV</h2><p class="sub">Sign in here and your TV signs in to the same account. This phone stays as it is.</p>
+      <form id="tvlForm" autocomplete="on"><label class="fld"><span>Email</span><input class="inp" id="tvl-email" type="email" autocomplete="username" required value="${esc(email)}"></label>
+      <label class="fld"><span>Password</span><input class="inp" id="tvl-pass" type="password" autocomplete="current-password" required></label>
+      <p class="tour-note" id="tvl-msg" role="status">Connecting to your TV…</p>
+      <div class="actions"><button class="btn btn-prime" type="submit" id="tvl-send"><i data-lucide="tv"></i>Sign in TV</button></div></form>`;
+    icons(); setTimeout(() => { const f = $(email ? '#tvl-pass' : '#tvl-email'); if (f) f.focus(); }, 60);
+    const msg = (t) => { const el = $('#tvl-msg'); if (el) el.textContent = t; };
+    let answer = null;
+    const bus = new Bus(`login-${code}`, (m) => { if (m.t === 'done' || m.t === 'fail') { if (answer) answer(m); } });
+    // the form is live straight away; sending waits for the connection
+    const ready = bus.connect().then((ok) => { bus.send({ t: 'hello' }); msg(ok ? 'Connected to your TV.' : 'Could not reach your TV. Check this phone’s connection.'); return ok; });
+    $('#tvlForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = $('#tvl-send'); btn.disabled = true; msg('Signing in…');
+      try {
+        await ready;
+        const c = Account.config(); if (!c) throw new Error('accounts are not set up');
+        await Account.loadLib();
+        // a separate, throwaway client: the TV gets its own session instead of sharing this phone's
+        const tmp = window.supabase.createClient(c.url.replace(/\/+$/, ''), c.anonKey, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'mkc:tvlogin' } });
+        const { data, error } = await tmp.auth.signInWithPassword({ email: $('#tvl-email').value.trim(), password: $('#tvl-pass').value });
+        if (error) throw error;
+        $('#tvl-pass').value = '';
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const sealed = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await this.aes(key), new TextEncoder().encode(JSON.stringify({ a: data.session.access_token, r: data.session.refresh_token })));
+        const reply = new Promise((res) => { answer = res; setTimeout(() => res(null), 15000); });
+        bus.send({ t: 'session', iv: b64url.enc(iv), data: b64url.enc(new Uint8Array(sealed)) });
+        msg('Sending to your TV…');
+        const r = await reply;
+        if (!r) throw new Error('your TV did not answer. Make sure the code is still on its screen');
+        if (r.t === 'fail') throw new Error(r.msg || 'your TV could not sign in');
+        body.innerHTML = '<h2>Your TV is signed in</h2><p class="sub">You can put your phone down. Your library, progress and addons load on the TV now.</p>';
+        bus.close();
+      } catch (err) { msg(`Could not sign in: ${err.message || err}`); btn.disabled = false; }
+    });
+    setTimeout(() => bus.close(), 10 * 60000);
+  },
+};
 /* ---------------- Deep links: QR handoff, remote and party invites ---------------- */
 const Deep = {
   async handle() {
     const h = location.hash.replace(/^#/, '');
     if (h.startsWith('play?')) { history.replaceState(null, '', location.pathname); await this.play(new URLSearchParams(h.slice(5))); }
     else if (h.startsWith('remote=')) { history.replaceState(null, '', location.pathname); Remote.join(h.slice(7).toUpperCase()); }
+    else if (h.startsWith('login=')) { history.replaceState(null, '', location.pathname); const [code, key] = h.slice(6).split('.'); TvLogin.join((code || '').toUpperCase(), key); }
     else if (h.startsWith('party=')) { history.replaceState(null, '', location.pathname); openLayer('partyLayer'); Party.render(); await Party.join(h.slice(6)); }
   },
   async play(q) {
@@ -6910,7 +7012,7 @@ const Deep = {
     playStream({ meta, video: v, streams }, pick, { startAt: t });
   },
 };
-addEventListener('hashchange', () => { if (/^#(play\?|remote=|party=)/.test(location.hash)) Deep.handle(); });
+addEventListener('hashchange', () => { if (/^#(play\?|remote=|party=|login=)/.test(location.hash)) Deep.handle(); });
 
 COMMANDS.push(
   { label: 'Start or join a watch party', icon: 'users', run: () => Party.openPanel() },
@@ -7371,7 +7473,7 @@ const Layout = {
   ask() {
     if (Store.get('askedFocus', false) || Store.get('homeLayout', null)) return;
     // wait for the intro, the walkthrough and any open panel to be gone
-    if (document.body.classList.contains('intro-on') || document.body.classList.contains('locked') || !Store.get('toured', false) || $('.sup-ask')) { setTimeout(() => this.ask(), 2000); return; }
+    if (document.body.classList.contains('intro-on') || document.body.classList.contains('locked') || document.body.classList.contains('layer-open') || !Store.get('toured', false) || $('.sup-ask')) { setTimeout(() => this.ask(), 2000); return; }
     Store.set('askedFocus', true);
     const t = document.createElement('div'); t.className = 'focus-ask glass-solid'; t.setAttribute('role', 'dialog'); t.setAttribute('aria-label', 'Home layout');
     t.innerHTML = `<b>What do you watch most?</b><small>Home puts it first. Change it any time in Settings › Home.</small><div class="inrow">${[['movies-first', 'Movies'], ['series-first', 'Series'], ['both', 'Both']].map(([v, l]) => `<button class="btn btn-ghost btn-sm" type="button" data-focus="${v}">${l}</button>`).join('')}</div>`;
