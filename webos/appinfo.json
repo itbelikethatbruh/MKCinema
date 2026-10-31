@@ -1,0 +1,15 @@
+{
+  "id": "com.mkcinema.app",
+  "version": "1.1.0",
+  "vendor": "MKCinema",
+  "type": "web",
+  "main": "index.html",
+  "title": "MKCinema",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "bgColor": "#000000",
+  "iconColor": "#000000",
+  "splashBackground": "splash.png",
+  "resolution": "1920x1080",
+  "disableBackHistoryAPI": true
+}
