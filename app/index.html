@@ -1753,6 +1753,32 @@ a.xr-credit:hover{color:#fff}
 @keyframes plBreath{0%,100%{opacity:.4}50%{opacity:1}}
 @media (prefers-reduced-motion:reduce){.p-load .pl-art{animation:plBreath 2.4s ease-in-out infinite!important;transform:none}}
 body.reduce-motion .p-load .pl-art{animation:plBreath 2.4s ease-in-out infinite!important;transform:none}
+
+/* ---------- Smart TV (html.tv): read from the sofa, driven by a D-pad, smooth on a TV's GPU ---------- */
+html.tv .glass,html.tv .glass-solid,html.tv .modal,html.tv .hud-mid .ibtn{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.tv #openFile,html.tv #muteBtn,html.tv .dock .seg,html.tv #pLock,html.tv #pPip,html.tv #pVol,html.tv #pAmb,html.tv #amb,html.tv .tab[data-view="studio"]{display:none!important}
+/* rows: room for the focused poster to grow, no snapping fighting the remote */
+html.tv .rail{padding:24px 18px 32px;margin:-24px -18px -12px;scroll-padding-inline:18px;scroll-snap-type:none}
+/* posters: lift + platinum ring, animated with transform and opacity only */
+html.tv .card{outline:none!important}
+html.tv .card-inner{transition:transform .22s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 0 1px rgba(255,255,255,.07)}
+html.tv .card-inner::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:4;box-shadow:0 0 0 3px #f2f2f3,0 0 0 7px rgba(0,0,0,.7),0 26px 50px -18px #000;opacity:0;transition:opacity .16s linear}
+html.tv .card.nav-focus,html.tv .card:focus-visible{z-index:3}
+html.tv .card.nav-focus .card-inner,html.tv .card:focus-visible .card-inner{transform:scale(1.08);box-shadow:0 0 0 1px rgba(255,255,255,.07)}
+html.tv .card.nav-focus .card-inner::after,html.tv .card:focus-visible .card-inner::after{opacity:1}
+html.tv .card.nav-focus .card-sub{color:var(--ink)}
+/* everything else: a solid ring you can see across the room, and a small lift */
+html.tv .nav-focus:not(.card),html.tv :focus-visible:not(.card){outline:3px solid #f2f2f3!important;outline-offset:3px;box-shadow:0 0 0 8px rgba(0,0,0,.55)!important;animation:none!important}
+html.tv .btn,html.tv .ibtn,html.tv .tab,html.tv .chip,html.tv .row-more,html.tv #hud button{transition:transform .18s cubic-bezier(.2,.8,.2,1)}
+html.tv .btn.nav-focus{transform:scale(1.04)}
+html.tv .ibtn.nav-focus,html.tv .tab.nav-focus,html.tv .chip.nav-focus,html.tv #hud button.nav-focus{transform:scale(1.08)}
+html.tv .row-more.nav-focus{transform:translateX(4px)}
+html.tv input.nav-focus,html.tv textarea.nav-focus,html.tv select.nav-focus{outline-offset:1px}
+/* no endless decorative motion on a TV: it costs frames for nothing at sofa distance */
+html.tv .skeleton{animation:none;background:rgba(255,255,255,.06)}
+html.tv body.fx .logo3d.pop{animation:logoPop 1.15s cubic-bezier(.16,1,.3,1) calc(0s - var(--t0,0s)) both}
+html.tv .lg-sheen{display:none!important}
+html.tv body.fx .btn-ghost::after,html.tv body.fx .btn-prime::after{display:none}
 </style>
 </head>
 <body class="locked">
@@ -2292,8 +2318,11 @@ function applyPreset(name) {
 if (CFG.quality !== 'custom') CFG.quality = applyPreset(CFG.quality);
 /* Devices without hover (phones, tablets) can never reveal "on hover" poster text, so they get the title below instead */
 const NO_HOVER = matchMedia('(hover: none)');
+/* Smart TVs (the MKCinema Android TV / Fire TV app, LG webOS, TV browsers): a D-pad remote, sofa distance and a slow GPU */
+const IS_TV = document.documentElement.classList.contains('tv') || /MKCinemaTV|Android TV|GoogleTV|AFT[A-Z]|SMART-TV|SmartTV|Web0S|webOS|Tizen|BRAVIA/i.test(navigator.userAgent);
+if (IS_TV) document.documentElement.classList.add('tv');
 /* Phones and tablets: Chrome on Android can black out tiles of backdrop-filtered or 3D-layered elements while scrolling, so these get a flat, unblurred UI */
-const TOUCH_UI = matchMedia('(pointer: coarse)').matches || NO_HOVER.matches;
+const TOUCH_UI = IS_TV || matchMedia('(pointer: coarse)').matches || NO_HOVER.matches;
 const cardInfoMode = () => (CFG.cardInfo === 'hover' && NO_HOVER.matches ? 'below' : CFG.cardInfo);
 </script>
 <script>
@@ -3406,6 +3435,7 @@ function syncLayers() {
   b.toggle('locked', open); clearTimeout(layerT);
   // The page stops painting only once the panel has faded in over it
   if (open) layerT = setTimeout(() => b.toggle('layer-open', [...MENU_LAYERS, 'player'].some((x) => !$(`#${x}`).hidden)), 320); else b.remove('layer-open');
+  if (IS_TV && typeof Nav !== 'undefined') Nav.settle();
 }
 function openLayer(id) { const el = $(`#${id}`); el.classList.remove('leaving'); el.hidden = false; syncLayers(); return el; }
 /* A closed layer is hidden at once (all logic sees it as closed), but CSS keeps .leaving[hidden] on screen for a short fade */
@@ -3809,7 +3839,7 @@ document.addEventListener('fullscreenchange', () => trIcon('#trFull', document.f
 /* =====================================================================
    Player: HLS.js + native, ambilight, sources, subtitles, binge engine, handoff
    ===================================================================== */
-const P = { ctx: null, stream: null, hls: null, amb: CFG.ambilight, subs: [], subDelay: 0, idleT: 0, lastSave: 0, curSub: -1, upNextT: 0, upNextDismissed: false, filter: 'all', retried: false, raf: 0, remux: null, ducking: false };
+const P = { ctx: null, stream: null, hls: null, amb: CFG.ambilight && !IS_TV, subs: [], subDelay: 0, idleT: 0, lastSave: 0, curSub: -1, upNextT: 0, upNextDismissed: false, filter: 'all', retried: false, raf: 0, remux: null, ducking: false };
 const video = $('#video');
 /* Player clock. While the audio rescue remux runs, the video element starts at 0 from the point the server began
    converting, so its time is offset and its duration comes from the server's probe. Everything reads time through these. */
@@ -4376,7 +4406,7 @@ function renderOptMenu() {
     ${audio.length ? `<h5>Audio</h5>${audio.map((a) => `<button type="button" class="${a.on ? 'on' : ''}" data-audio="${a.i}"><i data-lucide="audio-lines"></i>${esc(a.label)}</button>`).join('')}` : ''}
     <h5>Aspect ratio</h5><div class="seg-row">${ASPECTS.map(([v, l]) => `<button type="button" class="${P.aspect === v ? 'on' : ''}" data-fit="${v}">${l}</button>`).join('')}</div>
     <h5>Zoom</h5><div class="seg-row">${[1, 1.1, 1.25, 1.5].map((z) => `<button type="button" class="${P.zoom === z ? 'on' : ''}" data-zoom="${z}">${Math.round(z * 100)}%</button>`).join('')}</div>
-    ${TOUCH_UI ? '<button type="button" data-lock><i data-lucide="lock"></i>Lock controls</button>' : ''}
+    ${TOUCH_UI && !IS_TV ? '<button type="button" data-lock><i data-lucide="lock"></i>Lock controls</button>' : ''}
     <button type="button" data-amb><i data-lucide="sun"></i>Ambilight ${P.amb ? 'on' : 'off'}</button>
     ${handoffUrl(P.stream) ? `<h5>Open in another app</h5>${playersHere().map((p) => `<button type="button" data-xp="${esc(p.id)}"><i data-lucide="${p.m3u ? 'list-video' : 'external-link'}"></i>${esc(p.m3u ? '.m3u playlist' : p.name)}</button>`).join('')}<button type="button" data-xcopy><i data-lucide="copy"></i>Copy stream link</button>` : ''}`;
   $$('[data-speed]', m).forEach((b) => b.addEventListener('click', () => { video.playbackRate = Number(b.dataset.speed); renderOptMenu(); }));
@@ -4658,16 +4688,46 @@ const Nav = {
       const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0;
     });
   },
-  focus(el) {
+  mem: new WeakMap(), auto: null, settleT: 0,
+  focus(el, fast) {
     $$('.nav-focus').forEach((x) => x.classList.remove('nav-focus'));
     el.classList.add('nav-focus'); el.focus({ preventScroll: true });
-    el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
-   
+    this.mem.set(this.root(), el); const rail = el.closest('.rail'); if (rail) rail._navLast = el;
+    if (!IS_TV) { el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' }); return; }
+    // TV: holding a direction scrolls instantly (smooth scrolls would queue up), the focused row sits mid-screen,
+    // and the billboard comes fully back into view when you return to it
+    const behavior = fast ? 'auto' : 'smooth';
+    if (el.closest('#hero') && this.root().id === 'app') { scrollTo({ top: 0, behavior }); return; }
+    if (el.closest('.dock-wrap, #hud')) return;
+    el.scrollIntoView({ block: rail ? 'center' : 'nearest', inline: 'nearest', behavior });
   },
-  move(dir) {
+  /* where the remote lands when nothing in the open panel has focus yet */
+  start(root, list) {
+    if (root.id === 'hud') return list.find((el) => el.id === 'pPlay') || list[0];
+    if (root.id === 'app') return list.find((el) => el.id === 'heroPlay') || list.find((el) => el.matches('.card')) || list.find((el) => !el.closest('.dock-wrap')) || list[0];
+    return list.find((el) => el.matches('.btn-prime')) || list.find((el) => !/close|back/i.test(`${el.getAttribute('aria-label') || ''} ${el.className}`)) || list[0];
+  },
+  restore(fast = true) {
+    const root = this.root(), list = this.items(root); if (!list.length) return false;
+    let el = this.mem.get(root); if (!el || !el.isConnected || !list.includes(el)) el = this.start(root, list);
+    this.focus(el, fast); return el;
+  },
+  /* TV: after a panel opens or closes, put the focus somewhere visible (the last item used there, or its main button) */
+  settle() {
+    if (!IS_TV) return; clearTimeout(this.settleT);
+    const run = (again) => {
+      if (!$('#player').hidden) return;
+      const root = this.root(), a = document.activeElement, inside = a && a !== document.body && root.contains(a) && !a.closest('[hidden]');
+      if (inside && !(again && a === this.auto)) return;
+      this.auto = this.restore(true) || null;
+      if (!again) this.settleT = setTimeout(() => run(true), 650);
+    };
+    this.settleT = setTimeout(() => run(false), 140);
+  },
+  move(dir, fast) {
     const root = this.root(); const list = this.items(root); if (!list.length) return;
     const cur = root.contains(document.activeElement) && document.activeElement !== document.body ? document.activeElement : null;
-    if (!cur) { this.focus(list[0]); return; }
+    if (!cur) { if (IS_TV) this.restore(fast); else this.focus(list[0]); return; }
     const a = cur.getBoundingClientRect(), ax = a.left + a.width / 2, ay = a.top + a.height / 2;
     let best = null, bestScore = Infinity;
     for (const el of list) {
@@ -4679,9 +4739,16 @@ const Nav = {
       else { main = dir === 'down' ? dy : -dy; cross = Math.abs(dx); overlap = Math.min(a.right, b.right) - Math.max(a.left, b.left) > 0; }
       if (main <= 4) continue;
       const score = main + cross * (overlap ? .6 : 2.6);
+      // TV: the dock floats over the page, so from the page it is only picked when nothing else lies that way
+      if (IS_TV && root.id === 'app' && el.closest('.dock-wrap') && !cur.closest('.dock-wrap')) { if (1e6 + score < bestScore) { bestScore = 1e6 + score; best = el; } continue; }
       if (score < bestScore) { bestScore = score; best = el; }
     }
-    if (best) this.focus(best);
+    // Moving up or down into another row returns to the poster you last had in it, if it is still on screen
+    if (best && (dir === 'up' || dir === 'down')) {
+      const rail = best.closest('.rail'), last = rail && rail !== cur.closest('.rail') && rail._navLast;
+      if (last && last.isConnected && list.includes(last)) { const r = last.getBoundingClientRect(); if (r.right > 0 && r.left < innerWidth) best = last; }
+    }
+    if (best) this.focus(best, fast);
   },
 };
 function back() {
@@ -4690,6 +4757,7 @@ function back() {
     if (PlayerPlus.back()) return;
     if (!$('#subMenu').hidden || !$('#optMenu').hidden) { $('#subMenu').hidden = true; $('#optMenu').hidden = true; return; }
     if ($('.drawer.open', $('#player'))) { closeDrawers(); return; }
+    if (IS_TV && $('#hud').contains(document.activeElement) && !$('#hud').classList.contains('idle')) { document.activeElement.blur(); $$('.nav-focus').forEach((x) => x.classList.remove('nav-focus')); $('#hud').classList.add('idle'); return; }
     closePlayer(); return;
   }
   if (!$('#trailer').hidden) { closeTrailer(); return; }
@@ -4714,8 +4782,21 @@ function handleKey(e) {
     if (open) back(); else if (/Web0S|webOS/.test(navigator.userAgent)) window.close();
     return;
   }
+  if (typing && IS_TV && !e.defaultPrevented && /^Arrow/.test(k) && e.target.tagName === 'INPUT') {
+    // A remote has no Tab key: Up/Down always leave a text box, Left/Right leave it at either end of the text
+    let edge = k === 'ArrowUp' || k === 'ArrowDown';
+    if (!edge) { try { const t = e.target, a = t.selectionStart, z = t.selectionEnd; edge = a == null || (k === 'ArrowLeft' ? a === 0 && z === 0 : a === t.value.length); } catch (x) { edge = true; } }
+    if (edge) { e.preventDefault(); Nav.move(k.slice(5).toLowerCase(), e.repeat); return; }
+  }
   if (typing) return;
   const playerOpen = !$('#player').hidden, drawer = $('#player .drawer.open') || !$('#dspPop').hidden || !$('#subMenu').hidden || !$('#optMenu').hidden || !$('#pMsg').hidden;
+  if (playerOpen && !drawer && IS_TV) {
+    // TV remote in the player: Up/Down reach the controls, Left/Right seek unless a control has focus, OK plays/pauses
+    const hud = $('#hud'), idle = hud.classList.contains('idle'), a = document.activeElement, onCtl = !idle && a && a !== document.body && hud.contains(a);
+    if (k === 'ArrowUp' || k === 'ArrowDown') { e.preventDefault(); if (idle || !onCtl) { wakeHud(); Nav.restore(true); } else { Nav.move(k === 'ArrowUp' ? 'up' : 'down', e.repeat); wakeHud(); } return; }
+    if ((k === 'ArrowLeft' || k === 'ArrowRight') && onCtl) { e.preventDefault(); Nav.move(k === 'ArrowLeft' ? 'left' : 'right', e.repeat); wakeHud(); return; }
+    if (k === 'Enter' && !onCtl && !Skip.visible()) { e.preventDefault(); if (a && a !== document.body) a.blur(); togglePlay(); wakeHud(); return; }
+  }
   if (playerOpen && !drawer) {
     const map = { ' ': togglePlay, k: togglePlay, j: () => seekBy(-step()), l: () => seekBy(step()), ArrowLeft: () => seekBy(-step()), ArrowRight: () => seekBy(step()), g: () => setSubDelay(P.subDelay - .25), h: () => setSubDelay(P.subDelay + .25), v: cycleSub, b: cycleAudio, '[': () => nudgeSpeed(-.25), ']': () => nudgeSpeed(.25), '=': () => nudgeSpeed(0), o: () => $('#pOpts').click(), ArrowUp: () => { video.volume = clamp(video.volume + .1, 0, 1); }, ArrowDown: () => { video.volume = clamp(video.volume - .1, 0, 1); }, f: toggleFull, m: () => { video.muted = !video.muted; }, n: playNext, s: () => openDrawer('src'), e: () => !$('#pEpsBtn').hidden && openDrawer('ep'), c: () => $('#pSubs').click(), a: () => DSP.toggle(), p: () => Party.openPanel(), Backspace: back };
     if (map[k] && !(k === ' ' && e.target.tagName === 'BUTTON' && e.target !== document.body)) { e.preventDefault(); map[k](); wakeHud(); return; }
@@ -4723,7 +4804,7 @@ function handleKey(e) {
     if (k === 'Enter' && document.activeElement === document.body) { togglePlay(); return; }
   }
   const dirs = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
-  if (dirs[k]) { e.preventDefault(); Nav.move(dirs[k]); return; }
+  if (dirs[k]) { e.preventDefault(); Nav.move(dirs[k], e.repeat); return; }
   if (k === 'Backspace') { e.preventDefault(); back(); }
   if (k === '/' && $('#palette').hidden) { e.preventDefault(); openPalette(); }
 }
@@ -4924,6 +5005,7 @@ async function boot() {
   if (!/^login=/.test(start)) maybeTour();
   Deep.handle(); Governor.init(); PWA.init(); Support.maybe();
   setTimeout(() => Layout.ask(), 1500);
+  if (IS_TV) { setTimeout(() => Nav.settle(), 1200); setTimeout(() => Nav.settle(), 3500); }
   if (navigator.getGamepads && Array.from(navigator.getGamepads()).some(Boolean)) Pad.start();
 }
 </script>
@@ -5400,9 +5482,13 @@ async function showAsk(q) {
 /* ---------------- Voice search (Web Speech API) ---------------- */
 const Voice = {
   Rec: window.SpeechRecognition || window.webkitSpeechRecognition,
-  get ok() { return !!this.Rec; },
-  active: null,
+  /* MKCinema for Android / TV 1.2+: the app hands speech to the system recognizer (WebViews have no Web Speech) */
+  native: () => !!(window.MKAndroid && typeof window.MKAndroid.voice === 'function'),
+  get ok() { return this.native() || !!this.Rec; },
+  active: null, pending: null,
   start(input, btn) {
+    if (!input) return;
+    if (this.native()) { this.nativeStart(input, btn); return; }
     if (this.active) { this.active.stop(); return; }
     const r = new this.Rec(); this.active = r;
     r.lang = navigator.language || 'en-US'; r.interimResults = true; r.maxAlternatives = 1;
@@ -5412,7 +5498,33 @@ const Voice = {
     r.onend = () => { btn.classList.remove('live'); input.placeholder = before; this.active = null; if (input.id === 'palInput' && looksLikeAsk(input.value)) { closePalette(); showAsk(input.value.trim()); } };
     try { r.start(); } catch (e) { btn.classList.remove('live'); this.active = null; toast('Voice search could not start here', 'err'); }
   },
+  nativeStart(input, btn) {
+    if (this.pending) { try { MKAndroid.voiceStop(); } catch (e) { /* older app */ } this.nativeDone(null, 'cancelled'); return; }
+    this.pending = { input, btn, before: input.placeholder };
+    if (btn) btn.classList.add('live'); input.placeholder = 'Listening…';
+    let ok = false; try { ok = MKAndroid.voice(navigator.language || 'en-US'); } catch (e) { ok = false; }
+    if (!ok) this.nativeDone(null, 'unavailable');
+  },
+  /* called by the Android app: partial text while you speak */
+  nativePartial(text) { const p = this.pending; if (p && text) p.input.value = text; },
+  /* called by the Android app with the final text, or an error: cancelled, nomatch, denied, unavailable, error */
+  nativeDone(text, err) {
+    const p = this.pending; this.pending = null; if (!p) return;
+    if (p.btn) p.btn.classList.remove('live'); p.input.placeholder = p.before;
+    if (text) {
+      p.input.value = text; p.input.dispatchEvent(new Event('input', { bubbles: true }));
+      if (p.input.id === 'palInput' && looksLikeAsk(text)) { closePalette(); showAsk(text.trim()); }
+      return;
+    }
+    if (err === 'unavailable') { toast('This TV doesn’t offer voice input to apps. Type with the on-screen keyboard instead; on many TVs its mic key works.', 'info', 7000); p.input.focus(); }
+    else if (err === 'denied') toast('MKCinema needs the microphone. Allow it in your TV’s Settings › Apps › MKCinema › Permissions.', 'err', 7000);
+    else if (err === 'nomatch') toast('Didn’t catch that. Try again.', 'err');
+    else if (err && err !== 'cancelled') toast('Voice search stopped. Try again.', 'err');
+  },
 };
+window.MKVoice = Voice;
+/* the remote's search / mic key (Android app 1.2+) */
+window.MKVoiceSearch = () => { if ($('#palette').hidden) openPalette(); setTimeout(() => { if (Voice.ok) Voice.start($('#palInput'), $('#palMic')); }, 120); return true; };
 function bindVoice(root) { $$('[data-voice-for]', root).forEach((b) => { b.onclick = (e) => { e.preventDefault(); Voice.start($(`#${b.dataset.voiceFor}`), b); }; }); }
 
 /* ---------------- First-visit walkthrough ---------------- */
@@ -7416,6 +7528,8 @@ $$('#calRange [data-days]').forEach((b) => b.addEventListener('click', () => { C
 const Governor = {
   done: false,
   init() {
+    // TVs: the TV layout is built to hold High, so never auto-drop. A TV the governor already dropped goes back to High once.
+    if (IS_TV) { if (!Store.get('tvHigh', false)) { Store.set('tvHigh', true); if (CFG.quality === 'low') { CFG.quality = applyPreset('high'); saveCfg(); applyAll(); } } return; }
     if (!CFG.governor) return;
     if (navigator.getBattery) navigator.getBattery().then((b) => { const chk = () => { if (!b.charging && b.level <= 0.2) this.saver('Battery is low'); }; b.addEventListener('levelchange', chk); b.addEventListener('chargingchange', chk); chk(); }).catch(() => {});
     // sample frame pacing during the first seconds of each scroll while effects are on (phones included)
@@ -7619,7 +7733,7 @@ const SECTIONS = [
   ] },
   { id: 'performance', icon: 'gauge', label: 'Performance', intro: 'High is the default: raised, shimmering buttons, posters with depth, the 3D logo while a film loads, and frosted glass on desktops. Phones get all of it except the glass. If scrolling ever stutters or the battery runs low, MKCinema drops to Low by itself. Video quality is never affected.', rows: () => [
     { html: presetsHTML },
-    { key: 'blur', label: 'Glass blur', help: `0 gives solid black panels, the fastest option.${TOUCH_UI ? ' This device always uses solid panels, because Chrome on Android can black out parts of the screen under glass.' : ''}`, type: 'range', min: 0, max: 30, step: 2, fmt: (v) => (v ? `${v}px` : 'solid') },
+    { key: 'blur', label: 'Glass blur', help: `0 gives solid black panels, the fastest option.${IS_TV ? ' TVs always use solid panels, which keeps the remote smooth at High.' : TOUCH_UI ? ' This device always uses solid panels, because Chrome on Android can black out parts of the screen under glass.' : ''}`, type: 'range', min: 0, max: 30, step: 2, fmt: (v) => (v ? `${v}px` : 'solid') },
     { key: 'showFps', label: 'Show frame rate', type: 'toggle' },
   ] },
   { id: 'playback', icon: 'play-circle', label: 'Playback', intro: 'Smart Play uses these preferences when it scores streams.', rows: () => [
