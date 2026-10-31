@@ -260,7 +260,8 @@ public class MainActivity extends Activity {
         return true;
     }
 
-    static String hostOf(String url) { try { String h = Uri.parse(url).getHost(); return h == null ? "" : h; } catch (Exception e) { return ""; } }
+    /** "https://host" of a page, so the bridge only answers MKCinema itself over HTTPS. */
+    static String hostOf(String url) { try { Uri u = Uri.parse(url); return "https".equals(u.getScheme()) && u.getHost() != null ? u.getHost() : ""; } catch (Exception e) { return ""; } }
 
     /** Voice search for the page: WebViews have no Web Speech API, so the app runs the system speech recognizer. */
     class Bridge {
