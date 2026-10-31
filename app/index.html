@@ -17,7 +17,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=25">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400..700&family=Sora:wght@400;600;700;800&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..700,0..100,0..1;1,9..144,400..700,0..100,0..1&display=block">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js"></script>
 <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js"></script>
@@ -146,6 +147,9 @@ main{padding-top:calc(var(--dock-h) + 28px + env(safe-area-inset-top,0px));paddi
 .imdb{display:inline-flex;align-items:center;gap:5px;font-weight:700;color:#111;background:#f5c518;border-radius:6px;padding:1px 7px;font-size:12px;line-height:1.5;white-space:nowrap;flex:none}
 .info .imdb{font-size:10px;padding:1px 6px;line-height:1.6}
 .hero-desc{color:#c9cfdd;margin:0 0 22px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;max-width:58ch}
+.hero-title{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hero-title[hidden]{display:none}
+@media (max-width:760px){.hero{min-height:max(clamp(380px,56vh,620px),550px)}}
 .hero-dots{position:absolute;right:24px;bottom:24px;display:flex;gap:6px}
 .hero-dots button{width:22px;height:4px;border-radius:3px;background:rgba(255,255,255,.25)}
 .hero-dots button.on{background:var(--cyan);width:36px}
@@ -647,7 +651,7 @@ input[type=color].clr{width:44px;height:34px;border:1px solid var(--line);border
 .si-opts{display:grid;gap:6px}
 .si-opts .check{height:auto;min-height:40px;width:100%}
 .si-err{margin:0;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--bad);font-size:13.5px}
-.si-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0 8px}
+.si-sum{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:16px 0 8px}
 .si-sum div{display:grid;gap:2px;padding:16px;border-radius:16px;border:1px solid var(--line);text-align:center}
 .si-sum b{font-family:var(--f-display);font-size:30px;font-weight:700}
 .si-sum span{color:var(--mute);font-size:12px}
@@ -1227,7 +1231,8 @@ body.touch-ui .ep.spoil .th img,body.touch-ui .un-th.spoil img{filter:brightness
 @media (max-width:640px){.sup{grid-template-columns:minmax(0,1fr)}.sup-qr{width:180px}}
 .dk-st{display:block;margin-top:2px;font-family:var(--f-mono);font-size:11.5px}
 /* ===================== Premium pass: brand, type, buttons, episode sheet, settings, guide ===================== */
-:root{--f-serif:"Bodoni Moda","Didot","Bodoni 72","Times New Roman",serif;--champ:#d9d4c7}
+:root{--f-serif:"Fraunces",Georgia,"Times New Roman",serif;--champ:#d9d4c7}
+#intro h1,.brand .word,.gs-n,.avatar,.tour-modal h2.tw-name,.tw-tag,.tw-pillars b,.tour-modal h2.tw-h,.tw-list em,.tw-cr b,.xr-ph::before{font-optical-sizing:none;font-variation-settings:"opsz" 72,"SOFT" 0,"WONK" 0}
 .mk-sprite{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
 /* Splash: the MK monogram in two drawn rings, set in platinum */
 #intro{background:radial-gradient(70% 55% at 50% 44%,#0d0c0b,#000 72%)}
@@ -2127,6 +2132,7 @@ body.reduce-motion .p-load .pl-art{animation:plBreath 2.4s ease-in-out infinite!
       <div class="si-opts">
         <label class="check"><input type="checkbox" id="siLib" checked>Library (saved titles)</label>
         <label class="check"><input type="checkbox" id="siProg" checked>Watch progress (Continue watching)</label>
+        <label class="check"><input type="checkbox" id="siSeen" checked>Watched history (films and episodes you finished)</label>
         <label class="check"><input type="checkbox" id="siAdd" checked>Addons, including their settings and keys</label>
       </div>
       <p class="si-err" id="siErr" role="alert" hidden></p>
@@ -3194,6 +3200,11 @@ function setHeroList(list) {
 }
 // The billboard only advances while it can be seen, so nothing repaints under an open panel or in a background tab
 function nextHero() { if (document.hidden || document.body.classList.contains('layer-open') || S.view !== 'home' || scrollY > innerHeight) { S.heroTimer = setTimeout(nextHero, 3000); return; } showHero(S.heroIdx + 1, 1); }
+/* The banner keeps the tallest height any slide has needed at this width, so swiping never makes it jump */
+function heroHold() {
+  const h = $('#hero'); if (S.heroW !== innerWidth) { S.heroW = innerWidth; S.heroH = 0; }
+  h.style.minHeight = ''; S.heroH = Math.max(S.heroH || 0, h.offsetHeight); h.style.minHeight = `${S.heroH}px`;
+}
 function showHero(i, dir = 1) {
   if (!S.hero.length) return;
   S.heroIdx = (i + S.hero.length) % S.hero.length; const m = S.hero[S.heroIdx];
@@ -3208,6 +3219,7 @@ function showHero(i, dir = 1) {
   $('#heroMeta').innerHTML = [m.imdbRating ? `<span class="imdb ${rateTier(m.imdbRating)}"><b>IMDb</b>${esc(m.imdbRating)}</span>` : '', yearOf(m) ? `<span>${esc(yearOf(m))}</span>` : '', m.runtime ? `<span>${esc(m.runtime)}</span>` : '', genresOf(m).slice(0, 3).map(esc).join(' · '), `<span class="tag-s">${esc(m.type)}</span>`].filter(Boolean).join('');
   $('#heroDesc').textContent = m.description || '';
   { const hb = $('#hero .hero-body'); hb.classList.remove('swap'); void hb.offsetWidth; hb.classList.add('swap'); }
+  heroHold();
   $('#heroEyebrow').innerHTML = `<i data-lucide="flame"></i>Featured · ${esc(m._addon || 'Catalog')}`;
   $$('#heroDots button').forEach((b, k) => b.classList.toggle('on', k === S.heroIdx));
   $('#heroList').innerHTML = inWatchlist(m.id) ? '<i data-lucide="check"></i>In watchlist' : '<i data-lucide="plus"></i>Watchlist';
@@ -5471,18 +5483,42 @@ const StremioImport = {
       throw new Error('Your browser blocked the request to Stremio. Open MKCinema through mkcinema-server.js and try again.');
     }
   },
-  async run(email, password, { library, progress, addons }) {
+  /* Stremio stores a series' watched episodes as "anchorVideoId:anchorLength:base64(zlib(bits))", one bit per episode
+     with episodes sorted by season, episode, then release date (stremio-core, stremio-watched-bitfield). */
+  async seenEpisodes(it) {
+    const parts = String((it.state || {}).watched || '').split(':'); if (parts.length < 3) return [];
+    const b64 = parts.pop(), len = Number(parts.pop()), anchor = parts.join(':');
+    const zipped = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const bits = new Uint8Array(await new Response(new Blob([zipped]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer());
+    const meta = await engine.fetchMeta('series', it._id);
+    const num = (v) => (v == null || v === '' || Number.isNaN(Number(v)) ? -Infinity : Number(v));
+    const cmp = (a, b) => (a === b ? 0 : a < b ? -1 : 1);
+    const ids = ((meta && meta.videos) || []).filter((v) => v && v.id)
+      .sort((a, b) => cmp(num(a.season), num(b.season)) || cmp(num(a.episode), num(b.episode)) || cmp(num(Date.parse(a.released)), num(Date.parse(b.released))))
+      .map((v) => v.id);
+    const at = ids.indexOf(anchor); if (at < 0 || !(len > 0)) return [];
+    const off = len - at - 1;
+    return ids.filter((id, i) => { const k = i + off; return k >= 0 && (k >> 3) < bits.length && (bits[k >> 3] >> (k % 8)) & 1; });
+  },
+  async run(email, password, { library, progress, addons, seen }) {
     const login = await this.call('login', { type: 'Login', email, password, facebook: false });
     const authKey = login && login.authKey; if (!authKey) throw new Error('Stremio did not return a session');
-    const out = { saved: 0, progress: 0, addons: 0, skippedAddons: 0 };
+    const out = { saved: 0, progress: 0, watched: 0, addons: 0, skippedAddons: 0 };
     try {
-      if (library || progress) {
+      if (library || progress || seen) {
         const items = (await this.call('datastoreGet', { authKey, collection: 'libraryItem', ids: [], all: true })) || [];
+        const seenJobs = [];
         for (const it of items) {
-          if (!it || !it._id || it.temp) continue;
+          if (!it || !it._id) continue;
           const type = it.type === 'series' ? 'series' : it.type === 'movie' ? 'movie' : null; if (!type) continue;
           const st = it.state || {};
-          if (library && !it.removed && !S.watchlist.some((m) => m.id === it._id)) {
+          if (seen) {
+            const w = watchedMap(), when = Date.parse(st.lastWatched) || Date.now();
+            const mark = (id) => { if (!w[id]) { w[id] = when; out.watched++; } };
+            if (type === 'movie' && (st.timesWatched > 0 || st.flaggedWatched > 0)) mark(it._id);
+            if (type === 'series' && st.watched) seenJobs.push(() => this.seenEpisodes(it).then((ids) => ids.forEach(mark)).catch(() => {}));
+          }
+          if (library && !it.temp && !it.removed && !S.watchlist.some((m) => m.id === it._id)) {
             S.watchlist.push({ id: it._id, type, name: it.name, poster: it.poster || metaPoster({ id: it._id }), background: null, releaseInfo: '', genres: [], imdbRating: '' }); out.saved++;
           }
           const t = (st.timeOffset || 0) / 1000, d = (st.duration || 0) / 1000;
@@ -5497,7 +5533,9 @@ const StremioImport = {
             }
           }
         }
-        Store.set('watchlist', S.watchlist); Store.set('progress', S.progress);
+        // series need their episode lists, so these run four at a time
+        await Promise.all(Array.from({ length: 4 }, async () => { while (seenJobs.length) await seenJobs.shift()(); }));
+        Store.set('watchlist', S.watchlist); Store.set('progress', S.progress); if (seen) Store.set('watched', watchedMap());
       }
       if (addons) {
         const col = await this.call('addonCollectionGet', { type: 'AddonCollectionGet', authKey, update: true });
@@ -5524,10 +5562,10 @@ $('#siForm').addEventListener('submit', async (e) => {
   if (!email || !password) return;
   btn.disabled = true; btn.innerHTML = '<i data-lucide="loader"></i>Importing…'; icons(); $('#siErr').hidden = true;
   try {
-    const r = await StremioImport.run(email, password, { library: $('#siLib').checked, progress: $('#siProg').checked, addons: $('#siAdd').checked });
+    const r = await StremioImport.run(email, password, { library: $('#siLib').checked, progress: $('#siProg').checked, seen: $('#siSeen').checked, addons: $('#siAdd').checked });
     $('#siPass').value = '';
     $('#siForm').hidden = true; $('#siDone').hidden = false;
-    $('#siSummary').innerHTML = [[r.saved, 'titles added to your library'], [r.progress, 'items in progress'], [r.addons, 'addons installed']].map(([n, l]) => `<div><b class="tnum">${n}</b><span>${l}</span></div>`).join('');
+    $('#siSummary').innerHTML = [[r.saved, 'titles added to your library'], [r.progress, 'items in progress'], [r.watched, 'films and episodes marked watched'], [r.addons, 'addons installed']].map(([n, l]) => `<div><b class="tnum">${n}</b><span>${l}</span></div>`).join('');
     $('#siNote').textContent = r.skippedAddons ? `${r.skippedAddons} addon${r.skippedAddons === 1 ? ' was' : 's were'} already installed or built into Stremio, so ${r.skippedAddons === 1 ? 'it was' : 'they were'} skipped.` : '';
     Recs.cache = null; if (S.view === 'home') renderHome(); if (S.view === 'library') renderLibrary();
   } catch (err) {
@@ -7454,7 +7492,7 @@ const EXT_HELP = {
 const SECTIONS = [
   { id: 'account', icon: 'circle-user-round', label: 'Account', intro: 'Sign in with Supabase to keep your library, progress, addons and settings in sync across devices.', bind: () => Account.bind(), rows: () => [
     { html: () => Account.panelHTML() },
-    { key: 'importStremio', label: 'Import from Stremio', help: 'Copies your Stremio library, watch progress and addons into MKCinema. Your Stremio password is used once and never saved.', type: 'button', text: 'Import from Stremio', icon: 'download', run: () => openStremioImport() },
+    { key: 'importStremio', label: 'Import from Stremio', help: 'Copies your Stremio library, watch progress, watched history and addons into MKCinema. Your Stremio password is used once and never saved.', type: 'button', text: 'Import from Stremio', icon: 'download', run: () => openStremioImport() },
     { key: 'cloudSync', label: 'Cloud sync', help: 'Uploads your watchlist, progress, addons and settings to your account a few seconds after they change.', type: 'toggle' },
   ] },
   { id: 'picks', icon: 'sparkles', label: 'Your Picks', intro: 'Recommendations made on this device from your favorites, your library and what you watch. No outside AI service sees your taste.', rows: () => [
