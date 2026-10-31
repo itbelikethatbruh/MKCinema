@@ -6956,12 +6956,13 @@ const TvLogin = {
     const msg = (t) => { const el = $('#tvl-msg'); if (el) el.textContent = t; };
     let answer = null;
     const bus = new Bus(`login-${code}`, (m) => { if (m.t === 'done' || m.t === 'fail') { if (answer) answer(m); } });
-    const ok = await bus.connect(); bus.send({ t: 'hello' });
-    msg(ok ? 'Connected to your TV.' : 'Could not reach your TV. Check this phone’s connection.');
+    // the form is live straight away; sending waits for the connection
+    const ready = bus.connect().then((ok) => { bus.send({ t: 'hello' }); msg(ok ? 'Connected to your TV.' : 'Could not reach your TV. Check this phone’s connection.'); return ok; });
     $('#tvlForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = $('#tvl-send'); btn.disabled = true; msg('Signing in…');
       try {
+        await ready;
         const c = Account.config(); if (!c) throw new Error('accounts are not set up');
         await Account.loadLib();
         // a separate, throwaway client: the TV gets its own session instead of sharing this phone's
