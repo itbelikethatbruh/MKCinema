@@ -10,8 +10,8 @@
  *      rewrites HLS playlists so every child playlist, key and segment goes through it too.
  *   3. Serves index.html (the MKCinema app) at / when it sits next to this file, plus its
  *      install files (manifest.webmanifest, sw.js, icons).
- *   4. GET /remux?url=&t=  (needs ffmpeg) audio rescue: copies the video and converts EAC3/AC3/DTS/TrueHD
- *      audio to stereo AAC in a fragmented MP4 browsers can play. /remux/probe reports duration and codecs,
+ *   4. GET /remux?url=&t=&audio=  (needs ffmpeg) audio rescue: copies the video and converts EAC3/AC3/DTS/TrueHD
+ *      audio (track `audio`, default the first) to stereo AAC in a fragmented MP4 browsers can play. /remux/probe reports duration, codecs and audio tracks,
  *      /remux/seek finds the keyframe a seek really starts on.
  *   5. /debrid?url=  a relay for debrid APIs that browsers block (only their API hosts, nothing stored).
  *
@@ -293,7 +293,9 @@ app.get('/remux/probe', async (req, res) => {
     if (code !== 0) return res.status(502).json({ error: (err.trim().split('\n').pop() || 'ffprobe failed').slice(0, 300) });
     try {
       const j = JSON.parse(out), v = (j.streams || []).find((s) => s.codec_type === 'video'), a = (j.streams || []).filter((s) => s.codec_type === 'audio');
-      res.json({ duration: Number(j.format && j.format.duration) || null, video: v ? v.codec_name : null, audio: a.map((s) => `${s.codec_name}${s.channels ? ` ${s.channels}ch` : ''}${s.tags && s.tags.language ? ` ${s.tags.language}` : ''}`) });
+      res.json({ duration: Number(j.format && j.format.duration) || null, video: v ? v.codec_name : null, audio: a.map((s) => `${s.codec_name}${s.channels ? ` ${s.channels}ch` : ''}${s.tags && s.tags.language ? ` ${s.tags.language}` : ''}`),
+        // every audio track in file order, for the player's Audio language menu (index n is ffmpeg's 0:a:n)
+        tracks: a.map((s, n) => ({ index: n, codec: s.codec_name || '', channels: s.channels || 0, language: (s.tags && s.tags.language) || '', title: (s.tags && s.tags.title) || '', default: !!(s.disposition && s.disposition.default) })) });
     } catch (e) { res.status(502).json({ error: 'could not read ffprobe output' }); }
   });
 });
@@ -325,10 +327,11 @@ app.get('/remux', async (req, res) => {
   if (remuxRunning >= MAX_REMUX) return res.status(503).json({ error: `already converting ${MAX_REMUX} streams; try again shortly` });
   let u; try { u = await checkTarget(String(req.query.url || '')); } catch (e) { return res.status(e.status || 400).json({ error: e.message }); }
   const t = Math.max(0, Number(req.query.t) || 0), h = decodeHeaders(req.query.headers);
+  const track = Math.max(0, Math.min(63, Math.floor(Number(req.query.audio) || 0))); // which audio track (language) to keep
   const args = ['-hide_banner', '-loglevel', 'error', '-nostdin',
     '-reconnect', '1', '-reconnect_streamed', '1', '-reconnect_delay_max', '4',
     ...(t ? ['-noaccurate_seek', '-ss', (t + 0.2).toFixed(3)] : []), ...ffAgent(h), ...ffHeaders(h), '-i', u.href,
-    '-map', '0:v:0', '-map', '0:a:0?', '-sn', '-dn',
+    '-map', '0:v:0', '-map', `0:a:${track}?`, '-sn', '-dn',
     '-c:v', 'copy', ...(req.query.hevc === '1' ? ['-tag:v', 'hvc1'] : []),
     '-c:a', 'aac', '-b:a', '192k', '-ac', '2',
     '-f', 'mp4', '-movflags', 'frag_keyframe+empty_moov+default_base_moof', 'pipe:1'];
