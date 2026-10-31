@@ -5509,7 +5509,7 @@ const StremioImport = {
         const items = (await this.call('datastoreGet', { authKey, collection: 'libraryItem', ids: [], all: true })) || [];
         const seenJobs = [];
         for (const it of items) {
-          if (!it || !it._id || it.temp) continue;
+          if (!it || !it._id) continue;
           const type = it.type === 'series' ? 'series' : it.type === 'movie' ? 'movie' : null; if (!type) continue;
           const st = it.state || {};
           if (seen) {
@@ -5518,7 +5518,7 @@ const StremioImport = {
             if (type === 'movie' && (st.timesWatched > 0 || st.flaggedWatched > 0)) mark(it._id);
             if (type === 'series' && st.watched) seenJobs.push(() => this.seenEpisodes(it).then((ids) => ids.forEach(mark)).catch(() => {}));
           }
-          if (library && !it.removed && !S.watchlist.some((m) => m.id === it._id)) {
+          if (library && !it.temp && !it.removed && !S.watchlist.some((m) => m.id === it._id)) {
             S.watchlist.push({ id: it._id, type, name: it.name, poster: it.poster || metaPoster({ id: it._id }), background: null, releaseInfo: '', genres: [], imdbRating: '' }); out.saved++;
           }
           const t = (st.timeOffset || 0) / 1000, d = (st.duration || 0) / 1000;
