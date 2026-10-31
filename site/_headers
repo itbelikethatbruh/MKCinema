@@ -1,6 +1,6 @@
 /download/*.apk
   Content-Type: application/vnd.android.package-archive
-  Content-Disposition: attachment; filename="MKCinema.apk"
+  Content-Disposition: attachment
   Cache-Control: no-cache
 /*
   X-Content-Type-Options: nosniff
@@ -17,4 +17,8 @@
   Cache-Control: no-cache
 /download/*.tar.gz
   Content-Type: application/gzip
+  Cache-Control: no-cache
+/download/*.ipk
+  Content-Type: application/vnd.debian.binary-package
+  Content-Disposition: attachment
   Cache-Control: no-cache

@@ -2,14 +2,17 @@ package com.mkcinema.app;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.UiModeManager;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -24,7 +27,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 
-/** MKCinema for Android: the web app in a full-screen WebView, with hand-off to VLC and other players. */
+/** MKCinema for Android, Android TV, Google TV and Fire TV: the web app in a full-screen WebView, with hand-off to VLC and other players. */
 public class MainActivity extends Activity {
     static final String HOME = "https://mkcinema.pages.dev/";
     static final String HOST = "mkcinema.pages.dev";
@@ -36,9 +39,14 @@ public class MainActivity extends Activity {
     WebChromeClient.CustomViewCallback customCb;
     ValueCallback<Uri[]> fileCb;
     PermissionRequest pendingPerm;
+    boolean tv;
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
+        UiModeManager ui = (UiModeManager) getSystemService(UI_MODE_SERVICE);
+        tv = (ui != null && ui.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION)
+                || getPackageManager().hasSystemFeature("android.software.leanback")
+                || getPackageManager().hasSystemFeature("amazon.hardware.fire_tv");
         root = new FrameLayout(this);
         root.setBackgroundColor(Color.BLACK);
         web = new WebView(this);
@@ -55,7 +63,8 @@ public class MainActivity extends Activity {
         s.setJavaScriptCanOpenWindowsAutomatically(true);
         s.setLoadWithOverviewMode(true);
         s.setUseWideViewPort(true);
-        s.setUserAgentString(s.getUserAgentString() + " MKCinemaAndroid/1.0");
+        s.setUserAgentString(s.getUserAgentString() + " MKCinemaAndroid/1.1" + (tv ? " MKCinemaTV/1.1" : ""));
+        if (tv) { web.setFocusable(true); web.setFocusableInTouchMode(true); web.requestFocus(); immersive(true); }
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(web, true);
 
@@ -63,6 +72,8 @@ public class MainActivity extends Activity {
             @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
                 return route(r.getUrl());
             }
+            @Override public void onPageCommitVisible(WebView v, String url) { if (tv) v.evaluateJavascript(TV_JS, null); }
+            @Override public void onPageFinished(WebView v, String url) { if (tv) v.evaluateJavascript(TV_JS, null); }
             @Override public void onReceivedError(WebView v, WebResourceRequest r, WebResourceError e) {
                 if (r.isForMainFrame()) v.loadDataWithBaseURL(null, offline(), "text/html", "utf-8", null);
             }
@@ -73,6 +84,7 @@ public class MainActivity extends Activity {
                 customView = view; customCb = cb;
                 root.addView(view, new FrameLayout.LayoutParams(-1, -1));
                 web.setVisibility(View.GONE);
+                view.setFocusable(true); view.requestFocus();
                 immersive(true);
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
             }
@@ -148,7 +160,8 @@ public class MainActivity extends Activity {
         root.removeView(customView);
         customView = null;
         web.setVisibility(View.VISIBLE);
-        immersive(false);
+        if (tv) web.requestFocus();
+        immersive(tv);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         if (customCb != null) customCb.onCustomViewHidden();
         customCb = null;
@@ -190,10 +203,51 @@ public class MainActivity extends Activity {
 
     @SuppressWarnings("deprecation")
     @Override public void onBackPressed() {
-        if (customView != null) exitFullscreen();
-        else if (web.canGoBack()) web.goBack();
-        else super.onBackPressed();
+        if (customView != null) { exitFullscreen(); return; }
+        if (!tv) { if (web.canGoBack()) web.goBack(); else super.onBackPressed(); return; }
+        // On a TV remote, Back closes whatever MKCinema has open first, then goes home, then leaves the app.
+        web.evaluateJavascript(TV_BACK_JS, r -> {
+            if ("true".equals(r)) return;
+            if (web.canGoBack()) web.goBack(); else super.onBackPressed();
+        });
     }
+
+    /** TV remotes: media keys drive the player. Arrows and OK reach the page, which already does D-pad navigation. */
+    @Override public boolean dispatchKeyEvent(KeyEvent e) {
+        if (tv && e.getAction() == KeyEvent.ACTION_DOWN) {
+            String k = null;
+            switch (e.getKeyCode()) {
+                case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE: case KeyEvent.KEYCODE_MEDIA_PLAY: case KeyEvent.KEYCODE_MEDIA_PAUSE: k = " "; break;
+                case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD: k = "l"; break;
+                case KeyEvent.KEYCODE_MEDIA_REWIND: k = "j"; break;
+                case KeyEvent.KEYCODE_MEDIA_NEXT: k = "n"; break;
+                case KeyEvent.KEYCODE_MENU: k = "o"; break;
+                case KeyEvent.KEYCODE_SEARCH: k = "/"; break;
+            }
+            if (k != null) { web.evaluateJavascript("window.MKTV&&MKTV.key(" + (k.equals(" ") ? "' '" : "'" + k + "'") + ")", null); return true; }
+        }
+        return super.dispatchKeyEvent(e);
+    }
+
+    /** Runs on every page load on a TV: a 1280x720 layout for viewing from the sofa, and helpers for the remote. */
+    static final String TV_JS = "(function(){"
+        + "var m=document.querySelector('meta[name=viewport]');"
+        + "if(!m){m=document.createElement('meta');m.name='viewport';document.head.appendChild(m);}"
+        + "var c='width=1280, viewport-fit=cover';if(m.content!==c)m.content=c;"
+        + "document.documentElement.classList.add('tv');"
+        + "if(window.MKTV)return;"
+        + "window.MKTV={key:function(k){document.dispatchEvent(new KeyboardEvent('keydown',{key:k,bubbles:true,cancelable:true}));return true;}};"
+        + "})()";
+
+    /** Returns true when the page handled Back itself. */
+    static final String TV_BACK_JS = "(function(){try{"
+        + "var ids=['remote','castLayer','partyLayer','player','trailer','tour','stremioImport','palette','epSheet','askLayer','tastePick','settings','addons','detail'];"
+        + "var open=ids.some(function(i){var e=document.getElementById(i);return e&&!e.hidden;});"
+        + "if(open&&typeof back==='function'){back();return true;}"
+        + "if(document.fullscreenElement){document.exitFullscreen();return true;}"
+        + "var h=document.querySelector('#tabs .tab');"
+        + "if(h&&!h.classList.contains('on')){h.click();return true;}"
+        + "}catch(e){}return false;})()";
 
     @Override protected void onSaveInstanceState(Bundle b) { super.onSaveInstanceState(b); web.saveState(b); }
     @Override protected void onPause() { super.onPause(); web.onPause(); CookieManager.getInstance().flush(); }
