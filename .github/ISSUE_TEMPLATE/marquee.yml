@@ -1,0 +1,21 @@
+name: Nominate a film for the marquee
+description: Suggest a film for the "Now showing" marquee in the README
+title: "Marquee: "
+labels: ["marquee"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Put the film's **title** in the issue title, after `Marquee: `, like `Marquee: Casablanca`.
+        Once the maintainer approves a nomination, everyone can vote for it with a 👍 reaction. Every day the approved nomination with the most 👍 takes the marquee.
+        Titles only, please: no links, posters or where-to-watch tips.
+  - type: input
+    id: year
+    attributes:
+      label: Year
+      placeholder: "1942"
+  - type: textarea
+    id: why
+    attributes:
+      label: Why everyone should see it
+      description: One or two sentences, no spoilers.
