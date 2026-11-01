@@ -8021,13 +8021,14 @@ const SET_GROUPS = [
   ['Look and feel', ['appearance', 'performance']],
   ['Watching', ['playback', 'subtitles', 'streams', 'debrid']],
   ['Connected', ['sync', 'devices']],
-  ['More', ['sound', 'keys', 'data', 'support']],
+  ['More', ['sound', 'keys', 'data', 'support', 'about']],
 ];
 const SET_BLURB = {
   start: 'VLC, debrid and your first sources', account: 'Sign in and sync', picks: 'Recommendations made on this device', home: 'Start page and rows',
   appearance: 'Contrast, posters, ratings', performance: 'Effects and smoothness', playback: 'Player, VLC, skip intro, audio', subtitles: 'Size, colour, language',
   streams: 'Addons and how sources load', debrid: 'AllDebrid, Premiumize, Real-Debrid, TorBox', sync: 'Scrobble and watchlists', devices: 'Phone remote, watch party, install',
   sound: 'Intro and soundtrack', keys: 'Keyboard and gamepad', data: 'Setup Cloner, backup, restore', support: 'Keep MKCinema going',
+  about: 'Version, credits, third-party licenses',
 };
 const SET_PHONE = matchMedia('(max-width: 760px)');
 let setPhoneHome = false;
@@ -8082,6 +8083,45 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
   const prevBack = back;
   back = function () { if (!$('#settings').hidden && SET_PHONE.matches && !setPhoneHome) { setPhoneHome = true; markSettingsNav(); return; } return prevBack(); };
 }
+/* ---------------- About & licenses ----------------
+   Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
+const APP_VERSION = '2.7.18';
+const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."};
+const OFL = 'This Font Software is licensed under the SIL Open Font License, Version 1.1.';
+const LIC_GROUPS = [
+  ['In the app', [
+    { name: 'hls.js', ver: '1.5.13', use: 'Streaming playback', lic: 'Apache-2.0', url: 'https://github.com/video-dev/hls.js', text: LIC_TEXT.hls, extra: 'Full license: https://www.apache.org/licenses/LICENSE-2.0' },
+    { name: 'Lucide', ver: '0.454.0', use: 'Icons', lic: 'ISC', url: 'https://lucide.dev', text: LIC_TEXT.lucide },
+    { name: 'supabase-js', ver: '2.117.3', use: 'Accounts and sync', lic: 'MIT', url: 'https://github.com/supabase/supabase-js', text: LIC_TEXT.supa },
+    { name: 'GSAP', ver: '3.12.5', use: 'Animation', lic: 'GreenSock Standard', url: 'https://gsap.com/standard-license', text: 'GSAP is used under the GreenSock Standard "no charge" license.\nLicense terms: https://gsap.com/standard-license' },
+  ]],
+  ['Fonts', [
+    { name: 'Fraunces', use: 'Display type', lic: 'OFL-1.1', url: 'https://github.com/undercasetype/Fraunces', text: `Copyright 2018 The Fraunces Project Authors (https://github.com/undercasetype/Fraunces)\n\n${OFL}` },
+    { name: 'Sora', use: 'Headings', lic: 'OFL-1.1', url: 'https://github.com/sora-xor/sora-font', text: `Copyright 2019 The Sora Project Authors (https://github.com/sora-xor/sora-font)\n\n${OFL}` },
+    { name: 'Onest', use: 'Body text', lic: 'OFL-1.1', url: 'https://github.com/googlefonts/onest', text: `Copyright 2021 The Onest Project Authors (https://github.com/googlefonts/onest)\n\n${OFL}` },
+    { name: 'JetBrains Mono', use: 'Labels and numbers', lic: 'OFL-1.1', url: 'https://github.com/JetBrains/JetBrainsMono', text: `Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono)\n\n${OFL}` },
+  ]],
+  ['Companion server', [
+    { name: 'Express', ver: '4.21.2', use: 'Web server', lic: 'MIT', url: 'https://github.com/expressjs/express', text: LIC_TEXT.express },
+    { name: 'cors', ver: '2.8.5', use: 'Cross-origin access', lic: 'MIT', url: 'https://github.com/expressjs/cors', text: LIC_TEXT.cors },
+    { name: 'node-fetch', ver: '2.7.0', use: 'Network requests', lic: 'MIT', url: 'https://github.com/node-fetch/node-fetch', text: LIC_TEXT.nf },
+  ]],
+  ['Ideas adapted', [
+    { name: 'webvlc', use: 'Local file playback, drag and drop, VLC-style keys', lic: 'MIT', url: 'https://github.com/addyosmani/webvlc', text: LIC_TEXT.webvlc },
+  ]],
+];
+const licItem = (x) => `<details class="lic"><summary data-nav><span class="lic-n"><b>${esc(x.name)}</b><small>${x.ver ? `${esc(x.ver)} · ` : ''}${esc(x.use)}</small></span><span class="lic-tag">${esc(x.lic)}</span><i data-lucide="chevron-down" class="lic-chev"></i></summary>
+  <div class="lic-body"><pre class="lic-pre">${esc(x.text)}${x.extra ? `\n\n${esc(x.extra)}` : ''}</pre><a class="lic-link" href="${esc(x.url)}" target="_blank" rel="noopener" data-nav><i data-lucide="external-link"></i>Project page</a></div></details>`;
+SECTIONS.push({ id: 'about', icon: 'scale', label: 'About & licenses', intro: 'Version, credits and the open source licenses MKCinema is built with.', rows: () => [
+  { html: () => `<div class="ab-hero"><div class="ab-mark">MKCinema</div><small>Version ${APP_VERSION} · Made by Drake Christopher</small>
+    <div class="ab-links"><a class="btn btn-ghost btn-sm" href="https://github.com/itbelikethatbruh/MKCinema" target="_blank" rel="noopener" data-nav><i data-lucide="code"></i>Source code</a></div></div>` },
+  { group: 'Stremio' },
+  { html: () => `<div class="lic-feature"><div class="lic-fh"><span class="lic-n"><b>Stremio Add-on SDK and stremio-core</b><small>The companion server is built on the Stremio Add-on SDK (1.6.10), and add-ons, Stremio import and watched history follow the Stremio protocol from stremio-core.</small></span><span class="lic-tag">MIT</span></div>
+    <pre class="lic-pre">${esc(LIC_TEXT.stremio)}</pre>
+    <div class="lic-links"><a class="lic-link" href="https://github.com/Stremio/stremio-addon-sdk" target="_blank" rel="noopener" data-nav><i data-lucide="external-link"></i>stremio-addon-sdk</a><a class="lic-link" href="https://github.com/Stremio/stremio-core" target="_blank" rel="noopener" data-nav><i data-lucide="external-link"></i>stremio-core</a></div>
+    <small class="lic-note">Stremio is a trademark of Smart Code OOD. MKCinema is an independent project and is not affiliated with or endorsed by Stremio.</small></div>` },
+  ...LIC_GROUPS.flatMap(([g, list]) => [{ group: g }, { html: () => list.map(licItem).join('') }]),
+] });
 // First visit: the guide is the first thing Settings shows
 if (!Store.get('guideSeen', false)) { setSection = 'start'; Store.set('guideSeen', true); }
 
@@ -8283,6 +8323,34 @@ const AudioLang = {
 <style>
 #optMenu .al-note{display:flex;gap:8px;align-items:flex-start;margin:2px 0 8px;font-size:12.5px;line-height:1.45;color:var(--mute)}
 #optMenu .al-note svg{width:14px;height:14px;flex:none;margin-top:2px}
+/* About & licenses (2.7.18) */
+.ab-hero{padding:22px 0 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+.ab-mark{font-family:var(--f-serif);font-size:34px;line-height:1.05;letter-spacing:-.01em;color:#ececee}
+.ab-hero small{display:block;margin-top:6px;font-family:var(--f-mono);font-size:11.5px;letter-spacing:.08em;color:#a9a9b1}
+.ab-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.set-card>.ab-hero:last-child,.set-card>.lic:last-child,.set-card>.lic-feature:last-child{border-bottom:0}
+.lic-feature{padding:18px 0 18px}
+.lic-fh,.lic summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center}
+.lic-n b{display:block;font-weight:600;font-size:14.5px;color:#ececee}
+.lic-n small{display:block;color:#a9a9b1;font-size:13px;line-height:1.5;margin-top:2px;max-width:62ch}
+.lic-tag{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.08em;color:#d9d4c7;border:1px solid rgba(217,212,199,.28);border-radius:999px;padding:4px 9px;white-space:nowrap}
+.lic-pre{margin:14px 0 0;padding:14px 16px;background:#070708;border:1px solid rgba(255,255,255,.06);border-radius:12px;font-family:var(--f-mono);font-size:11.5px;line-height:1.6;color:#c0c0c8;white-space:pre-wrap;overflow-wrap:anywhere;max-height:340px;overflow:auto}
+.lic-links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px}
+.lic-link{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:12.5px;color:#d9d4c7;text-decoration:none;border-radius:6px}
+.lic-links .lic-link{margin-top:0}
+.lic-link svg{width:14px;height:14px}
+.lic-link:hover,.lic-link:focus-visible{color:#ececee;text-decoration:underline;text-underline-offset:3px}
+.lic-note{display:block;margin-top:14px;color:#8d8d95;font-size:12px;line-height:1.5}
+.lic{border-bottom:1px solid rgba(255,255,255,.06)}
+.lic summary{list-style:none;cursor:pointer;padding:15px 0;border-radius:10px}
+.lic summary::-webkit-details-marker{display:none}
+.lic summary{grid-template-columns:minmax(0,1fr) auto 18px}
+.lic-chev{width:18px;height:18px;color:#8d8d95;transition:transform .2s ease}
+.lic[open] .lic-chev{transform:rotate(180deg)}
+.lic-body{padding:0 0 16px}
+.lic-body .lic-pre{margin-top:0}
+body.hc .lic-n small,body.hc .lic-pre{color:#d2d2d8}
+@media (max-width:760px){.ab-mark{font-size:30px}.lic-pre{font-size:11px;padding:12px}}
 </style>
 </body>
 </html>
