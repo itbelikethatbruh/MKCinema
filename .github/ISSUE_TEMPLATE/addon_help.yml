@@ -1,0 +1,33 @@
+name: Addon or playback help
+description: A source won't play, an addon won't install, or a stream has no sound
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please **don't paste debrid keys, passwords or addon links that contain keys**. Replace them with `KEY`.
+        MKCinema can't help find content; it only plays what your own addons return.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What's wrong?
+      options: [Addon won't install, No sources found, Source won't play, No sound or no picture, Subtitles, Something else]
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where are you playing?
+      options: [Inside MKCinema, Handed off to VLC or another player]
+  - type: input
+    id: device
+    attributes:
+      label: Device, browser or app version
+      placeholder: e.g. Windows 11, MKCinema.exe; or Android TV, app 1.2
+  - type: textarea
+    id: details
+    attributes:
+      label: What happened?
+      description: The title, the source's quality and size labels, and any message MKCinema showed.
+    validations:
+      required: true

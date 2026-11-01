@@ -6,7 +6,8 @@
 
 - [ ] Web app (`app/`)
 - [ ] Website (`site/`)
-- [ ] Android / Windows / Mac / Linux app
+- [ ] Android, Android TV, webOS, Windows, Mac or Linux app
+- [ ] README or artwork (`.github/readme/`)
 
 ## Checklist
 

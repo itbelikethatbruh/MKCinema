@@ -22,7 +22,7 @@ These are product decisions, and pull requests that break them won't be merged:
 ## Making a change
 
 1. Fork the repo and create a branch: `git checkout -b fix/short-description`.
-2. Make your change in the matching folder (`app/`, `site/`, `android/`, `windows/`, `mac/` or `linux/`).
+2. Make your change in the matching folder (`app/`, `site/`, `android/`, `webos/`, `windows/`, `mac/` or `linux/`). README artwork lives in `.github/readme/`: edit `generate.py` and run it rather than editing the SVGs by hand.
 3. Test it. For the web app, run `node app/mkcinema-server.js` and check desktop and phone widths. For a native app, build it with the steps in the [README](README.md#build-from-source).
 4. Write clear commit messages: a short summary line, then what changed and why.
 5. Open a pull request and fill in the template.
