@@ -298,10 +298,11 @@ SECTIONS = [
     ("download", "01", "Download", "Eight platforms, one library"),
     ("features", "02", "Features", "Everything a private cinema needs"),
     ("screenshots", "03", "In motion", "Real screenshots of the live app"),
-    ("how", "04", "How it works", "Your device, your keys, your addons"),
-    ("build", "05", "Build from source", "Every app, from this repository"),
-    ("faq", "06", "Questions", "The short answers"),
-    ("support", "07", "Support MKCinema", "Free, no ads, made by one person"),
+    ("marquee", "04", "Now showing", "Picked by the community, daily"),
+    ("how", "05", "How it works", "Your device, your keys, your addons"),
+    ("build", "06", "Build from source", "Every app, from this repository"),
+    ("faq", "07", "Questions", "The short answers"),
+    ("support", "08", "Support MKCinema", "Free, no ads, made by one person"),
 ]
 
 

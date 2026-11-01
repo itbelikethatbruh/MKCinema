@@ -1,13 +1,17 @@
 name: README stats
 
-# Draws the live stats card in the README from the repository's real numbers
-# (latest release, app downloads, commits) and publishes it to the
-# readme-assets branch, so main never gets bot commits.
+# Draws the README's live images and publishes them to the readme-assets
+# branch, so main never gets bot commits:
+# - stats.svg: latest release, app downloads and commits from the GitHub API
+# - marquee.svg: "Now showing", the most-voted approved nomination
+#   (issues labelled marquee + approved) or a daily classic
 on:
   schedule:
     - cron: "17 5 * * *"
   release:
     types: [published]
+  issues:
+    types: [labeled, unlabeled, closed, reopened]
   push:
     branches: [main]
     paths: [".github/readme/**", ".github/workflows/readme-stats.yml"]
@@ -15,6 +19,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: readme-stats
@@ -34,11 +39,19 @@ jobs:
           pip install --quiet fonttools brotli pillow
           npm pack --silent @fontsource/fraunces@5 @fontsource/space-grotesk@5
           for f in *.tgz; do mkdir -p "${f%.tgz}" && tar xzf "$f" -C "${f%.tgz}" --strip-components 1; done
-      - name: Draw the card
+      - name: Labels for marquee nominations
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create marquee --color d9d4c7 --description "Film nominated for the README marquee" 2>/dev/null || true
+          gh label create approved --color 9ccfb0 --description "Approved by the maintainer" 2>/dev/null || true
+      - name: Draw the images
         working-directory: .github/readme
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: python3 stats.py "$RUNNER_TEMP/out/stats.svg"
+        run: |
+          python3 stats.py "$RUNNER_TEMP/out/stats.svg"
+          python3 marquee.py "$RUNNER_TEMP/out/marquee.svg"
       - name: Publish to readme-assets
         working-directory: ${{ runner.temp }}/out
         env:
@@ -47,6 +60,6 @@ jobs:
           git init -q -b readme-assets
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add stats.svg
+          git add stats.svg marquee.svg
           git commit -q -m "README stats $(date -u +%F)"
           git push -fq "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" readme-assets

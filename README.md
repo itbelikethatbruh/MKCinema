@@ -16,6 +16,7 @@
   <a href="https://mkcinema-site.pages.dev"><b>Website</b></a> &nbsp;·&nbsp;
   <a href="#download"><b>Download</b></a> &nbsp;·&nbsp;
   <a href="#features"><b>Features</b></a> &nbsp;·&nbsp;
+  <a href="#marquee"><b>Now showing</b></a> &nbsp;·&nbsp;
   <a href="#build"><b>Build</b></a> &nbsp;·&nbsp;
   <a href="CHANGELOG.md"><b>Changelog</b></a>
 </p>
@@ -97,6 +98,18 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 <td align="center"><img src="docs/screenshots/app-addon-studio.jpg" alt="Addon Studio"><br><sub>Addon Studio: design a Stremio addon visually</sub></td>
 </tr>
 </table>
+
+<a name="marquee"></a>
+<p><img src="docs/readme/h-marquee.svg" width="100%" alt="Now showing"></p>
+
+<p align="center"><a href="https://github.com/itbelikethatbruh/MKCinema/issues?q=is%3Aissue+is%3Aopen+label%3Amarquee+label%3Aapproved"><img src="https://raw.githubusercontent.com/itbelikethatbruh/MKCinema/readme-assets/marquee.svg" width="100%" alt="Now showing on the MKCinema marquee, updated daily"></a></p>
+
+<p align="center">
+  <a href="https://github.com/itbelikethatbruh/MKCinema/issues/new?template=marquee.yml"><b>Nominate a film</b></a> &nbsp;·&nbsp;
+  <a href="https://github.com/itbelikethatbruh/MKCinema/issues?q=is%3Aissue+is%3Aopen+label%3Amarquee+label%3Aapproved"><b>Vote with 👍</b></a>
+</p>
+
+<p align="center"><sub>The marquee changes every day. The approved nomination with the most 👍 takes it; on quiet days a classic does.</sub></p>
 
 <a name="how"></a>
 <p><img src="docs/readme/h-how.svg" width="100%" alt="How it works"></p>
