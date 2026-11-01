@@ -8102,21 +8102,26 @@ const LIC_GROUPS = [
     { name: 'JetBrains Mono', use: 'Labels and numbers', lic: 'OFL-1.1', url: 'https://github.com/JetBrains/JetBrainsMono', text: `Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono)\n\n${OFL}` },
   ]],
   ['Companion server', [
-    { name: 'Express', ver: '4.21.2', use: 'Web server', lic: 'MIT', url: 'https://github.com/expressjs/express', text: LIC_TEXT.express },
-    { name: 'cors', ver: '2.8.5', use: 'Cross-origin access', lic: 'MIT', url: 'https://github.com/expressjs/cors', text: LIC_TEXT.cors },
-    { name: 'node-fetch', ver: '2.7.0', use: 'Network requests', lic: 'MIT', url: 'https://github.com/node-fetch/node-fetch', text: LIC_TEXT.nf },
+    { name: 'Express', ver: '4.x', use: 'Web server', lic: 'MIT', url: 'https://github.com/expressjs/express', text: LIC_TEXT.express },
+    { name: 'cors', ver: '2.x', use: 'Cross-origin access', lic: 'MIT', url: 'https://github.com/expressjs/cors', text: LIC_TEXT.cors },
+    { name: 'node-fetch', ver: '2.x', use: 'Network requests', lic: 'MIT', url: 'https://github.com/node-fetch/node-fetch', text: LIC_TEXT.nf },
+  ]],
+  ['Data and services', [
+    { name: 'Wikipedia', use: 'X-Ray summaries and cast photos', lic: 'CC BY-SA 4.0', url: 'https://en.wikipedia.org/wiki/Wikipedia:Copyrights', text: 'Text from Wikipedia is available under the Creative Commons Attribution-ShareAlike 4.0 License (https://creativecommons.org/licenses/by-sa/4.0/). MKCinema shows a link to the source article with each summary.\nPhotos come from Wikimedia Commons and keep the license shown on their file pages.' },
+    { name: 'Other services', use: 'Metadata, trailers, subtitles, sync and debrid', lic: 'Their terms', url: '', text: 'MKCinema connects to these services. Their data, images and video belong to their owners and are used under each service\'s own terms:\n\nCinemeta and OpenSubtitles v3 (Stremio add-ons), Metahub artwork, YouTube (official trailers, through the YouTube embedded player), OMDb, Kitsu, AniSkip, RPDB, Trakt, Simkl, Supabase, and the debrid service you connect (AllDebrid, Premiumize, Real-Debrid or TorBox).\n\nAdd-ons you install yourself are run by third parties and are not part of MKCinema.' },
   ]],
   ['Ideas adapted', [
     { name: 'webvlc', use: 'Local file playback, drag and drop, VLC-style keys', lic: 'MIT', url: 'https://github.com/addyosmani/webvlc', text: LIC_TEXT.webvlc },
   ]],
 ];
 const licItem = (x) => `<details class="lic"><summary data-nav><span class="lic-n"><b>${esc(x.name)}</b><small>${x.ver ? `${esc(x.ver)} · ` : ''}${esc(x.use)}</small></span><span class="lic-tag">${esc(x.lic)}</span><i data-lucide="chevron-down" class="lic-chev"></i></summary>
-  <div class="lic-body"><pre class="lic-pre">${esc(x.text)}${x.extra ? `\n\n${esc(x.extra)}` : ''}</pre><a class="lic-link" href="${esc(x.url)}" target="_blank" rel="noopener" data-nav><i data-lucide="external-link"></i>Project page</a></div></details>`;
-SECTIONS.push({ id: 'about', icon: 'scale', label: 'About & licenses', intro: 'Version, credits and the open source licenses MKCinema is built with.', rows: () => [
-  { html: () => `<div class="ab-hero"><div class="ab-mark">MKCinema</div><small>Version ${APP_VERSION} · Made by Drake Christopher</small>
-    <div class="ab-links"><a class="btn btn-ghost btn-sm" href="https://github.com/itbelikethatbruh/MKCinema" target="_blank" rel="noopener" data-nav><i data-lucide="code"></i>Source code</a></div></div>` },
+  <div class="lic-body"><pre class="lic-pre">${esc(x.text)}${x.extra ? `\n\n${esc(x.extra)}` : ''}</pre>${x.url ? `<a class="lic-link" href="${esc(x.url)}" target="_blank" rel="noopener" data-nav><i data-lucide="external-link"></i>${x.lic.startsWith('CC') ? 'License details' : 'Project page'}</a>` : ''}</div></details>`;
+SECTIONS.push({ id: 'about', icon: 'scale', label: 'About & licenses', intro: 'Version, MKCinema\'s own license, and the third-party software, fonts and services it uses.', rows: () => [
+  { html: () => `<div class="ab-hero"><div class="ab-mark">MKCinema</div><small>Version ${APP_VERSION} · © 2026 Drake Christopher</small>
+    <p class="ab-gpl">MKCinema is free software under the GNU General Public License, version 3. It comes with ABSOLUTELY NO WARRANTY. You are welcome to share and change it under the terms of that license.</p>
+    <div class="ab-links"><a class="btn btn-ghost btn-sm" href="https://github.com/itbelikethatbruh/MKCinema" target="_blank" rel="noopener" data-nav><i data-lucide="code"></i>Source code</a><a class="btn btn-ghost btn-sm" href="https://github.com/itbelikethatbruh/MKCinema/blob/main/LICENSE" target="_blank" rel="noopener" data-nav><i data-lucide="scale"></i>GPL-3.0 license</a></div></div>` },
   { group: 'Stremio' },
-  { html: () => `<div class="lic-feature"><div class="lic-fh"><span class="lic-n"><b>Stremio Add-on SDK and stremio-core</b><small>The companion server is built on the Stremio Add-on SDK (1.6.10), and add-ons, Stremio import and watched history follow the Stremio protocol from stremio-core.</small></span><span class="lic-tag">MIT</span></div>
+  { html: () => `<div class="lic-feature"><div class="lic-fh"><span class="lic-n"><b>Stremio Add-on SDK and stremio-core</b><small>The companion server uses the Stremio Add-on SDK to serve its add-on. Stremio import reads watched history in the format stremio-core stores it (its watched-bitfield module). Both are MIT licensed under this notice.</small></span><span class="lic-tag">MIT</span></div>
     <pre class="lic-pre">${esc(LIC_TEXT.stremio)}</pre>
     <div class="lic-links"><a class="lic-link" href="https://github.com/Stremio/stremio-addon-sdk" target="_blank" rel="noopener" data-nav><i data-lucide="external-link"></i>stremio-addon-sdk</a><a class="lic-link" href="https://github.com/Stremio/stremio-core" target="_blank" rel="noopener" data-nav><i data-lucide="external-link"></i>stremio-core</a></div>
     <small class="lic-note">Stremio is a trademark of Smart Code OOD. MKCinema is an independent project and is not affiliated with or endorsed by Stremio.</small></div>` },
@@ -8327,6 +8332,8 @@ const AudioLang = {
 .ab-hero{padding:22px 0 20px;border-bottom:1px solid rgba(255,255,255,.06)}
 .ab-mark{font-family:var(--f-serif);font-size:34px;line-height:1.05;letter-spacing:-.01em;color:#ececee}
 .ab-hero small{display:block;margin-top:6px;font-family:var(--f-mono);font-size:11.5px;letter-spacing:.08em;color:#a9a9b1}
+.ab-gpl{margin:12px 0 0;max-width:62ch;color:#a9a9b1;font-size:13px;line-height:1.55}
+body.hc .ab-gpl{color:#d2d2d8}
 .ab-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
 .set-card>.ab-hero:last-child,.set-card>.lic:last-child,.set-card>.lic-feature:last-child{border-bottom:0}
 .lic-feature{padding:18px 0 18px}
