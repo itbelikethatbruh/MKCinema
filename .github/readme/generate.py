@@ -11,10 +11,9 @@ people who ask their system for reduced motion.
     pip install fonttools brotli pillow
     python3 generate.py
 
-Outputs: hero.svg, download-*.svg, icon-*.svg, h-*.svg, footer.svg and
-mk-monogram.stl (the README's ```stl block is a copy of it).
+Outputs: hero.svg, download-*.svg, icon-*.svg, h-*.svg, how.svg and footer.svg.
 """
-import base64, glob, io, math, os, re, sys
+import base64, glob, io, os, re, sys
 
 from fontTools.ttLib import TTFont
 from fontTools.pens.svgPathPen import SVGPathPen
@@ -299,106 +298,113 @@ SECTIONS = [
     ("download", "01", "Download", "Eight platforms, one library"),
     ("features", "02", "Features", "Everything a private cinema needs"),
     ("screenshots", "03", "In motion", "Real screenshots of the live app"),
-    ("3d", "04", "Spin the monogram", "Drag it. GitHub renders it in 3D"),
-    ("how", "05", "How it works", "Your device, your keys, your addons"),
-    ("build", "06", "Build from source", "Every app, from this repository"),
-    ("faq", "07", "Questions", "The short answers"),
-    ("support", "08", "Support MKCinema", "Free, no ads, made by one person"),
+    ("how", "04", "How it works", "Your device, your keys, your addons"),
+    ("build", "05", "Build from source", "Every app, from this repository"),
+    ("faq", "06", "Questions", "The short answers"),
+    ("support", "07", "Support MKCinema", "Free, no ads, made by one person"),
 ]
 
 
 def section_headers():
-    W, H = 1280, 150
-    for key, num, title, sub in SECTIONS:
+    # 960 wide with no small print, so the title stays readable on a phone
+    W, H = 960, 110
+    for key, num, title, _sub in SECTIONS:
         tw = SERIF_IT.width(title, 58)
-        x0 = 130 + tw + 34
+        x0 = 112 + tw + 30
         svg = f'''
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-label="{title}">
 <title>{title}</title>
 <style>.ln{{transform-box:fill-box;transform-origin:left;animation:ln 2.4s cubic-bezier(.2,.7,.2,1) both}}@keyframes ln{{from{{transform:scaleX(0)}}to{{transform:none}}}}{REDUCED}</style>
 <defs><linearGradient id="p" x1="0" y1="0" x2="1" y2="1">{PLAT}</linearGradient>
 <linearGradient id="l" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d9d4c7" stop-opacity=".6"/><stop offset="1" stop-color="#d9d4c7" stop-opacity="0"/></linearGradient></defs>
-<path d="{SERIF_LT_IT.path(num, 64, 8, 96)}" fill="none" stroke="#d9d4c7" stroke-opacity=".55" stroke-width="1.1"/>
-<path d="{SERIF_IT.path(title, 58, 130, 92)}" fill="url(#p)"/>
-<rect class="ln" x="{x0:.0f}" y="74" width="{W - x0 - 8:.0f}" height="1" fill="url(#l)"/>
-<path d="{SANS_MD.path(sub.upper(), 13, 132, 128, track=0.28)}" fill="#9a9aa3"/>
+<path d="{SERIF_LT_IT.path(num, 62, 6, 80)}" fill="none" stroke="#d9d4c7" stroke-opacity=".6" stroke-width="1.2"/>
+<path d="{SERIF_IT.path(title, 58, 112, 78)}" fill="url(#p)"/>
+<rect class="ln" x="{x0:.0f}" y="60" width="{max(W - x0 - 6, 0):.0f}" height="1" fill="url(#l)"/>
 </svg>'''
         write(f"h-{key}.svg", svg)
 
 
+# ------------------------------------------------------------ how it works
+def how_diagram():
+    """Replaces the Mermaid chart, which GitHub's mobile app shows as raw code.
+    Tall and narrow so its text stays readable on a phone."""
+    W = 720
+    rows = [
+        ("b-stremio", "Stremio addons you install", "Catalogues and streams", False),
+        ("i-bolt", "Your debrid service", "Connected with your own key", False),
+        ("i-shield", "Supabase sync, optional", "Your row only, locked by RLS", False),
+        ("i-ext", "VLC, Infuse, mpv, IINA, PotPlayer", "One-tap hand-off", False),
+        ("i-users", "Friends' devices", "Watch party, peer to peer", True),
+    ]
+    top, ch, gap = 196, 96, 18
+    H = top + len(rows) * (ch + gap) + 12
+    tx = 70
+    cards, joins = [], []
+    for i, (icon, title, sub, dashed) in enumerate(rows):
+        y = top + i * (ch + gap)
+        cy = y + ch / 2
+        attrs, body = symbol(icon)
+        dash = ' stroke-dasharray="5 6"' if dashed else ""
+        joins.append(f'<path d="M{tx} {cy - 30} q0 30 30 30 h40" fill="none" stroke="#d9d4c7" stroke-opacity=".45" stroke-width="1.5"{dash}/>'
+                     f'<circle class="pt" style="animation-delay:{i * 0.35:.2f}s" cx="{tx + 70}" cy="{cy}" r="4" fill="#ece8df"/>')
+        cards.append(f'''<g transform="translate(150 {y})">
+<rect width="{W - 160}" height="{ch}" rx="22" fill="url(#bg)"/><rect x=".5" y=".5" width="{W - 161}" height="{ch - 1}" rx="21.5" fill="none" stroke="url(#st)"/>
+<rect x="20" y="22" width="52" height="52" rx="15" fill="#050506" stroke="#ffffff1c"/>
+<svg x="33" y="35" width="26" height="26" viewBox="0 0 24 24" {attrs} color="#ece8df">{body}</svg>
+<path d="{SANS_SB.path(title, 24, 92, 46)}" fill="url(#p)"/>
+<path d="{SANS.path(sub, 19, 92, 74)}" fill="#9a9aa3"/>
+</g>''')
+    last = top + (len(rows) - 1) * (ch + gap) + ch / 2 - 30
+    svg = f'''
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img"
+ aria-label="MKCinema runs on your device, with Your Picks on-device. It connects to the Stremio addons you install, your debrid service with your own key, optional Supabase sync to your own row, video players such as VLC, and friends' devices for watch parties, peer to peer.">
+<title>How MKCinema works</title>
+<style>.pt{{animation:pt 2.8s ease-in-out infinite}}@keyframes pt{{0%,100%{{opacity:.25}}50%{{opacity:1}}}}
+.run{{animation:run 3.2s cubic-bezier(.5,0,.5,1) infinite}}@keyframes run{{from{{transform:translateY(-120px)}}to{{transform:translateY({H}px)}}}}{REDUCED}</style>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#17171a"/><stop offset="1" stop-color="#09090a"/></linearGradient>
+<linearGradient id="st" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".34"/><stop offset=".5" stop-color="#fff" stop-opacity=".06"/><stop offset="1" stop-color="#fff" stop-opacity=".2"/></linearGradient>
+<linearGradient id="p" x1="0" y1="0" x2="1" y2="1">{PLAT}</linearGradient>
+<linearGradient id="r" x1="0" y1="0" x2="1" y2="1">{RING}</linearGradient>
+<linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<clipPath id="trunk"><rect x="{tx - 1.5}" y="150" width="3" height="{last - 150}"/></clipPath>
+</defs>
+<g transform="translate(10 10)">
+<rect width="{W - 20}" height="150" rx="28" fill="url(#bg)"/><rect x=".5" y=".5" width="{W - 21}" height="149" rx="27.5" fill="none" stroke="url(#st)"/>
+<circle cx="80" cy="75" r="44" fill="#050505" stroke="url(#r)" stroke-width="2"/>
+<path d="{MK_LETTERS}" fill="url(#p)" transform="translate(80 75) scale(.62)"/>
+<path d="{SERIF.path("MKCinema", 40, 148, 68)}" fill="url(#p)"/>
+<path d="{SANS.path("On your phone, TV or computer", 20, 150, 98)}" fill="#c9c9d0"/>
+<path d="{SANS.path("Your Picks runs here, on the device", 17, 150, 124)}" fill="#8a8a93"/>
+</g>
+<rect x="{tx - .75}" y="160" width="1.5" height="{last - 160}" fill="#d9d4c7" fill-opacity=".45"/>
+<g clip-path="url(#trunk)"><rect class="run" x="{tx - 1.5}" y="0" width="3" height="120" fill="url(#beam)"/></g>
+{"".join(joins)}
+{"".join(cards)}
+</svg>'''
+    write("how.svg", svg)
+
+
 # ------------------------------------------------------------------ footer
 def footer():
-    W, H = 1280, 300
-    line = SANS_MD.path("FREE  ·  OPEN SOURCE  ·  NO ADS  ·  NO TRACKING", 13, W / 2, 262, track=0.32, anchor="middle")
-    sig = SERIF_LT_IT.path("Made for the love of film by Drake Christopher", 26, W / 2, 222, anchor="middle")
+    W, H = 960, 300
+    line = SANS_MD.path("FREE  ·  OPEN SOURCE  ·  NO ADS  ·  NO TRACKING", 15, W / 2, 266, track=0.3, anchor="middle")
+    sig = SERIF_LT_IT.path("Made for the love of film by Drake Christopher", 32, W / 2, 224, anchor="middle")
     svg = f'''
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-label="Made for the love of film by Drake Christopher">
 <title>MKCinema</title>
-<style>.o{{transform-box:view-box;transform-origin:640px 96px;animation:o 14s linear infinite}}@keyframes o{{to{{transform:rotate(360deg)}}}}{REDUCED}</style>
+<style>.o{{transform-box:view-box;transform-origin:480px 96px;animation:o 14s linear infinite}}@keyframes o{{to{{transform:rotate(360deg)}}}}{REDUCED}</style>
 <defs><linearGradient id="p" x1="0" y1="0" x2="1" y2="1">{PLAT}</linearGradient>
 <linearGradient id="r" x1="0" y1="0" x2="1" y2="1">{RING}</linearGradient>
-<radialGradient id="gl" cx="640" cy="96" r="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f4f1ea" stop-opacity=".12"/><stop offset="1" stop-color="#f4f1ea" stop-opacity="0"/></radialGradient></defs>
-<circle cx="640" cy="96" r="150" fill="url(#gl)"/>
-<circle cx="640" cy="96" r="62" fill="#050505" stroke="url(#r)" stroke-width="2.2"/>
-<circle class="o" cx="640" cy="96" r="74" fill="none" stroke="url(#r)" stroke-width="1.2" stroke-dasharray="70 395" stroke-linecap="round" opacity=".8"/>
-<path d="{MK_LETTERS}" fill="url(#p)" transform="translate(640 96) scale(.92)"/>
+<radialGradient id="gl" cx="480" cy="96" r="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f4f1ea" stop-opacity=".12"/><stop offset="1" stop-color="#f4f1ea" stop-opacity="0"/></radialGradient></defs>
+<circle cx="480" cy="96" r="150" fill="url(#gl)"/>
+<circle cx="480" cy="96" r="62" fill="#050505" stroke="url(#r)" stroke-width="2.2"/>
+<circle class="o" cx="480" cy="96" r="74" fill="none" stroke="url(#r)" stroke-width="1.2" stroke-dasharray="70 395" stroke-linecap="round" opacity=".8"/>
+<path d="{MK_LETTERS}" fill="url(#p)" transform="translate(480 96) scale(.92)"/>
 <path d="{sig}" fill="#e7e2d6"/>
 <path d="{line}" fill="#8a8a93"/>
 </svg>'''
     write("footer.svg", svg)
-
-
-# --------------------------------------------------------------------- STL
-def monogram_stl():
-    """The MK monogram as an ASCII STL: extruded letter strokes inside a ring."""
-    quads = []
-    for part in MK_LETTERS.split("Z"):
-        nums = [float(n) for n in re.findall(r"-?\d+(?:\.\d+)?", part)]
-        if len(nums) == 8:
-            pts = [(nums[i], -nums[i + 1]) for i in range(0, 8, 2)]
-            # make counter-clockwise
-            a = sum(pts[i][0] * pts[(i + 1) % 4][1] - pts[(i + 1) % 4][0] * pts[i][1] for i in range(4))
-            quads.append(pts if a > 0 else pts[::-1])
-    tris = []
-
-    def prism(poly, z0, z1):
-        n = len(poly)
-        for i in range(1, n - 1):
-            tris.append(((poly[0][0], poly[0][1], z1), (poly[i][0], poly[i][1], z1), (poly[i + 1][0], poly[i + 1][1], z1)))
-            tris.append(((poly[0][0], poly[0][1], z0), (poly[i + 1][0], poly[i + 1][1], z0), (poly[i][0], poly[i][1], z0)))
-        for i in range(n):
-            a, b = poly[i], poly[(i + 1) % n]
-            tris.append(((a[0], a[1], z0), (b[0], b[1], z0), (b[0], b[1], z1)))
-            tris.append(((a[0], a[1], z0), (b[0], b[1], z1), (a[0], a[1], z1)))
-
-    for q in quads:
-        prism(q, 0, 9)
-    seg, r0, r1 = 48, 66, 72
-    for i in range(seg):
-        t0, t1 = 2 * math.pi * i / seg, 2 * math.pi * (i + 1) / seg
-        prism([(r1 * math.cos(t0), r1 * math.sin(t0)), (r1 * math.cos(t1), r1 * math.sin(t1)),
-               (r0 * math.cos(t1), r0 * math.sin(t1)), (r0 * math.cos(t0), r0 * math.sin(t0))], 0, 5)
-
-    def fmt(v):
-        return f"{v:.1f}".rstrip("0").rstrip(".").replace("-0", "0") if abs(v) > 0.04 else "0"
-
-    lines = ["solid mkcinema"]
-    for a, b, c in tris:
-        ux, uy, uz = b[0] - a[0], b[1] - a[1], b[2] - a[2]
-        vx, vy, vz = c[0] - a[0], c[1] - a[1], c[2] - a[2]
-        nx, ny, nz = uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx
-        L = math.sqrt(nx * nx + ny * ny + nz * nz) or 1
-        lines.append(f"facet normal {nx/L:.2f} {ny/L:.2f} {nz/L:.2f}".replace("-0.00", "0.00"))
-        lines.append("outer loop")
-        for p in (a, b, c):
-            lines.append("vertex " + " ".join(fmt(v) for v in p))
-        lines.append("endloop")
-        lines.append("endfacet")
-    lines.append("endsolid mkcinema")
-    stl = "\n".join(lines) + "\n"
-    with open(os.path.join(OUT, "mk-monogram.stl"), "w") as fh:
-        fh.write(stl)
-    print(f"mk-monogram.stl {len(tris)} facets, {len(stl)/1024:.1f} KB")
 
 
 if __name__ == "__main__":
@@ -406,5 +412,5 @@ if __name__ == "__main__":
     download_buttons()
     feature_icons()
     section_headers()
+    how_diagram()
     footer()
-    monogram_stl()
