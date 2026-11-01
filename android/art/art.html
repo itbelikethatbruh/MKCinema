@@ -1,0 +1,40 @@
+<!doctype html><html><head><meta charset="utf-8">
+
+<style>@font-face{font-family:Fraunces;src:url(fraunces.woff2) format("woff2");font-weight:100 900;font-display:block}
+html,body{margin:0;background:#000}
+.stage{position:relative;overflow:hidden;background:#000}
+.banner{width:1280px;height:720px}
+.icon{width:1024px;height:1024px}
+.glow{position:absolute;inset:0;background:
+ radial-gradient(60% 85% at 50% 50%,rgba(64,62,58,.42),rgba(20,20,19,.25) 45%,transparent 72%),
+ radial-gradient(120% 120% at 50% 120%,rgba(217,212,199,.05),transparent 60%)}
+.icon .glow{background:radial-gradient(58% 58% at 50% 42%,#1d1c1a,#0a0a0a 62%,#000 100%)}
+.grain{position:absolute;inset:0;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.lock{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:54px}
+.word{display:flex;flex-direction:column;gap:20px}
+.wm{font-family:Fraunces,serif;font-variation-settings:"opsz" 144;font-size:136px;line-height:.9;letter-spacing:.01em;
+ background:linear-gradient(180deg,#ffffff 0%,#ece8df 42%,#a8a49c 58%,#f2eee6 78%,#c9c4ba 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+ filter:drop-shadow(0 2px 0 rgba(0,0,0,.6)) drop-shadow(0 18px 30px rgba(0,0,0,.8))}
+.wm b{font-weight:600}.wm span{font-weight:400;letter-spacing:.03em}
+.rule{display:flex;align-items:center;gap:18px;font-family:Fraunces,serif;font-variation-settings:"opsz" 9;font-weight:500;font-size:21px;letter-spacing:.62em;color:#d9d4c7;text-transform:uppercase;padding-left:6px}
+.rule i{flex:none;width:100%;height:2px;background:linear-gradient(90deg,rgba(217,212,199,.9),rgba(217,212,199,.35) 60%,transparent)}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<linearGradient id="plat" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".38" stop-color="#e2ded6"/><stop offset=".56" stop-color="#8f8c86"/><stop offset=".76" stop-color="#f3efe7"/><stop offset="1" stop-color="#aaa69e"/></linearGradient>
+<linearGradient id="ring" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbf8f1"/><stop offset=".48" stop-color="#5f5c57"/><stop offset="1" stop-color="#ebe6db"/></linearGradient>
+<radialGradient id="disc" cx=".5" cy=".38" r=".7"><stop offset="0" stop-color="#1f1e1c"/><stop offset=".7" stop-color="#090909"/><stop offset="1" stop-color="#030303"/></radialGradient>
+<filter id="emb" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.2" stdDeviation=".6" flood-color="#000" flood-opacity=".9"/><feDropShadow dx="0" dy="-.4" stdDeviation=".2" flood-color="#fff" flood-opacity=".25"/></filter>
+<path id="L" d="M-36.5 -28L-34.1 -28L-34.1 28L-36.5 28ZM-36.5 -28L-28 -28L-12.2 28L-15.2 28ZM-0.8 -28L1.5 -28L-12.2 28L-15.2 28ZM-0.5 -28L8.1 -28L8.1 28L-0.5 28ZM30.8 -28L33.5 -28L8.1 5.2L8.1 1.5ZM11.7 -2.4L18.3 -6.8L39.1 28L29.9 28ZM-41.9 -28L-28 -28L-28 -26.9L-41.9 -26.9ZM-41.9 26.9L-28.7 26.9L-28.7 28L-41.9 28ZM-5.3 -28L13.1 -28L13.1 -26.9L-5.3 -26.9ZM-5.3 26.9L13.1 26.9L13.1 28L-5.3 28ZM25.7 -28L38.3 -28L38.3 -26.9L25.7 -26.9ZM26.1 26.9L42.7 26.9L42.7 28L26.1 28Z"/>
+<symbol id="mono" viewBox="0 0 120 120">
+ <circle cx="60" cy="60" r="57" fill="url(#disc)"/>
+ <circle cx="60" cy="60" r="56.2" fill="none" stroke="url(#ring)" stroke-width="2.2"/>
+ <circle cx="60" cy="60" r="51.6" fill="none" stroke="url(#ring)" stroke-width=".55" opacity=".75"/>
+ <g transform="translate(60 61) scale(.74)" filter="url(#emb)"><use href="#L" fill="url(#plat)"/></g>
+</symbol></defs></svg>
+<div id="banner" class="stage banner"><div class="glow"></div><div class="grain"></div>
+ <div class="lock"><svg width="360" height="360"><use href="#mono"/></svg>
+  <div class="word"><div class="wm"><b>MK</b><span>Cinema</span></div><div class="rule"><i></i></div></div></div></div>
+<div id="icon" class="stage icon"><div class="glow"></div><div class="grain"></div>
+ <div class="lock"><svg width="820" height="820"><use href="#mono"/></svg></div></div>
+<div id="fg" class="stage icon" style="background:transparent"><div class="lock"><svg width="700" height="700"><use href="#mono"/></svg></div></div>
+</body></html>
