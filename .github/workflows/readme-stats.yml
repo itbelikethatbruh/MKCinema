@@ -1,0 +1,52 @@
+name: README stats
+
+# Draws the live stats card in the README from the repository's real numbers
+# (latest release, app downloads, commits) and publishes it to the
+# readme-assets branch, so main never gets bot commits.
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  release:
+    types: [published]
+  push:
+    branches: [main]
+    paths: [".github/readme/**", ".github/workflows/readme-stats.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: readme-stats
+  cancel-in-progress: true
+
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fonts and tools
+        working-directory: .github/readme
+        run: |
+          pip install --quiet fonttools brotli pillow
+          npm pack --silent @fontsource/fraunces@5 @fontsource/space-grotesk@5
+          for f in *.tgz; do mkdir -p "${f%.tgz}" && tar xzf "$f" -C "${f%.tgz}" --strip-components 1; done
+      - name: Draw the card
+        working-directory: .github/readme
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 stats.py "$RUNNER_TEMP/out/stats.svg"
+      - name: Publish to readme-assets
+        working-directory: ${{ runner.temp }}/out
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          git init -q -b readme-assets
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add stats.svg
+          git commit -q -m "README stats $(date -u +%F)"
+          git push -fq "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" readme-assets
