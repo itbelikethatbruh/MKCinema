@@ -16,6 +16,7 @@ Titles only: no posters, no links to any content.
     GITHUB_REPOSITORY=owner/name GITHUB_TOKEN=... python3 marquee.py out/marquee.svg
 """
 import datetime, json, os, re, sys, unicodedata, urllib.request
+from xml.sax.saxutils import escape
 
 OUT_PATH = sys.argv[1] if len(sys.argv) > 1 else "marquee.svg"
 import generate as g  # fonts and helpers
@@ -160,8 +161,8 @@ def draw(title, credit, foot):
     foot_p = g.SANS_MD.path(foot, 16, W / 2, 414, track=0.26, anchor="middle") if foot else ""
     alt = f"Now showing: {title}. {credit.title()}."
     svg = f'''
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-label="{alt.replace('"', '')}">
-<title>{alt.replace('<', '').replace('&', 'and')}</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-label="{escape(alt, {'"': '&quot;'})}">
+<title>{escape(alt)}</title>
 <style>
 .b{{fill:#ffe7b0;animation:chase 1.5s steps(1) infinite}}.b1{{animation-delay:-.5s}}.b2{{animation-delay:-1s}}
 @keyframes chase{{0%{{opacity:1}}33%{{opacity:.28}}66%{{opacity:.5}}}}
