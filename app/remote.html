@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>MKCinema Remote</title>
+<meta name="description" content="Your phone as a remote for MKCinema on your TV.">
+<meta name="theme-color" content="#000000">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="MK Remote">
+<link rel="manifest" href="remote.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://wogffhgdixgrayowewnf.supabase.co" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Onest:wght@400;500;600&display=swap">
+<style>
+/* MKCinema Remote. Noir: black, platinum, champagne. Motion uses transform and opacity only. No sounds. */
+:root{
+  --void:#000;--ink:#f2f2f3;--mute:#a8a8b0;--dim:#6e6e76;--champ:#d9d4c7;
+  --ok:#9ccfb0;--warn:#e3c77a;--bad:#ef7a7d;
+  --line:rgba(255,255,255,.09);--line-hi:rgba(255,255,255,.2);--glass:rgba(255,255,255,.035);
+  --plat:linear-gradient(180deg,#fbfbfb 0%,#e3e3e6 55%,#c9c9ce 100%);
+  --f-display:"Sora",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --ease:cubic-bezier(.22,.8,.24,1);--spring:cubic-bezier(.34,1.56,.64,1);
+  --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--void);color:var(--ink);font:15px/1.45 var(--f-body);overflow:hidden;overscroll-behavior:none}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;touch-action:manipulation}
+button:focus-visible,input:focus-visible{outline:2px solid var(--champ);outline-offset:3px}
+svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+[hidden]{display:none!important}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ambient glow behind everything: a fixed layer, never animated */
+.amb{position:fixed;inset:0;pointer-events:none;background:radial-gradient(90% 55% at 50% -8%,rgba(217,212,199,.10),transparent 62%),radial-gradient(70% 40% at 50% 112%,rgba(255,255,255,.05),transparent 70%)}
+
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;padding:calc(var(--sat) + 14px) 18px calc(var(--sab) + 16px);max-width:520px;margin:0 auto}
+.screen.in{animation:rise .55s var(--ease) both}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ---------- Pairing ---------- */
+.brand{display:flex;align-items:center;gap:10px;color:var(--champ)}
+.brand svg{width:34px;height:34px}
+.brand span{font:600 12px/1 var(--f-display);letter-spacing:.32em;text-transform:uppercase;color:var(--mute)}
+.pair-body{flex:1;display:flex;flex-direction:column;justify-content:center;gap:18px;padding-bottom:6vh}
+.pair-body h1{font:700 30px/1.12 var(--f-display);letter-spacing:-.02em;margin:0}
+.pair-body p{margin:0;color:var(--mute);max-width:34ch}
+.pair-body p b{color:var(--ink);font-weight:600}
+.code{position:relative;display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:6px}
+.code input{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;text-transform:uppercase;caret-color:transparent;border:0;background:none;color:transparent;-webkit-user-select:text;user-select:text}
+.code .c{height:60px;border-radius:14px;border:1px solid var(--line);background:var(--glass);display:grid;place-items:center;font:600 24px/1 var(--f-display);letter-spacing:.02em;transition:border-color .2s}
+.code .c.cur{border-color:var(--champ)}
+.code .c.cur:empty::after{content:"";width:2px;height:26px;background:var(--champ);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.code.shake{animation:shake .42s var(--ease)}
+@keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;height:54px;border-radius:999px;padding:0 26px;font:600 15px/1 var(--f-display);letter-spacing:.01em;transition:transform .18s var(--ease),opacity .2s}
+.btn:active{transform:scale(.97)}
+.btn-prime{background:var(--plat);color:#0a0a0b;box-shadow:0 10px 30px -12px rgba(255,255,255,.35),inset 0 1px 0 #fff}
+.btn-ghost{border:1px solid var(--line-hi);color:var(--ink)}
+.btn[disabled]{opacity:.4;pointer-events:none}
+.recent{display:grid;gap:8px;margin-top:4px}
+.recent h2{font:600 11px/1 var(--f-display);letter-spacing:.24em;text-transform:uppercase;color:var(--dim);margin:8px 0 4px}
+.tvrow{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;border:1px solid var(--line);background:var(--glass);text-align:left;width:100%;transition:transform .18s var(--ease)}
+.tvrow:active{transform:scale(.985)}
+.tvrow b{display:block;font-weight:600}.tvrow small{color:var(--dim);font-size:12px}
+.tvrow .grow{flex:1;min-width:0}
+.tvrow .on{font-size:11px;color:var(--ok);letter-spacing:.06em}
+.hint{color:var(--dim);font-size:13px;text-align:center;margin-top:auto;padding-top:14px}
+.hint a{color:var(--mute)}
+
+/* ---------- Controller ---------- */
+.top{display:flex;align-items:center;gap:10px;min-height:46px}
+.tvchip{display:flex;align-items:center;gap:11px;min-width:0;flex:1;text-align:left;padding:6px 8px 6px 4px;border-radius:14px}
+.tvchip:active{opacity:.7}
+.tvchip .dot{position:relative;width:9px;height:9px;border-radius:50%;background:var(--dim);flex:none}
+.tvchip .dot::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:1px solid currentColor;opacity:0}
+.tvchip[data-s="live"] .dot{background:var(--ok);color:var(--ok)}
+.tvchip[data-s="live"] .dot::after{animation:ping 2.4s var(--ease) infinite}
+.tvchip[data-s="wait"] .dot{background:var(--warn)}
+.tvchip[data-s="wait"] .dot,.tvchip[data-s="conn"] .dot{animation:breathe 1.2s ease-in-out infinite}
+.tvchip[data-s="off"] .dot{background:var(--bad)}
+@keyframes ping{0%{opacity:.7;transform:scale(.6)}70%,100%{opacity:0;transform:scale(1.8)}}
+@keyframes breathe{50%{opacity:.35}}
+.tvchip .nm{min-width:0}
+.tvchip b{display:block;font:600 16px/1.2 var(--f-display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tvchip small{display:block;color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tvchip .chev{width:16px;height:16px;color:var(--dim)}
+.iconbtn{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);color:var(--mute);transition:transform .18s var(--ease)}
+.iconbtn:active{transform:scale(.92)}
+
+.seg{position:relative;display:grid;grid-template-columns:1fr 1fr;padding:3px;border-radius:999px;border:1px solid var(--line);background:var(--glass);margin:12px auto 0;width:200px}
+.seg i{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:999px;background:rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.12);transition:transform .35s var(--ease)}
+.seg[data-m="dpad"] i{transform:translateX(100%)}
+.seg button{position:relative;height:32px;font:600 12px/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);transition:opacity .2s}
+.seg button.on{color:var(--ink)}
+
+/* now playing */
+.now{position:relative;display:flex;align-items:center;gap:13px;margin-top:12px;padding:11px;border-radius:20px;border:1px solid var(--line);background:var(--glass);overflow:hidden;min-height:84px}
+.now .art{position:relative;width:96px;height:60px;border-radius:12px;background:#111 center/cover no-repeat;flex:none;overflow:hidden;box-shadow:0 8px 24px -10px rgba(0,0,0,.9)}
+.now .art::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.now .art.empty{display:grid;place-items:center;color:var(--dim);background:#0c0c0d}
+.now .meta{min-width:0;flex:1;display:flex;flex-direction:column;gap:6px}
+.now .k{font:600 10px/1 var(--f-display);letter-spacing:.22em;text-transform:uppercase;color:var(--champ)}
+.now .t{font:600 15px/1.2 var(--f-display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now .s{font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now .cc{flex:none;align-self:flex-start;height:30px;padding:0 10px;border-radius:999px;border:1px solid var(--line);font:600 11px/1 var(--f-display);letter-spacing:.06em;color:var(--mute);display:flex;align-items:center;gap:6px}
+.now .cc svg{width:16px;height:16px}
+.now .cc.on{color:#0a0a0b;background:var(--plat);border-color:transparent}
+.scrub{position:relative;height:26px;margin:-4px 0 -8px;touch-action:none;cursor:pointer}
+.scrub .trk{position:absolute;left:0;right:0;top:11px;height:4px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden}
+.scrub .fill{position:absolute;inset:0;background:var(--plat);transform-origin:left;transform:scaleX(0)}
+.scrub .knob{position:absolute;top:6px;left:-7px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.6);transform:translateX(0) scale(.0001);transition:opacity .2s}
+.scrub.drag .knob,.now.playing .scrub .knob{transform-origin:center}
+.times{display:flex;justify-content:space-between;font-size:11px;color:var(--dim)}
+.bubble{position:absolute;bottom:30px;left:0;padding:5px 9px;border-radius:9px;background:#fff;color:#000;font:600 12px/1 var(--f-body);pointer-events:none;opacity:0;transform:translateX(-50%) translateY(4px);transition:opacity .15s,transform .15s var(--ease)}
+.scrub.drag .bubble{opacity:1;transform:translateX(var(--bx,0)) translateX(-50%)}
+
+.login{display:flex;align-items:center;gap:12px;margin-top:10px;padding:12px 14px;border-radius:16px;border:1px solid rgba(217,212,199,.35);background:rgba(217,212,199,.06);text-align:left;width:100%;animation:rise .45s var(--ease) both}
+.login b{display:block;font-weight:600}.login small{color:var(--mute);font-size:12px}
+.login .grow{flex:1}
+
+/* control surface */
+.surface{position:relative;flex:1;min-height:220px;margin-top:14px}
+.pad{position:absolute;inset:0;border-radius:30px;background:radial-gradient(120% 80% at 50% 0%,#151517 0%,#08080a 55%,#050506 100%);border:1px solid var(--line);overflow:hidden;touch-action:none;contain:strict}
+.pad::before{content:"";position:absolute;left:50%;top:50%;width:62%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(255,255,255,.045);box-shadow:0 0 0 38px rgba(255,255,255,.012)}
+.pad .tip{position:absolute;left:0;right:0;bottom:22px;text-align:center;font-size:12px;letter-spacing:.04em;color:var(--dim);transition:opacity .6s}
+.pad.used .tip{opacity:0}
+.pad .glow{position:absolute;left:0;top:0;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.16) 0%,rgba(217,212,199,.06) 38%,transparent 70%);opacity:0;transition:opacity .25s;will-change:transform}
+.pad.down .glow{opacity:1;transition:opacity .08s}
+.pad .ring{position:absolute;left:0;top:0;width:70px;height:70px;margin:-35px 0 0 -35px;border-radius:50%;border:1.5px solid rgba(255,255,255,.55);opacity:0;pointer-events:none}
+.pad .edge{position:absolute;display:grid;place-items:center;color:#fff;opacity:0;pointer-events:none}
+.pad .edge svg{width:30px;height:30px}
+.pad .e-up{left:50%;top:14px;transform:translateX(-50%)}
+.pad .e-down{left:50%;bottom:14px;transform:translateX(-50%)}
+.pad .e-left{top:50%;left:14px;transform:translateY(-50%)}
+.pad .e-right{top:50%;right:14px;transform:translateY(-50%)}
+
+.dpad{position:absolute;left:50%;top:50%;width:min(100%,310px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 50% 30%,#18181a,#09090a 70%);border:1px solid var(--line);box-shadow:0 30px 60px -30px rgba(0,0,0,1),inset 0 1px 0 rgba(255,255,255,.06);overflow:hidden;touch-action:none}
+.surface.small .dpad{width:auto;height:100%}
+.dpad .dir{position:absolute;inset:0;display:block}
+.dpad .dir::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at var(--gx) var(--gy),rgba(255,255,255,.14),transparent 55%);opacity:0;transition:opacity .25s}
+.dpad .dir.on::before{opacity:1;transition:opacity .04s}
+.dpad .dir svg{position:absolute;width:26px;height:26px;color:var(--mute);transition:transform .2s var(--ease),opacity .2s}
+.dpad .dir.on svg{color:#fff}
+.dpad .d-up{clip-path:polygon(0 0,100% 0,50% 50%);--gx:50%;--gy:6%}
+.dpad .d-right{clip-path:polygon(100% 0,100% 100%,50% 50%);--gx:94%;--gy:50%}
+.dpad .d-down{clip-path:polygon(0 100%,100% 100%,50% 50%);--gx:50%;--gy:94%}
+.dpad .d-left{clip-path:polygon(0 0,0 100%,50% 50%);--gx:6%;--gy:50%}
+.dpad .d-up svg{left:50%;top:9%;margin-left:-13px}
+.dpad .d-down svg{left:50%;bottom:9%;margin-left:-13px}
+.dpad .d-left svg{top:50%;left:9%;margin-top:-13px}
+.dpad .d-right svg{top:50%;right:9%;margin-top:-13px}
+.dpad .x{position:absolute;inset:0;pointer-events:none}
+.dpad .x::before,.dpad .x::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:linear-gradient(transparent,rgba(255,255,255,.06) 20%,transparent 42%,transparent 58%,rgba(255,255,255,.06) 80%,transparent);transform:rotate(45deg)}
+.dpad .x::after{transform:rotate(-45deg)}
+.dpad .ok{position:absolute;left:50%;top:50%;width:40%;aspect-ratio:1;margin:-20% 0 0 -20%;border-radius:50%;background:radial-gradient(circle at 50% 28%,#232326,#0d0d0f 72%);border:1px solid rgba(255,255,255,.14);box-shadow:0 14px 30px -12px rgba(0,0,0,1),inset 0 1px 0 rgba(255,255,255,.1);display:grid;place-items:center;font:600 15px/1 var(--f-display);letter-spacing:.2em;color:var(--champ);transition:transform .16s var(--ease)}
+.dpad .ok::before{content:"";position:absolute;inset:-1px;border-radius:50%;padding:1px;background:linear-gradient(140deg,rgba(255,255,255,.55),rgba(255,255,255,.04) 40%,rgba(217,212,199,.35));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.dpad .ok.on{transform:scale(.94)}
+
+/* keys */
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.key{height:58px;border-radius:18px;border:1px solid var(--line);background:var(--glass);display:flex;align-items:center;justify-content:center;gap:9px;font:600 13px/1 var(--f-display);color:var(--mute);transition:transform .16s var(--ease),opacity .2s}
+.key:active,.key.on{transform:scale(.95)}
+.key svg{color:var(--ink)}
+.transport{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding:0 2px;transition:opacity .3s}
+.transport.idle .tb{opacity:.35}
+.tb{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;color:var(--ink);position:relative;transition:transform .16s var(--ease),opacity .3s}
+.tb:active,.tb.on{transform:scale(.9)}
+.tb small{position:absolute;font:600 8px/1 var(--f-display);top:50%;left:50%;transform:translate(-50%,-38%);letter-spacing:0}
+.tb.seek svg{width:30px;height:30px}
+.tb.vol svg{width:21px;height:21px;color:var(--mute)}
+.play{width:76px;height:76px;border-radius:50%;background:var(--plat);color:#0a0a0b;display:grid;place-items:center;box-shadow:0 16px 36px -14px rgba(255,255,255,.4),inset 0 1px 0 #fff;transition:transform .18s var(--spring),opacity .3s}
+.play:active{transform:scale(.92)}
+.play svg{width:28px;height:28px;fill:currentColor;stroke:none}
+.transport.idle .play{opacity:.5}
+
+/* sheets */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.62);opacity:0;pointer-events:none;transition:opacity .3s var(--ease);z-index:20}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;max-width:520px;margin:0 auto;padding:10px 18px calc(var(--sab) + 18px);border-radius:26px 26px 0 0;background:#0c0c0e;border:1px solid var(--line);border-bottom:0;box-shadow:0 -30px 60px -20px rgba(0,0,0,.9);transform:translateY(105%);transition:transform .42s var(--ease);visibility:hidden}
+.sheet.on{transform:none;visibility:visible}
+.sheet .grab{width:38px;height:4px;border-radius:4px;background:rgba(255,255,255,.18);margin:0 auto 14px}
+.sheet h3{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:600 11px/1.3 var(--f-display);letter-spacing:.24em;text-transform:uppercase;color:var(--dim);margin:6px 2px 12px}
+.field{display:flex;align-items:center;gap:8px;height:56px;padding:0 6px 0 16px;border-radius:16px;border:1px solid var(--line-hi);background:rgba(255,255,255,.04)}
+.field:focus-within{border-color:var(--champ)}
+.field input{flex:1;min-width:0;height:100%;border:0;background:none;color:var(--ink);font:500 17px/1 var(--f-body);outline:0;-webkit-user-select:text;user-select:text}
+.field input::placeholder{color:var(--dim)}
+.field .iconbtn{width:42px;height:42px;border:0}
+.mic.live{color:#0a0a0b;background:var(--plat);animation:breathe 1.1s ease-in-out infinite}
+.acts{display:grid;grid-template-columns:1fr 1.4fr;gap:10px;margin-top:14px}
+.acts .btn{height:52px}
+.kbnote{font-size:12px;color:var(--dim);margin:10px 2px 0}
+.menu .tvrow{margin-bottom:8px}
+.menu .item{text-decoration:none;display:flex;align-items:center;gap:14px;width:100%;height:54px;padding:0 6px;border-bottom:1px solid var(--line);text-align:left;color:var(--ink);font-weight:500}
+.menu .item:last-child{border-bottom:0}
+.menu .item svg{color:var(--mute)}
+.menu .item.warn{color:var(--bad)}.menu .item.warn svg{color:var(--bad)}
+
+.toast{position:fixed;left:50%;top:calc(var(--sat) + 12px);z-index:30;padding:10px 16px;border-radius:999px;background:#fff;color:#000;font:600 13px/1.2 var(--f-body);transform:translate(-50%,-140%);opacity:0;transition:transform .45s var(--ease),opacity .3s;max-width:calc(100% - 32px);text-align:center;pointer-events:none}
+.toast.on{transform:translate(-50%,0);opacity:1}
+
+@media (max-height:700px){
+  .now{min-height:72px;padding:9px}.now .art{width:80px;height:50px}
+  .keys{margin-top:10px}.key{height:50px}
+  .transport{margin-top:8px}.play{width:66px;height:66px}
+  .seg{margin-top:8px}.surface{margin-top:10px}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="amb"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="mkPlat" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".38" stop-color="#dcd9d1"/><stop offset=".56" stop-color="#8f8c86"/><stop offset=".76" stop-color="#efebe2"/><stop offset="1" stop-color="#a9a59d"/></linearGradient>
+    <path id="mkLetters" d="M-36.5 -28L-34.1 -28L-34.1 28L-36.5 28ZM-36.5 -28L-28 -28L-12.2 28L-15.2 28ZM-0.8 -28L1.5 -28L-12.2 28L-15.2 28ZM-0.5 -28L8.1 -28L8.1 28L-0.5 28ZM30.8 -28L33.5 -28L8.1 5.2L8.1 1.5ZM11.7 -2.4L18.3 -6.8L39.1 28L29.9 28ZM-41.9 -28L-28 -28L-28 -26.9L-41.9 -26.9ZM-41.9 26.9L-28.7 26.9L-28.7 28L-41.9 28ZM-5.3 -28L13.1 -28L13.1 -26.9L-5.3 -26.9ZM-5.3 26.9L13.1 26.9L13.1 28L-5.3 28ZM25.7 -28L38.3 -28L38.3 -26.9L25.7 -26.9ZM26.1 26.9L42.7 26.9L42.7 28L26.1 28Z"/>
+    <symbol id="mk" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" fill="none" stroke="url(#mkPlat)" stroke-width="2"/><circle cx="60" cy="60" r="50" fill="none" stroke="url(#mkPlat)" stroke-width=".8" opacity=".6"/><use href="#mkLetters" transform="translate(60 60) scale(.84)" fill="url(#mkPlat)"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="i-kb" viewBox="0 0 24 24"><path d="M10 8h.01"/><path d="M12 12h.01"/><path d="M14 8h.01"/><path d="M16 12h.01"/><path d="M18 8h.01"/><path d="M6 8h.01"/><path d="M7 16h10"/><path d="M8 12h.01"/><rect width="20" height="16" x="2" y="4" rx="2"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.4-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="5.5" y="4" width="4.5" height="16" rx="1.2"/><rect x="14" y="4" width="4.5" height="16" rx="1.2"/></symbol>
+    <symbol id="i-rew" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+    <symbol id="i-ff" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></symbol>
+    <symbol id="i-cc" viewBox="0 0 24 24"><rect width="18" height="14" x="3" y="5" rx="2"/><path d="M7 15h4M15 15h2M7 11h2M13 11h4"/></symbol>
+    <symbol id="i-vol1" viewBox="0 0 24 24"><path d="M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5z"/><path d="M16 9a5 5 0 0 1 0 6"/></symbol>
+    <symbol id="i-vol2" viewBox="0 0 24 24"><path d="M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.4 18.4a9 9 0 0 0 0-12.8"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-tv" viewBox="0 0 24 24"><rect width="20" height="15" x="2" y="7" rx="2"/><path d="m17 2-5 5-5-5"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></symbol>
+    <symbol id="i-enter" viewBox="0 0 24 24"><path d="m9 10-5 5 5 5"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+    <symbol id="i-open" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+    <symbol id="i-install" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+    <symbol id="i-login" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></symbol>
+    <symbol id="i-unlink" viewBox="0 0 24 24"><path d="m18.84 12.25 1.72-1.71a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="m5.17 11.75-1.71 1.71a5 5 0 0 0 7.07 7.07l1.71-1.71"/><path d="M8 2v3M2 8h3M16 22v-3M22 16h-3"/></symbol>
+  </defs>
+</svg>
+
+<!-- ============ Pair ============ -->
+<section class="screen" id="pair" hidden>
+  <div class="brand"><svg aria-hidden="true"><use href="#mk"/></svg><span>Remote</span></div>
+  <div class="pair-body">
+    <h1>Pair with your TV</h1>
+    <p>Open MKCinema on your TV and scan the code on screen with your phone camera. Or type the 6-character code from <b>Settings › Devices › Phone remote</b>.</p>
+    <label class="code" id="codeBox" aria-label="Pairing code">
+      <input id="codeIn" inputmode="text" autocomplete="one-time-code" autocapitalize="characters" autocorrect="off" spellcheck="false" maxlength="6" enterkeyhint="go">
+      <span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span>
+    </label>
+    <button class="btn btn-prime" type="button" id="codeGo" disabled><svg class="i"><use href="#i-tv"/></svg>Pair</button>
+    <div class="recent" id="recent" hidden></div>
+  </div>
+  <p class="hint"><a href="./">Open MKCinema on this phone</a></p>
+</section>
+
+<!-- ============ Controller ============ -->
+<section class="screen" id="ctl" hidden>
+  <header class="top">
+    <button class="tvchip" type="button" id="tvChip" data-s="conn" aria-label="Switch TV">
+      <span class="dot"></span>
+      <span class="nm"><b id="tvName">Your TV</b><small id="tvState">Connecting…</small></span>
+      <svg class="i chev"><use href="#i-down"/></svg>
+    </button>
+    <button class="iconbtn" type="button" id="menuBtn" aria-label="More"><svg class="i"><use href="#i-more"/></svg></button>
+  </header>
+
+  <div class="now" id="now">
+    <div class="art empty" id="art"><svg class="i"><use href="#i-tv"/></svg></div>
+    <div class="meta">
+      <span class="k" id="nowK">On your TV</span>
+      <span class="t" id="nowT">Waiting for your TV</span>
+      <span class="s" id="nowS"></span>
+      <div class="scrub" id="scrub" hidden><div class="trk"><i class="fill" id="fill"></i></div><i class="knob" id="knob"></i><span class="bubble tnum" id="bubble">0:00</span></div>
+      <div class="times tnum" id="times" hidden><span id="tCur">0:00</span><span id="tDur">0:00</span></div>
+    </div>
+    <button class="cc" type="button" id="ccBtn" hidden aria-label="Subtitles"><svg class="i"><use href="#i-cc"/></svg>CC</button>
+  </div>
+  <button class="login" type="button" id="loginBtn" hidden><svg class="i"><use href="#i-login"/></svg><span class="grow"><b>Sign in your TV from here</b><small>Faster than typing on the TV</small></span><svg class="i"><use href="#i-right"/></svg></button>
+
+  <div class="seg" id="seg" data-m="pad" role="tablist"><i></i><button type="button" data-m="pad" class="on">Touch</button><button type="button" data-m="dpad">D-pad</button></div>
+
+  <div class="surface" id="surface">
+    <div class="pad" id="pad" aria-label="Touchpad: swipe to move, tap to select">
+      <span class="edge e-up"><svg class="i"><use href="#i-up"/></svg></span>
+      <span class="edge e-down"><svg class="i"><use href="#i-down"/></svg></span>
+      <span class="edge e-left"><svg class="i"><use href="#i-left"/></svg></span>
+      <span class="edge e-right"><svg class="i"><use href="#i-right"/></svg></span>
+      <i class="glow" id="glow"></i><i class="ring" id="ring"></i>
+      <span class="tip">Swipe to move · Tap to select · Hold a swipe to keep going</span>
+    </div>
+    <div class="dpad" id="dpad" hidden>
+      <button type="button" class="dir d-up" data-k="up" aria-label="Up"><svg class="i"><use href="#i-up"/></svg></button>
+      <button type="button" class="dir d-right" data-k="right" aria-label="Right"><svg class="i"><use href="#i-right"/></svg></button>
+      <button type="button" class="dir d-down" data-k="down" aria-label="Down"><svg class="i"><use href="#i-down"/></svg></button>
+      <button type="button" class="dir d-left" data-k="left" aria-label="Left"><svg class="i"><use href="#i-left"/></svg></button>
+      <i class="x"></i>
+      <button type="button" class="ok" data-k="ok" aria-label="OK">OK</button>
+    </div>
+  </div>
+
+  <div class="keys">
+    <button class="key" type="button" data-k="back"><svg class="i"><use href="#i-back"/></svg>Back</button>
+    <button class="key" type="button" data-k="home"><svg class="i"><use href="#i-home"/></svg>Home</button>
+    <button class="key" type="button" id="kbBtn"><svg class="i"><use href="#i-kb"/></svg>Type</button>
+  </div>
+
+  <div class="transport idle" id="transport">
+    <button class="tb vol" type="button" data-k="voldown" data-rep aria-label="Volume down"><svg class="i"><use href="#i-vol1"/></svg></button>
+    <button class="tb seek" type="button" data-k="rew" data-rep aria-label="Rewind"><svg class="i"><use href="#i-rew"/></svg><small class="tnum" id="stepA">10</small></button>
+    <button class="play" type="button" data-k="playpause" id="playBtn" aria-label="Play or pause"><svg class="i"><use href="#i-play" id="playIco"/></svg></button>
+    <button class="tb seek" type="button" data-k="ff" data-rep aria-label="Forward"><svg class="i"><use href="#i-ff"/></svg><small class="tnum" id="stepB">10</small></button>
+    <button class="tb vol" type="button" data-k="volup" data-rep aria-label="Volume up"><svg class="i"><use href="#i-vol2"/></svg></button>
+  </div>
+</section>
+
+<div class="scrim" id="scrim"></div>
+
+<!-- keyboard -->
+<div class="sheet" id="kb" role="dialog" aria-label="Type on your TV">
+  <div class="grab"></div>
+  <h3 id="kbTitle">Type on your TV</h3>
+  <div class="field">
+    <input id="kbIn" type="text" autocomplete="off" autocapitalize="sentences" spellcheck="false" enterkeyhint="search" placeholder="Search movies, series…">
+    <button class="iconbtn" type="button" id="kbClear" aria-label="Clear" hidden><svg class="i"><use href="#i-x"/></svg></button>
+    <button class="iconbtn mic" type="button" id="kbMic" aria-label="Speak" hidden><svg class="i"><use href="#i-mic"/></svg></button>
+  </div>
+  <p class="kbnote" id="kbNote">Letters appear on the TV as you type.</p>
+  <div class="acts"><button class="btn btn-ghost" type="button" id="kbDone">Done</button><button class="btn btn-prime" type="button" id="kbGo"><svg class="i"><use href="#i-enter"/></svg><span id="kbGoT">Search</span></button></div>
+</div>
+
+<!-- menu -->
+<div class="sheet menu" id="menu" role="dialog" aria-label="Remote menu">
+  <div class="grab"></div>
+  <h3>Your TVs</h3>
+  <div id="menuTvs"></div>
+  <button class="item" type="button" id="mPair"><svg class="i"><use href="#i-plus"/></svg>Pair another TV</button>
+  <button class="item" type="button" id="mInstall" hidden><svg class="i"><use href="#i-install"/></svg>Add the remote to your home screen</button>
+  <a class="item" href="./" id="mApp"><svg class="i"><use href="#i-open"/></svg>Open MKCinema on this phone</a>
+  <button class="item warn" type="button" id="mForget"><svg class="i"><use href="#i-unlink"/></svg>Forget this TV</button>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+'use strict';
+/* MKCinema Remote: a phone page that drives MKCinema on a TV.
+   Transport is Supabase Realtime broadcast over one bare WebSocket (no SDK to download, so it opens instantly),
+   on the same channel the TV app's Bus listens to: mkc-remote-<CODE>, event "m". A BroadcastChannel covers
+   a second tab on the same device. The TV keeps its code, and this phone remembers every TV it paired with. */
+const SB_DEFAULT = { url: 'https://wogffhgdixgrayowewnf.supabase.co', key: 'sb_publishable_ZpiFwB_oM579GwCunYpHWg_jelRazT-' };
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const rid = (n = 10) => Array.from(crypto.getRandomValues(new Uint8Array(n)), (b) => 'abcdefghijkmnpqrstuvwxyz23456789'[b % 32]).join('');
+const CODE_RE = /^[ABCDEFGHJKMNPQRSTUVWXYZ2-9]{6}$/;
+const Store = {
+  get(k, d) { try { const v = localStorage.getItem('mkc:rm.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('mkc:rm.' + k, JSON.stringify(v)); } catch (e) { /* private mode: keep going in memory */ } },
+};
+const ME = Store.get('id', '') || (() => { const id = rid(); Store.set('id', id); return id; })();
+const fmt = (s) => { s = Math.max(0, Math.floor(s || 0)); const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, x = String(s % 60).padStart(2, '0'); return h ? `${h}:${String(m).padStart(2, '0')}:${x}` : `${m}:${x}`; };
+const buzz = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { /* not allowed */ } };
+const phoneName = () => { const u = navigator.userAgent; return /Android/.test(u) ? 'Android phone' : /iPhone|iPad/.test(u) ? 'iPhone' : 'Phone'; };
+let toastT = 0;
+function toast(t, ms = 2600) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), ms); }
+
+/* ---------- Paired TVs ---------- */
+const TVs = {
+  list() { return Store.get('tvs', []).filter((t) => t && CODE_RE.test(t.code)); },
+  save(code, name, sb) { const old = this.list().find((t) => t.code === code), l = this.list().filter((t) => t.code !== code); l.unshift({ code, name: name || 'TV', at: Date.now(), sb: sb || (old && old.sb) || null }); Store.set('tvs', l.slice(0, 8)); },
+  sb(code) { const t = this.list().find((x) => x.code === code); return (t && t.sb) || null; },
+  forget(code) { Store.set('tvs', this.list().filter((t) => t.code !== code)); },
+  name(code) { const t = this.list().find((x) => x.code === code); return t ? t.name : ''; },
+};
+
+/* ---------- Realtime link: Phoenix protocol, JSON serializer ---------- */
+class Link {
+  constructor(code, onMsg, onState, sb) {
+    this.sb = sb || SB_DEFAULT; this.code = code; this.topic = `realtime:mkc-remote-${code}`; this.onMsg = onMsg; this.onState = onState;
+    this.ws = null; this.joined = false; this.ref = 0; this.joinRef = ''; this.seen = new Set(); this.closed = false; this.tries = 0; this.hbT = 0; this.reT = 0;
+    try { this.bc = new BroadcastChannel(`mkc:remote-${code}`); this.bc.onmessage = (e) => this.recv(e.data); } catch (e) { this.bc = null; }
+    this.open();
+  }
+  open() {
+    if (this.closed) return;
+    clearTimeout(this.reT); this.onState('conn');
+    let ws;
+    try { ws = this.ws = new WebSocket(`${this.sb.url.replace(/^http/, 'ws')}/realtime/v1/websocket?apikey=${encodeURIComponent(this.sb.key)}&vsn=1.0.0`); }
+    catch (e) { this.retry(); return; }
+    ws.onopen = () => {
+      this.joinRef = String(++this.ref);
+      this.raw({ topic: this.topic, event: 'phx_join', payload: { config: { broadcast: { self: false, ack: false }, presence: { key: '' }, postgres_changes: [] } }, ref: this.joinRef, join_ref: this.joinRef });
+      clearInterval(this.hbT); this.hbT = setInterval(() => this.raw({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: String(++this.ref) }), 25000);
+    };
+    ws.onmessage = (e) => {
+      let m; try { m = JSON.parse(e.data); } catch (x) { return; }
+      if (m.event === 'phx_reply' && m.ref === this.joinRef) {
+        if (m.payload && m.payload.status === 'ok') { this.joined = true; this.tries = 0; this.onState('online'); }
+        else { try { ws.close(); } catch (x) { /* gone */ } }
+        return;
+      }
+      if (m.topic !== this.topic) return;
+      if (m.event === 'broadcast' && m.payload && m.payload.event === 'm') this.recv(m.payload.payload);
+      else if (m.event === 'phx_error' || m.event === 'phx_close') { try { ws.close(); } catch (x) { /* gone */ } }
+    };
+    ws.onclose = () => { if (this.ws !== ws) return; this.joined = false; clearInterval(this.hbT); if (!this.closed) { this.onState('offline'); this.retry(); } };
+    ws.onerror = () => {};
+  }
+  retry() { if (this.closed) return; clearTimeout(this.reT); const d = [300, 800, 1600, 3000, 5000][Math.min(this.tries++, 4)]; this.reT = setTimeout(() => this.open(), d); }
+  alive() { return this.ws && this.ws.readyState === 1 && this.joined; }
+  /* after the phone wakes, the socket can look open but be dead: reopen it straight away */
+  kick() { if (this.closed) return; if (this.ws) { const w = this.ws; this.ws = null; try { w.close(); } catch (e) { /* gone */ } } this.joined = false; this.tries = 0; this.open(); }
+  raw(o) { try { if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify(o)); } catch (e) { /* closing */ } }
+  send(msg) {
+    const m = { ...msg, _from: ME, _id: rid(8) }; this.seen.add(m._id);
+    try { this.bc && this.bc.postMessage(m); } catch (e) { /* closed */ }
+    if (this.joined) this.raw({ topic: this.topic, event: 'broadcast', payload: { type: 'broadcast', event: 'm', payload: m }, ref: String(++this.ref), join_ref: this.joinRef });
+  }
+  recv(m) {
+    if (!m || m._from === ME || this.seen.has(m._id)) return; this.seen.add(m._id);
+    if (this.seen.size > 1500) this.seen = new Set([...this.seen].slice(-400));
+    if (m._to && m._to !== ME) return;
+    this.onMsg(m);
+  }
+  close() {
+    this.closed = true; clearTimeout(this.reT); clearInterval(this.hbT);
+    if (this.joined) this.send({ t: 'bye' });
+    const ws = this.ws; this.ws = null; this.joined = false;
+    setTimeout(() => { try { ws && ws.close(); } catch (e) { /* gone */ } }, 60);
+    try { this.bc && this.bc.close(); } catch (e) { /* gone */ }
+  }
+}
+
+/* ---------- Remote state ---------- */
+const R = {
+  code: '', link: null, st: null, lastSt: 0, net: 'conn', hiT: 0, watchT: 0, kbAuto: false, kbWas: false, typingAt: 0,
+  base: { cur: 0, dur: 0, at: 0, paused: true }, raf: 0,
+  connect(code, sb) {
+    if (this.link) this.link.close();
+    this.sb = sb || TVs.sb(code); this.code = code; this.st = null; this.lastSt = 0; this.kbWas = false;
+    $('#tvName').textContent = TVs.name(code) || 'Your TV';
+    show('ctl'); this.paintNow(); this.paintState();
+    this.link = new Link(code, (m) => this.onMsg(m), (s) => { this.net = s; if (s === 'online') this.hello(); this.paintState(); }, this.sb);
+    clearInterval(this.hiT); this.hiT = setInterval(() => this.hello(), 4000);
+    clearInterval(this.watchT); this.watchT = setInterval(() => this.paintState(), 1000);
+  },
+  hello() { if (this.link) this.link.send({ t: 'hi', name: phoneName(), v: 2 }); },
+  leave() { clearInterval(this.hiT); clearInterval(this.watchT); if (this.link) this.link.close(); this.link = null; this.code = ''; this.st = null; cancelAnimationFrame(this.raf); },
+  send(msg) { if (this.link) this.link.send(msg); },
+  key(k) { this.send({ t: 'key', k }); },
+  live() { return this.net === 'online' && this.lastSt && Date.now() - this.lastSt < 11000; },
+  onMsg(m) {
+    if (m.t === 'st') {
+      const first = !this.lastSt; this.lastSt = Date.now(); this.st = m;
+      if (m.dev) { $('#tvName').textContent = m.dev; if (!first && TVs.name(this.code) !== m.dev) TVs.save(this.code, m.dev); }
+      if (first) { TVs.save(this.code, m.dev, this.sb); history.replaceState(null, '', location.pathname); buzz(14); }
+      this.base = { cur: Number(m.cur) || 0, dur: Number(m.dur) || 0, at: performance.now(), paused: !!m.paused };
+      this.paintNow(); this.paintState(); this.syncKb();
+    } else if (m.t === 'gone') {
+      toast('This TV made a new pairing code. Scan it again to keep going.', 5000);
+      closeSheet(true); TVs.forget(this.code); this.leave(); Pair.show();
+    }
+  },
+  paintState() {
+    const chip = $('#tvChip'), st = $('#tvState');
+    let s, txt;
+    if (this.net === 'online' && this.live()) { s = 'live'; txt = this.st && this.st.v === 'player' ? (this.st.paused ? 'Paused' : 'Playing') : 'Connected'; }
+    else if (this.net === 'online') { s = 'wait'; txt = this.lastSt ? 'TV not answering. Is MKCinema still open?' : 'Looking for your TV…'; }
+    else if (this.net === 'offline') { s = 'off'; txt = navigator.onLine === false ? 'This phone is offline' : 'Reconnecting…'; }
+    else { s = 'conn'; txt = 'Connecting…'; }
+    if (chip.dataset.s !== s) chip.dataset.s = s;
+    if (st.textContent !== txt) st.textContent = txt;
+  },
+  paintNow() {
+    const m = this.st, playing = !!(m && m.v === 'player');
+    const art = $('#art'), url = m && m.art ? m.art : '';
+    if (art.dataset.u !== url) {
+      art.dataset.u = url;
+      if (url) { const im = new Image(); im.onload = () => { if (art.dataset.u === url) { art.style.backgroundImage = `url("${url.replace(/"/g, '%22')}")`; art.classList.remove('empty'); art.innerHTML = ''; } }; im.src = url; }
+      else { art.style.backgroundImage = ''; art.classList.add('empty'); art.innerHTML = '<svg class="i"><use href="#i-tv"/></svg>'; }
+    }
+    $('#nowK').textContent = !m ? 'On your TV' : playing ? (m.paused ? 'Paused' : 'Now playing') : m.title && m.title !== m.where ? (m.where || 'Browsing') : 'On your TV';
+    $('#nowT').textContent = !m ? (this.lastSt ? 'Your TV' : 'Waiting for your TV') : (m.title || (playing ? 'Playing' : 'MKCinema'));
+    $('#nowS').textContent = m ? (m.sub || '') : 'Keep MKCinema open on the TV';
+    $('#scrub').hidden = !playing || !m.dur; $('#times').hidden = !playing || !m.dur;
+    $('#now').classList.toggle('playing', playing);
+    const cc = $('#ccBtn'); cc.hidden = !playing; cc.classList.toggle('on', !!(m && m.subs));
+    $('#transport').classList.toggle('idle', !playing);
+    $('#playIco').setAttribute('href', playing && !m.paused ? '#i-pause' : '#i-play');
+    const step = String((m && m.step) || 10); $('#stepA').textContent = step; $('#stepB').textContent = step;
+    $('#tDur').textContent = fmt(m && m.dur);
+    $('#loginBtn').hidden = !(m && m.login);
+    this.tick(true);
+  },
+  /* the progress bar runs on its own between updates, so it moves smoothly instead of jumping once a second */
+  tick(once) {
+    cancelAnimationFrame(this.raf);
+    const m = this.st; if (!m || m.v !== 'player' || !this.base.dur) return;
+    const run = () => {
+      if (Scrub.drag) return;
+      const b = this.base, t = clamp(b.cur + (b.paused ? 0 : (performance.now() - b.at) / 1000), 0, b.dur), r = b.dur ? t / b.dur : 0;
+      $('#fill').style.transform = `scaleX(${r})`;
+      const w = $('#scrub').clientWidth; $('#knob').style.transform = `translateX(${(r * w).toFixed(1)}px) scale(${b.paused ? 1 : .0001})`;
+      const tc = fmt(t); if ($('#tCur').textContent !== tc) $('#tCur').textContent = tc;
+      if (!b.paused && !document.hidden) this.raf = requestAnimationFrame(run);
+    };
+    run(); if (once && this.base.paused) cancelAnimationFrame(this.raf);
+  },
+  syncKb() {
+    const kb = this.st && this.st.kb;
+    if (kb && !this.kbWas && !Kb.open) Kb.show(kb, true);
+    else if (!kb && this.kbWas && Kb.open && Kb.auto && Date.now() - this.typingAt > 1500) Kb.hide();
+    else if (kb && Kb.open) Kb.label(kb);
+    this.kbWas = !!kb;
+  },
+};
+
+/* ---------- Screens ---------- */
+function show(id) {
+  ['pair', 'ctl'].forEach((s) => { const el = $(`#${s}`), on = s === id; if (el.hidden === !on) return; el.hidden = !on; if (on) { el.classList.remove('in'); void el.offsetWidth; el.classList.add('in'); } });
+}
+
+/* ---------- Pairing ---------- */
+const Pair = {
+  show(prefill) {
+    show('pair'); const inp = $('#codeIn'); inp.value = prefill || ''; this.paint(); this.recent();
+    setTimeout(() => { if (!TVs.list().length) inp.focus(); }, 380);
+  },
+  paint() {
+    const v = $('#codeIn').value, cells = $$('#codeBox .c'), focused = document.activeElement === $('#codeIn');
+    cells.forEach((c, i) => { c.textContent = v[i] || ''; c.classList.toggle('cur', focused && i === Math.min(v.length, 5)); });
+    $('#codeGo').disabled = !CODE_RE.test(v);
+  },
+  recent() {
+    const l = TVs.list(), box = $('#recent'); box.hidden = !l.length; if (!l.length) return;
+    box.innerHTML = '<h2>Paired TVs</h2>';
+    l.forEach((t) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'tvrow'; b.innerHTML = '<svg class="i"><use href="#i-tv"/></svg><span class="grow"><b></b><small></small></span><svg class="i"><use href="#i-right"/></svg>'; b.querySelector('b').textContent = t.name; b.querySelector('small').textContent = `Code ${t.code}`; b.onclick = () => R.connect(t.code); box.appendChild(b); });
+  },
+  go() {
+    const v = $('#codeIn').value.toUpperCase();
+    if (!CODE_RE.test(v)) { const b = $('#codeBox'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); buzz([10, 40, 10]); return; }
+    $('#codeIn').blur(); R.connect(v);
+  },
+};
+$('#codeIn').addEventListener('input', (e) => { const v = e.target.value.toUpperCase().replace(/[^ABCDEFGHJKMNPQRSTUVWXYZ2-9]/g, '').slice(0, 6); e.target.value = v; Pair.paint(); if (CODE_RE.test(v)) Pair.go(); });
+$('#codeIn').addEventListener('focus', () => Pair.paint()); $('#codeIn').addEventListener('blur', () => Pair.paint());
+$('#codeIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') Pair.go(); });
+$('#codeGo').onclick = () => Pair.go();
+
+/* ---------- Touchpad: swipe moves one step per 44 px, a held swipe keeps going, a flick adds steps, a tap is OK ---------- */
+const Pad = (() => {
+  const pad = $('#pad'), glow = $('#glow'), ring = $('#ring'); const STEP = 44;
+  let g = null;
+  const pos = (e) => { const r = pad.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  const flash = (d) => { const el = $(`.e-${d}`, pad); el.animate([{ opacity: .9 }, { opacity: 0 }], { duration: 420, easing: 'ease-out' }); };
+  const emit = (d) => { R.key(d); flash(d); buzz(5); pad.classList.add('used'); };
+  const stopHold = () => { if (g) { clearTimeout(g.holdT); clearInterval(g.repT); } };
+  pad.addEventListener('pointerdown', (e) => {
+    if (g) return; const [x, y] = pos(e);
+    g = { id: e.pointerId, x0: x, y0: y, ax: x, ay: y, t0: performance.now(), moved: false, last: '', hist: [[x, y, performance.now()]], holdT: 0, repT: 0, steps: 0 };
+    try { pad.setPointerCapture(e.pointerId); } catch (x2) { /* gone */ }
+    glow.style.transform = `translate3d(${x}px,${y}px,0)`; pad.classList.add('down');
+  });
+  pad.addEventListener('pointermove', (e) => {
+    if (!g || e.pointerId !== g.id) return; const [x, y] = pos(e), now = performance.now();
+    glow.style.transform = `translate3d(${x}px,${y}px,0)`;
+    g.hist.push([x, y, now]); if (g.hist.length > 8) g.hist.shift();
+    if (!g.moved && Math.hypot(x - g.x0, y - g.y0) > 12) g.moved = true;
+    if (!g.moved) return;
+    const dx = x - g.ax, dy = y - g.ay;
+    let d = '';
+    if (Math.abs(dx) >= STEP && Math.abs(dx) > Math.abs(dy) * 1.15) { d = dx > 0 ? 'right' : 'left'; g.ax += Math.sign(dx) * STEP; g.ay = y; }
+    else if (Math.abs(dy) >= STEP && Math.abs(dy) > Math.abs(dx) * 1.15) { d = dy > 0 ? 'down' : 'up'; g.ay += Math.sign(dy) * STEP; g.ax = x; }
+    if (d) { emit(d); g.last = d; g.steps++; }
+    // holding still after a swipe repeats that direction, like holding a remote's arrow
+    stopHold();
+    if (g.last) { const dir = g.last; g.holdT = setTimeout(() => { if (!g) return; emit(dir); g.repT = setInterval(() => { if (g) emit(dir); }, 130); }, 380); }
+  });
+  const end = (e, cancel) => {
+    if (!g || e.pointerId !== g.id) return; stopHold();
+    const [x, y] = pos(e), dt = performance.now() - g.t0;
+    pad.classList.remove('down');
+    if (!cancel && !g.moved && dt < 500) {
+      R.key('ok'); buzz(12); pad.classList.add('used');
+      ring.style.transform = `translate3d(${x}px,${y}px,0)`;
+      ring.animate([{ opacity: .9, transform: `translate3d(${x}px,${y}px,0) scale(.4)` }, { opacity: 0, transform: `translate3d(${x}px,${y}px,0) scale(1.5)` }], { duration: 460, easing: 'cubic-bezier(.22,.8,.24,1)' });
+    } else if (!cancel && g.moved) {
+      // a fast flick carries on for a few more steps
+      const h = g.hist, a = h[0], b = h[h.length - 1], ms = Math.max(1, b[2] - a[2]);
+      const vx = (b[0] - a[0]) / ms, vy = (b[1] - a[1]) / ms, v = Math.max(Math.abs(vx), Math.abs(vy));
+      if (v > 0.9 && ms < 140) {
+        const d = Math.abs(vx) > Math.abs(vy) ? (vx > 0 ? 'right' : 'left') : (vy > 0 ? 'down' : 'up');
+        const extra = clamp(Math.round((v - 0.7) * 2.2), 1, 4);
+        for (let i = 0; i < extra; i++) setTimeout(() => emit(d), 70 * (i + 1));
+      } else if (!g.steps) {
+        // a short, slow swipe still counts as one step
+        const dx = x - g.x0, dy = y - g.y0;
+        if (Math.max(Math.abs(dx), Math.abs(dy)) > 22) emit(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+      }
+    }
+    g = null;
+  };
+  pad.addEventListener('pointerup', (e) => end(e, false));
+  pad.addEventListener('pointercancel', (e) => end(e, true));
+  return {};
+})();
+
+/* ---------- Hold-to-repeat buttons: D-pad, seek, volume ---------- */
+function holdable(el, fire, rep) {
+  let t = 0, i = 0, id = null;
+  const stop = () => { clearTimeout(t); clearInterval(i); el.classList.remove('on'); id = null; };
+  el.addEventListener('pointerdown', (e) => {
+    if (id !== null) return; id = e.pointerId; e.preventDefault(); el.classList.add('on'); fire(); buzz(rep ? 6 : 10);
+    try { el.setPointerCapture(e.pointerId); } catch (x) { /* gone */ }
+    if (rep) t = setTimeout(() => { i = setInterval(() => { fire(); buzz(4); }, rep); }, 380);
+  });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((ev) => el.addEventListener(ev, (e) => { if (e.pointerId === id) stop(); }));
+  el.addEventListener('click', (e) => { if (e.detail === 0) fire(); }); // keyboard / accessibility activation
+  el.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+$$('#dpad [data-k]').forEach((b) => holdable(b, () => R.key(b.dataset.k), b.dataset.k === 'ok' ? 0 : 120));
+$$('.keys [data-k]').forEach((b) => holdable(b, () => R.key(b.dataset.k), 0));
+$$('#transport [data-k]').forEach((b) => holdable(b, () => {
+  const k = b.dataset.k; R.key(k);
+  // show the change straight away; the TV's next update confirms it
+  const s = R.st; if (!s || s.v !== 'player') return;
+  if (k === 'playpause') { R.base = { ...R.base, cur: R.base.cur + (R.base.paused ? 0 : (performance.now() - R.base.at) / 1000), at: performance.now(), paused: !R.base.paused }; s.paused = R.base.paused; R.paintNow(); }
+  if (k === 'rew' || k === 'ff') { const st = Number(s.step) || 10; R.base.cur = clamp(R.base.cur + (k === 'ff' ? st : -st), 0, R.base.dur || 1e9); R.tick(true); }
+}, b.hasAttribute('data-rep') ? 200 : 0));
+document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+/* ---------- Mode: touchpad or D-pad ---------- */
+function setMode(m) {
+  $('#seg').dataset.m = m; $$('#seg button').forEach((b) => b.classList.toggle('on', b.dataset.m === m));
+  $('#pad').hidden = m !== 'pad'; $('#dpad').hidden = m !== 'dpad'; Store.set('mode', m); fitDpad();
+}
+function fitDpad() { const s = $('#surface'); s.classList.toggle('small', s.clientHeight < Math.min(s.clientWidth, 310)); }
+$$('#seg button').forEach((b) => b.addEventListener('click', () => { setMode(b.dataset.m); buzz(6); }));
+addEventListener('resize', fitDpad);
+
+/* ---------- Scrubbing ---------- */
+const Scrub = (() => {
+  const el = $('#scrub'); const S = { drag: false };
+  const ratio = (e) => { const r = el.getBoundingClientRect(); return clamp((e.clientX - r.left) / r.width, 0, 1); };
+  const paint = (r) => { const w = el.clientWidth; $('#fill').style.transform = `scaleX(${r})`; $('#knob').style.transform = `translateX(${(r * w).toFixed(1)}px) scale(1.25)`; el.style.setProperty('--bx', `${clamp(r * w, 26, w - 26)}px`); $('#bubble').textContent = fmt(r * R.base.dur); };
+  el.addEventListener('pointerdown', (e) => { if (!R.base.dur) return; S.drag = true; el.classList.add('drag'); try { el.setPointerCapture(e.pointerId); } catch (x) { /* gone */ } paint(ratio(e)); buzz(6); });
+  el.addEventListener('pointermove', (e) => { if (S.drag) paint(ratio(e)); });
+  const end = (e, ok) => { if (!S.drag) return; S.drag = false; el.classList.remove('drag'); if (ok) { const t = ratio(e) * R.base.dur; R.send({ t: 'cmd', c: 'seek', v: Math.round(t) }); R.base = { ...R.base, cur: t, at: performance.now() }; buzz(10); } R.tick(true); };
+  el.addEventListener('pointerup', (e) => end(e, true)); el.addEventListener('pointercancel', (e) => end(e, false));
+  return S;
+})();
+$('#ccBtn').onclick = () => { R.send({ t: 'cmd', c: 'subs' }); buzz(8); };
+$('#loginBtn').onclick = () => { if (R.st && R.st.login && /^https?:\/\//.test(R.st.login)) location.href = R.st.login; };
+
+/* ---------- Sheets ---------- */
+let sheet = null;
+function openSheet(id) { closeSheet(true); sheet = id; $(`#${id}`).classList.add('on'); $('#scrim').classList.add('on'); }
+function closeSheet(quiet) { if (!sheet) return; const id = sheet; sheet = null; $(`#${id}`).classList.remove('on'); $('#scrim').classList.remove('on'); if (id === 'kb') Kb.closed(); if (!quiet) buzz(4); }
+$('#scrim').onclick = () => closeSheet();
+
+/* ---------- Keyboard: what you type shows up on the TV as you type ---------- */
+const Kb = {
+  open: false, auto: false, sendT: 0, lastSent: 0, pending: null, rec: null,
+  show(kb, auto) {
+    this.auto = !!auto; this.open = true; this.label(kb);
+    const inp = $('#kbIn'); inp.value = kb && typeof kb.val === 'string' ? kb.val : ''; this.paint();
+    openSheet('kb'); setTimeout(() => { inp.focus(); try { inp.setSelectionRange(inp.value.length, inp.value.length); } catch (e) { /* not text */ } }, 60);
+  },
+  label(kb) {
+    const pw = !!(kb && kb.pw), inp = $('#kbIn');
+    $('#kbTitle').textContent = kb && kb.ph ? kb.ph.replace(/…$/, '') : 'Type on your TV';
+    inp.type = pw ? 'password' : kb && kb.type === 'email' ? 'email' : 'text';
+    inp.setAttribute('enterkeyhint', kb && kb.go === 'search' ? 'search' : kb ? 'done' : 'search');
+    $('#kbGoT').textContent = kb && kb.go !== 'search' ? 'Enter' : 'Search';
+    $('#kbNote').textContent = pw ? 'For passwords, “Sign in your TV from here” is safer when your TV shows it.' : 'Letters appear on the TV as you type.';
+  },
+  closed() { this.open = false; this.flush(); $('#kbIn').blur(); this.stopMic(); },
+  hide() { if (sheet === 'kb') closeSheet(true); },
+  paint() { $('#kbClear').hidden = !$('#kbIn').value; },
+  /* send at most every 70 ms while typing, and always the last value */
+  push() {
+    R.typingAt = Date.now(); this.pending = $('#kbIn').value; this.paint();
+    const wait = 70 - (Date.now() - this.lastSent);
+    if (wait <= 0) this.flush(); else if (!this.sendT) this.sendT = setTimeout(() => this.flush(), wait);
+  },
+  flush() { clearTimeout(this.sendT); this.sendT = 0; if (this.pending == null) return; R.send({ t: 'text', v: this.pending }); this.pending = null; this.lastSent = Date.now(); },
+  go() { this.pending = $('#kbIn').value; this.flush(); R.send({ t: 'enter' }); buzz(12); closeSheet(true); },
+  mic() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SR) return;
+    if (this.rec) { this.stopMic(); return; }
+    const r = this.rec = new SR(); r.lang = navigator.language || 'en-US'; r.interimResults = true; r.maxAlternatives = 1;
+    $('#kbMic').classList.add('live'); buzz(10);
+    r.onresult = (e) => { let s = ''; for (const res of e.results) s += res[0].transcript; $('#kbIn').value = s.trim(); this.push(); if (e.results[e.results.length - 1].isFinal) { this.stopMic(); this.go(); } };
+    r.onerror = (e) => { this.stopMic(); if (e.error === 'not-allowed') toast('Allow the microphone to search by voice'); };
+    r.onend = () => this.stopMic();
+    try { r.start(); } catch (e) { this.stopMic(); }
+  },
+  stopMic() { if (this.rec) { const r = this.rec; this.rec = null; try { r.stop(); } catch (e) { /* stopped */ } } $('#kbMic').classList.remove('live'); },
+};
+$('#kbIn').addEventListener('input', () => Kb.push());
+$('#kbIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); Kb.go(); } });
+$('#kbClear').onclick = () => { $('#kbIn').value = ''; Kb.push(); $('#kbIn').focus(); };
+$('#kbDone').onclick = () => closeSheet();
+$('#kbGo').onclick = () => Kb.go();
+$('#kbMic').hidden = !(window.SpeechRecognition || window.webkitSpeechRecognition);
+$('#kbMic').onclick = () => Kb.mic();
+$('#kbBtn').addEventListener('click', () => { buzz(8); Kb.show(R.st && R.st.kb, false); });
+
+/* ---------- Menu ---------- */
+let installEv = null;
+addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEv = e; });
+function openMenu() {
+  const box = $('#menuTvs'); box.innerHTML = '';
+  TVs.list().forEach((t) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'tvrow';
+    b.innerHTML = '<svg class="i"><use href="#i-tv"/></svg><span class="grow"><b></b><small></small></span>';
+    b.querySelector('b').textContent = t.name; b.querySelector('small').textContent = `Code ${t.code}`;
+    if (t.code === R.code) { const s = document.createElement('span'); s.className = 'on'; s.textContent = 'CONNECTED'; b.appendChild(s); }
+    b.onclick = () => { closeSheet(); if (t.code !== R.code) R.connect(t.code); };
+    box.appendChild(b);
+  });
+  $('#mInstall').hidden = !installEv; $('#mForget').hidden = !R.code;
+  openSheet('menu'); buzz(6);
+}
+$('#menuBtn').onclick = openMenu; $('#tvChip').onclick = openMenu;
+$('#mPair').onclick = () => { closeSheet(true); R.leave(); Pair.show(); };
+$('#mForget').onclick = () => { const c = R.code; closeSheet(); R.leave(); TVs.forget(c); toast('TV forgotten'); Pair.show(); };
+$('#mInstall').onclick = async () => { closeSheet(); if (!installEv) return; installEv.prompt(); try { await installEv.userChoice; } catch (e) { /* dismissed */ } installEv = null; };
+
+/* ---------- Waking up: phones drop sockets when the screen goes off ---------- */
+document.addEventListener('visibilitychange', () => { if (document.hidden || !R.link) return; if (!R.link.alive()) R.link.kick(); else R.hello(); R.tick(true); });
+addEventListener('online', () => { if (R.link) R.link.kick(); });
+addEventListener('pageshow', (e) => { if (e.persisted && R.link) R.link.kick(); });
+/* the Android app maps its Back button to back() */
+window.back = () => { if (sheet) { closeSheet(); return true; } if (R.code) { R.key('back'); return true; } return false; };
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && sheet) closeSheet(); });
+
+/* ---------- Start ---------- */
+(() => {
+  setMode(Store.get('mode', 'pad'));
+  const raw = decodeURIComponent(location.hash.replace(/^#/, '')).replace(/^(remote=|code=)/i, ''), [c, cfg] = raw.split('.');
+  const code = (c || '').toUpperCase().slice(0, 6);
+  // a TV on its own Supabase project puts that project in the QR code after the dot
+  let sb = null; try { if (cfg) { const o = JSON.parse(atob(cfg.replace(/-/g, '+').replace(/_/g, '/'))); if (/^https:\/\/[^\s"]+$/.test(o.u) && typeof o.k === 'string') sb = { url: o.u, key: o.k }; } } catch (e) { sb = null; }
+  if (CODE_RE.test(code)) { R.connect(code, sb); return; }
+  const last = TVs.list()[0];
+  if (last) R.connect(last.code); else Pair.show();
+})();
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>

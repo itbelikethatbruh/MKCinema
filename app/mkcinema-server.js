@@ -376,11 +376,17 @@ app.get('/yt/:id', (req, res) => {
 
 // The MKCinema web app, when index.html sits next to this file, and its install files
 const INDEX = path.join(__dirname, 'index.html');
-const PWA_FILES = { 'manifest.webmanifest': 'application/manifest+json', 'sw.js': 'text/javascript', 'icon-192.png': 'image/png', 'icon-512.png': 'image/png', 'icon-maskable-512.png': 'image/png' };
+const PWA_FILES = { 'manifest.webmanifest': 'application/manifest+json', 'remote.webmanifest': 'application/manifest+json', 'sw.js': 'text/javascript', 'icon-192.png': 'image/png', 'icon-512.png': 'image/png', 'icon-maskable-512.png': 'image/png' };
 app.get(Object.keys(PWA_FILES).map((f) => `/${f}`), (req, res, next) => {
   const name = req.path.slice(1), file = path.join(__dirname, name);
   if (!fs.existsSync(file)) return next();
   res.type(PWA_FILES[name]); if (name === 'sw.js') res.set('Cache-Control', 'no-cache'); res.sendFile(file);
+});
+// The phone remote page (QR codes on the TV point at /remote)
+app.get(['/remote', '/remote.html'], (req, res, next) => {
+  const file = path.join(__dirname, 'remote.html');
+  if (!fs.existsSync(file)) return next();
+  res.sendFile(file);
 });
 app.get(['/', '/index.html'], (req, res, next) => {
   if (!fs.existsSync(INDEX)) return next();

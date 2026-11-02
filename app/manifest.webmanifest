@@ -35,5 +35,20 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Phone remote",
+      "short_name": "Remote",
+      "description": "Use this phone as a remote for MKCinema on your TV",
+      "url": "./remote",
+      "icons": [
+        {
+          "src": "icon-192.png?v=25",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }

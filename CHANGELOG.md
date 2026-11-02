@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.7.21 (2026-11-02)
+
+- **MKCinema Remote, your phone as a TV remote**: scan the QR code on the TV (it shows in a corner the first few launches, and any time in Settings › Devices › Phone remote) and the phone opens a dedicated remote page at `/remote`. It loads instantly (no app boot, no SDK download), and it talks to the TV over one Realtime socket, about 40 ms phone to TV. It has a touchpad (swipe to move, hold a swipe to keep going, flick for several steps, tap for OK) or a D-pad with OK, plus Back, Home, and Type. Type opens a keyboard whose letters show up on the TV as you type, with voice search where the phone's browser supports it. The keyboard also opens by itself when the TV selects a text box. The page shows what the TV has selected or is playing, with artwork and a progress bar you can drag to seek, and it has play/pause, skip, volume and subtitles. Pairing is remembered on both sides: the TV keeps its code, and the phone reconnects to the last TV when opened (it also reconnects by itself after the screen locks). The remote can be added to the home screen as its own app. "New code" in Settings unpairs every phone. When the TV is showing its sign-in QR code, the remote offers to sign the TV in from the phone.
+- The old in-app phone trackpad is replaced by the new remote, and old `#remote=` links forward to it.
+
 ## Web app 2.7.19 (2026-11-01)
 
 - **Smart TV speed**: the splash now runs as a CSS animation on the TV's graphics chip, so it stays smooth while the app loads behind it, and it is shorter (2.9 s). Icons are drawn once and reused: before, every featured-banner change redrew all 200+ icons on the page, a stall of about 100 ms on a slow TV every 9 seconds. The intro sound's reverb is built about 60 times faster. On a TV the featured banner waits while you are using the remote and changes every 14 seconds, card titles and the banner logo use lighter shadows, and the hidden ambilight no longer runs a frame loop during playback.

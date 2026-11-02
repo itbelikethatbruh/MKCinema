@@ -126,7 +126,7 @@ Star badges use the IMDb rating from Cinemeta. RPDB posters (with ratings printe
 ### Watch together and phones (Settings › Devices)
 - **Watch party** (people icon or `P`): a 6-character room. Everyone opens the same title from their own sources; play, pause and seeks stay in sync (drift is corrected by nudging speed, or seeking past 1 s). Chat, reactions and push-to-talk voice run peer to peer over WebRTC; the room itself uses Supabase Realtime with the built-in key. Very strict networks (some corporate or mobile carriers) block peer connections without a TURN server, which MKCinema does not provide.
 - **Watch on phone**: a QR code that opens the same title, source and second on your phone. It contains the stream link, so only show it to people you would give that link.
-- **Phone as remote**: scan a QR code and your phone becomes a trackpad (tap to pause, swipe to skip 15 s, slide for volume) plus buttons for audio preset and subtitles.
+- **Phone as remote** (`remote.html`, served as `/remote`): scan the QR code on the TV and your phone becomes a remote with a touchpad or D-pad, Back/Home, a live keyboard and voice search, now-playing artwork, drag-to-seek, play/pause, skip, volume and subtitles. Pairing is remembered on both sides.
 
 ### Trakt, Simkl and the Airing Calendar
 Connect Trakt with your own free API app (trakt.tv/oauth/applications, redirect `urn:ietf:wg:oauth:2.0:oob`) or Simkl with a client ID. MKCinema scrobbles as you watch (past 80 % counts as watched) and can import or export your watchlist. The Calendar tab lists upcoming and recent episodes of shows in your watchlist and Continue watching.
