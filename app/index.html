@@ -1183,25 +1183,23 @@ body.layer-open .focus-ask{display:none}
 .rm-big{font-size:18px;letter-spacing:.14em;color:var(--ink)}
 .rm-code{text-transform:uppercase;letter-spacing:.3em;font-size:18px;text-align:center}
 
-/* Phone remote */
-#remote.layer-ov{background:#000}
-.remote{width:100%;max-width:520px;min-height:100%;margin:0 auto;display:flex;flex-direction:column;gap:14px}
-.rm-top{display:flex;align-items:center;gap:10px}
-.rm-now{min-width:0;flex:1}.rm-now b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rm-now small{color:var(--mute);font-size:12px}
-.rm-dot{width:10px;height:10px;border-radius:50%;background:var(--dim)}.rm-dot.ok{background:var(--ok)}.rm-dot.bad{background:var(--bad)}
-.rm-join{display:grid;gap:12px;padding-top:20vh}.rm-join p{color:var(--mute);text-align:center;margin:0}
-.rm-main{flex:1;display:flex;flex-direction:column;gap:14px}
-.rm-pad{position:relative;flex:1;min-height:42vh;border-radius:24px;background:radial-gradient(120% 90% at 50% 0%,#141416,#050505);border:1px solid var(--line);display:grid;place-items:center;text-align:center;color:var(--dim);font-size:13px;line-height:1.8;touch-action:none;user-select:none;overflow:hidden}
-.rm-flash{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-style:normal;font-family:var(--f-mono);font-size:22px;color:#fff;opacity:0;pointer-events:none}
-.rm-flash.go{animation:rmFlash .7s ease-out}
-@keyframes rmFlash{0%{opacity:0;transform:translate(-50%,-40%)}25%{opacity:1;transform:translate(-50%,-50%)}100%{opacity:0;transform:translate(-50%,-60%)}}
-.rm-prog{display:flex;align-items:center;gap:10px;font-family:var(--f-mono);font-size:12px;color:var(--mute)}
-.rm-trk{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}.rm-trk i{display:block;height:100%;background:var(--ink);transform-origin:left;transform:scaleX(0)}
-.rm-row{display:flex;justify-content:center;align-items:center;gap:18px}
-.rm-row .ibtn{width:64px;height:64px;border-radius:20px;border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
-.rm-row .ibtn small{font-size:10px;color:var(--mute)}
-.rm-row .rm-play{width:84px;height:84px;border-radius:50%;background:var(--plat);color:#000}
-.rm-small{flex-wrap:wrap;gap:8px}
+/* Phone remote (2.7.20): pairing panel and the TV's first-run corner card. Opacity and transform only. */
+.rm-pair{display:flex;gap:22px;align-items:center;flex-wrap:wrap;justify-content:center}
+.rm-pair .qr-wrap{margin:6px 0;flex:none;width:min(220px,62vw)}
+.rm-pair-t{flex:1;min-width:220px}
+.rm-pair-t .sub{margin-top:0}
+.rm-codebig{font:600 34px/1 var(--f-display);letter-spacing:.32em;color:var(--ink);margin:12px 0 6px}
+html.tv .rm-pair .qr-wrap{width:250px}
+html.tv #castLayer .modal{max-width:820px;width:min(820px,92vw)}
+html.tv .rm-pair{flex-wrap:nowrap}
+.rm-hint{position:fixed;right:28px;top:96px;z-index:9000;display:flex;align-items:center;gap:18px;padding:16px 22px 16px 16px;max-width:520px;border-radius:22px;background:#0b0b0d;border:1px solid rgba(255,255,255,.12);box-shadow:0 30px 80px -20px rgba(0,0,0,.95);opacity:0;transform:translateY(18px);transition:opacity .6s var(--ease),transform .6s var(--ease);pointer-events:none}
+.rm-hint.on{opacity:1;transform:none}
+.rm-hint .qr-wrap{width:128px;margin:0;padding:8px;border-radius:12px;flex:none}
+.rm-hint-t{display:flex;flex-direction:column;gap:5px;min-width:0}
+.rm-hint-t small{font:600 11px/1 var(--f-display);letter-spacing:.24em;text-transform:uppercase;color:var(--champ)}
+.rm-hint-t>b{font:600 20px/1.2 var(--f-display);color:var(--ink)}
+.rm-hint-t span{font-size:14px;color:var(--mute);line-height:1.45}
+.rm-hint-t span b{color:var(--ink);letter-spacing:.18em}
 
 /* Player buttons that only fit on wide screens (phones reach them from the ⋯ menu) */
 @media (max-width:640px){.ctl .pp-desk{display:none}}
@@ -2231,32 +2229,6 @@ html.tv .hero-logo,html.tv .logo3d .hero-logo{filter:drop-shadow(0 3px 10px rgba
   </div>
 </div>
 
-<!-- ============ Remote: this phone controls a player on another screen ============ -->
-<div id="remote" class="layer-ov top-layer" hidden>
-  <div class="remote" role="application" aria-label="Remote control">
-    <header class="rm-top"><button class="ibtn" id="rmClose" type="button" aria-label="Leave remote"><i data-lucide="x"></i></button><div class="rm-now"><b id="rmTitle">Connecting…</b><small id="rmSub"></small></div><span class="rm-dot" id="rmDot"></span></header>
-    <div class="rm-join" id="rmJoin" hidden>
-      <p>Enter the code shown on the screen you want to control.</p>
-      <input class="inp mono rm-code" id="rmCode" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC123">
-      <button class="btn btn-prime" type="button" id="rmGo"><i data-lucide="link"></i>Connect</button>
-    </div>
-    <div class="rm-main" id="rmMain">
-      <div class="rm-pad" id="rmPad"><span>Tap to play or pause<br>Swipe sideways to skip 15 s<br>Slide up or down for volume</span><i class="rm-flash" id="rmFlash"></i></div>
-      <div class="rm-prog"><span id="rmCur" class="tnum">0:00</span><div class="rm-trk"><i id="rmFill"></i></div><span id="rmDur" class="tnum">0:00</span></div>
-      <div class="rm-row">
-        <button class="ibtn" type="button" data-rm="back"><i data-lucide="rotate-ccw"></i><small>15 s</small></button>
-        <button class="ibtn rm-play" type="button" data-rm="toggle" id="rmPlay"><i data-lucide="play"></i></button>
-        <button class="ibtn" type="button" data-rm="fwd"><i data-lucide="rotate-cw"></i><small>15 s</small></button>
-      </div>
-      <div class="rm-row rm-small">
-        <button class="btn btn-ghost btn-sm" type="button" data-rm="voldown"><i data-lucide="volume-1"></i>Vol −</button>
-        <button class="btn btn-ghost btn-sm" type="button" data-rm="volup"><i data-lucide="volume-2"></i>Vol +</button>
-        <button class="btn btn-ghost btn-sm" type="button" data-rm="dsp" id="rmDsp"><i data-lucide="audio-lines"></i>Audio</button>
-        <button class="btn btn-ghost btn-sm" type="button" data-rm="subs" id="rmSubs"><i data-lucide="captions"></i>Subtitles</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <div id="partyPill" class="party-pill" hidden><button type="button" id="partyPillBtn"><i data-lucide="users"></i><span id="partyPillTxt"></span></button></div>
 <div id="partyAudio" hidden></div>
@@ -3479,7 +3451,7 @@ function orderedEpisodes(meta) { return seasonsOf(meta).filter(([s]) => s !== 0)
 function nextVideo(meta, video) { const list = orderedEpisodes(meta); const i = list.findIndex((v) => v.id === video.id); return i >= 0 ? list[i + 1] || null : null; }
 function videoIdFor(meta, v) { return v.id || StremioEngine.seriesId(meta.id, v.season, v.episode); }
 
-const MENU_LAYERS = ['epSheet', 'detail', 'addons', 'palette', 'settings', 'tastePick', 'askLayer', 'tour', 'stremioImport', 'trailer', 'partyLayer', 'castLayer', 'remote'];
+const MENU_LAYERS = ['epSheet', 'detail', 'addons', 'palette', 'settings', 'tastePick', 'askLayer', 'tour', 'stremioImport', 'trailer', 'partyLayer', 'castLayer'];
 /* While any layer is up, body.layer-open lets CSS stop painting the page underneath. On phones Chrome can fall behind
    rasterizing a long scrolling panel, and any tile it has not drawn yet would otherwise show the page through it. */
 let layerT = 0;
@@ -4730,7 +4702,7 @@ $('#openPalette').onclick = () => openPalette();
    ===================================================================== */
 const Nav = {
   root() {
-    for (const id of ['remote', 'castLayer', 'partyLayer']) if (!$(`#${id}`).hidden) return $(`#${id}`);
+    for (const id of ['castLayer', 'partyLayer']) if (!$(`#${id}`).hidden) return $(`#${id}`);
     if (!$('#player').hidden) { const d = $('.drawer.open', $('#player')); return d || (!$('#subMenu').hidden ? $('#subMenu') : !$('#optMenu').hidden ? $('#optMenu') : !$('#dspPop').hidden ? $('#dspPop') : (!$('#pMsg').hidden ? $('#pMsg') : $('#hud'))); }
     for (const id of ['tour', 'stremioImport', 'palette', 'settings', 'tastePick', 'addons', 'epSheet', 'detail', 'askLayer']) if (!$(`#${id}`).hidden) return $(`#${id}`);
     return $('#app');
@@ -4805,7 +4777,7 @@ const Nav = {
   },
 };
 function back() {
-  for (const id of ['remote', 'castLayer', 'partyLayer']) if (!$(`#${id}`).hidden) { closeLayer(id); if (id === 'remote') Remote.leave(); return; }
+  for (const id of ['castLayer', 'partyLayer']) if (!$(`#${id}`).hidden) { closeLayer(id); return; }
   if (!$('#player').hidden) {
     if (PlayerPlus.back()) return;
     if (!$('#subMenu').hidden || !$('#optMenu').hidden) { $('#subMenu').hidden = true; $('#optMenu').hidden = true; return; }
@@ -4831,7 +4803,7 @@ function handleKey(e) {
   if (k === 'Escape') { e.preventDefault(); back(); return; }
   if (e.keyCode === 461 || k === 'GoBack' || k === 'BrowserBack') {
     e.preventDefault();
-    const open = ['remote', 'castLayer', 'partyLayer', 'player', 'trailer', 'tour', 'stremioImport', 'palette', 'epSheet', 'askLayer', 'tastePick', 'settings', 'addons', 'detail'].some((id) => { const el = $(`#${id}`); return el && !el.hidden; });
+    const open = ['castLayer', 'partyLayer', 'player', 'trailer', 'tour', 'stremioImport', 'palette', 'epSheet', 'askLayer', 'tastePick', 'settings', 'addons', 'detail'].some((id) => { const el = $(`#${id}`); return el && !el.hidden; });
     if (open) back(); else if (/Web0S|webOS/.test(navigator.userAgent)) window.close();
     return;
   }
@@ -6655,7 +6627,7 @@ const appLink = (hash) => (/^https?:$/.test(location.protocol) ? `${location.ori
 const Cast = {
   tab: 'handoff',
   open(tab) {
-    if (tab) this.tab = tab; else this.tab = P.stream && !$('#player').hidden ? 'handoff' : 'remote';
+    if (tab) this.tab = tab; else this.tab = P.stream && !$('#player').hidden && !IS_TV ? 'handoff' : 'remote';
     openLayer('castLayer'); this.render();
   },
   handoffLink() {
@@ -6678,101 +6650,239 @@ const Cast = {
         <p class="tour-note">The code contains this stream’s link. Debrid links are tied to your account, so only show it to people you would hand the link to.</p><div class="actions"><button class="btn btn-ghost btn-sm" type="button" id="castCopy"><i data-lucide="copy"></i>Copy link</button></div>`
         : `<p class="sub">${P.stream && P.stream._local ? 'Files opened from this device stay on this device, so they cannot be sent to a phone. Online sources can.' : 'Start a video first, then come back here to send it to your phone at the same moment.'}</p>`;
     } else if (this.tab === 'remote') {
-      if (!Remote.hostCode) Remote.host();
-      const link = appLink(`remote=${Remote.hostCode}`);
-      inner = `<div class="qr-wrap">${QR.svg(link)}</div><p class="sub">Scan to turn your phone into a trackpad remote for this screen, or open MKCinema on the phone and enter <b class="mono rm-big">${esc(Remote.hostCode)}</b> under Settings › Devices.</p>
-        <p class="tour-note" id="castState">${Remote.hostBus && Remote.hostBus.online ? 'Waiting for your phone…' : 'Connecting…'}</p>`;
+      Remote.host();
+      inner = `<div class="rm-pair"><div class="qr-wrap">${QR.svg(Remote.link(Remote.code))}</div><div class="rm-pair-t"><p class="sub">Scan with your phone camera. Your phone becomes a remote: touchpad or D-pad, play, pause and seek, and a keyboard (or your voice) for search. It stays paired, so next time just open it.</p>
+        <div class="rm-codebig">${esc(Remote.code)}</div><p class="tour-note" id="castState">${Remote.stateLine()}</p>
+        <div class="actions"><button class="btn btn-ghost btn-sm" type="button" id="rmNew"><i data-lucide="refresh-cw"></i>New code</button></div></div></div>`;
     } else {
-      inner = `<p class="sub">Enter the code shown on the other screen.</p><div class="inrow"><input class="inp mono rm-code" id="castCode" maxlength="6" autocapitalize="characters" placeholder="ABC123"><button class="btn btn-prime" type="button" id="castJoin"><i data-lucide="link"></i>Connect</button></div>`;
+      inner = `<p class="sub">Enter the code shown on the other screen. This opens MKCinema Remote, which remembers the screen for next time.</p><div class="inrow"><input class="inp mono rm-code" id="castCode" maxlength="6" autocapitalize="characters" placeholder="ABC123"><button class="btn btn-prime" type="button" id="castJoin"><i data-lucide="link"></i>Connect</button></div>`;
     }
-    body.innerHTML = tabs + inner; icons();
+    body.innerHTML = (IS_TV && this.tab === 'remote' ? '' : tabs) + inner; icons();
     $$('[data-ct]', body).forEach((b) => b.addEventListener('click', () => { this.tab = b.dataset.ct; this.render(); }));
     const cp = $('#castCopy'); if (cp) cp.onclick = () => copyText(this.handoffLink());
-    const j = $('#castJoin'); if (j) j.onclick = () => { const c = $('#castCode').value.trim().toUpperCase(); if (c.length === 6) { closeLayer('castLayer'); Remote.join(c); } else toast('Codes have 6 characters', 'err'); };
+    const j = $('#castJoin'); if (j) j.onclick = () => { const c = $('#castCode').value.trim().toUpperCase(); if (RM_CODE.test(c)) Remote.join(c); else toast('Codes have 6 characters', 'err'); };
+    const nw = $('#rmNew'); if (nw) nw.onclick = () => Remote.renew();
   },
 };
 $('#pCast').onclick = () => Cast.open();
 
+/* ---------------- Phone remote (2.7.20) ----------------
+   The phone opens remote.html (served as /remote), a small page of its own that loads instantly and talks over one bare
+   Realtime socket. This screen hosts channel remote-<CODE>; the code is kept, so a phone paired once reconnects by itself.
+   Phones send keys (the same path as the TV's own remote), text for the focused box, and player commands; this screen
+   answers with what is on it: the highlighted title, the player position, and whether a text box wants typing. */
+const RM_CODE = /^[ABCDEFGHJKMNPQRSTUVWXYZ2-9]{6}$/;
+const rmText = (el) => !!el && (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && /^(text|search|email|password|url|tel|number)$/.test(el.type || 'text'))) && !el.closest('[hidden]');
 const Remote = {
-  hostCode: '', hostBus: null, phones: 0, statusT: 0,
-  /* The screen with the player listens for commands */
+  code: '', bus: null, peers: new Map(), last: '', lastAt: 0, soonT: 0, beatT: 0, hintEl: null,
+  device() {
+    const u = navigator.userAgent;
+    return /AFT[A-Z]/.test(u) ? 'Fire TV' : /Web0S|webOS/.test(u) ? 'LG TV' : /GoogleTV/.test(u) ? 'Google TV' : /Android TV|MKCinemaTV|BRAVIA/.test(u) ? 'Android TV' : /Tizen/.test(u) ? 'Samsung TV' : IS_TV ? 'TV'
+      : /Android|iPad/.test(u) ? 'Tablet' : /Mac/.test(u) ? 'Mac' : /Windows/.test(u) ? 'Windows PC' : 'Computer';
+  },
+  storedCode() { let c = Store.get('rcode', ''); if (!RM_CODE.test(c)) { c = roomCode(); Store.set('rcode', c); } return c; },
+  link(code) { if (!/^https?:$/.test(location.protocol)) return ''; return `${location.origin}${location.pathname.replace(/[^/]*$/, '')}remote${code ? `#${code}` : ''}`; },
   async host() {
-    if (this.hostBus) return;
-    this.hostCode = roomCode();
-    this.hostBus = new Bus(`remote-${this.hostCode}`, (m) => this.onCmd(m));
-    const ok = await this.hostBus.connect();
-    const st = $('#castState'); if (st) st.textContent = ok ? 'Ready. Waiting for your phone…' : 'Could not reach the realtime service. Phones on this computer still work; others need a connection.';
-    clearInterval(this.statusT); this.statusT = setInterval(() => this.status(), 1000);
+    if (this.bus) return this.bus.online;
+    this.code = this.storedCode();
+    const bus = this.bus = new Bus(`remote-${this.code}`, (m) => this.onMsg(m));
+    clearInterval(this.beatT); this.beatT = setInterval(() => this.beat(), 1000);
+    const ok = await bus.connect(); if (this.bus !== bus) return false;
+    this.paintCast(); return ok;
   },
-  status() {
-    if (!this.hostBus || !this.phones) return;
-    const ctx = P.ctx;
-    this.hostBus.send({ t: 'st', title: ctx ? ctx.meta.name : 'Nothing playing', sub: ctx && ctx.video ? `S${ctx.video.season} · E${ctx.video.episode}` : '', cur: P.stream ? pNow() : 0, dur: P.stream && isFinite(pDur()) ? pDur() : 0, paused: video.paused, vol: Math.round((P.ducking ? Duck.base : video.volume) * 100), dsp: DSP_PRESETS[CFG.dsp].label, subs: P.curSub >= 0 });
+  /* a new code: every paired phone is told, then has to scan again */
+  async renew() {
+    const old = this.bus; this.bus = null; this.peers.clear();
+    if (old) { old.send({ t: 'gone' }); setTimeout(() => old.close(), 600); }
+    Store.set('rcode', roomCode()); await this.host(); if (typeof Cast !== 'undefined' && !$('#castLayer').hidden) Cast.render();
+    toast('New remote code. Phones paired before need to scan again.', 'ok', 4200);
   },
-  onCmd(m) {
-    if (m.t === 'hi') { this.phones++; toast('Phone remote connected', 'ok'); const st = $('#castState'); if (st) st.textContent = 'Phone connected. You can close this window.'; this.status(); return; }
-    if (m.t === 'bye') { this.phones = Math.max(0, this.phones - 1); return; }
-    if (m.t !== 'cmd' || $('#player').hidden) { this.status(); return; }
-    const vol = (v) => { const x = clamp(v, 0, 1); if (P.ducking) { Duck.base = x; video.volume = x * Duck.target; } else { video.volume = x; video.muted = false; } };
-    switch (m.c) {
+  /* this device becomes the remote: the remote page is its own, lighter app */
+  join(code) {
+    const l = this.link(RM_CODE.test(code || '') ? code : '');
+    if (!l) { toast('The phone remote needs MKCinema on a web address, such as mkcinema.pages.dev.', 'err', 6000); return; }
+    location.href = l;
+  },
+  leave() { /* the remote lives on its own page now */ },
+  stateLine() {
+    const n = this.peers.size;
+    if (n) return `${n === 1 ? 'A phone is' : `${n} phones are`} connected as a remote.`;
+    if (this.bus && this.bus.online) return `Ready. No camera? Open <b>${esc(this.link().replace(/^https?:\/\//, ''))}</b> on the phone and type the code.`;
+    return 'Connecting…';
+  },
+  paintCast() { const st = $('#castState'); if (st) st.innerHTML = this.stateLine(); },
+  beat() {
+    const now = Date.now();
+    this.peers.forEach((p, id) => { if (now - p.at > 15000) this.peers.delete(id); });
+    // a channel that never came up is retried every 20 s
+    if (this.bus && !this.bus.online && now - (this.retryAt || 0) > 20000) { this.retryAt = now; const b = this.bus; this.bus = null; b.close(); this.host(); return; }
+    if (this.peers.size) this.push();
+  },
+  onMsg(m) {
+    const id = m._from; if (!id) return;
+    if (m.t === 'bye') { this.peers.delete(id); this.paintCast(); return; }
+    const known = this.peers.get(id);
+    this.peers.set(id, { name: m.name || (known && known.name) || 'Phone', at: Date.now() });
+    if (!known) {
+      toast(`${m.name && m.name !== 'Phone' ? m.name.replace(/^\w/, (c) => c.toUpperCase()) : 'Your phone'} is connected as a remote`, 'ok', 3200);
+      Store.set('rmPaired', true); this.unhint(); this.paintCast();
+    }
+    switch (m.t) {
+      case 'hi': this.push(true); return;
+      case 'key': this.key(String(m.k || '')); break;
+      case 'cmd': this.cmd(m.c, m.v); break;
+      case 'text': this.text(String(m.v == null ? '' : m.v)); break;
+      case 'enter': this.enter(); break;
+      default: return;
+    }
+    this.soon();
+  },
+  soon() { clearTimeout(this.soonT); this.soonT = setTimeout(() => this.push(), 40); },
+  /* ---- keys: the same path a TV remote's keys take ---- */
+  press(key) {
+    const a = document.activeElement, t = a && a !== document.body && a.isConnected ? a : document.body;
+    const ev = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }); t.dispatchEvent(ev);
+    // a text box keeps the arrows on a computer; a remote has no other way out of it
+    if (!ev.defaultPrevented && /^Arrow/.test(key) && rmText(t)) Nav.move(key.slice(5).toLowerCase());
+    return ev;
+  },
+  layerOpen() { return ['castLayer', 'partyLayer', 'player', 'trailer', 'tour', 'stremioImport', 'palette', 'epSheet', 'askLayer', 'tastePick', 'settings', 'addons', 'detail'].some((id) => { const el = $(`#${id}`); return el && !el.hidden; }); },
+  key(k) {
+    TV_KEY_AT = performance.now();
+    const dirs = { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight' }, playing = !$('#player').hidden;
+    if (dirs[k]) { this.press(dirs[k]); return; }
+    switch (k) {
+      case 'ok': this.ok(); break;
+      case 'back': if (this.layerOpen()) back(); else if (S.view !== 'home') { go('home'); this.focusHome(); } break;
+      case 'home': this.home(); break;
+      case 'search': this.typeIn(); break;
+      case 'menu': if (playing) $('#pOpts').click(); break;
+      case 'playpause': if (playing) { togglePlay(); wakeHud(); } else if (!$('#trailer').hidden) this.press(' '); break;
+      case 'rew': case 'ff': if (playing) { seekBy(k === 'ff' ? step() : -step()); seekFx(k === 'ff' ? 1 : -1); } break;
+      case 'volup': case 'voldown': this.cmd(k); break;
+      default: break;
+    }
+  },
+  ok() {
+    const a = document.activeElement, el = a && a !== document.body && a.isConnected && !a.closest('[hidden]') ? a : null, player = $('#player');
+    if (rmText(el)) { if (el.value && (el.id === 'palInput' || el.type === 'search')) this.press('Enter'); else this.push(true); return; }
+    if (!player.hidden) {
+      if (Skip.visible()) { Skip.go(); return; }
+      const hud = $('#hud');
+      if (!el || !player.contains(el) || (hud.contains(el) && hud.classList.contains('idle'))) { togglePlay(); wakeHud(); return; }
+    }
+    if (!el) { if (IS_TV) Nav.restore(true); else Nav.move('down'); return; }
+    if (this.press('Enter').defaultPrevented || !el.isConnected) return;
+    if (el.tagName === 'SELECT') { if (el.options.length) { el.selectedIndex = (el.selectedIndex + 1) % el.options.length; el.dispatchEvent(new Event('change', { bubbles: true })); } return; }
+    el.click();
+  },
+  home() {
+    for (let i = 0; i < 12 && this.layerOpen(); i++) back();
+    if (!$('#player').hidden) closePlayer();
+    if (S.view !== 'home') go('home'); else scrollTo({ top: 0 });
+    this.focusHome();
+  },
+  focusHome() { setTimeout(() => { const h = $('#heroPlay'); if (h && h.getBoundingClientRect().width) Nav.focus(h, true); else Nav.restore(true); }, 140); },
+  /* typing from the phone: the TV's own on-screen keyboard stays down until its remote is used again */
+  quiet(el) {
+    if (!el || el.dataset.rmq != null) return;
+    el.dataset.rmq = el.getAttribute('inputmode') == null ? '-' : el.getAttribute('inputmode'); el.setAttribute('inputmode', 'none');
+    const undo = () => { const v = el.dataset.rmq; delete el.dataset.rmq; if (v === '-') el.removeAttribute('inputmode'); else el.setAttribute('inputmode', v); el.removeEventListener('blur', undo); removeEventListener('keydown', real, true); };
+    const real = (e) => { if (e.isTrusted) undo(); };
+    el.addEventListener('blur', undo); addEventListener('keydown', real, true);
+  },
+  typeIn() {
+    const a = document.activeElement; if (rmText(a)) { this.quiet(a); return a; }
+    const el = $('#palInput'); this.quiet(el);
+    if ($('#palette').hidden) openPalette(); else el.focus();
+    return el;
+  },
+  text(v) {
+    const el = this.typeIn(); v = v.slice(0, 500);
+    if (el.value === v) return;
+    el.value = v; el.dispatchEvent(new Event('input', { bubbles: true }));
+  },
+  enter() {
+    const el = document.activeElement; if (!rmText(el)) return;
+    const ev = this.press('Enter');
+    if (!ev.defaultPrevented && el.form) { try { el.form.requestSubmit ? el.form.requestSubmit() : el.form.submit(); } catch (e) { /* invalid form */ } }
+  },
+  /* ---- player commands (older phone remotes send these too) ---- */
+  cmd(c, v) {
+    if ($('#player').hidden) return;
+    const setVol = (x) => { x = clamp(x, 0, 1); if (P.ducking) { Duck.base = x; video.volume = x * Duck.target; } else { video.volume = x; video.muted = false; } };
+    const cur = () => (P.ducking ? Duck.base : video.volume);
+    switch (c) {
       case 'toggle': togglePlay(); break;
-      case 'back': seekBy(-15); seekFx(-1); break;
-      case 'fwd': seekBy(15); seekFx(1); break;
-      case 'vol': vol(Number(m.v) / 100); break;
-      case 'volup': vol((P.ducking ? Duck.base : video.volume) + 0.1); break;
-      case 'voldown': vol((P.ducking ? Duck.base : video.volume) - 0.1); break;
+      case 'back': seekBy(-step()); seekFx(-1); break;
+      case 'fwd': seekBy(step()); seekFx(1); break;
+      case 'seek': { const t = Number(v), d = pDur(); if (isFinite(t) && isFinite(d)) { pSeek(clamp(t, 0, Math.max(0, d - 1))); seekFx(t >= pNow() ? 1 : -1); } break; }
+      case 'vol': setVol(Number(v) / 100); break;
+      case 'volup': setVol(cur() + 0.1); toast(`Volume ${Math.round(cur() * 100)}%`, 'info', 900, 'rmvol'); break;
+      case 'voldown': setVol(cur() - 0.1); toast(`Volume ${Math.round(cur() * 100)}%`, 'info', 900, 'rmvol'); break;
       case 'dsp': DSP.cycle(); break;
       case 'subs': if (P.curSub >= 0) { selectSub(-1); toast('Subtitles off'); } else cycleSub(); break;
       default: break;
     }
-    wakeHud(); setTimeout(() => this.status(), 150);
+    wakeHud();
   },
-  /* This phone becomes the remote */
-  bus: null, st: null,
-  async join(code) {
-    openLayer('remote'); $('#rmJoin').hidden = !!code; $('#rmMain').hidden = !code;
-    if (!code) { $('#rmTitle').textContent = 'Phone remote'; $('#rmSub').textContent = ''; setTimeout(() => $('#rmCode').focus(), 50); return; }
-    this.leave(true);
-    $('#rmTitle').textContent = 'Connecting…'; $('#rmSub').textContent = `Code ${code}`; $('#rmDot').className = 'rm-dot';
-    this.bus = new Bus(`remote-${code}`, (m) => { if (m.t === 'st') this.show(m); });
-    const ok = await this.bus.connect();
-    if (!this.bus) return;
-    /* Without the realtime service a player in another tab on this device can still answer over BroadcastChannel */
-    if (ok) { $('#rmDot').className = 'rm-dot ok'; $('#rmTitle').textContent = 'Connected'; $('#rmSub').textContent = 'Waiting for the player…'; }
-    else { $('#rmDot').className = 'rm-dot bad'; $('#rmTitle').textContent = 'Could not reach the realtime service'; $('#rmSub').textContent = 'Check your connection and the code.'; }
-    this.bus.send({ t: 'hi' }); clearInterval(this.helloT); this.helloT = setInterval(() => { if (!this.st) this.bus && this.bus.send({ t: 'hi' }); }, 3000);
+  /* ---- what the phone shows ---- */
+  where() {
+    const L = { trailer: 'Trailer', tour: 'Welcome', palette: 'Search', castLayer: 'Phone', partyLayer: 'Watch party', epSheet: 'Episodes', settings: 'Settings', addons: 'Addons', detail: 'Details' };
+    for (const id of Object.keys(L)) { const el = $(`#${id}`); if (el && !el.hidden) return L[id]; }
+    return { home: 'Home', movie: 'Movies', series: 'Series', tv: 'Live TV', library: 'Library', calendar: 'Calendar', studio: 'Studio' }[S.view] || 'Browsing';
   },
-  leave(quiet) { clearInterval(this.helloT); if (this.bus) { this.bus.send({ t: 'bye' }); this.bus.close(); this.bus = null; } this.st = null; if (!quiet && !$('#remote').hidden) closeLayer('remote'); },
-  send(c, v) { if (!this.bus) return; this.bus.send({ t: 'cmd', c, v }); try { navigator.vibrate && navigator.vibrate(8); } catch (e) { /* not allowed */ } },
-  show(st) {
-    this.st = st; $('#rmDot').className = 'rm-dot ok'; $('#rmTitle').textContent = st.title; $('#rmSub').textContent = [st.sub, `Volume ${st.vol}%`, st.dsp, st.subs ? 'Subtitles on' : ''].filter(Boolean).join(' · ');
-    $('#rmPlay').innerHTML = `<i data-lucide="${st.paused ? 'play' : 'pause'}"></i>`; $('#rmDsp').lastChild.textContent = st.dsp.split(' ')[0];
-    $('#rmCur').textContent = fmtTime(st.cur); $('#rmDur').textContent = st.dur ? fmtTime(st.dur) : '—';
-    $('#rmFill').style.transform = `scaleX(${st.dur ? clamp(st.cur / st.dur, 0, 1) : 0})`; icons();
+  state() {
+    const a = document.activeElement, pl = !$('#player').hidden && P.ctx, s = { t: 'st', v: pl ? 'player' : 'browse', dev: this.device(), step: step() };
+    if (pl) {
+      const m = P.ctx.meta, v = P.ctx.video, d = pDur();
+      Object.assign(s, { title: m.name || '', sub: v ? `S${v.season} · E${v.episode}${v.name || v.title ? ` · ${v.name || v.title}` : ''}` : [m.year || m.releaseInfo, (m.genres || [])[0]].filter(Boolean).join(' · '),
+        art: (v && v.thumbnail) || m.background || m.poster || '', cur: Math.round((pNow() || 0) * 10) / 10, dur: P.stream && isFinite(d) ? Math.round(d) : 0,
+        paused: video.paused, vol: Math.round((P.ducking ? Duck.base : video.volume) * 100), subs: P.curSub >= 0 });
+    } else {
+      const card = a && a.closest ? a.closest('[data-card]') : null;
+      const m = card ? (S.metas.get(card.dataset.id) || { name: card.getAttribute('aria-label') || '' }) : (!$('#detail').hidden && D.meta) || null;
+      s.where = this.where();
+      if (m) { s.title = m.name || ''; s.sub = [m.year || m.releaseInfo, m.type === 'series' ? 'Series' : m.type === 'movie' ? 'Film' : ''].filter(Boolean).join(' · '); s.art = m.background || m.poster || ''; }
+      else s.title = s.where;
+    }
+    if (rmText(a)) {
+      const lab = a.id === 'palInput' ? 'Search' : a.placeholder || a.getAttribute('aria-label') || (a.labels && a.labels[0] ? a.labels[0].textContent.trim() : '');
+      s.kb = { val: a.type === 'password' ? '' : a.value, ph: lab.slice(0, 60), pw: a.type === 'password', type: a.type, go: a.id === 'palInput' || a.type === 'search' ? 'search' : 'enter' };
+    }
+    if (typeof TvLogin !== 'undefined' && TvLogin.bus && (TvLogin.state === 'waiting' || TvLogin.state === 'phone')) s.login = TvLogin.link();
+    return s;
   },
+  push(force) {
+    if (!this.bus || !this.peers.size) return;
+    const s = this.state(), sig = JSON.stringify({ ...s, cur: 0 }), now = Date.now();
+    if (!force && sig === this.last && (s.v !== 'player' || s.paused) && now - this.lastAt < 4000) return;
+    this.last = sig; this.lastAt = now; this.bus.send(s);
+  },
+  status() { this.soon(); },
+  /* TV: a quiet corner card the first few launches, until a phone has paired */
+  hint() {
+    if (!IS_TV || this.hintEl || this.peers.size || Store.get('rmPaired', false)) return;
+    // never over the welcome tour or an open panel: wait for the home screen
+    if (this.layerOpen() || document.body.classList.contains('intro-on')) { clearTimeout(this.hintT); this.hintT = setTimeout(() => this.hint(), 3000); return; }
+    const n = Store.get('rmHint', 0), link = this.link(this.code); if (n >= 3 || !link) return; Store.set('rmHint', n + 1);
+    const el = this.hintEl = document.createElement('div'); el.className = 'rm-hint'; el.setAttribute('role', 'status');
+    el.innerHTML = `<div class="qr-wrap">${QR.svg(link, { margin: 2 })}</div><div class="rm-hint-t"><small>Phone remote</small><b>Use your phone as a remote</b><span>Scan with your phone camera, or open ${esc(this.link().replace(/^https?:\/\//, ''))} and type <b class="mono">${esc(this.code)}</b></span></div>`;
+    document.body.appendChild(el); requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on')));
+    setTimeout(() => this.unhint(), 18000);
+  },
+  unhint() { const el = this.hintEl; if (!el) return; this.hintEl = null; el.classList.remove('on'); setTimeout(() => el.remove(), 700); },
 };
-$('#rmClose').onclick = () => Remote.leave();
-$('#rmGo').onclick = () => { const c = $('#rmCode').value.trim().toUpperCase(); if (c.length !== 6) { toast('Codes have 6 characters', 'err'); return; } Remote.join(c); };
-$('#rmCode').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') $('#rmGo').click(); });
-$$('[data-rm]').forEach((b) => b.addEventListener('click', () => Remote.send(b.dataset.rm)));
-/* Trackpad: tap toggles, a sideways swipe skips 15 s, sliding up or down sets the volume */
-(() => {
-  const pad = $('#rmPad'); let g = null;
-  const flash = (txt) => { const f = $('#rmFlash'); f.textContent = txt; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); };
-  pad.addEventListener('pointerdown', (e) => { g = { x: e.clientX, y: e.clientY, t: performance.now(), vol: Remote.st ? Remote.st.vol : 50, mode: null, sent: 0 }; try { pad.setPointerCapture(e.pointerId); } catch (_) { /* gone */ } });
-  pad.addEventListener('pointermove', (e) => {
-    if (!g) return; const dx = e.clientX - g.x, dy = e.clientY - g.y;
-    if (!g.mode && Math.hypot(dx, dy) > 18) g.mode = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
-    if (g.mode === 'y') { const v = clamp(Math.round(g.vol - dy / 3), 0, 100); const now = performance.now(); if (now - g.sent > 90) { g.sent = now; Remote.send('vol', v); flash(`Volume ${v}%`); } }
-  });
-  pad.addEventListener('pointerup', (e) => {
-    if (!g) return; const dx = e.clientX - g.x, quick = performance.now() - g.t < 600;
-    if (!g.mode && quick) { Remote.send('toggle'); flash('Play / pause'); }
-    else if (g.mode === 'x' && Math.abs(dx) > 40) { Remote.send(dx > 0 ? 'fwd' : 'back'); flash(dx > 0 ? '+15 s' : '−15 s'); }
-    g = null;
-  });
-  pad.addEventListener('pointercancel', () => { g = null; });
-})();
+['play', 'pause', 'seeked', 'loadedmetadata'].forEach((ev) => video.addEventListener(ev, () => { if (Remote.peers.size) Remote.soon(); }));
+document.addEventListener('focusin', () => { if (Remote.peers.size) Remote.soon(); });
+/* A TV, or a screen a phone has paired with before, listens for its phones from launch */
+if (IS_TV || Store.get('rmPaired', false)) {
+  const start = () => {
+    if (document.body.classList.contains('intro-on')) { setTimeout(start, 600); return; }
+    setTimeout(() => Remote.host().then((ok) => { if (ok) setTimeout(() => Remote.hint(), 1600); }), 1200);
+  };
+  setTimeout(start, 2500);
+}
 
 /* ---------------- Watch party: WebRTC mesh with "perfect negotiation", data channels for sync, chat and reactions ----------------
    Clocks are compared with ping/pong; the room creator (or the earliest member left) sends a heartbeat, and everyone else
@@ -7008,7 +7118,7 @@ const Party = {
 $('#pParty').onclick = () => (Party.code && $('#partyDrawer').classList.contains('open') ? closeDrawers() : Party.openPanel());
 $('#partyPillBtn').onclick = () => Party.openPanel();
 ['play', 'pause', 'seeked'].forEach((ev) => video.addEventListener(ev, () => Party.local(ev)));
-addEventListener('beforeunload', () => { Party.leave(true); Remote.leave(true); });
+addEventListener('beforeunload', () => { Party.leave(true); });
 {
   // keep the floating party pill off the player, and back once it closes
   const base = syncLayers; syncLayers = function () { base(); Party.pill(); };
@@ -7168,7 +7278,7 @@ const Deep = {
   async handle() {
     const h = location.hash.replace(/^#/, '');
     if (h.startsWith('play?')) { history.replaceState(null, '', location.pathname); await this.play(new URLSearchParams(h.slice(5))); }
-    else if (h.startsWith('remote=')) { history.replaceState(null, '', location.pathname); Remote.join(h.slice(7).toUpperCase()); }
+    else if (h.startsWith('remote=')) { const c = h.slice(7).toUpperCase(); if (RM_CODE.test(c)) { location.replace(Remote.link(c)); return; } history.replaceState(null, '', location.pathname); }
     else if (h.startsWith('login=')) { history.replaceState(null, '', location.pathname); const [code, key] = h.slice(6).split('.'); TvLogin.join((code || '').toUpperCase(), key); }
     else if (h.startsWith('party=')) { history.replaceState(null, '', location.pathname); openLayer('partyLayer'); Party.render(); await Party.join(h.slice(6)); }
   },
@@ -7873,8 +7983,9 @@ const SECTIONS = [
     run('#smk-x', async () => { Store.set('simkl', { clientId: Simkl.cfg().clientId }); renderSettingsBody(); });
   } },
   { id: 'devices', icon: 'smartphone', label: 'Devices', intro: 'Hand a film to your phone at the same second, drive this screen from your phone, or watch in sync with friends.', rows: () => [
-    { key: 'castOpen', label: 'Phone remote', help: 'Shows a QR code. Scan it and your phone becomes a trackpad: tap to pause, swipe to skip 15 s, slide for volume, plus audio mode and subtitles.', type: 'button', text: 'Show QR code', icon: 'qr-code', run: () => { closeLayer('settings'); Cast.open('remote'); } },
-    { key: 'remoteJoin', label: 'Use this device as a remote', help: 'Enter the code shown on the other screen.', type: 'button', text: 'Enter code', icon: 'smartphone', run: () => { closeLayer('settings'); Remote.join(''); } },
+    { key: 'castOpen', label: 'Phone remote', help: 'Scan a QR code and your phone becomes a remote for this screen: touchpad or D-pad, play and seek, and a keyboard or your voice for search. Phones stay paired.', type: 'button', text: 'Pair a phone', icon: 'qr-code', run: () => { closeLayer('settings'); Cast.open('remote'); } },
+    { key: 'remoteNew', label: 'Unpair all phones', help: 'Makes a new pairing code. Phones paired before stop working until they scan the new one.', type: 'button', text: 'New code', icon: 'refresh-cw', run: () => Remote.renew() },
+    { key: 'remoteJoin', label: 'Use this phone as a remote', help: 'Opens MKCinema Remote, where you type the code shown on the TV. It remembers the TV for next time.', type: 'button', text: 'Open remote', icon: 'smartphone', run: () => Remote.join('') },
     { key: 'partyOpen', label: 'Watch party', help: 'Synced playback, voice chat that lowers the film while people talk, text chat and reactions. Works peer to peer; some strict networks (some offices and mobile carriers) block direct connections.', type: 'button', text: Party.code ? `Party ${Party.code}` : 'Start or join', icon: 'users', run: () => { closeLayer('settings'); Party.openPanel(); } },
     { key: 'install', label: 'Install as an app', help: PWA.installed() ? 'MKCinema is running as an installed app.' : 'Adds MKCinema to your home screen or dock, with its own window and faster start.', type: 'button', text: 'Install', icon: 'download', run: () => PWA.install() },
   ] },
@@ -8151,7 +8262,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.7.19';
+const APP_VERSION = '2.7.20';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
