@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.7.20 (2026-11-02)
+
+- **Featured banner keeps its shape**: the banner and the rows under it no longer move as the featured films cycle. 2.7.15 held only the banner's outer height and measured it before the film's logo had loaded, so logos still popped in and pushed the title up, and on short screens (laptops, phones turned sideways) the banner still grew and shrank and moved the rows below. Now the logo, title, details line and description each have a fixed slot, so nothing a film brings can change the layout.
+
 ## Web app 2.7.19 (2026-11-01)
 
 - **Smart TV speed**: the splash now runs as a CSS animation on the TV's graphics chip, so it stays smooth while the app loads behind it, and it is shorter (2.9 s). Icons are drawn once and reused: before, every featured-banner change redrew all 200+ icons on the page, a stall of about 100 ms on a slow TV every 9 seconds. The intro sound's reverb is built about 60 times faster. On a TV the featured banner waits while you are using the remote and changes every 14 seconds, card titles and the banner logo use lighter shadows, and the hidden ambilight no longer runs a frame loop during playback.
