@@ -1779,6 +1779,30 @@ html.tv .skeleton{animation:none;background:rgba(255,255,255,.06)}
 html.tv body.fx .logo3d.pop{animation:logoPop 1.15s cubic-bezier(.16,1,.3,1) calc(0s - var(--t0,0s)) both}
 html.tv .lg-sheen{display:none!important}
 html.tv body.fx .btn-ghost::after,html.tv body.fx .btn-prime::after{display:none}
+/* TV splash (2.7.19): compositor-only keyframes */
+html.tv #intro{background:#000;will-change:opacity}
+html.tv #intro .sp-glow,html.tv #intro .sp-line{display:none}
+html.tv #intro .sp-stage{perspective:none;will-change:opacity}
+html.tv #intro .sp-ring{stroke-dashoffset:0}
+html.tv #intro .sp-sheen{display:none}
+html.tv #intro .sp-mark{width:150px;height:150px}
+html.tv #intro .sp-emblem,html.tv #intro #introWord span,html.tv #intro .sp-rule,html.tv #intro #introTag{opacity:0;will-change:opacity,transform}
+html.tv #intro .sp-mono{opacity:1}
+html.tv #intro #introWord span{background:none;color:#f1ede4;-webkit-text-fill-color:#f1ede4}
+html.tv #intro.tvs .sp-emblem{animation:tvsEmblem 1.1s cubic-bezier(.16,1,.3,1) .1s both}
+html.tv #intro.tvs #introWord span{animation:tvsUp .7s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(.75s + var(--i,0) * 45ms)}
+html.tv #intro.tvs #introWord span:nth-child(2){--i:1}html.tv #intro.tvs #introWord span:nth-child(3){--i:2}html.tv #intro.tvs #introWord span:nth-child(4){--i:3}
+html.tv #intro.tvs #introWord span:nth-child(5){--i:4}html.tv #intro.tvs #introWord span:nth-child(6){--i:5}html.tv #intro.tvs #introWord span:nth-child(7){--i:6}html.tv #intro.tvs #introWord span:nth-child(8){--i:7}
+html.tv #intro.tvs .sp-rule{animation:tvsRule .9s cubic-bezier(.16,1,.3,1) 1.1s both}
+html.tv #intro.tvs #introTag{animation:tvsUp .8s cubic-bezier(.16,1,.3,1) 1.25s both}
+html.tv #intro.tvs{animation:tvsOut .55s ease-in 2.3s both}
+@keyframes tvsEmblem{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:none}}
+@keyframes tvsUp{from{opacity:0;transform:translate3d(0,14px,0)}to{opacity:1;transform:none}}
+@keyframes tvsRule{from{opacity:0;transform:scaleX(0)}to{opacity:1;transform:scaleX(1)}}
+@keyframes tvsOut{from{opacity:1}to{opacity:0}}
+/* TV paint: cheaper text and logo shadows, still legible on artwork */
+html.tv .card-title{text-shadow:0 1px 2px rgba(0,0,0,.9)}
+html.tv .hero-logo,html.tv .logo3d .hero-logo{filter:drop-shadow(0 3px 10px rgba(0,0,0,.7))}
 </style>
 </head>
 <body class="locked">
@@ -2349,7 +2373,29 @@ const fmtBytes = (b) => {
   return `${b.toFixed(b >= 10 || i < 2 ? 0 : 1)} ${u[i]}`;
 };
 const fmtDate = (d) => { const x = new Date(d); return isNaN(x) ? '' : x.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); };
-const icons = () => { try { window.lucide && lucide.createIcons({ attrs: { 'aria-hidden': 'true' } }); } catch (e) { /* icons are cosmetic */ } };
+/* Icons: lucide's createIcons() rebuilds every icon already on the page on each call (200+ SVGs), which stalled TVs on
+   every banner change. Here only new <i data-lucide> placeholders are drawn, each cloned from a cached template. */
+const ICON_TPL = new Map();
+const iconKey = (n) => n.replace(/(\w)(\w*)(_|-|\s*)/g, (g0, g1, g2) => g1.toUpperCase() + g2.toLowerCase());
+const icons = () => {
+  const L = window.lucide; if (!L) return;
+  if (!L.icons || !L.createElement) { try { L.createIcons({ attrs: { 'aria-hidden': 'true' } }); } catch (e) { /* icons are cosmetic */ } return; }
+  const list = document.querySelectorAll('i[data-lucide]');
+  for (let k = 0; k < list.length; k++) {
+    const el = list[k];
+    try {
+      const name = el.getAttribute('data-lucide');
+      let tpl = ICON_TPL.get(name);
+      if (tpl === undefined) { const node = L.icons[iconKey(name)]; tpl = node ? L.createElement(node) : null; ICON_TPL.set(name, tpl); }
+      if (!tpl || !el.parentNode) continue;
+      const svg = tpl.cloneNode(true);
+      svg.setAttribute('data-lucide', name); svg.setAttribute('aria-hidden', 'true');
+      for (const a of el.attributes) if (a.name !== 'class') svg.setAttribute(a.name, a.value);
+      svg.setAttribute('class', `lucide lucide-${name}${el.className ? ` ${el.className}` : ''}`);
+      el.parentNode.replaceChild(svg, el);
+    } catch (e) { /* icons are cosmetic */ }
+  }
+};
 const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
 const b64json = (obj) => btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
@@ -2437,7 +2483,7 @@ class Sfx {
       this.master = this.ctx.createGain(); this.master.gain.value = this.muted ? 0 : CFG.sfxVolume / 100;
       this.comp = this.ctx.createDynamicsCompressor(); this.comp.threshold.value = -14; this.comp.ratio.value = 4;
       this.master.connect(this.comp).connect(this.ctx.destination);
-      this.verb = this.ctx.createConvolver(); this.verb.buffer = this.impulse(3.6, 3.2);
+      this.verb = this.ctx.createConvolver(); this.verb.buffer = IS_TV ? this.impulse(1.8, 2.6) : this.impulse(3.6, 3.2);
       this.verbGain = this.ctx.createGain(); this.verbGain.gain.value = .55;
       this.verb.connect(this.verbGain).connect(this.master);
     }
@@ -2447,7 +2493,10 @@ class Sfx {
   async unlock() { const c = this.ensure(); if (c && c.state !== 'running') { try { await c.resume(); } catch (e) { /* needs a gesture */ } } return !!c && c.state === 'running'; }
     impulse(sec, decay) {
     const c = this.ctx, len = Math.floor(c.sampleRate * sec), b = c.createBuffer(2, len, c.sampleRate);
-    for (let ch = 0; ch < 2; ch++) { const d = b.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay); }
+    for (let ch = 0; ch < 2; ch++) {
+      const d = b.getChannelData(ch);
+      for (let i = 0; i < len; i += 64) { const env = Math.pow(1 - i / len, decay), e = Math.min(len, i + 64); for (let j = i; j < e; j++) d[j] = (Math.random() * 2 - 1) * env; }
+    }
     return b;
   }
   noise(sec) {
@@ -3235,7 +3284,11 @@ function setHeroList(list) {
   showHero(0);
 }
 // The billboard only advances while it can be seen, so nothing repaints under an open panel or in a background tab
-function nextHero() { if (document.hidden || document.body.classList.contains('layer-open') || S.view !== 'home' || scrollY > innerHeight) { S.heroTimer = setTimeout(nextHero, 3000); return; } showHero(S.heroIdx + 1, 1); }
+let TV_KEY_AT = 0; if (IS_TV) addEventListener('keydown', () => { TV_KEY_AT = performance.now(); }, true);
+function nextHero() {
+  if (document.hidden || document.body.classList.contains('layer-open') || S.view !== 'home' || scrollY > innerHeight || (IS_TV && performance.now() - TV_KEY_AT < 8000)) { S.heroTimer = setTimeout(nextHero, 3000); return; }
+  showHero(S.heroIdx + 1, 1);
+}
 /* The banner keeps the tallest height any slide has needed at this width, so swiping never makes it jump */
 function heroHold() {
   const h = $('#hero'); if (S.heroW !== innerWidth) { S.heroW = innerWidth; S.heroH = 0; }
@@ -3260,7 +3313,7 @@ function showHero(i, dir = 1) {
   $$('#heroDots button').forEach((b, k) => b.classList.toggle('on', k === S.heroIdx));
   $('#heroList').innerHTML = inWatchlist(m.id) ? '<i data-lucide="check"></i>In watchlist' : '<i data-lucide="plus"></i>Watchlist';
   icons();
-  clearTimeout(S.heroTimer); S.heroTimer = setTimeout(nextHero, 9000);
+  clearTimeout(S.heroTimer); S.heroTimer = setTimeout(nextHero, IS_TV ? 14000 : 9000);
 }
 
 /* =====================================================================
@@ -4091,7 +4144,7 @@ async function closePlayer() {
 function startAmbilight() {
   cancelAnimationFrame(P.raf);
   // Phones and touch tablets use a full-screen stage, so the glow would never be seen: skip the per-frame work there
-  if (TOUCH_PLAYER.matches) return;
+  if (TOUCH_PLAYER.matches || IS_TV) return;
   const c = $('#amb'), g = c.getContext('2d'); let n = 0;
   const [ma, mb] = moodFor(P.ctx.meta);
   let last = 0;
@@ -4873,8 +4926,21 @@ function finishIntro() {
   syncLayers();
   INTRO.tl = null; INTRO.skipping = false;
 }
+/* Smart TV splash: the same emblem and wordmark, run by CSS on the compositor so it stays smooth while the app loads
+   underneath. Opacity and transform only; the rings are drawn, not traced, and the app appears beneath the fade. */
+function runIntroTV() {
+  const intro = $('#intro'); intro.hidden = false; intro.style.opacity = ''; intro.classList.remove('tvs'); void intro.offsetWidth;
+  $('#app').classList.remove('pre'); $('#app').style.cssText = '';
+  document.body.classList.add('locked', 'intro-on'); $('#skip').hidden = true; $('#soundgate').hidden = true;
+  intro.classList.add('tvs');
+  if (!INTRO.skipping) setTimeout(() => { if (INTRO.tl) sfx.riser(2.2); }, 60);
+  const t1 = setTimeout(() => { if (INTRO.tl && !INTRO.skipping) sfx.chord(); }, 1100);
+  const t2 = setTimeout(() => { intro.classList.remove('tvs'); finishIntro(); }, 2900);
+  INTRO.tl = { progress() { clearTimeout(t1); clearTimeout(t2); intro.classList.remove('tvs'); } };
+}
 function runIntro() {
   layoutWord();
+  if (IS_TV && !matchMedia('(prefers-reduced-motion: reduce)').matches && !CFG.reduceMotion) { runIntroTV(); return; }
   const intro = $('#intro'); intro.hidden = false; intro.style.opacity = '1';
   $('#introTag').style.opacity = '0'; $('#app').classList.add('pre'); document.body.classList.add('locked', 'intro-on');
   if (!window.gsap || matchMedia('(prefers-reduced-motion: reduce)').matches || CFG.reduceMotion) { revealApp(true); finishIntro(); return; }
@@ -8085,7 +8151,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.7.18';
+const APP_VERSION = '2.7.19';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
