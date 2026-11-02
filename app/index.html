@@ -6681,7 +6681,13 @@ const Remote = {
       : /Android|iPad/.test(u) ? 'Tablet' : /Mac/.test(u) ? 'Mac' : /Windows/.test(u) ? 'Windows PC' : 'Computer';
   },
   storedCode() { let c = Store.get('rcode', ''); if (!RM_CODE.test(c)) { c = roomCode(); Store.set('rcode', c); } return c; },
-  link(code) { if (!/^https?:$/.test(location.protocol)) return ''; return `${location.origin}${location.pathname.replace(/[^/]*$/, '')}remote${code ? `#${code}` : ''}`; },
+  link(code) {
+    if (!/^https?:$/.test(location.protocol)) return '';
+    // a screen on its own Supabase project hands the phone that project too (url and publishable key, both public)
+    let extra = ''; const c = Account.config();
+    if (code && c && c.url && c.anonKey && c.url.replace(/\/+$/, '') !== SUPABASE_PROJECT.url) extra = `.${btoa(JSON.stringify({ u: c.url.replace(/\/+$/, ''), k: c.anonKey })).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_')}`;
+    return `${location.origin}${location.pathname.replace(/[^/]*$/, '')}remote${code ? `#${code}${extra}` : ''}`;
+  },
   async host() {
     if (this.bus) return this.bus.online;
     this.code = this.storedCode();

@@ -361,7 +361,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
    Transport is Supabase Realtime broadcast over one bare WebSocket (no SDK to download, so it opens instantly),
    on the same channel the TV app's Bus listens to: mkc-remote-<CODE>, event "m". A BroadcastChannel covers
    a second tab on the same device. The TV keeps its code, and this phone remembers every TV it paired with. */
-const SB = { url: 'https://wogffhgdixgrayowewnf.supabase.co', key: 'sb_publishable_ZpiFwB_oM579GwCunYpHWg_jelRazT-' };
+const SB_DEFAULT = { url: 'https://wogffhgdixgrayowewnf.supabase.co', key: 'sb_publishable_ZpiFwB_oM579GwCunYpHWg_jelRazT-' };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -381,15 +381,16 @@ function toast(t, ms = 2600) { const el = $('#toast'); el.textContent = t; el.cl
 /* ---------- Paired TVs ---------- */
 const TVs = {
   list() { return Store.get('tvs', []).filter((t) => t && CODE_RE.test(t.code)); },
-  save(code, name) { const l = this.list().filter((t) => t.code !== code); l.unshift({ code, name: name || 'TV', at: Date.now() }); Store.set('tvs', l.slice(0, 8)); },
+  save(code, name, sb) { const old = this.list().find((t) => t.code === code), l = this.list().filter((t) => t.code !== code); l.unshift({ code, name: name || 'TV', at: Date.now(), sb: sb || (old && old.sb) || null }); Store.set('tvs', l.slice(0, 8)); },
+  sb(code) { const t = this.list().find((x) => x.code === code); return (t && t.sb) || null; },
   forget(code) { Store.set('tvs', this.list().filter((t) => t.code !== code)); },
   name(code) { const t = this.list().find((x) => x.code === code); return t ? t.name : ''; },
 };
 
 /* ---------- Realtime link: Phoenix protocol, JSON serializer ---------- */
 class Link {
-  constructor(code, onMsg, onState) {
-    this.code = code; this.topic = `realtime:mkc-remote-${code}`; this.onMsg = onMsg; this.onState = onState;
+  constructor(code, onMsg, onState, sb) {
+    this.sb = sb || SB_DEFAULT; this.code = code; this.topic = `realtime:mkc-remote-${code}`; this.onMsg = onMsg; this.onState = onState;
     this.ws = null; this.joined = false; this.ref = 0; this.joinRef = ''; this.seen = new Set(); this.closed = false; this.tries = 0; this.hbT = 0; this.reT = 0;
     try { this.bc = new BroadcastChannel(`mkc:remote-${code}`); this.bc.onmessage = (e) => this.recv(e.data); } catch (e) { this.bc = null; }
     this.open();
@@ -398,7 +399,7 @@ class Link {
     if (this.closed) return;
     clearTimeout(this.reT); this.onState('conn');
     let ws;
-    try { ws = this.ws = new WebSocket(`${SB.url.replace(/^http/, 'ws')}/realtime/v1/websocket?apikey=${encodeURIComponent(SB.key)}&vsn=1.0.0`); }
+    try { ws = this.ws = new WebSocket(`${this.sb.url.replace(/^http/, 'ws')}/realtime/v1/websocket?apikey=${encodeURIComponent(this.sb.key)}&vsn=1.0.0`); }
     catch (e) { this.retry(); return; }
     ws.onopen = () => {
       this.joinRef = String(++this.ref);
@@ -448,12 +449,12 @@ class Link {
 const R = {
   code: '', link: null, st: null, lastSt: 0, net: 'conn', hiT: 0, watchT: 0, kbAuto: false, kbWas: false, typingAt: 0,
   base: { cur: 0, dur: 0, at: 0, paused: true }, raf: 0,
-  connect(code) {
+  connect(code, sb) {
     if (this.link) this.link.close();
-    this.code = code; this.st = null; this.lastSt = 0; this.kbWas = false;
+    this.sb = sb || TVs.sb(code); this.code = code; this.st = null; this.lastSt = 0; this.kbWas = false;
     $('#tvName').textContent = TVs.name(code) || 'Your TV';
     show('ctl'); this.paintNow(); this.paintState();
-    this.link = new Link(code, (m) => this.onMsg(m), (s) => { this.net = s; if (s === 'online') this.hello(); this.paintState(); });
+    this.link = new Link(code, (m) => this.onMsg(m), (s) => { this.net = s; if (s === 'online') this.hello(); this.paintState(); }, this.sb);
     clearInterval(this.hiT); this.hiT = setInterval(() => this.hello(), 4000);
     clearInterval(this.watchT); this.watchT = setInterval(() => this.paintState(), 1000);
   },
@@ -465,8 +466,8 @@ const R = {
   onMsg(m) {
     if (m.t === 'st') {
       const first = !this.lastSt; this.lastSt = Date.now(); this.st = m;
-      if (m.dev) { $('#tvName').textContent = m.dev; }
-      if (first) { TVs.save(this.code, m.dev); history.replaceState(null, '', location.pathname); buzz(14); }
+      if (m.dev) { $('#tvName').textContent = m.dev; if (!first && TVs.name(this.code) !== m.dev) TVs.save(this.code, m.dev); }
+      if (first) { TVs.save(this.code, m.dev, this.sb); history.replaceState(null, '', location.pathname); buzz(14); }
       this.base = { cur: Number(m.cur) || 0, dur: Number(m.dur) || 0, at: performance.now(), paused: !!m.paused };
       this.paintNow(); this.paintState(); this.syncKb();
     } else if (m.t === 'gone') {
@@ -751,9 +752,11 @@ addEventListener('keydown', (e) => { if (e.key === 'Escape' && sheet) closeSheet
 /* ---------- Start ---------- */
 (() => {
   setMode(Store.get('mode', 'pad'));
-  const h = decodeURIComponent(location.hash.replace(/^#/, '')).toUpperCase().replace(/^(REMOTE=|CODE=)/, '');
-  const code = h.slice(0, 6);
-  if (CODE_RE.test(code)) { R.connect(code); return; }
+  const raw = decodeURIComponent(location.hash.replace(/^#/, '')).replace(/^(remote=|code=)/i, ''), [c, cfg] = raw.split('.');
+  const code = (c || '').toUpperCase().slice(0, 6);
+  // a TV on its own Supabase project puts that project in the QR code after the dot
+  let sb = null; try { if (cfg) { const o = JSON.parse(atob(cfg.replace(/-/g, '+').replace(/_/g, '/'))); if (/^https:\/\/[^\s"]+$/.test(o.u) && typeof o.k === 'string') sb = { url: o.u, key: o.k }; } } catch (e) { sb = null; }
+  if (CODE_RE.test(code)) { R.connect(code, sb); return; }
   const last = TVs.list()[0];
   if (last) R.connect(last.code); else Pair.show();
 })();
