@@ -4763,10 +4763,11 @@ const Nav = {
     this.settleT = setTimeout(() => run(false), 140);
   },
   move(dir, fast) {
-    const root = this.root(); const list = this.items(root); if (!list.length) return;
+    const root = this.root();
     const cur = root.contains(document.activeElement) && document.activeElement !== document.body ? document.activeElement : null;
+    if (cur && (dir === 'left' || dir === 'right')) { const n = this.step(cur, dir); if (n) { this.focus(n, fast); return; } }
+    const list = this.items(root); if (!list.length) return;
     if (!cur) { if (IS_TV) this.restore(fast); else this.focus(list[0]); return; }
-    if (dir === 'left' || dir === 'right') { const n = this.step(cur, dir); if (n) { this.focus(n, fast); return; } }
     const a = cur.getBoundingClientRect(), ax = a.left + a.width / 2, ay = a.top + a.height / 2;
     let best = null, bestScore = Infinity;
     for (const el of list) {
