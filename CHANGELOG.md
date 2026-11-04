@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.7.35 (2026-11-04)
+
+- **Faster start on every device**: the app no longer waits for 840 KB of third-party scripts before it can draw. The icon library (1,700 icons, 355 KB) is replaced by the 146 icons MKCinema uses, built in (27 KB); an icon outside that set still loads the full library on its own. The video streaming library (hls.js, 413 KB) loads when a film's page opens, and a stream waits for it if needed. TVs skip the intro animation library, since they never show the intro. In a Fire TV profile with a 6x slower CPU, script work while starting fell from about 0.67 s to 0.26 s.
+- **Smoother remote on TVs**: posters' info overlay and buttons still faded on every focus move, which repainted the whole page on each frame. On a TV every focus change is now instant. Per remote press, style work fell about 70%, painting about 50% and layer building about 60% in the same profile.
+
 ## Web app 2.7.26 (2026-11-04)
 
 - **Peak Cinema, a scene surfer for when you can't decide**: start it from the panel under the featured banner on Home (or search "Peak Cinema"). It plays 90-second scenes from films in your catalogs and watchlist, one after another, with moods (Action, Sci-Fi, Thriller, Comedy, Horror, Animation, Drama). Keep watching opens the film in the player from that exact second, From the start opens it from the beginning, and Next scene skips. TV remotes: arrows and OK, plus Next track or Channel up/down to skip.
