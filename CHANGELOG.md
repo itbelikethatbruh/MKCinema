@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.7.23 (2026-11-04)
+
+- **Back from VLC lands on the film's page**: playing a source in VLC or another outside player no longer opens the in-app player with an "Opening in VLC" panel (whose buttons overlapped the player controls). MKCinema stays on the film's page, or opens it when you started from Home, and hands the stream to the app, so pressing Back in the player returns you to the source list. A short note says it is opening; if the app never takes over (not installed, or the browser wanted a tap), a quiet note says so and the sources are right there. The player's own "Open in another app" menu works the same way.
+
 ## Web app 2.7.22 (2026-11-03)
 
 - **Smart TV speed, measured properly**: on a TV every row of posters was split into extra graphics layers as wide as the whole row (about 33 megapixels of layers on Home), and the animated focus on posters rebuilt them twice on every remote press. Rows are now self-contained, and the poster lift and ring switch instantly on a TV. In a Fire TV profile with a 6x slower CPU, the page's rendering work per remote press fell by about 60%, frames over 50 ms while moving fell from 30 to 2, and none go over 100 ms. Moving left and right along a row no longer measures the whole page, and Home rows hold 24 posters on a TV (See all has the rest).
