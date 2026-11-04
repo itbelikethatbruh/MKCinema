@@ -2,6 +2,14 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.7.37 (2026-11-04)
+
+- **Peak Cinema follows your theme again**: 2.7.36 was built from a copy that had lost the theme colours on Peak Cinema, so it always showed in Noir. Midnight, Velvet and Sepia now apply to it again, as they did in 2.7.35.
+
+## Web app 2.7.36 (2026-11-04)
+
+- **Peak Cinema on TVs tries the film's other source**: when the first cached copy of a scene will not open, the film's second cached source is tried before Peak Cinema moves on to another film.
+
 ## Web app 2.7.35 (2026-11-04)
 
 - **Faster start on every device**: the app no longer waits for 840 KB of third-party scripts before it can draw. The icon library (1,700 icons, 355 KB) is replaced by the 146 icons MKCinema uses, built in (27 KB); an icon outside that set still loads the full library on its own. The video streaming library (hls.js, 413 KB) loads when a film's page opens, and a stream waits for it if needed. TVs skip the intro animation library, since they never show the intro. In a Fire TV profile with a 6x slower CPU, script work while starting fell from about 0.67 s to 0.26 s.

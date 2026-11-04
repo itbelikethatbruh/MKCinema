@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MKCinema for TV</title>
+<link rel="icon" href="/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--void:#000;--s2:#111113;--s3:#19191c;--ink:#f4f4f5;--mute:#c9c9d0;--dim:#9a9aa3;--champ:#d9d4c7}
+*{box-sizing:border-box;margin:0}
+body{background:var(--void);color:var(--ink);font:500 clamp(18px,2.2vw,28px)/1.45 Onest,system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:4vh 5vw}
+main{max-width:1100px;width:100%}
+.brand{display:flex;align-items:center;gap:.6em;color:var(--champ);letter-spacing:.2em;text-transform:uppercase;font-size:.7em}
+.brand img{width:2.2em;height:2.2em;border-radius:22%}
+h1{font:600 clamp(36px,5.4vw,72px)/1.05 Fraunces,Georgia,serif;margin:.4em 0 .3em}
+.url{display:inline-block;background:var(--s3);border:2px solid var(--champ);border-radius:.4em;padding:.05em .45em;color:var(--ink);font-weight:600;letter-spacing:.03em}
+a.btn{display:inline-block;margin:1em 0 1.4em;background:var(--champ);color:#000;text-decoration:none;font-weight:600;font-size:1.15em;padding:.7em 1.6em;border-radius:999px;outline:none;transition:transform .15s}
+a.btn:focus,a.btn:hover{transform:scale(1.06);box-shadow:0 0 0 6px #000,0 0 0 10px var(--champ)}
+ol{padding-left:1.3em;color:var(--mute)}
+li{margin:.35em 0}
+li b{color:var(--ink)}
+.dim{color:var(--dim);font-size:.75em;margin-top:1.4em}
+</style></head>
+<body><main>
+<div class="brand"><img src="/icon-192.png" alt="">MKCinema</div>
+<h1>Get MKCinema on your TV</h1>
+<p>On a Fire Stick or Android TV, open the <b>Downloader</b> app and type <span class="url">mkctv.pages.dev</span>, then press Go. The app downloads and asks to install.</p>
+<a class="btn" href="/MKCinema-TV.apk" autofocus>Download the TV app</a>
+<ol>
+<li>First time only: install <b>Downloader</b> from the Amazon Appstore (search "Downloader").</li>
+<li>Allow it to install apps: <b>Settings › My Fire TV › Developer options › Install unknown apps › Downloader › On</b>. If Developer options is missing, open <b>My Fire TV › About</b> and press Select on your device name 7 times.</li>
+<li>In Downloader, type <b>mkctv.pages.dev</b> and press <b>Go</b>, then choose <b>Install</b>.</li>
+<li>Open MKCinema, then sign in by scanning the QR code with your phone (Settings › Account).</li>
+</ol>
+<p class="dim">Works on Fire TV, Android TV and Google TV. Phones and computers: mkcinema-site.pages.dev</p>
+</main>
+<script>document.querySelector('.btn').focus()</script>
+</body></html>

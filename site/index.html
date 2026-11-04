@@ -536,7 +536,7 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
         <span><svg><use href="#i-check"/></svg>Open source</span>
         <span><svg><use href="#i-check"/></svg>No account needed</span>
       </div>
-      <div class="quick rv d3" aria-label="Download MKCinema">
+      <div class="quick rv d3" role="group" aria-label="Download MKCinema">
         <span class="quick-t">Download the app</span>
         <div class="qgrid">
           <a class="qd" href="download/MKCinema.apk" download="MKCinema.apk"><svg><use href="#b-android"/></svg><span><b>Android</b><small>.apk · 450 KB</small></span></a>
@@ -544,7 +544,7 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
           <a class="qd" href="download/MKCinema-1.0.dmg" download="MKCinema-1.0.dmg"><svg><use href="#b-apple"/></svg><span><b>Mac</b><small>.dmg · 1.5 MB</small></span></a>
           <a class="qd" href="download/mkcinema_1.0_amd64.deb" download><svg><use href="#b-linux"/></svg><span><b>Linux</b><small>.deb · 200 KB</small></span></a>
         </div>
-        <span class="quick-n">On a TV? Get the <a href="#tv">Smart TV app</a>. Linux without apt? Get the <a href="download/mkcinema-1.0-linux-x86_64.tar.gz" download>.tar.gz</a>. Install help is in <a href="#install">Download</a>.</span>
+        <span class="quick-n">On a TV? Open Downloader and type <b>mkctv.pages.dev</b>, or see the <a href="#tv">Smart TV app</a>. Linux without apt? Get the <a href="download/mkcinema-1.0-linux-x86_64.tar.gz" download>.tar.gz</a>. Install help is in <a href="#install">Download</a>.</span>
       </div>
     </div>
     <div class="stage rv d2" id="stage" aria-hidden="true">
@@ -558,7 +558,7 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
   </div>
 </section>
 
-<div class="strip" aria-label="Works with">
+<div class="strip" role="group" aria-label="Works with">
   <p class="strip-t">Works with the services you already use</p>
   <div class="track"><span class="lg"><svg><use href="#b-stremio"/></svg>Stremio addons</span><span class="lg"><svg><use href="#i-bolt"/></svg>Any debrid service</span><span class="lg"><svg><use href="#b-vlcmediaplayer"/></svg>VLC</span><span class="lg"><svg><use href="#b-mpv"/></svg>mpv</span><span class="lg"><svg><use href="#b-trakt"/></svg>Trakt</span><span class="lg"><img class="inv" src="logos/simkl.png" alt="" width="28" height="28" loading="lazy">Simkl</span><span class="lg"><svg><use href="#b-imdb"/></svg>IMDb ratings</span><span class="lg"><svg><use href="#b-youtube"/></svg>Official trailers</span><span class="lg"><svg><use href="#b-wikipedia"/></svg>Wikipedia for X-Ray</span><span class="lg" aria-hidden="true"><svg><use href="#b-stremio"/></svg>Stremio addons</span><span class="lg" aria-hidden="true"><svg><use href="#i-bolt"/></svg>Any debrid service</span><span class="lg" aria-hidden="true"><svg><use href="#b-vlcmediaplayer"/></svg>VLC</span><span class="lg" aria-hidden="true"><svg><use href="#b-mpv"/></svg>mpv</span><span class="lg" aria-hidden="true"><svg><use href="#b-trakt"/></svg>Trakt</span><span class="lg" aria-hidden="true"><img class="inv" src="logos/simkl.png" alt="" width="28" height="28" loading="lazy">Simkl</span><span class="lg" aria-hidden="true"><svg><use href="#b-imdb"/></svg>IMDb ratings</span><span class="lg" aria-hidden="true"><svg><use href="#b-youtube"/></svg>Official trailers</span><span class="lg" aria-hidden="true"><svg><use href="#b-wikipedia"/></svg>Wikipedia for X-Ray</span></div>
 </div>
@@ -754,12 +754,12 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
         <div>
           <h3>Smart TV</h3>
           <p>The cinema on the big screen. Browse with your remote's arrows and OK, Back closes what's open, and play, pause and skip work from the remote's media keys.</p>
-          <div class="distros" aria-label="Android TV, Google TV, Fire TV and LG"><svg><use href="#b-android"/></svg><svg><use href="#b-amazonfiretv"/></svg><svg><use href="#b-lg"/></svg></div>
+          <div class="distros" role="img" aria-label="Android TV, Google TV, Fire TV and LG"><svg><use href="#b-android"/></svg><svg><use href="#b-amazonfiretv"/></svg><svg><use href="#b-lg"/></svg></div>
         </div>
         <div class="tv-act">
           <a class="btn btn-plat" href="download/MKCinema-TV.apk" download="MKCinema-TV.apk"><svg><use href="#i-down"/></svg>Android TV &amp; Fire TV</a>
           <a class="btn btn-ghost" href="download/com.mkcinema.app_1.1.0_all.ipk" download><svg><use href="#i-down"/></svg>LG webOS .ipk (beta)</a>
-          <span class="fine">Version 1.2.1 · 450 KB · Android TV 7 or later. On Fire TV, open Downloader and enter <b>mkcinema-site.pages.dev/tv</b></span>
+          <span class="fine">Version 1.2.1 · 450 KB · Android TV 7 or later. On Fire TV, open Downloader and type <b>mkctv.pages.dev</b></span>
         </div>
       </div>
     </div>
@@ -777,8 +777,8 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
     <details class="apk-help rv">
       <summary>How to install on a TV<i></i></summary>
       <ol>
-        <li><b>Fire TV:</b> install <b>Downloader</b> from the Amazon Appstore. In <b>Settings › My Fire TV › Developer options</b>, allow Downloader to install unknown apps. Open Downloader, enter <code>mkcinema-site.pages.dev/tv</code> and tap <b>Install</b>.</li>
-        <li><b>Android TV and Google TV:</b> install <b>Downloader</b> from Google Play, allow it under <b>Settings › Apps › Security › Unknown sources</b>, then enter <code>mkcinema-site.pages.dev/tv</code>. You can also copy MKCinema-TV.apk over with a USB stick and open it with a file manager.</li>
+        <li><b>Fire TV:</b> install <b>Downloader</b> from the Amazon Appstore. In <b>Settings › My Fire TV › Developer options</b>, allow Downloader to install unknown apps (if Developer options is missing, open <b>My Fire TV › About</b> and press Select on your device name 7 times). Open Downloader, enter <code>mkctv.pages.dev</code> and tap <b>Install</b>.</li>
+        <li><b>Android TV and Google TV:</b> install <b>Downloader</b> from Google Play, allow it under <b>Settings › Apps › Security › Unknown sources</b>, then enter <code>mkctv.pages.dev</code>. You can also copy MKCinema-TV.apk over with a USB stick and open it with a file manager.</li>
         <li>MKCinema shows up in your TV's apps row. Sign in and your addons, library and settings come with you.</li>
         <li><b>LG webOS (beta):</b> LG only installs apps from its own store, so the .ipk needs the TV in Developer Mode (LG's Developer Mode app and the webOS CLI) or Homebrew Channel.</li>
       </ol>
@@ -857,7 +857,7 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
       <details><summary>Do I need an account?<i></i></summary><div class="a">No. Everything works without one. Signing in with email and password adds sync of your library, progress, addons and settings across your devices.</div></details>
       <details><summary>What is debrid, and which service should I use?<i></i></summary><div class="a">A debrid service fetches files for you and streams them back over a fast, direct connection. MKCinema works with the major debrid services using your own key, so use whichever you prefer. Settings › Get started walks you through adding it.</div></details>
       <details><summary>Why do you recommend VLC?<i></i></summary><div class="a">Browsers can't decode some common formats, such as HEVC video or Dolby and DTS sound. VLC plays nearly everything, and MKCinema hands a stream to it in one tap. If you can't install a player, turn on Browser only mode.</div></details>
-      <details><summary>Where are my keys stored?<i></i></summary><div class="a">In your browser, and, if you sign in, in your own account row, which row-level security keeps readable only by you. Turn off <em>Sync keys with my account</em> in Settings › Debrid to keep them on one device. Keys are only ever sent to the service they belong to.</div></details>
+      <details><summary>Where are my keys stored?<i></i></summary><div class="a">In your browser, and, if you sign in, in your own account row, which row-level security keeps readable only by you. Turn off <em>Sync keys with my account</em> in Settings › Debrid to keep them on one device. Keys are only ever sent to the service they belong to. When a browser isn’t allowed to call that service directly, the call passes through MKCinema’s small relay, which forwards it and doesn’t store or log your key.</div></details>
       <details><summary>Which devices does MKCinema run on?<i></i></summary><div class="a">Android phones and tablets, Windows 10 and 11, macOS 11 or later, and 64-bit Linux all have their own app above. Any other computer can use it in Chrome, Edge or Firefox. iPhone and iPad are not supported. On a TV, open it in the TV's browser, or hand streams to VLC or Infuse. Chromecast casting isn't built in yet.</div></details>
       <details><summary>Are the downloads safe?<i></i></summary><div class="a">Every app is MKCinema itself, opening mkcinema.pages.dev in its own window, and its full source is on GitHub. The APK is signed with MKCinema's own key and only asks for internet access and, for push-to-talk in watch parties, your microphone. The Windows and Mac apps aren't code-signed by Microsoft or Apple yet, so each asks you to confirm the first time (see the install steps above). Download them only from this site or the GitHub repository.</div></details>
       <details><summary>Can I move over from Stremio?<i></i></summary><div class="a">Yes. Settings › Account › Import from Stremio copies your library, progress and addons. Your Stremio password is used once and never stored.</div></details>

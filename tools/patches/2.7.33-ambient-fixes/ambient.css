@@ -1,0 +1,90 @@
+/* ===== Ambient Mode (2.7.32): multi-plane parallax screensaver ===== */
+#saver{position:fixed;inset:0;z-index:9500;background:#000;opacity:0;transition:opacity .9s ease;overflow:hidden;cursor:none;contain:strict;color:#fff;--xf:2000ms}
+#saver[hidden]{display:none}
+#saver.on{opacity:1}
+#saver:not(.on){transition-duration:.45s}
+.sv-back,.sv-front{position:absolute;inset:0}
+.sv-gl,.sv-fx{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+.sv-back-key{position:absolute;width:0;height:0;overflow:hidden}
+/* each scene enters from 95 % and leaves by pushing toward you while it dissolves */
+.sv-b,.sv-f{position:absolute;inset:0;opacity:0;transform:scale(.95);transition:opacity var(--xf) ease,transform var(--xf) cubic-bezier(.2,.7,.2,1)}
+.sv-b.on,.sv-f.on{opacity:1;transform:none}
+.sv-b.out,.sv-f.out{opacity:0;transform:scale(1.12)}
+.sv-b.b{transition:none;opacity:1;transform:none}
+/* plane 0: the backdrop counter-pans on its own depth */
+.sv-b{perspective:1200px;overflow:hidden}
+.sv-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 22%;transform:scale(1.12) translate3d(0,0,-80px)}
+@keyframes svPan{from{transform:scale(1.16) translate3d(-3%,0,-80px)}to{transform:scale(1.08) translate3d(3%,-1%,-80px)}}
+@keyframes svPanR{from{transform:scale(1.16) translate3d(3%,0,-80px)}to{transform:scale(1.08) translate3d(-3%,-1%,-80px)}}
+body.fx .sv-bg{animation:svPan 14s cubic-bezier(.45,.05,.55,.95) both}
+body.fx .sv-b.r .sv-bg{animation-name:svPanR}
+.sv-b::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.86) 0%,rgba(0,0,0,.3) 32%,transparent 56%),linear-gradient(90deg,rgba(0,0,0,.6) 0%,transparent 50%),linear-gradient(180deg,rgba(0,0,0,.45),transparent 20%)}
+.sv-b.r::after{background:linear-gradient(0deg,rgba(0,0,0,.86) 0%,rgba(0,0,0,.3) 32%,transparent 56%),linear-gradient(270deg,rgba(0,0,0,.6) 0%,transparent 50%),linear-gradient(180deg,rgba(0,0,0,.45),transparent 20%)}
+.sv-b.b::after{display:none}
+/* mode B draws its own vignette over the shader canvas */
+.sv-back::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity var(--xf) ease;background:radial-gradient(120% 90% at 50% 40%,transparent 55%,rgba(0,0,0,.55)),linear-gradient(0deg,rgba(0,0,0,.8) 0%,transparent 45%)}
+#saver.is-b .sv-back::after{opacity:1}
+/* the projector beam for the default style */
+.sv-beam{position:absolute;inset:-25%;pointer-events:none;opacity:0;transition:opacity 2s ease;background:linear-gradient(112deg,transparent 40%,rgba(255,236,200,.05) 46%,rgba(255,236,200,.11) 50%,rgba(255,236,200,.04) 55%,transparent 61%)}
+.sv-beam.on{opacity:1}
+body.fx .sv-beam{animation:svBeam 18s ease-in-out infinite alternate}
+@keyframes svBeam{from{transform:translate3d(-2%,0,0) rotate(-1.5deg)}to{transform:translate3d(2%,0,0) rotate(1.5deg)}}
+/* planes 2 and 3 share one 3D stage */
+.sv-f{perspective:1200px;transform-style:preserve-3d}
+.sv-glow{position:absolute;left:-8vw;bottom:-14vh;width:70vw;height:70vh;background:radial-gradient(closest-side,var(--c1),transparent);opacity:.32;transform:translateZ(20px)}
+.sv-f.r .sv-glow{left:auto;right:-8vw}
+.sv-glow2{left:auto;right:-6vw;bottom:-10vh;width:60vw;height:90vh;background:radial-gradient(closest-side,var(--c2),transparent);opacity:.28}
+.sv-cut{position:absolute;right:3vw;bottom:-2vh;height:86vh;max-width:64vw;object-fit:contain;object-position:right bottom;transform-origin:60% 100%;transform:translate3d(0,0,50px);filter:drop-shadow(0 28px 36px rgba(0,0,0,.72)) drop-shadow(0 0 1px rgba(0,0,0,.6))}
+@keyframes svCut{from{transform:scale(.98) translate3d(4%,2%,40px)}to{transform:scale(1.08) translate3d(-4%,0,65px)}}
+body.fx .sv-cut{animation:svCut 14s cubic-bezier(.45,.05,.55,.95) both}
+.sv-logo{position:absolute;left:6vw;bottom:19vh;width:min(46vw,660px);height:clamp(90px,23vh,240px);transform:translateZ(90px);transform-style:preserve-3d}
+.sv-f.r .sv-logo{left:auto;right:6vw}
+@keyframes svPop{from{opacity:0;transform:translate3d(0,24px,-80px) rotateX(22deg)}to{opacity:1;transform:translateZ(90px)}}
+body.fx .sv-f .sv-logo{animation:svPop 1.4s cubic-bezier(.16,1,.3,1) .35s both}
+.sv-logo-in{display:flex;align-items:flex-end;width:100%;height:100%;transform:translate3d(1.5%,0,0)}
+.sv-f.r .sv-logo-in{justify-content:flex-end}
+@keyframes svDrift{from{transform:translate3d(1.5%,0,0)}to{transform:translate3d(-1.5%,0,0)}}
+body.fx .sv-logo-in{animation:svDrift 14s cubic-bezier(.45,.05,.55,.95) both}
+.sv-logo-img{display:block;max-width:100%;max-height:100%;object-fit:contain;object-position:left bottom;filter:drop-shadow(0 -1px 0 rgba(255,255,255,.3)) drop-shadow(.6px 1px 0 #3a3a3f) drop-shadow(1.2px 2px 0 #222226) drop-shadow(2.4px 4px 0 #111113) drop-shadow(0 18px 26px rgba(0,0,0,.75))}
+.sv-f.r .sv-logo-img{object-position:right bottom}
+.sv-title{margin:0;font-family:var(--f-display);font-weight:800;font-size:clamp(38px,6vw,92px);line-height:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-shadow:0 -1px 0 rgba(255,255,255,.3),.6px 1px 0 #3a3a3f,1.2px 2px 0 #2c2c30,1.8px 3px 0 #222226,2.4px 4px 0 #19191c,3px 5px 0 #111113,0 20px 34px rgba(0,0,0,.85)}
+.sv-title[hidden]{display:none}
+.sv-hud{position:absolute;left:6vw;bottom:12vh;display:flex;flex-wrap:wrap;gap:10px;align-items:center;transform:translateZ(60px)}
+.sv-f.r .sv-hud{left:auto;right:6vw;justify-content:flex-end}
+.sv-pill{padding:5px 13px;border-radius:999px;background:rgba(8,8,10,.55);border:1px solid rgba(255,255,255,.24);font-size:clamp(13px,1.3vw,18px);color:#f2f2f4;white-space:nowrap}
+.sv-imdb{color:#f5c518;font-weight:800}
+.sv-watch{position:absolute;left:6vw;bottom:5.5vh;display:flex;align-items:center;gap:10px;font-size:clamp(13px,1.25vw,17px);font-weight:600;letter-spacing:.04em;color:#f4f2ec;cursor:pointer;transform:translateZ(60px)}
+.sv-f.r .sv-watch{left:auto;right:6vw}
+.sv-watch svg{width:1.6em;height:1.6em;padding:.35em;border-radius:50%;border:1.5px solid rgba(255,255,255,.75);box-sizing:content-box}
+@keyframes svPulse{0%,100%{opacity:.55}50%{opacity:1}}
+body.fx .sv-watch{animation:svPulse 2.4s ease-in-out infinite}
+.sv-top{position:absolute;z-index:3;top:4.5vh;left:5vw;right:5vw;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
+.sv-brand{display:flex;align-items:center;gap:clamp(12px,1.4vw,20px);font-family:var(--f-display);font-weight:700;font-size:clamp(17px,1.9vw,30px);letter-spacing:.3em;color:#f4f2ec;text-shadow:0 2px 12px rgba(0,0,0,.85),0 0 1px rgba(0,0,0,.9)}
+.sv-brand svg{width:clamp(48px,5.4vw,84px);height:clamp(48px,5.4vw,84px);filter:drop-shadow(0 3px 10px rgba(0,0,0,.7))}
+.sv-clock{font-family:var(--f-display);font-weight:600;font-size:clamp(26px,3.4vw,52px);color:rgba(255,255,255,.92);text-shadow:0 2px 14px rgba(0,0,0,.7);font-variant-numeric:tabular-nums}
+.sv-hint{position:absolute;z-index:3;left:0;right:0;top:4.8vh;display:flex;justify-content:center;gap:28px;font-family:var(--f-mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:rgba(255,255,255,.6);opacity:0;animation:svHint 8s ease 1.4s both;pointer-events:none}
+@keyframes svHint{0%{opacity:0}12%,75%{opacity:1}100%{opacity:0}}
+/* the governor's reduced level: no beam sway, no logo filter extrusion */
+#saver.sv-lite .sv-beam{animation:none}
+#saver.sv-lite .sv-logo-img{filter:drop-shadow(0 10px 16px rgba(0,0,0,.75))}
+/* clearart carries the title at its foot: it sits higher so the whole title stays on screen */
+.sv-cut.ct{bottom:7vh;height:78vh}
+/* TVs (Fire TV sticks have little graphics memory): one flat stage instead of nested 3D layers, no animated filters,
+   so each scene is two layers, not eight. The pan, push, pop and drift all still run, as 2D moves. */
+html.tv .sv-b,html.tv .sv-f{perspective:none;transform-style:flat}
+html.tv .sv-logo{transform:none;transform-style:flat}
+html.tv .sv-glow,html.tv .sv-hud,html.tv .sv-watch{transform:none}
+@keyframes svPanTV{from{transform:scale(1.14) translate3d(-3%,0,0)}to{transform:scale(1.06) translate3d(3%,-1%,0)}}
+@keyframes svPanRTV{from{transform:scale(1.14) translate3d(3%,0,0)}to{transform:scale(1.06) translate3d(-3%,-1%,0)}}
+html.tv body.fx .sv-bg{animation-name:svPanTV}
+html.tv body.fx .sv-b.r .sv-bg{animation-name:svPanRTV}
+@keyframes svCutTV{from{transform:scale(.98) translate3d(3%,2%,0)}to{transform:scale(1.06) translate3d(-3%,0,0)}}
+html.tv body.fx .sv-cut{animation-name:svCutTV}
+html.tv .sv-cut{filter:none}
+@keyframes svPopTV{from{opacity:0;transform:translate3d(0,24px,0) scale(.94)}to{opacity:1;transform:none}}
+html.tv body.fx .sv-f .sv-logo{animation-name:svPopTV}
+html.tv .sv-logo-img{filter:drop-shadow(0 8px 14px rgba(0,0,0,.8))}
+html.tv body.fx .sv-beam{animation:none}
+/* once the screensaver covers everything, the app underneath stops painting */
+body.saver-full #app{visibility:hidden}
+@media (max-width:760px){.sv-logo{width:auto;right:6vw;height:clamp(70px,15vh,140px)}.sv-f.r .sv-logo{left:6vw}.sv-cut{height:60vh;max-width:96vw;right:-4vw}.sv-hint{display:none}.sv-brand{font-size:15px}}
