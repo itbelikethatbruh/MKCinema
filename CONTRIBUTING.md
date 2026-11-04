@@ -16,7 +16,7 @@ These are product decisions, and pull requests that break them won't be merged:
 2. **Users bring their own keys.** Never ship anyone's addon config, debrid key or account. Keys stay in the user's browser and their own account row.
 3. **Privacy first.** No analytics, tracking or outside AI services. Your Picks runs on the device.
 4. **Do not cover or strip YouTube's player branding or ads** in trailers.
-5. **One theme: Noir.** Matte black, graphite and platinum type. No interface sounds. Animations use `transform` and `opacity` only. Avoid `backdrop-filter` and `preserve-3d` inside scrolling rows (they cause black tiles on Android Chrome).
+5. **Four themes, Noir by default.** Noir (matte black, graphite and platinum type), Midnight, Velvet and Sepia. Colours come from theme tokens (`var(--nXXXXXX, fallback)`), so new CSS should use those instead of hard-coded neutrals. Video surfaces stay true black in every theme. No interface sounds. Animations use `transform` and `opacity` only. Avoid `backdrop-filter` and `preserve-3d` inside scrolling rows (they cause black tiles on Android Chrome).
 6. **Phones are first-class.** Test at 390 px wide on Android Chrome. Nothing may scroll sideways.
 
 ## Making a change
