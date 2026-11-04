@@ -3997,7 +3997,7 @@ const Handoff = {
   launch(p, ctx, stream) {
     const url = handoffUrl(stream), title = streamTitle(ctx), name = playerName(p);
     // Land on this film's page (and episode) so coming back shows its sources
-    const sameFilm = !$('#detail').hidden && D.meta && D.meta.id === ctx.meta.id;
+    const sameFilm = !$('#detail').hidden && D.meta && D.meta.id === ctx.meta.id && (!ctx.video || (D.video && D.video.id === ctx.video.id));
     if (!sameFilm) openDetail(ctx.meta, { videoId: ctx.video ? videoIdFor(ctx.meta, ctx.video) : undefined });
     if (p.m3u) { downloadM3U(url, title); toast(`Playlist saved. Open it to start ${title} in your video player.`, 'ok', 5200, 'handoff'); return; }
     toast(`Opening in ${name}…`, 'info', 2400, 'handoff');
