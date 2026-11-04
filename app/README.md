@@ -2,7 +2,7 @@
 
 Files:
 
-- `index.html`: the whole app (Noir UI, Stremio engine, addon manager, ambilight player, Addon Studio). Open it in a browser, or let the server below serve it.
+- `index.html`: the whole app (Noir UI and three more themes, Stremio engine, addon manager, ambilight player, Addon Studio). Open it in a browser, or let the server below serve it.
 - `supabase.sql`: the table and access rules for account sync.
 - `.env.example`: optional server settings. You don't need it.
 - `manifest.webmanifest`, `sw.js`, `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`: make MKCinema installable as an app (PWA). Upload them next to `index.html`.
@@ -47,7 +47,7 @@ Sign-in is plain email and password through Supabase Auth, with a password reset
 
 - Account: Supabase sign-in and cloud sync.
 - Intro & sound: the intro and its soundtrack. The interface itself makes no sounds.
-- Appearance: one look, Noir (matte black, platinum type, hairlines; champagne only for small highlights). There are no themes and nothing animates behind the page, which keeps scrolling smooth on phones. Poster text (on hover, below the poster, or always), the optional curved IMAX wall (desktop), interface size, reduced motion.
+- Appearance: four themes, Noir (matte black, platinum type, hairlines; champagne only for small highlights) by default, plus Midnight, Velvet and Sepia. Each keeps the same contrast, and the player stays true black. Nothing animates behind the page, which keeps scrolling smooth on phones. Poster text (on hover, below the poster, or always), the optional curved IMAX wall (desktop), interface size, reduced motion.
 - Performance: Low is the default (solid black panels). High and Balanced add frosted glass on desktop; phones and tablets always use solid panels. Glass blur can be fine-tuned, and the frame rate can be shown. Video quality is unaffected.
 - Playback: play streams in MKCinema or an outside app (see below), max quality, preferred format, autoplay next, resume, seek step, default speed, ambilight and its strength.
 - Subtitles: auto-select a language, size, color, background, font, outline and position.

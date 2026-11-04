@@ -80,6 +80,11 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 <td width="33%" valign="top"><img src="docs/readme/icon-shield.svg" width="52" alt=""><br><b>Your keys stay yours</b><br><sub>Keys live on your device and, if you sign in, in your own row that only you can read.</sub></td>
 <td width="33%" valign="top"><img src="docs/readme/icon-import.svg" width="52" alt=""><br><b>Move from Stremio</b><br><sub>Import your library, progress and addons in one step. Scrobble to Trakt or Simkl.</sub></td>
 </tr>
+<tr>
+<td width="33%" valign="top"><img src="docs/readme/icon-palette.svg" width="52" alt=""><br><b>Four themes</b><br><sub>Noir by default, plus Midnight (ink blue blacks, ice silver type), Velvet (deep oxblood, soft ivory) and Sepia (warm umber, cream type). Settings › Appearance, synced with your account.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-monitor.svg" width="52" alt=""><br><b>Ambient Mode</b><br><sub>Leave the TV idle and your Home becomes a living screensaver: each film as a layered 3D scene with its own atmosphere. OK opens the film, Back returns.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-film.svg" width="52" alt=""><br><b>Peak Cinema</b><br><sub>Can't decide? Surf 90-second scenes from films in your catalogs and watchlist, filtered by mood, and keep watching from that exact second.</sub></td>
+</tr>
 </table>
 
 <a name="screenshots"></a>
