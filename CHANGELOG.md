@@ -15,11 +15,67 @@ All notable changes to MKCinema. The web app version and the native app versions
 - **Faster start on every device**: the app no longer waits for 840 KB of third-party scripts before it can draw. The icon library (1,700 icons, 355 KB) is replaced by the 146 icons MKCinema uses, built in (27 KB); an icon outside that set still loads the full library on its own. The video streaming library (hls.js, 413 KB) loads when a film's page opens, and a stream waits for it if needed. TVs skip the intro animation library, since they never show the intro. In a Fire TV profile with a 6x slower CPU, script work while starting fell from about 0.67 s to 0.26 s.
 - **Smoother remote on TVs**: posters' info overlay and buttons still faded on every focus move, which repainted the whole page on each frame. On a TV every focus change is now instant. Per remote press, style work fell about 70%, painting about 50% and layer building about 60% in the same profile.
 
+## Web app 2.7.34 (2026-11-04)
+
+- **Four themes**: Noir stays the default, and Settings › Appearance adds Midnight (ink blue blacks, ice silver type), Velvet (deep oxblood, soft ivory, rose gold highlights) and Sepia (warm umber blacks, cream type, amber highlights). Each theme keeps Noir's lightness for every colour, so contrast, the TV light-on-dark rules and focus states carry over. Video surfaces stay true black in every theme. No new effects.
+
+## Web app 2.7.33 (2026-11-04)
+
+- **Ambient Mode shows each title once**: fanart.tv "clear art" cutouts have the title printed on them, and so do TMDB backdrops tagged with a language. Textless backdrops are now preferred. When the art carries the title, our own logo stays off, and the cutout sits higher so its title stays on screen.
+- **Ambient Mode on Fire TV**: it could crash after a few films. Every film now frees its images when it leaves, large art is shrunk once and the full-size copy released, skipped preloads are freed, a stuck image can no longer stall a scene, a lost WebGL context falls back to the CSS mode, and TVs get a flat stage with no nested 3D layers or animated filters. In a Fire TV profile, 16 films in a row hold 1 to 2 live images and a steady 11 to 12 MB heap.
+- Includes the Peak Cinema fix from its own thread.
+
+## Web app 2.7.32 (2026-11-04)
+
+- **Ambient Mode** replaces the screensaver: a layered 3D scene for each film from Home, your watchlist and Continue watching. Each scene lasts 14 seconds, the next one is loaded 5 seconds ahead, and scenes change with a 2-second Z-warp (the old scene pushes past you while the new one settles in).
+  - **Shadowbox** (when a transparent character cutout exists on fanart.tv): backdrop, particles, the cutout and the logo sit on separate 3D planes that pan against each other, with a rim glow taken from the backdrop's two main colours.
+  - **Depth** (a CORS-readable backdrop and WebGL): a fragment shader builds a depth map from the image (centre weight, brightness and contrast) and orbits a virtual camera by up to 2.5%, with the edges anchored.
+  - **Classic** (anything else): a slow pan with the same particles and HUD.
+  - Particles follow the genre: fog and ash for horror, sci-fi and thriller; embers and bokeh for action and crime; projector dust in a light beam otherwise. The HUD shows year, IMDb rating, genres and a pulsing "Press OK to watch".
+  - Remote: Left and Right browse, OK opens the film's page, Back or any other button returns. A frame-time governor steps the effects down when the device can't keep up.
+- Starts after 90 seconds idle by default on TVs and desktops (phones stay off). Settings › Home: **Screensaver / Ambient Mode** starts it now. Optional free **Fanart.tv** and **TMDB** keys unlock cutouts, clean logos and the depth mode; they stay on the device.
+
+## Web app 2.7.31 (2026-11-04)
+
+- **Featured banner back to calm**: the Home banner is back to how it was before 2.7.25, a rounded card with still art and a plain title. The dots, motion, edge-to-edge layout and turning title are gone, along with the extra graphics work they caused (Fire TV profile: layers back from 15 to 10 MPx). Only the top-biased crop stays, so faces aren't cut off. All the 3D and depth effects now live only in the screensaver.
+- Includes 2.7.30 (Peak Cinema on TVs uses one video element).
+
+## Web app 2.7.29 (2026-11-04)
+
+- **Wallpapers with real depth**: the Home banner and the screensaver are now layered scenes that move at different speeds. The key art pushes in and pans (a Ken Burns move), two layers of drifting light (fine dust and soft bokeh) float between the art and the title and move faster than it, and the title logo slowly turns in 3D after it pops in. On a desktop, the mouse moves the layers against each other. Art is cropped toward faces (the top third) instead of the centre. Phones keep the calm banner.
+- **Screensaver**: the MKCinema mark in the corner is larger, bolder and brighter so it reads from the sofa, and the push is gentler so the art stays sharp on a TV. **Start screensaver** now sits at the top of Settings › Home.
+- 2.7.27 and 2.7.28 (exit prompt, endless rows, cropped art, TV contrast) are included; their own notes come with their pull requests.
+
+## Web app 2.7.28 (2026-11-04)
+
+- **Endless rows**: Home catalog rows keep loading as you scroll right (touch, trackpad, mouse wheel) or press Right on a TV remote, first from the page already fetched and then from the addon's next page (the Stremio `skip` extra). "See all" stays in the row heading, and a See all tile closes the row when the catalog runs out (or after 240 posters on a TV, 400 elsewhere). The remote no longer measures posters in rows far off screen, so long rows don't slow every key press.
+- **Art keeps faces in view**: the details banner crops from the bottom, under the fade, instead of the middle, and is a little taller on wide screens, so heads are no longer cut off at the top.
+- **TV: no dark text on light buttons**: on some TVs dark text on the white Smart Play button, selected chips, the IMDb badge and the stream tags showed as white on white. On TV they are now light text on dark with a platinum edge.
+- Builds on 2.7.27 (Exit prompt on TV Back).
+
+## Web app 2.7.27 (2026-11-04)
+
+- **Exit prompt on TV**: on the Android TV / Fire TV app and LG webOS, Back now closes whatever is open, then returns to Home, then asks "Leaving MKCinema?" instead of quitting straight away. Press Back again to exit, or OK on "Keep watching" to stay. A Back pressed within 0.7 s of the prompt appearing is ignored, so mashing Back can't exit by accident. Works with the installed TV app 1.2.1, so no reinstall is needed.
+
 ## Web app 2.7.26 (2026-11-04)
 
 - **Peak Cinema, a scene surfer for when you can't decide**: start it from the panel under the featured banner on Home (or search "Peak Cinema"). It plays 90-second scenes from films in your catalogs and watchlist, one after another, with moods (Action, Sci-Fi, Thriller, Comedy, Horror, Animation, Drama). Keep watching opens the film in the player from that exact second, From the start opens it from the beginning, and Next scene skips. TV remotes: arrows and OK, plus Next track or Channel up/down to skip.
 - **Honest scene picking**: there is no public database of best-scene timestamps, so none is faked. A scene starts between about a third and three quarters of the way in, past the opening and before the credits. Skips and keeps are learned on the device only (genres you keep come up more, and the window moves toward the moments you stayed for), and the info button explains it and can reset it.
 - **Gentle on your accounts**: only sources your debrid service already has cached, in formats the device can decode, are used (1080p H.264 first, since many 4K HEVC files will not decode in browsers or TV apps). The browser jumps straight to the scene with a range request. One film is looked up at a time, at least 2.5 s apart, only the next scene is buffered, and a debrid link is requested only for the scene that plays next.
+
+## Web app 2.7.25 (2026-11-04)
+
+- **Wallpapers with 3D titles**: on TVs and desktops, Home's featured banner is now a wallpaper. The film's official key art runs edge to edge, up under the dock, and drifts slowly toward you. The title logo has a solid 3D edge (a thin rim light, a seven-step extruded side and a soft cast shadow) and pops forward each time the film changes. On a desktop, the art and the title move against each other with the mouse. Phones keep the rounded banner and get the 3D title and a short settle-in of the art. The banner's height comes from the screen, never the film, so the rows below never move.
+- **Screensaver**: when nothing has been pressed for a while, the screen fills with key art and 3D title logos from Home, your watchlist and Continue watching, with a clock, alternating sides so nothing burns in. Any button (or Back on the remote) returns you exactly where you were, and the press is not passed on. It never starts while something plays. Settings › Home › Screensaver: TV after 3 minutes, desktop after 10, phones off by default, plus a "Show now" preview.
+- In a Fire TV profile with a 6x slower CPU, rendering work while moving around Home is within run-to-run noise of 2.7.24 (no frames over 50 ms either way).
+
+## Web app 2.7.24 (2026-11-04)
+
+- **TV film pages open at the top**, and the TV top bar is larger so it reads from the sofa.
+
+## Web app 2.7.23 (2026-11-04)
+
+- **Back from VLC lands on the film's page**: playing a source in VLC or another outside player no longer opens the in-app player with an "Opening in VLC" panel (whose buttons overlapped the player controls). MKCinema stays on the film's page, or opens it when you started from Home, and hands the stream to the app, so pressing Back in the player returns you to the source list. A short note says it is opening; if the app never takes over (not installed, or the browser wanted a tap), a quiet note says so and the sources are right there. The player's own "Open in another app" menu works the same way.
 
 ## Web app 2.7.22 (2026-11-03)
 
@@ -31,6 +87,10 @@ All notable changes to MKCinema. The web app version and the native app versions
 
 - **MKCinema Remote, your phone as a TV remote**: scan the QR code on the TV (it shows in a corner the first few launches, and any time in Settings › Devices › Phone remote) and the phone opens a dedicated remote page at `/remote`. It loads instantly (no app boot, no SDK download), and it talks to the TV over one Realtime socket, about 40 ms phone to TV. It has a touchpad (swipe to move, hold a swipe to keep going, flick for several steps, tap for OK) or a D-pad with OK, plus Back, Home, and Type. Type opens a keyboard whose letters show up on the TV as you type, with voice search where the phone's browser supports it. The keyboard also opens by itself when the TV selects a text box. The page shows what the TV has selected or is playing, with artwork and a progress bar you can drag to seek, and it has play/pause, skip, volume and subtitles. Pairing is remembered on both sides: the TV keeps its code, and the phone reconnects to the last TV when opened (it also reconnects by itself after the screen locks). The remote can be added to the home screen as its own app. "New code" in Settings unpairs every phone. When the TV is showing its sign-in QR code, the remote offers to sign the TV in from the phone.
 - The old in-app phone trackpad is replaced by the new remote, and old `#remote=` links forward to it.
+
+## Web app 2.7.20 (2026-11-02)
+
+- **Featured banner keeps its shape**: the banner and the rows under it no longer move as the featured films cycle. 2.7.15 held only the banner's outer height and measured it before the film's logo had loaded, so logos still popped in and pushed the title up, and on short screens (laptops, phones turned sideways) the banner still grew and shrank and moved the rows below. Now the logo, title, details line and description each have a fixed slot, so nothing a film brings can change the layout.
 
 ## Web app 2.7.19 (2026-11-01)
 
