@@ -69,7 +69,7 @@ const HlsLoad = {
 function loadUrl(stream, startAt) {
   const hlsTok = ++HlsLoad.tok;
   if (!window.Hls && !HlsLoad.failed && !stream._local && /\\.m3u8(\\?|$)/i.test(stream.url || '')) {
-    HlsLoad.get().catch(() => {}).then(() => { if (hlsTok === HlsLoad.tok && !$('#player').hidden) loadUrl(stream, startAt); });
+    HlsLoad.get().catch(() => {}).then(() => { if (hlsTok === HlsLoad.tok && P.stream === stream && !$('#player').hidden) loadUrl(stream, startAt); });
     return;
   }
   const bh = stream.behaviorHints || {};""" % HLS_URL, 'loadUrl')
