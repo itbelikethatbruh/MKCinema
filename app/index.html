@@ -1804,6 +1804,20 @@ html.tv body.fx .btn-ghost::after,html.tv body.fx .btn-prime::after{display:none
 html.tv #intro,html.tv #skip,html.tv #soundgate{display:none!important}
 /* the focused item never hides under the floating dock */
 html.tv{scroll-padding-top:104px;scroll-padding-bottom:24px}
+/* 2.7.24 tv-dock */
+html.tv{--dock-h:78px;scroll-padding-top:116px}
+html.tv .dock{gap:10px;padding-inline:14px 12px;border-radius:20px}
+html.tv .dock .brand .mk{width:46px;height:46px}
+html.tv .tabs{gap:4px;padding:9px 8px;margin:-9px 0}
+html.tv .tab{color:#d2d2d8;font-size:17.5px;font-weight:600;gap:9px;padding:12px 16px;border-radius:13px}
+html.tv .tab .lucide{width:22px;height:22px}
+html.tv .tab:not(.on) .lbl{display:inline}
+html.tv .dock-tools{gap:8px}
+html.tv .dock .ibtn,html.tv .dock .searchbtn{width:52px;height:52px;padding:0;border-radius:15px}
+html.tv .dock .ibtn .lucide,html.tv .dock .searchbtn .lucide{width:24px;height:24px}
+html.tv .dock .searchbtn .kbd,html.tv .dock .searchbtn>span{display:none}
+/* 2.7.24 layer-top */
+html.tv .layer-ov{scroll-padding-block:40px 32px}
 /* TV paint: cheaper text and logo shadows, still legible on artwork */
 html.tv .card-title{text-shadow:0 1px 2px rgba(0,0,0,.9)}
 html.tv .hero-logo,html.tv .logo3d .hero-logo{filter:drop-shadow(0 3px 10px rgba(0,0,0,.7))}
@@ -3264,7 +3278,7 @@ function setHeroList(list) {
 // The billboard only advances while it can be seen, so nothing repaints under an open panel or in a background tab
 let TV_KEY_AT = 0; if (IS_TV) addEventListener('keydown', () => { TV_KEY_AT = performance.now(); }, true);
 function nextHero() {
-  if (document.hidden || document.body.classList.contains('layer-open') || S.view !== 'home' || scrollY > innerHeight || (IS_TV && performance.now() - TV_KEY_AT < 8000)) { S.heroTimer = setTimeout(nextHero, 3000); return; }
+  if (document.hidden || document.body.classList.contains('layer-open') || document.body.classList.contains('saver-on') || S.view !== 'home' || scrollY > innerHeight || (IS_TV && performance.now() - TV_KEY_AT < 8000)) { S.heroTimer = setTimeout(nextHero, 3000); return; }
   showHero(S.heroIdx + 1, 1);
 }
 function showHero(i, dir = 1) {
@@ -3273,11 +3287,11 @@ function showHero(i, dir = 1) {
   $('#hero').dataset.dir = dir < 0 ? 'p' : 'n';
   const bg = $('#heroBg'); const olds = $$('img', bg);
   bg.insertAdjacentHTML('beforeend', imgTag(metaBg(m), m.name, m.id, { wide: true, lazy: false }));
-  const img = bg.lastElementChild; img.style.position = 'absolute'; img.style.inset = '0'; img.style.opacity = '0'; img.draggable = false;
+  const img = bg.lastElementChild; img.style.position = 'absolute'; img.style.inset = '0'; img.style.opacity = '0'; img.draggable = false; img.classList.add('wp');
   requestAnimationFrame(() => { img.style.opacity = '1'; img.classList.add('in'); });
   if (olds.length) setTimeout(() => olds.forEach((o) => o.remove()), 1000);
   const logo = metaLogo(m);
-  $('#heroLogoWrap').innerHTML = `${logo ? imgTag(logo, m.name, m.id, { nofb: true, cls: 'hero-logo', lazy: false }) : ''}<h1 class="hero-title" data-logo-alt ${logo ? 'hidden' : ''}>${esc(m.name)}</h1>`;
+  $('#heroLogoWrap').innerHTML = `<div class="wp-logo">${logo ? imgTag(logo, m.name, m.id, { nofb: true, cls: 'hero-logo', lazy: false }) : ''}<h1 class="hero-title" data-logo-alt ${logo ? 'hidden' : ''}>${esc(m.name)}</h1></div>`;
   $('#heroMeta').innerHTML = [m.imdbRating ? `<span class="imdb ${rateTier(m.imdbRating)}"><b>IMDb</b>${esc(m.imdbRating)}</span>` : '', yearOf(m) ? `<span>${esc(yearOf(m))}</span>` : '', m.runtime ? `<span>${esc(m.runtime)}</span>` : '', genresOf(m).slice(0, 3).map(esc).join(' · '), `<span class="tag-s">${esc(m.type)}</span>`].filter(Boolean).join('');
   $('#heroDesc').textContent = m.description || '';
   { const hb = $('#hero .hero-body'); hb.classList.remove('swap'); requestAnimationFrame(() => hb.classList.add('swap')); }
@@ -3984,16 +3998,34 @@ function handoffHTML(s) {
   }
   return items.join('');
 }
-/* Hand the current stream to the chosen app. Called from playStream when Settings › Playback picks an outside player. */
-function launchExternal(p, stream) {
-  const url = handoffUrl(stream), title = streamTitle(P.ctx);
-  const proxied = stream.behaviorHints && stream.behaviorHints.proxyHeaders;
-  const where = p.m3u ? 'Your browser is saving a playlist file. Open it and your default video player starts the stream.' : `Your browser should switch to ${esc(playerName(p))}. If nothing happens, the app may not be installed, or the browser wants a tap first.`;
-  const note = proxied ? ` This source needs custom headers, so it is routed through your MKCinema proxy at <span class="mono">${esc(S.proxy)}</span>. That only works if the app can reach that address.` : '';
-  showMsg(p.m3u ? 'Sent to your video player' : `Opening in ${playerName(p)}`, `${where}${note} Subtitles chosen in MKCinema do not carry over.`,
-    `${playerBtn(p, url, title, true)}<button class="btn btn-ghost" type="button" data-act="force"><i data-lucide="play"></i>Play here instead</button><button class="btn btn-ghost" type="button" data-copy="${esc(url)}"><i data-lucide="copy"></i>Copy link</button><button class="btn btn-ghost" type="button" data-act="sources"><i data-lucide="layers"></i>Sources</button>`);
-  if (p.m3u) downloadM3U(url, title); else { try { location.href = p.link(url, title); } catch (e) { /* the button above still works */ } }
-}
+/* Hand-off to an outside player (2.7.23). The in-app player never opens for it: MKCinema stays on the film's page with
+   its sources, so leaving VLC (or any player) lands right back there. If the page never loses focus, the app did not
+   take over, and a quiet note says so; the source list underneath is already there to pick again. */
+const Handoff = {
+  t: 0, left: false,
+  init() {
+    const gone = () => { if (this.t) this.left = true; };
+    addEventListener('blur', gone); addEventListener('pagehide', gone);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') gone(); });
+  },
+  launch(p, ctx, stream) {
+    const url = handoffUrl(stream), title = streamTitle(ctx), name = playerName(p);
+    // Land on this film's page (and episode) so coming back shows its sources
+    const sameFilm = !$('#detail').hidden && D.meta && D.meta.id === ctx.meta.id && (!ctx.video || (D.video && D.video.id === ctx.video.id));
+    if (!sameFilm) openDetail(ctx.meta, { videoId: ctx.video ? videoIdFor(ctx.meta, ctx.video) : undefined });
+    if (p.m3u) { downloadM3U(url, title); toast(`Playlist saved. Open it to start ${title} in your video player.`, 'ok', 5200, 'handoff'); return; }
+    toast(`Opening in ${name}…`, 'info', 2400, 'handoff');
+    this.left = false; const t0 = this.t = Date.now();
+    try { location.href = p.link(url, title); } catch (e) { /* reported below */ }
+    setTimeout(() => {
+      if (this.t !== t0) return; this.t = 0;
+      // A late timer means the page was frozen while the app played, so it did open
+      if (this.left || document.visibilityState === 'hidden' || Date.now() - t0 > 6000) return;
+      toast(`${name[0].toUpperCase() + name.slice(1)} did not open. Check it is installed, or pick the source again. Settings › Playback can switch to the built-in player.`, 'err', 7000, 'handoff');
+    }, 2600);
+  },
+};
+Handoff.init();
 function showMsg(title, body, actions = '') {
   const m = $('#pMsg'); m.hidden = false;
   m.innerHTML = `<div class="box glass-solid"><h3>${esc(title)}</h3><p>${body}</p><div class="actions">${actions}</div></div>`;
@@ -4020,6 +4052,10 @@ async function playStream(ctx, stream, { startAt } = {}) {
   if (!stream) return;
   if (stream.ytId) { if (!$('#player').hidden) closePlayer(); openTrailer(stream.ytId); return; }
   stream._tel = stream._tel || Telemetry.parse(stream);
+  if (stream._tel.kind !== 'ext' && stream._tel.kind !== 'p2p' && extPlayer() && handoffUrl(stream) && !P.force) {
+    if (!$('#player').hidden) closePlayer();
+    Handoff.launch(extPlayer(), ctx, stream); return;
+  }
   const wasOpen = !$('#player').hidden;
   if (!wasOpen) { openLayer('player'); }
   const prevCtx = P.ctx; P.ctx = ctx; P.stream = stream; P.retried = false;
@@ -4042,8 +4078,6 @@ async function playStream(ctx, stream, { startAt } = {}) {
   if (t.kind === 'ext') { showMsg('This source opens outside MKCinema', 'The addon gave a web page or app link instead of a video stream.', handoffHTML(stream) + '<button class="btn btn-ghost" type="button" data-act="sources"><i data-lucide="layers"></i>Other sources</button>'); }
   else if (t.kind === 'p2p') {
     showMsg('This is a peer-to-peer torrent stream', 'Browsers cannot play BitTorrent info hashes directly. Hand it to a torrent-capable player, or pick a web-ready source.', handoffHTML(stream) + '<button class="btn btn-ghost" type="button" data-act="sources"><i data-lucide="layers"></i>Other sources</button>');
-  } else if (extPlayer() && handoffUrl(stream) && !P.force) {
-    video.removeAttribute('src'); launchExternal(extPlayer(), stream); P.force = false; startAmbilight(); return;
   } else if (stream.url && (stream.behaviorHints || {}).notWebReady && !(stream.behaviorHints || {}).proxyHeaders && !P.force) {
     showMsg('The addon marked this stream as not web-ready', 'It may use a container or codec browsers cannot decode. An external player is the safer choice, or you can try it here anyway.', `<button class="btn btn-prime" type="button" data-act="force"><i data-lucide="play"></i>Try in browser</button>${handoffHTML(stream)}<button class="btn btn-ghost" type="button" data-act="sources"><i data-lucide="layers"></i>Other sources</button>`);
   } else if (stream.url) {
@@ -4441,7 +4475,7 @@ function renderOptMenu() {
   $$('[data-zoom]', m).forEach((b) => b.addEventListener('click', () => { P.zoom = Number(b.dataset.zoom); applyPicture(); renderOptMenu(); }));
   const lk = $('[data-lock]', m); if (lk) lk.onclick = () => { m.hidden = true; setLock(true); };
   const amb = $('[data-amb]', m); if (amb) amb.onclick = () => { $('#pAmb').click(); renderOptMenu(); };
-  $$('[data-xp]', m).forEach((b) => b.addEventListener('click', () => { const p = PLAYERS.find((x) => x.id === b.dataset.xp); saveProgress(true); video.pause(); m.hidden = true; launchExternal(p, P.stream); }));
+  $$('[data-xp]', m).forEach((b) => b.addEventListener('click', () => { const p = PLAYERS.find((x) => x.id === b.dataset.xp), ctx = P.ctx, st = P.stream; m.hidden = true; closePlayer(); Handoff.launch(p, ctx, st); }));
   const xc = $('[data-xcopy]', m); if (xc) xc.onclick = () => copyText(handoffUrl(P.stream));
   icons();
 }
@@ -4737,6 +4771,10 @@ const Nav = {
     const behavior = fast ? 'auto' : 'smooth';
     if (el.closest('#hero') && this.root().id === 'app') { scrollTo({ top: 0, behavior }); return; }
     if (el.closest('.dock-wrap, #hud')) return;
+    // inside a panel (details, settings...), anything in its top part scrolls the panel all the way up, so the
+    // close button and the panel's top edge are never left cut off by the screen edge
+    const lay = !rail && el.closest('.layer-ov');
+    if (lay && lay.scrollTop > 0) { const y = el.getBoundingClientRect().bottom - lay.getBoundingClientRect().top + lay.scrollTop; if (y < lay.clientHeight * .7) { lay.scrollTo({ top: 0, behavior }); return; } }
     el.scrollIntoView({ block: rail ? 'center' : 'nearest', inline: 'nearest', behavior });
   },
   /* where the remote lands when nothing in the open panel has focus yet */
@@ -8013,6 +8051,8 @@ const SECTIONS = [
   ] },
   { id: 'home', icon: 'layout-dashboard', label: 'Home', intro: 'Choose what MKCinema opens on and what your Home shows.', rows: () => [
     { key: 'hlStart', label: 'Open on', type: 'select', options: [['home', 'Home'], ['movie', 'Movies'], ['series', 'Series'], ['tv', 'Live TV'], ['library', 'Library'], ['calendar', 'Calendar']], get: () => Layout.get().start, set: (v) => Layout.set({ start: v }) },
+    { key: 'saverAfter', label: 'Screensaver', help: 'Fills the screen with key art and 3D titles from your Home, watchlist and Continue watching when nothing has been pressed for a while. Any button brings you back. It never starts while something plays.', type: 'select', num: true, options: [[0, 'Off'], [1, 'After 1 minute'], [3, 'After 3 minutes'], [5, 'After 5 minutes'], [10, 'After 10 minutes'], [20, 'After 20 minutes']], get: () => Saver.after(), set: (v) => Saver.setAfter(v) },
+    { key: 'saverNow', label: 'Preview the screensaver', type: 'button', text: 'Show now', icon: 'image', run: () => { closeLayer('settings'); setTimeout(() => Saver.open(true), 450); } },
     { key: 'hlFocus', label: 'Movies or series', help: 'Orders, or limits, the catalog rows on Home and the featured banner.', type: 'select', options: [['both', 'Both, as my addons list them'], ['movies-first', 'Movies first'], ['series-first', 'Series first'], ['movies', 'Movies only'], ['series', 'Series only']], get: () => Layout.get().focus, set: (v) => Layout.set({ focus: v }) },
     { group: 'Rows on Home' },
     { key: 'hlTrakt', label: 'Trakt Watchlist and Collection rows', help: 'Off by default: they repeat My watchlist and are often empty. Empty rows never show on Home.', type: 'toggle', get: () => Layout.get().traktLists, set: (v) => Layout.set({ traktLists: v }) },
@@ -8284,7 +8324,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.7.22';
+const APP_VERSION = '2.7.26';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -8525,6 +8565,211 @@ const AudioLang = {
   };
 }
 </script>
+<script>
+/* =====================================================================
+   2.7.25 Wallpapers: banner parallax + idle screensaver
+   ===================================================================== */
+// The banner's art pauses while it is off screen; desktops get a light mouse parallax
+(() => {
+  const hero = $('#hero'); if (!hero) return;
+  if ('IntersectionObserver' in window) new IntersectionObserver((es) => es.forEach((e) => hero.classList.toggle('still', !e.isIntersecting))).observe(hero);
+  if (IS_TV || TOUCH_UI || !matchMedia('(hover:hover) and (pointer:fine)').matches) return;
+  let raf = 0, x = 0, y = 0;
+  hero.addEventListener('pointermove', (e) => {
+    const r = hero.getBoundingClientRect(); x = ((e.clientX - r.left) / r.width - .5) * 2; y = ((e.clientY - r.top) / r.height - .5) * 2;
+    if (!raf) raf = requestAnimationFrame(() => { raf = 0; hero.style.setProperty('--mx', x.toFixed(3)); hero.style.setProperty('--my', y.toFixed(3)); });
+  }, { passive: true });
+  hero.addEventListener('pointerleave', () => { hero.style.setProperty('--mx', 0); hero.style.setProperty('--my', 0); });
+})();
+
+/* Screensaver: official key art with the title logo popping out in 3D, a clock and nothing else. It starts after the
+   idle time in Settings › Home (TV 3 min, desktop 10, phones off), never while anything plays, and any button ends it. */
+const Saver = {
+  el: null, isOpen: false, last: Date.now(), tok: 0, list: [], i: 0, side: 0,
+  after() { const v = Store.get('saverAfter', null); return v == null ? (IS_TV ? 3 : TOUCH_UI ? 0 : 10) : Number(v) || 0; },
+  setAfter(v) { Store.set('saverAfter', Number(v) || 0); this.last = Date.now(); },
+  init() {
+    const poke = () => { this.last = Date.now(); };
+    // Keys end the screensaver and are swallowed, so the first press never also moves or opens something underneath
+    addEventListener('keydown', (e) => { poke(); if (!this.isOpen) return; e.preventDefault(); e.stopImmediatePropagation(); if (Date.now() - this.at > 500) this.close(); }, true);
+    ['pointerdown', 'wheel', 'touchstart'].forEach((t) => addEventListener(t, poke, { capture: true, passive: true }));
+    let px = -1, py = -1;
+    addEventListener('pointermove', (e) => {
+      if (!this.isOpen) { if (e.pointerType === 'mouse') poke(); return; }
+      if (px < 0) { px = e.clientX; py = e.clientY; return; }
+      if (Math.abs(e.clientX - px) + Math.abs(e.clientY - py) > 24 && Date.now() - this.at > 900) { px = -1; this.close(); }
+    }, { capture: true, passive: true });
+    this.resetMove = () => { px = -1; };
+    setInterval(() => this.tick(), 10000);
+    // Back on a TV remote (the Android TV app calls back() directly) closes the screensaver first
+    const prev = back; back = function () { if (Saver.isOpen) { Saver.close(); return; } return prev.apply(this, arguments); };
+  },
+  tick() {
+    const a = this.after(); if (!a || this.isOpen || Date.now() - this.last < a * 60000) return;
+    if (this.allowed()) this.open();
+  },
+  allowed() {
+    const b = document.body.classList, ae = document.activeElement;
+    if (document.hidden || b.contains('intro-on') || b.contains('locked')) return false;
+    if (!$('#player').hidden || !$('#trailer').hidden) return false;
+    if ($$('video').some((v) => !v.paused && !v.ended)) return false;
+    if (ae && /INPUT|TEXTAREA|SELECT/.test(ae.tagName)) return false;
+    return this.pool().length >= 2;
+  },
+  pool() {
+    const seen = new Set(), out = [];
+    const add = (m) => { if (!m || !m.id || seen.has(m.id) || !metaBg(m)) return; seen.add(m.id); out.push(m); };
+    (S.hero || []).forEach(add); (S.watchlist || []).forEach(add);
+    try { continueItems().forEach((p) => add({ id: p.metaId, type: p.type, name: p.name, background: p.background, genres: p.genres })); } catch (e) { /* no progress yet */ }
+    return out;
+  },
+  build() {
+    const el = document.createElement('div'); el.id = 'saver'; el.hidden = true; el.setAttribute('aria-hidden', 'true');
+    el.innerHTML = `<div class="sv-stage"></div><div class="sv-top"><div class="sv-brand"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="55" fill="none" stroke="url(#mkRing)" stroke-width="2"/><use href="#mkLetters" transform="translate(60 60) scale(.84)" fill="url(#mkPlat)"/></svg>MKCINEMA</div><div class="sv-clock"></div></div><div class="sv-hint">Press any button to return</div><i class="sv-back"></i>`;
+    el.addEventListener('pointerdown', (e) => { e.preventDefault(); if (Date.now() - this.at > 500) this.close(); });
+    el.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); });
+    document.body.appendChild(el); return (this.el = el);
+  },
+  open(manual) {
+    if (this.isOpen) return;
+    const pool = this.pool(); if (pool.length < (manual ? 1 : 2)) { if (manual) toast('The screensaver needs a few titles on Home first.', 'info'); return; }
+    for (let k = pool.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [pool[k], pool[j]] = [pool[j], pool[k]]; }
+    const el = this.el || this.build();
+    this.list = pool; this.i = 0; this.isOpen = true; this.at = Date.now(); this.resetMove();
+    $('.sv-stage', el).innerHTML = ''; el.hidden = false; document.body.classList.add('saver-on');
+    // The Android TV app forwards Back only while an element with a known id shows; borrow #remote if it is free
+    if (IS_TV && !$('#remote')) $('.sv-back', el).id = 'remote';
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on')));
+    clearTimeout(this.fullT); this.fullT = setTimeout(() => { if (this.isOpen) document.body.classList.add('saver-full'); }, 1300);
+    const clock = $('.sv-clock', el), tickClock = () => { clock.textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); };
+    tickClock(); clearInterval(this.clk); this.clk = setInterval(tickClock, 15000);
+    this.next();
+  },
+  load(src, ms) {
+    return new Promise((res, rej) => {
+      const img = new Image(); img.decoding = 'async'; img.referrerPolicy = 'no-referrer'; img.alt = '';
+      const t = setTimeout(() => rej(new Error('slow')), ms);
+      img.onload = () => { clearTimeout(t); (img.decode ? img.decode().catch(() => {}) : Promise.resolve()).then(() => res(img)); };
+      img.onerror = () => { clearTimeout(t); rej(new Error('failed')); };
+      img.src = src;
+    });
+  },
+  async next() {
+    const tok = ++this.tok;
+    for (let tries = 0; tries < Math.min(this.list.length, 6); tries++) {
+      const m = this.list[this.i++ % this.list.length], lg = metaLogo(m);
+      let art, logo = null;
+      try { [art, logo] = await Promise.all([this.load(metaBg(m), 9000), lg ? this.load(lg, 6000).catch(() => null) : null]); } catch (e) { if (tok !== this.tok) return; continue; }
+      if (tok !== this.tok || !this.isOpen) return;
+      this.paint(m, art, logo);
+      this.cyc = setTimeout(() => this.next(), IS_TV ? 22000 : 18000);
+      return;
+    }
+    if (tok === this.tok) this.cyc = setTimeout(() => this.next(), 30000);
+  },
+  paint(m, art, logo) {
+    const stage = $('.sv-stage', this.el), olds = $$('.sv-s', stage);
+    const s = document.createElement('div'); this.side ^= 1; s.className = `sv-s${this.side ? '' : ' r'}`;
+    s.appendChild(art);
+    const meta = [m.imdbRating ? `<span class="imdb ${rateTier(m.imdbRating)}"><b>IMDb</b>${esc(m.imdbRating)}</span>` : '', yearOf(m) ? `<span>${esc(yearOf(m))}</span>` : '', genresOf(m).slice(0, 3).map(esc).join(' · ')].filter(Boolean).join('');
+    s.insertAdjacentHTML('beforeend', `<div class="sv-info"><div class="sv-logo"><div class="wp-logo"><h2 class="hero-title"></h2></div></div><div class="sv-meta">${meta}</div></div>`);
+    const box = $('.wp-logo', s), h = $('.hero-title', s); h.textContent = m.name || '';
+    if (logo) { logo.className = 'hero-logo'; box.insertBefore(logo, h); h.hidden = true; }
+    stage.appendChild(s);
+    requestAnimationFrame(() => requestAnimationFrame(() => s.classList.add('on')));
+    olds.forEach((o) => { o.classList.remove('on'); setTimeout(() => o.remove(), 1700); });
+  },
+  close() {
+    if (!this.isOpen) return;
+    this.isOpen = false; this.tok++; this.last = Date.now();
+    clearTimeout(this.cyc); clearInterval(this.clk); clearTimeout(this.fullT);
+    const el = this.el; document.body.classList.remove('saver-full'); el.classList.remove('on');
+    const b = $('#remote', el); if (b) b.removeAttribute('id');
+    setTimeout(() => {
+      if (this.isOpen) return;
+      el.hidden = true; $('.sv-stage', el).innerHTML = ''; document.body.classList.remove('saver-on');
+      if (typeof tvBackHook === 'function') tvBackHook();
+    }, 450);
+  },
+};
+Saver.init();
+</script>
+<style>
+/* ===== 2.7.25 Wallpapers: key art edge to edge, titles with a 3D edge, and an idle screensaver ===== */
+/* The 3D title: a thin rim light on top, three hard dark layers for thickness, then a soft cast shadow.
+   Painted once per film inside its own layer; only transform and opacity ever animate. */
+.wp-logo{display:flex;align-items:flex-end;height:100%;max-width:100%;min-width:0;transform-origin:0 100%}
+/* three chained hard shadows at 1x, 2x and 4x the offset fill a solid edge seven steps deep, lighter near the face */
+#heroLogoWrap .wp-logo .hero-logo,.sv-logo .hero-logo{filter:drop-shadow(0 -1px 0 rgba(255,255,255,.3)) drop-shadow(.6px 1px 0 #3a3a3f) drop-shadow(1.2px 2px 0 #222226) drop-shadow(2.4px 4px 0 #111113) drop-shadow(0 22px 26px rgba(0,0,0,.75))}
+.wp-logo .hero-title{text-shadow:0 -1px 0 rgba(255,255,255,.3),.6px 1px 0 #3a3a3f,1.2px 2px 0 #2c2c30,1.8px 3px 0 #222226,2.4px 4px 0 #19191c,3px 5px 0 #111113,3.6px 6px 0 #0b0b0c,0 22px 34px rgba(0,0,0,.85)}
+html.tv #heroLogoWrap .wp-logo .hero-logo{filter:drop-shadow(.6px 1px 0 #3a3a3f) drop-shadow(1.2px 2px 0 #222226) drop-shadow(2.4px 4px 0 #111113) drop-shadow(0 14px 16px rgba(0,0,0,.72))}
+@keyframes wpPop{0%{opacity:0;transform:perspective(1000px) translate3d(0,28px,-170px) rotateX(26deg) scale(.86)}55%{opacity:1}100%{opacity:1;transform:perspective(1000px) translate3d(0,0,0) rotateX(0) scale(1)}}
+body.fx .hero-body.swap .wp-logo{animation:wpPop 1.15s cubic-bezier(.16,1,.3,1) both}
+/* the art drifts slowly toward you, like a camera easing in; it stops while the banner is off screen */
+@keyframes wpDrift{from{transform:scale(1.13) translate3d(1.6%,.8%,0)}to{transform:scale(1.03) translate3d(-1.1%,-.3%,0)}}
+@keyframes wpSettle{from{transform:scale(1.07)}to{transform:scale(1)}}
+body.fx #heroBg img.wp{animation:wpDrift 20s cubic-bezier(.3,.1,.3,1) both}
+body.fx #hero.still #heroBg img.wp{animation-play-state:paused}
+
+/* TVs and desktops: the banner is a wallpaper, edge to edge and up under the dock. Its height is fixed by the screen,
+   never by the film, so the rows below never move (2.7.20). */
+@media (min-width:761px){
+  #view-home>.hero{--hl:150px;--gut:calc(max(0px,(100vw - 1480px) / 2) + 16px + clamp(8px,2vw,40px));
+    margin:calc(-28px - var(--dock-h) - env(safe-area-inset-top,0px)) calc(50% - 50vw) 28px;border-radius:0;border:0;background:var(--void);min-height:0;height:clamp(500px,88vh,940px)}
+  #view-home>.hero::before{background:linear-gradient(90deg,rgba(0,0,0,.86) 0%,rgba(0,0,0,.5) 34%,rgba(0,0,0,.08) 62%,transparent 80%),linear-gradient(0deg,var(--void) 0%,rgba(0,0,0,.72) 16%,transparent 46%),linear-gradient(180deg,rgba(0,0,0,.6) 0%,transparent 22%)}
+  #view-home>.hero .hero-body{padding:0 0 clamp(54px,9vh,104px) var(--gut);max-width:calc(var(--gut) + 700px)}
+  #view-home>.hero .hero-logo{max-width:min(560px,100%)}
+  #view-home>.hero .hero-dots{right:var(--gut);bottom:clamp(60px,9.6vh,110px)}
+  #view-home>.hero .hero-nav.prev{left:max(12px,calc(var(--gut) - 64px))}
+  #view-home>.hero .hero-nav.next{right:max(12px,calc(var(--gut) - 64px))}
+}
+@media (min-width:761px) and (orientation:landscape) and (max-height:540px){#view-home>.hero{--hl:96px;height:max(100vh,420px)}}
+/* phones keep the rounded banner: the art settles in once instead of drifting under a scrolling page */
+@media (max-width:760px){body.fx #heroBg img.wp{animation:wpSettle 1.8s cubic-bezier(.16,1,.3,1) both}}
+/* desktops: art and title move against each other with the mouse */
+@media (hover:hover) and (pointer:fine){
+  html:not(.tv) body.fx #heroBg{transform:translate3d(calc(var(--mx,0) * -14px),calc(var(--my,0) * -9px),0) scale(1.03);transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+  html:not(.tv) body.fx #hero:not(.dragging) .hero-body{transform:translate3d(calc(var(--mx,0) * 9px),calc(var(--my,0) * 5px),0)}
+}
+
+/* ---------- Screensaver ---------- */
+#saver{position:fixed;inset:0;z-index:9500;background:#000;opacity:0;transition:opacity 1.1s ease;overflow:hidden;cursor:none;contain:strict;color:#fff}
+#saver[hidden]{display:none}
+#saver.on{opacity:1}
+#saver:not(.on){transition-duration:.4s}
+.sv-s{position:absolute;inset:0;opacity:0;transition:opacity 1.6s ease}
+.sv-s.on{opacity:1}
+.sv-s>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+@keyframes svDrift{from{transform:scale(1.15) translate3d(2%,1%,0)}to{transform:scale(1.02) translate3d(-1.6%,-.6%,0)}}
+@keyframes svDriftR{from{transform:scale(1.15) translate3d(-2%,1%,0)}to{transform:scale(1.02) translate3d(1.6%,-.6%,0)}}
+body.fx .sv-s>img{animation:svDrift 24s linear both}
+body.fx .sv-s.r>img{animation-name:svDriftR}
+.sv-s::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.88) 0%,rgba(0,0,0,.35) 30%,transparent 55%),linear-gradient(90deg,rgba(0,0,0,.62) 0%,transparent 52%),linear-gradient(180deg,rgba(0,0,0,.45),transparent 18%)}
+.sv-s.r::after{background:linear-gradient(0deg,rgba(0,0,0,.88) 0%,rgba(0,0,0,.35) 30%,transparent 55%),linear-gradient(270deg,rgba(0,0,0,.62) 0%,transparent 52%),linear-gradient(180deg,rgba(0,0,0,.45),transparent 18%)}
+.sv-info{position:absolute;z-index:1;left:6vw;bottom:10vh;width:min(48vw,680px);display:flex;flex-direction:column;align-items:flex-start}
+.sv-s.r .sv-info{left:auto;right:6vw;align-items:flex-end;text-align:right}
+.sv-logo{height:clamp(96px,24vh,250px);width:100%;display:flex;align-items:flex-end;margin-bottom:20px}
+.sv-s.r .sv-logo{justify-content:flex-end}
+.sv-s.r .sv-logo .wp-logo{transform-origin:100% 100%;justify-content:flex-end}
+.sv-logo .hero-logo{display:block;max-height:100%;max-width:100%;object-fit:contain;object-position:left bottom}
+.sv-s.r .sv-logo .hero-logo{object-position:right bottom}
+.sv-logo .hero-title{font-family:var(--f-display);font-weight:800;font-size:clamp(40px,6.4vw,96px);line-height:1;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sv-meta{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:clamp(14px,1.5vw,20px);color:#e4e4e8;text-shadow:0 1px 3px rgba(0,0,0,.9)}
+.sv-s.r .sv-meta{justify-content:flex-end}
+.sv-meta .imdb{font-size:.8em}
+body.fx .sv-s.on .wp-logo{animation:wpPop 1.5s cubic-bezier(.16,1,.3,1) .45s both}
+@keyframes svUp{from{opacity:0;transform:translate3d(0,14px,0)}}
+body.fx .sv-s.on .sv-meta{animation:svUp 1s cubic-bezier(.16,1,.3,1) 1.1s both}
+.sv-top{position:absolute;z-index:2;top:5vh;left:5vw;right:5vw;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
+.sv-brand{display:flex;align-items:center;gap:12px;font-family:var(--f-mono);font-size:12px;letter-spacing:.32em;color:rgba(255,255,255,.72)}
+.sv-brand svg{width:34px;height:34px}
+.sv-clock{font-family:var(--f-display);font-weight:600;font-size:clamp(26px,3.4vw,52px);letter-spacing:.01em;color:rgba(255,255,255,.9);text-shadow:0 2px 14px rgba(0,0,0,.7);font-variant-numeric:tabular-nums}
+.sv-hint{position:absolute;z-index:2;left:0;right:0;bottom:3.6vh;text-align:center;font-family:var(--f-mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:rgba(255,255,255,.55);opacity:0;animation:svHint 7s ease 1.2s both}
+@keyframes svHint{0%{opacity:0}12%,72%{opacity:1}100%{opacity:0}}
+/* once the screensaver covers everything, the app underneath stops painting */
+body.saver-full #app{visibility:hidden}
+@media (max-width:760px){.sv-info{width:auto;right:6vw}.sv-s.r .sv-info{left:6vw}.sv-logo{height:clamp(80px,16vh,150px)}}
+</style>
 <style>
 #optMenu .al-note{display:flex;gap:8px;align-items:flex-start;margin:2px 0 8px;font-size:12.5px;line-height:1.45;color:var(--mute)}
 #optMenu .al-note svg{width:14px;height:14px;flex:none;margin-top:2px}
@@ -8558,6 +8803,466 @@ body.hc .ab-gpl{color:#d2d2d8}
 .lic-body .lic-pre{margin-top:0}
 body.hc .lic-n small,body.hc .lic-pre{color:#d2d2d8}
 @media (max-width:760px){.ab-mark{font-size:30px}.lic-pre{font-size:11px;padding:12px}}
+</style>
+<script>
+/* 2.7.26 Peak Cinema */
+/* =====================================================================
+   2.7.26 Peak Cinema: flip through 90-second scenes, one film after another
+   ---------------------------------------------------------------------
+   There is no public list of "best scene" timestamps, so none is pretended. A scene is a point between about a third and
+   three quarters of the way into the film (past the opening, well before the credits). What you skip and what you keep
+   watching is learned on this device only and nudges both that window and which genres come up.
+   Only sources your debrid service already has cached, in formats this browser can decode, are used. The browser jumps
+   straight to the scene with an HTTP range request on your own stream link. To spare addons and your debrid account, only
+   one film is looked up at a time (at least 2.5 s apart), only the next scene is buffered, and a debrid link is only
+   requested for the scene that plays next.
+   ===================================================================== */
+const Peak = {
+  CLIP: 90, GAP: 2500, MAX_MISS: 10,
+  MOODS: [
+    ['any', 'Anything', null], ['action', 'Action', /action|adventure|war|western/i], ['scifi', 'Sci-Fi', /sci-?fi|science fiction|fantasy/i],
+    ['thriller', 'Thriller', /thriller|crime|mystery/i], ['comedy', 'Comedy', /comed/i], ['horror', 'Horror', /horror/i],
+    ['animation', 'Animation', /animat|family/i], ['drama', 'Drama', /drama|romance|history/i],
+  ],
+  el: null, on: false, tok: 0, mood: 'any', pool: [], used: new Set(), staged: null, next: null, cur: null, n: 0, miss: 0,
+  busy: false, dry: false, lookAt: 0, linkAt: 0, idleT: 0, muted: false,
+  learn() { return Object.assign({ g: {}, kept: [], seen: {} }, Store.get('peakLearn', {})); },
+  saveLearn(l) { const now = Date.now(); for (const k in l.seen) if (now - l.seen[k] > 3 * 864e5) delete l.seen[k]; Store.set('peakLearn', l); },
+  // the window a scene is picked from, as a share of the running time; scenes you kept watching pull it toward them
+  band() {
+    const k = this.learn().kept; if (k.length < 3) return [.35, .75];
+    const c = clamp(k.reduce((a, b) => a + b, 0) / k.length, .42, .68); return [c - .17, c + .17];
+  },
+  feedback(clip, kind) {
+    if (!clip) return; const l = this.learn(), w = { skip: -1, full: 1, keep: 3 }[kind] || 0;
+    genresOf(clip.meta).forEach((g) => { l.g[g] = clamp((l.g[g] || 0) + w, -8, 8); });
+    if (kind === 'keep' && clip.d) { l.kept.push(+(clip.v.currentTime / clip.d).toFixed(3)); l.kept = l.kept.slice(-10); }
+    this.saveLearn(l);
+  },
+
+  build() {
+    const el = document.createElement('div'); el.id = 'peak'; el.className = 'pk'; el.hidden = true;
+    el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Peak Cinema');
+    el.innerHTML = `
+      <div class="pk-stage"><video class="pk-v" playsinline preload="auto"></video><video class="pk-v" playsinline preload="auto"></video><div class="pk-shade"></div></div>
+      <div class="pk-ui">
+        <div class="pk-top">
+          <div class="pk-brand"><span class="pk-mark">Peak Cinema</span><span class="pk-sub" id="pkCount"></span></div>
+          <div class="pk-moods chips" id="pkMoods">${this.MOODS.map(([k, l]) => `<button class="chip${k === this.mood ? ' on' : ''}" type="button" data-nav data-mood="${k}">${l}</button>`).join('')}</div>
+          <div class="pk-tools">
+            <button class="ibtn" id="pkMute" type="button" data-nav aria-label="Sound"><i data-lucide="volume-2"></i></button>
+            <button class="ibtn" id="pkHow" type="button" data-nav aria-label="How scenes are picked"><i data-lucide="info"></i></button>
+            <button class="ibtn" id="pkClose" type="button" data-nav aria-label="Close Peak Cinema"><i data-lucide="x"></i></button>
+          </div>
+        </div>
+        <div class="pk-status" id="pkStatus" hidden></div>
+        <div class="pk-bottom">
+          <div class="pk-info" id="pkInfo"></div>
+          <div class="pk-acts">
+            <button class="btn btn-bolt" id="pkKeep" type="button" data-nav><i data-lucide="play"></i><span class="sp-l">Keep watching<small id="pkFrom">From here</small></span></button>
+            <button class="btn btn-ghost" id="pkStart" type="button" data-nav><i data-lucide="rotate-ccw"></i>From the start</button>
+            <button class="btn btn-ghost" id="pkSkip" type="button" data-nav><i data-lucide="skip-forward"></i>Next scene</button>
+            <button class="btn btn-ghost" id="pkDetails" type="button" data-nav><i data-lucide="info"></i>Details</button>
+          </div>
+          <div class="pk-foot"><div class="pk-next" id="pkNext"></div><div class="pk-bar"><i id="pkBar"></i></div></div>
+        </div>
+      </div>
+      <div class="pk-how" id="pkHowBox" hidden>
+        <div class="pk-how-box">
+          <h3>How Peak Cinema picks scenes</h3>
+          <p>MKCinema has no database of famous scenes, and none is pretended. Each scene starts at a point between about a third and three quarters of the way into the film, past the opening and well before the credits.</p>
+          <p>What you skip and what you keep watching teaches it, on this device only: genres you keep come up more, and the window moves toward the moments you stayed for.</p>
+          <p>Only sources your debrid service already has cached, in formats this device can play, are used. MKCinema looks up one film at a time and buffers only the next scene, so your addons and your debrid account are never flooded.</p>
+          <div class="pk-how-acts"><button class="btn btn-ghost" id="pkForget" type="button" data-nav><i data-lucide="eraser"></i>Forget what it learned</button><button class="btn btn-prime" id="pkHowOk" type="button" data-nav>Got it</button></div>
+        </div>
+      </div>`;
+    document.body.appendChild(el);
+    this.vids = $$('.pk-v', el);
+    this.vids.forEach((v) => {
+      v.addEventListener('timeupdate', () => this.tick(v));
+      v.addEventListener('ended', () => { if (this.cur && this.cur.v === v) { this.feedback(this.cur, 'full'); this.advance(); } });
+      v.addEventListener('error', () => { if (this.cur && this.cur.v === v) { this.status('That scene stopped loading, so here is the next one.'); this.advance(); } });
+    });
+    $('#pkClose', el).onclick = () => this.close();
+    $('#pkSkip', el).onclick = () => this.skip();
+    $('#pkKeep', el).onclick = () => this.keep(false);
+    $('#pkStart', el).onclick = () => this.keep(true);
+    $('#pkDetails', el).onclick = () => { const c = this.cur; if (!c) return; this.close(); openDetail(c.meta); };
+    $('#pkMute', el).onclick = () => this.setMuted(!this.muted);
+    $('#pkHow', el).onclick = () => this.how(true);
+    $('#pkHowOk', el).onclick = () => this.how(false);
+    $('#pkForget', el).onclick = () => { Store.set('peakLearn', {}); toast('Peak Cinema starts fresh', 'ok', 2400); this.how(false); };
+    $$('[data-mood]', el).forEach((b) => b.addEventListener('click', () => this.setMood(b.dataset.mood)));
+    ['pointermove', 'pointerdown'].forEach((t) => el.addEventListener(t, () => this.wake(), { passive: true }));
+    $('.pk-stage', el).addEventListener('click', () => { const c = this.cur; if (c && !TOUCH_UI) (c.v.paused ? c.v.play().catch(() => {}) : c.v.pause()); });
+    icons(); return el;
+  },
+  how(show) { $('#pkHowBox').hidden = !show; this.wake(true); if (IS_TV) Nav.restore(true); else if (show) $('#pkHowOk').focus(); },
+
+  async open() {
+    if (this.on) return;
+    const el = this.el;
+    this.on = true; this.tok++; this.n = 0; this.miss = 0; this.dry = false; this.cur = this.next = this.staged = null; this.used.clear();
+    this.muted = !!Store.get('peakMuted', false); this.setMuted(this.muted);
+    $('#pkInfo').innerHTML = ''; $('#pkNext').textContent = ''; $('#pkBar').style.transform = 'scaleX(0)'; $('#pkCount').textContent = '';
+    el.classList.add('empty'); openLayer('peak');
+    this.claimBack();
+    this.wake(true);
+    if (!engine.addons.some((a) => a.enabled !== false && !a.builtin && engine.supports(a, 'stream', 'movie', 'tt0111161'))) { this.blocked('none'); return; }
+    this.status('Finding a scene your sources have ready…', true);
+    await this.buildPool(this.tok);
+    this.fill();
+  },
+  close() {
+    if (!this.on) return;
+    this.on = false; this.tok++; clearTimeout(this.idleT);
+    this.vids.forEach((v) => this.unload(v));
+    this.cur = this.next = this.staged = null;
+    const s = $('.pk-stage', this.el); if (s.id === 'remote') { s.removeAttribute('id'); tvBackHook(); }
+    $('#pkHowBox').hidden = true; closeLayer('peak');
+  },
+  claimBack() { if (IS_TV && this.on && !$('#remote')) $('.pk-stage', this.el).id = 'remote'; },
+  unload(v) { v.pause(); v.removeAttribute('src'); v.load(); v.classList.remove('on'); v._clip = null; },
+  setMuted(m) {
+    this.muted = m; Store.set('peakMuted', m);
+    if (this.cur) this.cur.v.muted = m;
+    const b = $('#pkMute'); if (b) { b.innerHTML = `<i data-lucide="${m ? 'volume-x' : 'volume-2'}"></i>`; b.setAttribute('aria-label', m ? 'Sound on' : 'Mute'); icons(); }
+  },
+  setMood(k) {
+    if (k === this.mood && this.pool.length) return;
+    this.mood = k; $$('#pkMoods [data-mood]').forEach((b) => b.classList.toggle('on', b.dataset.mood === k));
+    // what is already buffered for the old mood is let go; the scene on screen keeps playing until the new one is ready
+    const tok = ++this.tok; this.miss = 0; this.dry = false;
+    if (this.next) { this.unload(this.next.v); this.next = null; }
+    this.staged = null; this.busy = false; $('#pkNext').textContent = '';
+    this.buildPool(tok).then(() => { if (tok === this.tok) { this.fill(); if (this.cur) this.status(`Switching to ${this.MOODS.find((m) => m[0] === k)[1].toLowerCase()} after this scene`, false, 2600); } });
+  },
+
+  /* Films come from the catalogs on your Home and your watchlist; a mood uses the catalogs' own genre filter when they have one */
+  async buildPool(tok) {
+    const mood = this.MOODS.find((m) => m[0] === this.mood), re = mood[2];
+    const cats = engine.catalogs({ type: 'movie' }).filter((c) => !c.required.length).slice(0, 8);
+    const lists = await Promise.allSettled(cats.map((c) => {
+      const g = re && c.genres.find((x) => re.test(x));
+      return engine.fetchCatalog(c, g ? { genre: g } : {});
+    }));
+    if (tok !== this.tok) return;
+    const seen = new Set(), out = [];
+    const add = (m) => { if (!m || !m.id || seen.has(m.id) || (m.type && m.type !== 'movie') || !/^tt\d/.test(m.id)) return; if (re && genresOf(m).length && !genresOf(m).some((g) => re.test(g))) return; seen.add(m.id); out.push(m); };
+    lists.forEach((r) => { if (r.status === 'fulfilled') r.value.forEach(add); });
+    (S.watchlist || []).forEach(add);
+    this.pool = out;
+  },
+  /* weighted draw: genres you kept come up more, ones you skip less, and nothing you surfed in the last three days repeats */
+  pick() {
+    const l = this.learn(), now = Date.now();
+    let c = this.pool.filter((m) => !this.used.has(m.id) && !(l.seen[m.id] && now - l.seen[m.id] < 3 * 864e5));
+    if (!c.length) c = this.pool.filter((m) => !this.used.has(m.id));
+    if (!c.length) return null;
+    const w = c.map((m) => { const a = genresOf(m).reduce((s, g) => s + (l.g[g] || 0), 0), r = parseFloat(m.imdbRating) || 6.5; return Math.exp(clamp(a, -8, 8) * .16) * (0.4 + r / 10); });
+    let x = Math.random() * w.reduce((a, b) => a + b, 0);
+    for (let i = 0; i < c.length; i++) { x -= w[i]; if (x <= 0) return c[i]; }
+    return c[c.length - 1];
+  },
+  async gate(key, gap) { const wait = this[key] - Date.now(); if (wait > 0) await sleep(wait); this[key] = Date.now() + gap; },
+
+  /* Which of a film's sources can open straight on a scene here: cached on your debrid service, a plain file (not HLS),
+     a format this device decodes. 1080p goes first, since many 4K HEVC remuxes will not decode in browsers or TV apps. */
+  choose(streams) {
+    const ok = visibleStreams(streams).filter((s) => {
+      const t = s._tel, bh = s.behaviorHints || {};
+      if (t.cached !== true || t.isTrailer || bh.proxyHeaders || bh.notWebReady) return false;
+      if (!(t.kind === 'http' || (t.kind === 'p2p' && t.debrid))) return false;
+      return BrowserPlay.ok(s);
+    });
+    const rank = (s) => { const t = s._tel, gb = (t.sizeBytes || 0) / 1073741824; return ({ '1080p': 60, '720p': 40, '4K UHD': 30, '1440p': 45, SD: 5 }[t.res] || 25) + (t.codec === 'H.264' ? 15 : 0) - (t.mkv ? 10 : 0) - (gb > 25 ? 15 : 0); };
+    return ok.sort((a, b) => rank(b) - rank(a));
+  },
+  /* one film looked up: its addons are asked once, then the debrid cache check is waited for (no second request) */
+  async stage(tok) {
+    for (let tries = 0; tries < 3 && tok === this.tok; tries++) {
+      const meta = this.pick(); if (!meta) return null;
+      this.used.add(meta.id);
+      await this.gate('lookAt', this.GAP); if (tok !== this.tok) return null;
+      let streams = [];
+      try { streams = (await engine.fetchStreams('movie', (meta.behaviorHints && meta.behaviorHints.defaultVideoId) || meta.id)).streams; } catch (e) { /* counted as a miss */ }
+      if (tok !== this.tok) return null;
+      const hashes = streams.filter((s) => s.infoHash && !s.url);
+      for (let i = 0; i < 12 && hashes.length && Vault.service() && hashes.some((s) => !Vault.cached.has(String(s.infoHash).toLowerCase())); i++) await sleep(250);
+      hashes.forEach((s) => { s._tel = Telemetry.parse(s); });
+      const list = this.choose(streams);
+      if (list.length) { this.miss = 0; return { meta: remember(meta), streams, list }; }
+      this.miss++;
+      if (this.miss >= this.MAX_MISS) return null;
+    }
+    return 'retry';
+  },
+  /* the next scene: its debrid link is requested now (only for this one), and the browser seeks straight to the scene */
+  async load(st, tok) {
+    const v = this.vids.find((x) => !x._clip && (!this.cur || this.cur.v !== x)); if (!v) return null;
+    for (const s of st.list.slice(0, 2)) {
+      let url = s.url;
+      if (!url && s.infoHash) {
+        await this.gate('linkAt', 2000); if (tok !== this.tok) return null;
+        try { url = await Vault.resolve(s, { meta: st.meta, video: null }); s._infoHash = s.infoHash; delete s.infoHash; s.url = url; s._debrid = s._tel.debrid; s._tel = Telemetry.parse(s); } catch (e) { continue; }
+        if (tok !== this.tok) return null;
+      }
+      const clip = { meta: st.meta, stream: s, streams: st.streams, v, offset: 0, d: 0 };
+      v._clip = clip;
+      const ok = await this.seekTo(v, url, clip, tok);
+      if (tok !== this.tok) { if (v._clip === clip) this.unload(v); return null; }
+      if (ok) return clip;
+      this.unload(v);
+    }
+    return null;
+  },
+  seekTo(v, url, clip, tok) {
+    return new Promise((done) => {
+      let fin = false; const end = (ok) => { if (fin) return; fin = true; clearTimeout(t); v.removeEventListener('error', err); done(ok); };
+      const err = () => end(false), t = setTimeout(() => end(false), 25000);
+      v.addEventListener('error', err);
+      v.muted = true; v.preload = 'auto'; v.src = url;
+      v.addEventListener('loadedmetadata', () => {
+        const d = v.duration;
+        if (tok !== this.tok || !isFinite(d) || d < 1200) { end(false); return; }
+        const [lo, hi] = this.band(), credits = Math.max(480, d * .1);
+        const a = Math.max(600, d * lo), b = Math.min(d * hi, d - credits - this.CLIP);
+        if (b <= a) { end(false); return; }
+        clip.d = d; clip.offset = Math.round(a + Math.random() * (b - a));
+        v.currentTime = clip.offset;
+        const ready = () => {
+          // a video track this device cannot decode still plays its sound with no picture: such files are left out
+          if (!v.videoWidth) { end(false); return; }
+          if (v.readyState >= 3) end(true); else v.addEventListener('canplay', () => end(!!v.videoWidth), { once: true });
+        };
+        v.addEventListener('seeked', ready, { once: true });
+      }, { once: true });
+    });
+  },
+  /* keeps one scene ready behind the one on screen, and one more film looked up (addon answer only, no debrid link) */
+  async fill() {
+    if (this.busy || !this.on) return; this.busy = true; const tok = this.tok;
+    try {
+      while (tok === this.tok && this.on && !this.next) {
+        if (!this.staged) {
+          if (!this.cur) this.status('Finding a scene your sources have ready…', true);
+          const st = await this.stage(tok); if (tok !== this.tok) return;
+          if (st === 'retry') continue;
+          if (!st) { this.dry = true; if (!this.cur) this.blocked(this.miss >= this.MAX_MISS ? 'miss' : 'empty'); else $('#pkNext').textContent = ''; return; }
+          this.staged = st;
+        }
+        const st = this.staged; this.staged = null;
+        if (this.cur) $('#pkNext').innerHTML = `<span class="spin"></span>Up next: ${esc(st.meta.name)}`;
+        const clip = await this.load(st, tok); if (tok !== this.tok) return;
+        if (!clip) { this.miss++; if (this.miss >= this.MAX_MISS && !this.cur) { this.blocked('miss'); return; } continue; }
+        this.next = clip;
+        if (!this.cur) this.advance();
+        else $('#pkNext').innerHTML = `<span class="pk-dot"></span>Up next: ${esc(clip.meta.name)}`;
+      }
+      // the film after next is looked up while this scene plays, so a skip never waits on addons
+      if (tok === this.tok && this.on && !this.staged && this.cur) { const st = await this.stage(tok); if (tok === this.tok && !st) this.dry = true; else if (tok === this.tok && st !== 'retry') this.staged = st; }
+    } finally {
+      if (tok === this.tok) {
+        this.busy = false;
+        // a scene was used up while a lookup ran: carry on, unless the films have run out
+        if (this.on && this.cur && !this.dry && (!this.next || !this.staged)) setTimeout(() => this.fill(), 60);
+      }
+    }
+  },
+  advance() {
+    const n = this.next, old = this.cur;
+    if (!n) {
+      // nothing buffered yet: keep the last frame up and say what is happening
+      if (old) { old.v.pause(); this.cur = null; this.unload(old.v); }
+      this.el.classList.add('empty'); $('#pkInfo').innerHTML = ''; this.fill(); this.status('Finding the next scene…', true); return;
+    }
+    this.next = null; this.cur = n; this.n++;
+    const l = this.learn(); l.seen[n.meta.id] = Date.now(); this.saveLearn(l);
+    n.v.muted = this.muted; n.startedAt = Date.now();
+    n.v.play().catch(() => { n.v.muted = true; this.setMuted(true); n.v.play().catch(() => {}); });
+    n.v.classList.add('on'); this.el.classList.remove('empty');
+    if (old) { old.v.classList.remove('on'); setTimeout(() => { if (old.v._clip === old) this.unload(old.v); this.fill(); }, 500); }
+    this.render(); this.status(''); $('#pkNext').textContent = ''; this.wake();
+    // the remote starts on Keep watching once there is something to keep watching
+    if (IS_TV && !old) { Nav.mem.delete(this.el); Nav.focus($('#pkKeep'), true); }
+    clearTimeout(this.silentT);
+    // a file whose sound this device cannot decode plays silently: say so once it is clear, and move on
+    this.silentT = setTimeout(() => { const c = this.cur; if (c === n && !c.v.paused && !c.v.muted && 'webkitAudioDecodedByteCount' in c.v && c.v.webkitAudioDecodedByteCount === 0) { this.status('That file had no sound this device can play, so here is the next scene.', false, 4000); this.advance(); } }, 4500);
+    if (!old) this.fill();
+  },
+  tick(v) {
+    const c = this.cur; if (!c || c.v !== v) return;
+    const p = clamp((v.currentTime - c.offset) / this.CLIP, 0, 1);
+    $('#pkBar').style.transform = `scaleX(${p.toFixed(4)})`;
+    const f = `From ${fmtTime(v.currentTime)}`; if ($('#pkFrom').textContent !== f) $('#pkFrom').textContent = f;
+    if (p >= 1) { this.feedback(c, 'full'); this.advance(); }
+  },
+  render() {
+    const c = this.cur, m = c.meta, logo = metaLogo(m);
+    $('#pkCount').textContent = `Scene ${this.n}`;
+    $('#pkInfo').innerHTML = `
+      <div class="pk-eye">${esc(fmtTime(c.offset))} of ${esc(fmtTime(c.d))} · ${esc([c.stream._tel.res, c.stream._addon].filter(Boolean).join(' · '))}</div>
+      <div class="pk-logo">${logo ? imgTag(logo, m.name, m.id, { nofb: true, cls: 'hero-logo', lazy: false }) : ''}<h2 class="pk-title" data-logo-alt ${logo ? 'hidden' : ''}>${esc(m.name)}</h2></div>
+      <div class="metaline">${[m.imdbRating ? `<span class="imdb ${rateTier(m.imdbRating)}"><b>IMDb</b>${esc(m.imdbRating)}</span>` : '', yearOf(m) ? `<span>${esc(yearOf(m))}</span>` : '', genresOf(m).slice(0, 3).map(esc).join(' · ')].filter(Boolean).join('')}</div>`;
+    $('#pkFrom').textContent = `From ${fmtTime(c.offset)}`;
+  },
+  status(msg, spin, ms) {
+    const s = $('#pkStatus'); clearTimeout(this.stT);
+    if (!msg) { s.hidden = true; return; }
+    s.hidden = false; s.innerHTML = `${spin ? '<span class="spin"></span>' : ''}<span>${esc(msg)}</span>`;
+    if (ms) this.stT = setTimeout(() => { s.hidden = true; }, ms);
+  },
+  blocked(why) {
+    const msg = {
+      none: ['Peak Cinema needs a stream addon', 'It plays scenes from sources your debrid service already has cached. Add a stream addon, and your debrid key in Settings › Debrid.'],
+      miss: ['No cached copies turned up', `The last ${this.MAX_MISS} films had no cached source in a format this device can play. Try another mood, or check your debrid key in Settings › Debrid.`],
+      empty: ['That is every film for now', 'Your catalogs have no more films for this mood. Try another one.'],
+    }[why];
+    const s = $('#pkStatus'); s.hidden = false; this.el.classList.add('empty');
+    s.innerHTML = `<div class="pk-block"><h3>${esc(msg[0])}</h3><p>${esc(msg[1])}</p><div class="pk-how-acts">${why === 'none' ? '<button class="btn btn-prime" type="button" data-nav data-pk="addons"><i data-lucide="puzzle"></i>Open addons</button>' : '<button class="btn btn-prime" type="button" data-nav data-pk="again"><i data-lucide="refresh-cw"></i>Keep looking</button>'}<button class="btn btn-ghost" type="button" data-nav data-pk="close">Close</button></div></div>`;
+    icons();
+    $$('[data-pk]', s).forEach((b) => b.addEventListener('click', () => {
+      const a = b.dataset.pk;
+      if (a === 'close') this.close();
+      if (a === 'addons') { this.close(); $('#openAddons').click(); }
+      if (a === 'again') { this.miss = 0; this.dry = false; this.used.clear(); this.fill(); }
+    }));
+    if (IS_TV) Nav.restore(true);
+  },
+  skip() { const c = this.cur; if (c && Date.now() - c.startedAt < 12000) this.feedback(c, 'skip'); this.advance(); this.wake(); },
+  /* hooked: the full film opens in the normal player, from this second or from the very start, with all its sources */
+  keep(fromStart) {
+    const c = this.cur; if (!c) return;
+    this.feedback(c, 'keep');
+    const at = fromStart ? 0 : Math.floor(c.v.currentTime), streams = [c.stream, ...c.streams.filter((s) => s !== c.stream)];
+    this.close();
+    playStream({ meta: c.meta, video: null, streams }, c.stream, { startAt: at });
+  },
+  wake(stay) {
+    if (!this.el) return; this.el.classList.remove('idle'); clearTimeout(this.idleT);
+    if (!stay) this.idleT = setTimeout(() => { if (this.on && this.cur && $('#pkHowBox').hidden && $('#pkStatus').hidden) this.el.classList.add('idle'); }, 4200);
+  },
+  key(e) {
+    if (!this.on || !$('#player').hidden) return;
+    const k = e.key, tag = (e.target && e.target.tagName) || '';
+    if (/INPUT|TEXTAREA|SELECT/.test(tag)) return;
+    const idle = this.el.classList.contains('idle');
+    // the first press on a quiet screen only brings the controls back
+    if (idle && /^(Arrow|Enter$)/.test(k)) { e.preventDefault(); e.stopImmediatePropagation(); this.wake(); if (IS_TV || !document.activeElement || document.activeElement === document.body) Nav.restore(true); return; }
+    const stop = () => { e.preventDefault(); e.stopImmediatePropagation(); this.wake(); };
+    if (k === 'MediaTrackNext' || k === 'ChannelUp' || k === 'ChannelDown' || e.keyCode === 427 || e.keyCode === 428 || k === 'n' || k === 'N') { stop(); this.skip(); return; }
+    if (k === 'MediaPlayPause' || k === 'MediaPlay' || k === 'MediaPause' || k === 'k' || (k === ' ' && tag !== 'BUTTON')) { stop(); const c = this.cur; if (c) (c.v.paused ? c.v.play().catch(() => {}) : c.v.pause()); return; }
+    if (k === 'm' || k === 'M') { stop(); this.setMuted(!this.muted); return; }
+    this.wake();
+  },
+  /* the Home invitation, first thing under the featured banner */
+  strip() {
+    const rows = $('#homeRows'); if (!rows || $('#pkStrip')) return;
+    rows.insertAdjacentHTML('afterbegin', `<section class="pk-strip" id="pkStrip" aria-label="Peak Cinema">
+      <div class="pk-strip-t"><span class="pk-mark">Peak Cinema</span><h3>Can't decide? Surf scenes instead.</h3><p>Ninety seconds from the middle of one film, then the next, from sources your debrid service already has cached. Keep watching from that second, or start from the top.</p></div>
+      <button class="btn btn-bolt" id="pkGo" type="button" data-nav><i data-lucide="film"></i><span class="sp-l">Start surfing<small>Scenes, back to back</small></span></button></section>`);
+    $('#pkGo').onclick = () => this.open(); icons();
+  },
+  init() {
+    this.el = this.build(); MENU_LAYERS.push('peak');
+    document.addEventListener('keydown', (e) => this.key(e), true);
+    document.addEventListener('visibilitychange', () => { const c = this.cur; if (this.on && c && document.hidden) c.v.pause(); });
+    // Android TV app 1.2 only hands Back to the page while an element with a known id shows; #remote is one of them,
+    // so while Peak Cinema is open it holds that id whenever no floating prompt does
+    const hook = tvBackHook; tvBackHook = function () { hook.apply(this, arguments); Peak.claimBack(); };
+    const prevBack = back;
+    back = function () {
+      if (Peak.on && $('#player').hidden && !(typeof Saver !== 'undefined' && Saver.isOpen)) { if (!$('#pkHowBox').hidden) Peak.how(false); else Peak.close(); return; }
+      return prevBack.apply(this, arguments);
+    };
+    const root = Nav.root.bind(Nav), start = Nav.start.bind(Nav);
+    Nav.root = function () {
+      if (Peak.on && $('#player').hidden && $('#castLayer').hidden && $('#partyLayer').hidden) return !$('#pkHowBox').hidden ? $('#pkHowBox') : (!$('#pkStatus').hidden && $('.pk-block', Peak.el)) ? $('#pkStatus') : Peak.el;
+      return root();
+    };
+    Nav.start = function (r, list) {
+      if (r === Peak.el) return list.find((el) => el.id === (Peak.cur ? 'pkKeep' : 'pkSkip')) || list[0];
+      return start(r, list);
+    };
+    const home = renderHome;
+    renderHome = function () { const p = home.apply(this, arguments); Peak.strip(); return p; };
+    Peak.strip();
+    COMMANDS.splice(1, 0, { label: 'Peak Cinema: surf scenes', icon: 'film', run: () => Peak.open() });
+  },
+};
+Peak.init();
+</script>
+<style>
+/* ===== 2.7.26 Peak Cinema ===== */
+.pk{position:fixed;inset:0;z-index:66;background:#000;overflow:hidden;color:#ececee}
+.pk[hidden]{display:none}
+.pk.leaving[hidden]{display:block!important;pointer-events:none;animation:ovOut .22s ease-in forwards}
+.pk-stage{position:absolute;inset:0}
+.pk-v{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;opacity:0;transition:opacity .45s ease}
+.pk-v.on{opacity:1}
+.pk-shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.72) 0,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 50%,rgba(0,0,0,.86) 100%);transition:opacity .4s ease}
+.pk-ui{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none;padding:calc(18px + env(safe-area-inset-top,0px)) max(28px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(28px,env(safe-area-inset-left,0px));transition:opacity .35s ease}
+.pk-ui>*{pointer-events:auto}
+.pk.idle .pk-ui,.pk.idle .pk-shade{opacity:0}
+.pk.idle .pk-ui>*{pointer-events:none}
+.pk.idle{cursor:none}
+.pk-top{display:flex;align-items:center;gap:18px}
+.pk-brand{display:flex;flex-direction:column;gap:3px;flex:none}
+.pk-mark{font-family:var(--f-mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#d9d4c7}
+.pk-sub{font-size:12px;color:#9a9aa2;min-height:15px}
+.pk-moods{flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:6px 4px;justify-content:center}
+.pk-moods::-webkit-scrollbar{display:none}
+.pk .chip{background:rgba(20,20,23,.78);color:#c9c9cf;border-color:rgba(255,255,255,.1)}
+.pk .chip.on,body.hc .pk .chip.on{background:#ececee;color:#0a0a0b;border-color:#ececee}
+.pk-tools{display:flex;gap:6px;flex:none}
+.pk-tools .ibtn{background:rgba(20,20,23,.78);border:1px solid rgba(255,255,255,.08)}
+.pk-status{align-self:center;display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:999px;background:rgba(14,14,16,.9);border:1px solid rgba(255,255,255,.08);font-size:13.5px;color:#d2d2d8;max-width:min(560px,92vw)}
+.pk-status[hidden]{display:none}
+.pk-status:has(.pk-block){border-radius:20px;padding:0;background:none;border:0}
+.pk-block{background:#0e0e10;border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:26px 28px;text-align:left}
+.pk-block h3,.pk-how-box h3{font-family:var(--f-serif);font-weight:500;font-size:24px;margin:0 0 8px;color:#f2f2f4}
+.pk-block p,.pk-how-box p{color:#b9b9c0;font-size:14px;line-height:1.6;margin:0 0 10px}
+.pk-how-acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.pk-bottom{display:flex;flex-direction:column;gap:16px;max-width:1100px}
+.pk-eye{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.08em;color:#a9a9b0;margin-bottom:10px}
+.pk-logo .hero-logo{display:block;max-height:96px;max-width:min(420px,70vw);width:auto;height:auto;object-fit:contain;object-position:left bottom;filter:drop-shadow(0 6px 22px rgba(0,0,0,.6))}
+.pk-title{font-family:var(--f-serif);font-weight:500;font-size:clamp(28px,4vw,48px);line-height:1.05;margin:0;text-shadow:0 4px 24px rgba(0,0,0,.6)}
+.pk-info .metaline{margin-top:10px}
+.pk-info:empty{display:none}
+.pk-acts{display:flex;flex-wrap:wrap;gap:10px}
+.pk.empty .pk-acts,.pk.empty .pk-foot{display:none}
+.pk-foot{display:flex;flex-direction:column;gap:10px}
+.pk-next{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#9a9aa2;min-height:16px}
+.pk-next .spin{width:11px;height:11px;border-width:1.5px}
+.pk-dot{width:6px;height:6px;border-radius:50%;background:#d9d4c7;flex:none}
+.pk-bar{height:2px;background:rgba(255,255,255,.14);border-radius:2px;overflow:hidden}
+.pk-bar i{display:block;height:100%;background:#d9d4c7;transform:scaleX(0);transform-origin:left center}
+.pk-how{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.72);padding:20px}
+.pk-how[hidden]{display:none}
+.pk-how-box{max-width:560px;background:#0e0e10;border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:28px 30px}
+/* Home invitation */
+.pk-strip{display:flex;align-items:center;justify-content:space-between;gap:24px;margin:6px 0 30px;padding:24px 28px;border-radius:20px;background:linear-gradient(110deg,#111114 0%,#0a0a0c 60%,#121214 100%);border:1px solid rgba(255,255,255,.07)}
+.pk-strip h3{font-family:var(--f-serif);font-weight:500;font-size:clamp(20px,2.2vw,27px);margin:8px 0 6px;color:#f2f2f4}
+.pk-strip p{margin:0;color:#a9a9b0;font-size:14px;line-height:1.55;max-width:640px}
+.pk-strip .btn{flex:none}
+@media (max-width:760px){
+  .pk-ui{padding-inline:16px}
+  .pk-top{flex-wrap:wrap;gap:10px}
+  .pk-moods{order:3;flex-basis:100%;justify-content:flex-start;padding-inline:0}
+  .pk-brand{flex:1}
+  .pk-acts .btn{height:42px;padding-inline:14px;font-size:13px}
+  .pk-acts #pkDetails{display:none}
+  .pk-logo .hero-logo{max-height:64px}
+  .pk-strip{flex-direction:column;align-items:flex-start;padding:20px}
+}
+html.tv .pk-moods{isolation:isolate}
+html.tv .pk-v{transition:none}
+html.tv .pk-ui{transition:opacity .2s linear}
+html.tv .pk-acts .btn{height:54px;font-size:16px;padding-inline:22px}
+html.tv .pk-strip .btn{height:58px}
+html.tv .pk-strip{flex-direction:column;align-items:flex-start;gap:18px}
+.pk .btn-ghost{background:rgba(14,14,16,.74);border-color:rgba(255,255,255,.12)}
+.pk,.pk-stage{outline:none}
 </style>
 </body>
 </html>
