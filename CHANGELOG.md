@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.7.27 (2026-11-04)
+
+- **Exit prompt on TV**: on the Android TV / Fire TV app and LG webOS, Back now closes whatever is open, then returns to Home, then asks "Leaving MKCinema?" instead of quitting straight away. Press Back again to exit, or OK on "Keep watching" to stay. A Back pressed within 0.7 s of the prompt appearing is ignored, so mashing Back can't exit by accident. Works with the installed TV app 1.2.1, so no reinstall is needed.
+
 ## Web app 2.7.26 (2026-11-04)
 
 - **Peak Cinema, a scene surfer for when you can't decide**: start it from the panel under the featured banner on Home (or search "Peak Cinema"). It plays 90-second scenes from films in your catalogs and watchlist, one after another, with moods (Action, Sci-Fi, Thriller, Comedy, Horror, Animation, Drama). Keep watching opens the film in the player from that exact second, From the start opens it from the beginning, and Next scene skips. TV remotes: arrows and OK, plus Next track or Channel up/down to skip.
