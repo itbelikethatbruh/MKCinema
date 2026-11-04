@@ -9172,7 +9172,7 @@ const Peak = {
     this.mood = k; $$('#pkMoods [data-mood]').forEach((b) => b.classList.toggle('on', b.dataset.mood === k));
     // what is already buffered for the old mood is let go; the scene on screen keeps playing until the new one is ready
     const tok = ++this.tok; this.miss = 0; this.dry = false;
-    if (this.next) { this.unload(this.next.v); this.next = null; }
+    if (this.next) { if (this.next.v) this.unload(this.next.v); this.next = null; }
     this.staged = null; this.busy = false; $('#pkNext').textContent = '';
     this.buildPool(tok).then(() => { if (tok === this.tok) { this.fill(); if (this.cur) this.status(`Switching to ${this.MOODS.find((m) => m[0] === k)[1].toLowerCase()} after this scene`, false, 2600); } });
   },
@@ -9317,7 +9317,8 @@ const Peak = {
     this.status(`Loading ${n.meta.name}…`, true);
     n.v = v; v._clip = n;
     const ok = await this.seekTo(v, n.url, n, tok);
-    if (tok !== this.tok) return;
+    // a mood change while this loaded: free the only video element for the new mood's scenes
+    if (tok !== this.tok) { if (v._clip === n) this.unload(v); return; }
     if (!ok) { this.unload(v); this.miss++; this.advance(); return; }
     n.lazy = false; this.next = n; this.advance();
   },
