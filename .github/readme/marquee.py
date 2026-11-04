@@ -4,18 +4,13 @@
 Run daily by .github/workflows/readme-stats.yml, which publishes it to the
 readme-assets branch.
 
-What it shows, in order:
-1. The community's pick: the open issue labelled both "marquee" and
-   "approved" with the most thumbs-up reactions. Nominations come from the
-   "Nominate a film" issue form; the maintainer adds "approved" so nothing
-   unreviewed reaches the README.
-2. Otherwise a classic from the list below, changing every day.
-
-Titles only: no posters, no links to any content.
+It shows one major film from 2025-2026, a different one every day, from the
+list below. Titles only: no posters, no links to any content. Keep the list to
+films that have already opened; add new releases as they come out.
 
     GITHUB_REPOSITORY=owner/name GITHUB_TOKEN=... python3 marquee.py out/marquee.svg
 """
-import datetime, json, os, re, sys, unicodedata, urllib.request
+import datetime, json, os, re, sys, urllib.request
 from xml.sax.saxutils import escape
 
 OUT_PATH = sys.argv[1] if len(sys.argv) > 1 else "marquee.svg"
@@ -24,25 +19,17 @@ import generate as g  # fonts and helpers
 REPO = os.environ.get("GITHUB_REPOSITORY", "itbelikethatbruh/MKCinema")
 TOKEN = os.environ.get("GITHUB_TOKEN", "")
 
-CLASSICS = [
-    ("Metropolis", 1927), ("The General", 1926), ("City Lights", 1931), ("M", 1931),
-    ("It Happened One Night", 1934), ("Modern Times", 1936), ("Stagecoach", 1939),
-    ("The Wizard of Oz", 1939), ("His Girl Friday", 1940), ("Citizen Kane", 1941),
-    ("The Maltese Falcon", 1941), ("Casablanca", 1942), ("Double Indemnity", 1944),
-    ("Brief Encounter", 1945), ("It's a Wonderful Life", 1946), ("Bicycle Thieves", 1948),
-    ("The Third Man", 1949), ("Sunset Boulevard", 1950), ("Rashomon", 1950),
-    ("All About Eve", 1950), ("Singin' in the Rain", 1952), ("Tokyo Story", 1953),
-    ("Seven Samurai", 1954), ("Rear Window", 1954), ("On the Waterfront", 1954),
-    ("The Night of the Hunter", 1955), ("The Searchers", 1956), ("12 Angry Men", 1957),
-    ("Wild Strawberries", 1957), ("Vertigo", 1958), ("North by Northwest", 1959),
-    ("Some Like It Hot", 1959), ("The 400 Blows", 1959), ("Breathless", 1960),
-    ("Psycho", 1960), ("The Apartment", 1960), ("La Dolce Vita", 1960),
-    ("Lawrence of Arabia", 1962), ("8½", 1963), ("Dr. Strangelove", 1964),
-    ("The Good, the Bad and the Ugly", 1966), ("Persona", 1966), ("Playtime", 1967),
-    ("2001: A Space Odyssey", 1968), ("Once Upon a Time in the West", 1968),
-    ("The Godfather", 1972), ("Chinatown", 1974), ("Jaws", 1975), ("Taxi Driver", 1976),
-    ("Alien", 1979), ("Blade Runner", 1982), ("Back to the Future", 1985),
-    ("My Neighbor Totoro", 1988), ("Cinema Paradiso", 1988), ("Goodfellas", 1990),
+FEATURES = [
+    ("Sinners", 2025), ("Mission: Impossible The Final Reckoning", 2025), ("Superman", 2025),
+    ("Jurassic World Rebirth", 2025), ("The Fantastic Four: First Steps", 2025), ("Thunderbolts", 2025),
+    ("How to Train Your Dragon", 2025), ("Lilo & Stitch", 2025), ("F1", 2025), ("Weapons", 2025),
+    ("28 Years Later", 2025), ("One Battle After Another", 2025), ("Frankenstein", 2025),
+    ("Tron: Ares", 2025), ("Wicked: For Good", 2025), ("Zootopia 2", 2025), ("Avatar: Fire and Ash", 2025),
+    ("Predator: Badlands", 2025), ("The Running Man", 2025), ("Final Destination Bloodlines", 2025),
+    ("KPop Demon Hunters", 2025), ("Marty Supreme", 2025), ("Hamnet", 2025), ("Bugonia", 2025),
+    ("Project Hail Mary", 2026), ("The Super Mario Galaxy Movie", 2026), ("The Mandalorian and Grogu", 2026),
+    ("Toy Story 5", 2026), ("Supergirl", 2026), ("Spider-Man: Brand New Day", 2026), ("The Odyssey", 2026),
+    ("Michael", 2026), ("Scream 7", 2026), ("The Devil Wears Prada 2", 2026),
 ]
 
 
@@ -55,35 +42,10 @@ def api(path):
         return json.load(r)
 
 
-def clean(title):
-    """Keep letters, digits and simple punctuation, at most 36 characters."""
-    title = unicodedata.normalize("NFC", title)
-    title = re.sub(r"^\s*(marquee|vote|nominate|nomination)\s*[:\-]\s*", "", title, flags=re.I)
-    title = re.sub(r"[^\w\s'&:,.!?½\-]", "", title).strip()
-    title = re.sub(r"\s+", " ", title)
-    return title[:36].strip()
-
-
 def pick():
-    try:
-        issues = api("/issues?state=open&labels=marquee,approved&per_page=100")
-    except Exception as e:  # no network or rate limit: fall back to a classic
-        print("issues unavailable:", e)
-        issues = []
-    best = None
-    for it in issues:
-        if "pull_request" in it:
-            continue
-        votes = it.get("reactions", {}).get("+1", 0)
-        title = clean(it["title"])
-        if title and (best is None or votes > best[1] or (votes == best[1] and it["number"] < best[2])):
-            best = (title, votes, it["number"])
-    if best:
-        v = best[1]
-        return best[0], f"CHOSEN BY THE COMMUNITY  ·  {v} VOTE{'' if v == 1 else 'S'}"
     day = datetime.date.today().toordinal()
-    title, year = CLASSICS[day % len(CLASSICS)]
-    return title, f"TODAY'S CLASSIC  ·  {year}"
+    title, year = FEATURES[day % len(FEATURES)]
+    return title, f"FEATURE PRESENTATION  ·  {year}"
 
 
 def stats():
