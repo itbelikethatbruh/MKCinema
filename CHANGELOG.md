@@ -2,6 +2,16 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.7.32 (2026-11-04)
+
+- **Ambient Mode** replaces the screensaver: a layered 3D scene for each film from Home, your watchlist and Continue watching. Each scene lasts 14 seconds, the next one is loaded 5 seconds ahead, and scenes change with a 2-second Z-warp (the old scene pushes past you while the new one settles in).
+  - **Shadowbox** (when a transparent character cutout exists on fanart.tv): backdrop, particles, the cutout and the logo sit on separate 3D planes that pan against each other, with a rim glow taken from the backdrop's two main colours.
+  - **Depth** (a CORS-readable backdrop and WebGL): a fragment shader builds a depth map from the image (centre weight, brightness and contrast) and orbits a virtual camera by up to 2.5%, with the edges anchored.
+  - **Classic** (anything else): a slow pan with the same particles and HUD.
+  - Particles follow the genre: fog and ash for horror, sci-fi and thriller; embers and bokeh for action and crime; projector dust in a light beam otherwise. The HUD shows year, IMDb rating, genres and a pulsing "Press OK to watch".
+  - Remote: Left and Right browse, OK opens the film's page, Back or any other button returns. A frame-time governor steps the effects down when the device can't keep up.
+- Starts after 90 seconds idle by default on TVs and desktops (phones stay off). Settings › Home: **Screensaver / Ambient Mode** starts it now. Optional free **Fanart.tv** and **TMDB** keys unlock cutouts, clean logos and the depth mode; they stay on the device.
+
 ## Web app 2.7.31 (2026-11-04)
 
 - **Featured banner back to calm**: the Home banner is back to how it was before 2.7.25, a rounded card with still art and a plain title. The dots, motion, edge-to-edge layout and turning title are gone, along with the extra graphics work they caused (Fire TV profile: layers back from 15 to 10 MPx). Only the top-biased crop stays, so faces aren't cut off. All the 3D and depth effects now live only in the screensaver.
