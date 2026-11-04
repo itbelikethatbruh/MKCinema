@@ -8894,7 +8894,8 @@ const Peak = {
     $('#pkForget', el).onclick = () => { Store.set('peakLearn', {}); toast('Peak Cinema starts fresh', 'ok', 2400); this.how(false); };
     $$('[data-mood]', el).forEach((b) => b.addEventListener('click', () => this.setMood(b.dataset.mood)));
     ['pointermove', 'pointerdown'].forEach((t) => el.addEventListener(t, () => this.wake(), { passive: true }));
-    $('.pk-stage', el).addEventListener('click', () => { const c = this.cur; if (c && !TOUCH_UI) (c.v.paused ? c.v.play().catch(() => {}) : c.v.pause()); });
+    // a click on the picture pauses or plays; on touch screens a tap only resumes a paused scene (the first tap shows the controls)
+    $('.pk-stage', el).addEventListener('click', () => { const c = this.cur; if (!c) return; if (c.v.paused) c.v.play().catch(() => {}); else if (!TOUCH_UI) c.v.pause(); });
     icons(); return el;
   },
   how(show) { $('#pkHowBox').hidden = !show; this.wake(true); if (IS_TV) Nav.restore(true); else if (show) $('#pkHowOk').focus(); },
@@ -9166,7 +9167,12 @@ const Peak = {
   init() {
     this.el = this.build(); MENU_LAYERS.push('peak');
     document.addEventListener('keydown', (e) => this.key(e), true);
-    document.addEventListener('visibilitychange', () => { const c = this.cur; if (this.on && c && document.hidden) c.v.pause(); });
+    // leaving the app pauses the scene; coming back picks it up again
+    document.addEventListener('visibilitychange', () => {
+      const c = this.cur; if (!this.on || !c) return;
+      if (document.hidden) { if (!c.v.paused) { c.v.pause(); c.hiddenPause = true; } }
+      else if (c.hiddenPause) { c.hiddenPause = false; c.v.play().catch(() => {}); }
+    });
     // Android TV app 1.2 only hands Back to the page while an element with a known id shows; #remote is one of them,
     // so while Peak Cinema is open it holds that id whenever no floating prompt does
     const hook = tvBackHook; tvBackHook = function () { hook.apply(this, arguments); Peak.claimBack(); };
