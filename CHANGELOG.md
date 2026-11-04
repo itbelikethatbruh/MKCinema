@@ -2,6 +2,12 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.7.33 (2026-11-04)
+
+- **Ambient Mode shows each title once**: fanart.tv "clear art" cutouts have the title printed on them, and so do TMDB backdrops tagged with a language. Textless backdrops are now preferred. When the art carries the title, our own logo stays off, and the cutout sits higher so its title stays on screen.
+- **Ambient Mode on Fire TV**: it could crash after a few films. Every film now frees its images when it leaves, large art is shrunk once and the full-size copy released, skipped preloads are freed, a stuck image can no longer stall a scene, a lost WebGL context falls back to the CSS mode, and TVs get a flat stage with no nested 3D layers or animated filters. In a Fire TV profile, 16 films in a row hold 1 to 2 live images and a steady 11 to 12 MB heap.
+- Includes the Peak Cinema fix from its own thread.
+
 ## Web app 2.7.32 (2026-11-04)
 
 - **Ambient Mode** replaces the screensaver: a layered 3D scene for each film from Home, your watchlist and Continue watching. Each scene lasts 14 seconds, the next one is loaded 5 seconds ahead, and scenes change with a 2-second Z-warp (the old scene pushes past you while the new one settles in).
