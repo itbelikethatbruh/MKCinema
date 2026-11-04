@@ -2,12 +2,23 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.7.29 (2026-11-04)
+
+- **Wallpapers with real depth**: the Home banner and the screensaver are now layered scenes that move at different speeds. The key art pushes in and pans (a Ken Burns move), two layers of drifting light (fine dust and soft bokeh) float between the art and the title and move faster than it, and the title logo slowly turns in 3D after it pops in. On a desktop, the mouse moves the layers against each other. Art is cropped toward faces (the top third) instead of the centre. Phones keep the calm banner.
+- **Screensaver**: the MKCinema mark in the corner is larger, bolder and brighter so it reads from the sofa, and the push is gentler so the art stays sharp on a TV. **Start screensaver** now sits at the top of Settings › Home.
+- 2.7.27 and 2.7.28 (exit prompt, endless rows, cropped art, TV contrast) are included; their own notes come with their pull requests.
+
 ## Web app 2.7.25 (2026-11-04)
 
 - **Wallpapers with 3D titles**: on TVs and desktops, Home's featured banner is now a wallpaper. The film's official key art runs edge to edge, up under the dock, and drifts slowly toward you. The title logo has a solid 3D edge (a thin rim light, a seven-step extruded side and a soft cast shadow) and pops forward each time the film changes. On a desktop, the art and the title move against each other with the mouse. Phones keep the rounded banner and get the 3D title and a short settle-in of the art. The banner's height comes from the screen, never the film, so the rows below never move.
 - **Screensaver**: when nothing has been pressed for a while, the screen fills with key art and 3D title logos from Home, your watchlist and Continue watching, with a clock, alternating sides so nothing burns in. Any button (or Back on the remote) returns you exactly where you were, and the press is not passed on. It never starts while something plays. Settings › Home › Screensaver: TV after 3 minutes, desktop after 10, phones off by default, plus a "Show now" preview.
 - In a Fire TV profile with a 6x slower CPU, rendering work while moving around Home is within run-to-run noise of 2.7.24 (no frames over 50 ms either way).
 
+## Web app 2.7.26 (2026-11-04)
+
+- **Peak Cinema, a scene surfer for when you can't decide**: start it from the panel under the featured banner on Home (or search "Peak Cinema"). It plays 90-second scenes from films in your catalogs and watchlist, one after another, with moods (Action, Sci-Fi, Thriller, Comedy, Horror, Animation, Drama). Keep watching opens the film in the player from that exact second, From the start opens it from the beginning, and Next scene skips. TV remotes: arrows and OK, plus Next track or Channel up/down to skip.
+- **Honest scene picking**: there is no public database of best-scene timestamps, so none is faked. A scene starts between about a third and three quarters of the way in, past the opening and before the credits. Skips and keeps are learned on the device only (genres you keep come up more, and the window moves toward the moments you stayed for), and the info button explains it and can reset it.
+- **Gentle on your accounts**: only sources your debrid service already has cached, in formats the device can decode, are used (1080p H.264 first, since many 4K HEVC files will not decode in browsers or TV apps). The browser jumps straight to the scene with a range request. One film is looked up at a time, at least 2.5 s apart, only the next scene is buffered, and a debrid link is requested only for the scene that plays next.
 ## Web app 2.7.23 (2026-11-04)
 
 - **Back from VLC lands on the film's page**: playing a source in VLC or another outside player no longer opens the in-app player with an "Opening in VLC" panel (whose buttons overlapped the player controls). MKCinema stays on the film's page, or opens it when you started from Home, and hands the stream to the app, so pressing Back in the player returns you to the source list. A short note says it is opening; if the app never takes over (not installed, or the browser wanted a tap), a quiet note says so and the sources are right there. The player's own "Open in another app" menu works the same way.
