@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.7.31 (2026-11-04)
+
+- **Featured banner back to calm**: the Home banner is back to how it was before 2.7.25, a rounded card with still art and a plain title. The dots, motion, edge-to-edge layout and turning title are gone, along with the extra graphics work they caused (Fire TV profile: layers back from 15 to 10 MPx). Only the top-biased crop stays, so faces aren't cut off. All the 3D and depth effects now live only in the screensaver.
+- Includes 2.7.30 (Peak Cinema on TVs uses one video element).
+
 ## Web app 2.7.29 (2026-11-04)
 
 - **Wallpapers with real depth**: the Home banner and the screensaver are now layered scenes that move at different speeds. The key art pushes in and pans (a Ken Burns move), two layers of drifting light (fine dust and soft bokeh) float between the art and the title and move faster than it, and the title logo slowly turns in 3D after it pops in. On a desktop, the mouse moves the layers against each other. Art is cropped toward faces (the top third) instead of the centre. Phones keep the calm banner.
