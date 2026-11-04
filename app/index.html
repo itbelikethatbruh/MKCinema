@@ -3258,7 +3258,7 @@ async function renderHome() {
       const metas = await engine.fetchCatalog(cat);
       // Home only shows rows that have something in them; empty or failing catalogs stay in Discover and the addon manager
       if (!metas.length) { sec.remove(); return; }
-      fillRail(sec, metas.slice(0, IS_TV ? 24 : 40).map((m) => cardHTML(m)).join(''));
+      { const shown = IS_TV ? 24 : 40; fillRail(sec, metas.slice(0, shown).map((m) => cardHTML(m)).join('')); if (typeof Endless !== 'undefined') Endless.attach(sec, cat, metas, Math.min(shown, metas.length)); }
       if (!heroSet && i <= 2) { heroSet = true; setHeroList(metas.filter((m) => m.background || m.poster).slice(0, 8)); }
     } catch (e) { sec.remove(); console.warn('Home row skipped:', cat.name, e.message); }
   }));
@@ -4746,8 +4746,15 @@ const Nav = {
   rects: new Map(),
   items(root) {
     const out = [], rects = this.rects; rects.clear();
+    const railR = new Map(), vh = innerHeight;
     for (const el of root.querySelectorAll('[data-nav], button, a[href], input, select, textarea, [tabindex="0"]')) {
       if (el.disabled || el.tabIndex < 0) continue;
+      const pr = el.parentElement;
+      if (pr && pr.classList.contains('rail')) {
+        let rr = railR.get(pr);
+        if (rr === undefined) { const b = pr.getBoundingClientRect(); rr = b.bottom > -vh * 1.5 && b.top < vh * 2.5; railR.set(pr, rr); }
+        if (!rr) continue;
+      }
       const r = el.getBoundingClientRect(); if (!(r.width > 0 && r.height > 0) || el.closest('[hidden]')) continue;
       rects.set(el, r); out.push(el);
     }
@@ -4764,7 +4771,7 @@ const Nav = {
   focus(el, fast) {
     $$('.nav-focus').forEach((x) => x.classList.remove('nav-focus'));
     el.classList.add('nav-focus'); el.focus({ preventScroll: true });
-    this.mem.set(this.root(), el); const rail = el.closest('.rail'); if (rail) rail._navLast = el;
+    this.mem.set(this.root(), el); const rail = el.closest('.rail'); if (rail) { rail._navLast = el; if (rail._inf) Endless.near(rail, el); }
     if (!IS_TV) { el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' }); return; }
     // TV: holding a direction scrolls instantly (smooth scrolls would queue up), the focused row sits mid-screen,
     // and the billboard comes fully back into view when you return to it
@@ -8324,7 +8331,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.7.26';
+const APP_VERSION = '2.7.28';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -9269,6 +9276,188 @@ html.tv .pk-strip .btn{height:58px}
 html.tv .pk-strip{flex-direction:column;align-items:flex-start;gap:18px}
 .pk .btn-ghost{background:rgba(14,14,16,.74);border-color:rgba(255,255,255,.12)}
 .pk,.pk-stage{outline:none}
+</style>
+<script>
+/* 2.7.27 Exit prompt */
+const ExitAsk = {
+  el: null, at: 0, key: null, armed: false,
+  ua: navigator.userAgent,
+  // only where Back really can leave the app: the MKCinema TV app and LG webOS
+  able() { return IS_TV && /MKCinemaAndroid|MKCinemaTV|Web0S|webOS/.test(this.ua); },
+  webos() { return /Web0S|webOS/.test(this.ua); },
+  canQuit() { return this.webos() || !!(window.MKAndroid && typeof MKAndroid.exit === 'function'); },
+  hold() {
+    if (!this.able()) return;
+    if (!this.key) { this.key = document.createElement('i'); this.key.className = 'tv-back-key'; this.key.setAttribute('aria-hidden', 'true'); document.body.appendChild(this.key); }
+    // any other element still carrying the id (a prompt, Peak, the screensaver) gives it up; back() closes those itself
+    const other = $('#remote'); if (other && other !== this.key) other.removeAttribute('id');
+    this.key.id = 'remote';
+  },
+  release() { if (this.key && this.key.id === 'remote') this.key.removeAttribute('id'); },
+  // something is on screen that Back should close first
+  busy() {
+    if (document.fullscreenElement) return true;
+    if (!$('#player').hidden || document.body.classList.contains('layer-open')) return true;
+    if (['castLayer', 'partyLayer', 'trailer', 'tour', 'stremioImport', 'palette', 'epSheet', 'askLayer', 'tastePick', 'settings', 'addons', 'detail'].some((id) => { const e = $(`#${id}`); return e && !e.hidden; })) return true;
+    if (typeof EpSheet !== 'undefined' && EpSheet.isOpen()) return true;
+    if ($('.focus-ask, .sup-ask')) return true;
+    if (typeof Remote !== 'undefined' && Remote.hintEl) return true;
+    if (typeof Saver !== 'undefined' && Saver.isOpen) return true;
+    if (typeof Peak !== 'undefined' && Peak.on) return true;
+    return false;
+  },
+  open() {
+    if (this.el) return;
+    this.prevFocus = document.activeElement;
+    const quit = this.canQuit();
+    const t = document.createElement('div'); t.className = 'exit-ask'; t.setAttribute('role', 'alertdialog'); t.setAttribute('aria-modal', 'true'); t.setAttribute('aria-labelledby', 'exitAskT');
+    t.innerHTML = `<div class="xa-card"><span class="xa-mark" aria-hidden="true">MK</span><h2 id="exitAskT">Leaving MKCinema?</h2><p>Press <b>Back</b> again to exit.</p><div class="xa-row"><button class="btn xa-stay" type="button" data-xa="stay">Keep watching</button>${quit ? '<button class="btn btn-ghost xa-quit" type="button" data-xa="quit">Exit</button>' : ''}</div></div>`;
+    document.body.appendChild(t); this.el = t; this.at = Date.now();
+    $('[data-xa="stay"]', t).onclick = () => this.close();
+    const q = $('[data-xa="quit"]', t); if (q) q.onclick = () => this.quit();
+    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('on')));
+    Nav.focus($('[data-xa="stay"]', t));
+    // a Back pressed by accident right after (a held or mashed key) only keeps the prompt; after that, Back exits
+    this.armed = false; clearTimeout(this.armT); this.armT = setTimeout(() => { if (this.el === t) { this.armed = true; this.release(); } }, 700);
+  },
+  close() {
+    const t = this.el; if (!t) return;
+    this.el = null; this.armed = false; clearTimeout(this.armT); this.hold();
+    t.classList.remove('on'); setTimeout(() => t.remove(), 300);
+    const f = this.prevFocus; this.prevFocus = null;
+    if (f && f.isConnected && f !== document.body) Nav.focus(f); else Nav.settle();
+  },
+  quit() {
+    try { if (window.MKAndroid && typeof MKAndroid.exit === 'function') { MKAndroid.exit(); return; } } catch (e) { /* older app */ }
+    try { if (window.webOSSystem && webOSSystem.close) { webOSSystem.close(); return; } } catch (e) { /* not webOS */ }
+    window.close();
+  },
+  // Back from the very top: leave fullscreen, then go to Home, then ask
+  root() {
+    if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); return; }
+    const h = $('#tabs .tab'); if (h && !h.classList.contains('on')) { h.click(); return; }
+    this.open();
+  },
+  init() {
+    if (!this.able()) return;
+    this.hold();
+    // whoever hands out the id from now on, the key keeps it
+    const hook = tvBackHook; tvBackHook = function () { hook.apply(this, arguments); ExitAsk.armed ? ExitAsk.release() : ExitAsk.hold(); };
+    const prev = back;
+    back = function () {
+      if (ExitAsk.el) { if (ExitAsk.armed) ExitAsk.close(); return; }
+      if (!ExitAsk.busy()) { ExitAsk.root(); return; }
+      return prev.apply(this, arguments);
+    };
+    const root = Nav.root.bind(Nav);
+    Nav.root = function () { return ExitAsk.el || root(); };
+    // webOS sends Back as a key; while the prompt is armed it closes the app, otherwise back() runs
+    if (ExitAsk.webos()) document.addEventListener('keydown', (e) => {
+      if (!(e.keyCode === 461 || e.key === 'GoBack' || e.key === 'BrowserBack')) return;
+      e.preventDefault(); e.stopImmediatePropagation();
+      if (ExitAsk.el && ExitAsk.armed) { ExitAsk.quit(); return; }
+      back();
+    }, true);
+    // the prompt never sits over a film the phone remote started
+    setInterval(() => { if (ExitAsk.el && ExitAsk.busy()) ExitAsk.close(); }, 1000);
+  },
+};
+ExitAsk.init();
+</script>
+<style>
+/* ===== 2.7.27 Exit prompt ===== */
+.tv-back-key{display:none!important}
+.exit-ask{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 45%,rgba(8,9,12,.82),rgba(0,0,0,.94) 70%);opacity:0;transition:opacity .28s var(--ease,ease)}
+.exit-ask.on{opacity:1}
+.exit-ask .xa-card{position:relative;width:min(520px,100%);display:grid;justify-items:center;gap:10px;padding:40px 40px 34px;border-radius:22px;text-align:center;color:#ececee;background:linear-gradient(160deg,#17181c,#0b0b0d 70%);border:1px solid rgba(255,255,255,.1);box-shadow:0 40px 90px -30px #000,inset 0 1px 0 rgba(255,255,255,.06);transform:translateY(14px) scale(.97);opacity:0;transition:transform .34s var(--ease,ease),opacity .3s}
+.exit-ask.on .xa-card{transform:none;opacity:1}
+.exit-ask .xa-mark{font-family:var(--f-serif,Georgia,serif);font-size:26px;letter-spacing:.06em;background:linear-gradient(120deg,#f4f4f5,#a1a1aa 55%,#e4e4e7);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:4px}
+.exit-ask h2{margin:0;font-family:var(--f-display);font-size:28px;font-weight:600;letter-spacing:-.01em;color:#f4f4f5}
+.exit-ask p{margin:0;color:#a1a1aa;font-size:16px}
+.exit-ask p b{color:#e4e4e7;font-weight:600}
+.exit-ask .xa-row{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap;justify-content:center}
+.exit-ask .btn{height:52px;padding-inline:28px;font-size:16px;border-radius:14px}
+.exit-ask .xa-stay{color:#0b0b0d;background:linear-gradient(120deg,#fafafa,#d4d4d8);border:0}
+.exit-ask .xa-quit{color:#e4e4e7;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.16)}
+</style>
+<script>
+/* Endless rows (2.7.28+) */
+/* Scrolling or pressing Right near the end of a Home row adds the next titles; "See all" stays in the header */
+const Endless = {
+  CHUNK: IS_TV ? 24 : 40, CAP: IS_TV ? 240 : 400,
+  attach(sec, cat, metas, shown) {
+    const rail = sec.querySelector('.rail'); if (!rail) return;
+    const ids = new Set(metas.map((m) => m.id));
+    rail._inf = { cat, buf: metas.slice(shown), ids, skip: metas.length, count: shown, done: !cat.extras.some((e) => e.name === 'skip'), busy: false, ended: false, fails: 0, waitTill: 0 };
+    if (rail._inf.done && !rail._inf.buf.length) this.end(rail);
+    else if (rail.scrollWidth <= rail.clientWidth * 1.5) this.near(rail);
+  },
+  // el: the poster the remote is on (TV), or nothing for a scroll
+  near(rail, el) {
+    const st = rail._inf; if (!st || st.busy || st.ended || performance.now() < st.waitTill) return;
+    if (el) { let x = el; for (let n = 0; n < 8 && x; n++) x = x.nextElementSibling; if (x) return; }
+    else if (rail.scrollLeft + rail.clientWidth < rail.scrollWidth - rail.clientWidth * 1.5) return;
+    this.more(rail);
+  },
+  async more(rail) {
+    const st = rail._inf; st.busy = true;
+    try {
+      if (st.buf.length < this.CHUNK && !st.done) {
+        if (!st.buf.length) rail.insertAdjacentHTML('beforeend', '<div class="skeleton rail-sk"></div>'.repeat(3));
+        try {
+          const metas = await engine.fetchCatalog(st.cat, { skip: st.skip });
+          st.skip += metas.length; st.fails = 0;
+          const add = metas.filter((m) => !st.ids.has(m.id)); add.forEach((m) => st.ids.add(m.id));
+          if (!add.length) st.done = true; else st.buf.push(...add);
+        } catch (e) { if (++st.fails >= 3) st.done = true; else st.waitTill = performance.now() + 4000; }
+        rail.querySelectorAll('.rail-sk').forEach((x) => x.remove());
+      }
+      if (!rail.isConnected) return;
+      const take = st.buf.splice(0, Math.max(0, Math.min(this.CHUNK, this.CAP - st.count)));
+      st.count += take.length;
+      if (take.length) { rail.insertAdjacentHTML('beforeend', take.map((m) => cardHTML(m)).join('')); icons(); queueWall(); }
+      if (st.count >= this.CAP || (st.done && !st.buf.length)) this.end(rail);
+    } finally { st.busy = false; }
+  },
+  end(rail) {
+    const st = rail._inf; if (!st || st.ended) return; st.ended = true;
+    rail.insertAdjacentHTML('beforeend', '<button class="rail-all" type="button" data-nav><i data-lucide="layout-grid"></i><span>See all</span></button>');
+    rail.lastElementChild.addEventListener('click', () => openCatalog(st.cat)); icons();
+  },
+};
+{
+  let pend = new Set(), raf = 0;
+  document.addEventListener('scroll', (e) => {
+    const r = e.target; if (!r || !r._inf || r._inf.ended) return;
+    pend.add(r); if (!raf) raf = requestAnimationFrame(() => { raf = 0; pend.forEach((x) => Endless.near(x)); pend.clear(); });
+  }, { capture: true, passive: true });
+}
+</script>
+<style>
+/* ===== Endless rows, uncropped art, TV contrast ===== */
+/* Art crops from the bottom, under the fade, so heads and faces stay in view */
+.d-hero .bg,.pal-top .pt-bg img{object-position:50% 12%}
+@media (min-width:761px) and (min-height:541px){.d-hero{min-height:clamp(300px,54vh,560px)}}
+/* the tile that ends an endless row */
+.rail-all{flex:none;align-self:stretch;width:clamp(120px,11vw,160px);display:grid;place-content:center;justify-items:center;gap:10px;border-radius:var(--r-m);border:1px solid var(--line-hi);background:rgba(255,255,255,.03);color:var(--ink);font-weight:600;font-size:14px;scroll-snap-align:start}
+.rail-all .lucide{width:26px;height:26px}
+@media (hover:hover){.rail-all:hover{background:rgba(255,255,255,.07)}}
+.rail>.skeleton.rail-sk{flex:none;width:clamp(132px,14vw,192px)}
+/* TV: no dark text on a light fill. Light text on dark with a platinum edge reads on every TV picture mode */
+html.tv .btn-prime,html.tv .btn-bolt,html.tv a.btn.btn-prime,html.tv a.btn.btn-bolt,html.tv .exit-ask .xa-stay{color:#fff!important;background:linear-gradient(180deg,#2b2b30,#121215)!important;box-shadow:inset 0 0 0 2px #e6e6e9!important;border:0}
+html.tv .btn-bolt>svg.lucide{background:#f2f2f3;color:#000;fill:#000;box-shadow:none}
+html.tv .sp-l small{color:rgba(255,255,255,.66)}
+html.tv .btn-bolt::after{display:none}
+html.tv .chip.on,html.tv .pk .chip.on,html.tv .segc button.on,html.tv .qp-g.on{color:#fff!important;background:#26262b!important;border-color:#f2f2f3!important;box-shadow:inset 0 0 0 1px #f2f2f3!important}
+html.tv .chip.on .tag-s{color:#fff!important;background:rgba(255,255,255,.12)!important;border-color:rgba(255,255,255,.45)!important}
+html.tv .tb.res,html.tv .tb.res.k4,html.tv .tb.deb{color:#fff;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.6)}
+html.tv .tb.res.k4,html.tv .tb.deb{color:#efe7d2;border-color:#d9d4c7;background:rgba(217,212,199,.14)}
+html.tv .imdb,html.tv .imdb.r-hi,html.tv .imdb.r-lo{color:#fff;background:#141417;box-shadow:inset 0 0 0 1.5px #f5c518}
+html.tv .imdb.r-hi{box-shadow:inset 0 0 0 1.5px #3fd98a}
+html.tv .imdb.r-lo{box-shadow:inset 0 0 0 1.5px #f07a66}
+html.tv .badge-r.r-hi,html.tv .badge-r.r-mid,html.tv .badge-r.r-lo{color:#fff;background:rgba(10,10,12,.88);box-shadow:inset 0 0 0 1.5px currentColor}
+html.tv .badge-r.r-hi{color:#7af0b4}html.tv .badge-r.r-mid{color:#ffd76a}html.tv .badge-r.r-lo{color:#ff9a85}
+html.tv .rail-all.nav-focus{background:rgba(255,255,255,.08)}
 </style>
 </body>
 </html>

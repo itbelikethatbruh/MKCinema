@@ -2,6 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.7.28 (2026-11-04)
+
+- **Endless rows**: Home catalog rows keep loading as you scroll right (touch, trackpad, mouse wheel) or press Right on a TV remote, first from the page already fetched and then from the addon's next page (the Stremio `skip` extra). "See all" stays in the row heading, and a See all tile closes the row when the catalog runs out (or after 240 posters on a TV, 400 elsewhere). The remote no longer measures posters in rows far off screen, so long rows don't slow every key press.
+- **Art keeps faces in view**: the details banner crops from the bottom, under the fade, instead of the middle, and is a little taller on wide screens, so heads are no longer cut off at the top.
+- **TV: no dark text on light buttons**: on some TVs dark text on the white Smart Play button, selected chips, the IMDb badge and the stream tags showed as white on white. On TV they are now light text on dark with a platinum edge.
+- Builds on 2.7.27 (Exit prompt on TV Back).
+
 ## Web app 2.7.26 (2026-11-04)
 
 - **Peak Cinema, a scene surfer for when you can't decide**: start it from the panel under the featured banner on Home (or search "Peak Cinema"). It plays 90-second scenes from films in your catalogs and watchlist, one after another, with moods (Action, Sci-Fi, Thriller, Comedy, Horror, Animation, Drama). Keep watching opens the film in the player from that exact second, From the start opens it from the beginning, and Next scene skips. TV remotes: arrows and OK, plus Next track or Channel up/down to skip.
