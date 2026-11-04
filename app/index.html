@@ -8625,7 +8625,7 @@ const Saver = {
   },
   build() {
     const el = document.createElement('div'); el.id = 'saver'; el.hidden = true; el.setAttribute('aria-hidden', 'true');
-    el.innerHTML = `<div class="sv-stage"></div><div class="sv-top"><div class="sv-brand"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="55" fill="none" stroke="url(#mkRing)" stroke-width="2"/><use href="#mkLetters" transform="translate(60 60) scale(.84)" fill="url(#mkPlat)"/></svg>MKCINEMA</div><div class="sv-clock"></div></div><div class="sv-hint">Press any button to return</div><i class="sv-back" hidden></i>`;
+    el.innerHTML = `<div class="sv-stage"></div><div class="sv-top"><div class="sv-brand"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="55" fill="none" stroke="url(#mkRing)" stroke-width="2"/><use href="#mkLetters" transform="translate(60 60) scale(.84)" fill="url(#mkPlat)"/></svg>MKCINEMA</div><div class="sv-clock"></div></div><div class="sv-hint">Press any button to return</div><i class="sv-back"></i>`;
     el.addEventListener('pointerdown', (e) => { e.preventDefault(); if (Date.now() - this.at > 500) this.close(); });
     el.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); });
     document.body.appendChild(el); return (this.el = el);
