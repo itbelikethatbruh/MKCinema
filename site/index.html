@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>MKCinema · Your addons, in a private cinema</title>
-<meta name="description" content="MKCinema is a free, open-source premium player for the Stremio addons you choose. Built-in debrid, VLC hand-off, watch parties, X-Ray and on-device picks. Apps for Android, Android TV, Fire TV, Windows, Mac and Linux.">
+<meta name="description" content="MKCinema is a free, open-source premium player for the Stremio addons you choose. Five looks and an Anime mode, a player with 200 % volume and Listen on phone, built-in debrid, VLC hand-off, watch parties and on-device picks. Apps for Android, Android TV, Fire TV, Windows, Mac and Linux.">
 <meta name="theme-color" content="#000000">
 <meta property="og:title" content="MKCinema">
 <meta property="og:description" content="Your addons, in a private cinema. Every device, one library, nothing to install.">
@@ -441,6 +441,61 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
   .stage.in .pop .pi{animation:fadeIn .8s ease calc(.4s + var(--i)*.15s) both}.stage.in .pop .pb{animation:none}
   .pop .pi{transform:none}
 }
+
+/* ---------- 2.20 refresh: colour pops, five looks, Anime, Listen ---------- */
+:root{--pink:#ff6fae;--rose:#ff2d55;--violet:#a08cff;--sky:#66c8ff;--teal:#45dcc6;--amber:#ffbd57;--pop:linear-gradient(100deg,#ff6fae 0%,#a08cff 38%,#66c8ff 70%,#45dcc6 100%)}
+.hero-glow{background:radial-gradient(closest-side at 32% 42%,rgba(160,140,255,.24),transparent 72%),radial-gradient(closest-side at 70% 36%,rgba(255,111,174,.17),transparent 72%),radial-gradient(closest-side at 54% 72%,rgba(69,220,198,.13),transparent 72%)}
+.popt{background:var(--pop);-webkit-background-clip:text;background-clip:text;color:transparent}
+.eyebrow::before{background:linear-gradient(90deg,transparent,currentColor)}
+#features .eyebrow{color:var(--violet)}#player .eyebrow{color:var(--sky)}#listen .eyebrow{color:var(--teal)}#anime .eyebrow{color:var(--pink)}#looks .eyebrow{color:var(--amber)}#together .eyebrow{color:var(--pink)}#privacy .eyebrow{color:var(--teal)}#compare .eyebrow{color:var(--violet)}
+.bento .card{--a:var(--violet)}
+.bento .card:nth-child(5n+1){--a:var(--pink)}.bento .card:nth-child(5n+2){--a:var(--violet)}.bento .card:nth-child(5n+3){--a:var(--sky)}.bento .card:nth-child(5n+4){--a:var(--teal)}.bento .card:nth-child(5n){--a:var(--amber)}
+.bento .card .ic{color:var(--a);background:linear-gradient(180deg,color-mix(in srgb,var(--a) 22%,#1d1d22),#121215);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--a) 45%,transparent),inset 0 1px 0 rgba(255,255,255,.14),0 10px 26px -10px color-mix(in srgb,var(--a) 60%,transparent)}
+.bento .card::before{background:radial-gradient(420px circle at var(--mx,50%) var(--my,0%),color-mix(in srgb,var(--a) 16%,transparent),transparent 62%)}
+.bento .card:hover{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--a) 40%,transparent),inset 0 1px 0 rgba(255,255,255,.06)}
+.tag.new{color:var(--teal);box-shadow:inset 0 0 0 1px rgba(69,220,198,.45)}
+.list.c li:nth-child(5n+1) svg{color:var(--sky)}.list.c li:nth-child(5n+2) svg{color:var(--violet)}.list.c li:nth-child(5n+3) svg{color:var(--pink)}.list.c li:nth-child(5n+4) svg{color:var(--teal)}.list.c li:nth-child(5n) svg{color:var(--amber)}
+.vis.wide{aspect-ratio:16/10}
+.vis.wide img{left:0;top:0;width:100%;height:104%}
+#player .vis.wide{box-shadow:inset 0 0 0 1px rgba(102,200,255,.28),0 60px 120px -40px rgba(102,200,255,.28)}
+/* Listen on phone */
+.lv{position:relative;border-radius:28px;aspect-ratio:5/4;display:grid;place-items:center;overflow:hidden;background:radial-gradient(60% 70% at 30% 30%,rgba(69,220,198,.22),transparent 70%),radial-gradient(60% 60% at 80% 80%,rgba(102,200,255,.18),transparent 70%),linear-gradient(160deg,#0d1416,#050607);box-shadow:inset 0 0 0 1px rgba(69,220,198,.22)}
+.lv img{position:absolute;top:5%;left:50%;transform:translateX(-50%);height:90%;width:auto;border-radius:30px;box-shadow:0 0 0 7px #0b0b0d,0 0 0 8px rgba(255,255,255,.14),0 40px 90px -20px #000}
+.lv .wave{position:absolute;left:8%;top:16%;display:flex;gap:6px;align-items:flex-end;height:60px}
+.lv .wave i{width:6px;border-radius:4px;background:linear-gradient(180deg,var(--teal),var(--sky));animation:wv 1.4s ease-in-out infinite;transform-origin:bottom;height:100%}
+.lv .wave i:nth-child(2){animation-delay:-.3s}.lv .wave i:nth-child(3){animation-delay:-.6s}.lv .wave i:nth-child(4){animation-delay:-.9s}.lv .wave i:nth-child(5){animation-delay:-1.2s}
+@keyframes wv{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+.steps3{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.steps3 span{display:inline-flex;align-items:center;gap:10px;padding:9px 14px 9px 9px;border-radius:999px;font-size:14px;color:var(--mute);box-shadow:inset 0 0 0 1px var(--line2);background:rgba(255,255,255,.03)}
+.steps3 b{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--teal);color:#04120f;font-size:12.5px}
+/* Anime */
+#anime{overflow:hidden;background:radial-gradient(50% 60% at 15% 20%,rgba(255,45,85,.16),transparent 70%),radial-gradient(50% 60% at 90% 70%,rgba(160,80,255,.18),transparent 70%),linear-gradient(180deg,#000,#0e0616 30%,#0e0616 70%,#000)}
+#anime h2 em{background:linear-gradient(100deg,#ff2d55,#ff6fae 45%,#c08cff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.an-stage{position:relative;margin-top:56px}
+.an-stage .big{border-radius:24px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,111,174,.3),0 60px 140px -40px rgba(255,45,85,.35)}
+.an-stage .big img{width:100%;height:auto}
+.an-stage .ph{position:absolute;right:-1%;bottom:-8%;width:min(25%,250px);border-radius:28px;overflow:hidden;box-shadow:0 0 0 6px #0b0b0d,0 0 0 7px rgba(255,111,174,.35),0 40px 80px -20px #000}
+.an-stage .ph img{width:100%;height:auto}
+.an-feats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:72px}
+.an-feats div{padding:22px;border-radius:18px;background:linear-gradient(180deg,rgba(255,111,174,.08),rgba(255,255,255,.015));box-shadow:inset 0 0 0 1px rgba(255,111,174,.18)}
+.an-feats b{display:block;font:600 17px/1.3 var(--sans);margin-bottom:6px;color:#ffe3ee}
+.an-feats p{font-size:14.5px;color:var(--mute)}
+.petal{position:absolute;top:-6%;width:14px;height:10px;border-radius:12px 0 12px 0;background:linear-gradient(135deg,#ffc1d9,#ff6fae);opacity:.75;pointer-events:none;animation:fall linear infinite}
+@keyframes fall{0%{transform:translate3d(0,0,0) rotate(0)}100%{transform:translate3d(-120px,1400px,0) rotate(540deg)}}
+/* Looks */
+.looks{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:56px}
+.lk{border-radius:20px;padding:16px;background:var(--l0);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);min-height:210px;display:flex;flex-direction:column;justify-content:flex-end;position:relative;overflow:hidden}
+.lk::before{content:"";position:absolute;left:16px;right:16px;top:16px;height:78px;border-radius:12px;background:linear-gradient(135deg,var(--lb),var(--l0));box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.lk::after{content:"";position:absolute;left:28px;top:34px;width:44%;height:9px;border-radius:5px;background:var(--la);box-shadow:0 18px 0 -1px rgba(255,255,255,.18),0 34px 0 -1px rgba(255,255,255,.1)}
+.lk b{font:600 17px/1.2 var(--sans);color:var(--la)}
+.lk small{display:block;margin-top:6px;font-size:13px;line-height:1.45;color:rgba(255,255,255,.66)}
+.lk.wheel{background:#060607}
+.lk.wheel::before{left:50%;top:18px;width:96px;height:96px;transform:translateX(-50%);border-radius:50%;background:conic-gradient(#ff5f5f,#ffbd57,#f4e36b,#45dcc6,#66c8ff,#a08cff,#ff6fae,#ff5f5f);-webkit-mask:radial-gradient(closest-side,transparent 68%,#000 70%);mask:radial-gradient(closest-side,transparent 68%,#000 70%);box-shadow:none}
+.lk.wheel::after{display:none}
+.lk.wheel b{background:var(--pop);-webkit-background-clip:text;background-clip:text;color:transparent}
+@media (max-width:980px){.looks{grid-template-columns:repeat(3,1fr)}.an-feats{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.looks{grid-template-columns:repeat(2,1fr)}.an-feats{grid-template-columns:1fr}.an-stage .ph{width:34%;right:2%;bottom:-14%}.lv .wave{display:none}}
+@media (prefers-reduced-motion:reduce){.petal,.lv .wave i{animation:none}}
 </style>
 </head>
 <body>
@@ -453,7 +508,13 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
     <linearGradient id="mkSheen" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
     <clipPath id="mkClip"><use href="#mkLetters" transform="translate(60 60) scale(.84)"/></clipPath>
     <symbol id="logo" viewBox="0 0 120 120"><circle cx="60" cy="60" r="55" fill="#050505" stroke="url(#mkRing)" stroke-width="3"/><use href="#mkLetters" fill="url(#mkPlat)" transform="translate(60 60) scale(.8)"/></symbol>
-    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-head" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></symbol>
+<symbol id="i-torii" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4c5 1.3 11 1.3 16 0M4 8h16M7 5v15M17 5v15M12 8V5"/></symbol>
+<symbol id="i-vol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></symbol>
+<symbol id="i-lang" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
     <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></symbol>
     <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
     <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></symbol>
@@ -508,6 +569,8 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
     <a class="brand" href="#top" aria-label="MKCinema home"><svg aria-hidden="true"><use href="#logo"/></svg><span><b>MK</b><i>Cinema</i></span></a>
     <nav class="links" aria-label="Sections">
       <a href="#features">Features</a>
+      <a href="#player">Player</a>
+      <a href="#anime">Anime</a>
       <a href="#compare">Why MKCinema</a>
       <a href="#start">Get started</a>
       <a href="#install">Download</a>
@@ -526,6 +589,8 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
     <button class="menu-btn" id="closeBtn" aria-label="Close menu" style="display:inline-flex;margin:0"><svg><use href="#i-x"/></svg></button>
   </div>
   <a class="l" href="#features">Features</a>
+  <a class="l" href="#player">Player</a>
+  <a class="l" href="#anime">Anime</a>
   <a class="l" href="#compare">Why MKCinema</a>
   <a class="l" href="#start">Get started</a>
   <a class="l" href="#install">Download</a>
@@ -542,8 +607,8 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
   <div class="wrap hero-grid">
     <div>
       <span class="eyebrow rv">The premium addon player</span>
-      <h1 class="rv d1"><span class="nw">Your addons.</span><br><em class="plat nw">A private cinema.</em></h1>
-      <p class="lead rv d2">MKCinema plays the Stremio addons you choose in a matte-black cinema built for every screen. Debrid built in, one tap to VLC, watch parties, X-Ray and picks that never leave your device.</p>
+      <h1 class="rv d1"><span class="nw">Your addons.</span><br><em class="popt nw">A private cinema.</em></h1>
+      <p class="lead rv d2">MKCinema plays the Stremio addons you choose in a cinema that looks the way you like it: five looks, a colour wheel and an Anime mode. Debrid built in, a player that can send the sound to your phone, watch parties and picks that never leave your device.</p>
       <div class="cta rv d3">
         <a class="btn btn-plat" href="https://mkcinema.pages.dev/"><svg><use href="#i-play"/></svg>Open MKCinema</a>
         <a class="btn btn-ghost" href="#install" id="heroDl"><svg><use href="#i-down"/></svg>Download the app</a>
@@ -569,7 +634,7 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
       <div class="lyr lyr-ph" style="--d:2.2"><div class="phone" id="phone"><img src="shots/phone.webp" width="520" height="1097" alt="" loading="lazy"></div></div>
       <div class="lyr pop pop1" style="--d:3.2;--i:0"><span class="pb"><span class="pi"><svg><use href="#i-bolt"/></svg><b>Cached</b><small>4K · HDR · plays now</small></span></span></div>
       <div class="lyr pop pop2" style="--d:2.6;--i:1"><span class="pb"><span class="pi"><svg><use href="#i-play"/></svg><b>Smart Play</b><small>Best stream, picked for you</small></span></span></div>
-      <div class="lyr pop pop3" style="--d:3.8;--i:2"><span class="pb"><span class="pi"><svg><use href="#i-users"/></svg><b>Watch party</b><small>3 friends, perfectly in sync</small></span></span></div>
+      <div class="lyr pop pop3" style="--d:3.8;--i:2"><span class="pb"><span class="pi"><svg><use href="#i-head"/></svg><b>Listen on phone</b><small>TV sound in your headphones</small></span></span></div>
       <div class="lyr pop pop4" style="--d:2.9;--i:3"><span class="pb"><span class="pi"><svg><use href="#b-vlcmediaplayer"/></svg><b>One tap to VLC</b><small>Or any player you like</small></span></span></div>
     </div>
   </div>
@@ -598,8 +663,13 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
       <article class="card rv d1"><div class="ic"><svg><use href="#i-sync"/></svg></div><h3>Sync everywhere</h3><p>Sign in with email to carry your library, progress, addons and settings to every device you use. Scrobble to Trakt or Simkl too.</p><div class="logos"><span class="lg"><svg><use href="#b-trakt"/></svg>Trakt</span><span class="lg"><img class="inv" src="logos/simkl.png" alt="" width="28" height="28" loading="lazy">Simkl</span></div></article>
       <article class="card rv d2"><div class="ic"><svg><use href="#i-globe"/></svg></div><h3>Browser only mode</h3><p>Can't install a player? MKCinema lists only the sources your browser can play with picture and sound.</p></article>
       <article class="card rv"><div class="ic"><svg><use href="#i-film"/></svg></div><h3>Peak Cinema</h3><p>Can't decide? Surf 90-second scenes from films in your catalogs and watchlist, by mood. Keep watching opens the film at that exact second.</p></article>
-      <article class="card rv d1"><div class="ic"><svg><use href="#i-palette"/></svg></div><h3>Four themes</h3><p>Noir by default, plus Midnight, Velvet and Sepia. Each one keeps the same contrast and readable type. Want more? Add community themes and plugins from a reviewed gallery.</p></article>
+      <article class="card rv d1"><div class="ic"><svg><use href="#i-palette"/></svg></div><h3>Five looks, any colour</h3><p>Noir, Midnight, Velvet, Sepia and Anime, plus a colour wheel that tints the whole app. Your choice follows your account to every screen.</p></article>
       <article class="card rv d2"><div class="ic"><svg><use href="#i-layers"/></svg></div><h3>Ambient Mode</h3><p>A screensaver that turns your Home into layered, slowly moving film art. OK opens the film, Back returns you exactly where you were.</p></article>
+      <article class="card w3 rv"><div class="ic"><svg><use href="#i-head"/></svg></div><h3>Listen on your phone</h3><p>The film plays on the TV and the sound comes out of your phone, so you can watch with headphones while the house sleeps. No app to install: it's the phone remote you already scan.</p><span class="tag new">New in 2.20</span></article>
+      <article class="card w3 rv d1"><div class="ic"><svg><use href="#i-vol"/></svg></div><h3>Volume to 200 %</h3><p>Quiet film, small speakers? The slider goes past 100 % and turns champagne so you know you're boosting. Night Mode keeps whispers and explosions level.</p><span class="tag new">New in 2.20</span></article>
+      <article class="card rv"><div class="ic"><svg><use href="#i-lang"/></svg></div><h3>Speaks your language</h3><p>Menus in English, Español, Português, Français, Deutsch, Italiano and हिन्दी. It follows your device, or pick one in Settings.</p></article>
+      <article class="card rv d1"><div class="ic"><svg><use href="#i-list"/></svg></div><h3>MDBList rows</h3><p>Add any MDBList list as a row on Home with your own free API key. Curated lists, award shortlists, whatever you follow.</p></article>
+      <article class="card rv d2"><div class="ic"><svg><use href="#i-bell"/></svg></div><h3>New-episode alerts</h3><p>One quiet notice when a series you follow gets a new episode, checked on your own device. No server reads your list.</p></article>
       <article class="card w3 rv"><div class="ic"><svg><use href="#i-skip"/></svg></div><h3>Skip Intro and next episode</h3><p>Skip intros, endings and credits, anime included from any addon, and get a 10-second countdown to the next episode while its sources warm up. If a source stalls, MKCinema moves to the next one by itself.</p></article>
       <article class="card w3 rv d1"><div class="ic"><svg><use href="#i-phone"/></svg></div><h3>Your phone as a remote</h3><p>Scan the code on your TV and your phone becomes a touchpad or D-pad with play, seek, volume and subtitles. Type searches on the phone's keyboard, by voice where it's supported.</p></article>
       <article class="card w3 rv"><div class="ic"><svg><use href="#i-monitor"/></svg></div><h3>Show it on Discord</h3><p>Your Discord profile shows "Watching" and the title while a film plays, with the poster and time left. Switch it on in the Windows app under Settings › Desktop app.</p><div class="logos"><span class="lg"><svg><use href="#b-windows"/></svg>Windows app</span></div></article>
@@ -614,25 +684,76 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
 <section id="player">
   <div class="wrap split">
     <div>
-      <span class="eyebrow rv">The player</span>
+      <span class="eyebrow rv">The player, rebuilt in 2.20</span>
       <h2 class="rv d1">A screening room,<br><em>not a video tag.</em></h2>
-      <p class="lead rv d2">MKCinema's player was built for long nights on the sofa and quick episodes on a train.</p>
-      <ul class="list rv d3">
-        <li><svg><use href="#i-wave"/></svg><span><b>Night Mode audio.</b> Brings whispers and explosions closer together, with Vocal Boost and Spatial Widen presets.</span></li>
-        <li><svg><use href="#i-cc"/></svg><span><b>Subtitles that fit.</b> OpenSubtitles built in, your own files by drag and drop, and a sync strip you drag into place.</span></li>
-        <li><svg><use href="#i-phone"/></svg><span><b>Made for touch.</b> Double-tap to skip, pinch to fill, a lock button, and controls that stay clear of the notch.</span></li>
-        <li><svg><use href="#i-chip"/></svg><span><b>Audio rescue.</b> With your own MKCinema server and ffmpeg, Dolby and DTS sound in MKV files plays in the browser.</span></li>
+      <p class="lead rv d2">Edge-to-edge picture, times beside the bar, and every option one tab away: Playback, Picture, Audio and More.</p>
+      <ul class="list c rv d3">
+        <li><svg><use href="#i-vol"/></svg><span><b>Volume to 200 %.</b> A real boost through the audio engine, plus Night Mode, Vocal Boost and Spatial Widen.</span></li>
+        <li><svg><use href="#i-phone"/></svg><span><b>Gestures that feel native.</b> Hold for 2× speed, swipe the left side for brightness, the right for volume, sideways to seek.</span></li>
+        <li><svg><use href="#i-cc"/></svg><span><b>Subtitles done properly.</b> Styled anime subtitles with their fonts and signs, subtitles and chapters from inside MKV files, OpenSubtitles, and a sync strip you drag.</span></li>
+        <li><svg><use href="#i-spark"/></svg><span><b>It remembers.</b> Your speed for each title and your subtitle delay for each file come back next time.</span></li>
+        <li><svg><use href="#i-chip"/></svg><span><b>Stats for nerds.</b> Press I for picture, frames, buffer, network and sound details. Press ? for every shortcut.</span></li>
       </ul>
     </div>
-    <div class="vis pv rv d1" aria-hidden="true">
-      <div class="frame"></div>
-      <div class="xray"><small>X-RAY · CAST</small><div class="cast"><i></i><i></i><i></i><i></i></div><div class="xl"></div><div class="xl s"></div></div>
-      <div class="eq"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-      <div class="bar"></div>
-      <div class="skip">Skip Intro</div>
+    <div class="vis real wide rv d1" aria-hidden="true"><img src="shots/player.webp" width="1600" height="1000" alt="" loading="lazy"></div>
+  </div>
+</section>
+
+<!-- Listen on phone -->
+<section id="listen" style="padding-top:0">
+  <div class="wrap split rev">
+    <div>
+      <span class="eyebrow rv">Listen on phone</span>
+      <h2 class="rv d1">The TV plays.<br><em class="popt">Your headphones hear it.</em></h2>
+      <p class="lead rv d2">Late film, sleeping house? Tap Listen on the phone remote and the TV's sound moves to your phone, live and in stereo. The TV goes quiet, and the lock screen controls the film.</p>
+      <div class="steps3 rv d3"><span><b>1</b>Scan the code on the TV</span><span><b>2</b>Tap Listen on this phone</span><span><b>3</b>Plug in your headphones</span></div>
+    </div>
+    <div class="lv rv d1" aria-hidden="true"><div class="wave"><i></i><i></i><i></i><i></i><i></i></div><img src="shots/listen.webp" width="600" height="1301" alt="" loading="lazy"></div>
+  </div>
+</section>
+
+<!-- Anime -->
+<section id="anime">
+  <i class="petal" style="left:12%;animation-duration:15s;animation-delay:-3s"></i><i class="petal" style="left:34%;animation-duration:19s;animation-delay:-11s"></i><i class="petal" style="left:58%;animation-duration:17s;animation-delay:-6s"></i><i class="petal" style="left:77%;animation-duration:21s;animation-delay:-14s"></i><i class="petal" style="left:92%;animation-duration:16s;animation-delay:-1s"></i>
+  <div class="wrap">
+    <div class="center">
+      <span class="eyebrow rv">For anime fans</span>
+      <h2 class="rv d1">An Anime mode,<br><em>made with care.</em></h2>
+      <p class="lead rv d2">Its own Anime tab with what's trending and airing now, and an Anime look in crimson and violet with sakura petals and Miko, our mascot. Playing still uses your own addons, like everything else.</p>
+    </div>
+    <div class="an-stage rv d2">
+      <div class="big"><img src="shots/anime.webp" width="1600" height="1000" alt="The Anime tab in MKCinema: trending, airing now, most popular and top rated" loading="lazy"></div>
+      <div class="ph"><img src="shots/phone-anime.webp" width="600" height="1301" alt="The Anime look on a phone" loading="lazy"></div>
+    </div>
+    <div class="an-feats">
+      <div class="rv"><b>Styled subtitles</b><p>Fansub fonts, signs, positions and karaoke render the way they were made, right in the browser.</p></div>
+      <div class="rv d1"><b>Skip the opening</b><p>A Skip button for openings and endings, whichever addon the episode comes from.</p></div>
+      <div class="rv d2"><b>AniList and MyAnimeList</b><p>Your progress is marked when you finish an episode, and your lists come in on import.</p></div>
+      <div class="rv d3"><b>Trending to top rated</b><p>Four rows from Kitsu: Trending, Airing now, Most popular and Top rated.</p></div>
     </div>
   </div>
 </section>
+
+<!-- Looks -->
+<section id="looks">
+  <div class="wrap">
+    <div class="center">
+      <span class="eyebrow rv">Make it yours</span>
+      <h2 class="rv d1">Five looks.<br><em class="popt">Any colour you like.</em></h2>
+      <p class="lead rv d2">Every look stays dark so the poster art leads, and each keeps the same readable contrast on phones and TVs. Switch in Settings › Appearance and it follows your account.</p>
+    </div>
+    <div class="looks">
+      <div class="lk rv" style="--l0:#000;--lb:#1b1b1e;--la:#d9d4c7"><b>Noir</b><small>Black, platinum type and fine hairlines. The original.</small></div>
+      <div class="lk rv d1" style="--l0:#05070c;--lb:#16223a;--la:#bccde4"><b>Midnight</b><small>Ink blue and ice silver, like a cinema before the lights go down.</small></div>
+      <div class="lk rv d2" style="--l0:#0a0506;--lb:#3a1820;--la:#e3c8bd"><b>Velvet</b><small>Deep oxblood and soft ivory, with rose gold.</small></div>
+      <div class="lk rv d3" style="--l0:#0a0805;--lb:#33261a;--la:#e8d7b8"><b>Sepia</b><small>Warm umber, cream type and amber, like old film stock.</small></div>
+      <div class="lk rv" style="--l0:#0e0616;--lb:#3a1240;--la:#ff2d55"><b>Anime</b><small>Crimson and violet night, sakura and Miko. Early access.</small></div>
+      <div class="lk wheel rv d1"><b>Your colour</b><small>Turn one wheel and the whole app follows.</small></div>
+    </div>
+  </div>
+</section>
+
+<div class="hair"></div>
 
 <!-- Together -->
 <section id="together">
@@ -693,6 +814,7 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
           <tr><td>Your phone as a remote, no app needed<small>Scan the code on the TV</small></td><td class="mk"><span class="m y" title="Built in"><svg><use href="#i-check"/></svg></span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td><td><span class="m h" title="Partly, or only on some devices">◐</span></td><td><span class="m h" title="Partly, or only on some devices">◐</span></td><td><span class="m h" title="Partly, or only on some devices">◐</span></td></tr>
           <tr><td>Your own M3U or Xtream channels with a guide<small>XMLTV listings built in</small></td><td class="mk"><span class="m y" title="Built in"><svg><use href="#i-check"/></svg></span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td><td><span class="m y" title="Built in"><svg><use href="#i-check"/></svg></span></td><td><span class="m y" title="Built in"><svg><use href="#i-check"/></svg></span></td></tr>
           <tr><td>Split Screen, up to four streams at once<small>Channels, matches, anything, side by side</small></td><td class="mk"><span class="m y" title="Built in"><svg><use href="#i-check"/></svg></span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td></tr>
+          <tr><td>Hear the TV on your phone, in your headphones<small>Live sound to the phone remote, no app to install</small></td><td class="mk"><span class="m y" title="Built in"><svg><use href="#i-check"/></svg></span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td></tr>
           <tr><td>Ask for picks in plain words<small>Worked out on your device, never sent anywhere</small></td><td class="mk"><span class="m y" title="Built in"><svg><use href="#i-check"/></svg></span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td></tr>
           <tr><td>Plugins and themes from a reviewed gallery<small>Each file checked before it runs</small></td><td class="mk"><span class="m y" title="Built in"><svg><use href="#i-check"/></svg></span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td><td><span class="m y" title="Built in"><svg><use href="#i-check"/></svg></span></td><td><span class="m y" title="Built in"><svg><use href="#i-check"/></svg></span></td></tr>
           <tr><td>Import your Stremio library, progress and addons<small>One step, password never stored</small></td><td class="mk"><span class="m y" title="Built in"><svg><use href="#i-check"/></svg></span></td><td><span class="m d" title="Does not apply">–</span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td><td><span class="m n" title="Not built in"><svg><use href="#i-x"/></svg></span></td></tr>
@@ -753,7 +875,7 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
         <h3>Android</h3>
         <p>The full app for phones, tablets and Android TVs, with a full-screen player and one-tap hand-off to VLC.</p>
         <a class="btn btn-plat" href="download/MKCinema.apk" download="MKCinema.apk"><svg><use href="#i-down"/></svg>Download APK</a>
-        <span class="fine">Version 1.4.0 · 12 MB · Android 7 or later</span>
+        <span class="fine">Version 1.5.0 · 12 MB · Android 7 or later</span>
       </div>
       <div class="dlc rv d1">
         <div class="dl-top"><div class="ic brand-ic"><svg><use href="#b-windows"/></svg></div><span class="pill ok">Available now</span></div>
@@ -787,7 +909,7 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
         <div class="tv-act">
           <a class="btn btn-plat" href="download/MKCinema-TV.apk" download="MKCinema-TV.apk"><svg><use href="#i-down"/></svg>Android TV &amp; Fire TV</a>
           <a class="btn btn-ghost" href="download/com.mkcinema.app_1.1.0_all.ipk" download><svg><use href="#i-down"/></svg>LG webOS .ipk (beta)</a>
-          <span class="fine">Version 1.4.0 · 12 MB · Android TV 7 or later. On Fire TV, open Downloader and type <b>mkctv.pages.dev</b></span>
+          <span class="fine">Version 1.5.0 · 12 MB · Android TV 7 or later. On Fire TV, open Downloader and type <b>mkctv.pages.dev</b></span>
         </div>
       </div>
     </div>
@@ -879,7 +1001,7 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
       <h2 class="rv d1">Questions,<br><em>answered.</em></h2>
     </div>
     <div class="faq rv">
-      <details><summary>What is MKCinema?<i></i></summary><div class="a">A premium web player for Stremio-compatible addons. It brings your catalogues, sources and subtitles together in one library, with a player built for phones, tablets and big screens.</div></details>
+      <details><summary>What is MKCinema?<i></i></summary><div class="a">A premium player for Stremio-compatible addons. It brings your catalogues, sources and subtitles together in one library you can style your way, with a player built for phones, tablets and big screens.</div></details>
       <details><summary>Does MKCinema provide movies or shows?<i></i></summary><div class="a">No. MKCinema hosts no titles, channels or streams. Catalogues come from Cinemeta, subtitles from OpenSubtitles, and the only built-in source is official trailers. Anything else comes from addons you choose to install, and you are responsible for using them lawfully where you live.</div></details>
       <details><summary>Is it free and open source?<i></i></summary><div class="a">Yes to both. Every feature is included, with no ads and no paid tier, and the code is public on <a href="https://github.com/itbelikethatbruh/MKCinema" target="_blank" rel="noopener">GitHub</a> under GPL-3.0. If you enjoy it, you can support development with an optional PayPal donation.</div></details>
       <details><summary>Do I need an account?<i></i></summary><div class="a">No. Everything works without one. Signing in with email and password adds sync of your library, progress, addons and settings across your devices.</div></details>

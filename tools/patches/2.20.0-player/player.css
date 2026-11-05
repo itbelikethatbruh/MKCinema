@@ -64,3 +64,5 @@ html.tv .px-seekrow{gap:18px}
 html.tv .px-t{font-size:15px}
 html.tv #optMenu .px-tabs button.nav-focus{outline:none;box-shadow:0 0 0 2px #f2f2f3}
 #player #video,#player .hud,#player .hud-mid,#player .px-dim{touch-action:none}
+/* sweep: an empty list's note spans the grid instead of squeezing into one poster column */
+.grid>.empty{grid-column:1/-1}

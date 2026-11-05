@@ -47,7 +47,7 @@ Sign-in is plain email and password through Supabase Auth, with a password reset
 
 - Account: Supabase sign-in and cloud sync.
 - Intro & sound: the intro and its soundtrack. The interface itself makes no sounds.
-- Appearance: four themes, Noir (matte black, platinum type, hairlines; champagne only for small highlights) by default, plus Midnight, Velvet and Sepia. Each keeps the same contrast, and the player stays true black. Nothing animates behind the page, which keeps scrolling smooth on phones. Poster text (on hover, below the poster, or always), the optional curved IMAX wall (desktop), interface size, reduced motion.
+- Appearance: five looks, Noir (black, platinum type, hairlines; champagne only for small highlights) by default, plus Midnight, Velvet, Sepia and Anime (early access: crimson and violet, sakura and Miko), and a colour wheel that tints the whole app. Each keeps the same contrast, and the player stays true black. Nothing animates behind the page, which keeps scrolling smooth on phones. Poster text (on hover, below the poster, or always), the optional curved IMAX wall (desktop), interface size, reduced motion.
 - Performance: Low is the default (solid black panels). High and Balanced add frosted glass on desktop; phones and tablets always use solid panels. Glass blur can be fine-tuned, and the frame rate can be shown. Video quality is unaffected.
 - Playback: play streams in MKCinema or an outside app (see below), max quality, preferred format, autoplay next, resume, seek step, default speed, ambilight and its strength.
 - Subtitles: auto-select a language, size, color, background, font, outline and position.
