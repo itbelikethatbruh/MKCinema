@@ -36,6 +36,8 @@ import android.content.Context;
 import android.content.IntentFilter;
 import android.os.Environment;
 import android.provider.Settings;
+import android.app.PictureInPictureParams;
+import android.util.Rational;
 import java.util.ArrayList;
 import org.json.JSONObject;
 
@@ -44,7 +46,7 @@ public class MainActivity extends Activity {
     static final String HOME = "https://mkcinema.pages.dev/";
     static final String HOST = "mkcinema.pages.dev";
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5;
-    static final String VER = "1.2.5";
+    static final String VER = "1.2.6";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -55,6 +57,8 @@ public class MainActivity extends Activity {
     ValueCallback<Uri[]> fileCb;
     PermissionRequest pendingPerm;
     boolean tv;
+    /** Phone picture-in-picture (1.2.6): the page reports when a film plays, and its shape */
+    volatile boolean pipPlaying; volatile int pipW = 16, pipH = 9; boolean wasPip;
     volatile String pageHost = "";
     SpeechRecognizer recognizer;
     String voiceLang;
@@ -299,6 +303,18 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public void voiceStop() { runOnUiThread(() -> { if (recognizer != null) recognizer.cancel(); }); }
         @JavascriptInterface public String version() { return VER; }
+        /** Phones: the page says a film is playing (or stopped) and its frame size, so leaving the app shrinks it into a window. */
+        @JavascriptInterface public void pipState(boolean playing, int w, int h) {
+            if (!HOST.equals(pageHost) || tv) return;
+            pipPlaying = playing; if (w > 0 && h > 0) { pipW = w; pipH = h; }
+            if (Build.VERSION.SDK_INT >= 31) runOnUiThread(() -> { try { setPictureInPictureParams(pipParams()); } catch (Exception ignored) { } });
+        }
+        /** Phones: the player's picture-in-picture button (WebViews have no requestPictureInPicture). */
+        @JavascriptInterface public boolean pip() {
+            if (!HOST.equals(pageHost) || tv || Build.VERSION.SDK_INT < 26) return false;
+            runOnUiThread(MainActivity.this::enterPip);
+            return true;
+        }
         /** The TV player: {url, title, sub, startMs, subUrl, matchRate} */
         @JavascriptInterface public boolean play(String json) {
             if (!HOST.equals(pageHost)) return false;
@@ -438,8 +454,40 @@ public class MainActivity extends Activity {
         + "if(h&&!h.classList.contains('on')){h.click();return true;}"
         + "}catch(e){}return false;})()";
 
+    PictureInPictureParams pipParams() {
+        // Android accepts shapes between 1:2.39 and 2.39:1
+        double r = Math.max(1 / 2.39, Math.min(2.39, (double) pipW / pipH));
+        PictureInPictureParams.Builder b = new PictureInPictureParams.Builder().setAspectRatio(new Rational((int) Math.round(r * 1000), 1000));
+        if (Build.VERSION.SDK_INT >= 31) b.setAutoEnterEnabled(pipPlaying).setSeamlessResizeEnabled(true);
+        return b.build();
+    }
+    void enterPip() {
+        if (Build.VERSION.SDK_INT < 26 || tv) return;
+        try { if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) return; enterPictureInPictureMode(pipParams()); } catch (Exception ignored) { }
+    }
+    @Override protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        // Android 12+ enters by itself (setAutoEnterEnabled); older phones need the call
+        if (pipPlaying && Build.VERSION.SDK_INT >= 26 && Build.VERSION.SDK_INT < 31) enterPip();
+    }
+    @Override public void onPictureInPictureModeChanged(boolean in, Configuration c) {
+        super.onPictureInPictureModeChanged(in, c);
+        if (in) wasPip = true;
+        if (web != null) web.evaluateJavascript("window.MKPip&&MKPip.mode(" + in + ")", null);
+    }
+    @Override protected void onStop() {
+        super.onStop();
+        // The window was swiped away: stop the film instead of playing on unseen
+        if (wasPip && web != null) { wasPip = false; web.evaluateJavascript("window.MKPip&&MKPip.closed()", null); }
+    }
+
     @Override protected void onSaveInstanceState(Bundle b) { super.onSaveInstanceState(b); web.saveState(b); }
-    @Override protected void onPause() { super.onPause(); web.onPause(); CookieManager.getInstance().flush(); }
-    @Override protected void onResume() { super.onResume(); web.onResume(); }
+    @Override protected void onPause() {
+        super.onPause();
+        // In the picture-in-picture window the page keeps playing
+        if (!(Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode())) web.onPause();
+        CookieManager.getInstance().flush();
+    }
+    @Override protected void onResume() { super.onResume(); web.onResume(); if (wasPip && !(Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode())) wasPip = false; }
     @Override protected void onDestroy() { if (recognizer != null) recognizer.destroy(); if (web != null) { ((ViewGroup) web.getParent()).removeView(web); web.destroy(); } super.onDestroy(); }
 }

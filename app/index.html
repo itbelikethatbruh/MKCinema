@@ -1870,7 +1870,7 @@ html.tv :is(button,a,input,select,[data-nav],[tabindex],.card,.card *,.l1,.info,
 <div id="app" class="pre">
   <div class="dock-wrap">
     <nav class="dock glass" aria-label="Main">
-      <div class="brand" role="img" aria-label="MKCinema"><svg class="mk" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="55" fill="#050505" stroke="url(#mkRing)" stroke-width="3"/><use href="#mkLetters" fill="url(#mkPlat)" transform="translate(60 60) scale(.8)"/></svg><span class="word">MK<em>Cinema</em></span></div>
+      <h1 class="sr-only">MKCinema</h1><div class="brand" role="img" aria-label="MKCinema"><svg class="mk" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="55" fill="#050505" stroke="url(#mkRing)" stroke-width="3"/><use href="#mkLetters" fill="url(#mkPlat)" transform="translate(60 60) scale(.8)"/></svg><span class="word">MK<em>Cinema</em></span></div>
       <div class="tabs" id="tabs">
         <button class="tab on" data-view="home" data-nav type="button" title="Home"><i data-lucide="house"></i><span class="lbl">Home</span></button>
         <button class="tab" data-view="movie" data-nav type="button" title="Movies"><i data-lucide="clapperboard"></i><span class="lbl">Movies</span></button>
@@ -2052,7 +2052,7 @@ html.tv :is(button,a,input,select,[data-nav],[tabindex],.card,.card *,.l1,.info,
 </div>
 
 <!-- ============ Detail ============ -->
-<div id="detail" class="layer-ov" hidden>
+<div id="detail" class="layer-ov" role="dialog" aria-modal="true" aria-label="Title details" hidden>
   <article class="panel glass-solid" id="detailPanel"></article>
 </div>
 <div id="epSheet" class="layer-ov sheet-ov" hidden>
@@ -2099,13 +2099,13 @@ html.tv :is(button,a,input,select,[data-nav],[tabindex],.card,.card *,.l1,.info,
 </div>
 
 <!-- ============ Player ============ -->
-<div id="player" hidden>
+<div id="player" role="dialog" aria-label="Player" hidden>
   <canvas id="amb" width="64" height="36" aria-hidden="true"></canvas>
   <div class="stage" id="stage">
     <video id="video" playsinline preload="auto"></video>
     <div id="ytwrap"></div>
     <div class="p-load" id="pLoad" hidden aria-hidden="true"><div class="pl-art" id="pLoadArt"></div></div>
-    <div class="p-msg" id="pMsg" hidden></div>
+    <div class="p-msg" id="pMsg" role="status" aria-live="polite" hidden></div>
     <div class="hud" id="hud">
       <div class="hud-top">
         <button class="ibtn" id="pClose" type="button" aria-label="Close player"><i data-lucide="arrow-left"></i></button>
@@ -8260,7 +8260,7 @@ const Guide = {
     const st = this.steps(), done = Object.values(st).filter(Boolean).length, svc = this.svc(), key = Vault.cfg()[svc] || '';
     const step = (n, key, title, body) => `<section class="gs-step${st[key] ? ' done' : ''}"><span class="gs-n">${st[key] ? '<i data-lucide="check"></i>' : n}</span><div class="gs-c"><h4>${title}</h4>${body}</div></section>`;
     return `<div class="gs">
-      <div class="gs-prog" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="${done}"><i style="transform:scaleX(${done / 4})"></i></div>
+      <div class="gs-prog" role="progressbar" aria-label="Setup progress" aria-valuemin="0" aria-valuemax="4" aria-valuenow="${done}"><i style="transform:scaleX(${done / 4})"></i></div>
       <p class="gs-count">${done === 4 ? 'All set. Enjoy the show.' : `${done} of 4 done`}</p>
       ${step(1, 'vlc', 'Install VLC', `<p>Free, and it plays every file a browser cannot: MKV releases with EAC3, DTS or TrueHD sound, HEVC video, everything. MKCinema sends a stream to it in one tap.</p>
         <div class="inrow">${vlcButtons({ all: true })}</div>
@@ -8386,7 +8386,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.9.1';
+const APP_VERSION = '2.9.2';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -8658,7 +8658,8 @@ const AmbientArt = {
     const c = typeof AbortController !== 'undefined' ? new AbortController() : null, t = setTimeout(() => c && c.abort(), ms);
     try { const r = await fetch(url, c ? { signal: c.signal } : {}); return r.ok ? await r.json() : null; } catch (e) { return null; } finally { clearTimeout(t); }
   },
-  base(m) { return { m, bg: metaBg(m), bgCors: false, logo: metaLogo(m), cut: null }; },
+  hd: (u) => (u ? String(u).replace(/(images\.metahub\.space\/background\/)(small|medium)\//, '$1large/') : u),
+  base(m) { return { m, bg: this.hd(metaBg(m)), bgCors: false, logo: metaLogo(m), cut: null }; },
   bundle(m) {
     if (!this.cache.has(m.id)) this.cache.set(m.id, this.fetchBundle(m).catch(() => this.base(m)));
     return this.cache.get(m.id);
@@ -8678,10 +8679,10 @@ const AmbientArt = {
         const bds = ((im && im.backdrops) || []).filter((x) => x.file_path && x.width >= 1000);
         const clean = bds.filter((x) => !x.iso_639_1).sort((x, y) => (y.vote_average || 0) - (x.vote_average || 0))[0];
         const bd = clean || bds[0] || (hit.backdrop_path ? { file_path: hit.backdrop_path } : null);
-        if (bd) { b.bg = `https://image.tmdb.org/t/p/w1280${bd.file_path}`; b.bgCors = true; b.bgText = !clean; }
+        if (bd) { b.bg = `https://image.tmdb.org/t/p/original${bd.file_path}`; b.bgCors = true; b.bgText = !clean; }
         const logos = ((im && im.logos) || []).filter((l) => !/\.svg$/i.test(l.file_path));
         const lg = logos.find((l) => l.iso_639_1 === 'en') || logos[0];
-        if (lg) b.logo = `https://image.tmdb.org/t/p/w500${lg.file_path}`;
+        if (lg) b.logo = `https://image.tmdb.org/t/p/original${lg.file_path}`;
         if (series && !tvdb) { const x = await this.json(`https://api.themoviedb.org/3/tv/${hit.id}/external_ids?api_key=${enc(tmdb)}`); if (x && x.tvdb_id) tvdb = x.tvdb_id; }
       }
     }
@@ -8723,6 +8724,8 @@ const AmbientArt = {
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); img.removeAttribute('src'); c.className = img.className; return c;
     } catch (e) { return img; }
   },
+  // The screen's width in real pixels, capped so a 4K backdrop never decodes larger than needed on a stick
+  px() { return Math.round(Math.min(IS_TV ? 1920 : 2560, Math.max(1280, innerWidth * (devicePixelRatio || 1)))); },
   release(root) { if (root) root.querySelectorAll('img').forEach((i) => i.removeAttribute('src')); },
   // Top two colours of the backdrop (only for art the browser may read)
   colors(img) {
@@ -8870,7 +8873,7 @@ void main(){
   },
   resize(level) {
     if (!this.ok) return;
-    this.scale = level >= 2 ? (IS_TV ? .5 : .75) : .4;
+    const full = AmbientArt.px() / innerWidth; this.scale = full * (level >= 2 ? 1 : .6);
     this.cv.width = Math.round(innerWidth * this.scale); this.cv.height = Math.round(innerHeight * this.scale);
     this.gl.viewport(0, 0, this.cv.width, this.cv.height);
   },
@@ -8991,7 +8994,7 @@ const Saver = {
     try { img = await AmbientArt.load(b.bg, cors); } catch (e) { cors = false; titled = false; try { img = await AmbientArt.load(metaBg(m), false); } catch (e2) { return null; } }
     if (!this.isOpen) { img.removeAttribute('src'); return null; }
     const colors0 = cors ? AmbientArt.colors(img) : null;
-    if (cors) img = AmbientArt.shrink(img, IS_TV ? 1280 : 1920);
+    img = AmbientArt.shrink(img, AmbientArt.px());
     const [cut, logo] = await Promise.all([b.cut && this.level > 0 ? AmbientArt.load(b.cut, false, 7000).catch(() => null) : null, b.logo && !titled && !(b.cut && b.cutTitled && this.level > 0) ? AmbientArt.load(b.logo, false, 6000).catch(() => null) : null]);
     const mode = cut ? 'A' : cors && this.level > 0 && AmbientGL.ok !== false && (AmbientGL.ok || AmbientGL.init($('.sv-gl', this.el))) ? 'B' : 'C';
     const style = ambientStyle(m), colors = colors0 || AMBIENT_STYLES[style].colors;
@@ -10273,6 +10276,7 @@ html.tv .net-tile.nav-focus .net-logo{animation:netFloat 3.2s ease-in-out infini
 /* 2.9.0 Library */
 #libX{display:flex;flex-direction:column;gap:14px;margin:4px 0 26px}
 .lib-tabs{display:flex;flex-wrap:wrap;gap:8px}
+.lib-tl{display:contents}
 .lib-tabs .chip .tnum{opacity:.6;margin-left:4px;font-size:.9em}
 .lib-tabs .lib-new{border-style:dashed}
 .lib-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
@@ -10295,6 +10299,12 @@ html.tv .hero .hero-dots{right:134px;bottom:36px}
 /* the top menu on TVs: the selection ring sits inside the tab and the tab no longer grows, so it never runs into its neighbour */
 html.tv .tab.nav-focus{transform:none!important;outline-offset:-3px!important;box-shadow:none!important}
 html.tv .chip.nav-focus{transform:none!important;outline-offset:1px!important;box-shadow:none!important}
+/* 2.9.2 picture-in-picture window (Android app): only the picture */
+html.pip-mode #hud,html.pip-mode .p-msg,html.pip-mode .p-load,html.pip-mode #amb,html.pip-mode #toasts,html.pip-mode #updBar,html.pip-mode .upnext,html.pip-mode #sub2{display:none!important}
+html.pip-mode #player,html.pip-mode #player .stage{background:#000}
+html.pip-mode #video{object-fit:contain}
+/* 2.9.2 accessibility: text for screen readers only */
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
 </style>
 <script id="mkc-28">
@@ -12544,9 +12554,9 @@ const Library = {
     const list = this.view();
     const old = $('#libX'); const hadFocus = old && old.contains(document.activeElement) ? document.activeElement.dataset : null;
     const box = document.createElement('div'); box.id = 'libX';
-    box.innerHTML = `<div class="lib-tabs" role="tablist">${tabs.map(([id, label, n]) => `<button type="button" class="chip${s.tab === id ? ' on' : ''}" role="tab" aria-selected="${s.tab === id}" data-nav data-ltab="${esc(id)}">${esc(label)}${n != null ? ` <span class="tnum">${n}</span>` : ''}</button>`).join('')}<button type="button" class="chip lib-new" data-nav id="libNew"><i data-lucide="plus"></i>New list</button></div>
+    box.innerHTML = `<div class="lib-tabs"><div class="lib-tl" role="tablist" aria-label="Library">${tabs.map(([id, label, n]) => `<button type="button" class="chip${s.tab === id ? ' on' : ''}" role="tab" aria-selected="${s.tab === id}" data-nav data-ltab="${esc(id)}">${esc(label)}${n != null ? ` <span class="tnum">${n}</span>` : ''}</button>`).join('')}</div><button type="button" class="chip lib-new" data-nav id="libNew"><i data-lucide="plus"></i>New list</button></div>
       <div class="lib-bar">
-        <div class="segc" role="radiogroup" aria-label="Type">${[['all', 'All'], ['movie', 'Films'], ['series', 'Series']].map(([v, t]) => `<button type="button" class="${s.type === v ? 'on' : ''}" data-nav data-ltype="${v}">${t}</button>`).join('')}</div>
+        <div class="segc" role="radiogroup" aria-label="Type">${[['all', 'All'], ['movie', 'Films'], ['series', 'Series']].map(([v, t]) => `<button type="button" class="${s.type === v ? 'on' : ''}" role="radio" aria-checked="${s.type === v}" data-nav data-ltype="${v}">${t}</button>`).join('')}</div>
         <select class="inp lib-sort" id="libSort" aria-label="Sort" data-nav>${[['added', 'Date added'], ['az', 'A to Z'], ['year', 'Newest first'], ['rating', 'Highest rated']].map(([v, t]) => `<option value="${v}"${s.sort === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
         ${s.tab !== 'watched' ? `<button type="button" class="chip${s.hide ? ' on' : ''}" data-nav id="libHide" aria-pressed="${s.hide}">Hide watched</button>` : ''}
         <input class="inp lib-q" id="libQ" type="search" placeholder="Filter" value="${esc(s.q)}" autocomplete="off" aria-label="Filter by title">
@@ -12692,6 +12702,34 @@ TvPlayer.init();
 {
   const r = Servers.reach.bind(Servers);
   Servers.reach = function (url) { try { if (/^http:/i.test(url) && window.MKAndroid && Updater.newer(MKAndroid.version(), '1.2.4')) return url; } catch (e) { /* older app */ } return r(url); };
+}
+
+/* ---------------- 2.9.2 Picture-in-picture on phones ----------------
+   In the Android app (1.2.6+) the page tells the app when a film is playing and its shape; pressing Home, or the
+   player's PiP button, shrinks the film into a floating window (WebViews have no requestPictureInPicture).
+   In the window only the picture shows. Swiping the window away pauses the film. In browsers the video element
+   is marked autopictureinpicture, so installed apps that support it go into PiP on their own. */
+const PipMode = {
+  native: () => !IS_TV && !!(window.MKAndroid && MKAndroid.pipState),
+  last: '',
+  report() {
+    if (!this.native()) return;
+    const on = !$('#player').hidden && !!P.stream && !video.paused && !video.ended;
+    const k = `${on}|${video.videoWidth}|${video.videoHeight}`; if (k === this.last) return; this.last = k;
+    try { MKAndroid.pipState(on, video.videoWidth || 16, video.videoHeight || 9); } catch (e) { /* older app */ }
+  },
+};
+window.MKPip = {
+  mode(on) { document.documentElement.classList.toggle('pip-mode', !!on); if (!on) PipMode.last = ''; },
+  closed() { document.documentElement.classList.remove('pip-mode'); try { if (!video.paused) video.pause(); } catch (e) { /* none */ } PipMode.report(); },
+};
+try { video.setAttribute('autopictureinpicture', ''); } catch (e) { /* none */ }
+['play', 'playing', 'pause', 'ended', 'loadedmetadata', 'emptied'].forEach((ev) => video.addEventListener(ev, () => PipMode.report()));
+{
+  const pc = closePlayer;
+  closePlayer = function (...a) { const r = pc.apply(this, a); PipMode.last = ''; if (PipMode.native()) { try { MKAndroid.pipState(false, 0, 0); } catch (e) { /* older app */ } } return r; };
+  const btn = $('#pPip'), orig = btn && btn.onclick;
+  if (btn) btn.onclick = (e) => { if (window.MKAndroid && MKAndroid.pip && !IS_TV) { if (!MKAndroid.pip()) toast('Picture in picture is not available on this phone', 'err'); return; } if (orig) orig.call(btn, e); };
 }
 
 </script>

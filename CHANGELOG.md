@@ -2,6 +2,12 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.9.2 and Android app 1.2.6 (2026-11-05)
+
+- **Sharper Ambient Mode**: the screensaver draws at the screen's full resolution (it drew at half size on TVs before) and uses full-size art, with 4K catalog backdrops when no keys are set. Memory limits for streaming sticks stay in place.
+- **Picture-in-picture on phones**: in the Android app, pressing Home while a film plays shrinks it into a floating window. Swiping the window away pauses it.
+- **Accessibility**: film pages and the player are announced as dialogs, player messages are read out, Library tabs and filters have proper roles, and the page has a heading for screen readers.
+
 ## Web app 2.9.1 and Android app 1.2.5 (2026-11-05)
 
 - **The TV player**: on Android TV and Fire TV, streams play in the TV's own hardware player, so MKV, HEVC, HDR and Dolby Vision play the way the TV plays them. OK pauses, Left and Right skip, Menu switches the audio track, and your subtitle language comes along. MKCinema still picks the source, saves where you stopped and moves on to the next episode. If a source won't open there, the MKCinema player takes over. Settings › Playback › TV player switches back.
