@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.11.1 (2026-11-05)
+
+- **TV: the keyboard opens only when you ask**: moving the remote past a text box (an API key, a playlist link, a search box) no longer pops up the on-screen keyboard. Press OK on the box to type.
+- **TV: steadier focus in Settings**: Up and Down stay in the column you are in, Left from an option goes back to its section, and Right from the section list goes into its options instead of the close button.
+
 ## Web app 2.11.0 (2026-11-05)
 
 - **Side menu (optional)**: the main menu can now sit down the left side instead of across the top. On desktop it lists every section with its name. On narrower screens and TVs it shows icons, and opens with the names when you point at it or press Left on the remote. On phones, a menu button slides the sections in from the left. MKCinema asks once which you prefer, and you can switch any time in Settings › Appearance. The choice is kept per device.
