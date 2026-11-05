@@ -2,6 +2,15 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Windows app 1.1.0 (2026-11-05)
+
+- **Fixes the app closing right after it opens.** When Microsoft Edge WebView2 failed to start, the app crashed with no message. Start-up errors are now caught and explained, with a link to reinstall WebView2 when that's the fix, and details go to `%LOCALAPPDATA%\MKCinema\mkcinema.log`.
+- WebView2Loader.dll is loaded from disk instead of from memory, which some antivirus tools block.
+- One window only: opening MKCinema again brings it to the front.
+- The window fits your screen and display scale, starts maximized on small screens, remembers its size and position, and has a dark title bar with no white flash while loading.
+- Video fullscreen now fills the whole screen, and F11 toggles fullscreen. Right-click Copy and Paste work in text fields.
+- Links that open a new window (YouTube, GitHub) open in your browser. The page reloads itself if it crashes.
+
 ## Web app 2.9.4 (2026-11-05)
 
 - **Peak Cinema details**: Details (or Menu on the remote) pauses the scene and slides in the story, cast, director, running time and ratings. Back returns to the scene where it paused; Keep watching, From the start and Full page are one press away.
