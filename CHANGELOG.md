@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.11.0 (2026-11-05)
+
+- **Side menu (optional)**: the main menu can now sit down the left side instead of across the top. On desktop it lists every section with its name. On narrower screens and TVs it shows icons, and opens with the names when you point at it or press Left on the remote. On phones, a menu button slides the sections in from the left. MKCinema asks once which you prefer, and you can switch any time in Settings › Appearance. The choice is kept per device.
+- **Simpler Appearance**: one colour wheel replaces the theme cards and the custom theme builder. Turn the wheel (Left and Right on a TV remote) and the whole app follows; Classic black goes back to the original look. A look you already picked keeps working.
+
 ## Web app 2.10.0 (2026-11-05)
 
 - **Seat pictures**: MKCinema now has its own set of soft 3D-style portraits, covering a range of skin tones, hair types and head coverings, plus six playful characters for kids. Surprise me rolls a new one. Your main seat shows your account's profile photo if you added one.
