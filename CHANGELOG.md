@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.9.4 (2026-11-05)
+
+- **Peak Cinema details**: Details (or Menu on the remote) pauses the scene and slides in the story, cast, director, running time and ratings. Back returns to the scene where it paused; Keep watching, From the start and Full page are one press away.
+
 ## Android app 1.2.7 (2026-11-05)
 
 - **A proper Fire TV tile**: the app tile on TVs is now a square monogram-and-wordmark icon. Fire TV draws sideloaded apps in a square box, and the wide banner art was being squeezed into it.

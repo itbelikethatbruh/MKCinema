@@ -406,3 +406,21 @@ html.pip-mode #video{object-fit:contain}
 @media (max-width:560px){.pz-foot{grid-template-columns:1fr}.pz-tiles b{width:34px;height:44px;font-size:20px}}
 html.tv .pz-card .btn.nav-focus,html.tv .pz-foot .nav-focus,html.tv .pz .btn.nav-focus{transform:none;outline-offset:-3px}
 html.tv .pz-cells i{height:52px}
+/* 2.9.4 Peak Cinema details panel: slides in over the paused scene, no backdrop-filter */
+.pk-det{position:absolute;inset:0;z-index:6;display:flex;justify-content:flex-end;background:linear-gradient(90deg,rgba(0,0,0,.15),rgba(0,0,0,.55) 45%,rgba(0,0,0,.9));opacity:0;transition:opacity .28s ease}
+.pk-det.on{opacity:1}
+.pk-det-in{width:min(620px,100%);height:100%;overflow-y:auto;display:flex;flex-direction:column;justify-content:center;gap:16px;padding:48px clamp(20px,4vw,64px);background:linear-gradient(90deg,transparent,var(--n050505,#050505) 22%);transform:translate3d(40px,0,0);transition:transform .32s cubic-bezier(.2,.7,.2,1)}
+.pk-det.on .pk-det-in{transform:none}
+.pk-det-head{min-height:60px;display:flex;align-items:flex-end}
+.pk-det-logo{max-height:96px;max-width:100%;object-fit:contain;object-position:left bottom}
+.pk-det-t{margin:0;font:600 clamp(28px,3.4vw,40px)/1.1 var(--f-display);color:var(--ink)}
+.pk-det .metaline{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;color:var(--mute);font-size:14px}
+.pk-det-desc{margin:0;font-size:15.5px;line-height:1.6;color:var(--ink);opacity:.88;max-width:56ch}
+.pk-det-dl{margin:0;display:grid;gap:10px}
+.pk-det-dl div{display:grid;grid-template-columns:92px 1fr;gap:12px}
+.pk-det-dl dt{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);padding-top:3px}
+.pk-det-dl dd{margin:0;font-size:14px;color:var(--ink)}
+.pk-det-acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.pk-det-on .pk-ui{opacity:0;pointer-events:none}
+html.tv .pk-det .btn.nav-focus{transform:none;outline-offset:-3px}
+@media (max-width:760px){.pk-acts #pkDetails{display:inline-flex}.pk-det{background:rgba(0,0,0,.82)}.pk-det-in{width:100%;justify-content:flex-end;padding:24px 18px calc(24px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,transparent,var(--n050505,#050505) 30%)}.pk-det-acts .btn{flex:1 1 auto;justify-content:center}}
