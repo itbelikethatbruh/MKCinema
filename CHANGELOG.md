@@ -2,6 +2,31 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.9.0 (2026-11-05)
+
+- **A real Library**: tabs for Watchlist, In progress, Watched and your own lists, Films or Series, sorting by date added, title, year or rating, Hide watched and a filter box. A Lists button on every film page adds it to any list; lists follow your account.
+- **Source rules** (Settings): hide cam and screener copies, set a lowest resolution, a largest file size and an HDR preference, block your own words, and choose which debrid service goes first.
+- **Lock-screen and media keys**: phones, headphones, keyboards and remotes show what is playing and can play, pause, seek and skip to the next episode.
+- **Update notice**: a quiet bar says when a newer MKCinema or Android app is out.
+- **Fixes**: the banner arrows no longer cover the rating line; on TVs the menu's selection ring stays inside its tab.
+
+## Web app 2.8.9 (2026-11-05)
+
+- **Your own media servers**: connect Plex (a code on plex.tv/link), Jellyfin or Emby, and films and episodes you own show up as sources; Smart Play picks them first.
+- **New episodes**: a row under Continue watching and one quiet notice when a series you follow has a new episode.
+- **Kids seats need a grown-up PIN**, with a one-minute lockout after five wrong tries; an unlock lasts ten minutes.
+- **Faster Smart Play**: it starts on the first ready source instead of waiting for the slowest addon. On TVs the remote's Play button plays the selected poster.
+- **Debrid order**: with several keys saved, the one you added first is used.
+
+## Web app 2.8.8 (2026-11-05)
+
+- **Calm ratings**: one dark pill with white numbers and a soft gold star, instead of green, yellow and red.
+- **Roomier Seats**: each seat in its own card, names on one line, a clear "Watching now" line.
+
+## Web app 2.8.7 and Android app 1.2.4 (2026-11-05)
+
+- **Smooth trailers on TVs**: trailers open in the YouTube app, which uses the TV's own video hardware. Without it they play inside MKCinema as before; Settings › Trailers can switch back.
+
 ## Web app 2.8.6 and Android app 1.2.3 (2026-11-05)
 
 - **No more stuck remote**: on Movies and Series the Catalog drop-down kept every arrow press, so the remote was trapped until you backed out. Arrows now always leave drop-downs and multi-line boxes. If nothing lies above, Up goes to the top menu, and a panel that can still scroll moves a step instead of doing nothing.

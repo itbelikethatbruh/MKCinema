@@ -17,6 +17,7 @@ const SimpleHome = {
   rank(sec, seriesFirst) {
     const c = sec.dataset.curate, k = sec.dataset.cat || '';
     if (sec.id === 'cwRow') return 0;
+    if (sec.id === 'newEpRow') return 0.5;
     if (/^My watchlist/.test((sec.querySelector('.row-title') || {}).textContent || '')) return 1;
     if (c === 'top10') return 2;
     if (sec.id === 'netRow') return 3;
@@ -45,7 +46,7 @@ const SimpleHome = {
   dedupe() {
     const seen = new Set();
     $$('#homeRows > section.row').forEach((sec) => {
-      if (sec.hidden || sec.id === 'cwRow' || sec.id === 'forYouRow' || sec.id === 'netRow') return;
+      if (sec.hidden || sec.id === 'cwRow' || sec.id === 'newEpRow' || sec.id === 'forYouRow' || sec.id === 'netRow') return;
       const cards = $$('.rail > [data-card]', sec), isTop = sec.dataset.curate === 'top10';
       if (!isTop && !/^My watchlist/.test((sec.querySelector('.row-title') || {}).textContent || '')) {
         let left = cards.length;

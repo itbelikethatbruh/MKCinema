@@ -38,7 +38,9 @@ public class MainActivity extends Activity {
     static final String HOME = "https://mkcinema.pages.dev/";
     static final String HOST = "mkcinema.pages.dev";
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4;
-    static final String VER = "1.2.3";
+    static final String VER = "1.2.4";
+    /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
+    static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
     WebView web;
     FrameLayout root;
@@ -281,6 +283,22 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public void voiceStop() { runOnUiThread(() -> { if (recognizer != null) recognizer.cancel(); }); }
         @JavascriptInterface public String version() { return VER; }
+        /** Trailers on TVs: hands a YouTube video id to the YouTube app, whose player uses the TV's video hardware.
+            False when no YouTube app takes it, so the page plays the trailer itself. */
+        @JavascriptInterface public boolean youtube(String id) {
+            if (!HOST.equals(pageHost) || id == null || !id.matches("[A-Za-z0-9_-]{6,20}")) return false;
+            PackageManager pm = getPackageManager();
+            Uri watch = Uri.parse("https://www.youtube.com/watch?v=" + id);
+            for (String pkg : YT_APPS) {
+                for (Uri u : new Uri[] { watch, Uri.parse("vnd.youtube:" + id) }) {
+                    Intent i = new Intent(Intent.ACTION_VIEW, u).setPackage(pkg).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    if (i.resolveActivity(pm) == null) continue;
+                    runOnUiThread(() -> { try { startActivity(i); } catch (Exception ignored) { } });
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     Intent speechIntent(String lang) {
