@@ -14,8 +14,8 @@ import (
 	"time"
 )
 
-// Set at build time: -ldflags "-X main.discordAppID=<Discord application id>". Empty turns presence off.
-var discordAppID = ""
+// MKCinema's Discord application (public id). Override with -ldflags "-X main.discordAppID=<id>"; empty turns presence off.
+var discordAppID = "1567818702479425586"
 
 type activity struct {
 	Title   string `json:"title"`

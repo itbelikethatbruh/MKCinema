@@ -9,8 +9,8 @@ Build (from Linux or Windows, Go 1.24+):
     rsrc -arch amd64 -ico mkcinema.ico -manifest app.manifest -o rsrc_windows_amd64.syso
     GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -H windowsgui" -o MKCinema.exe .
 
-To show "Watching …" on Discord, add your Discord application id: `-ldflags "-s -w -H windowsgui -X main.discordAppID=<id>"`.
-Without it the Discord option stays hidden.
+Discord status uses MKCinema's Discord application (id 1567818702479425586, set in `discord.go`). A fork can use its own
+with `-ldflags "-s -w -H windowsgui -X main.discordAppID=<id>"`, or turn it off with an empty id.
 
 `webview2/` is a patched copy of go-webview2 (see `webview2/MKCINEMA.md`); `go.mod` points at it.
 
@@ -30,7 +30,7 @@ Desktop extras (1.2.0), both off until the user turns them on in Settings › De
   forwarding. It serves the file to the app on 127.0.0.1 with a random port and token, keeps at most two torrents,
   and deletes `%LOCALAPPDATA%\MKCinema\p2p` when it is turned off or the app closes. Peers can see the user's IP,
   and Settings says so before it can be turned on.
-- Discord status through Discord's local pipe (`discord.go`), only when an application id was built in.
+- Discord status ("Watching" and the title) through Discord's local pipe (`discord.go`).
 
 Requires Windows 10 or 11, 64-bit (Go 1.21+ doesn't run on Windows 7/8).
 
