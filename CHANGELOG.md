@@ -2,6 +2,19 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.13.2 (2026-11-05)
+
+- **Faster start**: each launch no longer downloads the app a second time in the background (about 360 KB) while checking for a self-hosted server setting.
+- **First visit**: the walkthrough always shows. It could lose a race with the menu question and then not appear, which also skipped the "What do you watch most?" question.
+- **Small phones**: on screens 360 px wide or narrower, the Settings button no longer sticks out of the top bar or disappears.
+- **TV**: rows no longer stick out 2 px past the screen edge, which let the page shift sideways.
+- **TV**: Back from a section to Home now puts the focus on Home, so the next press of the remote isn't lost.
+- **Black title logos are readable**: logos drawn in black, which vanished on the dark banner and details page, are now shown in white. Coloured logos are left alone.
+- **Details**: the awards line no longer appears twice.
+- **Phones use less data at start**: posters now load as their row comes near, instead of about 110 at once (about 50 now, same full-size images).
+- **TV**: Left on the banner's Smart Play now shows the previous featured title instead of jumping across the screen to the arrows.
+- The keyboard shortcut hint at the bottom of the page is hidden on phones, tablets and TVs.
+
 ## Web app 2.13.1 (2026-11-05)
 
 - **TV: the whole side menu is reachable**: with the side menu on, Down from Calendar now continues to Addons, Account, Watch party and Settings instead of jumping into the catalog.
