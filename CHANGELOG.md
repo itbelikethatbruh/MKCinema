@@ -11,6 +11,8 @@ All notable changes to MKCinema. The web app version and the native app versions
 - **TV**: Back from a section to Home now puts the focus on Home, so the next press of the remote isn't lost.
 - **Black title logos are readable**: logos drawn in black, which vanished on the dark banner and details page, are now shown in white. Coloured logos are left alone.
 - **Details**: the awards line no longer appears twice.
+- **Phones use less data at start**: posters now load as their row comes near, instead of about 110 at once (about 50 now, same full-size images).
+- **TV**: Left on the banner's Smart Play now shows the previous featured title instead of jumping across the screen to the arrows.
 - The keyboard shortcut hint at the bottom of the page is hidden on phones, tablets and TVs.
 
 ## Web app 2.13.1 (2026-11-05)

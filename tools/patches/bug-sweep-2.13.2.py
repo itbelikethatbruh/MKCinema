@@ -13,6 +13,11 @@ Usage: python3 -I bug-sweep-2.13.2.py index.html
 6. Details: the awards line was shown twice (the honours line and an "Awards" credit row with the same text).
 7. The keyboard-shortcut hint in the footer is hidden on touch screens and TVs, where it doesn't apply.
 8. TV: Back from a section (Movies, a streaming network page...) to Home left nothing focused, so the next press was lost.
+9. TV: Left on the banner's Smart Play jumped across the screen to the arrows at the bottom right. It now shows the
+   previous featured title and keeps the focus on Smart Play (Right from the last button still reaches the arrows).
+10. Phones: native lazy loading fetched ~110 posters (~3.8 MB) in the first seconds, rows far below and far to the
+   right included. Posters now load when their row comes within about two screens, and within two screen widths of
+   where the row is scrolled to. Full-size posters as before.
 """
 import sys
 p = sys.argv[1]
@@ -122,6 +127,60 @@ rep("""        desc.insertAdjacentHTML('afterend', `${WhereToWatch.honours(m)}${
 # 8. TV: Back to Home puts the focus on Home again
 rep("""    const h = $('#tabs .tab'); if (h && !h.classList.contains('on')) { h.click(); return; }""",
     """    const h = $('#tabs .tab'); if (h && !h.classList.contains('on')) { h.click(); Nav.settle(); return; }""")
+
+# 9. TV: Left on Smart Play flips to the previous featured title instead of jumping to the arrows
+rep("""      if (IS_TV && a && dir === 'left' && a.id === 'heroPlay' && $('#heroPrev')) { Nav.focus($('#heroPrev'), fast); return; }""",
+    """      if (IS_TV && a && dir === 'left' && a.id === 'heroPlay' && $('#heroPrev')) { if (S.hero.length > 1) showHero(S.heroIdx - 1, -1); return; }""")
+
+# 10. phones: posters load by row instead of Chrome's very wide lazy-load distance
+rep("""${lazy ? 'loading="lazy"' : ''} decoding="async" referrerpolicy="no-referrer">`;""",
+    """${lazy ? 'loading="lazy"' : ''} decoding="async" referrerpolicy="no-referrer">`.replace(lazy && src && PhoneImgs.on ? /^<img src="/ : /^\\b$/, `<img src="${PhoneImgs.BLANK}" data-lsrc="`);""")
+PHONE = """
+/* 2.13.2 phones: Chrome's own lazy loading fetches posters several screens away, sideways inside rows too (~110 posters,
+   ~3.8 MB, on the first Home load). Here a row's posters load once the row is within about two screens, and only as
+   far as two screen widths past where the row is scrolled to. Same full-size images, just later. */
+const PhoneImgs = {
+  on: TOUCH_UI && !IS_TV,
+  BLANK: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
+  rails: new Set(), io: null, raf: 0,
+  show(im) { const u = im.dataset.lsrc; if (!u) return; delete im.dataset.lsrc; im.src = u; },
+  // load a row's posters up to three row-widths past where it is scrolled to (layout offsets, so posters sliding in
+  // with an animation count where they will rest)
+  wake(rail) {
+    const imgs = rail.querySelectorAll('img[data-lsrc]'); if (!imgs.length || !rail.clientWidth) return;
+    const first = rail.firstElementChild, x0 = first ? first.offsetLeft : 0, lim = rail.scrollLeft + rail.clientWidth * 3;
+    for (const im of imgs) { const c = im.closest('.rail > *') || im; if (c.offsetLeft - x0 < lim) this.show(im); else break; }
+  },
+  // every row within about two screens of the visible part of the page
+  sweep() {
+    if (this.raf) return;
+    this.raf = requestAnimationFrame(() => {
+      this.raf = 0; const h = innerHeight;
+      for (const r of this.rails) {
+        if (!r.isConnected) { this.rails.delete(r); continue; }
+        const b = r.getBoundingClientRect(); if (b.height && b.bottom > -h * 2 && b.top < h * 3) this.wake(r);
+      }
+    });
+  },
+  watch(im) {
+    const rail = im.closest('.rail');
+    if (!rail) { this.io.observe(im); return; }
+    if (!this.rails.has(rail)) { this.rails.add(rail); rail.addEventListener('scroll', () => this.sweep(), { passive: true }); }
+    this.sweep();
+  },
+  init() {
+    if (!this.on || !('IntersectionObserver' in window)) { this.on = false; return; }
+    // posters outside rows (grids, lists) load as they come within two screens
+    this.io = new IntersectionObserver((ents) => ents.forEach((e) => { if (e.isIntersecting) { this.io.unobserve(e.target); this.show(e.target); } }), { rootMargin: `${Math.round(innerHeight * 2)}px 0px` });
+    const scan = (root) => { if (root.matches && root.matches('img[data-lsrc]')) this.watch(root); else if (root.querySelectorAll) root.querySelectorAll('img[data-lsrc]').forEach((im) => this.watch(im)); };
+    new MutationObserver((ms) => { ms.forEach((m) => m.addedNodes.forEach((n) => { if (n.nodeType === 1) scan(n); })); this.sweep(); }).observe(document.documentElement, { childList: true, subtree: true });
+    addEventListener('scroll', () => this.sweep(), { passive: true, capture: true }); addEventListener('resize', () => this.sweep());
+    scan(document.documentElement);
+  },
+};
+PhoneImgs.init();
+"""
+rep("const imgTag = (src, title, seed,", PHONE.lstrip('\n') + "const imgTag = (src, title, seed,")
 
 open(p, 'w', encoding='utf-8').write(s)
 print('applied')
