@@ -1604,6 +1604,14 @@ body.dk3 #tabs .tab{padding:8px 9px;gap:6px;font-size:13px}
 
 /* Welcome walkthrough, editorial: full-screen black, serif display type, hairline rules, no boxes */
 #tour{background:radial-gradient(120% 90% at 50% 0%,var(--n141414,#141414) 0%,var(--n050505,#050505) 55%,var(--n000000,#000) 100%)}
+/* 2.13.1 walkthrough: one fixed panel height, the step scrolls inside it, so Back and Next never move */
+#tour .tour-modal{display:flex;flex-direction:column;height:calc(100vh - 40px);height:calc(100dvh - 40px);max-height:none;overflow:hidden}
+#tour #tourBody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column}
+#tour #tourBody>.tour-step{margin-block:auto;width:100%}
+#tour .tour-top,#tour .tour-nav{flex:none}
+#tour #tourBody .qp-foot{bottom:0;background:linear-gradient(0deg,var(--n000000,#000) 70%,transparent)}
+#tour #tourBody.more{-webkit-mask-image:linear-gradient(180deg,#000 82%,transparent);mask-image:linear-gradient(180deg,#000 82%,transparent)}
+@media (max-width:620px){#tour .tour-modal{height:100vh;height:100dvh;min-height:0}}
 #tour .tour-modal{max-width:1040px;width:100%;background:transparent;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding-inline:clamp(20px,5vw,56px)}
 .tour-dots i{height:1px;width:22px;background:rgba(var(--ne8e3d8-c,232,227,216),.25)}.tour-dots i.on{width:44px;background:var(--ne8e3d8,#e8e3d8)}.tour-dots i.done{background:rgba(var(--ne8e3d8-c,232,227,216),.6)}
 #tourSkip{color:var(--ncfcac0,#cfcac0);text-decoration:none;letter-spacing:.14em;text-transform:uppercase;font-size:12px;font-weight:600}
@@ -5725,10 +5733,13 @@ function renderTour() {
   const a = $('[data-tour-addons]', body); if (a) a.onclick = () => { endTour(); $('#openAddons').click(); };
   const e = $('[data-tour-end]', body); if (e) e.onclick = endTour;
   const g = $('[data-tour-guide]', body); if (g) g.onclick = () => { endTour(); openSettings('start'); };
-  $('#tour .modal').scrollTop = 0;
+  $('#tour .modal').scrollTop = 0; body.scrollTop = 0; tourMore();
   if (IS_TV) { const a = document.activeElement; if (!a || a === document.body || a.hidden || !a.isConnected || a.closest('[hidden]')) { $$('.nav-focus').forEach((x) => x.classList.remove('nav-focus')); Nav.settle(); } }
 }
 $('#tourNext').onclick = () => tourGo(1);
+/* 2.13.1: a step taller than the panel fades at the bottom until it is scrolled to the end */
+function tourMore() { const b = $('#tourBody'); if (b) b.classList.toggle('more', !b.querySelector('.qp-foot') && b.scrollTop + b.clientHeight < b.scrollHeight - 4); }
+$('#tourBody').addEventListener('scroll', tourMore, { passive: true }); addEventListener('resize', tourMore);
 $('#tourBack').onclick = () => tourGo(-1);
 $('#tourSkip').onclick = endTour;
 if (Voice.ok) bindVoice($('#palette')); else $('#palMic').hidden = true;
@@ -8388,7 +8399,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.13.0';
+const APP_VERSION = '2.13.1';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -13675,6 +13686,67 @@ const Wheel = {
   };
 })();
 
+/* ---------------- 2.13.1 TV remote: side menu lane, Settings lanes ----------------
+   Reported on Reddit (Android TV, side menu): "when you scroll past Calendar focus moves right, over to the catalog"
+   and, in Settings › Plugins & themes, Down never reached the Add buttons.
+   1. In the side menu, Up and Down walk the menu in order, from Search down to Settings at the bottom, and stop there.
+   2. In the walkthrough, Up and Down scroll a step that is taller than the screen.
+   3. In Settings, Up and Down walk the column the focus is in row by row, so a button on the far right of the options
+      is found from a tab on the left and no row is skipped. Back closes Settings, as before. */
+(() => {
+  if (!IS_TV) return;
+  let lane = null;
+  const it = Nav.items.bind(Nav);
+  Nav.items = function (root) { const l = it(root); return lane ? l.filter((x) => lane.contains(x)) : l; };
+  const within = (box, fn) => { lane = box; try { return fn(); } finally { lane = null; } };
+  const mv = Nav.move.bind(Nav);
+  Nav.move = function (dir, fast) {
+    const a = document.activeElement, root = Nav.root();
+    if (!a || a === document.body || !root || (dir !== 'up' && dir !== 'down')) return mv(dir, fast);
+    // 1. side menu
+    const rail = root.id === 'app' && SideNav.side() && a.closest('.dock-wrap');
+    if (rail) {
+      const list = Nav.items(root).filter((x) => rail.contains(x)), top = (x) => (Nav.rects.get(x) || x.getBoundingClientRect()).top;
+      list.sort((p, q) => top(p) - top(q)); Nav.rects.clear();
+      const i = list.indexOf(a); if (i < 0) return mv(dir, fast);
+      const n = list[i + (dir === 'down' ? 1 : -1)]; if (n) Nav.focus(n, fast);
+      return;
+    }
+    // 2. walkthrough: a long step (the comparison table) scrolls with Up and Down when nothing to focus lies that way
+    if (root.id === 'tour') {
+      const tb = $('#tourBody');
+      if (dir === 'up' && tb && tb.scrollTop > 0 && a.closest('.tour-nav') && !tb.querySelector('[data-nav], button, a[href], input')) { tb.scrollBy({ top: -220, behavior: fast ? 'auto' : 'smooth' }); return; }
+      const r = mv(dir, fast);
+      if (document.activeElement === a && tb && tb.scrollHeight > tb.clientHeight + 4) tb.scrollBy({ top: dir === 'down' ? 220 : -220, behavior: fast ? 'auto' : 'smooth' });
+      return r;
+    }
+    // 3. Settings columns: walk the column row by row (the nearest row that way, then the control in it closest
+    //    across), so a small control at the end of a row, such as Text color under a wide slider, is never skipped
+    if (root.id === 'settings') {
+      const nav = $('#setNav'), body = $('#setBody'), pane = nav && nav.contains(a) ? nav : body && body.contains(a) ? body : null;
+      if (!pane) return mv(dir, fast);
+      const A = a.getBoundingClientRect(), ay = A.top + A.height / 2, ax = A.left + A.width / 2, down = dir === 'down';
+      const cand = []; let near = Infinity;
+      for (const el of within(pane, () => Nav.items(root))) {
+        if (el === a || el.contains(a) || a.contains(el)) continue;
+        const dt = el.closest('details'); if (dt && !dt.open && !el.closest('summary')) continue;   // inside a closed licence
+        const r = Nav.rects.get(el) || el.getBoundingClientRect(), dy = down ? r.top + r.height / 2 - ay : ay - (r.top + r.height / 2);
+        const gap = down ? r.top - A.bottom : A.top - r.bottom;
+        if (dy <= 4 || gap < -A.height / 2) continue;
+        cand.push([el, r, gap]); if (gap < near) near = gap;
+      }
+      Nav.rects.clear();
+      const row = cand.filter((c) => c[2] <= near + 16);
+      let best = null, bd = Infinity;
+      for (const [el, r] of row) { const d = Math.abs(r.left + r.width / 2 - ax); if (d < bd) { bd = d; best = el; } }
+      if (best) { if (pane === body) Nav.mem.set(body, best); Nav.focus(best, fast); return; }
+      if (pane === body) { const sc = a.closest('.set-body, .layer-ov') || body; sc.scrollBy({ top: down ? 200 : -200, behavior: 'smooth' }); }
+      return;
+    }
+    return mv(dir, fast);
+  };
+})();
+
 /* ---------------- 2.12.0 Anime skipping for every addon ----------------
    Skip.load already asks AniSkip when the episode id is a Kitsu or MAL id (anime addons). Most people watch anime
    through Cinemeta-style IMDb ids (tt…:season:episode), so those never got skip times. Now an animated series with
@@ -13978,6 +14050,67 @@ const Desktop = {
   },
 };
 Desktop.init();
+
+/* ---------------- 2.13.1 Phone Back button ----------------
+   Android's Back (the Android app, Chrome and the installed web app) walks the page's history. The app used to keep a
+   single history entry, so Back left MKCinema at once. Now each tap keeps a few spare entries, and Back spends one:
+   it closes whatever is open first (the same back() the Esc key uses), then returns to the previous screen, and at the
+   start screen it asks for a second press before leaving. TVs keep their own Back handling and are left alone. */
+const BackNav = {
+  DEPTH: 5, views: [], popping: false, skip: false, armT: 0,
+  idx() { const s = history.state; return s && typeof s.mkb === 'number' ? s.mkb : 0; },
+  // one entry per tap: Chrome lets Back land on entries the page added while the user was interacting with it
+  topUp() { const i = this.idx(); if (i >= this.DEPTH) return; try { history.pushState({ mkb: i + 1 }, '', location.href); } catch (e) { /* sandboxed */ } },
+  rootView() { const t = $('#tabs .tab'); return (t && t.dataset.view) || 'home'; },
+  // did back() close or change anything? Watch the DOM while it runs.
+  closeTop() {
+    const mo = new MutationObserver(() => {}); mo.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['hidden', 'class', 'open'] });
+    try { back(); } catch (e) { /* keep going */ }
+    const changed = mo.takeRecords().length > 0; mo.disconnect();
+    return changed;
+  },
+  prevScreen() {
+    while (this.views.length) {
+      const v = this.views.pop(); if (v.view === S.view) continue;
+      this.popping = true; try { go(v.view, v.opts); } finally { this.popping = false; }
+      const y = v.y; if (y > 0) setTimeout(() => scrollTo({ top: y, behavior: 'instant' in document.documentElement.style ? 'instant' : 'auto' }), 80);
+      return true;
+    }
+    if (S.view !== this.rootView()) { this.popping = true; try { go(this.rootView()); } finally { this.popping = false; } return true; }
+    return false;
+  },
+  onPop() {
+    if (this.skip) { this.skip = false; return; }
+    if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); return; }
+    if (this.closeTop() || this.prevScreen()) return;
+    // the start screen with nothing open: step down to the first entry, so the next Back leaves the app
+    const i = this.idx(); if (i > 0) { this.skip = true; history.go(-i); }
+    toast('Press Back again to exit', 'info', 2200, 'backexit');
+    clearTimeout(this.armT);
+    // the Android app's Back only sees history, so put one entry back if they stay
+    if (/MKCinemaAndroid/.test(navigator.userAgent)) this.armT = setTimeout(() => { if (!this.idx()) this.topUp(); }, 2400);
+  },
+  init() {
+    if (IS_TV) return;
+    // views remember where they came from; the start screen starts a fresh trail
+    const g0 = go;
+    go = function (view, opts) {
+      if (!BackNav.popping && S.view && S.view !== view) {
+        if (view === BackNav.rootView()) BackNav.views = [];
+        else { BackNav.views.push({ view: S.view, opts: S.view === 'movie' || S.view === 'series' ? S.discoverOpts || {} : {}, y: scrollY }); if (BackNav.views.length > 30) BackNav.views.shift(); }
+      }
+      if (view === 'movie' || view === 'series') S.discoverOpts = opts || {};
+      return g0.apply(this, arguments);
+    };
+    // other code resets the address with replaceState(null, …); keep the entry's place in the trail
+    const rs = history.replaceState.bind(history);
+    history.replaceState = function (state, t, u) { const i = BackNav.idx(); if (state == null && i) state = { mkb: i }; return rs(state, t, u); };
+    const tap = () => { clearTimeout(BackNav.armT); BackNav.topUp(); };
+    addEventListener('pointerup', tap, true); addEventListener('keydown', tap, true);
+    addEventListener('popstate', () => this.onPop());
+  },
+};
+BackNav.init();
 
 </script>
 <script id="mkc-cfwa">

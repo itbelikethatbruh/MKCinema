@@ -2,6 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.13.1 (2026-11-05)
+
+- **TV: the whole side menu is reachable**: with the side menu on, Down from Calendar now continues to Addons, Account, Watch party and Settings instead of jumping into the catalog.
+- **TV: every option in Settings is reachable**: Up and Down walk the options row by row, so buttons at the right edge (such as Add in Plugins & themes, and Text color in Subtitles) are no longer skipped.
+- **Walkthrough buttons stay put**: Back and Next sit in the same place on every step. A longer step scrolls inside the panel (Up and Down on a remote).
+- **Phone Back button**: Back closes what is open, then returns to the previous screen, and at the start screen asks for a second press before leaving the app.
+
 ## Web app 2.13.0 and Android/TV app 1.3.0 (2026-11-05)
 
 - **Torrents on Android, Android TV and Fire TV** (Settings › Torrents, off by default): the app now carries the same download-only torrent engine as the Windows app. On a TV stick it keeps one torrent at a time, stops if free storage runs low, and deletes everything when you turn it off or close the app. Settings explains that peers can see your IP before it can be turned on. Older 32-bit Fire TV Sticks are included.
