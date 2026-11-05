@@ -2,6 +2,12 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.10.0 (2026-11-05)
+
+- **Seat pictures**: MKCinema now has its own set of soft 3D-style portraits, covering a range of skin tones, hair types and head coverings, plus six playful characters for kids. Surprise me rolls a new one. Your main seat shows your account's profile photo if you added one.
+- **Edit seats from Who's watching**: a Manage seats button lets you rename a seat, change its picture or set a PIN, without going into Settings. A kids seat still needs the grown-up PIN, and a locked seat asks for its own PIN first.
+- On another seat, the account button shows that seat's picture.
+
 ## Windows app 1.1.0 (2026-11-05)
 
 - **Fixes the app closing right after it opens.** When Microsoft Edge WebView2 failed to start, the app crashed with no message. Start-up errors are now caught and explained, with a link to reinstall WebView2 when that's the fix, and details go to `%LOCALAPPDATA%\MKCinema\mkcinema.log`.

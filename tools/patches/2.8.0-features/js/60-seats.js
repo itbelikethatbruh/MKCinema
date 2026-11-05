@@ -6,28 +6,54 @@
 const Seats = {
   list() { return Store.raw.get('seats', []) || []; },
   saveList(l) { Store.raw.set('seats', l); Account.schedule(); },
-  owner() { return { id: '', name: Store.raw.get('ownerSeatName', '') || (Account.user ? Account.name().split('@')[0] : 'Main'), color: '#d9d4c7', pin: Store.raw.get('ownerPin', ''), kids: false }; },
+  owner() { return { id: '', name: Store.raw.get('ownerSeatName', '') || (Account.user ? Account.name().split('@')[0] : 'Main'), color: '#d9d4c7', pin: Store.raw.get('ownerPin', ''), kids: false, av: Store.raw.get('ownerAv', '') }; },
   all() { return [this.owner(), ...this.list()]; },
   cur() { return this.all().find((s) => s.id === SEAT) || this.owner(); },
   kids() { return !!this.cur().kids; },
   COLORS: ['#d9d4c7', '#bccde4', '#e3c8bd', '#e8d7b8', '#9ccfb0', '#c9b6e4', '#e5a3a3', '#a3d3e5'],
   async hashPin(id, pin) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`mkc-seat:${id}:${pin}`)); return Array.from(new Uint8Array(b)).map((x) => x.toString(16).padStart(2, '0')).join(''); },
-  avatar(s, lg) { return `<span class="seat-av${lg ? ' lg' : ''}${s.kids ? ' kids' : ''}" style="--sc:${esc(s.color || '#d9d4c7')}">${esc((s.name || '?').trim()[0] || '?').toUpperCase()}</span>`; },
+  /* 2.10.0: what a seat shows. 'photo' = the account's profile photo (main seat only), 'letter' = the old initial,
+     a SeatArt code = one of the portraits. A seat that never chose shows the account photo (main seat) or a portrait
+     picked from its id, so it looks the same on every device without anything being saved. */
+  artOf(s) {
+    const av = s.av || '', photo = s.id === '' && Store.get('avatar', null);
+    if (av === 'letter') return 'letter';
+    if (av === 'photo') return photo ? 'photo' : 'letter';
+    if (typeof SeatArt !== 'undefined' && SeatArt.valid(av)) return av;
+    if (photo) return 'photo';
+    if (typeof SeatArt === 'undefined') return 'letter';
+    const people = SeatArt.SET.filter((c) => c[0] === 'p'), h = [...String(s.id || 'main')].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+    return people[h % people.length];
+  },
+  avatar(s, lg, force) {
+    const a = force || this.artOf(s), cls = `seat-av${lg ? ' lg' : ''}${s.kids ? ' kids' : ''}`;
+    if (a === 'photo') return `<span class="${cls} img"><img src="${esc(Store.get('avatar', ''))}" alt=""></span>`;
+    if (a !== 'letter') return `<span class="${cls} art">${SeatArt.svg(a)}</span>`;
+    return `<span class="${cls}" style="--sc:${esc(s.color || '#d9d4c7')}">${esc((s.name || '?').trim()[0] || '?').toUpperCase()}</span>`;
+  },
+  managing: false,
   /* ---- the chooser ---- */
   pick({ force = false } = {}) {
     if (!this.list().length && !force) return;
     X8.layer('seatPick', { label: 'Who’s watching?', full: true });
     X8.backHook.seatPick = () => { const p = $('#seatPin'); if (p && !p.hidden) { p.hidden = true; Nav.settle(); return true; } return !force && !Store.raw.get('seatChosen', false) ? true : false; };
-    const b = X8.body('seatPick');
-    b.innerHTML = `<div class="seat-wrap"><span class="pk-mark">MKCinema</span><h2 class="seat-h">Who’s watching?</h2>
-      <div class="seat-grid">${this.all().map((s) => `<button type="button" class="seat" data-nav data-seat="${esc(s.id)}">${this.avatar(s, true)}<b>${esc(s.name)}</b><small>${s.kids ? 'Kids' : s.pin ? 'PIN' : s.id === SEAT ? 'Here now' : '&nbsp;'}</small></button>`).join('')}
-      <button type="button" class="seat add" data-nav id="seatAdd"><span class="seat-av lg add"><i data-lucide="plus"></i></span><b>Add a seat</b><small>&nbsp;</small></button></div></div>
+    const b = X8.body('seatPick'), m = this.managing;
+    b.innerHTML = `<div class="seat-wrap"><span class="pk-mark">MKCinema</span><h2 class="seat-h">${m ? 'Manage seats' : 'Who’s watching?'}</h2>
+      <div class="seat-grid${m ? ' manage' : ''}">${this.all().map((s) => `<button type="button" class="seat" data-nav data-seat="${esc(s.id)}" aria-label="${m ? `Edit ${esc(s.name)}` : esc(s.name)}"><span class="seat-face">${this.avatar(s, true)}${m ? '<span class="seat-pen"><i data-lucide="pencil"></i></span>' : ''}</span><b>${esc(s.name)}</b><small>${m ? 'Edit' : s.kids ? 'Kids' : s.pin ? 'PIN' : s.id === SEAT ? 'Here now' : '&nbsp;'}</small></button>`).join('')}
+      <button type="button" class="seat add" data-nav id="seatAdd"><span class="seat-av lg add"><i data-lucide="plus"></i></span><b>Add a seat</b><small>&nbsp;</small></button></div>
+      <button type="button" class="btn ${m ? 'btn-prime' : 'btn-ghost'} seat-manage" data-nav id="seatManage">${m ? '<i data-lucide="check"></i>Done' : '<i data-lucide="pencil"></i>Manage seats'}</button></div>
       <div class="seat-pin x8-sub" id="seatPin" hidden></div>`;
     icons();
-    $$('[data-seat]', b).forEach((x) => x.addEventListener('click', () => this.enter(x.dataset.seat)));
-    $('#seatAdd').onclick = () => this.guard(() => { X8.close('seatPick'); openSettings('seats'); });
+    $$('[data-seat]', b).forEach((x) => x.addEventListener('click', () => (this.managing ? this.editFromPicker(x.dataset.seat) : this.enter(x.dataset.seat))));
+    $('#seatManage').onclick = () => { this.managing = !this.managing; this.pick({ force: true }); if (IS_TV) Nav.focus($('#seatManage'), true); };
+    $('#seatAdd').onclick = () => this.guard(() => this.edit(null));
     X8.open('seatPick');
-    if (IS_TV) { const c = $(`[data-seat="${SEAT}"]`, b); if (c) Nav.focus(c, true); }
+    if (IS_TV && !m) { const c = $(`[data-seat="${SEAT}"]`, b); if (c) Nav.focus(c, true); }
+  },
+  /* editing from the picker: a kids seat needs the grown-up PIN, and someone else's locked seat needs its own PIN */
+  editFromPicker(id) {
+    const s = this.all().find((x) => x.id === id); if (!s) return;
+    this.guard(() => (s.pin && s.id !== SEAT && !this.unlocked ? this.askPin(s, () => this.edit(id)) : this.edit(id)));
   },
   async enter(id) {
     const s = this.all().find((x) => x.id === id); if (!s) return;
@@ -70,7 +96,7 @@ const Seats = {
   guard(fn) {
     if (this.unlocked && Date.now() - this.unlockedAt > 10 * 60e3) this.unlocked = false;   // the grown-up unlock lasts 10 minutes
     if (!this.kids() || this.unlocked || !this.owner().pin) { if (this.kids() && !this.owner().pin && !this.unlocked) { /* no grown-up PIN set: nothing to check */ } return fn(); }
-    this.askPin(this.owner(), () => { this.unlocked = true; this.unlockedAt = Date.now(); X8.close('seatPick'); fn(); }, 'Grown-up PIN');
+    this.askPin(this.owner(), () => { this.unlocked = true; this.unlockedAt = Date.now(); if (!this.managing) X8.close('seatPick'); fn(); }, 'Grown-up PIN');
   },
   kidSafe(m) {
     if (!m) return true;
@@ -95,20 +121,33 @@ const Seats = {
     $$('#setBody [data-sed]').forEach((b) => b.addEventListener('click', () => this.edit(b.dataset.sed)));
   },
   edit(id) {
-    const isNew = id == null, s = isNew ? { id: `s${Date.now().toString(36)}`, name: '', color: this.COLORS[(this.list().length + 1) % this.COLORS.length], kids: false, pin: '' } : { ...this.all().find((x) => x.id === id) };
+    const isNew = id == null, s = isNew ? { id: `s${Date.now().toString(36)}`, name: '', color: this.COLORS[(this.list().length + 1) % this.COLORS.length], kids: false, pin: '', av: this.freshArt() } : { ...this.all().find((x) => x.id === id) };
+    if (!s.av || !(s.av === 'letter' || s.av === 'photo' || SeatArt.valid(s.av))) s.av = this.artOf(s);
+    const photo = s.id === '' && Store.get('avatar', null);
+    let rolled = SeatArt.SET.includes(s.av) || s.av === 'photo' || s.av === 'letter' ? '' : s.av;
     if (isNew && this.list().length >= 7) { toast('Seven extra seats is the most', 'err'); return; }
     X8.layer('seatEdit', { label: 'Seat', icon: 'users', eyebrow: 'Seats' });
     const b = X8.body('seatEdit');
     b.innerHTML = `<h3 class="x8-h">${isNew ? 'Add a seat' : `Edit ${esc(s.name)}`}</h3>
-      <div class="x8-form"><label>Name<input class="inp" id="seName" maxlength="20" value="${esc(s.name)}" placeholder="Name" autocomplete="off"></label>
-      <div class="seat-colors" role="radiogroup" aria-label="Colour">${this.COLORS.map((c) => `<button type="button" data-nav data-col="${c}" class="${c === s.color ? 'on' : ''}" style="--sc:${c}" aria-label="Colour ${c}"></button>`).join('')}</div>
+      <div class="x8-form"><div class="se-top"><span id="seFace">${this.avatar(s, true, s.av)}</span><label>Name<input class="inp" id="seName" maxlength="20" value="${esc(s.name)}" placeholder="Name" autocomplete="off"></label></div>
+      <div class="se-avh"><b>Picture</b><button class="btn btn-ghost btn-sm" type="button" data-nav id="seRoll"><i data-lucide="wand-sparkles"></i>Surprise me</button></div>
+      <div class="seat-avs" role="radiogroup" aria-label="Picture" id="seAvs"></div>
+      <div class="seat-colors" role="radiogroup" aria-label="Colour" id="seCols"${s.av === 'letter' ? '' : ' hidden'}>${this.COLORS.map((c) => `<button type="button" data-nav data-col="${c}" class="${c === s.color ? 'on' : ''}" style="--sc:${c}" aria-label="Colour ${c}"></button>`).join('')}</div>
       ${s.id !== '' ? `<div class="set-row"><div><b>Kids seat</b><small>Only Animation and Family titles, no Live TV, and the grown-up PIN for Settings and Addons.</small></div><div class="set-ctl"><button class="switch ${s.kids ? 'on' : ''}" type="button" id="seKids" role="switch" aria-checked="${!!s.kids}" aria-label="Kids seat"></button></div></div>` : ''}
       ${s.id !== '' && !this.owner().pin ? '<label id="seGrownL">Grown-up PIN (4 digits). A kids seat needs one, so only a grown-up can leave it or open Settings<input class="inp mono" id="seGrown" inputmode="numeric" maxlength="4" placeholder="Set a grown-up PIN" autocomplete="off"></label>' : ''}
       <label>${s.id === '' ? 'Grown-up PIN (4 digits, guards kids seats too)' : 'PIN (4 digits, optional)'}<input class="inp mono" id="sePin" inputmode="numeric" maxlength="4" placeholder="${s.pin ? '•••• (leave empty to keep)' : 'No PIN'}" autocomplete="off"></label>
       ${s.pin ? '<button class="btn btn-ghost btn-sm" type="button" data-nav id="seNoPin"><i data-lucide="lock-open"></i>Remove the PIN</button>' : ''}</div>
       <div class="actions"><button class="btn btn-prime" type="button" data-nav id="seSave"><i data-lucide="check"></i>Save</button>${!isNew && s.id !== '' && s.id !== SEAT ? '<button class="btn btn-ghost danger" type="button" data-nav id="seDel"><i data-lucide="trash-2"></i>Remove seat</button>' : ''}</div>`;
-    icons();
-    $$('[data-col]', b).forEach((x) => x.addEventListener('click', () => { s.color = x.dataset.col; $$('[data-col]', b).forEach((y) => y.classList.toggle('on', y === x)); }));
+    const avs = () => [...(photo ? ['photo'] : []), ...(rolled ? [rolled] : []), ...SeatArt.SET, 'letter'];
+    const face = () => { $('#seFace', b).innerHTML = this.avatar({ ...s, name: $('#seName', b).value || s.name || '?' }, true, s.av); $('#seCols', b).hidden = s.av !== 'letter'; };
+    const paintAvs = () => {
+      $('#seAvs', b).innerHTML = avs().map((a) => `<button type="button" data-nav data-av="${esc(a)}" class="${a === s.av ? 'on' : ''}" role="radio" aria-checked="${a === s.av}" aria-label="${a === 'photo' ? 'Your profile photo' : a === 'letter' ? 'First letter of the name' : 'Portrait'}">${this.avatar({ ...s, name: $('#seName', b).value || s.name || '?', kids: false }, false, a)}</button>`).join('');
+      $$('[data-av]', b).forEach((x) => x.addEventListener('click', () => { s.av = x.dataset.av; $$('[data-av]', b).forEach((y) => { y.classList.toggle('on', y === x); y.setAttribute('aria-checked', y === x); }); face(); }));
+    };
+    paintAvs(); icons();
+    $('#seRoll', b).onclick = () => { let r; do r = SeatArt.random(); while (r === s.av); rolled = r; s.av = r; paintAvs(); face(); };
+    $('#seName', b).addEventListener('input', () => { if (s.av === 'letter') face(); });
+    $$('[data-col]', b).forEach((x) => x.addEventListener('click', () => { s.color = x.dataset.col; $$('[data-col]', b).forEach((y) => y.classList.toggle('on', y === x)); face(); }));
     const k = $('#seKids', b); if (k) k.onclick = () => { s.kids = !s.kids; k.classList.toggle('on', s.kids); k.setAttribute('aria-checked', s.kids); };
     const np = $('#seNoPin', b); if (np) np.onclick = () => { s.pin = ''; np.remove(); toast('PIN will be removed when you save'); };
     $('#sePin', b).addEventListener('keydown', (e) => e.stopPropagation());
@@ -123,16 +162,27 @@ const Seats = {
         if (!/^\d{4}$/.test(grown)) { toast('Set a 4-digit grown-up PIN first, so kids can’t leave their seat', 'err', 4200); if (gEl) gEl.focus(); return; }
         Store.raw.set('ownerPin', await this.hashPin('', grown)); Account.schedule();
       }
-      if (s.id === '') { Store.raw.set('ownerSeatName', s.name); Store.raw.set('ownerPin', s.pin || ''); Account.schedule(); }
-      else { const l = this.list().filter((x) => x.id !== s.id); l.push({ id: s.id, name: s.name, color: s.color, kids: !!s.kids, pin: s.pin || '' }); this.saveList(l); }
-      X8.close('seatEdit'); if (!$('#settings').hidden) renderSettingsBody(); toast(isNew ? `${s.name} has a seat` : 'Seat saved', 'ok');
+      if (s.id === '') { Store.raw.set('ownerSeatName', s.name); Store.raw.set('ownerPin', s.pin || ''); Store.raw.set('ownerAv', s.av || ''); Account.schedule(); }
+      else { const l = this.list(), i = l.findIndex((x) => x.id === s.id), row = { id: s.id, name: s.name, color: s.color, kids: !!s.kids, pin: s.pin || '', av: s.av || '' }; if (i >= 0) l[i] = row; else l.push(row); this.saveList(l); }
+      X8.close('seatEdit'); this.refresh(); toast(isNew ? `${s.name} has a seat` : 'Seat saved', 'ok');
     });
     const del = $('#seDel'); if (del) del.onclick = () => confirmTwice(del, () => this.guard(() => {
       this.saveList(this.list().filter((x) => x.id !== s.id));
       try { Object.keys(localStorage).filter((x) => x.startsWith(`mkc:seat:${s.id}:`)).forEach((x) => localStorage.removeItem(x)); } catch (e) { /* blocked */ }
-      X8.close('seatEdit'); if (!$('#settings').hidden) renderSettingsBody(); toast('Seat removed');
+      X8.close('seatEdit'); this.refresh(); toast('Seat removed');
     }));
     X8.open('seatEdit');
+    if (IS_TV) { if (typeof TvType !== 'undefined') ['#seName', '#sePin', '#seGrown'].forEach((q) => { const el = $(q, b); if (el) TvType.guard(el); }); const on = $('#seAvs .on', b); if (on) Nav.focus(on, true); }
+  },
+  /* a new seat starts on a portrait nobody in the house has yet */
+  freshArt() {
+    const used = new Set(this.all().map((x) => this.artOf(x))), free = SeatArt.SET.filter((c) => c[0] === 'p' && !used.has(c));
+    return free.length ? free[Math.floor(Math.random() * free.length)] : SeatArt.random();
+  },
+  refresh() {
+    if (!$('#settings').hidden) renderSettingsBody();
+    const p = $('#seatPick'); if (p && !p.hidden) { this.pick({ force: true }); if (IS_TV) Nav.settle(); }
+    Account.chip();
   },
   /* ---- sync: the main seat's library stays the account's library; other seats ride along under d.seats ---- */
   seatData(id) {
@@ -145,7 +195,7 @@ const Seats = {
       const d = ex.apply(this, arguments);
       if (SEAT) ['watchlist', 'progress', 'watched', 'taste'].forEach((k) => { d[k] = Store.raw.get(k, k === 'watchlist' ? [] : k === 'taste' ? null : {}); });
       const list = Seats.list();
-      d.seats = { list, ownerName: Store.raw.get('ownerSeatName', ''), ownerPin: Store.raw.get('ownerPin', ''), data: Object.fromEntries(list.map((s) => [s.id, Seats.seatData(s.id)])) };
+      d.seats = { list, ownerName: Store.raw.get('ownerSeatName', ''), ownerPin: Store.raw.get('ownerPin', ''), ownerAv: Store.raw.get('ownerAv', ''), data: Object.fromEntries(list.map((s) => [s.id, Seats.seatData(s.id)])) };
       return d;
     };
     const ap = Account.applyRemote.bind(Account);
@@ -155,7 +205,7 @@ const Seats = {
       ap(d);
       Object.entries(lib).forEach(([k, v]) => Store.raw.set(k, v));
       const z = d.seats; if (!z || !Array.isArray(z.list)) return;
-      Store.raw.set('seats', z.list); if (z.ownerName != null) Store.raw.set('ownerSeatName', z.ownerName); if (z.ownerPin != null) Store.raw.set('ownerPin', z.ownerPin);
+      Store.raw.set('seats', z.list); if (z.ownerName != null) Store.raw.set('ownerSeatName', z.ownerName); if (z.ownerPin != null) Store.raw.set('ownerPin', z.ownerPin); if (z.ownerAv != null) Store.raw.set('ownerAv', z.ownerAv);
       Object.entries(z.data || {}).forEach(([id, v]) => {
         if (id === SEAT) { if (v.watchlist) { S.watchlist = v.watchlist; Store.set('watchlist', v.watchlist); } if (v.progress) { S.progress = v.progress; Store.set('progress', v.progress); } if (v.watched) { Store.set('watched', v.watched); WATCHED = null; } if (v.taste) Store.set('taste', v.taste); return; }
         Object.entries(v || {}).forEach(([k, x]) => { if (x != null) try { localStorage.setItem(`mkc:seat:${id}:${k}`, JSON.stringify(x)); } catch (e) { /* full */ } });
@@ -186,7 +236,7 @@ const Seats = {
     }
     // a small seat badge on the account button
     const chip = Account.chip.bind(Account);
-    Account.chip = function () { chip(); const b = $('#openAccount'); if (b && Seats.list().length) { b.insertAdjacentHTML('beforeend', `<span class="seat-dot" style="--sc:${esc(Seats.cur().color)}" title="Seat: ${esc(Seats.cur().name)}"></span>`); } };
+    Account.chip = function () { chip(); const b = $('#openAccount'); if (b && Account.user && SEAT) { const a = Seats.artOf(Seats.cur()); if (a !== 'letter' && a !== 'photo') b.innerHTML = `<span class="avatar ph art">${SeatArt.svg(a)}</span>`; } if (b && Seats.list().length) { b.insertAdjacentHTML('beforeend', `<span class="seat-dot" style="--sc:${esc(Seats.cur().color)}" title="Seat: ${esc(Seats.cur().name)}"></span>`); } };
     Account.chip();
     let ok = false; try { ok = sessionStorage.getItem('mkc:seatOk') === '1'; } catch (e) { /* private */ }
     if (this.list().length && CFG.seatAsk !== false && !ok) {
