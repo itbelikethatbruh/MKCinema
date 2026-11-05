@@ -29,4 +29,4 @@ These are product decisions, and pull requests that break them won't be merged:
 
 ## License
 
-By contributing, you agree that your contributions are licensed under the [GPL-3.0](LICENSE).
+By contributing, you agree that your contributions are licensed under the [GPL-3.0](LICENSE). The additional terms in [NOTICE](NOTICE) (author credit, marking changes, and the MKCinema name and logo) apply to the whole project.
