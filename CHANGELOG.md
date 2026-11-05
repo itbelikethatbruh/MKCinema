@@ -2,6 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.8.3 and Android app 1.2.2 (2026-11-05)
+
+- **No white bar on TVs**: the white bar down the right edge at start-up was the Android TV app's own scrollbar, which the page cannot hide. Android app 1.2.2 turns it off (and the edge glow). Reinstall it once from mkctv.pages.dev.
+- **Rows slide like Netflix on TVs**: the selected poster stays at the left of the row and the row slides under it. Quick or held presses move instantly so the TV never falls behind, and Right on the last poster goes round to the first.
+- **Solid Top 10 numbers**: the thin outlined rank numbers are now solid and crisp.
+- **Network logos**: the Networks row and each service's page show the service's real logo, lifted off its tile with a soft glow and shadow. The logos ship with the app.
+
 ## Web app 2.8.2 (2026-11-05)
 
 - **Networks**: a Networks row under Top 10 opens what's on Netflix, Disney+, HBO Max, Prime Video, Apple TV+, Hulu, Paramount+, Peacock, Crunchyroll and Starz in your country, as films or series, with more on demand. The lists come from the community Streaming Catalogs addon and need no key; playing still goes through your own addons. Kids seats don't show the row.

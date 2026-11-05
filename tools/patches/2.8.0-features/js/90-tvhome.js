@@ -19,7 +19,7 @@ const Networks = {
   },
   net(id) { return this.LIST.find((n) => n[0] === id) || this.LIST[0]; },
   tile([id, name, c]) {
-    return `<button type="button" class="net-tile" data-nav data-net="${id}" style="--nc:${c}" aria-label="${esc(name)}: films and series"><b>${esc(name)}</b><small>Films &amp; series</small></button>`;
+    return `<button type="button" class="net-tile" data-nav data-net="${id}" style="--nc:${c}" aria-label="${esc(name)}: films and series"><span class="net-shade"></span><img class="net-logo" src="net/${id}.svg" alt="" decoding="async" draggable="false"></button>`;
   },
   row() {
     const sec = document.createElement('section'); sec.className = 'row net-row'; sec.id = 'netRow';
@@ -40,7 +40,7 @@ const Networks = {
     const box = $('#netBody'); if (!box) return;
     const [id, name, c] = this.net(this.cur);
     box.style.setProperty('--nc', c);
-    box.innerHTML = `<div class="net-head"><h1 class="page-title">${esc(name)}</h1><p class="page-sub">Popular on ${esc(name)} in ${esc(this.country())} right now. Lists from the community Streaming Catalogs addon; playing still uses your own addons.</p>
+    box.innerHTML = `<div class="net-head"><h1 class="page-title net-title" aria-label="${esc(name)}"><img class="net-logo" src="net/${id}.svg" alt="" decoding="async"></h1><p class="page-sub">Popular on ${esc(name)} in ${esc(this.country())} right now. Lists from the community Streaming Catalogs addon; playing still uses your own addons.</p>
         <div class="toolbar"><div class="segc" role="radiogroup" aria-label="Type">${[['movie', 'Films'], ['series', 'Series']].map(([v, l]) => `<button type="button" data-nav data-nt="${v}" class="${this.type === v ? 'on' : ''}" role="radio" aria-checked="${this.type === v}">${l}</button>`).join('')}</div>
         <div class="net-switch">${this.LIST.map(([nid, nn, nc]) => `<button type="button" class="chip ${nid === id ? 'on' : ''}" data-nav data-nsw="${nid}" style="--nc:${nc}">${esc(nn)}</button>`).join('')}</div></div></div>
       <div class="grid" id="netGrid">${skeletons(12)}</div>
@@ -95,11 +95,30 @@ const TvHome = {
       if (IS_TV && a && dir === 'left' && a.id === 'heroPlay' && $('#heroPrev')) { Nav.focus($('#heroPrev'), fast); return; }
       if ((dir === 'left' || dir === 'right') && a && a.matches && a.matches('.rail>.card, .rail>.net-tile') && !Nav.step(a, dir)) {
         const rail = a.closest('.rail');
-        if (dir === 'right' && rail && rail._inf && typeof Endless !== 'undefined') Endless.near(rail, a); // an endless row loads more and the next press continues
+        if (dir === 'right' && rail && rail._inf && typeof Endless !== 'undefined') { Endless.near(rail, a); return; } // an endless row loads more and the next press continues
+        // 2.8.3: like Netflix, Right on the last poster goes round to the first one instead of stopping dead
+        if (IS_TV && dir === 'right' && rail) { const first = $$(':scope>[data-nav]', rail).find((x) => !x.closest('[hidden]')); if (first && first !== a) Nav.focus(first, fast); }
         return;
       }
       return move(dir, fast);
     };
+    // 2.8.3 (Drake: holding Right on Top 10 did not slide the row along, it lagged and looked stuck).
+    // On TV the focused poster in a row is pinned to the row's left edge and the row slides under it, as on Netflix.
+    // Quick presses or a held button move it instantly, so smooth scrolls never pile up on a slow Fire TV.
+    if (IS_TV) {
+      const focus = Nav.focus.bind(Nav); let lastH = 0;
+      Nav.focus = function (el, fast) {
+        const rail = el && el.closest && el.closest('.rail'), now = performance.now(), quick = fast || now - lastH < 320;
+        if (rail) lastH = now;
+        const r = focus(el, quick);
+        if (rail && rail.scrollWidth > rail.clientWidth + 2) {
+          const pad = parseFloat(getComputedStyle(rail).paddingLeft) || 0, rr = rail.getBoundingClientRect(), er = el.getBoundingClientRect();
+          const left = Math.max(0, Math.min(rail.scrollWidth - rail.clientWidth, rail.scrollLeft + er.left - rr.left - pad - (parseFloat(getComputedStyle(el).marginLeft) || 0)));  // a Top 10 rank number sits in the margin, so it stays in view
+          if (Math.abs(left - rail.scrollLeft) > 1) rail.scrollTo({ left, behavior: quick ? 'auto' : 'smooth' });
+        }
+        return r;
+      };
+    }
     // the banner arrows: reachable and pressable with the remote
     if (IS_TV) ['heroPrev', 'heroNext'].forEach((id) => { const b = $(`#${id}`); if (b) b.setAttribute('data-nav', ''); });
   },

@@ -38,7 +38,7 @@ public class MainActivity extends Activity {
     static final String HOME = "https://mkcinema.pages.dev/";
     static final String HOST = "mkcinema.pages.dev";
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4;
-    static final String VER = "1.2.1";
+    static final String VER = "1.2.2";
 
     WebView web;
     FrameLayout root;
@@ -61,6 +61,11 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.BLACK);
         web = new WebView(this);
         web.setBackgroundColor(Color.BLACK);
+        // No native scrollbars or edge glow: the WebView flashed a white bar down the right edge at start-up on TVs
+        web.setVerticalScrollBarEnabled(false);
+        web.setHorizontalScrollBarEnabled(false);
+        web.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+        web.setOverScrollMode(View.OVER_SCROLL_NEVER);
         root.addView(web, new FrameLayout.LayoutParams(-1, -1));
         setContentView(root);
 
