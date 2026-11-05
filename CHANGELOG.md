@@ -2,6 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.22.1 (2026-11-05)
+
+- **Ko-fi**: MKCinema now has a Ko-fi page at [ko-fi.com/mkcinema](https://ko-fi.com/mkcinema). Settings › Support and the occasional thank-you note show a "Support on Ko-fi" button beside PayPal, and the QR code opens Ko-fi.
+- The thank-you note no longer breaks the PayPal wordmark onto two lines on phones, and a tap on either button snoozes it.
+- Website, README and the GitHub Sponsor button link to Ko-fi too.
+- Final 2.22.0 Anime look assets are now in the repo (baked scene-back/scene-near WebP layers that replace sky/far/near SVGs).
+
 ## Web app 2.22.0 (2026-11-05)
 
 - **The Anime look, comic edition**: the whole interface turns into a manga when you pick Anime in Settings › Appearance.
