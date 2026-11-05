@@ -70,7 +70,7 @@ const AnimeComic = {
   scene() {
     if ($('#anScene')) return;
     const d = document.createElement('div'); d.id = 'anScene'; d.setAttribute('aria-hidden', 'true');
-    d.innerHTML = '<i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="shade"></i>';
+    d.innerHTML = '<i class="l0"></i><i class="l2"></i><i class="l3"></i>';
     document.body.prepend(d);
   },
   par: { x: 0, y: 0, tx: 0, ty: 0, raf: 0 },
@@ -79,14 +79,16 @@ const AnimeComic = {
     const tick = () => {
       p.raf = 0;
       p.x += (p.tx - p.x) * 0.12; p.y += (p.ty - p.y) * 0.12;
-      const sc = Math.min(scrollY, 1400), L = $$('#anScene i');
-      const f = [[6, 0.015], [14, 0.04], [26, 0.08], [40, 0.12]];
-      for (let i = 0; i < 4 && L[i]; i++) L[i].style.transform = `translate3d(${(-p.x * f[i][0]).toFixed(1)}px,${(-p.y * f[i][0] * 0.5 - sc * f[i][1]).toFixed(1)}px,0)`;
+      const sc = this.cssScroll ? 0 : Math.min(scrollY, 1400), L = $$('#anScene i');
+      const f = [[0, 0], [26, 0.08], [40, 0.12]];
+      for (let i = 1; i < 3 && L[i]; i++) L[i].style.transform = `translate3d(${(-p.x * f[i][0]).toFixed(1)}px,${(-p.y * f[i][0] * 0.5 - sc * f[i][1]).toFixed(1)}px,0)`;
       if (Math.abs(p.tx - p.x) > 0.002 || Math.abs(p.ty - p.y) > 0.002) p.raf = requestAnimationFrame(tick);
     };
     const kick = () => { if (!p.raf && document.documentElement.classList.contains('an-fx')) p.raf = requestAnimationFrame(tick); };
     addEventListener('pointermove', (e) => { if (e.pointerType !== 'mouse') return; p.tx = e.clientX / innerWidth - 0.5; p.ty = e.clientY / innerHeight - 0.5; kick(); }, { passive: true });
-    addEventListener('scroll', kick, { passive: true });
+    // scrolling moves the layers on the compositor where the browser can (scroll-driven animations); otherwise here
+    this.cssScroll = !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: scroll()'));
+    if (!this.cssScroll) addEventListener('scroll', kick, { passive: true });
     this.kick = kick;
   },
   /* ---------- 3D poster tilt: one element at a time, no preserve-3d ---------- */
@@ -151,6 +153,7 @@ const AnimeComic = {
     de.classList.toggle('an-calm', on && !full);
     if (on) { this.fonts(); this.scene(); this.brand(); }
     this.icons();
+    if (on !== this.wasOn) { this.wasOn = on; if (typeof DockFit !== 'undefined') requestAnimationFrame(() => DockFit.run()); }
     if (on && S.view === 'anime') this.splash();
     if (full && !was) { this.watch(); if (this.kick) this.kick(); }
     if (!full) $$('#anScene i').forEach((i) => { i.style.transform = ''; });
@@ -158,6 +161,8 @@ const AnimeComic = {
   init() {
     if (typeof LOOKS !== 'undefined' && LOOKS.anime) Object.assign(LOOKS.anime, { label: 'Anime', blurb: 'A manga night: comic panels, slash wipes, a new logo and Miko. Effects scale to your device.', l0: '#0a0410', lb: '#3a0d34', li: '#fff', la: '#ff2d55' });
     this.parallax(); this.tilt();
+    // the burst frame and the popped icons reach past the menu bar on purpose: measure the bar without them
+    if (typeof DockFit !== 'undefined') { const o = DockFit.over.bind(DockFit); DockFit.over = function () { const de = document.documentElement; if (!AnimeComic.on()) return o(); de.classList.add('an-measure'); try { return o(); } finally { de.classList.remove('an-measure'); } }; }
     const g0 = go; go = function (view) { const prev = S.view, r = g0.apply(this, arguments); if (AnimeComic.on()) { if (view !== prev) AnimeComic.slash(); if (view === 'anime') setTimeout(() => AnimeComic.splash(), 0); AnimeComic.icons(); } return r; };
     if (typeof AnimeHub !== 'undefined') { const ar = AnimeHub.render.bind(AnimeHub); AnimeHub.render = function () { const r = ar.apply(this, arguments); AnimeComic.splash(); return r; }; }
     if (typeof SideNav !== 'undefined') { const so = SideNav.open.bind(SideNav); SideNav.open = function () { const r = so.apply(this, arguments); AnimeComic.icons(); const t = $('#sideDrawer .sd-brand'); if (t && AnimeComic.on() && !t.querySelector('.an-logo')) t.insertAdjacentHTML('afterbegin', AnimeComic.logo('sd')); return r; }; }

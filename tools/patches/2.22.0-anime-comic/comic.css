@@ -3,15 +3,13 @@ html[data-look="anime"]{--an-ink:#140818;--an-paper:#fff4f8;--an-red:#ff2d55;--a
 /* the scene: four still pictures; Full mode moves them with transform only */
 #anScene{display:none}
 html[data-look="anime"] #anSky{display:none!important}
-html[data-look="anime"] #anScene{display:block;position:fixed;inset:-48px -64px;z-index:-1;pointer-events:none;overflow:hidden;contain:strict}
+html[data-look="anime"] #anScene{display:block;position:fixed;inset:-48px -64px;z-index:-1;pointer-events:none;overflow:hidden;contain:strict;will-change:transform;background:#0a0410}
 #anScene i{position:absolute;inset:0;background-position:center bottom;background-repeat:no-repeat;background-size:cover;will-change:auto}
-#anScene .l0{background-image:url(anime/sky.svg)}
-#anScene .l1{background-image:url(anime/far.svg)}
-#anScene .l2{background-image:url(anime/near.svg)}
+#anScene .l0{background-image:url(anime/scene-back.webp)}
+#anScene .l2{background-image:url(anime/scene-near.webp);top:auto;bottom:0;height:max(calc((100vw + 128px) * .2917),42vh);background-size:cover;background-position:center top}
 #anScene .l3{background:url(anime/branch.svg) left top/min(520px,46vw) auto no-repeat;inset:-10px auto auto -24px;width:min(560px,50vw);height:260px}
-#anScene .shade{background:linear-gradient(180deg,rgba(10,4,16,.35),rgba(10,4,16,.62) 40%,rgba(10,4,16,.86) 75%,#0a0410);transform:none!important}
-html.an-fx #anScene i:not(.shade){will-change:transform}
-html.tv[data-look="anime"] #anScene .l3,html.tv[data-look="anime"] #anScene .l1{display:none}
+html.an-fx #anScene .l2,html.an-fx #anScene .l3{will-change:transform}
+html.tv[data-look="anime"] #anScene .l3{display:none}
 @media (max-width:760px){html[data-look="anime"] #anScene .l3{width:62vw;background-size:58vw auto;opacity:.85}}
 
 /* type: Dela Gothic One with an ink shadow and a crimson echo */
@@ -49,9 +47,8 @@ html[data-look="anime"] .btn-ghost::before{display:none!important}
 
 /* posters: comic panels, with a halftone and a 3D tilt on fast computers */
 html[data-look="anime"] .card-inner{border-radius:6px;box-shadow:0 0 0 2px var(--an-ink),0 0 0 4px rgba(255,244,248,.88),5px 5px 0 4px rgba(var(--an-red-c),.55)}
-html[data-look="anime"]:not(.tv) .card-inner::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;opacity:0;z-index:3;background:radial-gradient(circle at var(--gx,50%) 0,rgba(255,255,255,.22),transparent 55%),radial-gradient(rgba(255,45,85,.5) 1.2px,transparent 1.6px) 0 0/7px 7px;mix-blend-mode:screen;transition:opacity .2s}
+html.an-fx .card.an-tilt .card-inner::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;z-index:3;background:radial-gradient(circle at var(--gx,50%) 0,rgba(255,255,255,.2),transparent 55%),radial-gradient(rgba(255,120,150,.32) 1.2px,transparent 1.6px) 0 0/7px 7px}
 html.an-fx .card.an-tilt .card-inner{transform:perspective(800px) rotateX(var(--rx,0)) rotateY(var(--ry,0)) translateZ(0) scale(1.04);transition:transform .08s linear;box-shadow:0 0 0 2px var(--an-ink),0 0 0 4px #fff,9px 9px 0 4px var(--an-red)}
-html.an-fx .card.an-tilt .card-inner::after{opacity:1}
 html[data-look="anime"] .card .card-inner{transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .2s}
 html.tv[data-look="anime"] .card-inner{box-shadow:0 0 0 2px var(--an-ink),0 0 0 3px rgba(255,244,248,.5)}
 html.tv[data-look="anime"] .card.nav-focus .card-inner{box-shadow:0 0 0 2px var(--an-ink),0 0 0 6px #fff,0 0 0 9px var(--an-red)}
@@ -74,7 +71,7 @@ html[data-look="anime"] #view-anime .an-head.an-comic{padding-right:0;min-height
 .an-splash{display:none}
 html[data-look="anime"] .an-splash{display:block;position:relative;height:clamp(180px,20vw,270px);margin:0 0 18px;border:3px solid var(--an-ink);border-radius:6px;overflow:hidden;background:linear-gradient(115deg,#2a0b33 0,#5a0f3e 55%,#ff2d55 140%);box-shadow:0 0 0 2px rgba(255,244,248,.85),8px 8px 0 2px rgba(var(--an-red-c),.6);isolation:isolate}
 .an-lines{position:absolute;inset:-40%;background:repeating-conic-gradient(from 0deg at 72% 60%,rgba(255,255,255,.13) 0 1.6deg,transparent 1.6deg 7deg);z-index:-1}
-.an-splash::after{content:"";position:absolute;inset:0;background:radial-gradient(rgba(0,0,0,.35) 1.4px,transparent 1.8px) 0 0/8px 8px;mix-blend-mode:multiply;z-index:-1;pointer-events:none}
+.an-splash::after{content:"";position:absolute;inset:0;background:radial-gradient(rgba(0,0,0,.3) 1.4px,transparent 1.8px) 0 0/8px 8px;z-index:-1;pointer-events:none}
 .an-splash .an-logo.big{position:absolute;left:clamp(12px,3vw,40px);top:50%;width:min(56%,520px);height:auto;transform:translateY(-50%) rotate(-4deg);filter:drop-shadow(6px 6px 0 rgba(20,8,24,.85))}
 .an-splash .an-miko2{position:absolute;right:clamp(4px,4vw,60px);bottom:-6%;height:118%;width:auto;filter:drop-shadow(6px 0 0 rgba(20,8,24,.6))}
 .an-bubble{position:absolute;right:calc(clamp(4px,4vw,60px) + clamp(170px,19vw,260px));top:14%;max-width:230px;padding:10px 14px;background:var(--an-paper);color:var(--an-ink);border:3px solid var(--an-ink);border-radius:20px;font:700 14px/1.3 var(--f-body);box-shadow:4px 4px 0 var(--an-ink)}
@@ -120,7 +117,67 @@ html.an-fx #anSlash.go{display:block}
 @keyframes anBurst{from{opacity:1;transform:scale(.3) rotate(0)}to{opacity:0;transform:scale(1.25) rotate(18deg)}}
 
 /* the Appearance thumbnail shows the new scene */
-.lk[data-look="anime"] .lk-scr{background:url(anime/near.svg) center bottom/cover,url(anime/far.svg) center bottom/cover,url(anime/sky.svg) center bottom/cover,var(--lb)!important}
+.lk[data-look="anime"] .lk-scr{background:url(anime/scene-near.webp) center bottom/cover,url(anime/scene-back.webp) center bottom/cover,var(--lb)!important}
 .lk[data-look="anime"] .lk-scr i{font-family:"Dela Gothic One",var(--f-display);text-shadow:2px 2px 0 #ff2d55,4px 4px 0 #140818}
 
 @media (prefers-reduced-motion:reduce){#anSlash,.an-burst{display:none!important}.an-splash *{animation:none!important}}
+
+/* ===== round 2 (Drake): jagged comic frames, icons that break out, the side menu ===== */
+/* posters: a crimson burst frame behind every poster */
+html[data-look="anime"] .card-inner{box-shadow:0 0 0 2px var(--an-ink)}
+html[data-look="anime"]:not(.tv) .card-inner{border:0 solid transparent;border-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2048%2048%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ff2d55%22/%3E%3Cstop%20offset%3D%22.6%22%20stop-color%3D%22%23b0123f%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%235a0f3e%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath%20fill%3D%22url%28%23g%29%22%20fill-rule%3D%22evenodd%22%20d%3D%22M0.0%200.0%20L6.0%207.0%20L12.0%200.0%20L18.0%207.0%20L24.0%200.0%20L30.0%207.0%20L36.0%200.0%20L42.0%207.0%20L48.0%200.0%20L41.0%206.0%20L48.0%2012.0%20L41.0%2018.0%20L48.0%2024.0%20L41.0%2030.0%20L48.0%2036.0%20L41.0%2042.0%20L48.0%2048.0%20L42.0%2041.0%20L36.0%2048.0%20L30.0%2041.0%20L24.0%2048.0%20L18.0%2041.0%20L12.0%2048.0%20L6.0%2041.0%20L0.0%2048.0%20L7.0%2042.0%20L0.0%2036.0%20L7.0%2030.0%20L0.0%2024.0%20L7.0%2018.0%20L0.0%2012.0%20L7.0%206.0Z%20M14%2014%20V34%20H34%20V14Z%22/%3E%3C/svg%3E") 16 / 14px / 9px round}
+html.an-fx .card.an-tilt .card-inner{box-shadow:0 0 0 2px var(--an-ink),0 0 0 4px #fff}
+html.an-fx .card.an-tilt .card-inner{border-image-outset:13px}
+@media (max-width:760px){html[data-look="anime"]:not(.tv) .card-inner{border-image-outset:6px;border-image-width:10px}}
+/* the featured banner and the Anime splash get torn comic edges */
+html[data-look="anime"] .hero,html[data-look="anime"] .an-splash{border:0;box-shadow:none;border-radius:0;clip-path:%JAG_PANEL%}
+/* the menu bar: an ink panel inside a crimson burst */
+html[data-look="anime"] .dock{position:relative;isolation:isolate;background:transparent!important;border:0!important;box-shadow:none!important;overflow:visible}
+html[data-look="anime"] .dock::before,html[data-look="anime"] .dock::after{content:"";position:absolute;pointer-events:none;z-index:-1}
+html[data-look="anime"] .dock::before{inset:-7px;background:linear-gradient(90deg,#ff2d55,#9b1d6a 50%,#ff2d55);clip-path:%JAG_BAR%}
+html[data-look="anime"] .dock::after{inset:1px;background:radial-gradient(rgba(255,45,85,.18) 1px,transparent 1.5px) 0 0/6px 6px,linear-gradient(180deg,#1d0b26,#0e0616);clip-path:%JAG_BAR%}
+html[data-look="anime"] .tabs{padding-block:10px;margin-block:-10px}
+/* tabs: a slanted crimson slash, and the icon bursts out of it */
+html[data-look="anime"] #tabs .tab,html[data-look="anime"] #mtabs button{clip-path:none!important;border-radius:0;overflow:visible}
+html[data-look="anime"] #tabs .tab.on,html[data-look="anime"] #mtabs button.on,html[data-look="anime"] #sideDrawer .sd-list button.on,html[data-look="anime"] #view-anime .segc button.on{clip-path:none!important;background:linear-gradient(104deg,transparent 9px,var(--an-red) 9px,var(--an-red) calc(100% - 9px),transparent calc(100% - 9px))!important;box-shadow:none!important}
+html[data-look="anime"] svg.an-ic{transition:transform .25s cubic-bezier(.2,1.6,.4,1)}
+html[data-look="anime"] #tabs .tab.on svg.an-ic{transform:translate(-3px,-6px) scale(1.75) rotate(-10deg)}
+html[data-look="anime"] .dock-tools svg.an-ic{transform:scale(1.18)}
+@media (hover:hover){html[data-look="anime"] #tabs .tab:hover svg.an-ic,html[data-look="anime"] .dock-tools .ibtn:hover svg.an-ic{transform:translate(-2px,-5px) scale(1.55) rotate(-8deg)}}
+html[data-look="anime"] .dock-tools .ibtn{overflow:visible}
+html[data-look="anime"] #mtabs{overflow:visible;isolation:isolate;background:transparent!important;border:0!important;box-shadow:none!important}
+html[data-look="anime"] #mtabs::before,html[data-look="anime"] #mtabs::after{content:"";position:absolute;pointer-events:none;z-index:-1}
+html[data-look="anime"] #mtabs::before{inset:-7px;background:linear-gradient(90deg,#ff2d55,#9b1d6a 50%,#ff2d55);clip-path:%JAG_BAR%}
+html[data-look="anime"] #mtabs::after{inset:1px;background:linear-gradient(180deg,#1d0b26,#0e0616);clip-path:%JAG_BAR%}
+html[data-look="anime"] #mtabs button.on svg.an-ic{transform:translateY(-16px) scale(1.6) rotate(-8deg);filter:drop-shadow(2px 2px 0 var(--an-ink)) drop-shadow(0 0 1px #fff)}
+html[data-look="anime"] #mtabs button.on{background:none!important}
+html[data-look="anime"] #mtabs button.on span{background:var(--an-red);padding:1px 7px;transform:skewX(-10deg);display:inline-block}
+html.tv[data-look="anime"] svg.an-ic{transition:none}
+/* the side menu: a torn ink rail with a crimson edge; icons break out to the left */
+html[data-look="anime"].nav-side .dock::before{inset:-4px -10px -4px -4px;clip-path:%JAG_RAIL%}
+html[data-look="anime"].nav-side .dock::after{inset:0 -2px 0 0;background:radial-gradient(rgba(255,45,85,.16) 1px,transparent 1.5px) 0 0/6px 6px,repeating-linear-gradient(115deg,rgba(255,255,255,.035) 0 2px,transparent 2px 22px),linear-gradient(180deg,#1d0b26,#0b0410);clip-path:%JAG_RAIL%}
+html[data-look="anime"].nav-side #tabs .tab.on svg.an-ic{transform:translate(-8px,-4px) scale(1.8) rotate(-10deg)}
+html[data-look="anime"].nav-side .dock .brand .word{font-family:var(--an-font);font-weight:400;color:#fff;text-shadow:2px 2px 0 var(--an-red),4px 4px 0 var(--an-ink);letter-spacing:.02em}
+html[data-look="anime"].nav-side .dock .brand .word em{color:var(--an-red);font-style:normal;text-shadow:2px 2px 0 var(--an-ink)}
+html[data-look="anime"].nav-side .dock .brand .an-mark{width:52px;height:52px;transform:rotate(-8deg)}
+html[data-look="anime"].nav-side #tabs .tab .lbl{font-size:15px}
+html.side-mini[data-look="anime"] .dock-wrap::after{background:linear-gradient(90deg,rgba(14,6,22,.95) 0,rgba(14,6,22,.7) 340px,rgba(14,6,22,0) 720px)}
+/* the phone drawer */
+html[data-look="anime"] #sideDrawer .sd-panel{border:0;box-shadow:none;clip-path:%JAG_RAIL%;background:radial-gradient(rgba(255,45,85,.16) 1px,transparent 1.5px) 0 0/6px 6px,repeating-linear-gradient(115deg,rgba(255,255,255,.035) 0 2px,transparent 2px 22px),linear-gradient(180deg,#1d0b26,#0b0410)}
+html[data-look="anime"] #sideDrawer .sd-list button.on svg.an-ic{transform:translate(-4px,-3px) scale(1.6) rotate(-10deg)}
+html[data-look="anime"] #sideDrawer .sd-list button span{text-shadow:2px 2px 0 var(--an-ink)}
+
+/* the Anime page list switcher: one line that scrolls on phones (every look) */
+#view-anime .an-head .toolbar .segc{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;max-width:100%;-webkit-overflow-scrolling:touch}
+#view-anime .an-head .toolbar .segc::-webkit-scrollbar{display:none}
+#view-anime .an-head .toolbar .segc button{flex:none;white-space:nowrap}
+html[data-look="anime"] #view-anime .segc{background:transparent;border:0;gap:6px;padding:4px 2px}
+html[data-look="anime"] #view-anime .segc button{font-family:var(--an-font);font-weight:400;padding:8px 16px;border-radius:0;color:#e9dff2;background:linear-gradient(104deg,transparent 9px,rgba(255,255,255,.06) 9px,rgba(255,255,255,.06) calc(100% - 9px),transparent calc(100% - 9px))}
+html[data-look="anime"] #view-anime .segc button.on{color:#fff;text-shadow:2px 2px 0 var(--an-ink)}
+html.an-measure .dock::before,html.an-measure .dock::after{display:none!important}html.an-measure svg.an-ic{transform:none!important}html.an-measure .tabs{padding-block:0!important;margin-block:0!important}
+@supports (animation-timeline: scroll()){
+  html.an-fx #anScene .l2{animation:anPy2 linear both;animation-timeline:scroll(root);animation-range:0 1400px}
+  html.an-fx #anScene .l3{animation:anPy3 linear both;animation-timeline:scroll(root);animation-range:0 1400px}
+}
+@keyframes anPy2{to{translate:0 -112px}}
+@keyframes anPy3{to{translate:0 -168px}}

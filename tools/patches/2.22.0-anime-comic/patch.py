@@ -4,7 +4,7 @@ night city with parallax. Full effects only on fast devices, with a self-check t
 
 Run once on a 2.21.x+ build:  python3 -I patch.py /path/to/mkcinema
   - index.html: <style id="mkc-222css"> and <script id="mkc-222"> right before <script id="mkc-cfwa">.
-  - anime/: miko.svg (redrawn), sky.svg, far.svg, near.svg, branch.svg (from gen_scene.py).
+  - anime/: miko.svg (redrawn), scene-back.webp + scene-near.webp (baked from gen_scene.py's SVGs by bake.js), branch.svg.
   - sw.js and version.json: 2.22.0 unless newer.
 """
 import os, re, shutil, sys
@@ -24,7 +24,9 @@ def main(root):
     assert 'const AnimeLook' in s, 'needs the 2.16 Anime look'
     cur = re.search(r"const APP_VERSION = '([\d.]+)';", s).group(1)
     rd = lambda n: open(os.path.join(here, n), encoding='utf-8').read()
-    css, js = rd('comic.css'), rd('icons.js') + '\n' + rd('comic.js')
+    sys.path.insert(0, here); import gen_jag
+    css, js = gen_jag.fill(rd('comic.css')), rd('icons.js') + '\n' + rd('comic.js')
+    assert '%JAG_' not in css
     assert '</script' not in js and '</style' not in css
     a = '<script id="mkc-cfwa">'
     assert s.count(a) == 1
@@ -34,7 +36,7 @@ def main(root):
         s = s.replace(f"const APP_VERSION = '{cur}';", f"const APP_VERSION = '{VER}';")
     open(p, 'w', encoding='utf-8').write(s)
     os.makedirs(os.path.join(root, 'anime'), exist_ok=True)
-    for n in ('miko.svg', 'sky.svg', 'far.svg', 'near.svg', 'branch.svg'):
+    for n in ('miko.svg', 'scene-back.webp', 'scene-near.webp', 'branch.svg'):
         shutil.copyfile(os.path.join(here, 'anime', n), os.path.join(root, 'anime', n))
     if bump:
         sp = os.path.join(root, 'sw.js'); w = open(sp, encoding='utf-8').read()
