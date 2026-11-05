@@ -2,6 +2,21 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.22.0 (2026-11-05)
+
+- **The Anime look, comic edition**: the whole interface turns into a manga when you pick Anime in Settings › Appearance.
+  - A new anime MKCinema logo (with エムケー・シネマ), and a star-burst MK badge in the menu bar.
+  - Titles in Dela Gothic One with ink and crimson shadows. Row titles sit behind a crimson slash.
+  - An anime icon set for the menu, and slanted comic buttons.
+  - Posters framed as comic panels, toasts as speech bubbles, and a splash panel with Miko on the Anime page.
+- **Miko, redrawn**: a cel-shaded fox shrine maiden in place of the old drawing.
+- **A layered night city**: moon, skyline, rooftops and a sakura branch. On fast devices it moves in parallax as you scroll and point.
+- **Motion on fast devices only**: slash wipes with sound-effect lettering between sections, impact bursts when you press, and 3D tilt with a halftone shine on posters.
+  - TVs, slower phones, Low graphics and Reduce motion get the same look, still.
+  - If frames start dropping, the effects step down by themselves.
+  - Choose Auto, Full or Calm in Settings › Appearance › Anime effects.
+  - The featured banner never moves.
+
 ## Web app 2.21.1 (2026-11-05)
 
 - **Side menu on phones**: picking Side menu in Settings now closes Settings, slides the menu in once and says where it lives (the ☰ button at the top left). Before, nothing visible changed until you left Settings. On phones the other option is now called Bottom bar, which is where that bar is.
