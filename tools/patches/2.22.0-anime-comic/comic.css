@@ -1,0 +1,126 @@
+/* ===== 2.22.0 Anime look, comic edition ===== */
+html[data-look="anime"]{--an-ink:#140818;--an-paper:#fff4f8;--an-red:#ff2d55;--an-red-c:255,45,85;--an-font:"Dela Gothic One","Sora",system-ui,sans-serif;background:#0a0410}
+/* the scene: four still pictures; Full mode moves them with transform only */
+#anScene{display:none}
+html[data-look="anime"] #anSky{display:none!important}
+html[data-look="anime"] #anScene{display:block;position:fixed;inset:-48px -64px;z-index:-1;pointer-events:none;overflow:hidden;contain:strict}
+#anScene i{position:absolute;inset:0;background-position:center bottom;background-repeat:no-repeat;background-size:cover;will-change:auto}
+#anScene .l0{background-image:url(anime/sky.svg)}
+#anScene .l1{background-image:url(anime/far.svg)}
+#anScene .l2{background-image:url(anime/near.svg)}
+#anScene .l3{background:url(anime/branch.svg) left top/min(520px,46vw) auto no-repeat;inset:-10px auto auto -24px;width:min(560px,50vw);height:260px}
+#anScene .shade{background:linear-gradient(180deg,rgba(10,4,16,.35),rgba(10,4,16,.62) 40%,rgba(10,4,16,.86) 75%,#0a0410);transform:none!important}
+html.an-fx #anScene i:not(.shade){will-change:transform}
+html.tv[data-look="anime"] #anScene .l3,html.tv[data-look="anime"] #anScene .l1{display:none}
+@media (max-width:760px){html[data-look="anime"] #anScene .l3{width:62vw;background-size:58vw auto;opacity:.85}}
+
+/* type: Dela Gothic One with an ink shadow and a crimson echo */
+html[data-look="anime"] .page-title,html[data-look="anime"] .x8-h{font-family:var(--an-font);font-weight:400;letter-spacing:.01em;text-shadow:3px 3px 0 var(--an-red),6px 6px 0 var(--an-ink)}
+html[data-look="anime"] .row-title{font-family:var(--an-font);font-weight:400;letter-spacing:.01em;position:relative;padding-left:16px;text-shadow:2px 2px 0 var(--an-ink),3px 3px 0 rgba(var(--an-red-c),.85)}
+html[data-look="anime"] .row-title::before{content:"";position:absolute;left:0;top:.12em;bottom:.12em;width:7px;background:var(--an-red);transform:skewX(-14deg);box-shadow:2px 2px 0 var(--an-ink)}
+html[data-look="anime"] .row-title small{font-family:var(--f-body);font-weight:700;text-shadow:none;letter-spacing:.14em;color:#ff8fb4}
+html[data-look="anime"] .hero-title,html[data-look="anime"] .hero h1{font-family:var(--an-font);font-weight:400;text-shadow:4px 4px 0 var(--an-red),8px 8px 0 var(--an-ink)}
+html[data-look="anime"] .hero-logo{filter:drop-shadow(4px 4px 0 var(--an-ink)) drop-shadow(3px 3px 0 rgba(var(--an-red-c),.9))}
+html[data-look="anime"] .btn-prime{font-family:var(--an-font);font-weight:400;letter-spacing:0}
+html[data-look="anime"] #tabs .tab .lbl,html[data-look="anime"] #mtabs button span{font-weight:800;font-style:italic;letter-spacing:.01em}
+html[data-look="anime"] .btn-ghost{font-weight:800}
+html[data-look="anime"] #tabs .tab svg.an-ic,html[data-look="anime"] .dock-tools svg.an-ic{width:21px;height:21px}
+
+/* dock: an ink strip with a crimson underline */
+html[data-look="anime"] .dock{background:linear-gradient(180deg,rgba(20,8,24,.96),rgba(10,4,16,.96));border:2px solid var(--an-ink);box-shadow:0 0 0 1px rgba(255,255,255,.08),4px 4px 0 rgba(var(--an-red-c),.55)}
+html[data-look="anime"] .dock .brand .mk{display:none}
+.an-mark{display:none}
+html[data-look="anime"] .dock .brand .an-mark{display:block;width:46px;height:46px;flex:none;filter:drop-shadow(2px 2px 0 var(--an-ink))}
+.an-mk-t{font-family:var(--an-font,"Sora");font-size:21px;letter-spacing:-.04em}
+html.an-fx .dock .brand .an-mark{transition:transform .35s cubic-bezier(.2,1.6,.4,1)}
+html.an-fx .dock .brand:hover .an-mark{transform:rotate(-14deg) scale(1.08)}
+html[data-look="anime"] #tabs .tab{border-radius:0;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%)}
+html[data-look="anime"] #tabs .tab.on,html[data-look="anime"] #mtabs button.on{color:#fff;background:var(--an-red);box-shadow:none;text-shadow:2px 2px 0 var(--an-ink)}
+html[data-look="anime"] #mtabs{background:linear-gradient(180deg,rgba(20,8,24,.97),rgba(10,4,16,.98));border:2px solid var(--an-ink);box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+html[data-look="anime"] #mtabs button.on{clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);border-radius:0}
+svg.an-ic{overflow:visible}
+html[data-look="anime"] .tab.on svg.an-ic,html[data-look="anime"] #mtabs button.on svg.an-ic{--an-red:#fff;filter:drop-shadow(1.5px 1.5px 0 var(--an-ink))}
+
+/* buttons: slanted ink-shadowed panels */
+html[data-look="anime"] .btn-prime{color:#fff;background:var(--an-red);border:0;border-radius:4px;clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%);padding-inline:26px;box-shadow:inset -5px -5px 0 rgba(20,8,24,.55),inset 2px 2px 0 rgba(255,255,255,.35);text-shadow:2px 2px 0 var(--an-ink)}
+html[data-look="anime"] .btn-prime::before{display:none!important}
+html[data-look="anime"] .btn-ghost{border-radius:4px;border:2px solid rgba(255,244,248,.85)!important;background:rgba(20,8,24,.7)!important;box-shadow:3px 3px 0 var(--an-ink)!important}
+html[data-look="anime"] .btn-ghost::before{display:none!important}
+
+/* posters: comic panels, with a halftone and a 3D tilt on fast computers */
+html[data-look="anime"] .card-inner{border-radius:6px;box-shadow:0 0 0 2px var(--an-ink),0 0 0 4px rgba(255,244,248,.88),5px 5px 0 4px rgba(var(--an-red-c),.55)}
+html[data-look="anime"]:not(.tv) .card-inner::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;opacity:0;z-index:3;background:radial-gradient(circle at var(--gx,50%) 0,rgba(255,255,255,.22),transparent 55%),radial-gradient(rgba(255,45,85,.5) 1.2px,transparent 1.6px) 0 0/7px 7px;mix-blend-mode:screen;transition:opacity .2s}
+html.an-fx .card.an-tilt .card-inner{transform:perspective(800px) rotateX(var(--rx,0)) rotateY(var(--ry,0)) translateZ(0) scale(1.04);transition:transform .08s linear;box-shadow:0 0 0 2px var(--an-ink),0 0 0 4px #fff,9px 9px 0 4px var(--an-red)}
+html.an-fx .card.an-tilt .card-inner::after{opacity:1}
+html[data-look="anime"] .card .card-inner{transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .2s}
+html.tv[data-look="anime"] .card-inner{box-shadow:0 0 0 2px var(--an-ink),0 0 0 3px rgba(255,244,248,.5)}
+html.tv[data-look="anime"] .card.nav-focus .card-inner{box-shadow:0 0 0 2px var(--an-ink),0 0 0 6px #fff,0 0 0 9px var(--an-red)}
+@media (max-width:760px){html[data-look="anime"] .card-inner{box-shadow:0 0 0 2px var(--an-ink),0 0 0 3px rgba(255,244,248,.8),3px 3px 0 3px rgba(var(--an-red-c),.5)}}
+
+/* featured banner: a framed comic panel; it never moves */
+html[data-look="anime"] .hero{border:3px solid var(--an-ink);box-shadow:0 0 0 2px rgba(255,244,248,.85),8px 8px 0 2px rgba(var(--an-red-c),.6);border-radius:6px}
+
+/* chips and switches */
+html[data-look="anime"] .chip.on,html[data-look="anime"] .segc button.on{background:var(--an-red);border-color:var(--an-ink);color:#fff;text-shadow:1px 1px 0 var(--an-ink)}
+html[data-look="anime"] .seg button.on{background:var(--an-red);color:#fff}
+
+/* toasts: speech bubbles */
+html[data-look="anime"] .toast{background:var(--an-paper)!important;color:var(--an-ink)!important;border:3px solid var(--an-ink)!important;border-radius:22px!important;box-shadow:5px 5px 0 var(--an-red)!important;position:relative;font-weight:600}
+html[data-look="anime"] .toast .lucide{color:var(--an-red)}
+html[data-look="anime"] .toast::after{content:"";position:absolute;left:28px;bottom:-14px;width:18px;height:14px;background:var(--an-paper);clip-path:polygon(0 0,100% 0,0 100%);border-left:3px solid var(--an-ink)}
+
+/* the Anime page: a splash panel with the logo and Miko */
+html[data-look="anime"] #view-anime .an-head.an-comic{padding-right:0;min-height:0}
+.an-splash{display:none}
+html[data-look="anime"] .an-splash{display:block;position:relative;height:clamp(180px,20vw,270px);margin:0 0 18px;border:3px solid var(--an-ink);border-radius:6px;overflow:hidden;background:linear-gradient(115deg,#2a0b33 0,#5a0f3e 55%,#ff2d55 140%);box-shadow:0 0 0 2px rgba(255,244,248,.85),8px 8px 0 2px rgba(var(--an-red-c),.6);isolation:isolate}
+.an-lines{position:absolute;inset:-40%;background:repeating-conic-gradient(from 0deg at 72% 60%,rgba(255,255,255,.13) 0 1.6deg,transparent 1.6deg 7deg);z-index:-1}
+.an-splash::after{content:"";position:absolute;inset:0;background:radial-gradient(rgba(0,0,0,.35) 1.4px,transparent 1.8px) 0 0/8px 8px;mix-blend-mode:multiply;z-index:-1;pointer-events:none}
+.an-splash .an-logo.big{position:absolute;left:clamp(12px,3vw,40px);top:50%;width:min(56%,520px);height:auto;transform:translateY(-50%) rotate(-4deg);filter:drop-shadow(6px 6px 0 rgba(20,8,24,.85))}
+.an-splash .an-miko2{position:absolute;right:clamp(4px,4vw,60px);bottom:-6%;height:118%;width:auto;filter:drop-shadow(6px 0 0 rgba(20,8,24,.6))}
+.an-bubble{position:absolute;right:calc(clamp(4px,4vw,60px) + clamp(170px,19vw,260px));top:14%;max-width:230px;padding:10px 14px;background:var(--an-paper);color:var(--an-ink);border:3px solid var(--an-ink);border-radius:20px;font:700 14px/1.3 var(--f-body);box-shadow:4px 4px 0 var(--an-ink)}
+.an-bubble::after{content:"";position:absolute;right:-16px;top:22px;width:18px;height:14px;background:var(--an-paper);clip-path:polygon(0 0,100% 50%,0 100%);border-top:3px solid var(--an-ink)}
+@media (max-width:760px){.an-splash .an-logo.big{width:62%;top:34%;left:8px}.an-bubble{display:none}.an-splash .an-miko2{height:104%;right:-8%}}
+html[data-look="anime"] #view-anime .an-head .page-title{font-size:clamp(30px,4vw,52px)}
+.an-logo-t text{font-family:var(--an-font,"Sora");font-size:66px;letter-spacing:-.02em}
+.an-logo-t text.s{font-size:38px;letter-spacing:0}
+.an-logo text.k{font-family:var(--an-font,"Sora");font-size:15px;letter-spacing:.3em}
+html.an-fx .an-splash .an-miko2{animation:anBob 4.5s ease-in-out infinite}
+html.an-fx .an-splash .an-logo.big{animation:anSlam .55s cubic-bezier(.2,1.5,.4,1) both}
+html.an-fx .an-bubble{animation:anPop .4s .35s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes anBob{50%{transform:translateY(-6px) rotate(-1deg)}}
+@keyframes anSlam{from{opacity:0;transform:translateY(-50%) rotate(-4deg) scale(1.6)}to{opacity:1;transform:translateY(-50%) rotate(-4deg) scale(1)}}
+@keyframes anPop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+
+/* side drawer logo */
+html[data-look="anime"] #sideDrawer .sd-brand .an-logo{display:block;width:190px;height:auto}
+html[data-look="anime"] #sideDrawer .sd-brand{font-size:0}
+.an-logo.sd{display:none}
+html[data-look="anime"] #sideDrawer .sd-panel{background:#0e0616;border-right:3px solid var(--an-ink);box-shadow:6px 0 0 rgba(var(--an-red-c),.55)}
+html[data-look="anime"] #sideDrawer .sd-list button.on{background:var(--an-red);color:#fff;border-radius:0;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);text-shadow:2px 2px 0 var(--an-ink)}
+html[data-look="anime"] #sideDrawer .sd-list button span{font-family:var(--an-font)}
+
+/* slash wipe between sections (Full only) */
+#anSlash{position:fixed;inset:0;z-index:120;pointer-events:none;overflow:hidden;display:none;contain:strict}
+html.an-fx #anSlash.go{display:block}
+#anSlash i{position:absolute;left:-30%;width:160%;top:50%;transform:translate3d(-110%,-50%,0) rotate(-14deg)}
+#anSlash .a{height:22vh;background:var(--an-ink)}
+#anSlash .b{height:9vh;background:var(--an-red)}
+#anSlash .c{height:4px;background:#fff;box-shadow:0 0 18px 4px rgba(255,255,255,.7)}
+#anSlash.go .a{animation:anCut .58s cubic-bezier(.7,0,.2,1) both}
+#anSlash.go .b{animation:anCut .58s .04s cubic-bezier(.7,0,.2,1) both}
+#anSlash.go .c{animation:anCut .5s .08s cubic-bezier(.7,0,.2,1) both}
+@keyframes anCut{0%{transform:translate3d(-110%,-50%,0) rotate(-14deg)}45%{transform:translate3d(0,-50%,0) rotate(-14deg)}100%{transform:translate3d(110%,-50%,0) rotate(-14deg)}}
+#anSlash b{position:absolute;left:50%;top:50%;font:400 clamp(44px,8vw,110px)/1 var(--an-font);color:#fff;text-shadow:5px 5px 0 var(--an-red),9px 9px 0 var(--an-ink);transform:translate(-50%,-50%) rotate(-10deg);opacity:0}
+#anSlash.go b{animation:anSfx .62s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes anSfx{0%{opacity:0;transform:translate(-50%,-50%) rotate(-10deg) scale(.4)}30%{opacity:1;transform:translate(-50%,-50%) rotate(-10deg) scale(1.08)}70%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) rotate(-10deg) scale(1.2)}}
+
+/* impact burst (Full only) */
+.an-burst{position:fixed;width:120px;height:120px;margin:-60px 0 0 -60px;z-index:121;pointer-events:none}
+.an-burst svg{width:100%;height:100%;animation:anBurst .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes anBurst{from{opacity:1;transform:scale(.3) rotate(0)}to{opacity:0;transform:scale(1.25) rotate(18deg)}}
+
+/* the Appearance thumbnail shows the new scene */
+.lk[data-look="anime"] .lk-scr{background:url(anime/near.svg) center bottom/cover,url(anime/far.svg) center bottom/cover,url(anime/sky.svg) center bottom/cover,var(--lb)!important}
+.lk[data-look="anime"] .lk-scr i{font-family:"Dela Gothic One",var(--f-display);text-shadow:2px 2px 0 #ff2d55,4px 4px 0 #140818}
+
+@media (prefers-reduced-motion:reduce){#anSlash,.an-burst{display:none!important}.an-splash *{animation:none!important}}
