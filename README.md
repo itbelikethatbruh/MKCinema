@@ -16,6 +16,7 @@
   <a href="https://mkcinema-site.pages.dev"><b>Website</b></a> &nbsp;·&nbsp;
   <a href="#download"><b>Download</b></a> &nbsp;·&nbsp;
   <a href="#features"><b>Features</b></a> &nbsp;·&nbsp;
+  <a href="#compare"><b>Compare</b></a> &nbsp;·&nbsp;
   <a href="#marquee"><b>Now showing</b></a> &nbsp;·&nbsp;
   <a href="#build"><b>Build</b></a> &nbsp;·&nbsp;
   <a href="CHANGELOG.md"><b>Changelog</b></a>
@@ -96,6 +97,60 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 <td width="33%" valign="top"><img src="docs/readme/icon-palette.svg" width="52" alt=""><br><b>Atelier</b><br><sub>Make your own theme from blacks, highlights, type and corners, and share it as a code.</sub></td>
 </tr>
 </table>
+
+<a name="compare"></a>
+## How MKCinema compares
+
+MKCinema does more out of the box than Stremio, Plex, Jellyfin or Kodi in the rows below. Every row is something you can check in each app's own docs or issue tracker. If a row is wrong, [open an issue](https://github.com/itbelikethatbruh/MKCinema/issues) and we'll fix it.
+
+| | **MKCinema** | Stremio | Plex | Jellyfin | Kodi |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Stremio addons and your own Plex, Jellyfin or Emby server in one library | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Watch party with synced playback, chat and voice | ✅ | ❌ | ◐ ¹ | ◐ ² | ❌ |
+| Skip intro and credits | ✅ | ❌ ³ | ✅ ⁴ | ◐ ⁵ | ❌ |
+| Moves to another source by itself if one stalls | ✅ | ❌ | — | — | ❌ |
+| Subtitle sync you can drag into place, with a transcript | ✅ | ◐ ⁶ | ◐ ⁶ | ◐ ⁶ | ◐ ⁶ |
+| Seats for the household, with PINs and kids seats | ✅ | ❌ ⁷ | ✅ | ✅ | ✅ |
+| Phone becomes a remote by scanning a code, no app needed | ✅ | ❌ | ◐ ⁸ | ◐ ⁸ | ◐ ⁸ |
+| Your own M3U or Xtream channels with an XMLTV guide | ✅ | ❌ | ❌ ⁹ | ✅ | ✅ |
+| Split Screen, up to four streams at once | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Ask for picks in plain words, worked out on your device | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Browse films by their best 90-second scenes (Peak Cinema) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Design your own Stremio addon visually (Addon Studio) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Import your Stremio library, progress and addons | ✅ | — | ❌ | ❌ | ❌ |
+| Runs in a browser with nothing to install or host | ✅ | ✅ | ◐ ¹⁰ | ❌ ¹⁰ | ❌ |
+| Free and open source | ✅ GPL-3.0 | ◐ ¹¹ | ❌ | ✅ | ✅ |
+
+<sub>✅ built in · ◐ partly, or only on some devices · ❌ not built in · — doesn't apply</sub>
+
+<details>
+<summary><b>Notes and sources</b></summary>
+
+1. Plex removed Watch Together from its new mobile and TV apps in 2025. It stays in the Plex web app, without voice. ([Android Authority](https://www.androidauthority.com/plex-watch-together-removed-3529939/))
+2. Jellyfin SyncPlay keeps playback in sync, but has no built-in voice.
+3. Still an open request in Stremio's tracker. ([stremio-features #1756](https://github.com/Stremio/stremio-features/issues/1756))
+4. Needs a Plex Pass.
+5. Jellyfin 10.10 can show a skip button, but a plugin has to find the intros first. Support varies by client.
+6. These apps offer a subtitle delay setting only.
+7. Stremio has no profiles. Everyone on an account shares one Continue watching. ([stremio-features #320](https://github.com/Stremio/stremio-features/issues/320))
+8. You need the app installed on the phone (Plex, Jellyfin, or Kore/Yatse for Kodi).
+9. Plex Live TV needs a tuner. M3U playlists need a third-party bridge.
+10. Plex and Jellyfin need a media server that you run yourself to play your own files.
+11. The Stremio apps are open source, but its streaming server is not.
+
+</details>
+
+<details>
+<summary><b>Where others are still ahead</b></summary>
+
+- **Playing every file.** Kodi, Plex, Jellyfin and the Stremio desktop app use native players, so DTS, TrueHD and Dolby Vision files play everywhere. MKCinema's web player can't decode some of these, and it offers VLC or another player for them. A native player for the Android and TV app is being built.
+- **Offline downloads.** Plex and Jellyfin can save films to some devices. MKCinema can't download yet.
+- **Torrents without debrid.** Stremio's desktop app streams torrents itself. MKCinema needs a debrid service or its companion server.
+- **Apple devices.** There's no iPhone, iPad or Apple TV app.
+
+</details>
+
+<sub>Checked November 2026 against each app's public docs and issue trackers. Apps change, so open an issue if something's out of date.</sub>
 
 <a name="screenshots"></a>
 <p><img src="docs/readme/h-screenshots.svg" width="100%" alt="In motion"></p>
