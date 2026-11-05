@@ -2,14 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
-<<<<<<< HEAD
 ## Web app 2.9.3 (2026-11-05)
 
 - **Watch Party, redesigned**: Host and Join side by side, a six-cell code entry, a switch for sharing your stream link, and inside a party the code as letter tiles, members as avatar chips, reactions and chat. It follows your theme, and TV focus rings stay inside the panel.
 - **Split Screen from any film page**: a Split Screen chip next to the source filters puts the best source into a tile.
 
-=======
->>>>>>> origin/claude/project-thread-r7lz4o
 ## Web app 2.9.2 and Android app 1.2.6 (2026-11-05)
 
 - **Sharper Ambient Mode**: the screensaver draws at the screen's full resolution (it drew at half size on TVs before) and uses full-size art, with 4K catalog backdrops when no keys are set. Memory limits for streaming sticks stay in place.
