@@ -33,9 +33,9 @@ const Library = {
     const list = this.view();
     const old = $('#libX'); const hadFocus = old && old.contains(document.activeElement) ? document.activeElement.dataset : null;
     const box = document.createElement('div'); box.id = 'libX';
-    box.innerHTML = `<div class="lib-tabs" role="tablist">${tabs.map(([id, label, n]) => `<button type="button" class="chip${s.tab === id ? ' on' : ''}" role="tab" aria-selected="${s.tab === id}" data-nav data-ltab="${esc(id)}">${esc(label)}${n != null ? ` <span class="tnum">${n}</span>` : ''}</button>`).join('')}<button type="button" class="chip lib-new" data-nav id="libNew"><i data-lucide="plus"></i>New list</button></div>
+    box.innerHTML = `<div class="lib-tabs"><div class="lib-tl" role="tablist" aria-label="Library">${tabs.map(([id, label, n]) => `<button type="button" class="chip${s.tab === id ? ' on' : ''}" role="tab" aria-selected="${s.tab === id}" data-nav data-ltab="${esc(id)}">${esc(label)}${n != null ? ` <span class="tnum">${n}</span>` : ''}</button>`).join('')}</div><button type="button" class="chip lib-new" data-nav id="libNew"><i data-lucide="plus"></i>New list</button></div>
       <div class="lib-bar">
-        <div class="segc" role="radiogroup" aria-label="Type">${[['all', 'All'], ['movie', 'Films'], ['series', 'Series']].map(([v, t]) => `<button type="button" class="${s.type === v ? 'on' : ''}" data-nav data-ltype="${v}">${t}</button>`).join('')}</div>
+        <div class="segc" role="radiogroup" aria-label="Type">${[['all', 'All'], ['movie', 'Films'], ['series', 'Series']].map(([v, t]) => `<button type="button" class="${s.type === v ? 'on' : ''}" role="radio" aria-checked="${s.type === v}" data-nav data-ltype="${v}">${t}</button>`).join('')}</div>
         <select class="inp lib-sort" id="libSort" aria-label="Sort" data-nav>${[['added', 'Date added'], ['az', 'A to Z'], ['year', 'Newest first'], ['rating', 'Highest rated']].map(([v, t]) => `<option value="${v}"${s.sort === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
         ${s.tab !== 'watched' ? `<button type="button" class="chip${s.hide ? ' on' : ''}" data-nav id="libHide" aria-pressed="${s.hide}">Hide watched</button>` : ''}
         <input class="inp lib-q" id="libQ" type="search" placeholder="Filter" value="${esc(s.q)}" autocomplete="off" aria-label="Filter by title">
