@@ -11,6 +11,11 @@ All notable changes to MKCinema. The web app version and the native app versions
 - Video fullscreen now fills the whole screen, and F11 toggles fullscreen. Right-click Copy and Paste work in text fields.
 - Links that open a new window (YouTube, GitHub) open in your browser. The page reloads itself if it crashes.
 
+## Web app 2.9.8 and Android app 1.2.8 (2026-11-05)
+
+- **Sources that need request headers play on TV**: some addons mark a stream as needing headers such as a Referer. The TV app's own player now sends them itself, so these streams play without the companion server. Older TV apps and browsers keep the previous behaviour.
+- **Clearer source tag**: such streams are tagged "needs headers" instead of "via proxy".
+
 ## Web app 2.9.7 (2026-11-05)
 
 - **Anonymous visit counts (optional)**: MKCinema now uses Cloudflare Web Analytics on the app, the website and the TV help page. Once per visit it counts the page, the site you came from, browser, country and load speed. It sets no cookies and no IDs, and it never sees your addons, keys or what you watch. Turn it off under Settings › Data › Share anonymous visit counts. Privacy wording updated to match: no ads, no cookies, no profiles.
