@@ -23,16 +23,22 @@ const Updater = {
     el = document.createElement('div'); el.id = 'updBar'; el.setAttribute('role', 'status');
     el.innerHTML = `<div><b>${msg}</b><small>${sub}</small></div><div class="inrow">${kind === 'app' && !canSelf && tvApp ? '' : `<button class="btn btn-prime btn-sm" type="button" data-nav id="updGo">${kind === 'web' ? 'Refresh' : 'Update'}</button>`}<button class="btn btn-ghost btn-sm" type="button" data-nav id="updLater">Later</button></div>`;
     document.body.appendChild(el);
+    // TV: the bar sits outside the page the remote moves in, so it takes the remote while it shows (see init)
+    if (IS_TV) setTimeout(() => { if (el.isConnected && $('#player').hidden && !document.body.classList.contains('layer-open')) { const f = $('#updGo') || $('#updLater'); if (f) Nav.focus(f, true); } }, 60);
     $('#updLater').onclick = () => { Store.raw.set('updSkip', kind === 'web' ? `web:${v.web}` : `app:${v.android}`); el.remove(); Nav.settle && Nav.settle(); };
     const go = $('#updGo');
     if (go) go.onclick = () => {
       if (kind === 'web') { location.reload(); return; }
       const url = v.apk || 'https://mkcinema-site.pages.dev/download/MKCinema.apk';
-      if (canSelf) { let ok = false; try { ok = MKAndroid.update(url); } catch (e) { ok = false; } toast(ok ? 'Downloading the update… the installer opens when it is done' : 'The download could not start', ok ? 'info' : 'err', 6000); if (ok) el.remove(); return; }
+      if (canSelf) { let ok = false; try { ok = MKAndroid.update(url); } catch (e) { ok = false; } toast(ok ? 'Downloading the update… the installer opens when it is done' : 'The download could not start', ok ? 'info' : 'err', 6000); if (ok) { el.remove(); Nav.settle(); } return; }
       window.open(url, '_blank', 'noopener');
     };
   },
   init() {
+    // TV: while the bar shows on a page with no panel open, the remote moves inside it (Update, Later) and Back puts it away
+    const onTvBar = () => { const el = IS_TV && $('#updBar'); return el && $('#player').hidden && !document.body.classList.contains('layer-open') ? el : null; };
+    const root = Nav.root.bind(Nav); Nav.root = function (...a) { return onTvBar() || root(...a); };
+    const pb = back; back = function (...a) { const el = onTvBar(); if (el) { el.remove(); Nav.settle(); return; } return pb.apply(this, a); };
     setTimeout(() => this.check(true), 20000);
     setInterval(() => this.check(), this.EVERY);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) this.check(); });
