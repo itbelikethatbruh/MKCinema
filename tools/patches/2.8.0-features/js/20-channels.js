@@ -6,6 +6,7 @@
    open in VLC (or play through the user's own MKCinema server). */
 const Channels = {
   CACHE: 'mkc-channels', TTL: 12 * 3600e3,
+  uploads: new Map(),   // list id -> uploaded playlist text, for browsers without Cache Storage
   data: new Map(),      // list id -> { channels, epg: Map(channelKey -> programmes), at }
   get() { return { lists: [], favs: [], ...(Store.get('channels', {}) || {}) }; },
   save(d) { Store.set('channels', d); if (typeof Account !== 'undefined') Account.schedule(); },
@@ -94,7 +95,7 @@ const Channels = {
   async load(l, fresh = false) {
     if (!fresh && this.data.has(l.id)) return this.data.get(l.id);
     const src = this.src(l);
-    const text = l.kind === 'file' ? (await this.cached(l.id, 'm3u', false, async () => { throw new Error('Upload the playlist file again'); })) : await this.cached(l.id, 'm3u', fresh, () => this.text(src.m3u));
+    const text = l.kind === 'file' ? (await this.cached(l.id, 'm3u', false, async () => { if (this.uploads.has(l.id)) return this.uploads.get(l.id); throw new Error('Upload the playlist file again'); })) : await this.cached(l.id, 'm3u', fresh, () => this.text(src.m3u));
     const { channels, epg } = this.parseM3U(text, l);
     const d = { channels, epg: new Map(), at: Date.now(), epgUrl: src.epg || epg || '' };
     this.data.set(l.id, d);
@@ -144,7 +145,7 @@ const Channels = {
       if (l.kind === 'file') {
         const f = $('#chFile', b).files[0];
         if (!f && !edit) return say('Choose the playlist file first.', true);
-        if (f) { const text = await f.text(); await this.cached(l.id, 'm3u', true, async () => text); }
+        if (f) { const text = await f.text(); this.uploads.set(l.id, text); await this.cached(l.id, 'm3u', true, async () => text); }
         l.fileName = f ? f.name : l.fileName;
       }
       this.data.delete(l.id);
@@ -233,7 +234,8 @@ const Channels = {
       icons(); X8.open('chExt'); void meta;
       return;
     }
-    if (X8.mixedBlocked(c.url) && S.proxy) st.url = proxify(c.url, c.headers);
+    // the proxied address already carries the headers, so the player must not proxy it a second time
+    if (X8.mixedBlocked(c.url) && S.proxy) { st.url = proxify(c.url, c.headers); if (st.behaviorHints) delete st.behaviorHints.proxyHeaders; }
     playStream({ meta, video: null, streams: [st] }, st);
   },
   init() {

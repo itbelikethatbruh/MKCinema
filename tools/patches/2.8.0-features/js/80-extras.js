@@ -55,7 +55,8 @@ const AddonDir = {
       base.apply(this, arguments);
       if (!$('#adOpen')) { $('#addonSuggest').insertAdjacentHTML('beforeend', '<button class="chip" type="button" data-nav id="adOpen"><i data-lucide="compass"></i>Browse the community directory</button>'); $('#adOpen').onclick = () => AddonDir.open(); icons(); }
     };
-    COMMANDS.push({ label: 'Browse community addons', icon: 'compass', run: () => AddonDir.open() });
+    // a kids seat needs the grown-up PIN for addons, from the palette too
+    COMMANDS.push({ label: 'Browse community addons', icon: 'compass', run: () => (typeof Seats !== 'undefined' && Seats.kids() ? Seats.guard(() => AddonDir.open()) : AddonDir.open()) });
   },
 };
 AddonDir.init();
