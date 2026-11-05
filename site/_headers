@@ -22,3 +22,6 @@
   Content-Type: application/vnd.debian.binary-package
   Content-Disposition: attachment
   Cache-Control: no-cache
+/download/*.zip
+  Content-Type: application/zip
+  Cache-Control: no-cache

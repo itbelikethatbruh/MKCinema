@@ -145,7 +145,7 @@ Settings › Support has a PayPal link and QR code for donations to Drake Christ
 ## Premium pass (2.4)
 - **New brand**: a Didone MK monogram whose letters share one stem, in a platinum double ring, with the MKCINEMA wordmark in Bodoni Moda. The splash draws the rings, turns the emblem in from the dark and sweeps light across it.
 - **Episodes**: tapping an episode opens a sheet with that episode's Play button, previous/next, and its full source list (a bottom sheet on phones, a side panel on wide screens). No more scrolling to find sources.
-- **Get started** (first item in Settings): install VLC from Google Play, the App Store or videolan.org; connect the debrid service you use step by step (open its API key page, paste the key, test); add sources; sign in.
+- **Get started** (first item in Settings): install VLC from Google Play, the App Store or videolan.org; connect TorBox step by step (account, torbox.app/settings › API Key, paste, test); add sources; sign in.
 - **VLC recommended**: MKV sources carry an orange "VLC recommended" tag, and a failed MKV offers the VLC store link for your device.
 - **Settings**: grouped sections; on phones a list of sections with a page per section and a back bar.
 - **Effects**: High is the default on every device. Buttons are raised with a brushed-metal edge and a light sweep; posters lift with a little perspective; the loading logo pulses in 3D. Phones get everything except frosted glass (blur caused black tiles on Android Chrome). Slow scrolling or a low battery drops to Low automatically.
@@ -164,7 +164,7 @@ Settings › Support has a PayPal link and QR code for donations to Drake Christ
 - **Intro sound**: a slow, warm pad and one soft chime replace the riser and the hit.
 
 ### Debrid relay
-Debrid services refuse calls made directly from a web page (the browser blocks them, CORS). A Cloudflare Pages site uploaded from the dashboard only serves files (dashboard uploads do not deploy Pages Functions), so MKCinema needs a small relay to pass those calls on. It tries, in order:
+TorBox and the other debrid services refuse calls made directly from a web page (the browser blocks them, CORS). A Cloudflare Pages site uploaded from the dashboard only serves files (dashboard uploads do not deploy Pages Functions), so MKCinema needs a small relay to pass those calls on. It tries, in order:
 1. `/debrid` on the same site, which exists when `mkcinema-server.js` serves the app. On Pages this path returns the app page with no `x-mkc-relay` header, so MKCinema skips it.
 2. The `debrid-relay` Edge Function on the Supabase project the app signs in with (`supabase/functions/debrid-relay`, deployed with JWT verification off). It answers only https://mkcinema.pages.dev, its preview subdomains and localhost, and it is what makes debrid work on the dashboard-uploaded site.
 3. The proxy URL from Settings (your own `mkcinema-server.js`).

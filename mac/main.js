@@ -5,6 +5,7 @@ ObjC.import('WebKit');
 
 const HOME = 'https://mkcinema.pages.dev/';
 const HOST = 'mkcinema.pages.dev';
+const VERSION = '1.1';
 const app = $.NSApplication.sharedApplication;
 app.setActivationPolicy($.NSApplicationActivationPolicyRegular);
 
@@ -15,6 +16,65 @@ const icon = $.NSImage.alloc.initWithContentsOfFile(iconPath);
 if (!icon.isNil()) app.applicationIconImage = icon;
 
 function openOutside(url) { $.NSWorkspace.sharedWorkspace.openURL(url); }
+
+// ---- Torrents on this Mac (window.MKDesktop.p2p) ----
+// The engine is the separate mkp2p program in Resources. It only downloads (never uploads or seeds), listens on
+// 127.0.0.1 with a random token, and deletes what it downloaded when it stops. It stops when its input closes, which
+// also happens when this app quits or crashes. The web app starts it only after the user agrees in Settings.
+const fm = $.NSFileManager.defaultManager;
+const engineBin = (here.isNil() ? res : here.js) + '/mkp2p';
+const hasEngine = fm.isExecutableFileAtPath(engineBin);
+let eng = null, engIn = null, engBase = '';
+
+function engineStop() {
+  if (engIn) { try { engIn.fileHandleForWriting.closeFile; } catch (e) { /* already closed */ } }
+  eng = null; engIn = null; engBase = '';
+}
+
+function engineStart() {
+  if (engBase && eng && eng.running) return engBase;
+  engineStop();
+  const cache = $.NSHomeDirectory().js + '/Library/Caches/MKCinema';
+  fm.createDirectoryAtPathWithIntermediateDirectoriesAttributesError(cache, true, $(), null);
+  const t = $.NSTask.alloc.init;
+  t.launchPath = engineBin;
+  t.arguments = $(['-dir', cache, '-keep', '2', '-reserve-mb', '1024', '-conns', '50']);
+  const pin = $.NSPipe.pipe, pout = $.NSPipe.pipe;
+  t.standardInput = pin;
+  t.standardOutput = pout;
+  t.launch;
+  eng = t; engIn = pin;
+  // the engine prints its address (or "error: ...") as its first line, within a second
+  const rd = pout.fileHandleForReading;
+  let out = '';
+  while (out.indexOf('\n') < 0) {
+    const d = rd.availableData;
+    if (d.length === 0) break;
+    out += $.NSString.alloc.initWithDataEncoding(d, $.NSUTF8StringEncoding).js;
+  }
+  const line = out.split('\n')[0].trim();
+  if (line.indexOf('http://127.0.0.1:') !== 0) { engineStop(); throw new Error(line.replace(/^error:\s*/, '') || 'the engine closed'); }
+  engBase = line;
+  return engBase;
+}
+
+const bridgeJs = "(function(){if(location.hostname!=='" + HOST + "')return;var h=window.webkit.messageHandlers.mkd,n=0,w={};"
+  + "Object.defineProperty(window,'__mkdDone',{value:function(i,e,v){var p=w[i];delete w[i];if(p){if(e)p[1](new Error(e));else p[0](v)}}});"
+  + "function call(c){return new Promise(function(a,b){var i=++n;w[i]=[a,b];h.postMessage({id:i,cmd:c})})}"
+  + "var d={platform:'mac',version:'" + VERSION + "'};"
+  + (hasEngine ? "d.p2p={start:function(){return call('p2p-start')},stop:function(){return call('p2p-stop')}};" : '')
+  + "window.MKDesktop=d;})();";
+
+function bridge(msg) {
+  const body = msg.body;
+  const id = body.objectForKey('id').js, cmd = body.objectForKey('cmd').js;
+  let err = '', val = null;
+  try {
+    if (cmd === 'p2p-start') val = engineStart();
+    else if (cmd === 'p2p-stop') engineStop();
+  } catch (e) { err = String(e && e.message || e) || 'the engine did not start'; }
+  msg.webView.evaluateJavaScriptCompletionHandler('window.__mkdDone&&window.__mkdDone(' + JSON.stringify(id) + ',' + JSON.stringify(err) + ',' + JSON.stringify(val) + ')', null);
+}
 
 const offlinePage = '<!doctype html><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#000;color:#f2f2f3;font:16px -apple-system,system-ui;text-align:center">'
   + '<div><div style="font:500 32px Didot,Georgia,serif;margin-bottom:10px">You’re offline</div>'
@@ -34,8 +94,16 @@ function failed(webView, error) {
 
 ObjC.registerSubclass({
   name: 'MKCinemaDelegate',
-  protocols: ['WKUIDelegate', 'WKNavigationDelegate', 'NSApplicationDelegate'],
+  protocols: ['WKUIDelegate', 'WKNavigationDelegate', 'NSApplicationDelegate', 'WKScriptMessageHandler'],
   methods: {
+    'userContentController:didReceiveScriptMessage:': {
+      types: ['void', ['id', 'id']],
+      implementation: function (ucc, msg) { bridge(msg); }
+    },
+    'applicationWillTerminate:': {
+      types: ['void', ['id']],
+      implementation: function () { engineStop(); }
+    },
     // Links that open a new window: MKCinema pages load here, everything else opens in the default browser.
     'webView:createWebViewWithConfiguration:forNavigationAction:windowFeatures:': {
       types: ['id', ['id', 'id', 'id', 'id']],
@@ -96,7 +164,9 @@ win.setFrameAutosaveName('MKCinemaMain');
 
 const config = $.WKWebViewConfiguration.alloc.init;
 config.mediaTypesRequiringUserActionForPlayback = 0;
-config.applicationNameForUserAgent = 'Version/17.0 Safari/605.1.15 MKCinemaMac/1.0';
+config.applicationNameForUserAgent = 'Version/17.0 Safari/605.1.15 MKCinemaMac/' + VERSION;
+config.userContentController.addUserScript($.WKUserScript.alloc.initWithSourceInjectionTimeForMainFrameOnly(bridgeJs, 0, true)); // at document start
+config.userContentController.addScriptMessageHandlerName(delegate, 'mkd');
 const prefs = config.preferences;
 if (prefs.respondsToSelector('setElementFullscreenEnabled:')) prefs.setElementFullscreenEnabled(true);
 const web = $.WKWebView.alloc.initWithFrameConfiguration(win.contentView.bounds, config);

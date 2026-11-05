@@ -9,9 +9,6 @@ Build (from Linux or Windows, Go 1.24+):
     rsrc -arch amd64 -ico mkcinema.ico -manifest app.manifest -o rsrc_windows_amd64.syso
     GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -H windowsgui" -o MKCinema.exe .
 
-Discord status uses MKCinema's Discord application (id 1567818702479425586, set in `discord.go`). A fork can use its own
-with `-ldflags "-s -w -H windowsgui -X main.discordAppID=<id>"`, or turn it off with an empty id.
-
 `webview2/` is a patched copy of go-webview2 (see `webview2/MKCINEMA.md`); `go.mod` points at it.
 
 What the app does on start:
@@ -24,14 +21,14 @@ What the app does on start:
 - Video fullscreen fills the screen; F11 toggles fullscreen. Links that open a new window go to the default browser.
 - Reloads the page if it crashes, and offers a restart if the web engine stops.
 
-Desktop extras (1.2.0), both off until the user turns them on in Settings › Desktop app:
-
-- Torrent sources play on this PC (`p2p/`, anacrolix/torrent). Download only: no uploading, no seeding, no port
-  forwarding. It serves the file to the app on 127.0.0.1 with a random port and token, keeps at most two torrents,
-  and deletes `%LOCALAPPDATA%\MKCinema\p2p` when it is turned off or the app closes. Peers can see the user's IP,
-  and Settings says so before it can be turned on.
-- Discord status ("Watching" and the title) through Discord's local pipe (`discord.go`).
-
 Requires Windows 10 or 11, 64-bit (Go 1.21+ doesn't run on Windows 7/8).
 
 The exe is not code-signed, so Windows SmartScreen shows "Windows protected your PC" on first run (More info > Run anyway). A code-signing certificate removes that.
+
+## 1.3.0: offline downloads
+
+`dl/` keeps downloads in `Videos\MKCinema` (the index is `downloads.json` in the data folder). The page reaches it as
+`window.MKDesktop.dl` (start, list, remove, url, open, folder) through the bound `mkDL` function. At most two run at once.
+They resume after a dropped connection or a restart while the link still allows it. Finished files are served to the
+in-app player on 127.0.0.1 with a random token, and "Open in my player" hands the file to Windows' default video app.
+Subtitles are saved next to the film as .srt or .vtt, so VLC picks them up.

@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	version     = "1.2.1"
+	version     = "1.3.0"
 	home        = "https://mkcinema.pages.dev/"
 	appHost     = "mkcinema.pages.dev"
 	title       = "MKCinema"
@@ -153,11 +153,13 @@ func main() {
 
 	_ = w.Bind("mkP2P", mkP2P)
 	_ = w.Bind("mkPresence", mkPresence)
+	_ = w.Bind("mkDL", mkDL)
 	w.Init(desktopInit())
 
 	w.Navigate(home)
 	w.Run()
 	stopP2P()
+	stopDL()
 	presenceClear()
 	log.Printf("closed normally")
 }
