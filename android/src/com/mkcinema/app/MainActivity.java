@@ -46,7 +46,7 @@ public class MainActivity extends Activity {
     static final String HOME = "https://mkcinema.pages.dev/";
     static final String HOST = "mkcinema.pages.dev";
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6;
-    static final String VER = "1.5.0";
+    static final String VER = "1.6.0";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -322,6 +322,11 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public void voiceStop() { runOnUiThread(() -> { if (recognizer != null) recognizer.cancel(); }); }
         @JavascriptInterface public String version() { return VER; }
+        /** 1.6.0: frame-rate matching for the in-app player on TVs (the page measures the film's fps; 0 restores the TV's mode) */
+        @JavascriptInterface public void fps(float f) { if (!tv || !HOST.equals(pageHost)) return; runOnUiThread(() -> TvExtras.matchFrameRate(MainActivity.this, f)); }
+        /** 1.6.0: Continue watching on the Android TV / Google TV home screen */
+        @JavascriptInterface public void watchNext(String json) { if (!tv || !HOST.equals(pageHost) || json == null || json.length() > 4000) return; final android.content.Context c = getApplicationContext(); new Thread(() -> TvExtras.watchNext(c, json)).start(); }
+        @JavascriptInterface public void watchNextRemove(String id) { if (!tv || !HOST.equals(pageHost) || id == null) return; final android.content.Context c = getApplicationContext(); new Thread(() -> TvExtras.removeWatchNext(c, id)).start(); }
         /** 1.3.0: torrent engine on this device; returns the local address, or "error: ..." */
         @JavascriptInterface public String p2pStart() { return P2P.start(getApplicationContext()); }
         @JavascriptInterface public void p2pStop() { P2P.stop(getApplicationContext()); }

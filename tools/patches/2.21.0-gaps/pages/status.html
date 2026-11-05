@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Service status · MKCinema</title>
+<meta name="description" content="Live checks of MKCinema and the services it uses, from your connection.">
+<link rel="icon" href="icon-192.png">
+<style>/*BASE*/
+.st{display:grid;gap:8px;margin:18px 0}.st div{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.st i{width:10px;height:10px;border-radius:50%;background:var(--mute)}.st .ok i{background:var(--ok)}.st .bad i{background:var(--bad)}.st .slow i{background:var(--warn)}
+.st b{font-weight:600}.st small{display:block;color:var(--mute);font-size:13px}.st span{color:var(--mute);font-size:13px;text-align:right}
+</style>
+</head>
+<body>
+<main>
+<a class="brand" href="./">MK<em>CINEMA</em></a>
+<h1>Service status</h1>
+<p class="sub">Checked live from your connection, so this also shows whether your network can reach each service. <span id="when"></span></p>
+<div class="st" id="st"></div>
+<button type="button" id="again" class="ghost">Check again</button>
+<p class="sub" style="margin-top:24px">If everything here is green but something still fails, open MKCinema › Settings › Help › Send log and report it with the code.</p>
+</main>
+<script>
+'use strict';
+const SB = 'https://wogffhgdixgrayowewnf.supabase.co';
+const CHECKS = [
+  ['MKCinema app', 'The web app and its updates', './version.json'],
+  ['Sign-in and sync', 'Accounts, cloud sync, logs', SB + '/auth/v1/health', { apikey: '%KEY%' }],
+  ['Debrid relay', 'For debrid services that block browsers', SB + '/functions/v1/debrid-relay?ping=1'],
+  ['MyAnimeList relay', 'MyAnimeList sync', SB + '/functions/v1/mal-relay?ping=1'],
+  ['Cinemeta', 'Movie and series titles', 'https://v3-cinemeta.strem.io/manifest.json'],
+  ['Metahub', 'Posters and logos', 'https://images.metahub.space/poster/small/tt0111161/img', null, true],
+  ['Kitsu', 'Anime titles', 'https://anime-kitsu.strem.fun/manifest.json'],
+  ['TheIntroDB', 'Skip intro times', 'https://api.theintrodb.org/v2/media?imdb_id=tt0903747&season=1&episode=1'],
+];
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+async function check([name, what, url, headers, img]) {
+  const t0 = performance.now();
+  try {
+    if (img) await new Promise((res, rej) => { const i = new Image(); i.onload = res; i.onerror = rej; i.src = url + '?t=' + Date.now(); setTimeout(rej, 8000); });
+    else { const c = new AbortController(); setTimeout(() => c.abort(), 8000); const r = await fetch(url, { headers: headers || {}, cache: 'no-store', signal: c.signal }); if (!r.ok && r.status !== 401) throw new Error('HTTP ' + r.status); }
+    const ms = Math.round(performance.now() - t0); return { name, what, cls: ms > 2500 ? 'slow' : 'ok', note: ms > 2500 ? `Slow · ${ms} ms` : `Up · ${ms} ms` };
+  } catch (e) { return { name, what, cls: 'bad', note: e && e.name === 'AbortError' ? 'No answer' : 'Unreachable' }; }
+}
+async function run() {
+  const box = document.getElementById('st');
+  box.innerHTML = CHECKS.map(([n, w]) => `<div><i></i><div><b>${esc(n)}</b><small>${esc(w)}</small></div><span>Checking…</span></div>`).join('');
+  const res = await Promise.all(CHECKS.map(check));
+  box.innerHTML = res.map((r) => `<div class="${r.cls}"><i></i><div><b>${esc(r.name)}</b><small>${esc(r.what)}</small></div><span>${esc(r.note)}</span></div>`).join('');
+  document.getElementById('when').textContent = 'Last checked ' + new Date().toLocaleTimeString() + '.';
+}
+document.getElementById('again').onclick = run; run();
+</script>
+</body>
+</html>

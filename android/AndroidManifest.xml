@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mkcinema.app" android:versionCode="14" android:versionName="1.5.0">
+    package="com.mkcinema.app" android:versionCode="15" android:versionName="1.6.0">
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -11,6 +11,8 @@
     <!-- 1.5.0 new-episode notifications: post them (Android 13+ asks), and keep the twice-daily check after a reboot -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- 1.6.0: Continue watching row on the Android TV home screen (Watch Next) -->
+    <uses-permission android:name="com.android.providers.tv.permission.WRITE_EPG_DATA"/>
     <!-- Android TV, Google TV and Fire TV: no touchscreen or microphone needed. -->
     <uses-feature android:name="android.software.leanback" android:required="false"/>
     <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
