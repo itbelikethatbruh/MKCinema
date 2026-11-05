@@ -137,7 +137,7 @@ body.tvc-on #video{opacity:.18}
 .wtw .sec-title{margin-bottom:8px}
 .wtw-r{font-family:var(--f-mono);font-size:11px;color:var(--dim);font-weight:400}
 .wtw-g{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0}
-.wtw-l{font-size:12px;color:var(--dim);width:64px;flex:none}
+.wtw-l{font-size:12px;color:var(--dim);width:84px;flex:none}
 .wtw-p{display:inline-flex;align-items:center;gap:8px;padding:4px 10px 4px 4px;border-radius:999px;border:1px solid var(--line);color:var(--ink);text-decoration:none;font-size:12.5px}
 .wtw-p:hover,.wtw-p.nav-focus{border-color:var(--line-hi)}
 .wtw-p img{width:24px;height:24px;border-radius:6px;display:block}
@@ -208,3 +208,23 @@ html.tv .sl-card{transition:none}
 /* kids seat: no Peak Cinema (it surfs any film) */
 .kids-seat #pkStrip{display:none!important}
 .kids-seat [data-view="tv"],.kids-seat [data-view="studio"]{display:none!important}
+/* 2.8.2 Networks: plain dark tiles with the service's colour as a quiet glow, no logos */
+.net-rail .net-tile{flex:none;scroll-snap-align:start;position:relative;width:200px;height:112px;border-radius:var(--r-m);border:1px solid var(--line);
+  background:radial-gradient(120% 140% at 0% 100%,color-mix(in srgb,var(--nc) 42%,transparent),transparent 62%),var(--n111113,#111113);
+  color:var(--ink);text-align:left;padding:14px 16px;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;cursor:pointer;overflow:hidden}
+.net-tile b{font-family:var(--f-display);font-size:19px;font-weight:600;letter-spacing:-.01em;line-height:1.1}
+.net-tile small{font-size:11.5px;color:var(--mute);letter-spacing:.04em}
+.net-tile::after{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--nc);opacity:.85}
+@media (hover:hover){.net-tile:hover{border-color:color-mix(in srgb,var(--nc) 60%,var(--line))}}
+html.tv .net-rail .net-tile{width:240px;height:134px}
+html.tv .net-tile b{font-size:22px}
+html.tv .net-tile.nav-focus{outline:3px solid var(--ink);outline-offset:3px}
+#view-network .net-head .toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.net-switch{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;min-width:0}
+.net-switch::-webkit-scrollbar{display:none}
+.net-switch .chip.on{border-color:var(--nc);color:var(--ink);box-shadow:inset 0 -2px 0 var(--nc)}
+#netBody .page-title{position:relative;padding-left:16px}
+#netBody .page-title::before{content:"";position:absolute;left:0;top:.18em;bottom:.18em;width:4px;border-radius:2px;background:var(--nc)}
+/* 2.8.2 banner arrows on TVs: always shown, reachable with the remote */
+html.tv .hero-nav{display:grid!important;opacity:.78;transform:none}
+html.tv .hero-nav.nav-focus{opacity:1;outline:3px solid var(--ink);outline-offset:3px}

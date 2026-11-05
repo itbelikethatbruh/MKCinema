@@ -160,7 +160,9 @@ const WhereToWatch = {
     const box = $('#dWtw'); if (!box || !this.key() || !/^(movie|series)$/.test(m.type)) return;
     const r = await this.get(m); if (!$('#dWtw') || D.meta !== m) return;
     if (!r) { box.remove(); return; }
-    const grp = [['flatrate', 'Stream'], ['free', 'Free'], ['ads', 'With ads'], ['rent', 'Rent'], ['buy', 'Buy']].map(([k, l]) => [l, (r[k] || []).slice(0, 6)]).filter(([, x]) => x.length);
+    // each service shows once: streaming first, and rent and buy share one row (Drake: no duplicate rent/buy buttons)
+    const seen = new Set(), pick = (keys) => keys.flatMap((k) => r[k] || []).filter((x) => !seen.has(x.provider_id) && seen.add(x.provider_id)).slice(0, 6);
+    const grp = [['Stream', ['flatrate']], ['Free', ['free']], ['With ads', ['ads']], ['Rent or buy', ['rent', 'buy']]].map(([l, k]) => [l, pick(k)]).filter(([, x]) => x.length);
     if (!grp.length) { box.remove(); return; }
     box.innerHTML = `<h3 class="sec-title"><i data-lucide="tv"></i>Where to watch <small class="wtw-r">${esc(this.region())}</small></h3>
       ${grp.map(([l, list]) => `<div class="wtw-g"><span class="wtw-l">${l}</span>${list.map((p) => `<a class="wtw-p" href="${esc(r.link || '#')}" target="_blank" rel="noopener" data-nav title="${esc(p.provider_name)}">${p.logo_path ? `<img src="https://image.tmdb.org/t/p/w92${esc(p.logo_path)}" alt="" loading="lazy">` : ''}<span>${esc(p.provider_name)}</span></a>`).join('')}</div>`).join('')}
