@@ -9,7 +9,6 @@
   <a href="https://github.com/itbelikethatbruh/MKCinema/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/itbelikethatbruh/MKCinema?style=for-the-badge&labelColor=0a0a0b&color=d9d4c7"></a>
   <a href="https://mkcinema.pages.dev"><img alt="Open the web app" src="https://img.shields.io/badge/web%20app-live-d9d4c7?style=for-the-badge&labelColor=0a0a0b&logo=googlechrome&logoColor=white"></a>
   <a href="https://ko-fi.com/mkcinema"><img alt="Support on Ko-fi" src="https://img.shields.io/badge/support-Ko--fi-72a4f2?style=for-the-badge&labelColor=0a0a0b&logo=kofi&logoColor=white"></a>
-  <a href="#support"><img alt="Donate with PayPal" src="https://img.shields.io/badge/donate-PayPal-d9d4c7?style=for-the-badge&labelColor=0a0a0b&logo=paypal&logoColor=white"></a>
 </p>
 
 <p align="center">
@@ -391,9 +390,9 @@ MKCinema is made by **Drake Christopher**, with no ads and no paid tier. If it h
 
 - **Star the repo.** It's free and helps other people find MKCinema.
 - **Share it** with a friend who still juggles five apps to watch one film.
-- **Donate** on Ko-fi (one-off or monthly) or PayPal to keep it growing.
+- **Donate** on Ko-fi, one-off or monthly, by card or PayPal, to keep it growing.
 
-<p align="center"><a href="https://ko-fi.com/mkcinema"><img alt="Support on Ko-fi" src="https://img.shields.io/badge/Support%20on%20Ko--fi-0a0a0b?style=for-the-badge&logo=kofi&logoColor=white"></a> <a href="https://www.paypal.com/qrcodes/p2pqrc/W7NTDVZTZVQMU"><img alt="Donate with PayPal" src="https://img.shields.io/badge/Donate%20with%20PayPal-0a0a0b?style=for-the-badge&logo=paypal&logoColor=white"></a></p>
+<p align="center"><a href="https://ko-fi.com/mkcinema"><img alt="Support on Ko-fi" src="https://img.shields.io/badge/Support%20on%20Ko--fi-0a0a0b?style=for-the-badge&logo=kofi&logoColor=white"></a></p>
 
 ### Contributing
 

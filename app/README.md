@@ -140,7 +140,7 @@ One code or file carries your addons, settings, library, progress, home layout a
 - The GPU governor drops to Low graphics on low battery or when scrolling stutters.
 
 ### Support
-Settings › Support has a Ko-fi button and QR code (ko-fi.com/mkcinema) plus a PayPal button for donations to Drake Christopher. After a few visits MKCinema asks once every three weeks, never during playback, with a "Don't ask again" button.
+Settings › Support has a Ko-fi button and QR code (ko-fi.com/mkcinema) for donations to Drake Christopher, by card or PayPal. After a few visits MKCinema asks once every three weeks, never during playback, with a "Don't ask again" button.
 
 ## Premium pass (2.4)
 - **New brand**: a Didone MK monogram whose letters share one stem, in a platinum double ring, with the MKCINEMA wordmark in Bodoni Moda. The splash draws the rings, turns the emblem in from the dark and sweeps light across it.
@@ -177,7 +177,7 @@ Every relay only reaches the four debrid API hosts, takes the user's own key per
 - **Browser only mode** (Settings › Playback, off by default): for devices where VLC or another player can't be installed. Only sources this browser can play with picture and sound are listed: H.264 (or HEVC/AV1 where the device supports them), no Dolby Vision, no 10-bit H.264, AAC/Opus-style sound, and MKV files only when they name browser-friendly sound. Torrents show only with a debrid service. With your own MKCinema server running, audio rescue makes Dolby/DTS sound playable, so those come back. It reads release names, so a mislabelled file can slip through; automatic source switching then moves on.
 - **Profile photo**: Settings › Account, tap the avatar. It is cropped to a square, shrunk to 256 px and synced in your own account row.
 - **High text contrast** is the default (a choice you make yourself is kept).
-- **Support**: a "Support on Ko-fi" button in Ko-fi blue beside the "Donate with PayPal" button in PayPal's colours.
+- **Support**: a "Support on Ko-fi" button in Ko-fi blue.
 - **Welcome walkthrough**: new cinematic first screen, nine features, and an updated comparison with a typical streaming app.
 - **App icons**: the MK monogram for iPhone/iPad (apple-touch-icon.png) and Android (including a maskable icon). Remove and re-add a home-screen shortcut to see it.
 
