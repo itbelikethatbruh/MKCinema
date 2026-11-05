@@ -32,18 +32,18 @@
 <p><img src="docs/readme/h-download.svg" width="100%" alt="Download"></p>
 
 <p align="center">
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.2/MKCinema.apk"><img src="docs/readme/download-android.svg" width="290" alt="Download for Android"></a>
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.2/MKCinema-TV.apk"><img src="docs/readme/download-tv.svg" width="290" alt="Download for Android TV, Google TV and Fire TV"></a>
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.2/com.mkcinema.app_1.1.0_all.ipk"><img src="docs/readme/download-webos.svg" width="290" alt="Download for LG webOS"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.3/MKCinema.apk"><img src="docs/readme/download-android.svg" width="290" alt="Download for Android"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.3/MKCinema-TV.apk"><img src="docs/readme/download-tv.svg" width="290" alt="Download for Android TV, Google TV and Fire TV"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.3/com.mkcinema.app_1.1.0_all.ipk"><img src="docs/readme/download-webos.svg" width="290" alt="Download for LG webOS"></a>
   <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.exe"><img src="docs/readme/download-windows.svg" width="290" alt="Download for Windows"></a>
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.2/MKCinema-1.0.dmg"><img src="docs/readme/download-macos.svg" width="290" alt="Download for macOS"></a>
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.2/mkcinema_1.0_amd64.deb"><img src="docs/readme/download-linux.svg" width="290" alt="Download for Linux"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.3/MKCinema-1.0.dmg"><img src="docs/readme/download-macos.svg" width="290" alt="Download for macOS"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.3/mkcinema_1.0_amd64.deb"><img src="docs/readme/download-linux.svg" width="290" alt="Download for Linux"></a>
   <a href="https://mkcinema.pages.dev"><img src="docs/readme/download-web.svg" width="290" alt="Open the web app"></a>
 </p>
 
 <p align="center"><sub>
-  Release <a href="https://github.com/itbelikethatbruh/MKCinema/releases/tag/v1.2">v1.2</a> &nbsp;·&nbsp;
-  Linux also as <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.2/mkcinema-1.0-linux-x86_64.tar.gz">.tar.gz</a> &nbsp;·&nbsp;
+  Release <a href="https://github.com/itbelikethatbruh/MKCinema/releases/tag/v1.3">v1.3</a> &nbsp;·&nbsp;
+  Linux also as <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.3/mkcinema-1.0-linux-x86_64.tar.gz">.tar.gz</a> &nbsp;·&nbsp;
   Fire TV: type <code>mkctv.pages.dev</code> into the Downloader app
 </sub></p>
 
@@ -62,6 +62,11 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 <td width="33%" valign="top"><img src="docs/readme/icon-ext.svg" width="52" alt=""><br><b>One tap to VLC</b><br><sub>Hand any stream to VLC, Infuse, MX Player, Just Player, mpv, IINA or PotPlayer. Only players your device supports are listed.</sub></td>
 </tr>
 <tr>
+<td width="33%" valign="top"><img src="docs/readme/icon-import.svg" width="52" alt=""><br><b>Your own media servers</b><br><sub>Connect Plex, Jellyfin or Emby and the films you own sit next to your addon sources. Smart Play picks your own copy first.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-tv.svg" width="52" alt=""><br><b>The TV's own player</b><br><sub>On Android TV and Fire TV, streams play in the TV's hardware player, so HEVC, HDR and Dolby Vision play natively, with frame-rate matching. MKCinema still picks the source and saves your place.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-bolt.svg" width="52" alt=""><br><b>Torrents without debrid</b><br><sub>The Windows, Android and TV apps can play torrent sources themselves. Off until you turn it on, download only, and the cache is deleted when you stop.</sub></td>
+</tr>
+<tr>
 <td width="33%" valign="top"><img src="docs/readme/icon-users.svg" width="52" alt=""><br><b>Watch party</b><br><sub>Share a six-character room. Play, pause and seek stay in sync, with chat, reactions and push-to-talk, peer to peer.</sub></td>
 <td width="33%" valign="top"><img src="docs/readme/icon-eye.svg" width="52" alt=""><br><b>X-Ray</b><br><sub>Pause for a second to see the cast, actor bios, release facts, and the picture and sound details.</sub></td>
 <td width="33%" valign="top"><img src="docs/readme/icon-spark.svg" width="52" alt=""><br><b>Your Picks</b><br><sub>A <i>For you</i> row from your favourites and history. Ask in plain words, like “funny crime series”. It runs entirely on your device.</sub></td>
@@ -72,34 +77,39 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 <td width="33%" valign="top"><img src="docs/readme/icon-wave.svg" width="52" alt=""><br><b>Night Mode audio</b><br><sub>Brings whispers and explosions closer together, plus Vocal Boost and Spatial Widen presets.</sub></td>
 </tr>
 <tr>
-<td width="33%" valign="top"><img src="docs/readme/icon-globe.svg" width="52" alt=""><br><b>Browser only mode</b><br><sub>No player installed? MKCinema lists only the sources your browser can play with picture and sound.</sub></td>
-<td width="33%" valign="top"><img src="docs/readme/icon-phone.svg" width="52" alt=""><br><b>Phone as a remote</b><br><sub>Scan a code and your phone becomes a trackpad with volume, skip, audio presets and subtitles.</sub></td>
-<td width="33%" valign="top"><img src="docs/readme/icon-tv.svg" width="52" alt=""><br><b>Made for the big screen</b><br><sub>Android TV, Google TV, Fire TV and LG webOS, with a platinum focus ring, remembered rows and voice search.</sub></td>
-</tr>
-<tr>
-<td width="33%" valign="top"><img src="docs/readme/icon-cc.svg" width="52" alt=""><br><b>Subtitles that fit</b><br><sub>OpenSubtitles built in, your own files by drag and drop, and a sync strip you drag into place.</sub></td>
-<td width="33%" valign="top"><img src="docs/readme/icon-shield.svg" width="52" alt=""><br><b>Your keys stay yours</b><br><sub>Keys live on your device and, if you sign in, in your own row that only you can read.</sub></td>
-<td width="33%" valign="top"><img src="docs/readme/icon-import.svg" width="52" alt=""><br><b>Move from Stremio</b><br><sub>Import your library, progress and addons in one step. Scrobble to Trakt or Simkl.</sub></td>
-</tr>
-<tr>
-<td width="33%" valign="top"><img src="docs/readme/icon-palette.svg" width="52" alt=""><br><b>Four themes, plus your own</b><br><sub>Noir by default, plus Midnight (ink blue blacks, ice silver type), Velvet (deep oxblood, soft ivory) and Sepia (warm umber, cream type). Settings › Appearance, synced with your account.</sub></td>
-<td width="33%" valign="top"><img src="docs/readme/icon-monitor.svg" width="52" alt=""><br><b>Ambient Mode</b><br><sub>Leave the TV idle and your Home becomes a living screensaver: each film as a layered 3D scene with its own atmosphere. OK opens the film, Back returns.</sub></td>
-<td width="33%" valign="top"><img src="docs/readme/icon-film.svg" width="52" alt=""><br><b>Peak Cinema</b><br><sub>Can't decide? Surf 90-second scenes from films in your catalogs and watchlist, filtered by mood, and keep watching from that exact second.</sub></td>
-</tr>
-<tr>
-<td width="33%" valign="top"><img src="docs/readme/icon-tv.svg" width="52" alt=""><br><b>Channels and guide</b><br><sub>Your own M3U, Xtream or file playlists with an XMLTV guide, favourites, and Split Screen for up to four streams at once.</sub></td>
-<td width="33%" valign="top"><img src="docs/readme/icon-users.svg" width="52" alt=""><br><b>Seats</b><br><sub>A seat for everyone in the house with its own watchlist and progress, optional PINs, and kids seats with Animation and Family only.</sub></td>
-<td width="33%" valign="top"><img src="docs/readme/icon-ext.svg" width="52" alt=""><br><b>Send to TV</b><br><sub>Cast the playing stream to a Chromecast or Google TV, with a remote bar and Play here to bring it back.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-film.svg" width="52" alt=""><br><b>A real Library</b><br><sub>Watchlist, In progress, Watched and your own lists, with sorting and filters. Lists follow your account.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-spark.svg" width="52" alt=""><br><b>New episodes</b><br><sub>A row under Continue watching, and one quiet notice when a series you follow gets a new episode.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-shield.svg" width="52" alt=""><br><b>Source rules</b><br><sub>Hide cam copies, set a lowest resolution, a largest file size and an HDR preference, block words, and choose which debrid service goes first.</sub></td>
 </tr>
 <tr>
 <td width="33%" valign="top"><img src="docs/readme/icon-eye.svg" width="52" alt=""><br><b>Source Check</b><br><sub>Fakes, samples, archives and the wrong episode are hidden; cinema recordings and odd sizes are flagged, and every pick says why.</sub></td>
 <td width="33%" valign="top"><img src="docs/readme/icon-spark.svg" width="52" alt=""><br><b>Top 10 and Shortlist</b><br><sub>Top 10 today, Under 90 minutes, Hidden gems, Award winners and twenty quick picks to skip or save.</sub></td>
-<td width="33%" valign="top"><img src="docs/readme/icon-palette.svg" width="52" alt=""><br><b>Atelier</b><br><sub>Make your own theme from blacks, highlights, type and corners, and share it as a code.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-globe.svg" width="52" alt=""><br><b>Browser only mode</b><br><sub>No player installed? MKCinema lists only the sources your browser can play with picture and sound.</sub></td>
+</tr>
+<tr>
+<td width="33%" valign="top"><img src="docs/readme/icon-users.svg" width="52" alt=""><br><b>Seats</b><br><sub>A seat for everyone in the house with its own picture, watchlist and progress. Kids seats show Animation and Family only, behind a grown-up PIN.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-phone.svg" width="52" alt=""><br><b>Phone as a remote</b><br><sub>Scan a code and your phone becomes a trackpad with volume, skip, audio presets and subtitles.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-tv.svg" width="52" alt=""><br><b>Made for the big screen</b><br><sub>Android TV, Google TV, Fire TV and LG webOS, with a platinum focus ring, remembered rows, voice search and an optional side menu.</sub></td>
+</tr>
+<tr>
+<td width="33%" valign="top"><img src="docs/readme/icon-monitor.svg" width="52" alt=""><br><b>Ambient Mode</b><br><sub>Leave the TV idle and your Home becomes a living screensaver: each film as a layered 3D scene with its own atmosphere. OK opens the film, Back returns.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-film.svg" width="52" alt=""><br><b>Peak Cinema</b><br><sub>Can't decide? Surf 90-second scenes from films in your catalogs and watchlist, filtered by mood, and keep watching from that exact second.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-tv.svg" width="52" alt=""><br><b>Channels and guide</b><br><sub>Your own M3U, Xtream or file playlists with an XMLTV guide, favourites, and Split Screen for up to four streams at once.</sub></td>
+</tr>
+<tr>
+<td width="33%" valign="top"><img src="docs/readme/icon-cc.svg" width="52" alt=""><br><b>Subtitles that fit</b><br><sub>OpenSubtitles built in, your own files by drag and drop, and a sync strip you drag into place.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-ext.svg" width="52" alt=""><br><b>Send to TV and keep control</b><br><sub>Cast to a Chromecast or Google TV, control playback from the lock screen, headphones or media keys, and keep watching in picture-in-picture on Android.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-palette.svg" width="52" alt=""><br><b>Your colour</b><br><sub>Turn one colour wheel and the whole app follows, or keep Classic black. Synced with your account.</sub></td>
 </tr>
 <tr>
 <td width="33%" valign="top"><img src="docs/readme/icon-puzzle.svg" width="52" alt=""><br><b>Plugins and themes</b><br><sub>Add community features and looks from a reviewed gallery in <a href="plugins/">plugins/</a>. Each file is checked against its checksum before it runs.</sub></td>
-<td width="33%" valign="top"><img src="docs/readme/icon-bolt.svg" width="52" alt=""><br><b>Torrents without debrid</b><br><sub>The Windows, Android and TV apps can play torrent sources themselves. Off until you turn it on, download only, and the cache is deleted when you stop.</sub></td>
 <td width="33%" valign="top"><img src="docs/readme/icon-monitor.svg" width="52" alt=""><br><b>Show it on Discord</b><br><sub>The Windows app can show “Watching” and the title on your Discord profile, with the poster and time left. Off until you turn it on.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-import.svg" width="52" alt=""><br><b>Move from Stremio</b><br><sub>Import your library, progress and addons in one step. Scrobble to Trakt or Simkl.</sub></td>
+</tr>
+<tr>
+<td width="33%" valign="top"><img src="docs/readme/icon-shield.svg" width="52" alt=""><br><b>Your keys stay yours</b><br><sub>Keys live on your device and, if you sign in, in your own row that only you can read.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-puzzle.svg" width="52" alt=""><br><b>Addon Studio</b><br><sub>Design a Stremio addon visually, try it inside MKCinema straight away, then export a ready-to-run addon server.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-sync.svg" width="52" alt=""><br><b>One-tap addon install</b><br><sub>An addon's setup page ends with Install, and MKCinema opens, shows the addon's name and asks before it adds it.</sub></td>
 </tr>
 </table>
 
@@ -114,6 +124,7 @@ MKCinema does more out of the box than Stremio, Plex, Jellyfin or Kodi in the ro
 | Watch party with synced playback, chat and voice | ✅ | ❌ | ◐ ¹ | ◐ ² | ❌ |
 | Skip intro, ending and credits, anime included from any addon | ✅ | ❌ ³ | ◐ ⁴ | ◐ ⁵ | ❌ |
 | Moves to another source by itself if one stalls | ✅ | ❌ | — | — | ❌ |
+| Source rules across every addon: hide cam copies and fakes, set a lowest resolution and a largest file size, block words | ✅ | ◐ ¹³ | — | — | ◐ ¹³ |
 | Subtitle sync you can drag into place, with a transcript | ✅ | ◐ ⁶ | ◐ ⁶ | ◐ ⁶ | ◐ ⁶ |
 | Seats for the household, with PINs and kids seats | ✅ | ❌ ⁷ | ✅ | ✅ | ✅ |
 | Phone becomes a remote by scanning a code, no app needed | ✅ | ❌ | ◐ ⁸ | ◐ ⁸ | ◐ ⁸ |
@@ -144,6 +155,7 @@ MKCinema does more out of the box than Stremio, Plex, Jellyfin or Kodi in the ro
 10. Plex and Jellyfin need a media server that you run yourself to play your own files.
 11. The Stremio apps are open source, but its streaming server is not.
 12. Stremio has no plugin or theme support of its own. Third-party mods add some to its desktop app.
+13. Some Stremio addons and Kodi add-ons have their own filters, but each is set up separately inside that addon. Neither app filters across all sources.
 
 </details>
 
@@ -179,7 +191,7 @@ MKCinema does more out of the box than Stremio, Plex, Jellyfin or Kodi in the ro
 <p align="center"><img src="docs/readme/how.svg" width="560" alt="MKCinema runs on your device, with Your Picks on-device. It connects to the Stremio addons you install, your debrid service with your own key, optional Supabase sync to your own row, video players such as VLC, and friends' devices for watch parties, peer to peer."></p>
 
 - **Your keys stay yours.** Debrid keys live in your browser and, if you sign in, in your own Supabase row, which row-level security keeps readable only by you. You can turn sync off and keep them on one device.
-- **No tracking.** No ads, no analytics, and Your Picks never sends your taste to an outside service.
+- **No tracking.** No ads, no cookies and no profiles. The only measurement is an anonymous visit count (Cloudflare Web Analytics: page, browser, country, load speed), which you can turn off in Settings › Data. It never sees your addons, keys or what you watch, and Your Picks never sends your taste to an outside service.
 - **Bring your own sources.** MKCinema only plays what your addons return. You are responsible for using them lawfully where you live.
 
 ### Repository
