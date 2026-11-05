@@ -228,3 +228,30 @@ html.tv .net-tile.nav-focus{outline:3px solid var(--ink);outline-offset:3px}
 /* 2.8.2 banner arrows on TVs: always shown, reachable with the remote */
 html.tv .hero-nav{display:grid!important;opacity:.78;transform:none}
 html.tv .hero-nav.nav-focus{opacity:1;outline:3px solid var(--ink);outline-offset:3px}
+
+/* 2.8.3: no page scrollbar on TV, ever (there is no mouse to use it) */
+html.tv{scrollbar-width:none}html.tv ::-webkit-scrollbar{display:none}
+
+/* 2.8.3: Top 10 numbers are solid and crisp (the thin outline showed the font's inner joins and looked sketchy) */
+.card.t10c::before{-webkit-text-stroke:0;color:transparent;background:linear-gradient(180deg,rgba(246,246,248,.96) 0%,rgba(206,206,212,.78) 45%,rgba(120,120,128,.34) 100%);-webkit-background-clip:text;background-clip:text;font-weight:800;letter-spacing:-.07em;padding-right:.04em}
+
+/* 2.8.3: Networks show each service's real logo (Drake) */
+.net-rail .net-tile{display:grid;place-items:center;padding:18px 22px}
+.net-tile .net-logo{position:absolute;left:24px;right:24px;top:0;bottom:0;margin:auto;width:calc(100% - 48px);height:46px;object-fit:contain;object-position:center;pointer-events:none}
+html.tv .net-tile .net-logo{height:54px}
+#netBody .net-title{padding-left:0;margin-bottom:6px}
+#netBody .net-title::before{display:none}
+#netBody .net-title .net-logo{display:block;height:clamp(56px,7vw,96px);width:auto;max-width:min(320px,70vw)}
+.net-tile .net-logo[src$="dnp.svg"]{height:66px}html.tv .net-tile .net-logo[src$="dnp.svg"]{height:76px}
+/* 2.8.3: lifted logos (Drake). Light and shadow only: no preserve-3d, no backdrop-filter, motion is transform/opacity */
+.net-rail .net-tile{box-shadow:inset 0 1px 0 rgba(255,255,255,.10),inset 0 -18px 30px -18px rgba(0,0,0,.6),0 10px 22px -12px rgba(0,0,0,.8)}
+.net-tile::before{content:"";position:absolute;left:50%;top:50%;width:150px;height:96px;margin:-48px 0 0 -75px;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--nc) 55%,transparent),transparent);opacity:.55;pointer-events:none;transition:opacity .25s ease,transform .25s ease}
+.net-tile .net-logo{z-index:1;filter:drop-shadow(0 6px 8px rgba(0,0,0,.65)) drop-shadow(0 1px 1px rgba(0,0,0,.5));transition:transform .25s cubic-bezier(.2,.7,.2,1)}
+.net-tile .net-shade{position:absolute;left:18%;right:18%;bottom:14px;height:10px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.7),transparent);pointer-events:none;transition:opacity .25s ease,transform .25s ease}
+.net-tile:focus-visible .net-logo,.net-tile.nav-focus .net-logo{transform:translateY(-4px) scale(1.07)}
+.net-tile:focus-visible::before,.net-tile.nav-focus::before{opacity:.9;transform:scale(1.12)}
+.net-tile:focus-visible .net-shade,.net-tile.nav-focus .net-shade{opacity:.55;transform:scaleX(.85)}
+@media (hover:hover){.net-tile:hover .net-logo{transform:translateY(-4px) scale(1.07)}.net-tile:hover::before{opacity:.9;transform:scale(1.12)}.net-tile:hover .net-shade{opacity:.55;transform:scaleX(.85)}}
+html.tv .net-tile::before{width:180px;height:112px;margin:-56px 0 0 -90px}
+@media (prefers-reduced-motion:reduce){.net-tile .net-logo,.net-tile::before,.net-tile .net-shade{transition:none}}
+html.tv .net-tile .net-logo,html.tv .net-tile::before,html.tv .net-tile .net-shade{transition:none}
