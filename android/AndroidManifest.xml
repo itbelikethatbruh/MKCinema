@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mkcinema.app" android:versionCode="7" android:versionName="1.2.4">
+    package="com.mkcinema.app" android:versionCode="8" android:versionName="1.2.5">
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <!-- Android TV, Google TV and Fire TV: no touchscreen or microphone needed. -->
     <uses-feature android:name="android.software.leanback" android:required="false"/>
     <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
@@ -28,7 +29,7 @@
     <!-- 1.2.3: on TVs (UI mode television) the launcher icon resolves to drawable-television-*/ic_launcher.png, the 16:9 banner art,
          so Fire OS fills its wide app tile instead of a square icon between grey bars. Phones keep the square icon. -->
     <application android:label="MKCinema" android:icon="@drawable/ic_launcher"
-        android:banner="@drawable/banner" android:theme="@style/Noir" android:hardwareAccelerated="true" android:allowBackup="false" android:supportsRtl="true">
+        android:banner="@drawable/banner" android:theme="@style/Noir" android:hardwareAccelerated="true" android:allowBackup="false" android:supportsRtl="true" android:usesCleartextTraffic="true">
         <activity android:name=".MainActivity" android:exported="true" android:icon="@drawable/ic_launcher" android:banner="@drawable/banner" android:launchMode="singleTask"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|uiMode|density"
             android:windowSoftInputMode="adjustResize">
@@ -44,5 +45,8 @@
                 <data android:scheme="https" android:host="mkcinema.pages.dev"/>
             </intent-filter>
         </activity>
+        <!-- 1.2.5: the TV player (system hardware decoder), opened from the page with MKAndroid.play -->
+        <activity android:name=".PlayerActivity" android:exported="false" android:theme="@style/Noir"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|uiMode|density"/>
     </application>
 </manifest>
