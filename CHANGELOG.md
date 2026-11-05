@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.13.0 and Android/TV app 1.3.0 (2026-11-05)
+
+- **Torrents on Android, Android TV and Fire TV** (Settings › Torrents, off by default): the app now carries the same download-only torrent engine as the Windows app. On a TV stick it keeps one torrent at a time, stops if free storage runs low, and deletes everything when you turn it off or close the app. Settings explains that peers can see your IP before it can be turned on. Older 32-bit Fire TV Sticks are included.
+
 ## Windows app 1.2.1 (2026-11-05)
 
 - **Discord status is available**: turn on Settings › Desktop app › "Show what I'm watching on Discord" to show "Watching" and the title on your profile while the Discord app is open.
