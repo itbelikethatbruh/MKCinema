@@ -12,10 +12,22 @@
 </p>
 
 <p align="center">
+  <img alt="JavaScript" src="https://img.shields.io/badge/JavaScript-f7df1e?style=flat-square&labelColor=0a0a0b&logo=javascript&logoColor=white">
+  <img alt="Supabase" src="https://img.shields.io/badge/Supabase-3ecf8e?style=flat-square&labelColor=0a0a0b&logo=supabase&logoColor=white">
+  <img alt="Cloudflare Pages" src="https://img.shields.io/badge/Cloudflare%20Pages-f38020?style=flat-square&labelColor=0a0a0b&logo=cloudflarepages&logoColor=white">
+  <img alt="Stremio addon protocol" src="https://img.shields.io/badge/Stremio%20addon%20protocol-8a5aab?style=flat-square&labelColor=0a0a0b&logo=stremio&logoColor=white">
+  <img alt="libass via JASSUB" src="https://img.shields.io/badge/libass-JASSUB-ff6fae?style=flat-square&labelColor=0a0a0b">
+  <img alt="Go (Windows app)" src="https://img.shields.io/badge/Go-Windows%20app-00add8?style=flat-square&labelColor=0a0a0b&logo=go&logoColor=white">
+  <img alt="Java (Android app)" src="https://img.shields.io/badge/Java-Android%20app-e76f00?style=flat-square&labelColor=0a0a0b&logo=openjdk&logoColor=white">
+  <img alt="WebKitGTK (Linux app)" src="https://img.shields.io/badge/WebKitGTK-Linux%20app-66c8ff?style=flat-square&labelColor=0a0a0b">
+</p>
+
+<p align="center">
   <a href="https://mkcinema.pages.dev"><b>Open the app</b></a> &nbsp;·&nbsp;
   <a href="https://mkcinema-site.pages.dev"><b>Website</b></a> &nbsp;·&nbsp;
   <a href="#download"><b>Download</b></a> &nbsp;·&nbsp;
   <a href="#features"><b>Features</b></a> &nbsp;·&nbsp;
+  <a href="#new"><b>What's new</b></a> &nbsp;·&nbsp;
   <a href="#compare"><b>Compare</b></a> &nbsp;·&nbsp;
   <a href="#marquee"><b>Now showing</b></a> &nbsp;·&nbsp;
   <a href="#build"><b>Build</b></a> &nbsp;·&nbsp;
@@ -24,7 +36,7 @@
 
 <br>
 
-> **MKCinema** is a free, open-source premium player for the Stremio addons you choose. It brings your catalogues, debrid account and subtitles together in one matte-black library, with a player built for phones, tablets, desktops and TVs.
+> **MKCinema** is a free, open-source premium player for the Stremio addons you choose. It brings your catalogues, debrid account and subtitles together in one library you can style your way (five looks, a colour wheel and an Anime mode), with a player built for phones, tablets, desktops and TVs that can even send the sound to your phone.
 >
 > It ships no titles, channels or streams of its own. Catalogues come from Cinemeta, subtitles from OpenSubtitles, and the only built-in source is official trailers. Everything else comes from addons you install yourself.
 
@@ -55,6 +67,34 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 <a name="features"></a>
 <p><img src="docs/readme/h-features.svg" width="100%" alt="Features"></p>
 
+<a name="new"></a>
+### New in 2.15 to 2.20
+
+<table>
+<tr>
+<td width="33%" valign="top"><img src="docs/readme/icon-head.svg" width="52" alt=""><br><b>Listen on your phone</b><br><sub>The film plays on the TV and its sound comes out of your phone, live and in stereo, so you can use headphones while the house sleeps. It works from the phone remote, so there is no app to install.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-sliders.svg" width="52" alt=""><br><b>A player rebuilt</b><br><sub>Edge-to-edge picture, times beside the bar, and options in four tabs: Playback, Picture, Audio and More. Playback stats on <kbd>I</kbd>, every shortcut on <kbd>?</kbd>.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-vol.svg" width="52" alt=""><br><b>Volume to 200 %</b><br><sub>A real boost through the audio engine. The slider turns champagne past 100 % so you know you're boosting. The mouse wheel works too.</sub></td>
+</tr>
+<tr>
+<td width="33%" valign="top"><img src="docs/readme/icon-torii.svg" width="52" alt=""><br><b>Anime mode</b><br><sub>An Anime tab with Trending, Airing now, Most popular and Top rated, and an Anime look in crimson and violet with sakura and Miko, our mascot.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-cc.svg" width="52" alt=""><br><b>Styled anime subtitles</b><br><sub>Fansub fonts, signs, positions and karaoke render as they were made (libass), and subtitles and chapters inside MKV files show up by themselves.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-sync.svg" width="52" alt=""><br><b>AniList and MyAnimeList</b><br><sub>Episodes you finish are marked on your list, and your lists come in on import. Trakt and Simkl still work alongside.</sub></td>
+</tr>
+<tr>
+<td width="33%" valign="top"><img src="docs/readme/icon-palette.svg" width="52" alt=""><br><b>Five looks, any colour</b><br><sub>Noir, Midnight, Velvet, Sepia and Anime, plus one colour wheel that tints the whole app. Your choice follows your account.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-lang.svg" width="52" alt=""><br><b>Speaks your language</b><br><sub>Menus in English, Español, Português, Français, Deutsch, Italiano and हिन्दी. It follows your device, or pick one in Settings.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-list.svg" width="52" alt=""><br><b>MDBList rows</b><br><sub>Add any MDBList list as a row on Home with your own free API key.</sub></td>
+</tr>
+<tr>
+<td width="33%" valign="top"><img src="docs/readme/icon-phone.svg" width="52" alt=""><br><b>Gestures that feel native</b><br><sub>Hold for 2× speed, swipe the left side for brightness, the right for volume, and sideways to seek. Speed is remembered per title, subtitle timing per file.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-skip.svg" width="52" alt=""><br><b>Every skip, every chapter</b><br><sub>Intro, recap, credits and preview times from TheIntroDB and AniSkip, plus the file's own chapters.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-life.svg" width="52" alt=""><br><b>Support built in</b><br><sub>Settings › Support runs a Diagnostic and a speed test, and Send log gives you a six-character code to paste into a bug report. Nothing is sent until you tap it.</sub></td>
+</tr>
+</table>
+
+### Everything else
+
 <table>
 <tr>
 <td width="33%" valign="top"><img src="docs/readme/icon-puzzle.svg" width="52" alt=""><br><b>Your addons, your rules</b><br><sub>Install any Stremio addon by link, reorder them, and see results from each one the moment it answers.</sub></td>
@@ -78,7 +118,7 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 </tr>
 <tr>
 <td width="33%" valign="top"><img src="docs/readme/icon-film.svg" width="52" alt=""><br><b>A real Library</b><br><sub>Watchlist, In progress, Watched and your own lists, with sorting and filters. Lists follow your account.</sub></td>
-<td width="33%" valign="top"><img src="docs/readme/icon-spark.svg" width="52" alt=""><br><b>New episodes</b><br><sub>A row under Continue watching, and one quiet notice when a series you follow gets a new episode.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-bell.svg" width="52" alt=""><br><b>New episodes</b><br><sub>A row under Continue watching, and one quiet notice when a series you follow gets a new episode.</sub></td>
 <td width="33%" valign="top"><img src="docs/readme/icon-shield.svg" width="52" alt=""><br><b>Source rules</b><br><sub>Hide cam copies, set a lowest resolution, a largest file size and an HDR preference, block words, and choose which debrid service goes first.</sub></td>
 </tr>
 <tr>
@@ -99,7 +139,7 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 <tr>
 <td width="33%" valign="top"><img src="docs/readme/icon-cc.svg" width="52" alt=""><br><b>Subtitles that fit</b><br><sub>OpenSubtitles built in, your own files by drag and drop, and a sync strip you drag into place.</sub></td>
 <td width="33%" valign="top"><img src="docs/readme/icon-ext.svg" width="52" alt=""><br><b>Send to TV and keep control</b><br><sub>Cast to a Chromecast or Google TV, control playback from the lock screen, headphones or media keys, and keep watching in picture-in-picture on Android.</sub></td>
-<td width="33%" valign="top"><img src="docs/readme/icon-palette.svg" width="52" alt=""><br><b>Your colour</b><br><sub>Turn one colour wheel and the whole app follows, or keep Classic black. Synced with your account.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-eye.svg" width="52" alt=""><br><b>Spoiler Guard</b><br><sub>Blur the stills of episodes you haven't watched yet. Off until you turn it on.</sub></td>
 </tr>
 <tr>
 <td width="33%" valign="top"><img src="docs/readme/icon-puzzle.svg" width="52" alt=""><br><b>Plugins and themes</b><br><sub>Add community features and looks from a reviewed gallery in <a href="plugins/">plugins/</a>. Each file is checked against its checksum before it runs.</sub></td>
@@ -130,6 +170,7 @@ MKCinema does more out of the box than Stremio, Plex, Jellyfin or Kodi in the ro
 | Phone becomes a remote by scanning a code, no app needed | ✅ | ❌ | ◐ ⁸ | ◐ ⁸ | ◐ ⁸ |
 | Your own M3U or Xtream channels with an XMLTV guide | ✅ | ❌ | ❌ ⁹ | ✅ | ✅ |
 | Split Screen, up to four streams at once | ✅ | ❌ | ❌ | ❌ | ❌ |
+| The TV's sound on your phone, for headphones, with no app to install | ✅ | ❌ | ❌ | ❌ | ❌ ¹⁴ |
 | Ask for picks in plain words, worked out on your device | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Browse films by their best 90-second scenes (Peak Cinema) | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Design your own Stremio addon visually (Addon Studio) | ✅ | ❌ | ❌ | ❌ | ❌ |
@@ -156,27 +197,51 @@ MKCinema does more out of the box than Stremio, Plex, Jellyfin or Kodi in the ro
 11. The Stremio apps are open source, but its streaming server is not.
 12. Stremio has no plugin or theme support of its own. Third-party mods add some to its desktop app.
 13. Some Stremio addons and Kodi add-ons have their own filters, but each is set up separately inside that addon. Neither app filters across all sources.
+14. Some TV makers offer private listening through their own remote app (Roku, for example), but only for their own devices. None of these four apps has it built in.
 
 </details>
 
 <sub>Checked November 2026 against each app's public docs and issue trackers. Apps change, so open an issue if something's out of date.</sub>
 
+### Coming from VLC?
+
+VLC is a great file player, and MKCinema keeps it one tap away for the formats a browser can't decode. What MKCinema adds is everything around the player:
+
+- **A library, not a file list.** Posters, ratings, your watchlist, Continue watching and new episodes, synced across every device you sign in on.
+- **Sources found for you.** Your addons and debrid service are searched at once, fakes and cam copies are filtered out, and Smart Play picks the best one. If it stalls, the next one takes over.
+- **Things a file player can't do.** Listen on your phone, watch parties with voice, Skip Intro on any episode, X-Ray, and your phone as a remote by scanning a code.
+- **Your settings follow the film.** Speed per title and subtitle timing per file are remembered, and you pick up at the same second on another device.
+
 <a name="screenshots"></a>
 <p><img src="docs/readme/h-screenshots.svg" width="100%" alt="In motion"></p>
 
-<p align="center"><img src="docs/screenshots/app-home.webp" width="100%" alt="MKCinema home screen with Smart Play and the For you row"></p>
+<p align="center"><img src="docs/screenshots/app-home.webp" width="100%" alt="MKCinema Home in the Noir look, with the featured banner and Top 10 films today"></p>
 
 <table>
 <tr>
-<td width="40%" align="center"><img src="docs/screenshots/app-picks.webp" alt="Pick your favourites to build Your Picks"><br><sub>Your Picks, built on your device</sub></td>
-<td width="40%" align="center"><img src="docs/screenshots/app-party.webp" alt="Watch party"><br><sub>Watch party with synced playback and voice</sub></td>
-<td width="20%" align="center" rowspan="2"><img src="docs/screenshots/app-phone.webp" alt="MKCinema on a phone"><br><sub>Phones are first-class</sub></td>
+<td width="40%" align="center"><img src="docs/screenshots/app-anime.webp" alt="The Anime tab"><br><sub>The Anime tab: trending, airing now, most popular, top rated</sub></td>
+<td width="40%" align="center"><img src="docs/screenshots/app-anime-home.webp" alt="Home in the Anime look"><br><sub>The Anime look, with sakura and Miko</sub></td>
+<td width="20%" align="center" rowspan="2"><img src="docs/screenshots/app-phone-anime.webp" alt="The Anime tab on a phone"><br><sub>Phones are first-class</sub></td>
 </tr>
 <tr>
-<td align="center"><img src="docs/screenshots/app-welcome.jpg" alt="Welcome screen"><br><sub>The welcome tour</sub></td>
+<td align="center"><img src="docs/screenshots/app-player.webp" alt="The rebuilt player with the Audio tab open"><br><sub>The 2.20 player: tabs, 200 % volume, Listen on phone</sub></td>
+<td align="center"><img src="docs/screenshots/app-tv.webp" alt="MKCinema on a TV"><br><sub>On a TV: big type, a focus ring and remembered rows</sub></td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td width="40%" align="center"><img src="docs/screenshots/app-detail.webp" alt="A film page with Smart Play and its streams"><br><sub>Every pick says why</sub></td>
+<td width="40%" align="center"><img src="docs/screenshots/app-party.webp" alt="Watch party"><br><sub>Watch party with synced playback and voice</sub></td>
+<td width="20%" align="center" rowspan="2"><img src="docs/screenshots/app-listen.webp" alt="Listen on this phone, on the phone remote"><br><sub>Listen on phone</sub></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/screenshots/app-picks.webp" alt="Pick your favourites to build Your Picks"><br><sub>Your Picks, built on your device</sub></td>
 <td align="center"><img src="docs/screenshots/app-addon-studio.jpg" alt="Addon Studio"><br><sub>Addon Studio: design a Stremio addon visually</sub></td>
 </tr>
 </table>
+
+<p align="center"><sub>The player shots show <a href="https://studio.blender.org/films/sintel/">Sintel</a> © Blender Foundation, CC BY 3.0. Poster and backdrop art comes from the catalogues and belongs to its owners.</sub></p>
 
 <a name="marquee"></a>
 <p><img src="docs/readme/h-marquee.svg" width="100%" alt="Now showing"></p>
