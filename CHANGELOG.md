@@ -11,10 +11,15 @@ All notable changes to MKCinema. The web app version and the native app versions
 - Video fullscreen now fills the whole screen, and F11 toggles fullscreen. Right-click Copy and Paste work in text fields.
 - Links that open a new window (YouTube, GitHub) open in your browser. The page reloads itself if it crashes.
 
+## Web app 2.9.9 (2026-11-05)
+
+- **One-tap install from addon setup pages**: addons that need your own settings or token end their setup page with an Install button. On Android and TV (app 1.2.8), that button now opens MKCinema, which shows the addon's name and asks before installing. In the browser, when you come back from a setup page, MKCinema offers to install the link you copied. Installing the same addon with new settings replaces the old copy.
+
 ## Web app 2.9.8 and Android app 1.2.8 (2026-11-05)
 
 - **Sources that need request headers play on TV**: some addons mark a stream as needing headers such as a Referer. The TV app's own player now sends them itself, so these streams play without the companion server. Older TV apps and browsers keep the previous behaviour.
 - **Clearer source tag**: such streams are tagged "needs headers" instead of "via proxy".
+- **Addon Install links open the app**: Android app 1.2.8 opens stremio:// Install links from addon setup pages.
 
 ## Web app 2.9.7 (2026-11-05)
 

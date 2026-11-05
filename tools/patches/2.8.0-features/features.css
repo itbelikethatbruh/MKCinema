@@ -424,3 +424,9 @@ html.tv .pz-cells i{height:52px}
 .pk-det-on .pk-ui{opacity:0;pointer-events:none}
 html.tv .pk-det .btn.nav-focus{transform:none;outline-offset:-3px}
 @media (max-width:760px){.pk-acts #pkDetails{display:inline-flex}.pk-det{background:rgba(0,0,0,.82)}.pk-det-in{width:100%;justify-content:flex-end;padding:24px 18px calc(24px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,transparent,var(--n050505,#050505) 30%)}.pk-det-acts .btn{flex:1 1 auto;justify-content:center}}
+/* 2.9.9 copied addon link bar (same look as the update bar) */
+#adPaste{position:fixed;left:50%;bottom:calc(24px + var(--dock-h,0px));transform:translateX(-50%);z-index:90;display:flex;align-items:center;gap:18px;max-width:min(640px,calc(100vw - 32px));padding:14px 16px 14px 20px;border-radius:18px;background:var(--n141417,#141417);border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 40px -12px rgba(0,0,0,.8)}
+#adPaste>div:first-child{display:flex;flex-direction:column;gap:3px;min-width:0}
+#adPaste b{font-size:15px;font-weight:600}#adPaste small{font-size:13px;color:var(--mute);line-height:1.35}
+#adPaste .inrow{flex:none;gap:8px}
+@media (max-width:560px){#adPaste{flex-direction:column;align-items:stretch;gap:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
