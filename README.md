@@ -67,7 +67,7 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 <td width="33%" valign="top"><img src="docs/readme/icon-spark.svg" width="52" alt=""><br><b>Your Picks</b><br><sub>A <i>For you</i> row from your favourites and history. Ask in plain words, like “funny crime series”. It runs entirely on your device.</sub></td>
 </tr>
 <tr>
-<td width="33%" valign="top"><img src="docs/readme/icon-skip.svg" width="52" alt=""><br><b>Skip Intro, next episode</b><br><sub>Skip intros and credits, with a 10-second countdown to the next episode while its sources load.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-skip.svg" width="52" alt=""><br><b>Skip Intro, next episode</b><br><sub>Skip intros, endings and credits (anime too, from any addon), with a 10-second countdown to the next episode while its sources load.</sub></td>
 <td width="33%" valign="top"><img src="docs/readme/icon-sync.svg" width="52" alt=""><br><b>Automatic failover</b><br><sub>If a source shows no picture or stalls, MKCinema moves to the next one by itself.</sub></td>
 <td width="33%" valign="top"><img src="docs/readme/icon-wave.svg" width="52" alt=""><br><b>Night Mode audio</b><br><sub>Brings whispers and explosions closer together, plus Vocal Boost and Spatial Widen presets.</sub></td>
 </tr>
@@ -96,6 +96,11 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 <td width="33%" valign="top"><img src="docs/readme/icon-spark.svg" width="52" alt=""><br><b>Top 10 and Shortlist</b><br><sub>Top 10 today, Under 90 minutes, Hidden gems, Award winners and twenty quick picks to skip or save.</sub></td>
 <td width="33%" valign="top"><img src="docs/readme/icon-palette.svg" width="52" alt=""><br><b>Atelier</b><br><sub>Make your own theme from blacks, highlights, type and corners, and share it as a code.</sub></td>
 </tr>
+<tr>
+<td width="33%" valign="top"><img src="docs/readme/icon-puzzle.svg" width="52" alt=""><br><b>Plugins and themes</b><br><sub>Add community features and looks from a reviewed gallery in <a href="plugins/">plugins/</a>. Each file is checked against its checksum before it runs.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-bolt.svg" width="52" alt=""><br><b>Torrents on Windows</b><br><sub>The Windows app can play torrent sources itself, no debrid needed. Off until you turn it on, download only, and the cache is deleted when you stop.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-monitor.svg" width="52" alt=""><br><b>Your menu, your way</b><br><sub>Top bar or a side menu on any device, plus a colour wheel to tint the whole app.</sub></td>
+</tr>
 </table>
 
 <a name="compare"></a>
@@ -107,7 +112,7 @@ MKCinema does more out of the box than Stremio, Plex, Jellyfin or Kodi in the ro
 |---|:---:|:---:|:---:|:---:|:---:|
 | Stremio addons and your own Plex, Jellyfin or Emby server in one library | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Watch party with synced playback, chat and voice | ✅ | ❌ | ◐ ¹ | ◐ ² | ❌ |
-| Skip intro and credits | ✅ | ❌ ³ | ✅ ⁴ | ◐ ⁵ | ❌ |
+| Skip intro, ending and credits, anime included from any addon | ✅ | ❌ ³ | ◐ ⁴ | ◐ ⁵ | ❌ |
 | Moves to another source by itself if one stalls | ✅ | ❌ | — | — | ❌ |
 | Subtitle sync you can drag into place, with a transcript | ✅ | ◐ ⁶ | ◐ ⁶ | ◐ ⁶ | ◐ ⁶ |
 | Seats for the household, with PINs and kids seats | ✅ | ❌ ⁷ | ✅ | ✅ | ✅ |
@@ -117,6 +122,7 @@ MKCinema does more out of the box than Stremio, Plex, Jellyfin or Kodi in the ro
 | Ask for picks in plain words, worked out on your device | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Browse films by their best 90-second scenes (Peak Cinema) | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Design your own Stremio addon visually (Addon Studio) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Plugins and themes from a reviewed gallery, each file checked before it runs | ✅ | ❌ ¹² | ❌ | ✅ | ✅ |
 | Import your Stremio library, progress and addons | ✅ | — | ❌ | ❌ | ❌ |
 | Runs in a browser with nothing to install or host | ✅ | ✅ | ◐ ¹⁰ | ❌ ¹⁰ | ❌ |
 | Free and open source | ✅ GPL-3.0 | ◐ ¹¹ | ❌ | ✅ | ✅ |
@@ -137,16 +143,7 @@ MKCinema does more out of the box than Stremio, Plex, Jellyfin or Kodi in the ro
 9. Plex Live TV needs a tuner. M3U playlists need a third-party bridge.
 10. Plex and Jellyfin need a media server that you run yourself to play your own files.
 11. The Stremio apps are open source, but its streaming server is not.
-
-</details>
-
-<details>
-<summary><b>Where others are still ahead</b></summary>
-
-- **Playing every file.** Kodi, Plex, Jellyfin and the Stremio desktop app use native players, so DTS, TrueHD and Dolby Vision files play everywhere. MKCinema's web player can't decode some of these, and it offers VLC or another player for them. A native player for the Android and TV app is being built.
-- **Offline downloads.** Plex and Jellyfin can save films to some devices. MKCinema can't download yet.
-- **Torrents without debrid.** Stremio's desktop app streams torrents itself. MKCinema needs a debrid service or its companion server.
-- **Apple devices.** There's no iPhone, iPad or Apple TV app.
+12. Stremio has no plugin or theme support of its own. Third-party mods add some to its desktop app.
 
 </details>
 
