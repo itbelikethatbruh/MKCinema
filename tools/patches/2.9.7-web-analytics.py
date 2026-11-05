@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""2.9.7 Cloudflare Web Analytics: anonymous, cookieless page-visit counts on mkcinema.pages.dev only, plus privacy copy
-that stays exactly true ("No ads. No cookies, no profiles."), and a Settings > Data switch to turn it off. The beacon loads
+"""2.9.7 Cloudflare Web Analytics: anonymous, cookieless page-visit counts on mkcinema.pages.dev only, privacy copy
+updated to match ("No ads. No cookies, no profiles."), and a Settings > Data switch to turn it off. The beacon loads
 after the app, only on the live host.
 Usage: python3 -I this.py index.html sw.js   (on 2.9.6; idempotent)"""
 import os, re, sys, json

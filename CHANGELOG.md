@@ -13,7 +13,7 @@ All notable changes to MKCinema. The web app version and the native app versions
 
 ## Web app 2.9.7 (2026-11-05)
 
-- **Anonymous visit counts, out in the open**: MKCinema now uses Cloudflare Web Analytics on the app, the website and the TV help page. Once per visit it counts the page, the site you came from, browser, country and load speed. It sets no cookies and no IDs, and it never sees your addons, keys or what you watch. Turn it off under Settings › Data › Share anonymous visit counts. The privacy wording now says exactly this: no ads, no cookies, no profiles.
+- **Anonymous visit counts (optional)**: MKCinema now uses Cloudflare Web Analytics on the app, the website and the TV help page. Once per visit it counts the page, the site you came from, browser, country and load speed. It sets no cookies and no IDs, and it never sees your addons, keys or what you watch. Turn it off under Settings › Data › Share anonymous visit counts. Privacy wording updated to match: no ads, no cookies, no profiles.
 
 ## Web app 2.9.6 (2026-11-05)
 
