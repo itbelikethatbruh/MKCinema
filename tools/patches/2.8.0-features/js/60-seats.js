@@ -6,7 +6,7 @@
 const Seats = {
   list() { return Store.raw.get('seats', []) || []; },
   saveList(l) { Store.raw.set('seats', l); Account.schedule(); },
-  owner() { return { id: '', name: Store.raw.get('ownerSeatName', '') || (Account.user ? Account.name() : 'Main'), color: '#d9d4c7', pin: Store.raw.get('ownerPin', ''), kids: false }; },
+  owner() { return { id: '', name: Store.raw.get('ownerSeatName', '') || (Account.user ? Account.name().split('@')[0] : 'Main'), color: '#d9d4c7', pin: Store.raw.get('ownerPin', ''), kids: false }; },
   all() { return [this.owner(), ...this.list()]; },
   cur() { return this.all().find((s) => s.id === SEAT) || this.owner(); },
   kids() { return !!this.cur().kids; },
@@ -52,8 +52,12 @@ const Seats = {
     const press = async (k) => {
       if (k === 'x') v = v.slice(0, -1); else if (k === 'ok' || v.length >= 4) { /* check below */ } else v += k;
       if (v.length === 4 || k === 'ok') {
-        if ((await this.hashPin(s.id, v)) === s.pin) { box.hidden = true; ok(); return; }
-        v = ''; paint(); toast('That PIN is not right', 'err', 1800, 'pin'); return;
+        const wait = Math.ceil(((Seats.lockUntil || 0) - Date.now()) / 1000);
+        if (wait > 0) { v = ''; paint(); toast(`Too many tries. Wait ${wait} s`, 'err', 1800, 'pin'); return; }
+        if ((await this.hashPin(s.id, v)) === s.pin) { Seats.fails = 0; box.hidden = true; ok(); return; }
+        Seats.fails = (Seats.fails || 0) + 1;
+        if (Seats.fails >= 5) { Seats.fails = 0; Seats.lockUntil = Date.now() + 60e3; }
+        v = ''; paint(); toast(Seats.lockUntil > Date.now() ? 'Too many tries. Wait a minute' : 'That PIN is not right', 'err', 1800, 'pin'); return;
       }
       paint(); const f = $(`[data-pk="${k}"]`, box); if (IS_TV && f) Nav.focus(f, true);
     };
@@ -62,10 +66,11 @@ const Seats = {
     box.tabIndex = -1; if (!IS_TV) box.focus();
   },
   /* grown-up gate for a kids seat */
-  unlocked: false,
+  unlocked: false, unlockedAt: 0, fails: 0, lockUntil: 0,
   guard(fn) {
+    if (this.unlocked && Date.now() - this.unlockedAt > 10 * 60e3) this.unlocked = false;   // the grown-up unlock lasts 10 minutes
     if (!this.kids() || this.unlocked || !this.owner().pin) { if (this.kids() && !this.owner().pin && !this.unlocked) { /* no grown-up PIN set: nothing to check */ } return fn(); }
-    this.askPin(this.owner(), () => { this.unlocked = true; X8.close('seatPick'); fn(); }, 'Grown-up PIN');
+    this.askPin(this.owner(), () => { this.unlocked = true; this.unlockedAt = Date.now(); X8.close('seatPick'); fn(); }, 'Grown-up PIN');
   },
   kidSafe(m) {
     if (!m) return true;
@@ -77,10 +82,11 @@ const Seats = {
   section() {
     const me = this.cur();
     return { id: 'seats', icon: 'users', label: 'Seats', intro: 'Everyone in the house gets their own seat: their own watchlist, progress and picks. A seat can have a PIN, and a kids seat shows only Animation and Family titles.', bind: () => this.bindSection(), rows: () => [
-      { html: () => `<div class="seat-rows">${this.all().map((s) => `<div class="seat-row">${this.avatar(s)}<div><b>${esc(s.name)}${s.id === SEAT ? ' <span class="tag-s c">here now</span>' : ''}</b><small>${[s.id === '' ? 'Main seat' : '', s.kids ? 'Kids' : '', s.pin ? 'PIN on' : 'No PIN'].filter(Boolean).join(' · ')}</small></div>
+      { html: () => `<div class="seat-rows">${this.all().map((s) => `<div class="seat-row${s.id === SEAT ? ' here' : ''}">${this.avatar(s)}<div><b>${esc(s.name)}</b><small>${s.id === SEAT ? '<span class="seat-here">Watching now</span>' : ''}${[s.id === '' ? 'Main seat' : '', s.kids ? 'Kids' : '', s.pin ? 'PIN on' : 'No PIN'].filter(Boolean).join(' · ')}</small></div>
           <div class="inrow">${s.id !== SEAT ? `<button class="btn btn-ghost btn-sm" type="button" data-nav data-sgo="${esc(s.id)}">Switch</button>` : ''}<button class="btn btn-ghost btn-sm" type="button" data-nav data-sed="${esc(s.id)}"><i data-lucide="pencil"></i>Edit</button></div></div>`).join('')}</div>` },
       { key: 'seatAdd', label: 'Add a seat', help: 'Up to 7 more seats on this account.', type: 'button', text: 'Add a seat', icon: 'user-plus', run: () => this.edit(null) },
       { key: 'seatAsk', label: 'Ask who’s watching', help: 'Show the seats each time MKCinema opens, once there is more than one.', type: 'toggle', get: () => CFG.seatAsk !== false },
+      { html: () => (this.list().some((x) => x.kids) && !this.owner().pin ? '<p class="tour-note seat-warn">A kids seat has no lock yet: anyone can leave it. Edit your main seat and set a grown-up PIN.</p>' : '') },
       { html: () => `<p class="tour-note">${me.kids ? 'This is a kids seat.' : 'Seats are not separate accounts: anyone with this device can pick a seat without a PIN. Give a seat a PIN to keep it to its owner.'}</p>` },
     ] };
   },
@@ -97,6 +103,7 @@ const Seats = {
       <div class="x8-form"><label>Name<input class="inp" id="seName" maxlength="20" value="${esc(s.name)}" placeholder="Name" autocomplete="off"></label>
       <div class="seat-colors" role="radiogroup" aria-label="Colour">${this.COLORS.map((c) => `<button type="button" data-nav data-col="${c}" class="${c === s.color ? 'on' : ''}" style="--sc:${c}" aria-label="Colour ${c}"></button>`).join('')}</div>
       ${s.id !== '' ? `<div class="set-row"><div><b>Kids seat</b><small>Only Animation and Family titles, no Live TV, and the grown-up PIN for Settings and Addons.</small></div><div class="set-ctl"><button class="switch ${s.kids ? 'on' : ''}" type="button" id="seKids" role="switch" aria-checked="${!!s.kids}" aria-label="Kids seat"></button></div></div>` : ''}
+      ${s.id !== '' && !this.owner().pin ? '<label id="seGrownL">Grown-up PIN (4 digits). A kids seat needs one, so only a grown-up can leave it or open Settings<input class="inp mono" id="seGrown" inputmode="numeric" maxlength="4" placeholder="Set a grown-up PIN" autocomplete="off"></label>' : ''}
       <label>${s.id === '' ? 'Grown-up PIN (4 digits, guards kids seats too)' : 'PIN (4 digits, optional)'}<input class="inp mono" id="sePin" inputmode="numeric" maxlength="4" placeholder="${s.pin ? '•••• (leave empty to keep)' : 'No PIN'}" autocomplete="off"></label>
       ${s.pin ? '<button class="btn btn-ghost btn-sm" type="button" data-nav id="seNoPin"><i data-lucide="lock-open"></i>Remove the PIN</button>' : ''}</div>
       <div class="actions"><button class="btn btn-prime" type="button" data-nav id="seSave"><i data-lucide="check"></i>Save</button>${!isNew && s.id !== '' && s.id !== SEAT ? '<button class="btn btn-ghost danger" type="button" data-nav id="seDel"><i data-lucide="trash-2"></i>Remove seat</button>' : ''}</div>`;
@@ -106,10 +113,16 @@ const Seats = {
     const np = $('#seNoPin', b); if (np) np.onclick = () => { s.pin = ''; np.remove(); toast('PIN will be removed when you save'); };
     $('#sePin', b).addEventListener('keydown', (e) => e.stopPropagation());
     $('#seName', b).addEventListener('keydown', (e) => e.stopPropagation());
+    const gIn = $('#seGrown', b); if (gIn) gIn.addEventListener('keydown', (e) => e.stopPropagation());
     $('#seSave').onclick = () => this.guard(async () => {
       s.name = $('#seName').value.trim() || (s.id === '' ? 'Main' : 'Guest'); const pin = $('#sePin').value.trim();
       if (pin && !/^\d{4}$/.test(pin)) { toast('A PIN is 4 digits', 'err'); return; }
       if (pin) s.pin = await this.hashPin(s.id, pin);
+      const gEl = $('#seGrown'), grown = gEl ? gEl.value.trim() : '';
+      if (s.kids && s.id !== '' && !this.owner().pin) {
+        if (!/^\d{4}$/.test(grown)) { toast('Set a 4-digit grown-up PIN first, so kids can’t leave their seat', 'err', 4200); if (gEl) gEl.focus(); return; }
+        Store.raw.set('ownerPin', await this.hashPin('', grown)); Account.schedule();
+      }
       if (s.id === '') { Store.raw.set('ownerSeatName', s.name); Store.raw.set('ownerPin', s.pin || ''); Account.schedule(); }
       else { const l = this.list().filter((x) => x.id !== s.id); l.push({ id: s.id, name: s.name, color: s.color, kids: !!s.kids, pin: s.pin || '' }); this.saveList(l); }
       X8.close('seatEdit'); if (!$('#settings').hidden) renderSettingsBody(); toast(isNew ? `${s.name} has a seat` : 'Seat saved', 'ok');
