@@ -335,7 +335,7 @@ Bug reports, ideas and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIB
 
 ### License
 
-MKCinema is free software under the [GNU General Public License v3.0](LICENSE). Local file playback ideas are adapted from [addyosmani/webvlc](https://github.com/addyosmani/webvlc) (MIT). The README artwork is drawn by [`.github/readme/generate.py`](.github/readme/generate.py) with Fraunces and Space Grotesk (SIL Open Font License) and brand marks from [Simple Icons](https://simpleicons.org) (CC0).
+MKCinema is free software under the [GNU General Public License v3.0](LICENSE), created by Drake Christopher. You may study, change and share it under that license, with the extra terms in [NOTICE](NOTICE) that GPL-3.0 section 7 allows: forks must credit MKCinema and its author, must say they are modified, and must use their own name and icon, because the MKCinema name and MK logo are not covered by the license. Local file playback ideas are adapted from [addyosmani/webvlc](https://github.com/addyosmani/webvlc) (MIT). The README artwork is drawn by [`.github/readme/generate.py`](.github/readme/generate.py) with Fraunces and Space Grotesk (SIL Open Font License) and brand marks from [Simple Icons](https://simpleicons.org) (CC0).
 
 MKCinema is an independent project and is not affiliated with or endorsed by Stremio. Stremio, VLC and other names and logos belong to their owners and are used only to describe compatibility.
 
