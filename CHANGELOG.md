@@ -2,6 +2,17 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.8.6 and Android app 1.2.3 (2026-11-05)
+
+- **No more stuck remote**: on Movies and Series the Catalog drop-down kept every arrow press, so the remote was trapped until you backed out. Arrows now always leave drop-downs and multi-line boxes. If nothing lies above, Up goes to the top menu, and a panel that can still scroll moves a step instead of doing nothing.
+- **Rows glide without jitter on TVs**: moving along a row no longer re-centres the page on every press, and the row no longer slips back a few pixels at the start of each move. One steady glide follows the remote, faster when a button is held.
+- **Networks without boxes**: each service is its raised logo with a stepped edge and soft shadow; a see-through glass edge marks the selected one. Logos float gently (on TVs only the selected one), drift against the row as it scrolls and lean toward the pointer on computers.
+- **Full-width TV tile**: Android app 1.2.3 gives TVs the wide MKCinema banner as the app icon, so Fire TV no longer shows a small square between grey bars. Phones keep the square icon.
+
+## Web app 2.8.4 (2026-11-05)
+
+- **A simpler Home**: one clear order (Continue watching, My watchlist, Top 10, Networks, Popular films and series, your picks, themed rows, Critically acclaimed), with the extras at the bottom. Rows have plain names such as "Popular films", a film shows once on Home, and the banner just says Featured.
+
 ## Web app 2.8.3 and Android app 1.2.2 (2026-11-05)
 
 - **No white bar on TVs**: the white bar down the right edge at start-up was the Android TV app's own scrollbar, which the page cannot hide. Android app 1.2.2 turns it off (and the edge glow). Reinstall it once from mkctv.pages.dev.

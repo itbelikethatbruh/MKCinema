@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mkcinema.app" android:versionCode="5" android:versionName="1.2.2">
+    package="com.mkcinema.app" android:versionCode="6" android:versionName="1.2.3">
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -21,6 +21,8 @@
     <!-- Launcher art (1.2.1): plain PNGs in drawable-* folders at every density, no adaptive XML icon and no mipmap.
          Fire OS's launcher reloads sideloaded apps' tiles from the image file the icon points to, and it can't read an
          adaptive-icon XML or a mipmap folder, so the tile turned into a grey broken image some time after install. -->
+    <!-- 1.2.3: on TVs (UI mode television) the launcher icon resolves to drawable-television-*/ic_launcher.png, the 16:9 banner art,
+         so Fire OS fills its wide app tile instead of a square icon between grey bars. Phones keep the square icon. -->
     <application android:label="MKCinema" android:icon="@drawable/ic_launcher"
         android:banner="@drawable/banner" android:theme="@style/Noir" android:hardwareAccelerated="true" android:allowBackup="false" android:supportsRtl="true">
         <activity android:name=".MainActivity" android:exported="true" android:icon="@drawable/ic_launcher" android:banner="@drawable/banner" android:launchMode="singleTask"

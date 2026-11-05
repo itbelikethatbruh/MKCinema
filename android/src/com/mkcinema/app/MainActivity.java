@@ -38,7 +38,7 @@ public class MainActivity extends Activity {
     static final String HOME = "https://mkcinema.pages.dev/";
     static final String HOST = "mkcinema.pages.dev";
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4;
-    static final String VER = "1.2.2";
+    static final String VER = "1.2.3";
 
     WebView web;
     FrameLayout root;
