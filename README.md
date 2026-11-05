@@ -98,7 +98,7 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 </tr>
 <tr>
 <td width="33%" valign="top"><img src="docs/readme/icon-puzzle.svg" width="52" alt=""><br><b>Plugins and themes</b><br><sub>Add community features and looks from a reviewed gallery in <a href="plugins/">plugins/</a>. Each file is checked against its checksum before it runs.</sub></td>
-<td width="33%" valign="top"><img src="docs/readme/icon-bolt.svg" width="52" alt=""><br><b>Torrents on Windows</b><br><sub>The Windows app can play torrent sources itself, no debrid needed. Off until you turn it on, download only, and the cache is deleted when you stop.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-bolt.svg" width="52" alt=""><br><b>Torrents without debrid</b><br><sub>The Windows, Android and TV apps can play torrent sources themselves. Off until you turn it on, download only, and the cache is deleted when you stop.</sub></td>
 <td width="33%" valign="top"><img src="docs/readme/icon-monitor.svg" width="52" alt=""><br><b>Show it on Discord</b><br><sub>The Windows app can show “Watching” and the title on your Discord profile, with the poster and time left. Off until you turn it on.</sub></td>
 </tr>
 </table>

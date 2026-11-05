@@ -46,7 +46,7 @@ public class MainActivity extends Activity {
     static final String HOME = "https://mkcinema.pages.dev/";
     static final String HOST = "mkcinema.pages.dev";
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5;
-    static final String VER = "1.2.8";
+    static final String VER = "1.3.0";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -308,6 +308,10 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public void voiceStop() { runOnUiThread(() -> { if (recognizer != null) recognizer.cancel(); }); }
         @JavascriptInterface public String version() { return VER; }
+        /** 1.3.0: torrent engine on this device; returns the local address, or "error: ..." */
+        @JavascriptInterface public String p2pStart() { return P2P.start(getApplicationContext()); }
+        @JavascriptInterface public void p2pStop() { P2P.stop(getApplicationContext()); }
+        @JavascriptInterface public boolean p2pAvailable() { return new java.io.File(getApplicationInfo().nativeLibraryDir, "libmkp2p.so").exists(); }
         /** Phones: the page says a film is playing (or stopped) and its frame size, so leaving the app shrinks it into a window. */
         @JavascriptInterface public void pipState(boolean playing, int w, int h) {
             if (!HOST.equals(pageHost) || tv) return;
@@ -495,5 +499,5 @@ public class MainActivity extends Activity {
         CookieManager.getInstance().flush();
     }
     @Override protected void onResume() { super.onResume(); web.onResume(); if (wasPip && !(Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode())) wasPip = false; }
-    @Override protected void onDestroy() { if (recognizer != null) recognizer.destroy(); if (web != null) { ((ViewGroup) web.getParent()).removeView(web); web.destroy(); } super.onDestroy(); }
+    @Override protected void onDestroy() { if (isFinishing()) new Thread(() -> P2P.stop(getApplicationContext())).start(); if (recognizer != null) recognizer.destroy(); if (web != null) { ((ViewGroup) web.getParent()).removeView(web); web.destroy(); } super.onDestroy(); }
 }

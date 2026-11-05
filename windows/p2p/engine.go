@@ -35,12 +35,28 @@ type Engine struct {
 	token string
 	mu    sync.Mutex
 	order []metainfo.Hash
+	opt   Options
+	full  bool
+	done  chan struct{}
 }
 
 var videoExt = map[string]bool{".mkv": true, ".mp4": true, ".m4v": true, ".avi": true, ".webm": true, ".mov": true, ".ts": true, ".m2ts": true, ".wmv": true, ".mpg": true}
 
+// Options tune the engine for small devices.
+type Options struct {
+	Keep    int   // torrents kept at once (default 2)
+	Reserve int64 // stop downloading when free space on the cache drive falls below this many bytes (0 = no check)
+	Conns   int   // peer connections per torrent (0 = library default)
+}
+
 // Start creates the engine under dataDir/p2p (wiped first) and starts the local HTTP server.
-func Start(dataDir string) (*Engine, error) {
+func Start(dataDir string) (*Engine, error) { return StartOpts(dataDir, Options{}) }
+
+// StartOpts is Start with options.
+func StartOpts(dataDir string, o Options) (*Engine, error) {
+	if o.Keep <= 0 {
+		o.Keep = 2
+	}
 	dir := filepath.Join(dataDir, "p2p")
 	_ = os.RemoveAll(dir)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
@@ -52,6 +68,10 @@ func Start(dataDir string) (*Engine, error) {
 	cfg.Seed = false
 	cfg.NoDefaultPortForwarding = true
 	cfg.ListenPort = 0
+	if o.Conns > 0 {
+		cfg.EstablishedConnsPerTorrent = o.Conns
+		cfg.HalfOpenConnsPerTorrent = o.Conns / 2
+	}
 	cl, err := torrent.NewClient(cfg)
 	if err != nil {
 		// PCs with IPv6 turned off fail to open the IPv6 listener: try again on IPv4 only
@@ -63,7 +83,10 @@ func Start(dataDir string) (*Engine, error) {
 	}
 	b := make([]byte, 16)
 	_, _ = rand.Read(b)
-	e := &Engine{cl: cl, dir: dir, token: hex.EncodeToString(b)}
+	e := &Engine{cl: cl, dir: dir, token: hex.EncodeToString(b), opt: o, done: make(chan struct{})}
+	if o.Reserve > 0 {
+		go e.watchSpace()
+	}
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		cl.Close()
@@ -83,6 +106,9 @@ func Start(dataDir string) (*Engine, error) {
 func (e *Engine) Close() {
 	if e == nil {
 		return
+	}
+	if e.done != nil {
+		close(e.done)
 	}
 	if e.srv != nil {
 		_ = e.srv.Close()
@@ -154,7 +180,7 @@ func (e *Engine) remember(h metainfo.Hash) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	e.order = append([]metainfo.Hash{h}, e.order...)
-	for len(e.order) > 2 {
+	for len(e.order) > e.opt.Keep {
 		old := e.order[len(e.order)-1]
 		e.order = e.order[:len(e.order)-1]
 		if t, ok := e.cl.Torrent(old); ok {
@@ -192,6 +218,10 @@ func pickFile(t *torrent.Torrent, idx int) *torrent.File {
 }
 
 func (e *Engine) stream(w http.ResponseWriter, r *http.Request) {
+	if e.isFull() {
+		http.Error(w, "this device is almost out of storage", http.StatusInsufficientStorage)
+		return
+	}
 	t, err := e.add(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusGatewayTimeout)
@@ -233,4 +263,42 @@ func (e *Engine) status(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(out)
+}
+
+func (e *Engine) isFull() bool { e.mu.Lock(); defer e.mu.Unlock(); return e.full }
+
+// watchSpace drops every torrent (and its pieces) when the cache drive gets close to full, so a small TV stick
+// never runs out of storage. Playback stops with an error the app explains.
+func (e *Engine) watchSpace() {
+	for {
+		select {
+		case <-e.done:
+			return
+		case <-time.After(4 * time.Second):
+		}
+		free := freeBytes(e.dir)
+		if free < 0 {
+			continue
+		}
+		e.mu.Lock()
+		if free < e.opt.Reserve && !e.full {
+			e.full = true
+			for _, h := range e.order {
+				if t, ok := e.cl.Torrent(h); ok {
+					t.Drop()
+				}
+			}
+			e.order = nil
+			go func(dir string) {
+				ents, _ := os.ReadDir(dir)
+				for _, x := range ents {
+					_ = os.RemoveAll(filepath.Join(dir, x.Name()))
+				}
+			}(e.dir)
+			log.Printf("p2p: storage nearly full (%d bytes free), dropped torrents", free)
+		} else if free > e.opt.Reserve*2 {
+			e.full = false
+		}
+		e.mu.Unlock()
+	}
 }

@@ -9,6 +9,8 @@ $BT/aapt2 link -I $JAR --manifest AndroidManifest.xml -o $OUT/base.apk $OUT/c/re
 javac -source 11 -target 11 -nowarn -cp $JAR -d $OUT/classes $(find src -name '*.java')
 $BT/d8 --release --min-api 24 --lib $JAR --output $OUT/dex $(find $OUT/classes -name '*.class')
 cp $OUT/base.apk $OUT/unsigned.apk; (cd $OUT/dex && zip -q ../unsigned.apk classes.dex)
+# 1.3.0: torrent engine binaries (built from windows/cmd/mkp2p, see jniLibs/README.md), stored as lib/<abi>/libmkp2p.so
+if [ -d jniLibs ]; then mkdir -p $OUT/lib && cp -r jniLibs/* $OUT/lib/ && rm -f $OUT/lib/README.md && (cd $OUT && zip -q -r unsigned.apk lib); fi
 $BT/zipalign -f -p 4 $OUT/unsigned.apk $OUT/aligned.apk
 $BT/apksigner sign --ks keystore/mkcinema.jks --ks-pass file:keystore/password.txt --out $OUT/MKCinema.apk $OUT/aligned.apk
 $BT/apksigner verify --print-certs $OUT/MKCinema.apk | head -3

@@ -1,15 +1,21 @@
+/* 2.13.0: the Android and TV app (1.3.0+) has the same torrent engine, through MKAndroid.p2pStart/p2pStop. On a TV
+   stick it keeps one torrent at a time and stops when free storage runs low. */
+const androidP2P = (() => { try { const a = window.MKAndroid; if (!a || !a.p2pStart || !(a.p2pAvailable ? a.p2pAvailable() : true)) return null;
+  const call = (r) => { if (!r || /^error/i.test(r)) throw new Error(String(r || 'the engine did not start').replace(/^error:\s*/i, '')); return r; };
+  return { platform: IS_TV ? 'tv' : 'android', version: a.version ? a.version() : '', p2p: { start: async () => call(a.p2pStart()), stop: async () => a.p2pStop() }, fresh: true }; } catch (e) { return null; } })();
 /* ---------------- 2.12.0 Desktop app extras: torrents on this computer, Discord status ----------------
    Only in the Windows app (window.MKDesktop, set by the app before the page loads). Both are off until turned on.
    Torrents: the app runs a small torrent engine on this PC that only downloads (never uploads or seeds), serves
    the file to the player on 127.0.0.1, and deletes everything when it stops or the app closes.
    Discord: "Watching <title>" on your Discord profile while something plays, through Discord's local pipe. */
 const Desktop = {
-  d: window.MKDesktop || null,
+  d: window.MKDesktop || androidP2P,
+  here() { return this.d && this.d.platform === 'windows' ? 'this computer' : this.d && this.d.platform === 'tv' ? 'this TV' : 'this device'; },
   base: null,
   p2pOn() { return !!(this.d && this.d.p2p && Store.raw.get('p2pOn', false)); },
   discordOn() { return !!(this.d && this.d.setPresence && Store.raw.get('discordOn', false)); },
   async engine() {
-    if (this.base) return this.base;
+    if (this.base && !this.d.fresh) return this.base;
     this.base = await this.d.p2p.start(); if (!this.base) throw new Error('the engine did not start');
     return this.base;
   },
@@ -32,18 +38,18 @@ const Desktop = {
   /* ---- Settings › Desktop app ---- */
   confirming: false,
   section() {
-    return { id: 'desktop', icon: 'monitor', label: 'Desktop app', intro: 'Extras that only the desktop app can do. Both are off until you turn them on.', bind: () => this.bind(), rows: () => [{ html: () => this.html() }] };
+    return { id: 'desktop', icon: this.d.platform === 'windows' ? 'monitor' : 'magnet', label: this.d.platform === 'windows' ? 'Desktop app' : 'Torrents', intro: this.d.platform === 'windows' ? 'Extras that only the desktop app can do. Both are off until you turn them on.' : 'Play torrent sources without a debrid service. Off until you turn it on.', bind: () => this.bind(), rows: () => [{ html: () => this.html() }] };
   },
   html() {
     const on = this.p2pOn();
     const warn = this.confirming ? `<div class="dk-warn"><p><b>Before you turn this on</b></p><ul>
-        <li>Torrent sources play straight from other people's computers. They can see your IP address, the same as any torrent app.</li>
-        <li>MKCinema only downloads. It never uploads or seeds, and it deletes what it downloaded when you turn this off or close the app.</li>
+        <li>Torrent sources play straight from other people's devices. They can see your IP address, the same as any torrent app.</li>
+        <li>MKCinema only downloads. It never uploads or seeds, and it deletes what it downloaded when you turn this off or close the app.${this.d.platform === 'windows' ? '' : ' It keeps one torrent at a time and stops if storage runs low.'}</li>
         <li>You are responsible for what you play. Many places have laws about torrents; a debrid service or a VPN keeps your IP private.</li></ul>
         <div class="inrow"><button class="btn btn-prime btn-sm" type="button" data-nav id="dkYes">I understand, turn it on</button><button class="btn btn-ghost btn-sm" type="button" data-nav id="dkNo">Cancel</button></div></div>` : '';
-    return `<div class="set-row"><div><b>Play torrent sources on this computer</b><small>${on ? 'On. Sources marked “Torrent” play in MKCinema. Your IP is visible to peers while they play.' : 'Off. Torrent sources need a debrid service or another player.'}</small></div><div class="set-ctl"><button class="switch ${on ? 'on' : ''}" type="button" data-nav id="dkP2p" role="switch" aria-checked="${on}" aria-label="Play torrent sources on this computer"></button></div></div>${warn}
+    return `<div class="set-row"><div><b>Play torrent sources on ${this.here()}</b><small>${on ? 'On. Sources marked “Torrent” play in MKCinema. Your IP is visible to peers while they play.' : 'Off. Torrent sources need a debrid service or another player.'}</small></div><div class="set-ctl"><button class="switch ${on ? 'on' : ''}" type="button" data-nav id="dkP2p" role="switch" aria-checked="${on}" aria-label="Play torrent sources on ${this.here()}"></button></div></div>${warn}
       ${this.d.setPresence ? `<div class="set-row"><div><b>Show what I'm watching on Discord</b><small>“Watching” and the title on your Discord profile while something plays. Needs the Discord app open on this computer.</small></div><div class="set-ctl"><button class="switch ${this.discordOn() ? 'on' : ''}" type="button" data-nav id="dkDiscord" role="switch" aria-checked="${this.discordOn()}" aria-label="Show what I'm watching on Discord"></button></div></div>` : ''}
-      <p class="tour-note">MKCinema for ${esc(this.d.platform === 'windows' ? 'Windows' : this.d.platform || 'desktop')} ${esc(this.d.version || '')}</p>`;
+      <p class="tour-note">MKCinema for ${esc({ windows: 'Windows', tv: 'TV', android: 'Android' }[this.d.platform] || 'desktop')} ${esc(this.d.version || '')}</p>`;
   },
   repaint() { if (!$('#settings').hidden) renderSettingsBody(); },
   // the open title's sources were ranked before the switch changed: rank them again
@@ -67,8 +73,8 @@ const Desktop = {
       const parse = Telemetry.parse.bind(Telemetry);
       Telemetry.parse = function (s) {
         const t = parse(s);
-        if (s.infoHash && !s.url && !t.debrid && Desktop.p2pOn()) { t.webReady = true; t.source = 'Torrent · this PC'; t.score += 1900; }
-        if (s._p2p) t.source = 'Torrent · this PC';
+        if (s.infoHash && !s.url && !t.debrid && Desktop.p2pOn()) { t.webReady = true; t.source = `Torrent · ${Desktop.d.platform === 'windows' ? 'this PC' : 'this device'}`; t.score += 1900; }
+        if (s._p2p) t.source = `Torrent · ${Desktop.d.platform === 'windows' ? 'this PC' : 'this device'}`;
         return t;
       };
       const play = playStream;
@@ -93,7 +99,7 @@ const Desktop = {
     }
     SECTIONS.push(this.section());
     const grp = SET_GROUPS.find(([n]) => /watching/i.test(n)); if (grp) grp[1].push('desktop');
-    SET_BLURB.desktop = 'Torrents on this PC, Discord status';
+    SET_BLURB.desktop = this.d.platform === 'windows' ? 'Torrents on this PC, Discord status' : 'Torrents without debrid';
   },
 };
 Desktop.init();
