@@ -31,14 +31,16 @@ const TvPlayer = {
     loadUrl = function (stream, startAt) {
       if (!TvPlayer.on() || !P.ctx || stream._local || stream._noNative) return lu.apply(this, arguments);
       const bh = stream.behaviorHints || {}, headers = bh.proxyHeaders && bh.proxyHeaders.request;
-      if (bh.proxyHeaders && !S.proxy) return lu.apply(this, arguments);
-      const src = (bh.proxyHeaders || CFG.alwaysProxy) ? proxify(stream.url, headers || {}) : stream.url;
+      // streams that ask for request headers (Referer, User-Agent...): TV app 1.2.8 sends them itself, no proxy needed
+      const nativeHdr = !!(headers && Object.keys(headers).length && (() => { try { return Updater.newer(MKAndroid.version(), '1.2.7'); } catch (e) { return false; } })());
+      if (bh.proxyHeaders && !S.proxy && !nativeHdr) return lu.apply(this, arguments);
+      const src = nativeHdr ? stream.url : (bh.proxyHeaders || CFG.alwaysProxy) ? proxify(stream.url, headers || {}) : stream.url;
       const ctx = P.ctx, v = ctx.video;
       TvPlayer.cur = { ctx, stream, startAt };
       (async () => {
         const subUrl = await TvPlayer.subUrl(ctx);
         if (P.stream !== stream) return;
-        const ok = (() => { try { return MKAndroid.play(JSON.stringify({ url: src, title: ctx.meta.name || '', sub: v ? `S${v.season} · E${v.episode}${v.name || v.title ? ` · ${v.name || v.title}` : ''}` : [yearOf(ctx.meta), stream._tel && stream._tel.res].filter(Boolean).join(' · '), startMs: Math.round((startAt || 0) * 1000), subUrl, matchRate: CFG.matchRate !== false })); } catch (e) { return false; } })();
+        const ok = (() => { try { return MKAndroid.play(JSON.stringify({ url: src, title: ctx.meta.name || '', sub: v ? `S${v.season} · E${v.episode}${v.name || v.title ? ` · ${v.name || v.title}` : ''}` : [yearOf(ctx.meta), stream._tel && stream._tel.res].filter(Boolean).join(' · '), startMs: Math.round((startAt || 0) * 1000), subUrl, matchRate: CFG.matchRate !== false, headers: nativeHdr ? headers : undefined })); } catch (e) { return false; } })();
         if (!ok) { TvPlayer.cur = null; lu.call(this, stream, startAt); return; }
         Loader.hide && Loader.hide();
       })();

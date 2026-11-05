@@ -46,7 +46,7 @@ public class MainActivity extends Activity {
     static final String HOME = "https://mkcinema.pages.dev/";
     static final String HOST = "mkcinema.pages.dev";
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5;
-    static final String VER = "1.2.7";
+    static final String VER = "1.2.8";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -322,7 +322,8 @@ public class MainActivity extends Activity {
                 JSONObject o = new JSONObject(json);
                 Intent i = new Intent(MainActivity.this, PlayerActivity.class)
                     .putExtra("url", o.getString("url")).putExtra("title", o.optString("title")).putExtra("sub", o.optString("sub"))
-                    .putExtra("startMs", o.optInt("startMs", 0)).putExtra("subUrl", o.optString("subUrl", "")).putExtra("matchRate", o.optBoolean("matchRate", true));
+                    .putExtra("startMs", o.optInt("startMs", 0)).putExtra("subUrl", o.optString("subUrl", "")).putExtra("matchRate", o.optBoolean("matchRate", true))
+                    .putExtra("headers", o.has("headers") ? o.getJSONObject("headers").toString() : "");
                 runOnUiThread(() -> { try { startActivityForResult(i, REQ_PLAY); } catch (Exception ignored) { } });
                 return true;
             } catch (Exception e) { return false; }

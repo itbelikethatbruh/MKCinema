@@ -45,6 +45,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
     TextView title, sub, time, note, subLine;
     ProgressBar seek;
     final Handler h = new Handler(Looper.getMainLooper());
+    final java.util.HashMap<String, String> hdr = new java.util.HashMap<>();
     String url, subUrl;
     int startMs, audioIdx = -1;
     boolean prepared, matchRate, ended, wantNext, surfaceReady;
@@ -57,6 +58,8 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         Intent i = getIntent();
         url = i.getStringExtra("url"); subUrl = i.getStringExtra("subUrl");
+        // request headers some sources need (Referer, User-Agent...), sent by the player itself
+        try { String hj = i.getStringExtra("headers"); if (hj != null && !hj.isEmpty()) { org.json.JSONObject ho = new org.json.JSONObject(hj); java.util.Iterator<String> it = ho.keys(); while (it.hasNext()) { String k = it.next(); hdr.put(k, ho.optString(k)); } } } catch (Exception ignored) { }
         startMs = i.getIntExtra("startMs", 0); matchRate = i.getBooleanExtra("matchRate", true);
         float d = getResources().getDisplayMetrics().density;
 
@@ -100,7 +103,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
     void start(SurfaceHolder holder) {
         mp = new MediaPlayer();
         try {
-            mp.setDataSource(this, Uri.parse(url));
+            mp.setDataSource(this, Uri.parse(url), hdr);
             mp.setDisplay(holder);
             mp.setScreenOnWhilePlaying(true);
             mp.setOnPreparedListener(m -> { prepared = true; fit(); if (startMs > 0) m.seekTo(startMs); m.start(); note.setText(""); show(4000); });
@@ -127,7 +130,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
         float fps = 0;
         MediaExtractor x = new MediaExtractor();
         try {
-            x.setDataSource(url, new java.util.HashMap<>());
+            x.setDataSource(url, hdr);
             for (int t = 0; t < x.getTrackCount(); t++) {
                 MediaFormat f = x.getTrackFormat(t); String mime = f.getString(MediaFormat.KEY_MIME);
                 if (mime != null && mime.startsWith("video/") && f.containsKey(MediaFormat.KEY_FRAME_RATE)) {
