@@ -2,6 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.8.2 (2026-11-05)
+
+- **Networks**: a Networks row under Top 10 opens what's on Netflix, Disney+, HBO Max, Prime Video, Apple TV+, Hulu, Paramount+, Peacock, Crunchyroll and Starz in your country, as films or series, with more on demand. The lists come from the community Streaming Catalogs addon and need no key; playing still goes through your own addons. Kids seats don't show the row.
+- **Banner arrows on TVs**: the featured banner's arrows show on TVs and the remote reaches them: Left from Smart Play goes to the previous film's arrow, Right from Watchlist to the next.
+- **Rows stop at their ends on TVs**: pressing Right on the last poster in a row (Top 10 included) stays there instead of jumping to a button somewhere else on the page. Endless rows load more and carry on.
+- **Where to watch shows each service once**: rent and buy share one row, and a service you can stream on is not listed again under rent or buy.
+
 ## Web app 2.8.1 (2026-11-05)
 
 - **Loading screen polish**: Fire TV showed its own white scrollbar down the right edge while Home was still building. The page can no longer scroll while the loading screen is up, and scrollbars stay hidden from the first frame. The loading screen now shows the platinum MK monogram from the intro with MKCINEMA under it.
