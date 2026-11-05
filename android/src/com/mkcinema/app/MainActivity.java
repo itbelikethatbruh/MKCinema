@@ -151,18 +151,23 @@ public class MainActivity extends Activity {
 
     String startUrl(Intent i) {
         Uri d = i != null ? i.getData() : null;
+        if (d != null && "stremio".equals(d.getScheme())) return HOME + (HOME.contains("#") ? "&" : "#") + "install=" + Uri.encode(d.toString());
         return d != null && HOST.equals(d.getHost()) ? d.toString() : HOME;
     }
 
     @Override protected void onNewIntent(Intent i) {
         super.onNewIntent(i);
-        if (i.getData() != null) web.loadUrl(startUrl(i));
+        Uri d = i.getData();
+        // an addon Install link while MKCinema is open: hand it to the page (it asks first), no reload
+        if (d != null && "stremio".equals(d.getScheme())) { web.evaluateJavascript("window.MKInstall?MKInstall(" + JSONObject.quote(d.toString()) + "):location.replace(" + JSONObject.quote(startUrl(i)) + ")", null); return; }
+        if (d != null) web.loadUrl(startUrl(i));
     }
 
     /** Keeps MKCinema pages in the app; sends players, stores and other sites to the right app. */
     boolean route(Uri u) {
         String sc = u.getScheme() == null ? "" : u.getScheme();
         if (("https".equals(sc) || "http".equals(sc)) && HOST.equals(u.getHost())) return false;
+        if ("stremio".equals(sc)) { web.evaluateJavascript("window.MKInstall&&MKInstall(" + JSONObject.quote(u.toString()) + ")", null); return true; }
         if ("intent".equals(sc)) {
             try {
                 Intent i = Intent.parseUri(u.toString(), Intent.URI_INTENT_SCHEME);

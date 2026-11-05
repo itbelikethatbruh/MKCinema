@@ -46,6 +46,13 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="https" android:host="mkcinema.pages.dev"/>
             </intent-filter>
+            <!-- 1.2.8: an addon setup page's Install button (stremio://...manifest.json) opens MKCinema, which asks before installing -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="stremio"/>
+            </intent-filter>
         </activity>
         <!-- 1.2.5: the TV player (system hardware decoder), opened from the page with MKAndroid.play -->
         <activity android:name=".PlayerActivity" android:exported="false" android:theme="@style/Noir"
