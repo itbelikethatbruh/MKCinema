@@ -2,6 +2,23 @@
    Browse the community index at stremio-addons.net (about 750 addons, an open JSON list) from inside the addon manager:
    search, filter by what an addon provides, install in one press, or open its own setup page when it needs one. Adult
    addons stay hidden unless the viewer confirms they are 18 or older. MKCinema recommends none of them. */
+/* TV text boxes: landing on one with the remote must not pop the on-screen keyboard (it covers the screen and, on Fire TV,
+   fights the remote). The box is read-only with inputmode none (some TV keyboards ignore one of the two) until OK is pressed
+   on it; once the remote leaves it, it goes back to that state. */
+const TvType = {
+  guard(el) {
+    if (!el || el._tvType) return; el._tvType = true;
+    const arm = () => { el.setAttribute('inputmode', 'none'); el.readOnly = true; el.dataset.tvArmed = '1'; };
+    arm();
+    el.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.keyCode === 23) && el.dataset.tvArmed) {
+        e.preventDefault(); e.stopPropagation(); delete el.dataset.tvArmed; el.readOnly = false; el.setAttribute('inputmode', 'search');
+        el.blur(); setTimeout(() => { el.focus({ preventScroll: true }); try { el.click(); } catch (x) { /* none */ } }, 30);
+      }
+    }, true);
+    el.addEventListener('blur', () => { if (!el.dataset.tvArmed) setTimeout(() => { if (document.activeElement !== el) arm(); }, 60); });
+  },
+};
 const AddonDir = {
   URL: 'https://stremio-addons.net/api/addon_catalog/all/stremio-addons.net.json',
   list: null, q: '', type: '', n: 40, adult: false,
@@ -22,32 +39,70 @@ const AddonDir = {
     X8.open('addonDir');
     try { await this.load(); this.paint(); } catch (e) { X8.body('addonDir').innerHTML = `<div class="empty-state"><i data-lucide="cloud-off"></i><h3>The directory did not answer</h3><p>${esc(e.message)}. Paste an addon link in the addon manager instead.</p></div>`; icons(); }
   },
-  paint(keepFocus) {
-    const b = X8.body('addonDir'), have = new Set(engine.addons.map((a) => a.baseUrl)), base = (u) => u.replace(/\/manifest\.json(\?.*)?$/, '');
-    const q = normTitle(this.q);
-    const hits = this.list.filter((a) => (this.adult || !a.adult) && (!this.type || (this.type === 'subtitles' ? a.res.includes('subtitles') : this.type === 'catalog' ? a.res.includes('catalog') : a.types.includes(this.type))) && (!q || normTitle(`${a.m.name} ${a.m.description || ''}`).includes(q)));
-    const shown = hits.slice(0, this.n);
+  /* The shell (title, search, filter chips) is built once; typing and filters redraw only the list below, so the search
+     box is never torn down under the remote. On TV the box keeps the on-screen keyboard down until OK is pressed. */
+  paint() {
+    const b = X8.body('addonDir');
     const types = [['', 'All'], ['movie', 'Movies'], ['series', 'Series'], ['anime', 'Anime'], ['tv', 'TV'], ['catalog', 'Catalogs'], ['subtitles', 'Subtitles']];
     b.innerHTML = `<h3 class="x8-h">Community addons</h3><p class="sub">From the open directory at stremio-addons.net. Addons are made by their own authors; MKCinema checks none of them, so install only what you trust.</p>
-      <div class="ch-bar"><div class="ch-search"><i data-lucide="search"></i><input class="inp" id="adQ" type="search" placeholder="Search ${this.list.length} addons" value="${esc(this.q)}" autocomplete="off"></div></div>
-      <div class="chips" style="margin:10px 0 4px">${types.map(([v, l]) => `<button class="chip ${this.type === v ? 'on' : ''}" type="button" data-nav data-adt="${v}">${l}</button>`).join('')}<button class="chip ${this.adult ? 'on' : ''}" type="button" data-nav id="adAdult">18+</button></div>
-      <div class="ad-list">${shown.map((a, i) => { const inst = have.has(base(a.url)); return `<div class="ad-item">${a.m.logo ? `<img class="ad-logo" src="${esc(a.m.logo)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'ad-logo ad-mono',textContent:'${esc((a.m.name || '?').slice(0, 2).toUpperCase().replace(/'/g, ''))}'}))">` : `<span class="ad-logo ad-mono">${esc((a.m.name || '?').slice(0, 2).toUpperCase())}</span>`}
-          <div class="ad-t"><b>${esc(a.m.name)}</b> <span class="tag-s">v${esc(a.m.version || '?')}</span>${a.adult ? ' <span class="tag-s">18+</span>' : ''}<p>${esc(String(a.m.description || '').slice(0, 180))}</p><div class="tele">${[...new Set([...a.res, ...a.types])].slice(0, 6).map((r) => `<span class="tag-s">${esc(r)}</span>`).join('')}</div></div>
-          <div class="ad-act">${inst ? '<span class="tag-s c">Installed</span>' : a.need ? `<a class="btn btn-ghost btn-sm" data-nav href="${esc(base(a.url))}/configure" target="_blank" rel="noopener"><i data-lucide="settings-2"></i>Set up</a>` : `<button class="btn btn-ghost btn-sm" type="button" data-nav data-adi="${i}"><i data-lucide="download-cloud"></i>Install</button>${a.cfg ? `<a class="ad-cfg" href="${esc(base(a.url))}/configure" target="_blank" rel="noopener" data-nav>Options</a>` : ''}`}</div></div>`; }).join('') || '<p class="sub">No addons match.</p>'}</div>
-      ${hits.length > shown.length ? `<div class="actions" style="justify-content:center"><button class="btn btn-ghost" type="button" data-nav id="adMore">Show more · ${hits.length - shown.length} left</button></div>` : ''}
+      <div class="ch-bar"><div class="ch-search"><i data-lucide="search"></i><input class="inp" id="adQ" type="search" data-nav placeholder="Search ${this.list.length} addons${IS_TV ? ' · press OK to type' : ''}" value="${esc(this.q)}" autocomplete="off" enterkeyhint="search"></div></div>
+      <div class="chips" id="adChips" style="margin:10px 0 4px">${types.map(([v, l]) => `<button class="chip ${this.type === v ? 'on' : ''}" type="button" data-nav data-adt="${v}">${l}</button>`).join('')}<button class="chip ${this.adult ? 'on' : ''}" type="button" data-nav id="adAdult">18+</button></div>
+      <div id="adBody"></div>
       <p class="tour-note">An addon that needs setup opens its own page. Copy the link it gives you, then paste it in the addon manager.</p>`;
     icons();
-    const qi = $('#adQ'); qi.addEventListener('keydown', (e) => { if (!/^Arrow(Up|Down)$/.test(e.key)) e.stopPropagation(); });
-    qi.addEventListener('input', debounce(() => { this.q = qi.value; this.n = 40; this.paint(true); }, 220));
-    if (keepFocus && !TOUCH_UI) { qi.focus(); qi.setSelectionRange(qi.value.length, qi.value.length); }
-    $$('[data-adt]', b).forEach((x) => x.addEventListener('click', () => { this.type = x.dataset.adt; this.n = 40; this.paint(); }));
+    const qi = $('#adQ');
+    // typing keys stay in the box; arrows go on to the remote navigation (it leaves the box at the text's edges)
+    qi.addEventListener('keydown', (e) => { if (!/^Arrow/.test(e.key) && !(IS_TV && (e.key === 'Enter' || e.keyCode === 23))) e.stopPropagation(); });
+    qi.addEventListener('input', debounce(() => { if (qi.value === this.q) return; this.q = qi.value; this.n = 40; this.paintList(); }, 260));
+    if (IS_TV) {
+      TvType.guard(qi);
+      // the remote moves in clear lanes: search, then the filter chips, then the list one row at a time
+      b.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+        const a = document.activeElement, up = e.key === 'ArrowUp', chip = () => $('#adChips .chip.on') || $('#adChips .chip');
+        const rows = $$('#adBody .ad-item'), row = a && a.closest && a.closest('.ad-item'), first = (r) => r && $('[data-nav]', r);
+        let to = null;
+        if (a === qi) { if (up) return; to = chip(); }
+        else if (a && a.closest && a.closest('#adChips')) to = up ? qi : (first(rows[0]) || $('#adMore'));
+        else if (row) { const i = rows.indexOf(row); to = up ? (i > 0 ? first(rows[i - 1]) : chip()) : (first(rows[i + 1]) || $('#adMore')); }
+        else if (a && a.id === 'adMore') to = up ? first(rows[rows.length - 1]) : null;
+        else return;
+        e.preventDefault(); e.stopPropagation();
+        if (to) Nav.focus(to, e.repeat);
+      }, true);
+    }
+    $$('[data-adt]', b).forEach((x) => x.addEventListener('click', () => {
+      this.type = x.dataset.adt; this.n = 40;
+      $$('[data-adt]', b).forEach((c) => c.classList.toggle('on', c === x)); this.paintList();
+    }));
     $('#adAdult').onclick = (e) => {
       const x = e.currentTarget;
       if (!this.adult && !x.dataset.armed) { x.dataset.armed = '1'; x.textContent = 'I am 18 or older'; toast('Adult addons: press again to confirm you are 18 or older', 'info', 4000, 'adult'); setTimeout(() => { if (x.isConnected && x.dataset.armed) { delete x.dataset.armed; x.textContent = '18+'; } }, 5000); return; }
-      this.adult = !this.adult; this.paint();
+      delete x.dataset.armed; x.textContent = '18+';
+      this.adult = !this.adult; x.classList.toggle('on', this.adult); this.paintList();
     };
-    $$('[data-adi]', b).forEach((x) => x.addEventListener('click', async () => { x.disabled = true; const a = shown[Number(x.dataset.adi)]; const r = await installAddon(a.url); if (r) this.paint(); else x.disabled = false; }));
-    const more = $('#adMore'); if (more) more.onclick = () => { this.n += 40; this.paint(); };
+    this.paintList();
+  },
+  paintList(focusIdx) {
+    const body = $('#adBody'); if (!body) return;
+    const have = new Set(engine.addons.map((a) => a.baseUrl)), base = (u) => u.replace(/\/manifest\.json(\?.*)?$/, '');
+    const q = normTitle(this.q);
+    const hits = this.list.filter((a) => (this.adult || !a.adult) && (!this.type || (this.type === 'subtitles' ? a.res.includes('subtitles') : this.type === 'catalog' ? a.res.includes('catalog') : a.types.includes(this.type))) && (!q || normTitle(`${a.m.name} ${a.m.description || ''}`).includes(q)));
+    const shown = hits.slice(0, this.n);
+    const act = document.activeElement, hadFocus = !!(act && body.contains(act));
+    body.innerHTML = `<div class="ad-list">${shown.map((a, i) => { const inst = have.has(base(a.url)); return `<div class="ad-item" data-adx="${i}">${a.m.logo ? `<img class="ad-logo" src="${esc(a.m.logo)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'ad-logo ad-mono',textContent:'${esc((a.m.name || '?').slice(0, 2).toUpperCase().replace(/'/g, ''))}'}))">` : `<span class="ad-logo ad-mono">${esc((a.m.name || '?').slice(0, 2).toUpperCase())}</span>`}
+          <div class="ad-t"><b>${esc(a.m.name)}</b> <span class="tag-s">v${esc(a.m.version || '?')}</span>${a.adult ? ' <span class="tag-s">18+</span>' : ''}<p>${esc(String(a.m.description || '').slice(0, 180))}</p><div class="tele">${[...new Set([...a.res, ...a.types])].slice(0, 6).map((r) => `<span class="tag-s">${esc(r)}</span>`).join('')}</div></div>
+          <div class="ad-act">${inst ? '<span class="tag-s c" data-nav tabindex="0">Installed</span>' : a.need ? `<a class="btn btn-ghost btn-sm" data-nav href="${esc(base(a.url))}/configure" target="_blank" rel="noopener"><i data-lucide="settings-2"></i>Set up</a>` : `<button class="btn btn-ghost btn-sm" type="button" data-nav data-adi="${i}"><i data-lucide="download-cloud"></i>Install</button>${a.cfg ? `<a class="ad-cfg" href="${esc(base(a.url))}/configure" target="_blank" rel="noopener" data-nav>Options</a>` : ''}`}</div></div>`; }).join('') || '<p class="sub">No addons match.</p>'}</div>
+      ${hits.length > shown.length ? `<div class="actions" style="justify-content:center"><button class="btn btn-ghost" type="button" data-nav id="adMore">Show more · ${hits.length - shown.length} left</button></div>` : ''}`;
+    icons();
+    $$('[data-adi]', body).forEach((x) => x.addEventListener('click', async () => { x.disabled = true; const i = Number(x.dataset.adi); const r = await installAddon(shown[i].url); if (r) this.paintList(i); else { x.disabled = false; if (IS_TV && x.isConnected) Nav.focus(x, true); } }));
+    const more = $('#adMore', body); if (more) more.onclick = () => { const at = this.n; this.n += 40; this.paintList(at); };
+    // keep the remote where it was: the same row after an install, the first new row after Show more
+    if (focusIdx != null || hadFocus) {
+      const row = focusIdx != null && $(`[data-adx="${Math.min(focusIdx, shown.length - 1)}"]`, body);
+      const el = (row && $('[data-nav]', row)) || $('#adMore', body) || $('[data-nav]', body) || $('#adQ');
+      if (el) { if (IS_TV) Nav.focus(el, true); else el.focus({ preventScroll: true }); }
+    }
   },
   init() {
     const base = renderAddons;

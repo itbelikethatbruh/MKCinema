@@ -11,6 +11,10 @@ All notable changes to MKCinema. The web app version and the native app versions
 - Video fullscreen now fills the whole screen, and F11 toggles fullscreen. Right-click Copy and Paste work in text fields.
 - Links that open a new window (YouTube, GitHub) open in your browser. The page reloads itself if it crashes.
 
+## Web app 2.9.5 (2026-11-05)
+
+- **Community addon directory on TV**: the remote no longer gets stuck on the All filter, and the search box no longer flashes the on-screen keyboard. The keyboard opens only when you press OK on the search box. Up and Down move cleanly from search to the filters to the list, one addon at a time, and typing updates the list without redrawing the search box.
+
 ## Web app 2.9.4 (2026-11-05)
 
 - **Peak Cinema details**: Details (or Menu on the remote) pauses the scene and slides in the story, cast, director, running time and ratings. Back returns to the scene where it paused; Keep watching, From the start and Full page are one press away.
