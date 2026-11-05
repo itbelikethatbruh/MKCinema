@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy policy · MKCinema</title>
+<meta name="description" content="What MKCinema stores, where it is kept, and how to delete it.">
+<link rel="icon" href="icon-192.png">
+<style>:root{--bg:#0b0b0d;--panel:#141418;--line:rgba(255,255,255,.1);--ink:#f2efe8;--mute:#a7a29a;--gold:#d9d4c7;--ok:#3ddc84;--bad:#ff5470;--warn:#ffb43c}
+*{box-sizing:border-box}html{background:var(--bg)}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Onest",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-text-size-adjust:100%}
+main{max-width:760px;margin:0 auto;padding:40px 16px 80px}a{color:var(--gold)}
+.brand{display:inline-flex;gap:8px;align-items:baseline;font:700 15px/1 "Sora",system-ui,sans-serif;letter-spacing:.14em;text-decoration:none;color:var(--ink);margin-bottom:28px}.brand em{font-style:normal;color:var(--mute);font-weight:500}
+h1{font:600 clamp(28px,6vw,40px)/1.15 "Sora",system-ui,sans-serif;margin:0 0 8px}h2{font:600 19px/1.3 "Sora",system-ui,sans-serif;margin:34px 0 8px}
+.sub{color:var(--mute);margin:0 0 20px}ul{padding-left:20px}li{margin:4px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+button,input{font:inherit}button{background:var(--ink);color:#0b0b0d;border:0;border-radius:10px;padding:10px 16px;font-weight:600;cursor:pointer}button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+input{background:#0f0f12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}pre{white-space:pre-wrap;word-break:break-word;background:#0f0f12;border:1px solid var(--line);border-radius:10px;padding:12px;max-height:60vh;overflow:auto}
+</style>
+</head>
+<body>
+<main>
+<a class="brand" href="./">MK<em>CINEMA</em></a>
+<h1>Privacy policy</h1>
+<p class="sub">Last updated 5 November 2026. This page covers the MKCinema web app at mkcinema.pages.dev and the MKCinema apps for Android, Android TV, Fire TV, LG webOS, Windows, Mac and Linux, which all load that web app.</p>
+
+<div class="card"><b>The short version.</b> MKCinema works without an account. If you make one, your library and settings sync through it. We don't sell data, show ads or track you across sites. You can delete your account and everything synced with it in the app at any time.</div>
+
+<h2>What stays on your device</h2>
+<p>Your watchlist, watch progress, watched history, installed addons, settings, profiles and any keys you enter are saved in the app's storage on your device. Your recommendations ("Your Picks") are worked out on your device too.</p>
+
+<h2>Your account (optional)</h2>
+<ul>
+<li>Your email address and password are used to sign in. Passwords are handled by our sign-in provider, <a href="https://supabase.com/privacy" rel="noopener">Supabase</a>, and we never see them.</li>
+<li>With Cloud sync on, your watchlist, progress, watched history, addon list and settings are copied to your account so other devices can use them.</li>
+<li>Debrid and service keys are synced only while <b>Settings › Debrid › Sync keys with my account</b> is on. Turn it off to keep them on this device alone.</li>
+</ul>
+
+<h2>Logs you choose to send</h2>
+<p>Nothing is sent unless you press <b>Settings › Help › Send log</b>. A log contains your app version, device and browser type, your settings with all keys and links removed, the names of your addon hosts, and recent error messages. It never contains passwords, debrid or service keys, addon links or stream links. Each log gets a 6-character code, and only the developer can open it. To have a log removed, open a GitHub issue that includes its code.</p>
+
+<h2>Visit counts</h2>
+<p>The web app counts visits with <a href="https://www.cloudflare.com/web-analytics/" rel="noopener">Cloudflare Web Analytics</a>. It records the page, the site you came from, your browser, your country and the load speed. It uses no cookies and no identifiers. You can turn it off in <b>Settings › Data › Share anonymous visit counts</b>.</p>
+
+<h2>Services your device talks to</h2>
+<p>MKCinema is a client. To show titles and play them, your device connects directly to the services below. Each one has its own privacy policy.</p>
+<ul>
+<li>The addons and debrid services you add yourself.</li>
+<li>Title and artwork sources: Cinemeta and Metahub, Kitsu for anime, and TMDB or Fanart.tv if you add a key.</li>
+<li>Trailers from Apple (iTunes) and YouTube. Skip-intro times from TheIntroDB. Subtitles from the subtitle addons you install, such as OpenSubtitles.</li>
+<li>Services you connect yourself: Trakt, Simkl, AniList, MyAnimeList and MDBList.</li>
+<li>Two small relays run by MKCinema on Supabase. They forward requests for services that block browsers, which are some debrid services and MyAnimeList. Requests pass through them and nothing is stored.</li>
+</ul>
+
+<h2>New-episode notifications</h2>
+<p>In the Android app, the series you follow stay on your phone. The phone checks Cinemeta for new episodes itself, and no server keeps that list.</p>
+
+<h2>Deleting your data</h2>
+<ul>
+<li><b>Account and synced data:</b> go to Settings › Account › Delete account, or open <a href="https://mkcinema.pages.dev/#delete-account">mkcinema.pages.dev/#delete-account</a> and sign in. Your account and everything synced with it are removed at once.</li>
+<li><b>This device:</b> uninstall the app, or clear the site data for mkcinema.pages.dev in your browser.</li>
+<li><b>Can't sign in?</b> Open an issue on <a href="https://github.com/itbelikethatbruh/MKCinema/issues" rel="noopener">GitHub</a> and we'll explain how to confirm the account is yours.</li>
+</ul>
+
+<h2>Children</h2>
+<p>MKCinema isn't directed at children under 13. Kids seats exist so a parent can limit what a child sees on a shared device.</p>
+
+<h2>Changes</h2>
+<p>If this policy changes, the date at the top changes too. Questions go to <a href="https://github.com/itbelikethatbruh/MKCinema/issues" rel="noopener">GitHub issues</a>.</p>
+</main>
+</body>
+</html>
