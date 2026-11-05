@@ -4,7 +4,22 @@ labels: ["bug"]
 body:
   - type: markdown
     attributes:
-      value: Thanks for reporting! Please don't include debrid keys, passwords or addon links that contain keys.
+      value: |
+        Thanks for reporting! First send a log from the app: **Settings › Help › Send log**. It gives you a 6-character code that lets us see what went wrong on your device. Logs never include debrid keys, passwords, addon links or stream links, and you should not paste any of those here either.
+  - type: input
+    id: log_code
+    attributes:
+      label: Log code
+      description: The 6-character code from Settings › Help › Send log. Type "none" if you can't send one.
+      placeholder: e.g. K7QM2X
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: MKCinema version
+      description: Shown in Settings › About.
+      placeholder: e.g. 2.18.0
   - type: dropdown
     id: platform
     attributes:

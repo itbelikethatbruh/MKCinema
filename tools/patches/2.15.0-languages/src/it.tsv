@@ -1,0 +1,762 @@
+0	Tutti
+1	Qualsiasi
+2	Chiedi
+3	Bassa
+4	No
+5	In alto
+6	Indietro
+7	Dati
+8	Modifica
+9	Carattere
+10	Alta
+11	Home
+12	Principale
+13	Menu
+14	Altro
+15	Muto
+16	Nome
+17	Avanti
+18	Scorri
+19	Dimensione
+20	Salta
+21	Ordina
+22	Testo
+23	Thailandese
+24	Tipo
+25	Applica
+26	Sotto
+27	Cancella
+28	Chiudi
+29	Ceco
+30	Drammatico
+31	Olandese
+32	Invio
+33	Film
+34	Caratteri
+35	Greco
+36	Hindi
+37	Intro
+38	Liste
+39	Mai
+40	Pausa
+41	Telefono
+42	File
+43	Intervallo
+44	Ripristina
+45	Riprova
+46	Profili
+47	Con grazie
+48	Audio
+49	Tipi
+51	4K UHD
+52	7 giorni
+53	Dalla A alla Z
+54	Azione
+55	Addon
+56	Arabo
+57	Frecce
+58	In basso
+59	Annulla
+60	Cinema
+61	Colore
+62	Commedia
+63	Danese
+64	Debrid
+65	Più veloce
+66	Filtra
+67	Francese
+68	Tedesco
+69	Ho capito
+70	Ebraico
+71	Horror
+72	Importa
+73	Coreano
+74	Layout
+75	Film
+76	Player
+77	Polacco
+78	Rialzati
+79	Fantascienza
+80	Cerca
+81	Serie
+82	Più lento
+84	Sistema
+85	Volume
+86	30 giorni
+87	Chiave API
+88	Account
+89	Catalogo
+90	Cinese
+91	Collega
+92	Dettagli
+93	Dispositivi
+94	Inglese
+95	Express
+96	Finlandese
+97	Per te
+98	Avanti
+99	Galleria
+100	Installa
+101	Italiano
+102	Libreria
+103	TV in diretta
+104	Rete
+105	Locandine
+106	Privacy
+107	Codice QR
+108	Ripristina
+109	Russo
+110	Vedi tutto
+111	Serbo
+112	Fonti
+113	Spagnolo
+114	Stream
+115	Supporta
+116	Svedese
+117	Trailer
+118	Turco
+119	Versione
+120	Visto
+121	Aggiungi elemento
+122	Aggiungi regola
+123	ID addon
+124	Qualsiasi cosa
+125	Bilanciato
+126	Calendario
+127	Croato
+128	Scopri
+129	Scarica
+130	Episodi
+131	In evidenza
+132	Titoli
+133	Giapponese
+134	Manifest
+135	Reti TV
+136	Nuovo codice
+137	Nuova lista
+138	Nessun limite
+139	Al passaggio del mouse
+140	Password
+141	Riproduzione
+142	Posizione
+143	Rumeno
+144	Sezioni
+145	Impostazioni
+146	Standard
+147	Thriller
+148	Menu in alto
+149	Torrent
+150	Trailer
+151	Nome utente
+152	In visione
+153	5 secondi
+155	Animazione
+156	Evita HDR
+157	Testo normale
+158	Bulgaro
+159	ID client
+160	Collegato
+161	Copia codice
+162	Download
+163	Da qui
+164	Ungherese
+165	Carica altro
+166	Monospaziato
+167	Norvegese
+168	Sulla locandina
+169	Incolla chiave
+170	Scorciatoie
+171	Shortlist
+172	Menu laterale
+173	Salta passaggio
+174	Sottotitoli
+175	Ucraino
+176	Alza volume
+177	La mia lista
+178	10 secondi
+179	15 secondi
+180	30 secondi
+181	Ripetizione A-B
+182	Aggiungi un profilo
+183	Aspetto
+184	Più pertinente
+185	Sincronizzazione cloud
+186	CSS personalizzato
+187	Data di aggiunta
+188	Schermo intero
+189	Sfocatura vetro
+190	Nell’app
+191	Indonesiano
+192	Controlla battuta
+193	Scena successiva
+194	Una volta al giorno
+195	Portoghese
+196	Preferisci HDR
+197	Ripristina dimensione
+198	Invia alla TV
+199	Codice di configurazione
+200	File di configurazione
+201	Salta intro
+203	Spazio o K
+204	Colore del testo
+205	Chiave TorBox
+206	Trascrizione
+207	Vietnamita
+208	I tuoi consigli
+209	Il tuo telefono
+210	I tuoi gusti
+211	Tutte le fonti
+212	Stream migliore
+213	Cinema piatto
+214	Descrizione
+215	App desktop
+216	Porta di esportazione
+217	Schermo intero
+218	Inizia
+219	Gemme nascoste
+220	In corso
+221	Installa VLC
+222	Suono dell’intro
+223	Solo film
+224	Apri addon
+225	Apri telecomando
+227	Prestazioni
+228	Testo locandina
+229	Ripristina ritardo
+230	Vedi la mia Home
+231	Solo serie
+232	Codice sorgente
+233	Fonti (S)
+234	I loro termini
+235	Abbassa volume
+236	Tour guidato
+237	Visione di gruppo
+238	La tua regione
+239	non verificato
+240	Aggiungi playlist
+241	Addon Studio
+242	Qualsiasi lingua
+243	Nome del catalogo
+244	Scegli file…
+245	Cancella ricerca
+246	Chiudi player
+247	Collega Plex
+248	Tipo di visualizzazione
+249	Episodi (E)
+250	A ogni avvio
+251	Trova una battuta…
+252	Nascondi visti
+253	Volume dell’intro
+254	File più grande
+255	Prima i film
+256	La mia lista
+257	Prima i più recenti
+258	Episodio successivo
+259	Onest (senza grazie)
+260	Apri o riproduci
+261	Associa un telefono
+262	Telefono come telecomando
+263	Riproduci / pausa
+264	Strumenti del player
+265	Pagina del progetto
+266	Rivedi intro
+267	File nella Home
+268	Avvia il test
+269	Salva un fotogramma
+270	Prima le serie
+271	Clonatore di configurazione
+272	Controllo fonti
+273	Regole delle fonti
+274	Schermo diviso
+275	Regole degli stream
+276	Contorno del testo
+277	Top 10 di oggi
+278	In visione ora
+279	Timeout addon
+280	Chiave AllDebrid
+281	Film premiati
+282	Parole bloccate
+283	Elementi del catalogo
+284	Nero classico
+285	Cancella le mie chiavi
+286	Segreto client
+287	Chiudi trailer
+288	Collega Simkl
+289	Collega Trakt
+290	Ctrl/⌘ K o /
+291	Velocità predefinita
+292	Più votati
+293	Idee riprese
+294	Intro e audio
+295	Continua a guardare
+296	Blocca i controlli
+297	Aspetto e stile
+298	Gestisci addon
+299	Server multimediali
+300	Posizione del menu
+301	Ancora nessun elemento.
+302	Nessuna preferenza
+303	Non collegato
+304	Riproduci o metti in pausa
+305	Film popolari
+306	Riduci movimento
+307	Ripristina esempio
+308	Salva e prova
+309	Anteprime durante lo scorrimento
+310	Protezione spoiler
+311	Avvia o partecipa
+312	Inizia a esplorare
+313	Email Stremio
+314	Menu sottotitoli
+315	Sottotitoli (C)
+316	Tocca per l’audio
+317	Tocca per sbloccare
+318	Contrasto del testo
+319	Dettagli del titolo
+321	Le tue chiavi
+322	Dopo 1 minuto
+323	Chiedi a I tuoi consigli
+324	Lingua audio
+325	Automatico (US)
+326	Layout del catalogo
+327	Cancella avanzamento
+328	Chiave API debrid
+329	Servizio debrid
+330	Cancella tutti i dati
+331	Dall’inizio
+332	Schermo intero (F)
+333	HLS (adattivo)
+334	Dimensione interfaccia
+335	Proxy MKCinema
+336	Sottotitoli successivi
+337	Altri servizi
+338	Scegli i preferiti
+339	Riproduci l’intro
+340	Chiave Premiumize
+341	Azzera i miei gusti
+342	Ripristina impostazioni
+343	Avanzamento configurazione
+344	File standard
+345	Dove guardarlo
+346	I tuoi preferiti
+347	Dopo 3 minuti
+348	Dopo 5 minuti
+349	Calendario uscite
+350	Indietro di 10 secondi
+351	Scegli una fonte
+352	Cancella preferiti
+353	Svuota la mia lista
+354	Copia codice di configurazione
+355	Cambia sottotitoli
+356	Esc / Backspace
+357	Esporta addon.js
+358	Filtra per titolo
+359	Per utenti esperti
+360	Modalità notte fonda
+361	Dettagli licenza
+362	TV in diretta e guida
+363	Player MKCinema
+364	Apri su YouTube
+365	Portoghese (BR)
+366	Chiave Real-Debrid
+367	Ricorda il volume
+368	Cerca con la voce
+369	Mostra frame rate
+370	Dimensione · posizione
+371	VLC consigliato
+372	Visione di gruppo (P)
+373	Info e licenze
+374	Aggiungi le tue fonti
+375	Dopo 10 minuti
+376	Dopo 20 minuti
+377	Dopo 90 secondi
+378	Server companion
+379	Parete IMAX curva
+380	Invio / tasto A
+381	Addon installati
+382	Jellyfin o Emby
+383	Sottotitoli più grandi
+384	Film o serie
+385	Traccia audio successiva
+386	Episodio successivo (N)
+387	Audio Modalità notte
+388	Opzioni di riproduzione
+389	Plugin e temi
+390	Formato preferito
+391	Segnala un problema
+392	Ripristina tutto
+393	Accedi e sincronizza
+394	Qualcosa non va?
+395	Stream e addon
+396	Password Stremio
+397	Meno di 90 minuti
+398	Modalità solo browser
+399	Chiudi Peak Cinema
+400	Continua a guardare
+401	Cambia traccia audio
+402	Dati e servizi
+403	Decennio del giorno
+404	File diretto (MP4)
+405	Installa come app
+406	Pronto per il web
+407	Risoluzione più bassa
+408	Scegli i miei preferiti
+409	Riproduci un file locale
+410	Pulsante Salta intro
+411	Sottotitoli più piccoli
+412	Inizia una Shortlist
+413	Dissocia tutti i telefoni
+414	X-Ray in pausa
+415	Teatro spaziale 3D
+416	Intensità Ambilight
+417	Chiedi altro
+418	Chiedi chi sta guardando
+419	Indietro / avanti 10 s
+420	Opacità dello sfondo
+421	Dona con PayPal
+422	Scarica .mkcinema
+423	Avanti di 10 secondi
+424	Etichette e numeri
+425	URL del proxy MKCinema
+426	Consigli fatti per te
+427	Picture-in-picture
+428	Popolari · Cinemeta
+429	Lingua preferita
+430	Rivedi il tour guidato
+431	Accesso ovunque
+432	Avvia la Modalità ambiente
+433	Prova la mia connessione
+434	Attiva/disattiva suono dell’intro
+435	Aggiungi allo schermo diviso
+436	Importa da Stremio
+437	HTTP/Debrid istantaneo
+438	Tieni in vita MKCinema
+439	Carica file di sottotitoli…
+440	Titolo in evidenza successivo
+441	Chiave RPDB (facoltativa)
+442	Pagina iniziale e file
+443	Chiave TMDB (facoltativa)
+444	Voci più chiare
+445	Ti diamo il benvenuto in MKCinema
+446	Aggiungi OpenSubtitles v3
+447	Il migliore per questo dispositivo
+448	Cancella l’avanzamento di visione
+449	HDR e Dolby Vision
+450	Includi le chiavi private
+451	Intro e colonna sonora
+452	Tastiera e gamepad
+453	Audio Modalità notte (A)
+454	Ancora nessuna regola per gli stream.
+455	Riproduci dentro MKCinema
+456	Scene, una dopo l’altra
+457	Invito alla Shortlist
+458	Aggiungi la tua playlist
+459	Come vengono scelte le scene
+460	Locandine con voti (RPDB)
+462	Scarica solo con Wi-Fi
+463	Effetti e fluidità
+464	Dimentica ciò che ha imparato
+465	Hulu: film e serie
+466	Voto IMDb sulle locandine
+467	Libreria (titoli salvati)
+468	Apri il gestore degli addon
+469	Dimensione, colore, lingua
+470	Salta l’intro quando compare
+471	Cosa c’è su ogni servizio
+472	L’episodio e i suoi stream
+473	Montaggio a caldo in MKCinema
+474	Includi le mie chiavi private
+475	Ancora nessuna serie da seguire
+477	Titolo in evidenza precedente
+478	Scrobbling e liste
+479	Riflessi e vetro leggero
+480	Starz: film e serie
+481	Torrent senza debrid
+482	Usa un altro progetto
+483	Collega un account debrid
+484	Voti della critica (chiave OMDb)
+485	Profondità, riflessi e vetro
+486	Chiave Fanart.tv (facoltativa)
+487	Invio al telefono e telecomando
+488	Scegli il tuo servizio qui sotto.
+489	Velocità, qualità e audio
+490	Ritardo sottotitoli −/+ 0,25 s
+491	Cataloghi dai tuoi addon
+492	Disney+: film e serie
+493	HBO Max: film e serie
+494	Netflix: film e serie
+495	Peacock: film e serie
+496	Scegli almeno 3 preferiti
+497	Riprendi da dove avevi lasciato
+498	Salta le intro automaticamente
+499	Pannello fonti / episodi
+500	Sincronizza le chiavi con il mio account
+501	Apri sempre gli stream in VLC
+502	Chiedi qualcosa di preciso
+503	Porta la tua libreria Stremio
+504	Contrasto, locandine, voti
+505	Nascondi le fonti torrent (P2P)
+506	Mostra i trailer insieme agli stream
+507	Salvaschermo / Modalità ambiente
+508	Usa questo telefono come telecomando
+509	IL TUO CINEMA · OGNI FONTE
+510	Gli addon e come si caricano le fonti
+511	Apple TV+: film e serie
+512	Lo stream migliore, scelto per te
+513	Piatto e fermo, il più veloce
+514	Nessuna fonte di TV in diretta installata
+515	Entrambi, come li elencano i miei addon
+516	Nascondi copie CAM e screener
+517	Come Peak Cinema sceglie le scene
+518	Paramount+: film e serie
+519	Incolla la tua chiave API AllDebrid
+520	Riproduci un file da questo dispositivo
+521	Condividi conteggi anonimi delle visite
+522	Accedi o crea un account
+523	Avvia la Modalità ambiente quando inattivo
+524	Cambia fonte automaticamente
+525	Venti film, uno alla volta.
+526	Funzioni e temi della community
+527	Crunchyroll: film e serie
+528	Prefissi ID (separati da virgole)
+529	Prime Video: film e serie
+530	Clonatore di configurazione, backup, ripristino
+531	Menu velocità, qualità e audio
+532	Massima qualità per Smart Play
+533	Mantiene la tua libreria e i tuoi addon.
+534	Player, VLC, salta intro, audio
+535	Rialzati (sopra il testo impresso)
+536	Più lento / più veloce / velocità normale
+537	Le fonti sotto questo valore sono nascoste.
+538	Lo stesso, come file .mkcinema.
+539	Usa il debrid per i risultati torrent
+540	Riproduci l’episodio successivo automaticamente
+541	Attiva i sottotitoli automaticamente
+542	Riassunti X-Ray e foto del cast
+543	Ecco come appariranno i sottotitoli.
+544	Profili per tutti, PIN, bambini
+545	Salva l’ID client, poi collega.
+546	Mostra su Discord cosa sto guardando
+547	Timer di spegnimento (15, 30, 60 min, no)
+548	Non sai decidere? Esplora le scene.
+549	Ancora nessun server. Collegane uno qui sotto.
+550	Telecomando, visione di gruppo, installazione
+551	Cerca titoli, addon e comandi
+552	Mostra "Episodio successivo" prima della fine
+553	VLC, debrid e le tue prime fonti
+554	Avanzamento (Continua a guardare)
+555	Chiedi ogni volta (selettore app Android)
+556	Riproduci le fonti torrent su questo dispositivo
+557	Consigli calcolati su questo dispositivo
+558	Torrent su questo PC, stato su Discord
+559	File Watchlist e Collezione di Trakt
+560	Disattiva le animazioni e l’intro.
+561	Fino a 7 profili in più su questo account.
+562	Alzala per le TV e la distanza dal divano.
+563	Fai passare ogni stream dal proxy
+564	Riproduci le fonti torrent su questo computer
+565	Salva l’ID e il segreto, poi collega.
+566	Scarica VLC per Windows · Mac · Linux
+567	Incollala qui e premi Salva e prova.
+568	Versione, crediti, licenze di terze parti
+569	Cinemeta live non è raggiungibile da qui.
+570	Il tour rapido di ciò che offre MKCinema.
+571	Chiave da premiumize.me/account (API key)
+572	Cerca film, serie, canali, addon…
+573	Addon, con impostazioni e chiavi
+574	Sfoglia tutti i cataloghi dei tuoi addon.
+575	Sceglie la tua lingua quando lo stream ce l’ha.
+576	Dimensione, qualità, niente copie CAM, ordine debrid
+577	Prova “qualcosa come Arrival” in I tuoi consigli
+578	Invia al telefono o usa il telefono come telecomando
+580	Sezioni elencate a sinistra, come in un’app TV.
+581	Metadati, trailer, sottotitoli, sincronizzazione e debrid
+582	0 dà pannelli neri pieni, l’opzione più veloce.
+583	File playlist (.m3u) per VLC, mpv o qualsiasi player
+584	Un piccolo voto a stelle nell’angolo di ogni locandina.
+585	Quanto attendere ogni addon prima di rinunciare.
+586	Il menu scorre in alto. Il layout attuale.
+587	Cronologia (film ed episodi che hai finito)
+588	File locali, trascina e rilascia, tasti come VLC
+589	Spostarsi tra gli elementi (scorrimento e volume nel player)
+590	Un pulsante menu fa scorrere le sezioni da sinistra.
+591	Mantiene lo stesso gruppo di fonti (bingeGroup) quando possibile.
+592	Non ancora impostato. Scegli almeno 3 serie, film o generi.
+593	Usa il pulsante La mia lista su qualsiasi titolo per salvarlo qui.
+594	Scegli da dove parte MKCinema e cosa mostra la tua Home.
+595	Smart Play usa queste preferenze per valutare gli stream.
+596	Impossibile caricare la libreria Supabase (controlla la connessione)
+597	Decidi quali fonti compaiono e come MKCinema le raggiunge.
+598	Disattivato. Le fonti torrent richiedono un servizio debrid o un altro player.
+599	Registrazioni fatte al cinema (CAM, TS, telesync) e screener.
+600	Gli stream sopra questo valore scendono in classifica, utile con connessioni lente.
+601	Ancora nessun catalogo di questo tipo. Installa un addon che ne fornisca uno.
+602	Grazie per guardare e per tenere in vita questo progetto. · Drake
+603	Ordina o limita le file dei cataloghi nella Home e il banner in evidenza.
+604	Mostra i profili a ogni avvio di MKCinema, quando ce n’è più di uno.
+605	Riproduci fonti torrent senza servizio debrid. Disattivato finché non lo attivi.
+606	Salta i file molto grandi con connessioni lente o a consumo. 0 significa nessun limite.
+607	Risolve gli host che bloccano la riproduzione nel browser, al costo della tua banda.
+608	La sequenza di avvio e la sua colonna sonora. L’interfaccia in sé non emette suoni.
+609	Apre la pagina sicura di PayPal, così MKCinema non vede mai i tuoi dati di pagamento.
+610	Accedi con un codice su plex.tv/link. Funziona anche sulle TV, senza digitare password.
+611	Extra che solo l’app desktop può offrire. Entrambi restano disattivati finché non li attivi.
+612	MKCinema è gratuito e senza pubblicità. È creato e mantenuto online da Drake Christopher.
+613	Aggiunge MKCinema alla schermata Home o al dock, con una finestra propria e un avvio più rapido.
+614	Cast, dettagli di immagine e audio, e un segnalibro della scena, un attimo dopo la pausa.
+615	Le fonti il cui nome contiene una di queste parole vengono nascoste. Separa le parole con virgole.
+616	La galleria non si è caricata (Failed to fetch). Controlla la connessione e riprova.
+617	Trascina qui un video per riprodurlo, o un file di sottotitoli (.srt .vtt .ass .ssa .sub) per caricarlo
+618	I download aspettano il Wi-Fi invece di usare i dati mobili. Un film pesa spesso da 2 a 15 GB.
+619	Rimuove da questo browser impostazioni, libreria, avanzamento, addon e progetti Studio.
+620	Tocca o trascina intorno alla ruota. Tutta l’app si adegua, e si sincronizza con il tuo account.
+621	Con più chiavi debrid salvate, qui scegli quale servizio viene usato per primo.
+622	Applicato dopo gli stili di MKCinema su questo account. Cancellalo se qualcosa non sembra giusto.
+623	Quattro passaggi da un’installazione nuova al tasto play. Quasi tutti finiscono in cinque minuti.
+624	Puoi aggiungere altri servizi in seguito da Impostazioni › Debrid. La tua chiave resta su questo dispositivo.
+625	Crea un nuovo codice di associazione. I telefoni associati prima smettono di funzionare finché non scansionano il nuovo.
+626	Salva quelli che ti piacciono nella tua lista e salta il resto. A destra per salvare, a sinistra per saltare.
+627	Aggiungi serie alla tua lista, o iniziane una, e i nuovi episodi compariranno qui.
+628	Crea un’app su trakt.tv/oauth/applications con redirect URI urn:ietf:wg:oauth:2.0:oob.
+629	Trakt ne ha bisogno per completare l’accesso. È il segreto della tua app e resta su questo dispositivo.
+630	Versione, la licenza di MKCinema e il software, i caratteri e i servizi di terze parti che usa.
+631	Disattivate di default: ripetono La mia lista e spesso sono vuote. Le file vuote non compaiono mai nella Home.
+632	Sfoca le miniature e nasconde le trame degli episodi che non hai visto. Tocca Mostra su qualsiasi episodio.
+633	Serie, film o generi. MKCinema costruisce la tua fila “Per te” a partire da questi, direttamente su questo dispositivo.
+634	Aggiunge le chiavi debrid, RPDB e OMDb. Solo per i tuoi dispositivi: chiunque abbia il codice può usarle.
+635	Curva le file dei cataloghi intorno a te invece delle file piatte. Solo desktop, e più pesante durante lo scorrimento.
+636	I nuovi episodi delle serie nella tua lista e in Continua a guardare. Quelli già usciti partono con un tocco.
+637	Accedi con Supabase per tenere libreria, avanzamento, addon e impostazioni sincronizzati tra i dispositivi.
+638	Apre MKCinema Remote, dove digiti il codice mostrato sulla TV. Ricorda la TV per la prossima volta.
+639	Nessun addon di sottotitoli è installato o raggiungibile. Aggiungi OpenSubtitles v3 per cercare in migliaia di lingue.
+640	Consigliato per i file MKV e per ogni stream che non parte nel browser. Gratuito su tutte le piattaforme.
+641	Usato per gli stream che richiedono header personalizzati e per inoltrare i trailer quando MKCinema è aperto come file.
+642	Carica sul tuo account lista, avanzamento, addon e impostazioni pochi secondi dopo ogni modifica.
+643	Le chiavi debrid, RPDB e OMDb si caricano da sole ovunque accedi. Se disattivato restano solo su questo dispositivo.
+644	Alto rende ogni etichetta e descrizione più chiara e un po’ più marcata, per stanze luminose e schermi piccoli.
+645	La tua lista, le tue liste e tutto ciò che hai iniziato. Con l’accesso ti seguono su ogni dispositivo.
+646	Indirizzo, nome utente e password del tuo server. La password viene inviata solo al tuo server e non viene salvata.
+647	Un account porta libreria, avanzamento, addon e chiavi su ogni telefono, portatile e TV su cui accedi.
+648	Scegli almeno 3 serie, film o generi che ami. MKCinema costruisce questa fila a partire da questi, sul tuo dispositivo.
+649	Compare anche all’inizio dei titoli di coda, se l’episodio ha un marcatore. Con la riproduzione automatica parte un conto alla rovescia di 10 s.
+650	Scarica una volta fino a 40 MB per misurare la velocità, poi suggerisce la qualità più alta che si vede senza pause.
+651	Immagini 3D in parallasse a schermo intero, con atmosfera, subito. Sinistra e Destra per sfogliare, OK apre il film, Indietro torna.
+652	Passa un film al telefono nello stesso secondo, controlla questo schermo dal telefono o guarda in sincrono con gli amici.
+653	Proietta i colori dell’immagine intorno al player. Solo desktop: su telefoni e tablet il video riempie lo schermo.
+654	Incolla un codice di configurazione (mkc://…) o un vecchio export JSON, oppure scegli un file .mkcinema. Si applica subito, senza ricaricare.
+655	Usato per “Dove guardarlo” nelle pagine dei titoli. Serve la tua chiave TMDB (Impostazioni › Home, sotto Modalità ambiente, o qui sotto).
+656	Descrivilo con parole tue, come “serie poliziesca divertente” o “qualcosa come Arrival”. Funziona anche con la ricerca vocale.
+657	Assegna a qualsiasi azione del player il tasto che preferisci. Funziona insieme ai tasti sopra. Seleziona una riga, poi premi il tasto.
+658	Se una fonte non parte entro 3,5 s, dà errore o si blocca per 12 s, la migliore successiva subentra nello stesso punto.
+659	“Sta guardando” e il titolo sul tuo profilo Discord mentre qualcosa è in riproduzione. Serve l’app Discord aperta su questo computer.
+660	Addon, progetto Studio, impostazioni, Modalità notte, proxy, lista, avanzamento e layout della Home, in un unico codice mkc://.
+661	Scegli dove sta il menu e un colore per tutta l’app. Tutto resta scuro e sobrio, così niente compete con le locandine.
+662	OpenSubtitles v3 è installato di default. Nel player puoi anche caricare file .srt, .vtt, .ass, .ssa o .sub dal tuo dispositivo.
+663	Consigli calcolati su questo dispositivo dai tuoi preferiti, dalla tua libreria e da ciò che guardi. Nessun servizio di IA esterno vede i tuoi gusti.
+664	I profili non sono account separati: chiunque usi questo dispositivo può scegliere un profilo senza PIN. Dai un PIN a un profilo per riservarlo al suo proprietario.
+665	La tua configurazione vive in questo browser (e nel tuo account, se accedi). Il Clonatore di configurazione la sposta tutta su un altro dispositivo con un solo codice.
+666	Copia in MKCinema la tua libreria Stremio, l’avanzamento, la cronologia e gli addon. La password di Stremio viene usata una volta e mai salvata.
+667	Aggiungi funzioni e stili creati dalla community. Tutto ciò che è nella galleria è stato controllato prima di essere pubblicato, e viene ricontrollato prima di essere eseguito.
+668	Film dalla tua Home, dalla tua lista e da Continua a guardare, in 3D, quando non si preme nulla per un po’. Non parte mai durante una riproduzione.
+669	Sfondi e loghi da themoviedb.org, e l’effetto profondità per i film senza scontorno. Chiave API gratuita (v3) su themoviedb.org. Resta su questo dispositivo.
+670	Decidi quali fonti usano Smart Play e l’elenco delle fonti. Se le regole non lasciassero nulla, MKCinema torna a tutte le fonti così il film parte comunque.
+671	Sblocca lo shadowbox 3D completo: personaggi scontornati e loghi puliti da fanart.tv. Ottieni una chiave personale gratuita su fanart.tv. Resta su questo dispositivo.
+672	Compare per 8 s quando l’intro è nota: dai capitoli del file, da AniSkip per gli anime o dai tuoi salti negli episodi precedenti. Invio o il tasto A del gamepad lo premono.
+673	Le locandine hanno già il proprio titolo. "Al passaggio del mouse" le lascia pulite finché non ne indichi una. Telefoni e tablet non hanno il passaggio del mouse, quindi mostrano il titolo sotto.
+674	Elabora l’audio nel tuo browser. Funziona con ogni stream HLS e file locale, e con altre fonti quando l’host lo consente o mkcinema-server.js lo inoltra.
+675	0 dà pannelli neri pieni, l’opzione più veloce. Questo dispositivo usa sempre pannelli pieni, perché Chrome su Android può oscurare parti dello schermo sotto il vetro.
+676	Gratuito, e riproduce ogni file che un browser non sa riprodurre: release MKV con audio EAC3, DTS o TrueHD, video HEVC, tutto. MKCinema gli invia uno stream con un tocco.
+677	Scansiona un codice QR e il tuo telefono diventa il telecomando di questo schermo: touchpad o frecce, riproduzione e scorrimento, e tastiera o voce per cercare. I telefoni restano associati.
+678	Ciò che salti e ciò che continui a guardare gli insegna, solo su questo dispositivo: i generi che tieni compaiono più spesso, e la finestra si sposta verso i momenti in cui sei rimasto.
+679	Accedi una volta con il tuo account Stremio. MKCinema copia ciò che scegli qui sotto, poi chiude quella sessione. La tua password va solo a Stremio e non viene mai salvata.
+680	I tasti del player seguono VLC dove ha senso. Funziona anche un gamepad: le frecce spostano, A seleziona, B torna indietro, Y apre fonti o ricerca, LB/RB cambiano scheda o saltano 30 s.
+681	Ognuno in casa ha il proprio profilo: la propria lista, il proprio avanzamento e i propri consigli. Un profilo può avere un PIN, e un profilo bambini mostra solo titoli Animazione e Famiglia.
+682	MKCinema non include canali propri. Aggiungi una playlist da un servizio TV a cui sei abbonato (M3U, Xtream o XMLTV) o installa un addon Stremio che fornisca canali TV.
+683	Novanta secondi dal centro di un film, poi il successivo, da fonti che il tuo servizio debrid ha già in cache. Continua a guardare da quel secondo o ricomincia dall’inizio.
+684	Ti sei registrato con Facebook? Imposta prima una password Stremio. Se il browser blocca la chiamata a Stremio, MKCinema la inoltra tramite il proprio server senza salvare nulla.
+685	Nasconde le fonti doppiate solo in altre lingue, così Smart Play e il cambio automatico non le scelgono mai. Le release senza lingua indicata, o MULTi e Dual Audio, restano in elenco.
+686	Sostituisce le locandine con le versioni RatingPosterDB con i voti stampati sopra. Usa la chiave gratuita a meno che tu non aggiunga la tua. Se RPDB non ha una locandina, si usa quella normale.
+687	Un servizio debrid trasforma i link torrent trovati dai tuoi addon in stream diretti e veloci che partono subito. MKCinema funziona con tutti i principali, quindi usa quello che preferisci:
+688	I risultati torrent ricevono un badge Debrid (Istantaneo quando il tuo servizio li segnala in cache) e Smart Play li preferisce. Con più chiavi salvate, viene usata la prima che hai aggiunto.
+689	MKCinema non include film propri. Le fonti arrivano dagli addon di stream che scegli e di cui ti fidi, proprio come su Stremio. Installali dal gestore degli addon incollando il link del loro manifest.
+690	Nasconde programmi, archivi, sample, altri episodi e file troppo piccoli per essere il film. Registrazioni al cinema, un anno diverso o un file troppo piccolo per la qualità scendono in fondo con una nota.
+691	Guarda quello che hai già. Film ed episodi del tuo server Plex, Jellyfin o Emby compaiono come fonti accanto ai tuoi addon, e Smart Play li sceglie per primi. Gli accessi restano su questo dispositivo.
+692	MKCinema è un client per il protocollo aperto degli addon di Stremio. Metadati da Cinemeta, sottotitoli da OpenSubtitles. Non include stream propri: le fonti riproducibili arrivano dagli addon che installi.
+693	I player desktop su Linux non hanno un link web, quindi MKCinema salva una playlist .m3u che il tuo player predefinito apre. Salvato per Linux e sincronizzato con il tuo account. Torrent, file locali e trailer si riproducono sempre qui.
+694	Una volta per visita, Cloudflare Web Analytics conta la pagina, il sito da cui arrivi, il browser, il paese e la velocità di caricamento. Niente cookie, niente ID, nulla sui tuoi addon, sulle chiavi o su cosa guardi. Se disattivato non invia nulla.
+695	MKCinema non ha un database di scene famose, e non finge di averlo. Ogni scena parte in un punto tra circa un terzo e tre quarti del film, dopo l’inizio e ben prima dei titoli di coda.
+696	Apre una nuova issue su GitHub con una breve diagnostica già compilata (versione, dispositivo, impostazioni, errori recenti). Non include mai chiavi, password o link. La diagnostica viene anche copiata, così puoi incollarla ovunque.
+697	Apre lo stream in un’app Android installata, come fa Stremio. Se l’app manca, si apre il Play Store. Salvato per Android e sincronizzato con il tuo account. Torrent, file locali e trailer si riproducono sempre qui.
+698	Vengono usate solo le fonti che il tuo servizio debrid ha già in cache, in formati che questo dispositivo sa riprodurre. MKCinema cerca un film alla volta e carica solo la scena successiva, così i tuoi addon e il tuo account debrid non vengono mai sovraccaricati.
+699	MKCinema è creato e mantenuto online da Drake Christopher, senza pubblicità, senza cookie e senza profilazione. Le donazioni pagano l’hosting, il dominio e le ore dedicate alle nuove funzioni. Se ha migliorato le tue serate film, il prezzo di un caffè aiuta molto.
+700	Lingua
+701	Apri nel mio player
+702	Scarica di nuovo
+703	Mostra la cartella dei download
+704	Riprendi
+705	Riproduci
+706	Elimina
+707	Menu, pulsanti e impostazioni. Titoli e descrizioni arrivano dai tuoi addon e restano nella lingua in cui li inviano.
+708	Cambio lingua in corso…
+709	Come questo dispositivo
+710	Top 10 film di oggi
+711	I più popolari del momento
+712	Riproduci gli stream in
+713	Apri su
+714	Prova
+715	↑↓ sposta
+716	Invio apri
+717	MKCinema non ha un catalogo proprio, quindi non può mostrare nulla finché Cinemeta non risponde. Di solito significa che la pagina è dentro una sandbox che blocca le richieste esterne (come l’anteprima di Artifact) o che sei offline. Apri l’index.html scaricato in un browser normale, oppure avvia mkcinema-server.js e aprilo da lì.
+718	Da ratingposterdb.com. Resta su questo dispositivo.
+719	Alta è l’impostazione predefinita: pulsanti in rilievo e brillanti, locandine con profondità, il logo 3D mentre un film si carica e vetro smerigliato sui computer. I telefoni hanno tutto tranne il vetro. Se lo scorrimento scatta o la batteria è bassa, MKCinema passa da solo a Bassa. La qualità del video non viene mai toccata.
+720	Per i dispositivi su cui non puoi installare VLC o un altro player. Elenca solo le fonti che questo browser riproduce con immagine e audio funzionanti (H.264 o un codec supportato da questo dispositivo, audio AAC/Opus), e i torrent solo tramite il tuo servizio debrid. Meno fonti, ma quelle che vedi partono qui.
+721	Il migliore per questo dispositivo apre i trailer nell’app YouTube sulle TV con l’app MKCinema TV 1.2.4 o successiva, dove scorrono fluidi, e li riproduce dentro MKCinema ovunque altrove. I trailer incorporati usano youtube-nocookie.com con controlli YouTube, video correlati e annotazioni disattivati, e si chiudono da soli alla fine. YouTube mostra comunque il titolo, il link di condivisione e Altri video quando un trailer è in pausa o viene toccato; i suoi termini non permettono ai siti di coprirli. Se parte una pubblicità lo decidono YouTube e chi ha caricato il video; MKCinema non blocca le pubblicità.
+722	Su computer, passando il mouse sulla barra di avanzamento vedi l’immagine di quel momento. Legge un po’ del file in background; HLS e Schermo diviso non lo usano.
+723	I browser non possono riprodurli; vengono solo passati a player esterni.
+724	Usa il tuo account debrid per riprodurre subito i risultati torrent. Con l’accesso, le tue chiavi viaggiano con il tuo account e si caricano su ogni dispositivo in cui accedi; solo tu puoi leggerle. Non sono mai nei codici di configurazione a meno che tu non spunti quella casella, non vengono mai condivise e vengono inviate solo a quel servizio (o tramite il tuo server MKCinema se il browser blocca il servizio).
+725	Chiave da real-debrid.com/apitoken
+726	Chiave da torbox.app/settings (API key)
+727	Chiave da alldebrid.com/apikeys
+728	Un server con un semplice indirizzo http:// è raggiungibile solo tramite il server companion di MKCinema (Impostazioni › Stream e addon › URL del proxy MKCinema), perché i browser lo bloccano da una pagina https. I server Plex usano già indirizzi sicuri.
+729	Registra ciò che guardi e tieni le liste allineate. Oltre l’80 % un titolo conta come visto. Collegati con la tua app API gratuita; i token restano in questo browser.
+730	Crea un’app su simkl.com/settings/developer. Non serve un segreto.
+731	Riproduzione sincronizzata, chat vocale che abbassa il film mentre qualcuno parla, chat di testo e reazioni. Funziona peer to peer; alcune reti restrittive (alcuni uffici e operatori mobili) bloccano le connessioni dirette.
+732	Icone a sinistra. Premi Sinistra per aprirlo con i nomi.
+733	Seleziona la ruota, poi premi Sinistra e Destra per girarla.
+734	0 dà pannelli neri pieni, l’opzione più veloce. Le TV usano sempre pannelli pieni, così il telecomando resta fluido su Alta.
+735	Su una TV, MKCinema si apre direttamente sulla Home senza intro, così il telecomando è subito pronto. L’interfaccia non emette suoni.
+736	Top 10 serie di oggi
+737	Tu
+738	Disconnetti
+739	Importa lista
+740	Esporta lista
+741	Lo scrobbling è attivo.
+742	I titoli finiti vengono aggiunti alla tua cronologia Simkl.
+743	Importa la mia lista
+744	Collega AniList
+745	Salva token
+746	Incolla il token di AniList
+747	Aggiornato su AniList
+748	Crea un client su anilist.co/settings/developer con l’URL di reindirizzamento https://anilist.co/api/v2/oauth/pin. A MKCinema serve solo il suo ID.
+749	Salva l’ID client, poi collega. AniList mostra un token: incollalo qui.
+750	Approva MKCinema su AniList, copia il token che compare e incollalo qui sotto.
+751	Scansiona con il telefono e approva. Poi incolla nella casella il token mostrato da AniList con la tastiera del telecomando sul telefono (Impostazioni › Dispositivi).
+752	Incolla prima l’ID client di AniList
+753	Gli episodi anime che finisci aggiornano i tuoi progressi su AniList.
+754	AniList ti ha disconnesso. Collegati di nuovo.
+755	Questo non sembra un token AniList
+756	Liste MDBList
+757	Chiave API MDBList
+758	Serve per leggere le liste. È gratuita su mdblist.com/preferences (API key). Si sincronizza con le altre chiavi.
+759	Aggiungi una lista
+760	Incolla il link di una lista di mdblist.com. Diventa una fila nella Home, dopo le file selezionate.
+761	Aggiungi lista
+762	Rimuovi
+763	Aggiungi prima la tua chiave API gratuita di MDBList
+764	MDBList non ha nessuna lista a quell’indirizzo
+765	MDBList non ha accettato la chiave API
+766	Quella lista è già nella Home
+767	Fino a 10 liste
+768	Quella lista non ha film o serie con ID IMDb
+769	MDBList non ha risposto. Controlla la connessione e riprova.
+770	Incolla un link di lista come mdblist.com/lists/utente/nome-lista
