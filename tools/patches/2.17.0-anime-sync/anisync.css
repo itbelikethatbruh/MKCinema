@@ -1,0 +1,4 @@
+/* 2.17.0 AniList sign-in: token box and the TV QR code under the status line */
+.ani-row .ani-tok { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.ani-row .ani-tok .inp { flex: 1 1 220px; min-width: 0; }
+.ani-row .ani-qr { margin-top: 12px; width: 168px; }

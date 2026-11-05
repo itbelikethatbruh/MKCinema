@@ -19,3 +19,10 @@ Voice search (1.2): WebViews have no Web Speech API, so the page calls window.MK
 page uses `MKAndroid.dlStart/dlList/dlRemove/dlPlay`, which are refused on TVs. Finished films play in `PlayerActivity`,
 which now has touch controls on phones: tap shows the bar, double-tap a side skips 10 s, and the bar can be dragged.
 When the app can't load at all, the "You're offline" page lists finished downloads (`mkdl:` links).
+
+## 1.5.0 (versionCode 14): new-episode notifications (not compiled yet)
+
+`EpisodeAlerts.java` is a JobService that runs every 12 h, reads the followed series from Cinemeta and notifies about episodes
+from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEnable`/`epOn` turn it on or off (Android 13+
+asks for permission). There is no server. Details are in /mnt/project-files/patches/2.19.0-episode-alerts/README.md.
+It needs web 2.19.0 for the setting. Older pages simply don't show it.

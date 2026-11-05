@@ -2,6 +2,19 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.20.0 (2026-11-05)
+
+- **The player, rebuilt**: the picture fills the screen edge to edge on every device, TVs included (the framed view with the colour glow is now an option under Picture). The elapsed time and the length sit either side of the seek bar. Tap the length to switch to time left, or to the clock time the film ends.
+- **Seek bar fixed**: since 2.12.0 the bar's track was zero pixels wide, so only the dot showed. The progress line is back.
+- **Options in tabs**: Playback, Picture, Audio and More, instead of one long list. The waveform button opens Audio, and a speed chip shows the current speed.
+- **Volume up to 200 %**: drag the slider past the middle, scroll the mouse wheel over the picture, or pick 125/150/200 % under Audio. It works on any source whose sound the browser may process (HLS, local files, sources that allow it, or through your MKCinema server).
+- **Listen on phone**: on a paired phone remote, tap **Listen on this phone**. The TV's sound plays on the phone (and its headphones) and the TV goes quiet. When the TV can process the source, the sound is sent live from the TV. When it can't, the phone plays the same source itself and stays in step with the TV. The phone's lock screen controls the TV. It needs the MKCinema player on the TV (Settings › Playback › TV player).
+- **Picture adjustments**: brightness, contrast and colour, with Vivid, Lift dark scenes and Soft presets (not on TVs).
+- **Phone gestures**: hold for 2× speed, swipe up or down on the left for brightness and on the right for volume, and swipe sideways to seek with a time preview.
+- **Frame by frame** with `,` and `.`, **playback stats** (`I`: resolution, frame rate, dropped frames, buffer, stream type, network), and a **shortcut sheet** (`?`).
+- **Remembers per title**: your speed for a series or film, and your subtitle timing for the exact file.
+- More speeds (0.25× to 3×). The error panel on phones no longer sits under the play buttons. The audio-language note no longer names one debrid service.
+
 ## Web app 2.14.0, Android/TV app 1.4.0, Windows app 1.3.0, Mac and Linux apps 1.1 (2026-11-05)
 
 - **Offline downloads on phones, tablets and Windows**: a Download button on film and episode pages saves the file to the device, and Library › Downloads lists what you've saved, with play and delete. Downloads aren't offered on TVs or in a plain browser.
