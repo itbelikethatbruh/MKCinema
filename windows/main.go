@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	version     = "1.2.0"
+	version     = "1.2.1"
 	home        = "https://mkcinema.pages.dev/"
 	appHost     = "mkcinema.pages.dev"
 	title       = "MKCinema"

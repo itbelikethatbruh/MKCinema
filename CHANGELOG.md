@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Windows app 1.2.1 (2026-11-05)
+
+- **Discord status is available**: turn on Settings › Desktop app › "Show what I'm watching on Discord" to show "Watching" and the title on your profile while the Discord app is open.
+
 ## Web app 2.12.0 and Windows app 1.2.0 (2026-11-05)
 
 - **Anime skip times with any addon**: series with IMDb ids (the usual catalog) now get opening and ending times from AniSkip too, including seasons split into parts. A **Skip ending** button appears when more episode follows the ending, and both are marked on the seek bar.
