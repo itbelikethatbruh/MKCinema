@@ -255,3 +255,31 @@ html.tv .net-tile .net-logo{height:54px}
 html.tv .net-tile::before{width:180px;height:112px;margin:-56px 0 0 -90px}
 @media (prefers-reduced-motion:reduce){.net-tile .net-logo,.net-tile::before,.net-tile .net-shade{transition:none}}
 html.tv .net-tile .net-logo,html.tv .net-tile::before,html.tv .net-tile .net-shade{transition:none}
+
+/* 2.8.5: floating network logos with parallax (Drake). Compositor-only: the float animates `translate`/`scale`,
+   the parallax is a transform from CSS variables; no preserve-3d, nothing on the rows themselves */
+@keyframes netFloat{0%,100%{translate:0 0}50%{translate:0 -5px}}
+@keyframes netGlow{0%,100%{translate:var(--gx,0px) 0}50%{translate:var(--gx,0px) 3px}}
+@keyframes netShade{0%,100%{scale:1 1;opacity:1}50%{scale:.86 1;opacity:.7}}
+.net-tile .net-logo{--px:0px;--py:0px;transform:translate(var(--px),var(--py));animation:netFloat 5.6s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.63s)}
+.net-tile::before{animation:netGlow 5.6s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.63s)}
+.net-tile .net-shade{animation:netShade 5.6s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.63s)}
+.net-tile:focus-visible .net-logo,.net-tile.nav-focus .net-logo{transform:translate(var(--px),calc(var(--py) - 4px)) scale(1.07)}
+@media (hover:hover){.net-tile:hover .net-logo{transform:translate(var(--px),calc(var(--py) - 4px)) scale(1.07)}}
+body.reduce-motion .net-tile .net-logo,body.reduce-motion .net-tile::before,body.reduce-motion .net-tile .net-shade{animation:none}
+@media (prefers-reduced-motion:reduce){.net-tile .net-logo,.net-tile::before,.net-tile .net-shade{animation:none}}
+
+/* 2.8.6: networks without a box (Drake): the logo itself is the button, raised in 3D with a stepped edge and a soft
+   shadow under it; the frame is see-through and only shows as a faint glass edge when selected */
+.net-rail .net-tile{background:none;border:1px solid transparent;box-shadow:none;overflow:visible}
+.net-tile::after{display:none}
+.net-tile::before{width:120px;height:44px;margin:14px 0 0 -60px;opacity:.35;filter:none}
+.net-tile .net-logo{filter:drop-shadow(0 1px 0 rgba(0,0,0,.55)) drop-shadow(0 2px 0 rgba(0,0,0,.45)) drop-shadow(0 3px 0 rgba(0,0,0,.35)) drop-shadow(0 14px 12px rgba(0,0,0,.75))}
+.net-tile .net-shade{bottom:6px;height:12px;left:22%;right:22%}
+.net-tile:focus-visible,.net-tile.nav-focus{border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.035)}
+@media (hover:hover){.net-tile:hover{border-color:rgba(255,255,255,.18)}}
+.net-tile:focus-visible::before,.net-tile.nav-focus::before{opacity:.7}
+html.tv .net-tile.nav-focus{outline:none;border-color:rgba(255,255,255,.4)}
+/* TVs: only the selected logo floats, so a row of ten moving layers never competes with the remote */
+html.tv .net-tile .net-logo,html.tv .net-tile::before,html.tv .net-tile .net-shade{animation:none}
+html.tv .net-tile.nav-focus .net-logo{animation:netFloat 3.2s ease-in-out infinite}

@@ -24,8 +24,35 @@ const Networks = {
   row() {
     const sec = document.createElement('section'); sec.className = 'row net-row'; sec.id = 'netRow';
     sec.innerHTML = `<div class="row-head"><h2 class="row-title">Networks <small>What's on each service</small></h2></div><div class="rail net-rail">${this.LIST.map((n) => this.tile(n)).join('')}</div>`;
-    $$('[data-net]', sec).forEach((b) => b.addEventListener('click', () => this.open(b.dataset.net)));
+    $$('[data-net]', sec).forEach((b, i) => { b.style.setProperty('--i', i); b.addEventListener('click', () => this.open(b.dataset.net)); });
+    this.parallax(sec);
     return sec;
+  },
+  // 2.8.5 parallax (Drake): as the row moves, each logo drifts against its tile and its glow drifts the other way;
+  // on a computer the logo also leans toward the pointer. Only CSS variables change, once per frame. TVs keep the float.
+  parallax(sec) {
+    if (IS_TV) return;
+    const rail = sec.querySelector('.rail'); let raf = 0;
+    const run = () => {
+      raf = 0; const rr = rail.getBoundingClientRect(), mid = rr.left + rr.width / 2;
+      $$('.net-tile', rail).forEach((t) => {
+        const r = t.getBoundingClientRect(); if (r.right < rr.left - 40 || r.left > rr.right + 40) return;
+        const d = Math.max(-1, Math.min(1, (r.left + r.width / 2 - mid) / (rr.width / 2 || 1)));
+        t.style.setProperty('--gx', `${(d * 8).toFixed(1)}px`);
+        const img = t.querySelector('.net-logo'); if (img && !t._hov) img.style.setProperty('--px', `${(-d * 10).toFixed(1)}px`);
+      });
+    };
+    const ask = () => { if (!raf) raf = requestAnimationFrame(run); };
+    rail.addEventListener('scroll', ask, { passive: true }); addEventListener('resize', ask, { passive: true }); requestAnimationFrame(ask);
+    if (matchMedia('(hover:hover)').matches) $$('.net-tile', rail).forEach((t) => {
+      const img = t.querySelector('.net-logo'); if (!img) return;
+      t.addEventListener('pointermove', (e) => {
+        const r = t.getBoundingClientRect(); t._hov = true;
+        img.style.setProperty('--px', `${(((e.clientX - r.left) / r.width - 0.5) * 14).toFixed(1)}px`);
+        img.style.setProperty('--py', `${(((e.clientY - r.top) / r.height - 0.5) * 10).toFixed(1)}px`);
+      });
+      t.addEventListener('pointerleave', () => { t._hov = false; img.style.setProperty('--py', '0px'); ask(); });
+    });
   },
   place() {
     const rows = $('#homeRows'); if (!rows) return;
@@ -102,19 +129,73 @@ const TvHome = {
       }
       return move(dir, fast);
     };
-    // 2.8.3 (Drake: holding Right on Top 10 did not slide the row along, it lagged and looked stuck).
-    // On TV the focused poster in a row is pinned to the row's left edge and the row slides under it, as on Netflix.
-    // Quick presses or a held button move it instantly, so smooth scrolls never pile up on a slow Fire TV.
+    // 2.8.3/2.8.6 (Drake: rows lagged, then "cycling is jittery"). On TV the focused poster is pinned to the row's left
+    // edge and the row glides under it, as on Netflix. One animation per row that retargets from where it is, so presses
+    // never queue or jump; a held button glides faster. Moving along a row never scrolls the page up or down (that
+    // re-centring on every press was the jitter); the page only moves when the focus changes row.
     if (IS_TV) {
-      const focus = Nav.focus.bind(Nav); let lastH = 0;
+      const ease = (t) => 1 - Math.pow(1 - t, 3);
+      const glide = (rail, to, ms) => {
+        const tw = rail._tw || (rail._tw = { raf: 0 });
+        tw.from = rail.scrollLeft; tw.to = to; tw.t0 = performance.now(); tw.ms = ms;
+        if (tw.raf) return;
+        const step = (now) => {
+          const k = Math.max(0, Math.min(1, (now - tw.t0) / tw.ms)); // a frame can start before the key press that set t0
+          rail.scrollLeft = tw.from + (tw.to - tw.from) * ease(k);
+          tw.raf = k < 1 ? requestAnimationFrame(step) : 0;
+        };
+        tw.raf = requestAnimationFrame(step);
+      };
+      const focus = Nav.focus.bind(Nav); let lastAt = 0, lastRail = null;
       Nav.focus = function (el, fast) {
-        const rail = el && el.closest && el.closest('.rail'), now = performance.now(), quick = fast || now - lastH < 320;
-        if (rail) lastH = now;
-        const r = focus(el, quick);
-        if (rail && rail.scrollWidth > rail.clientWidth + 2) {
-          const pad = parseFloat(getComputedStyle(rail).paddingLeft) || 0, rr = rail.getBoundingClientRect(), er = el.getBoundingClientRect();
-          const left = Math.max(0, Math.min(rail.scrollWidth - rail.clientWidth, rail.scrollLeft + er.left - rr.left - pad - (parseFloat(getComputedStyle(el).marginLeft) || 0)));  // a Top 10 rank number sits in the margin, so it stays in view
-          if (Math.abs(left - rail.scrollLeft) > 1) rail.scrollTo({ left, behavior: quick ? 'auto' : 'smooth' });
+        const rail = el && el.closest && el.closest('.rail');
+        if (!rail) { lastRail = null; return focus(el, fast); }
+        const now = performance.now(), quick = fast || now - lastAt < 260, sameRow = rail === lastRail;
+        lastAt = now; lastRail = rail;
+        // the original focus() scrolls with scrollIntoView, which would also slide the row; do the page part here instead
+        el.scrollIntoView = function () {
+          if (sameRow) return; // along the row: the page stays still
+          const lay = el.closest('.layer-ov'), r = el.getBoundingClientRect();
+          const top = lay ? lay.getBoundingClientRect().top : 0, h = lay ? lay.clientHeight : innerHeight;
+          const d = r.top - top + r.height / 2 - h / 2;
+          if (Math.abs(d) > 6) (lay || window).scrollBy({ top: d, behavior: quick ? 'auto' : 'smooth' });
+        };
+        let r;
+        try { r = focus(el, quick); } finally { delete el.scrollIntoView; }
+        if (rail.scrollWidth > rail.clientWidth + 2) {
+          // measured from layout offsets, not on-screen boxes: the selected poster is scaled up, and measuring its
+          // scaled box made every press land a few pixels short and slide back (a visible shudder)
+          const first = rail.firstElementChild, ml = (x) => parseFloat(getComputedStyle(x).marginLeft) || 0;
+          // a Top 10 rank number sits in the card's left margin, so it stays in view
+          const left = Math.max(0, Math.min(rail.scrollWidth - rail.clientWidth, ml(first) + el.offsetLeft - first.offsetLeft - ml(el)));
+          if (Math.abs(left - (rail._tw && rail._tw.raf ? rail._tw.to : rail.scrollLeft)) > 1) glide(rail, left, quick ? 140 : 260);
+        }
+        return r;
+      };
+
+      // 2.8.6 (Drake: "it sometimes just freezes and you can't scroll back up ... you have to exit out").
+      // A drop-down (the Catalog picker on Movies and Series) kept every arrow press for itself on a remote, so the
+      // focus was trapped there. Arrows now leave drop-downs and multi-line boxes; OK still opens them.
+      document.addEventListener('keydown', (e) => {
+        const t = e.target, k = e.key;
+        if (!/^Arrow/.test(k) || !t || !t.tagName) return;
+        if (t.tagName === 'SELECT' || (t.tagName === 'TEXTAREA' && (k === 'ArrowUp' || k === 'ArrowDown'))) {
+          e.preventDefault(); e.stopImmediatePropagation(); Nav.move(k.slice(5).toLowerCase(), e.repeat);
+        }
+      }, true);
+
+      // and a way out from anywhere: if Up finds nothing above on a page, it goes to the menu at the top (as on
+      // Netflix); if Up or Down finds nothing in a panel that can still scroll, the panel scrolls a step instead
+      const mv = Nav.move.bind(Nav);
+      Nav.move = function (dir, fast) {
+        const before = document.activeElement, r = mv(dir, fast);
+        if (document.activeElement !== before || (dir !== 'up' && dir !== 'down')) return r;
+        const root = Nav.root(), lay = before && before.closest && before.closest('.layer-ov');
+        const sc = lay && [lay, ...$$('.set-body, .x8-body, .ep-sheet, .es-body', lay)].find((x) => x.scrollHeight > x.clientHeight + 4 && x.contains(before));
+        if (sc) { const by = (dir === 'up' ? -1 : 1) * sc.clientHeight * 0.6; if ((by < 0 && sc.scrollTop > 0) || (by > 0 && sc.scrollTop + sc.clientHeight < sc.scrollHeight - 2)) { sc.scrollBy({ top: by, behavior: 'smooth' }); return r; } }
+        if (dir === 'up' && root && root.id === 'app' && before && !before.closest('.dock-wrap')) {
+          const tab = $('.dock-wrap .tab.on') || $('.dock-wrap .tab');
+          if (tab) { Nav.focus(tab, true); scrollTo({ top: 0, behavior: 'smooth' }); }
         }
         return r;
       };
