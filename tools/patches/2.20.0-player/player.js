@@ -548,3 +548,24 @@ const PxListen = {
   const sec = AudioLang.section.bind(AudioLang);
   AudioLang.section = function (s) { return String(sec(s) || '').replace('Use a TorBox source, run your MKCinema server, or open it in VLC.', 'Your MKCinema server or VLC can switch it, and so can a debrid service that offers web streaming.'); };
 }
+
+/* ---------------- 2.20.0 sweep fixes ---------------- */
+{
+  // the phone's bottom bar never got the Anime tab that the top bar has (2.16.0)
+  const ser = $('#mtabs [data-view="series"]');
+  if (ser && !$('#mtabs [data-view="anime"]') && $('#view-anime')) {
+    ser.insertAdjacentHTML('afterend', '<button type="button" data-view="anime" data-nav><i data-lucide="torii"></i><span>Anime</span></button>');
+    $('#mtabs [data-view="anime"]').addEventListener('click', () => go('anime'));
+    icons();
+  }
+  // "0 addons answered · 3 streams": built-in sources (trailers) answer for ids no installed addon claims
+  if (typeof renderStreamsPanel === 'function') {
+    const rsp = renderStreamsPanel;
+    renderStreamsPanel = function () {
+      const r = rsp.apply(this, arguments);
+      const el = $('#dStreams .status-line span'), n = new Set((D.streams || []).map((s) => s._addon).filter(Boolean)).size;
+      if (el && n && /^0 addons answered/.test(el.textContent)) el.textContent = el.textContent.replace(/^0 addons answered/, `${n} addon${n === 1 ? '' : 's'} answered`);
+      return r;
+    };
+  }
+}
