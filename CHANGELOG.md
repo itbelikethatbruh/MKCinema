@@ -2,6 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.21.1 (2026-11-05)
+
+- **Side menu on phones**: picking Side menu in Settings now closes Settings, slides the menu in once and says where it lives (the ☰ button at the top left). Before, nothing visible changed until you left Settings. On phones the other option is now called Bottom bar, which is where that bar is.
+- **Rename seats from Who's watching**: every seat has a pencil to change its name and picture. "Manage seats" is now "Edit seats".
+- **Main seat name**: a main seat that was never named shows the account name, or a tidied name from the email, instead of the raw first half of the email address.
+- **Status page**: each service's name and description no longer show as a box inside a box.
+
 ## Web app 2.20.0 (2026-11-05)
 
 - **The player, rebuilt**: the picture fills the screen edge to edge on every device, TVs included (the framed view with the colour glow is now an option under Picture). The elapsed time and the length sit either side of the seek bar. Tap the length to switch to time left, or to the clock time the film ends.
