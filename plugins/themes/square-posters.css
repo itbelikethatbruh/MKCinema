@@ -1,0 +1,2 @@
+/* Square posters: sharp corners on posters and tiles, for a stricter, gallery look */
+.card, .card img, .card .ph, .net-tile, .net-tile img { border-radius: 3px !important; }

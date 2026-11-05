@@ -2,6 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.12.0 and Windows app 1.2.0 (2026-11-05)
+
+- **Anime skip times with any addon**: series with IMDb ids (the usual catalog) now get opening and ending times from AniSkip too, including seasons split into parts. A **Skip ending** button appears when more episode follows the ending, and both are marked on the seek bar.
+- **Plugins & themes** (Settings › Look and feel): a reviewed gallery from this repository's `plugins/` folder. Every file is checked against its SHA-256 before it runs, and adding a plugin from a link is tucked under "For developers" with a warning. Start with `#safe` in the address to skip all plugins.
+- **Windows app: play torrent sources on this PC** (Settings › Desktop app, off by default). Download only, never uploads or seeds, and the downloaded pieces are deleted when it is turned off or the app closes. Settings explains that peers can see your IP before it can be turned on.
+- **Windows app: Discord status** ("Watching" and the title) through Discord's local pipe, off by default.
+
 ## Web app 2.11.1 (2026-11-05)
 
 - **TV: the keyboard opens only when you ask**: moving the remote past a text box (an API key, a playlist link, a search box) no longer pops up the on-screen keyboard. Press OK on the box to type.

@@ -1,0 +1,236 @@
+// Package p2p streams torrents to the MKCinema desktop apps on this computer only.
+//
+// It is off until the user switches it on in Settings, listens on 127.0.0.1 with a random port and a random
+// token in every path, never uploads (NoUpload, no seeding, no port forwarding), keeps at most two torrents,
+// and deletes everything it downloaded when it stops.
+package p2p
+
+import (
+	"crypto/rand"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"os"
+	"path"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/anacrolix/torrent"
+	"github.com/anacrolix/torrent/metainfo"
+)
+
+type Engine struct {
+	Base  string // http://127.0.0.1:PORT/TOKEN
+	cl    *torrent.Client
+	srv   *http.Server
+	dir   string
+	token string
+	mu    sync.Mutex
+	order []metainfo.Hash
+}
+
+var videoExt = map[string]bool{".mkv": true, ".mp4": true, ".m4v": true, ".avi": true, ".webm": true, ".mov": true, ".ts": true, ".m2ts": true, ".wmv": true, ".mpg": true}
+
+// Start creates the engine under dataDir/p2p (wiped first) and starts the local HTTP server.
+func Start(dataDir string) (*Engine, error) {
+	dir := filepath.Join(dataDir, "p2p")
+	_ = os.RemoveAll(dir)
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return nil, err
+	}
+	cfg := torrent.NewDefaultClientConfig()
+	cfg.DataDir = dir
+	cfg.NoUpload = true
+	cfg.Seed = false
+	cfg.NoDefaultPortForwarding = true
+	cfg.ListenPort = 0
+	cl, err := torrent.NewClient(cfg)
+	if err != nil {
+		// PCs with IPv6 turned off fail to open the IPv6 listener: try again on IPv4 only
+		log.Printf("p2p: %v, retrying without IPv6", err)
+		cfg.DisableIPv6 = true
+		if cl, err = torrent.NewClient(cfg); err != nil {
+			return nil, err
+		}
+	}
+	b := make([]byte, 16)
+	_, _ = rand.Read(b)
+	e := &Engine{cl: cl, dir: dir, token: hex.EncodeToString(b)}
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		cl.Close()
+		return nil, err
+	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("/"+e.token+"/stream", e.stream)
+	mux.HandleFunc("/"+e.token+"/status", e.status)
+	e.srv = &http.Server{Handler: cors(mux), ReadHeaderTimeout: 10 * time.Second}
+	go func() { _ = e.srv.Serve(ln) }()
+	e.Base = fmt.Sprintf("http://127.0.0.1:%d/%s", ln.Addr().(*net.TCPAddr).Port, e.token)
+	log.Printf("p2p: engine on %s", ln.Addr())
+	return e, nil
+}
+
+// Close stops everything and deletes the downloaded data.
+func (e *Engine) Close() {
+	if e == nil {
+		return
+	}
+	if e.srv != nil {
+		_ = e.srv.Close()
+	}
+	if e.cl != nil {
+		errs := e.cl.Close()
+		for _, err := range errs {
+			log.Printf("p2p: close: %v", err)
+		}
+	}
+	_ = os.RemoveAll(e.dir)
+	log.Printf("p2p: engine stopped, cache removed")
+}
+
+// cors lets the app page (https://mkcinema.pages.dev) reach this local server, including Chrome's
+// private network access preflight.
+func cors(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		o := r.Header.Get("Origin")
+		if o == "https://mkcinema.pages.dev" || strings.HasSuffix(o, ".mkcinema.pages.dev") || strings.HasPrefix(o, "http://localhost") || strings.HasPrefix(o, "http://127.0.0.1") {
+			w.Header().Set("Access-Control-Allow-Origin", o)
+			w.Header().Set("Access-Control-Allow-Private-Network", "true")
+			w.Header().Set("Access-Control-Allow-Headers", "Range")
+			w.Header().Set("Access-Control-Expose-Headers", "Content-Length, Content-Range, Accept-Ranges")
+		}
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		h.ServeHTTP(w, r)
+	})
+}
+
+func (e *Engine) add(r *http.Request) (*torrent.Torrent, error) {
+	q := r.URL.Query()
+	ih := strings.ToLower(q.Get("ih"))
+	if len(ih) != 40 {
+		return nil, errors.New("bad info hash")
+	}
+	var h metainfo.Hash
+	if err := h.FromHexString(ih); err != nil {
+		return nil, err
+	}
+	t, isNew := e.cl.AddTorrentInfoHash(h)
+	if isNew {
+		var trs [][]string
+		for _, tr := range q["tr"] {
+			if strings.HasPrefix(tr, "udp://") || strings.HasPrefix(tr, "http://") || strings.HasPrefix(tr, "https://") {
+				trs = append(trs, []string{tr})
+			}
+		}
+		if len(trs) > 0 {
+			t.AddTrackers(trs)
+		}
+		e.remember(h)
+	}
+	select {
+	case <-t.GotInfo():
+	case <-time.After(75 * time.Second):
+		return nil, errors.New("no peers sent the torrent's details in time")
+	case <-r.Context().Done():
+		return nil, r.Context().Err()
+	}
+	return t, nil
+}
+
+// remember keeps the two most recent torrents and drops (and deletes) older ones.
+func (e *Engine) remember(h metainfo.Hash) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.order = append([]metainfo.Hash{h}, e.order...)
+	for len(e.order) > 2 {
+		old := e.order[len(e.order)-1]
+		e.order = e.order[:len(e.order)-1]
+		if t, ok := e.cl.Torrent(old); ok {
+			name := ""
+			if t.Info() != nil {
+				name = t.Info().BestName()
+			}
+			t.Drop()
+			if name != "" {
+				_ = os.RemoveAll(filepath.Join(e.dir, filepath.Clean(name)))
+			}
+		}
+	}
+}
+
+func pickFile(t *torrent.Torrent, idx int) *torrent.File {
+	files := t.Files()
+	if idx >= 0 && idx < len(files) {
+		return files[idx]
+	}
+	vids := make([]*torrent.File, 0, len(files))
+	for _, f := range files {
+		if videoExt[strings.ToLower(path.Ext(f.DisplayPath()))] {
+			vids = append(vids, f)
+		}
+	}
+	if len(vids) == 0 {
+		vids = files
+	}
+	sort.Slice(vids, func(i, j int) bool { return vids[i].Length() > vids[j].Length() })
+	if len(vids) == 0 {
+		return nil
+	}
+	return vids[0]
+}
+
+func (e *Engine) stream(w http.ResponseWriter, r *http.Request) {
+	t, err := e.add(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusGatewayTimeout)
+		return
+	}
+	idx, err := strconv.Atoi(r.URL.Query().Get("idx"))
+	if err != nil {
+		idx = -1
+	}
+	f := pickFile(t, idx)
+	if f == nil {
+		http.Error(w, "no file", http.StatusNotFound)
+		return
+	}
+	// only fetch the file being watched
+	for _, o := range t.Files() {
+		if o != f {
+			o.SetPriority(torrent.PiecePriorityNone)
+		}
+	}
+	rd := f.NewReader()
+	defer rd.Close()
+	rd.SetResponsive()
+	rd.SetReadahead(16 << 20)
+	w.Header().Set("Cache-Control", "no-store")
+	http.ServeContent(w, r, path.Base(f.DisplayPath()), time.Time{}, rd)
+}
+
+func (e *Engine) status(w http.ResponseWriter, r *http.Request) {
+	var h metainfo.Hash
+	if err := h.FromHexString(strings.ToLower(r.URL.Query().Get("ih"))); err != nil {
+		http.Error(w, "bad info hash", http.StatusBadRequest)
+		return
+	}
+	out := map[string]any{"known": false}
+	if t, ok := e.cl.Torrent(h); ok {
+		st := t.Stats()
+		out = map[string]any{"known": true, "info": t.Info() != nil, "peers": st.ActivePeers, "seeds": st.ConnectedSeeders, "read": st.BytesReadUsefulData.Int64()}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(out)
+}
