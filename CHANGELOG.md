@@ -11,6 +11,10 @@ All notable changes to MKCinema. The web app version and the native app versions
 - Video fullscreen now fills the whole screen, and F11 toggles fullscreen. Right-click Copy and Paste work in text fields.
 - Links that open a new window (YouTube, GitHub) open in your browser. The page reloads itself if it crashes.
 
+## Web app 2.9.7 (2026-11-05)
+
+- **Anonymous visit counts, out in the open**: MKCinema now uses Cloudflare Web Analytics on the app, the website and the TV help page. Once per visit it counts the page, the site you came from, browser, country and load speed. It sets no cookies and no IDs, and it never sees your addons, keys or what you watch. Turn it off under Settings › Data › Share anonymous visit counts. The privacy wording now says exactly this: no ads, no cookies, no profiles.
+
 ## Web app 2.9.6 (2026-11-05)
 
 - **Update bar on TV**: the remote can now reach Update and Later on the "TV app is ready" bar. The bar takes focus when it appears, Left and Right move between its buttons, and Back puts it away.
