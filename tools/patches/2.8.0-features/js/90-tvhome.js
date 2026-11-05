@@ -193,7 +193,7 @@ const TvHome = {
         const root = Nav.root(), lay = before && before.closest && before.closest('.layer-ov');
         const sc = lay && [lay, ...$$('.set-body, .x8-body, .ep-sheet, .es-body', lay)].find((x) => x.scrollHeight > x.clientHeight + 4 && x.contains(before));
         if (sc) { const by = (dir === 'up' ? -1 : 1) * sc.clientHeight * 0.6; if ((by < 0 && sc.scrollTop > 0) || (by > 0 && sc.scrollTop + sc.clientHeight < sc.scrollHeight - 2)) { sc.scrollBy({ top: by, behavior: 'smooth' }); return r; } }
-        if (dir === 'up' && root && root.id === 'app' && before && !before.closest('.dock-wrap')) {
+        if (dir === 'up' && root && root.id === 'app' && before && !before.closest('.dock-wrap') && !document.documentElement.classList.contains('nav-side')) {
           const tab = $('.dock-wrap .tab.on') || $('.dock-wrap .tab');
           if (tab) { Nav.focus(tab, true); scrollTo({ top: 0, behavior: 'smooth' }); }
         }
