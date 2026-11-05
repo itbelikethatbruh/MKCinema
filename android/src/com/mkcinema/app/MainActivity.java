@@ -45,8 +45,8 @@ import org.json.JSONObject;
 public class MainActivity extends Activity {
     static final String HOME = "https://mkcinema.pages.dev/";
     static final String HOST = "mkcinema.pages.dev";
-    static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5;
-    static final String VER = "1.4.0";
+    static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6;
+    static final String VER = "1.5.0";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -253,6 +253,12 @@ public class MainActivity extends Activity {
     }
 
     @Override public void onRequestPermissionsResult(int req, String[] p, int[] g) {
+        if (req == REQ_NOTIFY) {
+            boolean ok = g.length > 0 && g[0] == PackageManager.PERMISSION_GRANTED;
+            EpisodeAlerts.setEnabled(getApplicationContext(), ok);
+            web.evaluateJavascript("window.MKEpPerm&&MKEpPerm(" + ok + ")", null);
+            return;
+        }
         if (req == REQ_VOICE_MIC) {
             if (g.length > 0 && g[0] == PackageManager.PERMISSION_GRANTED) listen(voiceLang); else voiceDone(null, "denied");
             return;
@@ -326,6 +332,20 @@ public class MainActivity extends Activity {
             if (tv) return "error: downloads aren't available on TVs";
             return Downloads.start(getApplicationContext(), json);
         }
+        /** 1.5.0 new-episode notifications (phones and tablets): turn on/off; "on", "off", "asking" or "tv" */
+        @JavascriptInterface public String epEnable(boolean on) {
+            if (!HOST.equals(pageHost)) return "off";
+            if (tv) return "tv";
+            if (on && Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED) {
+                runOnUiThread(() -> requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, REQ_NOTIFY));
+                return "asking";
+            }
+            EpisodeAlerts.setEnabled(getApplicationContext(), on);
+            return on ? "on" : "off";
+        }
+        @JavascriptInterface public boolean epOn() { return !tv && EpisodeAlerts.enabled(getApplicationContext()); }
+        /** the series to watch for: {shows:[{id, name, reached}]} (reached = season*1000+episode) */
+        @JavascriptInterface public void epSync(String json) { if (HOST.equals(pageHost) && !tv && json != null && json.length() < 200000) EpisodeAlerts.sync(getApplicationContext(), json); }
         @JavascriptInterface public String dlList() { return HOST.equals(pageHost) && !tv ? Downloads.list(getApplicationContext()) : "[]"; }
         @JavascriptInterface public boolean dlRemove(String id) { return HOST.equals(pageHost) && !tv && id != null && Downloads.remove(getApplicationContext(), id); }
         /** Plays a finished download in the app's player; it reports back through MKNative.done like the TV player. */
