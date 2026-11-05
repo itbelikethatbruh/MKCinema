@@ -81,9 +81,19 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 <td width="33%" valign="top"><img src="docs/readme/icon-import.svg" width="52" alt=""><br><b>Move from Stremio</b><br><sub>Import your library, progress and addons in one step. Scrobble to Trakt or Simkl.</sub></td>
 </tr>
 <tr>
-<td width="33%" valign="top"><img src="docs/readme/icon-palette.svg" width="52" alt=""><br><b>Four themes</b><br><sub>Noir by default, plus Midnight (ink blue blacks, ice silver type), Velvet (deep oxblood, soft ivory) and Sepia (warm umber, cream type). Settings › Appearance, synced with your account.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-palette.svg" width="52" alt=""><br><b>Four themes, plus your own</b><br><sub>Noir by default, plus Midnight (ink blue blacks, ice silver type), Velvet (deep oxblood, soft ivory) and Sepia (warm umber, cream type). Settings › Appearance, synced with your account.</sub></td>
 <td width="33%" valign="top"><img src="docs/readme/icon-monitor.svg" width="52" alt=""><br><b>Ambient Mode</b><br><sub>Leave the TV idle and your Home becomes a living screensaver: each film as a layered 3D scene with its own atmosphere. OK opens the film, Back returns.</sub></td>
 <td width="33%" valign="top"><img src="docs/readme/icon-film.svg" width="52" alt=""><br><b>Peak Cinema</b><br><sub>Can't decide? Surf 90-second scenes from films in your catalogs and watchlist, filtered by mood, and keep watching from that exact second.</sub></td>
+</tr>
+<tr>
+<td width="33%" valign="top"><img src="docs/readme/icon-tv.svg" width="52" alt=""><br><b>Channels and guide</b><br><sub>Your own M3U, Xtream or file playlists with an XMLTV guide, favourites, and Split Screen for up to four streams at once.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-users.svg" width="52" alt=""><br><b>Seats</b><br><sub>A seat for everyone in the house with its own watchlist and progress, optional PINs, and kids seats with Animation and Family only.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-ext.svg" width="52" alt=""><br><b>Send to TV</b><br><sub>Cast the playing stream to a Chromecast or Google TV, with a remote bar and Play here to bring it back.</sub></td>
+</tr>
+<tr>
+<td width="33%" valign="top"><img src="docs/readme/icon-eye.svg" width="52" alt=""><br><b>Source Check</b><br><sub>Fakes, samples, archives and the wrong episode are hidden; cinema recordings and odd sizes are flagged, and every pick says why.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-spark.svg" width="52" alt=""><br><b>Top 10 and Shortlist</b><br><sub>Top 10 today, Under 90 minutes, Hidden gems, Award winners and twenty quick picks to skip or save.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-palette.svg" width="52" alt=""><br><b>Atelier</b><br><sub>Make your own theme from blacks, highlights, type and corners, and share it as a code.</sub></td>
 </tr>
 </table>
 

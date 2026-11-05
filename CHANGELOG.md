@@ -2,6 +2,25 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.8.0 (2026-11-05)
+
+- **Smooth first look**: on a fresh start Home used to appear in stages, with unstyled cards, an empty banner and text fading in. A plain MK cover with a progress bar now holds until the styles, the first row and the banner art are ready, then Home fades in once, complete. It never holds longer than 3.5 seconds on a TV or 4.5 seconds elsewhere.
+- **Smoother YouTube trailers**: the trailer pop-up was see-through, so the whole app under it was redrawn with every video frame. Nothing under a playing trailer is drawn now, and on TVs and phones the frame drops its rounded clip so the video can use the hardware path.
+- **Send to TV**: cast the playing stream to a Chromecast or Google TV (AirPlay where the browser offers it), with a small remote bar and "Play here" to take it back.
+- **Channels and guide**: add your own M3U playlist, Xtream login or playlist file, with an optional XMLTV guide. Live TV shows a guide grid with search, groups and favourites. A channel your browser cannot open offers a hand-off to VLC.
+- **Split Screen**: watch up to four channels or streams at once (two on TVs and phones). Sound follows the tile you pick.
+- **Player tools**: sleep timer with a gentle fade, A-B repeat, save a still frame, second subtitles, seek previews and your own key bindings in Settings › Shortcuts.
+- **Source Check**: sources that are executables, archives, samples, password-locked or the wrong episode are hidden; cinema recordings, screeners and suspicious sizes are flagged. Each best match says why it was picked.
+- **Curated Home rows**: Top 10 films today, Under 90 minutes, Hidden gems, Award winners and a decade of the day, plus the Shortlist: twenty picks to skip or save.
+- **Where to watch and honours**: a film page shows its streaming services for your region (with your own TMDB key) and its awards.
+- **Seats**: profiles for everyone in the house, each with its own watchlist, progress and picks, an optional PIN, and kids seats that only show Animation and Family titles.
+- **Atelier**: build your own theme from blacks, highlights, type and corners, and share it as a code. Custom CSS for those who want it.
+- **Addon directory, line check and problem reports**: browse community addons in the app, measure your connection to get a quality suggestion, and file a report with diagnostics that never include keys.
+
+## Web app 2.7.38 (2026-11-04)
+
+- **Peak Cinema on TVs**: the scene sat far up the screen with a purple area below it when Home had been scrolled. The page now goes to the top while Peak Cinema is open, and the scene is centred by layout instead of offsets.
+
 ## Web app 2.7.37 (2026-11-04)
 
 - **Peak Cinema follows your theme again**: 2.7.36 was built from a copy that had lost the theme colours on Peak Cinema, so it always showed in Noir. Midnight, Velvet and Sepia now apply to it again, as they did in 2.7.35.
