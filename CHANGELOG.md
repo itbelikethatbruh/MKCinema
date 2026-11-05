@@ -2,6 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.9.1 and Android app 1.2.5 (2026-11-05)
+
+- **The TV player**: on Android TV and Fire TV, streams play in the TV's own hardware player, so MKV, HEVC, HDR and Dolby Vision play the way the TV plays them. OK pauses, Left and Right skip, Menu switches the audio track, and your subtitle language comes along. MKCinema still picks the source, saves where you stopped and moves on to the next episode. If a source won't open there, the MKCinema player takes over. Settings › Playback › TV player switches back.
+- **Frame-rate matching**: the TV switches to the film's frame rate while it plays (24p without judder) and back afterwards. It can be turned off.
+- **One-tap updates** in the Android app: Update downloads the new version and opens the installer.
+- **Home media servers on http://**: Jellyfin and Emby on a plain home address now work inside the Android app.
+
 ## Web app 2.9.0 (2026-11-05)
 
 - **A real Library**: tabs for Watchlist, In progress, Watched and your own lists, Films or Series, sorting by date added, title, year or rating, Hide watched and a filter box. A Lists button on every film page adds it to any list; lists follow your account.

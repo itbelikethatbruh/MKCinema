@@ -30,6 +30,12 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
+import android.app.DownloadManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
+import android.os.Environment;
+import android.provider.Settings;
 import java.util.ArrayList;
 import org.json.JSONObject;
 
@@ -37,8 +43,8 @@ import org.json.JSONObject;
 public class MainActivity extends Activity {
     static final String HOME = "https://mkcinema.pages.dev/";
     static final String HOST = "mkcinema.pages.dev";
-    static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4;
-    static final String VER = "1.2.4";
+    static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5;
+    static final String VER = "1.2.5";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -79,6 +85,8 @@ public class MainActivity extends Activity {
         s.setSupportMultipleWindows(false);
         s.setJavaScriptCanOpenWindowsAutomatically(true);
         s.setLoadWithOverviewMode(true);
+        // 1.2.5: Jellyfin and Emby servers at home usually answer on plain http:// addresses
+        s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         s.setUseWideViewPort(true);
         s.setUserAgentString(s.getUserAgentString() + " MKCinemaAndroid/" + VER + (tv ? " MKCinemaTV/" + VER : ""));
         // Keep the page's renderer at high priority while MKCinema is on screen
@@ -208,6 +216,14 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onActivityResult(int req, int res, Intent data) {
+        if (req == REQ_PLAY) {
+            int pos = data != null ? data.getIntExtra("pos", -1) : -1, dur = data != null ? data.getIntExtra("dur", -1) : -1;
+            boolean ended = data != null && data.getBooleanExtra("ended", false), next = data != null && data.getBooleanExtra("next", false);
+            String err = data != null ? data.getStringExtra("error") : null;
+            web.evaluateJavascript("window.MKNative&&MKNative.done(" + pos + "," + dur + "," + ended + "," + next + "," + (err == null ? "null" : JSONObject.quote(err)) + ")", null);
+            if (tv) web.requestFocus();
+            return;
+        }
         if (req == REQ_VOICE) {
             ArrayList<String> r = res == RESULT_OK && data != null ? data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS) : null;
             if (r != null && !r.isEmpty()) voiceDone(r.get(0), ""); else voiceDone(null, res == RESULT_OK ? "nomatch" : "cancelled");
@@ -283,6 +299,24 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public void voiceStop() { runOnUiThread(() -> { if (recognizer != null) recognizer.cancel(); }); }
         @JavascriptInterface public String version() { return VER; }
+        /** The TV player: {url, title, sub, startMs, subUrl, matchRate} */
+        @JavascriptInterface public boolean play(String json) {
+            if (!HOST.equals(pageHost)) return false;
+            try {
+                JSONObject o = new JSONObject(json);
+                Intent i = new Intent(MainActivity.this, PlayerActivity.class)
+                    .putExtra("url", o.getString("url")).putExtra("title", o.optString("title")).putExtra("sub", o.optString("sub"))
+                    .putExtra("startMs", o.optInt("startMs", 0)).putExtra("subUrl", o.optString("subUrl", "")).putExtra("matchRate", o.optBoolean("matchRate", true));
+                runOnUiThread(() -> { try { startActivityForResult(i, REQ_PLAY); } catch (Exception ignored) { } });
+                return true;
+            } catch (Exception e) { return false; }
+        }
+        /** Updates: downloads the new APK and opens the system installer over this app; settings and sign-in stay. */
+        @JavascriptInterface public boolean update(String url) {
+            if (!HOST.equals(pageHost) || url == null || !url.startsWith("https://")) return false;
+            runOnUiThread(() -> startUpdate(url));
+            return true;
+        }
         /** Trailers on TVs: hands a YouTube video id to the YouTube app, whose player uses the TV's video hardware.
             False when no YouTube app takes it, so the page plays the trailer itself. */
         @JavascriptInterface public boolean youtube(String id) {
@@ -299,6 +333,32 @@ public class MainActivity extends Activity {
             }
             return false;
         }
+    }
+
+    long updId = -1;
+    void startUpdate(String url) {
+        if (Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) {
+            try { startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getPackageName()))); } catch (Exception ignored) { }
+            web.evaluateJavascript("window.toast&&toast('Allow MKCinema to install apps, then press Update again','info',7000)", null);
+            return;
+        }
+        try {
+            DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+            DownloadManager.Request r = new DownloadManager.Request(Uri.parse(url)).setTitle("MKCinema update").setMimeType("application/vnd.android.package-archive")
+                .setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, "MKCinema-update-" + System.currentTimeMillis() + ".apk")
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
+            updId = dm.enqueue(r);
+            BroadcastReceiver done = new BroadcastReceiver() { @Override public void onReceive(Context c, Intent i) {
+                if (i.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -2) != updId) return;
+                try { unregisterReceiver(this); } catch (Exception ignored) { }
+                Uri apk = dm.getUriForDownloadedFile(updId);
+                if (apk == null) { web.evaluateJavascript("window.toast&&toast('The update did not download. Try again','err',6000)", null); return; }
+                Intent inst = new Intent(Intent.ACTION_VIEW).setDataAndType(apk, "application/vnd.android.package-archive").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                try { startActivity(inst); } catch (Exception e) { web.evaluateJavascript("window.toast&&toast('The installer could not open','err',6000)", null); }
+            } };
+            IntentFilter f = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
+            if (Build.VERSION.SDK_INT >= 33) registerReceiver(done, f, Context.RECEIVER_EXPORTED); else registerReceiver(done, f);
+        } catch (Exception e) { web.evaluateJavascript("window.toast&&toast('The update could not start','err',6000)", null); }
     }
 
     Intent speechIntent(String lang) {
