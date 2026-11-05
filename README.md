@@ -32,18 +32,18 @@
 <p><img src="docs/readme/h-download.svg" width="100%" alt="Download"></p>
 
 <p align="center">
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.3/MKCinema.apk"><img src="docs/readme/download-android.svg" width="290" alt="Download for Android"></a>
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.3/MKCinema-TV.apk"><img src="docs/readme/download-tv.svg" width="290" alt="Download for Android TV, Google TV and Fire TV"></a>
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.3/com.mkcinema.app_1.1.0_all.ipk"><img src="docs/readme/download-webos.svg" width="290" alt="Download for LG webOS"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.4/MKCinema.apk"><img src="docs/readme/download-android.svg" width="290" alt="Download for Android"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.4/MKCinema-TV.apk"><img src="docs/readme/download-tv.svg" width="290" alt="Download for Android TV, Google TV and Fire TV"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.4/com.mkcinema.app_1.1.0_all.ipk"><img src="docs/readme/download-webos.svg" width="290" alt="Download for LG webOS"></a>
   <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.exe"><img src="docs/readme/download-windows.svg" width="290" alt="Download for Windows"></a>
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.3/MKCinema-1.0.dmg"><img src="docs/readme/download-macos.svg" width="290" alt="Download for macOS"></a>
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.3/mkcinema_1.0_amd64.deb"><img src="docs/readme/download-linux.svg" width="290" alt="Download for Linux"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.4/MKCinema-1.1-mac.zip"><img src="docs/readme/download-macos.svg" width="290" alt="Download for macOS"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.4/mkcinema_1.1_amd64.deb"><img src="docs/readme/download-linux.svg" width="290" alt="Download for Linux"></a>
   <a href="https://mkcinema.pages.dev"><img src="docs/readme/download-web.svg" width="290" alt="Open the web app"></a>
 </p>
 
 <p align="center"><sub>
-  Release <a href="https://github.com/itbelikethatbruh/MKCinema/releases/tag/v1.3">v1.3</a> &nbsp;·&nbsp;
-  Linux also as <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.3/mkcinema-1.0-linux-x86_64.tar.gz">.tar.gz</a> &nbsp;·&nbsp;
+  Release <a href="https://github.com/itbelikethatbruh/MKCinema/releases/tag/v1.4">v1.4</a> &nbsp;·&nbsp;
+  Linux also as <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.4/mkcinema-1.1-linux-x86_64.tar.gz">.tar.gz</a> &nbsp;·&nbsp;
   Fire TV: type <code>mkctv.pages.dev</code> into the Downloader app
 </sub></p>
 
@@ -64,7 +64,7 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 <tr>
 <td width="33%" valign="top"><img src="docs/readme/icon-import.svg" width="52" alt=""><br><b>Your own media servers</b><br><sub>Connect Plex, Jellyfin or Emby and the films you own sit next to your addon sources. Smart Play picks your own copy first.</sub></td>
 <td width="33%" valign="top"><img src="docs/readme/icon-tv.svg" width="52" alt=""><br><b>The TV's own player</b><br><sub>On Android TV and Fire TV, streams play in the TV's hardware player, so HEVC, HDR and Dolby Vision play natively, with frame-rate matching. MKCinema still picks the source and saves your place.</sub></td>
-<td width="33%" valign="top"><img src="docs/readme/icon-bolt.svg" width="52" alt=""><br><b>Torrents without debrid</b><br><sub>The Windows, Android and TV apps can play torrent sources themselves. Off until you turn it on, download only, and the cache is deleted when you stop.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-bolt.svg" width="52" alt=""><br><b>Torrents without debrid</b><br><sub>Every app (Windows, Mac, Linux, Android and TV) can play torrent sources themselves. Off until you turn it on, download only, and the cache is deleted when you stop.</sub></td>
 </tr>
 <tr>
 <td width="33%" valign="top"><img src="docs/readme/icon-users.svg" width="52" alt=""><br><b>Watch party</b><br><sub>Share a six-character room. Play, pause and seek stay in sync, with chat, reactions and push-to-talk, peer to peer.</sub></td>
@@ -203,7 +203,7 @@ MKCinema does more out of the box than Stremio, Plex, Jellyfin or Kodi in the ro
 | [`android/`](android) | Android, Android TV, Google TV and Fire TV app: a full-screen WebView with intent hand-off to video players, a TV launcher banner and remote control support. `MKCinema.apk` and `MKCinema-TV.apk` are the same file. |
 | [`webos/`](webos) | LG webOS app (beta): a hosted web app package. See [`webos/README.md`](webos/README.md). |
 | [`windows/`](windows) | Windows app: Go and Microsoft Edge WebView2. |
-| [`mac/`](mac) | Mac app: WKWebView through JavaScript for Automation, packaged as a .dmg. |
+| [`mac/`](mac) | Mac app: WKWebView through JavaScript for Automation, packaged as a .zip (and a .dmg when the dmg tools are installed). |
 | [`linux/`](linux) | Linux app: C and WebKitGTK 4.1, packaged as .deb and .tar.gz. |
 
 <a name="build"></a>
@@ -269,7 +269,7 @@ The app is a standard `.app` bundle that runs `main.js` with the system's JavaSc
 
 ```sh
 cd mac
-DMGTOOLS=/path/to/libdmg-hfsplus/build sh package.sh   # writes build/MKCinema-1.0.dmg
+DMGTOOLS=/path/to/libdmg-hfsplus/build sh package.sh   # writes build/MKCinema-1.1-mac.zip (and .dmg)
 ```
 </details>
 

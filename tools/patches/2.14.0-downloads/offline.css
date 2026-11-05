@@ -1,0 +1,26 @@
+/* 2.14.0 Offline downloads */
+#dDl{display:none}html.can-dl:not(.tv) #dDl{display:inline-flex}
+#dDl.busy svg{animation:dlSpin 1s linear infinite}@keyframes dlSpin{to{transform:rotate(360deg)}}
+.dl-pop{min-width:min(320px,86vw)}
+.dl-pop.float{position:absolute;z-index:20;margin-top:0}
+.dl-pop-h{padding:8px 12px 6px;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.dl-pop button span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.dl-pop button b{font-weight:600}
+.dl-pop button small{color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dl-none{padding:10px 12px 12px;color:var(--mute);font-size:13px;line-height:1.5;max-width:340px}
+.dl-list{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.dl-row{display:grid;grid-template-columns:136px minmax(0,1fr) auto;gap:18px;align-items:center;padding:12px;border-radius:16px;background:rgba(255,255,255,.035);border:1px solid var(--line-soft,rgba(255,255,255,.08))}
+.dl-art{position:relative;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#111114;display:grid;place-items:center;color:var(--mute)}
+.dl-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.dl-art svg{width:20px;height:20px}
+.dl-main{min-width:0;display:flex;flex-direction:column;gap:4px}
+.dl-main b{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dl-main small{color:var(--mute);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dl-bar{height:3px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden;margin:5px 0 1px}
+.dl-bar i{display:block;height:100%;background:var(--ink);transform-origin:0 50%;transition:transform .6s var(--ease,ease)}
+.dl-bar.seen i{background:var(--gold,#cdb47e)}
+.dl-bar.bad i{background:var(--bad,#c96b6b)}
+.dl-act{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.dl-foot{display:flex;justify-content:flex-end;padding-top:4px}
+@media (max-width:720px){.dl-row{grid-template-columns:104px minmax(0,1fr);gap:12px}.dl-act{grid-column:1/-1;justify-content:flex-start}}
+@media (prefers-reduced-motion:reduce){.dl-bar i{transition:none}#dDl.busy svg{animation:none}}

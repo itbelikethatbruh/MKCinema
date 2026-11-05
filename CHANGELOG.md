@@ -2,6 +2,14 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.14.0, Android/TV app 1.4.0, Windows app 1.3.0, Mac and Linux apps 1.1 (2026-11-05)
+
+- **Offline downloads on phones, tablets and Windows**: a Download button on film and episode pages saves the file to the device, and Library › Downloads lists what you've saved, with play and delete. Downloads aren't offered on TVs or in a plain browser.
+- **Android 1.4.0**: films download in the background through Android's download manager into the app's own folder (no storage permission, and they're removed if you uninstall). A Wi-Fi only setting is on by default. If the app starts with no internet, it opens straight to your downloads. The phone player gets touch controls.
+- **Windows 1.3.0**: downloads go to `Videos\MKCinema`, two at a time, and resume after a dropped connection. Subtitles are saved next to the film so VLC picks them up.
+- **Mac 1.1 and Linux 1.1: torrents** (Settings › Desktop app, off by default), with the same download-only engine as Windows and Android. Nothing is uploaded or seeded, and the pieces are deleted when it's turned off or the app closes.
+- The Mac app now ships as a `.zip` instead of a `.dmg`.
+
 ## Web app 2.13.2 (2026-11-05)
 
 - **Faster start**: each launch no longer downloads the app a second time in the background (about 360 KB) while checking for a self-hosted server setting.

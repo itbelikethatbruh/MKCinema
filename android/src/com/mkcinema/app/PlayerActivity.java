@@ -82,16 +82,59 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
         note = text(15, 0xFFCDB47E, Typeface.NORMAL);
         title.setText(i.getStringExtra("title")); sub.setText(i.getStringExtra("sub"));
         bar.addView(title); bar.addView(sub);
-        LinearLayout.LayoutParams sl = new LinearLayout.LayoutParams(-1, (int) (6 * d)); sl.topMargin = (int) (16 * d); bar.addView(seek, sl);
-        LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setPadding(0, (int) (8 * d), 0, 0);
+        // the bar sits in a taller strip so a finger can drag it
+        FrameLayout seekBox = new FrameLayout(this);
+        seekBox.addView(seek, new FrameLayout.LayoutParams(-1, (int) (6 * d), Gravity.CENTER_VERTICAL));
+        LinearLayout.LayoutParams sl = new LinearLayout.LayoutParams(-1, (int) (30 * d)); sl.topMargin = (int) (4 * d); bar.addView(seekBox, sl);
+        LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL);
+        playBtn = text(15, Color.WHITE, Typeface.BOLD); playBtn.setPadding(0, (int) (6 * d), (int) (18 * d), (int) (6 * d));
+        row.addView(playBtn);
         row.addView(time, new LinearLayout.LayoutParams(0, -2, 1)); row.addView(note);
         bar.addView(row);
         root.addView(bar, new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM));
         setContentView(root);
+        touch = !getPackageManager().hasSystemFeature("android.software.leanback") && getResources().getConfiguration().touchscreen != android.content.res.Configuration.TOUCHSCREEN_NOTOUCH;
+        if (touch) setupTouch(seekBox, d); else playBtn.setVisibility(View.GONE);
         note.setText("Loading…");
         if (matchRate && Build.VERSION.SDK_INT >= 23) new Thread(this::matchFrameRate).start();
         if (subUrl != null && !subUrl.isEmpty()) new Thread(this::loadSubs).start();
         h.post(tick);
+    }
+
+    TextView playBtn;
+    boolean touch;
+
+    /** Phones and tablets: tap shows or hides the bar, double-tap the left or right side skips 10 s, double-tap the
+        middle pauses, the bar can be dragged, and the Play/Pause label works. Films turn the phone sideways. */
+    void setupTouch(FrameLayout seekBox, float d) {
+        setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+        final android.view.GestureDetector g = new android.view.GestureDetector(this, new android.view.GestureDetector.SimpleOnGestureListener() {
+            @Override public boolean onDown(android.view.MotionEvent e) { return true; }
+            @Override public boolean onSingleTapConfirmed(android.view.MotionEvent e) {
+                if (bar.getVisibility() == View.VISIBLE && hideAt != 0) { bar.setVisibility(View.GONE); hideAt = 0; } else show(4000);
+                return true;
+            }
+            @Override public boolean onDoubleTap(android.view.MotionEvent e) {
+                float w = root.getWidth();
+                if (e.getX() < w / 3) skip(-10000); else if (e.getX() > w * 2 / 3) skip(10000); else togglePlay();
+                return true;
+            }
+        });
+        root.setOnTouchListener((v, e) -> g.onTouchEvent(e));
+        playBtn.setOnClickListener(v -> togglePlay());
+        seekBox.setOnTouchListener((v, e) -> {
+            if (!prepared || mp == null) return true;
+            int dur = mp.getDuration(); if (dur <= 0) return true;
+            float f = Math.max(0f, Math.min(1f, e.getX() / Math.max(1, v.getWidth())));
+            pendingSeek = (int) (f * dur); show(4000); tick.run(); h.removeCallbacks(tick); h.postDelayed(tick, 500);
+            if (e.getAction() == android.view.MotionEvent.ACTION_UP || e.getAction() == android.view.MotionEvent.ACTION_CANCEL) { h.removeCallbacks(doSeek); doSeek.run(); }
+            return true;
+        });
+    }
+
+    void togglePlay() {
+        if (!prepared || mp == null) return;
+        if (mp.isPlaying()) { mp.pause(); show(Long.MAX_VALUE / 4); } else { mp.start(); show(2500); }
     }
 
     TextView text(int sp, int color, int style) { TextView t = new TextView(this); t.setTextSize(sp); t.setTextColor(color); t.setTypeface(Typeface.create("sans-serif", style)); return t; }
@@ -158,9 +201,11 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
     /** Subtitles: SRT is used as is, WebVTT is turned into SRT, then handed to the player's timed-text track. */
     void loadSubs() {
         try {
-            HttpURLConnection c = (HttpURLConnection) new URL(subUrl).openConnection(); c.setConnectTimeout(8000); c.setReadTimeout(12000);
+            java.io.InputStream src;
+            if (subUrl.startsWith("/")) src = new java.io.FileInputStream(subUrl);
+            else { HttpURLConnection c = (HttpURLConnection) new URL(subUrl).openConnection(); c.setConnectTimeout(8000); c.setReadTimeout(12000); src = c.getInputStream(); }
             StringBuilder sb = new StringBuilder();
-            try (BufferedReader r = new BufferedReader(new InputStreamReader(c.getInputStream(), StandardCharsets.UTF_8))) { String l; while ((l = r.readLine()) != null) sb.append(l).append('\n'); }
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(src, StandardCharsets.UTF_8))) { String l; while ((l = r.readLine()) != null) sb.append(l).append('\n'); }
             String s = sb.toString().replace("﻿", "");
             if (s.trim().startsWith("WEBVTT")) {
                 StringBuilder o = new StringBuilder(); int n = 1;
@@ -209,7 +254,8 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
             try {
                 int pos = pendingSeek >= 0 ? pendingSeek : mp.getCurrentPosition(), dur = mp.getDuration();
                 if (dur > 0) seek.setProgress((int) (pos * 1000L / dur));
-                time.setText(fmt(pos) + "  /  " + fmt(dur) + (mp.isPlaying() ? "" : "   Paused"));
+                time.setText(fmt(pos) + "  /  " + fmt(dur) + (mp.isPlaying() || touch ? "" : "   Paused"));
+                if (touch) playBtn.setText(mp.isPlaying() ? "❚❚  Pause" : "▶  Play");
             } catch (Exception ignored) { }
         }
         if (hideAt > 0 && System.currentTimeMillis() > hideAt && mp != null && mp.isPlaying()) { bar.setVisibility(View.GONE); hideAt = 0; }

@@ -46,7 +46,7 @@ public class MainActivity extends Activity {
     static final String HOME = "https://mkcinema.pages.dev/";
     static final String HOST = "mkcinema.pages.dev";
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5;
-    static final String VER = "1.3.0";
+    static final String VER = "1.4.0";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -182,6 +182,12 @@ public class MainActivity extends Activity {
             } catch (Exception ignored) { }
             return true;
         }
+        // 1.4.0: a download picked on the "You're offline" page
+        if ("mkdl".equals(sc)) {
+            Intent i = tv ? null : Downloads.playIntent(this, Uri.decode(u.getSchemeSpecificPart()), 0);
+            if (i != null) try { startActivityForResult(i, REQ_PLAY); } catch (Exception ignored) { }
+            return true;
+        }
         if ("about".equals(sc) || "blob".equals(sc) || "data".equals(sc) || "javascript".equals(sc)) return false;
         open(u);
         return true;
@@ -218,10 +224,12 @@ public class MainActivity extends Activity {
     }
 
     String offline() {
-        return "<!doctype html><meta name=viewport content='width=device-width,initial-scale=1'><body style='margin:0;min-height:100vh;display:grid;place-items:center;background:#000;color:#f2f2f3;font:16px system-ui;text-align:center'>"
-            + "<div style='padding:24px'><div style='font:500 30px Georgia,serif;margin-bottom:10px'>You're offline</div>"
-            + "<div style='color:#bdbdc5;margin-bottom:26px'>MKCinema needs a connection to load. Check your Wi-Fi or data, then try again.</div>"
-            + "<a href='" + HOME + "' style='display:inline-block;padding:14px 26px;border-radius:999px;background:#e9e6de;color:#0b0b0c;font-weight:600;text-decoration:none'>Try again</a></div>";
+        String dls = tv ? "" : Downloads.offlineList(this);
+        return "<!doctype html><meta name=viewport content='width=device-width,initial-scale=1'><style>a.d{display:flex;flex-direction:column;gap:3px;text-align:left;padding:14px 18px;margin:0 0 10px;border-radius:14px;background:#141417;border:1px solid rgba(255,255,255,.1);color:#f2f2f3;text-decoration:none}a.d small{color:#9d9da6}</style><body style='margin:0;min-height:100vh;display:grid;place-items:center;background:#000;color:#f2f2f3;font:16px system-ui;text-align:center'>"
+            + "<div style='padding:24px;width:min(460px,100%);box-sizing:border-box'><div style='font:500 30px Georgia,serif;margin-bottom:10px'>You're offline</div>"
+            + "<div style='color:#bdbdc5;margin-bottom:26px'>MKCinema needs a connection to load. Check your Wi-Fi or data, then try again." + (dls.isEmpty() ? "" : " Your downloads still play:") + "</div>"
+            + dls
+            + "<a href='" + HOME + "' style='display:inline-block;margin-top:16px;padding:14px 26px;border-radius:999px;background:#e9e6de;color:#0b0b0c;font-weight:600;text-decoration:none'>Try again</a></div>";
     }
 
     @Override protected void onActivityResult(int req, int res, Intent data) {
@@ -312,6 +320,22 @@ public class MainActivity extends Activity {
         @JavascriptInterface public String p2pStart() { return P2P.start(getApplicationContext()); }
         @JavascriptInterface public void p2pStop() { P2P.stop(getApplicationContext()); }
         @JavascriptInterface public boolean p2pAvailable() { return new java.io.File(getApplicationInfo().nativeLibraryDir, "libmkp2p.so").exists(); }
+        /** 1.4.0 offline downloads, phones and tablets only: {url, headers, file, subUrl, wifiOnly, meta} → id or "error: ..." */
+        @JavascriptInterface public String dlStart(String json) {
+            if (!HOST.equals(pageHost)) return "error: not allowed here";
+            if (tv) return "error: downloads aren't available on TVs";
+            return Downloads.start(getApplicationContext(), json);
+        }
+        @JavascriptInterface public String dlList() { return HOST.equals(pageHost) && !tv ? Downloads.list(getApplicationContext()) : "[]"; }
+        @JavascriptInterface public boolean dlRemove(String id) { return HOST.equals(pageHost) && !tv && id != null && Downloads.remove(getApplicationContext(), id); }
+        /** Plays a finished download in the app's player; it reports back through MKNative.done like the TV player. */
+        @JavascriptInterface public boolean dlPlay(String id, int startMs) {
+            if (!HOST.equals(pageHost) || tv || id == null) return false;
+            Intent i = Downloads.playIntent(MainActivity.this, id, startMs);
+            if (i == null) return false;
+            runOnUiThread(() -> { try { startActivityForResult(i, REQ_PLAY); } catch (Exception ignored) { } });
+            return true;
+        }
         /** Phones: the page says a film is playing (or stopped) and its frame size, so leaving the app shrinks it into a window. */
         @JavascriptInterface public void pipState(boolean playing, int w, int h) {
             if (!HOST.equals(pageHost) || tv) return;
