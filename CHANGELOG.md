@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.8.1 (2026-11-05)
+
+- **Loading screen polish**: Fire TV showed its own white scrollbar down the right edge while Home was still building. The page can no longer scroll while the loading screen is up, and scrollbars stay hidden from the first frame. The loading screen now shows the platinum MK monogram from the intro with MKCINEMA under it.
+
 ## Web app 2.8.0 (2026-11-05)
 
 - **Smooth first look**: on a fresh start Home used to appear in stages, with unstyled cards, an empty banner and text fading in. A plain MK cover with a progress bar now holds until the styles, the first row and the banner art are ready, then Home fades in once, complete. It never holds longer than 3.5 seconds on a TV or 4.5 seconds elsewhere.
