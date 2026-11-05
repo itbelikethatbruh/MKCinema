@@ -1,4 +1,4 @@
-"""MKCinema 2.15.0: interface languages (Spanish, Portuguese (Brazil), French, German, Italian).
+"""MKCinema 2.15.0: interface languages (Spanish, Portuguese (Brazil), French, German, Italian, Hindi).
 
 Applies on top of web 2.14.0 or later. Run once:  python3 -I patch.py /path/to/mkcinema [--version X.Y.Z]
 (without --version: 2.14.x becomes 2.15.0; a base already at 2.15.0 or later keeps its version, so the order
@@ -12,7 +12,7 @@ against the 2.16.0 subtitles/support patch does not matter)
 import json, os, re, sys
 
 here = os.path.dirname(os.path.abspath(__file__))
-LANGS = ['es', 'pt', 'fr', 'de', 'it']
+LANGS = ['es', 'pt', 'fr', 'de', 'it', 'hi']
 
 
 def build(out_dir):
@@ -55,8 +55,8 @@ def main(root):
     early = ("try{var _ul=JSON.parse(localStorage.getItem('mkc:cfg')||'{}').uiLang||'auto',_uc=_ul!=='auto'?_ul:"
              "((navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en'])"
              ".map(function(x){return String(x).slice(0,2).toLowerCase()})"
-             ".filter(function(x){return /^(en|es|pt|fr|de|it)$/.test(x)})[0]||'en');"
-             "if(/^(es|pt|fr|de|it)$/.test(_uc))window.__i18nP=fetch('i18n/'+_uc+'.json')}catch(e){}")
+             ".filter(function(x){return /^(en|es|pt|fr|de|it|hi)$/.test(x)})[0]||'en');"
+             "if(/^(es|pt|fr|de|it|hi)$/.test(_uc))window.__i18nP=fetch('i18n/'+_uc+'.json')}catch(e){}")
     rep('<script>if (/MKCinemaTV|', '<script>' + early + 'if (/MKCinemaTV|')
     # checks that read row titles back: compare the English, not the translated text
     rep("!/My watchlist/.test(el.textContent.slice(0, 40))",

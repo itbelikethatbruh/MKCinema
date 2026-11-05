@@ -1,6 +1,6 @@
 # MKCinema 2.15.0: interface languages
 
-Adds Spanish, Portuguese (Brazil), French, German and Italian to menus, buttons, settings and help text.
+Adds Spanish, Portuguese (Brazil), French, German, Italian and Hindi to menus, buttons, settings and help text.
 The setting lives in Settings › Appearance › Language. "Match this device" is the default, and it follows the phone, TV or browser language.
 Titles, descriptions, stream names and subtitles come from addons and are never translated.
 
@@ -38,6 +38,15 @@ Sources:
 - es-ES, fr-FR and en-US desktop, plus pt-BR on a Fire TV user agent.
 - Navigation, rows and settings are translated. Card titles, hero titles and descriptions stay as the addon sent them.
 - Switching to German from Settings reloads in German.
+- hi-IN on desktop, a Fire TV user agent and a Pixel 7 (`shots/phone-hi.js`): 0 leftover English strings from the list, no errors.
+
+## Hindi
+
+- Added 2026-11-05 at Drake's request (many Indian users from Reddit). Machine-drafted, so a native speaker should review it.
+- The app's fonts have no Devanagari letters. In Hindi, `I18N.deva()` adds Noto Sans Devanagari (Google Fonts) to every web
+  font the app loads, for the Devanagari range only, with local Noto / Nirmala UI / Kohinoor fallbacks. Latin text keeps its font.
+- Translated Hindi text gets `letter-spacing:0` (`[data-deva]`), because tracking pulls Devanagari letters apart.
+- The MKCinema logo (`.brand`, `.sd-brand`) is skipped in every language. Before this fix it showed "MK Kino" / "MK Cine".
 - `i18nEn` returns "My watchlist" for "Meine Merkliste".
 - The service worker caches `i18n/<code>.json`.
 - No page errors. Translating 3000 new nodes takes about 15 ms.

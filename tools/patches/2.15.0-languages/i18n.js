@@ -1,13 +1,13 @@
 /* ---------------- 2.15.0 Interface languages ----------------
-   Menus, buttons, settings and messages in Spanish, Portuguese (Brazil), French, German or Italian. "Match this
+   Menus, buttons, settings and messages in Spanish, Portuguese (Brazil), French, German, Italian or Hindi. "Match this
    device" (the default) follows the phone, TV or browser language. Titles, descriptions and stream names come from
    your addons and stay exactly as they send them. The words live in i18n/<code>.json; text that has no translation
    yet stays in English. The page is translated as it is drawn: each piece of interface text is looked up in the
    language's list and swapped in place, so the app's own code keeps working in English underneath. */
 const I18N = {
-  langs: { en: 'English', es: 'Español', pt: 'Português (Brasil)', fr: 'Français', de: 'Deutsch', it: 'Italiano' },
+  langs: { en: 'English', es: 'Español', pt: 'Português (Brasil)', fr: 'Français', de: 'Deutsch', it: 'Italiano', hi: 'हिन्दी' },
   code: 'en', map: null, done: new WeakMap(), orig: new WeakMap(), attrDone: new WeakMap(),
-  SKIP: '.card-title,.hero-title,.hero-desc,.d-desc,h1,.stream .t1,.stream .t2,.s-meta,#pTitle,#pSub,pre,code,textarea,input,select.inp-raw,[translate="no"],[data-card] .card-sub,.dl-main b,#set-uiLang option',
+  SKIP: '.card-title,.hero-title,.hero-desc,.d-desc,h1,.stream .t1,.stream .t2,.s-meta,#pTitle,#pSub,pre,code,textarea,input,select.inp-raw,[translate="no"],[data-card] .card-sub,.dl-main b,#set-uiLang option,.brand,.sd-brand',
   ATTRS: ['placeholder', 'aria-label', 'title'],
   pick() {
     const c = CFG.uiLang || 'auto';
@@ -24,6 +24,7 @@ const I18N = {
     const p = n.parentElement; if (this.skip(p)) return;
     const nv = v.replace(k, t);
     this.orig.set(n, v); this.done.set(n, nv); n.nodeValue = nv;
+    if (this.code === 'hi' && !p.hasAttribute('data-deva')) p.setAttribute('data-deva', ''); // see deva()
   },
   attrs(el) {
     if (el.nodeType !== 1) return;
@@ -53,9 +54,40 @@ const I18N = {
     return s;
   },
   t(s) { return (this.map && this.map.get(s)) || s; },
+  // Hindi: the app's fonts (Onest, Sora, Fraunces, JetBrains Mono…) have no Devanagari letters, and some systems
+  // (Linux, some TVs) have no Devanagari font to fall back to. Each web font the app loads gets Noto Sans Devanagari
+  // added for the Devanagari range only, so Latin text keeps its own font and Hindi letters never show as boxes.
+  DEVA: 'https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@100..900&display=swap',
+  async deva() {
+    // Letter-spacing pulls Devanagari letters apart (the app tracks its small caps labels), so translated Hindi text gets none.
+    const ls = document.createElement('style'); ls.textContent = '[data-deva]{letter-spacing:0!important}'; document.head.appendChild(ls);
+    let url = '', range = 'U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF';
+    try {
+      const css = await (await fetch(this.DEVA)).text();
+      const b = css.split('/* devanagari */')[1] || '';
+      url = (b.match(/url\((https:[^)]+)\)/) || [])[1] || '';
+      range = (b.match(/unicode-range:\s*([^;]+);/) || [])[1] || range;
+    } catch (e) {}
+    const st = document.createElement('style'); st.id = 'mkc-deva'; document.head.appendChild(st);
+    const seen = new Set();
+    const scan = () => {
+      const fams = [];
+      document.querySelectorAll('link[href*="fonts.googleapis.com"]').forEach((l) => {
+        for (const m of l.href.matchAll(/family=([^:&]+)/g)) fams.push(decodeURIComponent(m[1]).replace(/\+/g, ' '));
+      });
+      const add = fams.filter((f) => !/devanagari/i.test(f) && !seen.has(f));
+      if (!add.length) return;
+      add.forEach((f) => seen.add(f));
+      const src = [url && `url(${url}) format('woff2')`, "local('Noto Sans Devanagari')", "local('NotoSansDevanagari-Regular')", "local('Nirmala UI')", "local('Kohinoor Devanagari')"].filter(Boolean).join(', ');
+      st.textContent = [...seen].map((f) => `@font-face{font-family:"${f}";font-style:normal;font-weight:100 900;font-display:swap;src:${src};unicode-range:${range}}`).join('\n');
+    };
+    scan();
+    new MutationObserver(scan).observe(document.head, { childList: true });
+  },
   async init() {
     this.code = this.pick();
     document.documentElement.lang = this.code === 'pt' ? 'pt-BR' : this.code;
+    if (this.code === 'hi') this.deva();
     if (this.code !== 'en') {
       try {
         const r = await (window.__i18nP || fetch(`i18n/${this.code}.json`));

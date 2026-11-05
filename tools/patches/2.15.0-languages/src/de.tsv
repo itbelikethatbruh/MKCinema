@@ -760,3 +760,21 @@
 768	Diese Liste enthält keine Filme oder Serien mit IMDb-ID
 769	MDBList hat nicht geantwortet. Prüfe deine Verbindung und versuche es erneut.
 770	Füge einen Listen-Link wie mdblist.com/lists/nutzer/listenname ein
+771	Auf MyAnimeList aktualisiert
+772	Erstelle einen API-Client unter myanimelist.net/apiconfig: App Type "other", App Redirect URL https://mkcinema.pages.dev/. MKCinema braucht nur dessen ID.
+773	Beendete Anime-Folgen aktualisieren deinen MyAnimeList-Fortschritt.
+774	Speichere die Client-ID und verbinde dann. MyAnimeList schickt dich nach der Bestätigung hierher zurück.
+775	Füge die Adresse ein, zu der MyAnimeList dich geschickt hat
+776	Abschließen
+777	MyAnimeList verbinden
+778	Füge zuerst deine MyAnimeList-Client-ID ein
+779	Scanne das mit deinem Handy und bestätige. Füge dann die Adresse, auf der dein Handy landet, mit der Tastatur der Handy-Fernbedienung in das Feld ein.
+780	MyAnimeList hat dich abgemeldet. Verbinde dich erneut.
+781	Diese Adresse enthält keinen MyAnimeList-Code
+782	Diese Anmeldung wurde woanders gestartet oder ist abgelaufen. Drücke erneut auf MyAnimeList verbinden.
+783	Auf MyAnimeList bestätigt. Wenn du auf einem anderen Bildschirm angefangen hast, füge die Adresse dieser Seite dort ins MyAnimeList-Feld ein.
+784	Das MyAnimeList-Relay ist nicht verfügbar
+785	Cinemeta ist nicht erreichbar
+786	Keine Kataloge installiert
+787	MKCinema hat keine eigenen Titel. Sobald Cinemeta antwortet, erscheinen deine Kataloge hier.
+788	Öffne die Addon-Verwaltung, um ein Katalog-Addon hinzuzufügen.
