@@ -1,0 +1,2 @@
+/* Bigger text: larger titles and descriptions for couch distance, without changing the layout scale */
+.card-title, .row-title, .hero-desc, .d-desc, .set-row small, .tour-note { font-size: 1.12em !important; }

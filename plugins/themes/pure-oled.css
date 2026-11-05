@@ -1,0 +1,9 @@
+/* Pure OLED: true black everywhere, for OLED TVs and phones (pixels switch fully off) */
+html, html[data-look] {
+  --n0b0b0c: #000; --n0b0b0c-c: 0,0,0;
+  --n111113: #000; --n111113-c: 0,0,0;
+  --n111111: #000; --n111111-c: 0,0,0;
+  --n050505: #000; --n050505-c: 0,0,0;
+  --n141417: #050505; --n141417-c: 5,5,5;
+}
+body { background: #000; }

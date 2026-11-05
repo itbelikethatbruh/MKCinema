@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "player-clock",
+      "kind": "plugin",
+      "name": "Player clock",
+      "description": "The time of day and when the film will end, in the corner while something plays.",
+      "author": "MKCinema",
+      "version": "1",
+      "file": "player-clock.js",
+      "sha256": "973b574cd888d480c8926b2f62e5058f193e611282b8d388e1f155df1e1500af"
+    },
+    {
+      "id": "tab-title",
+      "kind": "plugin",
+      "name": "Now playing in the title",
+      "description": "The window or browser tab shows what is playing, so it is easy to find on desktop.",
+      "author": "MKCinema",
+      "version": "1",
+      "file": "tab-title.js",
+      "sha256": "7a6ee4179bb3af0600192adb35d60d014ef4f84894deb551118ffc2de8ab91d5"
+    },
+    {
+      "id": "pure-oled",
+      "kind": "theme",
+      "name": "Pure OLED",
+      "description": "True black everywhere. Pixels switch fully off on OLED TVs and phones.",
+      "author": "MKCinema",
+      "version": "1",
+      "file": "pure-oled.css",
+      "sha256": "27bb5eec29a6ed0ba8ce919e8061cf556755f5b50e0ec8e6564796686f762d20"
+    },
+    {
+      "id": "square-posters",
+      "kind": "theme",
+      "name": "Square posters",
+      "description": "Sharp corners on posters and tiles, for a stricter gallery look.",
+      "author": "MKCinema",
+      "version": "1",
+      "file": "square-posters.css",
+      "sha256": "9c988eec232aee80df2834266639477326dc9df19f6eff24f76c774b144a1135"
+    },
+    {
+      "id": "bigger-text",
+      "kind": "theme",
+      "name": "Bigger text",
+      "description": "Larger titles and descriptions for couch distance.",
+      "author": "MKCinema",
+      "version": "1",
+      "file": "bigger-text.css",
+      "sha256": "761c9fdf84790352c1396073dc676730922864229d6e11ac156c083408784b5f"
+    }
+  ]
+}
