@@ -2,8 +2,9 @@
 """Draws the README artwork in docs/readme/.
 
 Everything is plain SVG with text converted to outlines, so it looks the same on
-every machine and needs no web fonts. Animations are CSS only and stop for
-people who ask their system for reduced motion.
+every machine and needs no web fonts. The art is drawn still: write() strips the
+CSS animation out, because GitHub's mobile app re-renders animated SVGs and the
+README flashes in and out there.
 
     cd .github/readme
     npm pack @fontsource/fraunces @fontsource/space-grotesk   # fonts (SIL OFL)
@@ -88,8 +89,29 @@ RING = ('<stop offset="0" stop-color="#f6f3ec"/><stop offset=".5" stop-color="#6
 REDUCED = "@media (prefers-reduced-motion: reduce){*{animation:none!important}}"
 
 
+STILL = {"h": ".5", "ring": ".8", "pt": ".7"}  # resting opacity for pulsing parts
+
+
+def still(svg):
+    """Freeze the art: drop the <style> animations and the parts that only exist
+    while moving (sheens, the travelling beam), and give pulsing parts a resting
+    opacity. Off-canvas start positions would otherwise leave them hidden."""
+    svg = re.sub(r"<style>.*?</style>", "", svg, flags=re.S)
+    svg = re.sub(r'<rect class="(?:g|sheen|run)"[^>]*/>', "", svg)
+
+    def tag(m):
+        name, cls, rest = m.group(1), m.group(2).split()[0], m.group(3)
+        rest = re.sub(r'\s*style="animation-delay:[^"]*"', "", rest)
+        op = f' opacity="{STILL[cls]}"' if cls in STILL and "opacity=" not in rest else ""
+        return f"<{name}{op}{rest}"
+
+    svg = re.sub(r'<(\w+) class="([^"]+)"([^>]*>)', tag, svg)
+    assert "animation" not in svg, "animated SVG left in the README art"
+    return svg
+
+
 def write(name, svg):
-    svg = re.sub(r">\s+<", "><", svg.strip())
+    svg = still(re.sub(r">\s+<", "><", svg.strip()))
     with open(os.path.join(OUT, name), "w", encoding="utf-8") as fh:
         fh.write(svg + "\n")
     print(f"{name:28s} {len(svg)/1024:7.1f} KB")
@@ -225,10 +247,10 @@ def hero():
 
 # ---------------------------------------------------------- download buttons
 DOWNLOADS = [
-    ("android", "b-android", "Android", "Phones and tablets", ".apk · 357 KB"),
-    ("tv", "i-tv", "Android TV", "Google TV · Fire TV", ".apk · 357 KB"),
+    ("android", "b-android", "Android", "Phones and tablets", ".apk · 11.4 MB"),
+    ("tv", "i-tv", "Android TV", "Google TV · Fire TV", ".apk · 11.4 MB"),
     ("webos", "b-lg", "LG webOS", "Beta · Developer Mode", ".ipk · 144 KB"),
-    ("windows", "b-windows", "Windows", "10 and 11 · 64-bit", ".exe · 2.7 MB"),
+    ("windows", "b-windows", "Windows", "10 and 11 · 64-bit", ".exe · 14.0 MB"),
     ("macos", "b-apple", "macOS", "Intel and Apple silicon", ".dmg · 1.4 MB"),
     ("linux", "b-linux", "Linux", "Ubuntu · Debian · Mint", ".deb · 203 KB"),
     ("web", "i-globe", "Web app", "Any modern browser", "No install"),

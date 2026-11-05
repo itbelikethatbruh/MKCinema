@@ -67,7 +67,7 @@ for i, (icon, label, value) in enumerate(tiles):
 <rect x=".5" y=".5" width="{tw-1:.1f}" height="149" rx="25.5" fill="none" stroke="url(#st)"/>
 <svg x="28" y="28" width="22" height="22" viewBox="0 0 24 24" {attrs} color="#d9d4c7">{body}</svg>
 <path d="{g.SANS_MD.path(label, 12, 60, 44, track=0.24)}" fill="#9a9aa3"/>
-<path class="n" style="animation-delay:{i*0.15:.2f}s" d="{g.SERIF.path(value, 58, 26, 122)}" fill="url(#p)"/>
+<path d="{g.SERIF.path(value, 58, 26, 122)}" fill="url(#p)"/>
 </g>''')
 
 stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%-d %b %Y").upper()
@@ -76,8 +76,6 @@ svg = f'''
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img"
  aria-label="Latest release {latest['tag_name'] if latest else 'none'}, {downloads} app downloads, {commits} commits, 8 platforms">
 <title>MKCinema on GitHub</title>
-<style>.n{{opacity:0;animation:n 1.2s cubic-bezier(.2,.7,.2,1) forwards}}@keyframes n{{from{{opacity:0;transform:translateY(10px)}}to{{opacity:1;transform:none}}}}
-@media (prefers-reduced-motion: reduce){{.n{{animation:none;opacity:1}}}}</style>
 <defs>
 <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#17171a"/><stop offset="1" stop-color="#080809"/></linearGradient>
 <linearGradient id="st" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".36"/><stop offset=".5" stop-color="#fff" stop-opacity=".06"/><stop offset="1" stop-color="#fff" stop-opacity=".22"/></linearGradient>

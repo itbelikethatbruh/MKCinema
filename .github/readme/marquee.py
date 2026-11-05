@@ -98,7 +98,8 @@ def draw(title, credit, foot):
                 ch = "?"
             tiles.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{tw}" height="{th}" rx="5" fill="url(#tile)"/>'
                          f'<path d="{face.path(ch, 40, x + tw / 2, y + 45, anchor="middle")}" fill="url(#p)"/>')
-    # chasing bulbs around the frame (opacity only)
+    # marquee bulbs around the frame, drawn lit and still (no animation: GitHub's
+    # mobile app re-renders animated SVGs and they flash)
     bulbs, k = [], 0
     m, step = 22, 26
     pts = []
@@ -115,7 +116,7 @@ def draw(title, credit, foot):
     while y > m:
         pts.append((m, y)); y -= step
     for k, (x, y) in enumerate(pts):
-        bulbs.append(f'<circle class="b b{k % 3}" cx="{x:.0f}" cy="{y:.0f}" r="4.2"/>')
+        bulbs.append(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="4.2" fill="#ffe7b0" opacity="{(1, .7, .85)[k % 3]}"/>')
     kicker = g.SANS_MD.path("NOW SHOWING", 17, W / 2, 113, track=0.45, anchor="middle")
     brand = g.SERIF.path("MK", 30, W / 2 - 2, 78, anchor="end")
     brand2 = g.SERIF_IT.path("Cinema", 30, W / 2 - 2, 78)
@@ -125,12 +126,6 @@ def draw(title, credit, foot):
     svg = f'''
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-label="{escape(alt, {'"': '&quot;'})}">
 <title>{escape(alt)}</title>
-<style>
-.b{{fill:#ffe7b0;animation:chase 1.5s steps(1) infinite}}.b1{{animation-delay:-.5s}}.b2{{animation-delay:-1s}}
-@keyframes chase{{0%{{opacity:1}}33%{{opacity:.28}}66%{{opacity:.5}}}}
-.glow{{animation:glow 4s ease-in-out infinite}}@keyframes glow{{0%,100%{{opacity:.55}}50%{{opacity:1}}}}
-{g.REDUCED}
-</style>
 <defs>
 <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#141416"/><stop offset="1" stop-color="#060607"/></linearGradient>
 <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f1f23"/><stop offset="1" stop-color="#0c0c0e"/></linearGradient>
@@ -140,7 +135,7 @@ def draw(title, credit, foot):
 <filter id="bloom" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
 </defs>
 <rect x="2" y="2" width="{W - 4}" height="{H - 4}" rx="30" fill="url(#bg)"/>
-<rect class="glow" x="2" y="2" width="{W - 4}" height="{H - 4}" rx="30" fill="url(#warm)"/>
+<rect opacity=".8" x="2" y="2" width="{W - 4}" height="{H - 4}" rx="30" fill="url(#warm)"/>
 <rect x="2.5" y="2.5" width="{W - 5}" height="{H - 5}" rx="29.5" fill="none" stroke="url(#st)"/>
 <rect x="40" y="40" width="{W - 80}" height="{H - 80}" rx="16" fill="none" stroke="#ffffff14"/>
 <g filter="url(#bloom)" opacity=".7">{"".join(bulbs)}</g>
