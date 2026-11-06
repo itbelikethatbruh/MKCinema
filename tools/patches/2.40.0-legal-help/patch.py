@@ -45,13 +45,20 @@ CSS = """.lg-doc h2{font:600 calc(17px * var(--ts,1))/1.3 var(--f-head,inherit);
 @media (max-width:560px){.ts-body{padding-left:4px}}
 """
 rep("#toasts{position:fixed;", CSS + "#toasts{position:fixed;", ".ts-item summary{")
+rep("#toasts{position:fixed;", ".tmdb-att{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:14px 0}.tmdb-att img{flex:none;height:16px;width:auto}.tmdb-att p{margin:0;flex:1;min-width:220px;color:var(--mute);font-size:calc(13px * var(--ts,1));line-height:1.5}\n#toasts{position:fixed;", ".tmdb-att{")
 
 # the module, in its own script block before the analytics block
 JS = (HERE / 'module.js').read_text(encoding='utf-8')
-if '<script id="mkc-240l">' not in s:
+import base64
+JS = JS.replace('__TMDB_LOGO__', 'data:image/svg+xml;base64,' + base64.b64encode((HERE / 'tmdb-logo.svg').read_bytes()).decode())
+blk = '<script id="mkc-240l">\n' + JS + '\n</script>\n'
+m = re.search(r'<script id="mkc-240l">\n.*?\n</script>\n', s, re.S)
+if m:
+    if m.group(0) != blk: s = s[:m.start()] + blk + s[m.end():]
+else:
     a = '<script id="mkc-cfwa">'
     assert s.count(a) == 1, 'cfwa anchor'
-    s = s.replace(a, '<script id="mkc-240l">\n' + JS + '\n</script>\n' + a, 1)
+    s = s.replace(a, blk + a, 1)
 
 # film page: the empty source list says why and links the guide
 rep("No streams for this filter. Install more stream addons from the addon manager.</div>",
@@ -121,4 +128,18 @@ prep('<h2>Children</h2>', """<h2>Your choices</h2>
 
 <h2>Children</h2>""", '<h2>Your choices</h2>')
 prep('<p>If this policy changes, the date at the top changes too.', '<p>The rules for using MKCinema are in the <a href="terms.html">terms of use</a>. If this policy changes, the date at the top changes too.', 'href="terms.html"')
+
+# 2.40.0 round 2: private contact, log retention, TMDB
+prep('Each log gets a 6-character code, and only the developer can open it. To have a log removed, open a GitHub issue that includes its code.',
+     'Each log gets a 6-character code, and only the developer can open it. Logs are deleted automatically after 90 days. To have one removed sooner, email <a href="mailto:legal@mkcinema.app">legal@mkcinema.app</a> with its code.',
+     'Logs are deleted automatically after 90 days.')
+prep('<li><b>Can\'t sign in?</b> Open an issue on <a href="https://github.com/itbelikethatbruh/MKCinema/issues" rel="noopener">GitHub</a> and we\'ll explain how to confirm the account is yours.</li>',
+     '<li><b>Can\'t sign in?</b> Email <a href="mailto:legal@mkcinema.app">legal@mkcinema.app</a> from the address on the account and we\'ll delete it for you.</li>',
+     'from the address on the account')
+prep('Questions go to <a href="https://github.com/itbelikethatbruh/MKCinema/issues" rel="noopener">GitHub issues</a>.</p>',
+     'Privacy questions and requests go to <a href="mailto:legal@mkcinema.app">legal@mkcinema.app</a>.</p>',
+     'Privacy questions and requests go to')
+prep('Title and artwork sources: Cinemeta and Metahub, Kitsu for anime, and TMDB or Fanart.tv if you add a key.',
+     'Title and artwork sources: Cinemeta and Metahub, Kitsu for anime, and TMDB or Fanart.tv if you add a key. MKCinema uses the TMDB API but is not endorsed or certified by TMDB.',
+     'is not endorsed or certified by TMDB')
 if t != po: pv.write_text(t, encoding='utf-8'); print('privacy.html changed')

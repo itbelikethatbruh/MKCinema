@@ -42,7 +42,13 @@ const Legal = {
       { group: 'Legal' },
       { key: 'privacyPage', label: 'Privacy policy', help: 'What MKCinema stores, where it is kept, and how to delete it.', type: 'button', text: 'Read', icon: 'shield-check', run: () => this.open('privacy') },
       { key: 'termsPage', label: 'Terms of use', help: 'What MKCinema is and isn’t: it hosts no films or streams, addons are run by others, and it comes with no warranty.', type: 'button', text: 'Read', icon: 'scale', run: () => this.open('terms') },
-      { key: 'copyrightPage', label: 'Copyright concerns', help: 'Where to send a takedown request, and how to report something MKCinema itself publishes.', type: 'button', text: 'Read', icon: 'copyright', run: () => this.open('copyright') },
+      { key: 'copyrightPage', label: 'Copyright concerns', help: 'Where to send a takedown request. Legal and privacy requests go to legal@mkcinema.app.', type: 'button', text: 'Read', icon: 'copyright', run: () => this.open('copyright') },
+    ];
+  },
+  attribution() {
+    return [
+      { group: 'Data sources' },
+      { html: () => `<div class="tmdb-att"><img src="__TMDB_LOGO__" alt="TMDB" width="120" height="16" loading="lazy"><p>MKCinema uses the TMDB API but is not endorsed or certified by TMDB. Details and images from TMDB appear when you add your own TMDB key.</p></div>` },
     ];
   },
 };
@@ -196,7 +202,7 @@ const Troubleshoot = {
 (function legalHelpInit() {
   // About: a Legal group on top (replaces the older single privacy row)
   const ab = secById('about');
-  if (ab) { const rows = ab.rows; ab.rows = () => [...Legal.rows(), ...rows().filter((r) => r.key !== 'privacyPage')]; }
+  if (ab) { const rows = ab.rows; ab.rows = () => [...Legal.rows(), ...rows().filter((r) => r.key !== 'privacyPage'), ...Legal.attribution()]; }
   // Help: the guide comes first, before the tools
   const hp = secById('help');
   if (hp) {

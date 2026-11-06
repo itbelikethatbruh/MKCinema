@@ -6,6 +6,7 @@ All notable changes to MKCinema. The web app version and the native app versions
 
 - **Troubleshooting guide.** Settings › Help now opens with quick fixes for no streams, buffering, sound, subtitles, addons, debrid keys, sign-in, TV remotes, updates, watch parties and trailers. Each fix has buttons that take you straight to the right setting, with the Diagnostic and Send log underneath. Also in the command palette and at app.mkcinema.app/#help.
 - **Terms of use and privacy, inside the app.** New terms of use page, a fuller privacy policy, and both readable in Settings › About & licenses on every device, TVs included. A *Why no streams?* link on an empty source list opens the right fix.
+- Legal and privacy requests now go to a private address, legal@mkcinema.app. Sent logs are deleted after 90 days. TMDB attribution is in Settings › About & licenses.
 
 ## Web app 2.39.0 (2026-11-06)
 
