@@ -1,0 +1,30 @@
+# Listing for the webOS Homebrew Channel. Submit as packages/com.mkcinema.app.yml in a pull request to
+# https://github.com/webosbrew/apps-repo (their rules: disclose AI use in the PR, no piracy).
+title: MKCinema
+iconUri: https://mkcinema-site.pages.dev/download/mkcinema-webos-icon.png
+manifestUrl: https://mkcinema-site.pages.dev/download/com.mkcinema.app.manifest.json
+category: multimedia
+pool: main
+requirements:
+  webosRelease: '>=7.0'
+description: |
+  # MKCinema
+
+  A media center for the big screen: browse films and series, keep a watchlist and continue watching
+  synced to your account, watch official trailers, and play media from your own sources and Stremio-compatible
+  add-ons that you add yourself. MKCinema ships with no content sources of its own.
+
+  The app opens the MKCinema web app (https://mkcinema.pages.dev) full screen, so it is always up to date.
+
+  ## Compatibility
+
+  LG TVs with webOS 22 or later (2022 models on). webOS 23 or later is recommended.
+
+  ## Source
+
+  https://github.com/itbelikethatbruh/mkcinema
+screenshots:
+  - https://mkcinema-site.pages.dev/shots/tv.webp
+  - https://mkcinema-site.pages.dev/shots/desktop.webp
+  - url: https://mkcinema-site.pages.dev/shots/player.webp
+    caption: Player

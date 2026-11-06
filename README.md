@@ -56,7 +56,8 @@
 <p align="center"><sub>
   Release <a href="https://github.com/itbelikethatbruh/MKCinema/releases/tag/v1.6">v1.6</a> &nbsp;·&nbsp;
   Linux also as <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.6/mkcinema-1.1-linux-x86_64.tar.gz">.tar.gz</a> &nbsp;·&nbsp;
-  Fire TV: type <code>mkctv.pages.dev</code> into the Downloader app
+  Fire TV: type <code>mkctv.pages.dev</code> into the Downloader app &nbsp;·&nbsp;
+  Samsung TV (2023+): <a href="tizen/README.md">install with TizenBrew</a>
 </sub></p>
 
 Every app opens the same MKCinema in its own window, so it always runs the latest version. Sign in with email and your library, progress, addons and settings follow you between devices.
@@ -129,7 +130,7 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 <tr>
 <td width="33%" valign="top"><img src="docs/readme/icon-users.svg" width="52" alt=""><br><b>Seats</b><br><sub>A seat for everyone in the house with its own picture, watchlist and progress. Kids seats show Animation and Family only, behind a grown-up PIN.</sub></td>
 <td width="33%" valign="top"><img src="docs/readme/icon-phone.svg" width="52" alt=""><br><b>Phone as a remote</b><br><sub>Scan a code and your phone becomes a trackpad with volume, skip, audio presets and subtitles.</sub></td>
-<td width="33%" valign="top"><img src="docs/readme/icon-tv.svg" width="52" alt=""><br><b>Made for the big screen</b><br><sub>Android TV, Google TV, Fire TV and LG webOS, with a platinum focus ring, remembered rows, voice search and an optional side menu.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-tv.svg" width="52" alt=""><br><b>Made for the big screen</b><br><sub>Android TV, Google TV, Fire TV, LG webOS and Samsung, with a platinum focus ring, remembered rows, voice search and an optional side menu.</sub></td>
 </tr>
 <tr>
 <td width="33%" valign="top"><img src="docs/readme/icon-monitor.svg" width="52" alt=""><br><b>Ambient Mode</b><br><sub>Leave the TV idle and your Home becomes a living screensaver: each film as a layered 3D scene with its own atmosphere. OK opens the film, Back returns.</sub></td>
@@ -267,6 +268,7 @@ VLC is a great file player, and MKCinema keeps it one tap away for the formats a
 | [`site/`](site) | The website at [mkcinema-site.pages.dev](https://mkcinema-site.pages.dev). |
 | [`android/`](android) | Android, Android TV, Google TV and Fire TV app: a full-screen WebView with intent hand-off to video players, a TV launcher banner and remote control support. `MKCinema.apk` and `MKCinema-TV.apk` are the same file. |
 | [`webos/`](webos) | LG webOS app (beta): a hosted web app package. See [`webos/README.md`](webos/README.md). |
+| [`tizen/`](tizen) | Samsung TV module for TizenBrew (beta): opens the web app and registers the remote's media keys. See [`tizen/README.md`](tizen/README.md). |
 | [`windows/`](windows) | Windows app: Go and Microsoft Edge WebView2. |
 | [`mac/`](mac) | Mac app: WKWebView through JavaScript for Automation, packaged as a .zip (and a .dmg when the dmg tools are installed). |
 | [`linux/`](linux) | Linux app: C and WebKitGTK 4.1, packaged as .deb and .tar.gz. |
