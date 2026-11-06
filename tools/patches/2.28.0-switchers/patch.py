@@ -3,6 +3,8 @@
 
 - index.html: style block mkc-228css + script block mkc-228 before mkc-cfwa (switchers.js, switchers.css).
   renderHome gives catalog rows and My watchlist stable keys (data-rk) so Arrange Home can tell them apart.
+- index.html: What's new card after an update + Settings › More › What's new (block mkc-228w, whatsnew.js/css).
+  Add each new release at the top of RELEASES in whatsnew.js.
 - kids/ages.json: age ratings for 1,356 popular animation, family and kids titles (built with build_ages.py from TMDB).
 - sw.js: kids/ages.json is cached like the language files, so kids seats keep their ratings offline.
 - i18n: new strings for es, pt, fr, de, it, hi (only added when missing).
@@ -47,6 +49,14 @@ def index(root):
         a = '<script id="mkc-cfwa">'
         assert s.count(a) == 1
         s = s.replace(a, f'<style id="mkc-228css">\n{css}</style>\n<script id="mkc-228">\n{js}</script>\n{a}')
+    if 'id="mkc-228w"' in s:
+        print('index.html: What\'s new block already there')
+    else:
+        js, css = rd('whatsnew.js'), rd('whatsnew.css')
+        assert '</script' not in js.lower() and '</style' not in css.lower()
+        a = '<script id="mkc-cfwa">'
+        assert s.count(a) == 1 and 'const Updater = {' in s
+        s = s.replace(a, f'<style id="mkc-228wcss">\n{css}</style>\n<script id="mkc-228w">\n{js}</script>\n{a}')
     cur = re.search(r"const APP_VERSION = '([\d.]+)';", s).group(1)
     if newer(VER, cur):
         s = s.replace(f"const APP_VERSION = '{cur}';", f"const APP_VERSION = '{VER}';")
