@@ -10,6 +10,10 @@ All notable changes to MKCinema. The web app version and the native app versions
 
 ## Web app 2.27.0 (2026-11-06)
 
+- **The side menu is now faint glass.** On computers the left menu is a barely-there smoked glass with a soft light along its edge, so the page shows through very slightly when the menu opens over it. Phones, tablets, TVs and Low graphics get the same tint as a solid panel, with no blur.
+- **A new logo in the side menu**: the MK emblem with a soft glow, a stacked platinum "MK / CINEMA" wordmark and a fine line under it, in the computer side menu and the phone menu drawer.
+- **Pick a font for the app** in Settings › Appearance › Font: Studio (the current look), Editorial, Classic, Wide, Condensed, Rounded, Deco, Slab and Techno. Each one pairs a heading font with an easy-to-read text font. They are all free, open-licence fonts and load only when you pick them. The logo and subtitles keep their own fonts, and your choice syncs to your account.
+
 - **Subtitles line up by themselves.** When you turn on a downloaded subtitle, MKCinema compares it with the subtitles inside the file (an MKV's subtitle index, in any language, read without downloading the film) and shifts it to match. It also fixes the common frame-rate mix-ups (23.976, 24 and 25 fps). When the browser can hear the film, it can line up with the dialogue instead. Only a clear match is applied, a timing you set by hand always wins, and Undo puts the old timing back. Subtitles › Auto-sync now runs it on demand. Turn it off in Settings › Subtitles.
 - **Manage add-ons from your phone.** The Add-ons screen on a TV shows a QR code. Scan it and the phone remote opens a list of the TV's add-ons: paste a link with your phone's keyboard, turn add-ons on or off, move them up or remove them. Add-on addresses (which can hold your settings) never leave the TV.
 - **TV player engine** setting for the TV app 1.7.0 (ExoPlayer or the basic player).

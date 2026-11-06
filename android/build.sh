@@ -2,7 +2,7 @@
 # Builds MKCinema.apk. Needs the Android SDK (build-tools 35, platform 35) at $SDK and the signing key in keystore/.
 set -e
 cd "$(dirname "$0")"
-SDK=${SDK:-/home/user/android/sdk}; BT=$SDK/build-tools/35.0.0; JAR=$SDK/platforms/android-35/android.jar
+SDK=${SDK:-$ANDROID_HOME}; BT=$SDK/build-tools/35.0.0; JAR=$SDK/platforms/android-35/android.jar
 OUT=${OUT:-build}; rm -rf $OUT; mkdir -p $OUT/c $OUT/classes $OUT/dex
 $BT/aapt2 compile --dir res -o $OUT/c/res.zip
 $BT/aapt2 link -I $JAR --manifest AndroidManifest.xml -o $OUT/base.apk $OUT/c/res.zip --auto-add-overlay

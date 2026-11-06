@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<script>try{var _ul=JSON.parse(localStorage.getItem('mkc:cfg')||'{}').uiLang||'auto',_uc=_ul!=='auto'?_ul:((navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en']).map(function(x){return String(x).slice(0,2).toLowerCase()}).filter(function(x){return /^(en|es|pt|fr|de|it|hi)$/.test(x)})[0]||'en');if(/^(es|pt|fr|de|it|hi)$/.test(_uc))window.__i18nP=fetch('i18n/'+_uc+'.json')}catch(e){}if (/MKCinemaTV|Android TV|GoogleTV|AFT[A-Z]|SMART-TV|SmartTV|Web0S|webOS|Tizen|BRAVIA/i.test(navigator.userAgent)) document.documentElement.classList.add('tv');try{if(JSON.parse(localStorage.getItem('mkc:navMode')||'0')==='side'){document.documentElement.classList.add('nav-side');if(document.documentElement.classList.contains('tv')||innerWidth<1200)document.documentElement.classList.add('side-mini')}}catch(e){}try{var _lk=JSON.parse(localStorage.getItem('mkc:cfg')||'{}').look;if(_lk&&_lk!=='noir'&&/^[a-z]+$/.test(_lk))document.documentElement.setAttribute('data-look',_lk);if(_lk==='atelier'){var _ac=JSON.parse(localStorage.getItem('mkc:atelierCss')||'null');if(typeof _ac==='string'){var _st=document.createElement('style');_st.id='atelier';_st.textContent=_ac;document.head.appendChild(_st);}}}catch(e){}</script>
+<script>try{var _ul=JSON.parse(localStorage.getItem('mkc:cfg')||'{}').uiLang||'auto',_uc=_ul!=='auto'?_ul:((navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en']).map(function(x){return String(x).slice(0,2).toLowerCase()}).filter(function(x){return /^(en|es|pt|fr|de|it|hi)$/.test(x)})[0]||'en');if(/^(es|pt|fr|de|it|hi)$/.test(_uc))window.__i18nP=fetch('i18n/'+_uc+'.json')}catch(e){}if (/MKCinemaTV|Android TV|GoogleTV|AFT[A-Z]|SMART-TV|SmartTV|Web0S|webOS|Tizen|BRAVIA/i.test(navigator.userAgent)) document.documentElement.classList.add('tv');try{if(JSON.parse(localStorage.getItem('mkc:navMode')||'0')==='side'){document.documentElement.classList.add('nav-side');if(document.documentElement.classList.contains('tv')||innerWidth<1200)document.documentElement.classList.add('side-mini')}}catch(e){}try{var _fn=JSON.parse(localStorage.getItem('mkc:cfg')||'{}').font,_FF={"editorial":"Bodoni+Moda:opsz,wght@6..96,400..900&family=Manrope:wght@400..800","classic":"DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400..700","wide":"Unbounded:wght@400..800&family=Inter:opsz,wght@14..32,400..700","condensed":"Oswald:wght@400..700&family=Barlow:wght@400;500;600;700","rounded":"Nunito:wght@400..900","deco":"Josefin+Sans:wght@300..700&family=Jost:wght@400..700","slab":"Zilla+Slab:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700","techno":"Chakra+Petch:wght@400;600;700&family=Barlow:wght@400;500;600;700"};if(_FF[_fn]){document.documentElement.setAttribute('data-font',_fn);var _fl=document.createElement('link');_fl.rel='stylesheet';_fl.id='mkcFont';_fl.href='https://fonts.googleapis.com/css2?family='+_FF[_fn]+'&display=swap';document.head.appendChild(_fl)}}catch(e){}try{var _lk=JSON.parse(localStorage.getItem('mkc:cfg')||'{}').look;if(_lk&&_lk!=='noir'&&/^[a-z]+$/.test(_lk))document.documentElement.setAttribute('data-look',_lk);if(_lk==='atelier'){var _ac=JSON.parse(localStorage.getItem('mkc:atelierCss')||'null');if(typeof _ac==='string'){var _st=document.createElement('style');_st.id='atelier';_st.textContent=_ac;document.head.appendChild(_st);}}}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>MKCinema</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -8044,7 +8044,7 @@ COMMANDS.push(
 /* =====================================================================
    MKCinema · settings, local files, boot
    ===================================================================== */
-const SUB_FONTS = { sans: 'var(--f-body)', serif: 'Georgia, "Times New Roman", serif', mono: 'var(--f-mono)', display: 'var(--f-display)', system: 'system-ui, sans-serif' };
+const SUB_FONTS = { sans: '"Onest", system-ui, sans-serif', serif: 'Georgia, "Times New Roman", serif', mono: 'var(--f-mono)', display: '"Sora", system-ui, sans-serif', system: 'system-ui, sans-serif' };
 const LANG_CHOICES = (() => { const seen = new Map(); Object.entries(LANGS).forEach(([code, name]) => { if (code.length === 3 && !seen.has(name)) seen.set(name, code); }); return [...seen.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([n, c]) => [c, n]); })();
 
 function applyAll() {
@@ -13646,7 +13646,7 @@ const SideNav = {
     }
     const { tabs, tools } = this.items(), cur = ($('#tabs .tab.on') || {}).dataset ? $('#tabs .tab.on').dataset.view : 'home';
     d.innerHTML = `<div class="sd-scrim" data-sdclose></div><nav class="sd-panel" aria-label="Menu">
-      <div class="sd-top"><span class="sd-brand">MK<em>Cinema</em></span><button type="button" class="ibtn" data-nav data-sdclose aria-label="Close menu"><i data-lucide="x"></i></button></div>
+      <div class="sd-top"><span class="sd-brand"><svg class="mk" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="55" fill="#050505" stroke="url(#mkRing)" stroke-width="3"/><use href="#mkLetters" fill="url(#mkPlat)" transform="translate(60 60) scale(.8)"/></svg><span class="sd-word">MK<em>Cinema</em></span></span><button type="button" class="ibtn" data-nav data-sdclose aria-label="Close menu"><i data-lucide="x"></i></button></div>
       <div class="sd-list">${tabs.map((t) => `<button type="button" data-nav data-sdview="${esc(t.view)}" class="${t.view === cur ? 'on' : ''}"><i data-lucide="${esc(t.icon)}"></i><span>${esc(t.label)}</span></button>`).join('')}</div>
       <div class="sd-list sd-tools">${tools.map(([id, ic, l]) => `<button type="button" data-nav data-sdtool="${id}"><i data-lucide="${ic}"></i><span>${l}</span></button>`).join('')}</div></nav>`;
     icons();
@@ -18939,6 +18939,154 @@ const TvEngine = {
     sc.setAttribute('data-cf-beacon', '{"token": "2ef8fe3029554590815952216270061a", "spa": false}'); document.body.appendChild(sc); };
   if (document.readyState === 'complete') setTimeout(go, 1500); else addEventListener('load', function () { setTimeout(go, 1500); });
 })();
+</script>
+<style id="mkc-227fcss">
+/* ===== 2.27.0 fonts: the logo and the intro title keep their own type ===== */
+html[data-font="editorial"]{--f-display:"Bodoni Moda",Georgia,"Times New Roman",serif;--f-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif}
+html[data-font="classic"]{--f-display:"DM Serif Display",Georgia,"Times New Roman",serif;--f-body:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+html[data-font="wide"]{--f-display:"Unbounded",system-ui,-apple-system,"Segoe UI",sans-serif;--f-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif}
+html[data-font="condensed"]{--f-display:"Oswald",system-ui,-apple-system,"Segoe UI",sans-serif;--f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif}
+html[data-font="rounded"]{--f-display:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;--f-body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif}
+html[data-font="deco"]{--f-display:"Josefin Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--f-body:"Jost",system-ui,-apple-system,"Segoe UI",sans-serif}
+html[data-font="slab"]{--f-display:"Zilla Slab",Georgia,"Times New Roman",serif;--f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+html[data-font="techno"]{--f-display:"Chakra Petch",system-ui,-apple-system,"Segoe UI",sans-serif;--f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif}
+html[data-font] #intro h1{font-family:"Sora",system-ui,sans-serif}
+html[data-font] .dock .brand{font-family:"Sora",system-ui,sans-serif}
+/* display faces that only come in one weight must not be faux-bolded */
+html[data-font="classic"]{font-synthesis-weight:none}
+/* optical fixes so every pairing sits at the same visual size as Studio */
+html[data-font="wide"] :is(.hero-title,.page-title){font-weight:700;letter-spacing:-.02em;font-size:clamp(24px,3.6vw,46px)}
+html[data-font="wide"] .row-title{font-weight:600;font-size:clamp(15px,1.5vw,19px);letter-spacing:-.01em}
+html[data-font="condensed"] :is(.hero-title,.page-title){font-weight:600;letter-spacing:.005em;text-transform:uppercase}
+html[data-font="condensed"] .row-title{font-weight:500;font-size:clamp(17px,1.85vw,23px);letter-spacing:.02em}
+html[data-font="editorial"] :is(.hero-title,.page-title){font-weight:600;letter-spacing:-.01em}
+html[data-font="editorial"] .row-title{font-weight:600;font-size:clamp(17px,1.85vw,23px)}
+html[data-font="classic"] .row-title{font-weight:400;font-size:clamp(18px,1.9vw,24px)}
+html[data-font="classic"] :is(.hero-title,.page-title){font-weight:400}
+html[data-font="deco"] .row-title{font-weight:600;font-size:clamp(17px,1.8vw,22px);letter-spacing:.02em}
+html[data-font="deco"] :is(.hero-title,.page-title){font-weight:700;letter-spacing:.01em}
+html[data-font="rounded"] :is(.hero-title,.page-title){font-weight:900}
+html[data-font="rounded"] .row-title{font-weight:800}
+html[data-font="slab"] .row-title{font-size:clamp(17px,1.8vw,22px)}
+html[data-font="techno"] .row-title{font-weight:600;letter-spacing:.01em}
+html[data-font="techno"] :is(.hero-title,.page-title){letter-spacing:0}
+
+/* Settings > Appearance > Font */
+.fnt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:6px 0}
+.fnt-opt{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;padding:14px 14px 12px;border-radius:14px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;text-align:left;transition:border-color .15s,background-color .15s}
+.fnt-opt:hover{border-color:var(--line-hi)}
+.fnt-opt.on{border-color:var(--ink);background:rgba(255,255,255,.045)}
+.fnt-opt .fs{font-size:26px;line-height:1.1;white-space:nowrap;overflow:hidden;max-width:100%}
+.fnt-opt[data-font="wide"] .fs{font-size:20px;line-height:1.4}
+.fnt-opt .fb{font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+html.tv .fnt-grid{grid-template-columns:repeat(3,1fr)}
+html.tv .fnt-opt.nav-focus{box-shadow:inset 0 0 0 3px #f2f2f3;border-color:transparent}
+
+/* ===== 2.27.0 side menu: faint liquid glass + logo lockup ===== */
+@media (min-width:761px){
+  html.nav-side:not(.tv):not([data-look="anime"]) .dock{position:relative;isolation:isolate;
+    background:linear-gradient(168deg,rgba(255,255,255,.07) 0,rgba(255,255,255,.02) 26%,rgba(255,255,255,.008) 62%,rgba(255,255,255,.035) 100%),rgba(var(--n0b0b0c-c,11,11,12),.6);
+    border:1px solid rgba(255,255,255,.07);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 1px 0 0 rgba(255,255,255,.035),inset 0 -1px 0 rgba(var(--n000000-c,0,0,0),.45),0 30px 70px -36px var(--n000000,#000);
+    -webkit-backdrop-filter:blur(28px) saturate(150%);backdrop-filter:blur(28px) saturate(150%)}
+  /* specular rim: brightest on the top-left edge, fading away; static */
+  html.nav-side:not(.tv):not([data-look="anime"]) .dock::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;padding:1px;pointer-events:none;
+    background:linear-gradient(162deg,rgba(255,255,255,.3) 0,rgba(255,255,255,.07) 18%,rgba(255,255,255,0) 45%,rgba(255,255,255,0) 80%,rgba(255,255,255,.1) 100%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+  /* Low graphics, touch screens: the same tint, solid, no blur */
+  html.nav-side:not(.tv):not([data-look="anime"]) body.noblur .dock{-webkit-backdrop-filter:none;backdrop-filter:none;
+    background:linear-gradient(168deg,rgba(255,255,255,.06) 0,rgba(255,255,255,.016) 26%,rgba(255,255,255,0) 62%,rgba(255,255,255,.03) 100%),var(--n0b0b0c,#0b0b0c)}
+
+  /* logo lockup */
+  html.nav-side:not([data-look="anime"]) .dock .brand{position:relative;gap:13px;min-height:58px;padding:4px 10px 22px;margin-bottom:8px}
+  html.nav-side:not([data-look="anime"]) .dock .brand::after{content:"";position:absolute;left:10px;right:10px;bottom:8px;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.05) 65%,rgba(255,255,255,0))}
+  html.nav-side:not([data-look="anime"]) .dock .brand .mk{width:42px;height:42px;flex:none;border-radius:50%;box-shadow:0 0 0 1px rgba(255,255,255,.06),0 8px 22px -6px var(--n000000,#000),0 0 26px -4px rgba(232,227,216,.16)}
+  html.nav-side:not([data-look="anime"]) .dock .brand .word{display:inline-flex!important;flex-direction:column;align-items:flex-start;line-height:1;font-family:var(--f-serif);font-size:27px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;
+    background:linear-gradient(176deg,#fff 0,#ece8df 42%,#a8a49c 58%,#f3efe7 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+  html.nav-side:not([data-look="anime"]) .dock .brand .word em{display:block;margin:7px 0 0 .1em;font-family:var(--f-serif);font-size:9.5px;font-weight:500;letter-spacing:.62em;line-height:1;color:var(--nb4b4bc,#b4b4bc);-webkit-text-fill-color:var(--nb4b4bc,#b4b4bc);background:none}
+  html.side-mini:not([data-look="anime"]) .dock .brand{padding-inline:0;justify-content:center}
+  @media (max-height:820px){html.nav-side:not([data-look="anime"]) .dock .brand{min-height:48px;padding-bottom:16px;margin-bottom:4px}html.nav-side:not([data-look="anime"]) .dock .brand .mk{width:36px;height:36px}html.nav-side:not([data-look="anime"]) .dock .brand .word{font-size:23px}}
+  html.side-mini:not([data-look="anime"]) .dock .brand::after{left:14px;right:14px;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.16),rgba(255,255,255,0))}
+  html.side-mini:not([data-look="anime"]) .dock-wrap:is(:hover,:focus-within) .brand{justify-content:flex-start;padding-inline:10px}
+  html.side-mini:not([data-look="anime"]) .dock-wrap:is(:hover,:focus-within) .brand .word{display:inline-flex!important}
+}
+html.tv.nav-side .dock .brand{display:none}
+
+/* phone drawer: same tint and rim, fully solid: unblurred see-through text behind it looks messy, and touch screens get no backdrop-filter */
+#sideDrawer .sd-panel{background:linear-gradient(168deg,rgba(255,255,255,.065) 0,rgba(255,255,255,.018) 24%,rgba(255,255,255,0) 60%,rgba(255,255,255,.03) 100%),var(--n0b0b0c,#0b0b0c);border-right:1px solid rgba(255,255,255,.09);box-shadow:inset -1px 0 0 rgba(255,255,255,.03),inset 0 1px 0 rgba(255,255,255,.1),24px 0 60px -30px var(--n000000,#000)}
+body:not(.noblur) #sideDrawer .sd-panel{background:linear-gradient(168deg,rgba(255,255,255,.07) 0,rgba(255,255,255,.02) 24%,rgba(255,255,255,0) 60%,rgba(255,255,255,.035) 100%),rgba(var(--n0b0b0c-c,11,11,12),.66);-webkit-backdrop-filter:blur(28px) saturate(150%);backdrop-filter:blur(28px) saturate(150%)}
+#sideDrawer .sd-top{padding:2px 4px 18px 8px;margin-bottom:8px;position:relative}
+#sideDrawer .sd-top::after{content:"";position:absolute;left:8px;right:4px;bottom:6px;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.05) 65%,rgba(255,255,255,0))}
+#sideDrawer .sd-brand{display:flex;align-items:center;gap:13px;font-size:inherit;letter-spacing:0;text-transform:none}
+#sideDrawer .sd-brand .mk{width:42px;height:42px;flex:none;border-radius:50%;box-shadow:0 0 0 1px rgba(255,255,255,.06),0 8px 22px -6px var(--n000000,#000),0 0 26px -4px rgba(232,227,216,.16)}
+#sideDrawer .sd-word{display:inline-flex;flex-direction:column;align-items:flex-start;line-height:1;font-family:var(--f-serif);font-size:27px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;font-optical-sizing:none;font-variation-settings:"opsz" 72,"SOFT" 0,"WONK" 0;
+  background:linear-gradient(176deg,#fff 0,#ece8df 42%,#a8a49c 58%,#f3efe7 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+#sideDrawer .sd-word em{display:block;margin:7px 0 0 .1em;font-style:normal;font-size:9.5px;letter-spacing:.62em;color:var(--nb4b4bc,#b4b4bc);-webkit-text-fill-color:var(--nb4b4bc,#b4b4bc)}
+html[data-look="anime"] #sideDrawer .sd-brand :is(.mk,.sd-word){display:none}
+html[data-look="anime"] #sideDrawer .sd-top::after{display:none}
+</style>
+<script id="mkc-227f">
+/* ---------------- 2.27.0 App fonts ----------------
+   Settings › Appearance › Font. Each choice pairs a display face (titles, headings) with a readable body face.
+   All are free OFL fonts from Google Fonts, fetched only when chosen. The logo, the intro title and subtitles
+   keep their own fonts. The head script sets html[data-font] and the stylesheet before the first paint. */
+const AppFont = {
+  LIST: {"studio": {"label": "Studio", "d": "'Sora',sans-serif", "b": "'Onest',sans-serif", "q": null}, "editorial": {"label": "Editorial", "d": "'Bodoni Moda',serif", "b": "'Manrope',sans-serif", "q": "Bodoni+Moda:opsz,wght@6..96,400..900&family=Manrope:wght@400..800"}, "classic": {"label": "Classic", "d": "'DM Serif Display',serif", "b": "'DM Sans',sans-serif", "q": "DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400..700"}, "wide": {"label": "Wide", "d": "'Unbounded',sans-serif", "b": "'Inter',sans-serif", "q": "Unbounded:wght@400..800&family=Inter:opsz,wght@14..32,400..700"}, "condensed": {"label": "Condensed", "d": "'Oswald',sans-serif", "b": "'Barlow',sans-serif", "q": "Oswald:wght@400..700&family=Barlow:wght@400;500;600;700"}, "rounded": {"label": "Rounded", "d": "'Nunito',sans-serif", "b": "'Nunito',sans-serif", "q": "Nunito:wght@400..900"}, "deco": {"label": "Deco", "d": "'Josefin Sans',sans-serif", "b": "'Jost',sans-serif", "q": "Josefin+Sans:wght@300..700&family=Jost:wght@400..700"}, "slab": {"label": "Slab", "d": "'Zilla Slab',serif", "b": "'IBM Plex Sans',sans-serif", "q": "Zilla+Slab:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700"}, "techno": {"label": "Techno", "d": "'Chakra Petch',sans-serif", "b": "'Barlow',sans-serif", "q": "Chakra+Petch:wght@400;600;700&family=Barlow:wght@400;500;600;700"}},
+  cur() { return this.LIST[CFG.font] ? CFG.font : 'studio'; },
+  url(q) { return `https://fonts.googleapis.com/css2?family=${q}&display=swap`; },
+  apply() {
+    const id = this.cur(), de = document.documentElement, f = this.LIST[id];
+    let l = document.getElementById('mkcFont');
+    if (!f.q) { de.removeAttribute('data-font'); if (l) l.remove(); }
+    else {
+      if (!l) { l = document.createElement('link'); l.rel = 'stylesheet'; l.id = 'mkcFont'; document.head.appendChild(l); }
+      const u = this.url(f.q); if (l.getAttribute('href') !== u) l.href = u;
+      de.setAttribute('data-font', id);
+    }
+    // tab labels change width with the font: refit the top menu once the faces arrive
+    const refit = () => { if (typeof DockFit !== 'undefined') DockFit.run(); };
+    refit(); try { document.fonts.ready.then(refit); setTimeout(refit, 1200); } catch (e) { refit(); }
+  },
+  // previews in Settings: every face, cut down to the few letters each card shows
+  preview() {
+    if (document.getElementById('mkcFontPv')) return;
+    const fams = Object.values(this.LIST).filter((f) => f.q).map((f) => f.q).join('&family=');
+    const l = document.createElement('link'); l.rel = 'stylesheet'; l.id = 'mkcFontPv';
+    l.href = `https://fonts.googleapis.com/css2?family=${fams}&display=swap&text=${encodeURIComponent('Film nightAaBbGg Studio Editorial Classic Wide Condensed Rounded Deco Slab Techno')}`;
+    document.head.appendChild(l);
+  },
+  html() {
+    const cur = this.cur();
+    return `<div class="fnt-grid" role="radiogroup" aria-label="Font">${Object.entries(this.LIST).map(([id, f]) => `<button type="button" class="fnt-opt${id === cur ? ' on' : ''}" data-nav data-font="${id}" role="radio" aria-checked="${id === cur}"><span class="fs" style="font-family:${f.d}">Film night</span><span class="fb" style="font-family:${f.b}">${f.label}</span></button>`).join('')}</div>`;
+  },
+  bind() {
+    const box = $('#setBody .fnt-grid'); if (!box) return;
+    this.preview();
+    $$('[data-font]', box).forEach((b) => b.addEventListener('click', () => {
+      setCfg('font', b.dataset.font);
+      $$('[data-font]', box).forEach((x) => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-checked', on); });
+    }));
+  },
+  init() {
+    const ap = secById('appearance');
+    if (ap) {
+      const rows = ap.rows;
+      ap.rows = () => {
+        const r = typeof rows === 'function' ? rows() : rows;
+        const i = r.findIndex((d) => d && d.group === 'Text');
+        const add = [{ group: 'Font' }, { html: () => this.html() }];
+        return i < 0 ? [...r, ...add] : [...r.slice(0, i), ...add, ...r.slice(i)];
+      };
+      const bind = ap.bind;
+      ap.bind = () => { if (bind) bind(); this.bind(); };
+    }
+    CFG_HOOKS.push((k) => { if (k === 'font') this.apply(); });
+    // a font picked on another device arrives with the account settings
+    if (typeof applyAll === 'function') { const aa = applyAll; window.applyAll = function () { const r = aa.apply(this, arguments); try { AppFont.apply(); } catch (e) { /* cosmetic */ } return r; }; }
+    this.apply();
+  },
+};
+AppFont.init();
 </script>
 </body>
 </html>
