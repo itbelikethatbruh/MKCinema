@@ -5,7 +5,7 @@ name: README stats
 # - stats.svg: latest release, app downloads and commits from the GitHub API
 # - marquee.svg: "Now showing", a major 2025-2026 film, a new one each day
 #
-# Security (SEC-N-13): actions are pinned to full commit SHAs, pip and npm installs are pinned
+# Security: actions are pinned to full commit SHAs, pip and npm installs are pinned
 # and hash-checked, and the work is split in two jobs. "draw" runs the third-party code
 # (fonttools, pillow, brotli, fonts) with a read-only token. "publish" holds the write token and
 # runs no third-party code: it only pushes the two finished images.

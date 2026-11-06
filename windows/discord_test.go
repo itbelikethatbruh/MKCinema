@@ -2,7 +2,7 @@ package main
 
 import "testing"
 
-// TR-NAT-01: the page sends fractional milliseconds; they must not make the status fail.
+// the page sends fractional milliseconds; they must not make the status fail.
 func TestParseActivityFractionalTimes(t *testing.T) {
 	a, err := parseActivity(`{"title":"Film","start":1762430000000.678,"end":1762437200000.2,"paused":false}`)
 	if err != nil {

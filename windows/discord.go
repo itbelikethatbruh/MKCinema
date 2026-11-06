@@ -30,7 +30,7 @@ type activity struct {
 }
 
 // parseActivity reads the page's status. The page works out start and end from the video's current time, so they
-// arrive with fractions of a millisecond (TR-NAT-01): they are read as numbers and rounded.
+// arrive with fractions of a millisecond: they are read as numbers and rounded.
 func parseActivity(raw string) (activity, error) {
 	var a activity
 	if err := json.Unmarshal([]byte(raw), &a); err != nil {

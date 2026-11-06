@@ -93,7 +93,7 @@ public class MainActivity extends Activity {
     volatile String key = "";
     /** the key reaches the page before its scripts run (androidx.webkit document-start script), or only after it loads */
     boolean docStart;
-    /** OPT-20: TV_JS runs once per page load */
+    /** TV_JS runs once per page load */
     boolean tvJsDone;
     SpeechRecognizer recognizer;
     String voiceLang;
@@ -235,7 +235,7 @@ public class MainActivity extends Activity {
     }
 
     static boolean appHost(String h) { for (String a : APP_HOSTS) if (a.equalsIgnoreCase(h)) return true; return false; }
-    /** TR-NAT-09: links to the web app on pages.dev or app.mkcinema.app (any page), or to mkcinema.app's front page */
+    /** links to the web app on pages.dev or app.mkcinema.app (any page), or to mkcinema.app's front page */
     static boolean ourLink(Uri u) {
         String sc = u.getScheme() == null ? "" : u.getScheme().toLowerCase(Locale.US), h = u.getHost() == null ? "" : u.getHost();
         if (!"https".equals(sc) && !"http".equals(sc)) return false;
@@ -261,7 +261,7 @@ public class MainActivity extends Activity {
     /** Keeps MKCinema pages in the app; sends players, stores and other sites to the right app. */
     boolean route(Uri u) {
         String sc = u.getScheme() == null ? "" : u.getScheme();
-        // SEC-N-09: only https://mkcinema.pages.dev stays as it is; http:// and the other homes of the web app open there
+        // only https://mkcinema.pages.dev stays as it is; http:// and the other homes of the web app open there
         if ("https".equals(sc) && HOST.equals(u.getHost())) return false;
         if (ourLink(u)) { web.loadUrl(inApp(u)); return true; }
         if ("stremio".equals(sc)) { web.evaluateJavascript("window.MKInstall&&MKInstall(" + JSONObject.quote(u.toString()) + ")", null); return true; }
@@ -409,7 +409,7 @@ public class MainActivity extends Activity {
 
     /** Voice search for the page: WebViews have no Web Speech API, so the app runs the system speech recognizer. */
     class Bridge {
-        /** SEC-N-03 / TR-NAT-06: a call counts only with this WebView's key (which only MKCinema's own page has) while
+        /** a call counts only with this WebView's key (which only MKCinema's own page has) while
             the main page is MKCinema. The page never passes the key itself: BRIDGE_JS wraps every method. */
         boolean ok(String k) {
             String mine = key;
@@ -510,7 +510,7 @@ public class MainActivity extends Activity {
             return true;
         }
         /** Updates: downloads the new APK and opens the system installer over this app; settings and sign-in stay.
-            1.8.1 (SEC-N-07): only from MKCinema's own download addresses, and only an APK signed with this app's key. */
+            1.8.1: only from MKCinema's own download addresses, and only an APK signed with this app's key. */
         @JavascriptInterface public boolean update(String k, String url) {
             if (!ok(k)) return false;
             if (!updateUrlOk(url)) { js("window.toast&&toast('Update rejected: that is not an MKCinema download','err',6000)"); return false; }
@@ -533,7 +533,7 @@ public class MainActivity extends Activity {
             }
             return false;
         }
-        /** 1.8.1 (TR-NAT-05): the Exit button of the TV's "Leaving MKCinema?" prompt */
+        /** 1.8.1: the Exit button of the TV's "Leaving MKCinema?" prompt */
         @JavascriptInterface public void exit(String k) { if (ok(k)) runOnUiThread(MainActivity.this::finishAndRemoveTask); }
     }
 
@@ -582,7 +582,7 @@ public class MainActivity extends Activity {
         return l.startsWith("https://") || l.startsWith("http://");
     }
 
-    /** SEC-N-09: plain http:// from the page goes only to this device and the home network (Jellyfin, Emby, the torrent
+    /** plain http:// from the page goes only to this device and the home network (Jellyfin, Emby, the torrent
         engine on 127.0.0.1). Elsewhere only pictures and video may load over http, like in a browser: scripts, frames
         and data are blocked, so nobody on the network can rewrite what MKCinema runs or reads. */
     static WebResourceResponse cleartext(WebResourceRequest r) {
@@ -615,7 +615,7 @@ public class MainActivity extends Activity {
         return !h.contains(".");
     }
 
-    /** SEC-N-07: updates come only over https from MKCinema's site or this project's GitHub releases */
+    /** updates come only over https from MKCinema's site or this project's GitHub releases */
     static boolean updateUrlOk(String url) {
         try {
             if (url == null) return false;
@@ -652,7 +652,7 @@ public class MainActivity extends Activity {
         } catch (Exception e) { web.evaluateJavascript("window.toast&&toast('The update could not start','err',6000)", null); }
     }
 
-    /** SEC-N-07: copies the finished download into the app's private storage (no other app can swap it there), checks
+    /** copies the finished download into the app's private storage (no other app can swap it there), checks
         it is MKCinema signed with this app's key, and only then opens the installer on that copy (UpdateFiles). */
     void finishUpdate(DownloadManager dm, long id) {
         File apk = UpdateFiles.file(this);

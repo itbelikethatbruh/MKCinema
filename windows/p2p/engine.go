@@ -6,7 +6,7 @@
 //
 // Each torrent is stored in its own folder named after its info hash (<dataDir>/p2p/<40 hex>), and the engine only
 // ever deletes folders it built from a hash. Names inside a torrent's metadata are never used to pick what to delete
-// (SEC-N-01: a torrent named "../../.." used to make it delete the user's home folder).
+// (a torrent named "../../.." used to make it delete the user's home folder).
 package p2p
 
 import (

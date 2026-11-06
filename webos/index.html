@@ -31,7 +31,7 @@ document.getElementById('retry').onclick = go;
 document.addEventListener('keydown', function (e) {
   if (e.keyCode === 13) go();
   // Back on the offline screen closes the app. webOSSystem is built into the TV's web engine; webOS.platformBack
-  // only exists when webOSTV.js is loaded, which this launcher doesn't need (TR-NAT-10).
+  // only exists when webOSTV.js is loaded, which this launcher doesn't need.
   if (e.keyCode === 461) {
     e.preventDefault();
     if (window.webOSSystem && webOSSystem.close) webOSSystem.close();

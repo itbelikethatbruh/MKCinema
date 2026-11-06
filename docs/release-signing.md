@@ -88,7 +88,7 @@ SmartScreen and Gatekeeper warnings needs real code signing. MKCinema is free fo
 **Windows**
 - **SignPath Foundation (free for open-source projects)**: recommended. MKCinema is GPL-3.0, which qualifies. Their
   conditions: the exe must be built by a CI workflow from the public source (a GitHub Actions job building
-  `windows/`, which SEC-N-06 wants anyway), maintainers use 2FA, and the signing request is approved in their portal.
+  `windows/`), maintainers use 2FA, and the signing request is approved in their portal.
   The certificate is issued to "SignPath Foundation" on behalf of the project. Apply at signpath.org.
 - **Azure Trusted Signing (Microsoft Artifact Signing)**: about USD 10 per month (Basic). Needs identity validation;
   check current eligibility for individuals in your country.

@@ -1,4 +1,4 @@
-# Pinned with hashes (SEC-N-13). Install with: pip install --require-hashes -r requirements.txt
+# Pinned with hashes. Install with: pip install --require-hashes -r requirements.txt
 # To update: pick new versions and copy every sha256 from https://pypi.org/project/<name>/<version>/#files
 fonttools==4.67.0 \
     --hash=sha256:0781fe22583529e1e98bb8a3a33040632e202a4c427ed7e65412c41a21b8ebcb \

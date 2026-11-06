@@ -60,7 +60,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         Intent i = getIntent();
         url = i.getStringExtra("url"); subUrl = i.getStringExtra("subUrl");
-        // 1.8.1 (SEC-N-03): films come over http(s), or from this app's own downloads folders; subtitles the same
+        // 1.8.1: films come over http(s), or from this app's own downloads folders; subtitles the same
         if (!allowed(url, false) || (subUrl != null && !subUrl.isEmpty() && !allowed(subUrl, true))) { setResult(RESULT_CANCELED, new Intent().putExtra("error", "blocked")); finish(); return; }
         // request headers some sources need (Referer, User-Agent...), sent by the player itself
         try { String hj = i.getStringExtra("headers"); if (hj != null && !hj.isEmpty()) { org.json.JSONObject ho = new org.json.JSONObject(hj); java.util.Iterator<String> it = ho.keys(); while (it.hasNext()) { String k = it.next(); hdr.put(k, ho.optString(k)); } } } catch (Exception ignored) { }
@@ -342,7 +342,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
             } catch (Exception ignored) { }
         }
         if (hideAt > 0 && System.currentTimeMillis() > hideAt && eng != null && eng.playing()) { bar.setVisibility(View.GONE); hideAt = 0; if (sel >= 0) { sel = -1; paintOpts(); } }
-        // OPT-20: nothing to update while the bar is hidden; show() starts it again
+        // nothing to update while the bar is hidden; show() starts it again
         if (bar.getVisibility() == View.VISIBLE) h.postDelayed(this, 500);
     } };
     static String fmt(int ms) { int s = Math.max(0, ms / 1000); return s >= 3600 ? String.format(java.util.Locale.US, "%d:%02d:%02d", s / 3600, s / 60 % 60, s % 60) : String.format(java.util.Locale.US, "%d:%02d", s / 60, s % 60); }

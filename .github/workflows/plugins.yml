@@ -1,6 +1,6 @@
 name: Plugin gallery
 
-# SEC-N-08 / SEC-W-12: the app only shows the gallery when plugins/registry.json carries a valid Ed25519
+# the app only shows the gallery when plugins/registry.json carries a valid Ed25519
 # signature (plugins/registry.json.sig) from the key whose public half is built into the app.
 # - Pull requests: check that every checksum in registry.json matches its file (no secrets, read-only).
 # - Merges to main: sign registry.json with the PLUGIN_SIGNING_KEY secret and commit the new signature.

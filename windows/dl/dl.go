@@ -93,7 +93,7 @@ type startReq struct {
 	Meta    json.RawMessage   `json:"meta"`
 }
 
-// VideoExt are the only file types a download is saved as or opened with (SEC-N-02): anything else is saved as .mkv,
+// VideoExt are the only file types a download is saved as or opened with: anything else is saved as .mkv,
 // so a page can never drop an .exe, .lnk, .hta or script into Videos\MKCinema or have Windows run it.
 var VideoExt = map[string]bool{".mkv": true, ".mp4": true, ".m4v": true, ".webm": true, ".avi": true, ".mov": true, ".ts": true, ".m2ts": true}
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 1.8.1 (SEC-N-09). Plain http:// stays allowed for the app as a whole because Android can't limit it to address
+<!-- 1.8.1. Plain http:// stays allowed for the app as a whole because Android can't limit it to address
      ranges here, and MKCinema needs it for Jellyfin/Emby servers on the home network, the torrent engine on 127.0.0.1
      and films that addons serve over http (played by the TV player). The page itself is limited in code instead:
      MainActivity.cleartext() lets http:// through only to this device and the home network, and elsewhere only

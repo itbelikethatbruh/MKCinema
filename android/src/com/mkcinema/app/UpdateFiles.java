@@ -11,7 +11,7 @@ import android.provider.OpenableColumns;
 import java.io.File;
 import java.io.FileNotFoundException;
 
-/** 1.8.1 (SEC-N-07): hands the checked update APK, kept in the app's private storage, to the system installer.
+/** 1.8.1: hands the checked update APK, kept in the app's private storage, to the system installer.
     Read-only, one file, not exported: the installer gets access only through the one-time grant on the install intent. */
 public class UpdateFiles extends ContentProvider {
     static File file(Context c) { return new File(new File(c.getCacheDir(), "update"), MainActivity.UPD_FILE); }

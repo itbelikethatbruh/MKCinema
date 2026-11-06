@@ -10,8 +10,8 @@ import (
 	"github.com/anacrolix/torrent/metainfo"
 )
 
-// evilTorrent builds a one-piece torrent with the given name and file path, like the SEC-N-01 attack.
-func evilTorrent(t *testing.T, name string, path []string, data string) *metainfo.MetaInfo {
+// makeTorrent builds a one-piece torrent with the given name and file path.
+func makeTorrent(t *testing.T, name string, path []string, data string) *metainfo.MetaInfo {
 	t.Helper()
 	sum := sha1.Sum([]byte(data))
 	info := metainfo.Info{
@@ -36,13 +36,13 @@ func mustExist(t *testing.T, p string) {
 
 // A torrent named "../../.." (or "../..") must never make the engine delete anything outside its cache, neither
 // when it is evicted (Keep: 1) nor when the engine stops.
-func TestEvilNameCannotDeleteOutsideCache(t *testing.T) {
+func TestNamesStayInCache(t *testing.T) {
 	for _, tc := range []struct {
 		name string
 		path []string
 	}{
-		{"../../..", []string{"a", "p2p", "x"}}, // the audit's example
-		{"../..", []string{"a", "p2p", "x"}},    // climbs exactly back into the cache with the old storage
+		{"../../..", []string{"a", "p2p", "x"}},
+		{"../..", []string{"a", "p2p", "x"}}, // climbs exactly back into the cache with the old storage
 		{"..", []string{"p2p", "x"}},
 		{"../../../../../../../../..", []string{"x"}},
 	} {
@@ -63,7 +63,7 @@ func TestEvilNameCannotDeleteOutsideCache(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			mi := evilTorrent(t, tc.name, tc.path, "evil")
+			mi := makeTorrent(t, tc.name, tc.path, "odd")
 			info, err := mi.UnmarshalInfo()
 			if err != nil {
 				t.Fatal(err)
@@ -72,13 +72,13 @@ func TestEvilNameCannotDeleteOutsideCache(t *testing.T) {
 				t.Fatalf("safeInfo accepted name %q", tc.name)
 			}
 			// add it the way the engine would (the storage may refuse it; either way it is remembered for eviction)
-			evil := mi.HashInfoBytes()
+			odd := mi.HashInfoBytes()
 			if tor, err := e.cl.AddTorrent(mi); err == nil {
-				evil = tor.InfoHash()
+				odd = tor.InfoHash()
 			}
-			e.remember(evil)
+			e.remember(odd)
 			// a second, normal torrent evicts the first (Keep: 1)
-			good := evilTorrent(t, "Film", []string{"Film.mkv"}, "good")
+			good := makeTorrent(t, "Film", []string{"Film.mkv"}, "good")
 			gt, err := e.cl.AddTorrent(good)
 			if err != nil {
 				t.Fatal(err)
@@ -87,15 +87,15 @@ func TestEvilNameCannotDeleteOutsideCache(t *testing.T) {
 			for _, s := range sentinels {
 				mustExist(t, s)
 			}
-			if _, ok := e.cl.Torrent(evil); ok {
-				t.Fatal("evil torrent was not dropped")
+			if _, ok := e.cl.Torrent(odd); ok {
+				t.Fatal("odd torrent was not dropped")
 			}
 			// the normal torrent lives in its hash folder, and evicting it deletes that folder
 			gdir := filepath.Join(e.dir, gt.InfoHash().HexString())
 			if !inside(e.dir, gdir) {
 				t.Fatal("hash folder not inside the cache")
 			}
-			third := evilTorrent(t, "Other", []string{"Other.mkv"}, "more")
+			third := makeTorrent(t, "Other", []string{"Other.mkv"}, "more")
 			tt, err := e.cl.AddTorrent(third)
 			if err != nil {
 				t.Fatal(err)

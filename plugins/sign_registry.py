@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sign plugins/registry.json with the gallery's Ed25519 key (SEC-N-08 / SEC-W-12).
+"""Sign plugins/registry.json with the gallery's Ed25519 key.
 
 The app downloads registry.json and registry.json.sig and checks the signature against the public key built into
 the app (Plugins.PUBKEY in index.html, the same key as registry-signing.pub here) before it shows the gallery.

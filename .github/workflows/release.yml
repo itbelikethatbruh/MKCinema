@@ -3,7 +3,7 @@ name: Release
 # Publishes a GitHub release with the app files from site/download and the notes in
 # .github/release/<tag>.md. Run it from Actions › Release › Run workflow, or push a tag like v1.0.
 #
-# SEC-N-06: every release also gets
+# every release also gets
 # - SHA256SUMS, a list of the SHA-256 of every file, attached to the release and printed in the notes
 # - a build provenance attestation for every file (check with: gh attestation verify <file> -R <owner>/<repo>)
 # How users check a download is in SECURITY.md ("Verifying downloads").

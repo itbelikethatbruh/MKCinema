@@ -128,8 +128,7 @@ func main() {
 	w := webview2.NewWithOptions(webview2.WebViewOptions{
 		AutoFocus: true,
 		DataPath:  dataDir,
-		// Bound Go functions (mkP2P, mkPresence, mkDL) exist and answer only on MKCinema's own pages (SEC-N-02,
-		// TR-NAT-07), and run off the window's thread so a slow call can't freeze it.
+		// Bound Go functions (mkP2P, mkPresence, mkDL) exist and answer only on MKCinema's own pages, and run off the window's thread so a slow call can't freeze it.
 		AllowSource:   origins.AppURL,
 		BindGuard:     pageGuardJS,
 		AsyncBindings: true,

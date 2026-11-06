@@ -1,4 +1,4 @@
-// Package origins is the one list of web addresses MKCinema's desktop code trusts (TR-NAT-09). The installed apps
+// Package origins is the one list of web addresses MKCinema's desktop code trusts. The installed apps
 // open mkcinema.pages.dev (their saved sign-in and settings live on that origin); the web app's public home is
 // app.mkcinema.app. Both are accepted everywhere a page is checked: the local p2p and download servers and the
 // Windows bridge.
@@ -35,7 +35,7 @@ func AppURL(raw string) bool {
 
 // Allowed reports whether a request's Origin header may read from the local servers. Origins are compared exactly:
 // https on the app's own hosts, and plain http on localhost / 127.0.0.1 (any port) for local testing. Pages preview
-// branches (*.mkcinema.pages.dev) and look-alikes such as http://localhost.evil.com are refused (SEC-N-12).
+// branches (*.mkcinema.pages.dev) and look-alikes such as http://localhost.evil.com are refused.
 func Allowed(o string) bool {
 	for _, h := range Hosts {
 		if o == "https://"+h {

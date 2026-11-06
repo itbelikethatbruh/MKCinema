@@ -21,7 +21,7 @@ if (!icon.isNil()) app.applicationIconImage = icon;
 
 // Only these kinds of links are handed to other apps: web and mail links, magnet and Stremio links, and the video
 // players the web app offers. file:, smb:, afp: and any other scheme are dropped, so a link can never open a file,
-// a network share or a program (SEC-N-05).
+// a network share or a program.
 const OUTSIDE = ['http', 'https', 'mailto', 'magnet', 'stremio', 'vlc', 'vlc-x-callback', 'iina', 'infuse', 'mpv', 'potplayer', 'outplayer', 'nplayer-http', 'nplayer-https'];
 function openOutside(url) {
   const scheme = url.isNil() || url.scheme.isNil() ? '' : url.scheme.js.toLowerCase();
@@ -86,7 +86,7 @@ const bridgeJs = "(function(){if(location.protocol!=='https:'||" + JSON.stringif
   + "window.MKDesktop=d;})();";
 
 // Only MKCinema's own top-level page may use the bridge: not frames inside it (trailers and their ads), not other
-// sites (SEC-N-11, TR-NAT-07).
+// sites.
 function fromApp(msg) {
   try {
     const f = msg.frameInfo;

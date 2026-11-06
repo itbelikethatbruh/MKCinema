@@ -1,6 +1,6 @@
 name: Android APK
 
-# SEC-N-04 / SEC-N-06: builds and signs MKCinema.apk from the source in android/, with the signing key
+# builds and signs MKCinema.apk from the source in android/, with the signing key
 # taken from secrets instead of a shared folder. Run it from Actions › Android APK › Run workflow.
 # The signed APK and its SHA-256 are kept as a workflow artifact for 7 days, with a provenance attestation.
 #
