@@ -21,7 +21,7 @@ code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
 <main>
 <a class="brand" href="./">MK<em>CINEMA</em></a>
 <h1>Privacy policy</h1>
-<p class="sub">Last updated 5 November 2026. This page covers the MKCinema web app at app.mkcinema.app (also reachable at mkcinema.pages.dev) and the MKCinema apps for Android, Android TV, Fire TV, LG webOS, Windows, Mac and Linux, which all load that web app.</p>
+<p class="sub">Last updated 6 November 2026. This page covers the MKCinema web app at app.mkcinema.app (also reachable at mkcinema.pages.dev) and the MKCinema apps for Android, Android TV, Fire TV, LG webOS, Samsung, Windows, Mac and Linux, which all load that web app.</p>
 
 <div class="card"><b>The short version.</b> MKCinema works without an account. If you make one, your library and settings sync through it. We don't sell data, show ads or track you across sites. You can delete your account and everything synced with it in the app at any time.</div>
 
@@ -38,6 +38,9 @@ code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
 <h2>Logs you choose to send</h2>
 <p>Nothing is sent unless you press <b>Settings › Help › Send log</b>. A log contains your app version, device and browser type, your settings with all keys and links removed, the names of your addon hosts, and recent error messages. It never contains passwords, debrid or service keys, addon links or stream links. Each log gets a 6-character code, and only the developer can open it. To have a log removed, open a GitHub issue that includes its code.</p>
 
+<h2>Watch parties, phone remote and voice chat</h2>
+<p>When you start or join a watch party, pair a phone as a remote, or use voice chat, the devices find each other through Supabase Realtime, which passes short messages along (play, pause, position, chat) and doesn't keep them. Where the network allows, the devices then talk to each other directly. To set up that direct link they ask public STUN servers run by Google and Cloudflare for their own internet address. As with any video call, the other people in the party can see your IP address. Voice is sent live between devices and never recorded or stored.</p>
+
 <h2>Visit counts</h2>
 <p>The web app counts visits with <a href="https://www.cloudflare.com/web-analytics/" rel="noopener">Cloudflare Web Analytics</a>. It records the page, the site you came from, your browser, your country and the load speed. It uses no cookies and no identifiers. You can turn it off in <b>Settings › Data › Share anonymous visit counts</b>.</p>
 
@@ -47,9 +50,17 @@ code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
 <li>The addons and debrid services you add yourself.</li>
 <li>Title and artwork sources: Cinemeta and Metahub, Kitsu for anime, and TMDB or Fanart.tv if you add a key.</li>
 <li>Trailers from Apple (iTunes) and YouTube. Skip-intro times from TheIntroDB. Subtitles from the subtitle addons you install, such as OpenSubtitles.</li>
-<li>Services you connect yourself: Trakt, Simkl, AniList, MyAnimeList and MDBList.</li>
+<li>Services you connect yourself: Trakt, Simkl, AniList, MyAnimeList and MDBList, your own Plex or Jellyfin server, and a custom poster service such as Pictorium if you add its link.</li>
+<li>Extra details when you use them: OMDb and RPDB scores if you add a key, Wikipedia and Wikidata for X-Ray, AniSkip, Jikan and arm.haglund.dev for anime episode matching, and Cloudflare's speed test server for <b>Test my connection</b>.</li>
+<li>Fonts from Google Fonts and code libraries from cdnjs, jsDelivr and unpkg. Like any website, these servers see your IP address when they send the files.</li>
 <li>Subtitle translation. When no subtitle exists in your language and your browser has no built-in translator, the subtitle lines (and nothing else) are sent to MKCinema’s translation service at subs.mkcinema.app, which runs on Cloudflare Workers AI. Translations are cached by their text so the same file is not translated twice; nothing about you is stored. Turn it off in <b>Settings › Subtitles</b>.</li>
 <li>Two small relays run by MKCinema on Supabase. They forward requests for services that block browsers, which are some debrid services and MyAnimeList. Requests pass through them and nothing is stored.</li>
+</ul>
+
+<h2>Extras in the computer and Android apps</h2>
+<ul>
+<li><b>Torrent engine</b> (Windows and Android apps, off by default). If you turn it on, your device joins BitTorrent swarms to fetch the file, and other people in each swarm can see your IP address.</li>
+<li><b>Discord status</b> (Windows app, off by default). If you turn it on, the title you're watching is sent to the Discord app on your computer, which shows it on your profile.</li>
 </ul>
 
 <h2>New-episode notifications</h2>
@@ -62,11 +73,19 @@ code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
 <li><b>Can't sign in?</b> Open an issue on <a href="https://github.com/itbelikethatbruh/MKCinema/issues" rel="noopener">GitHub</a> and we'll explain how to confirm the account is yours.</li>
 </ul>
 
+<h2>Your choices</h2>
+<ul>
+<li><b>See or move your data:</b> Settings › Data › Setup Cloner exports your library, addons and settings as one file or code.</li>
+<li><b>Correct it:</b> change anything in the app; with Cloud sync on, your account updates within seconds.</li>
+<li><b>Stop syncing:</b> turn off Cloud sync or key syncing, or sign out. Nothing new is uploaded after that.</li>
+<li><b>Delete it:</b> see "Deleting your data" above.</li>
+</ul>
+
 <h2>Children</h2>
 <p>MKCinema isn't directed at children under 13. Kids seats exist so a parent can limit what a child sees on a shared device.</p>
 
 <h2>Changes</h2>
-<p>If this policy changes, the date at the top changes too. Questions go to <a href="https://github.com/itbelikethatbruh/MKCinema/issues" rel="noopener">GitHub issues</a>.</p>
+<p>The rules for using MKCinema are in the <a href="terms.html">terms of use</a>. If this policy changes, the date at the top changes too. Questions go to <a href="https://github.com/itbelikethatbruh/MKCinema/issues" rel="noopener">GitHub issues</a>.</p>
 </main>
 </body>
 </html>

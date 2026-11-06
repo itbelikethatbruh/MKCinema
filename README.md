@@ -401,6 +401,7 @@ sh package.sh   # writes build/mkcinema_1.0_amd64.deb and the .tar.gz
 <summary><b>Does MKCinema provide movies or shows?</b></summary>
 
 No. MKCinema hosts and links to no content. It plays what your own addons return, plus official trailers.
+See the [terms of use](https://app.mkcinema.app/terms.html) and the [privacy policy](https://app.mkcinema.app/privacy.html), also in the app under Settings › About & licenses.
 </details>
 
 <details>
