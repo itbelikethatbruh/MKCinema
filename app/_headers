@@ -17,3 +17,7 @@
 
 /version.json
   Cache-Control: no-store
+
+# The Addon looks showcase is a public Stremio addon: any app may read it
+/addons/showcase/*
+  Access-Control-Allow-Origin: *
