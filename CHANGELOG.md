@@ -2,6 +2,14 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.32.1 (2026-11-06)
+
+- **Balanced buttons on phones.** On a phone held upright, the featured banner on Home shows Smart Play on its own row with Trailer, Details and Watchlist as three even buttons underneath (icon over label), instead of two half-width rows with Watchlist left alone. Film pages use the same layout: every secondary button (Trailer, Watchlist, Share, Lists, Download, IMDb) shares one even row, or two rows of three when there are six. Heights are fixed in CSS and follow the Text size setting.
+- **Phone tab bar.** Long translated labels (for example German "Mediathek") end in an ellipsis instead of running into the next tab.
+- **Settings on phones.** Each section's description now uses the full width under the title instead of a narrow column beside the icon, and the account cards lose a layer of padding.
+- **Faster start.** The Arrange Home icon was missing from the built-in icon set, so every start downloaded the full 355 KB icon library from unpkg. It is included now.
+- **Battery.** The network logos on Home no longer float in a loop on phones (30 endless animations over layered shadows, running even off screen). They still lift when touched. TVs already worked this way.
+
 ## Web app 2.31.2 (2026-11-06)
 
 - **Credit for Pictorium.** The Custom poster URL setting, the What's new card and the credits list now credit Pictorium's creator, [Eful97](https://github.com/Eful97), who suggested the integration. The README and the website mention it too.
