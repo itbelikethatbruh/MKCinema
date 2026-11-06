@@ -3821,7 +3821,7 @@ const AudioPref = {
   ok(s) {
     const want = CFG.audioOnly; if (!want || want === 'any' || !s._tel || s._tel.isTrailer || s._tel.kind === 'yt') return true;
     const { langs, multi } = this.langs(s);
-    return !langs.size || langs.has(want) || multi;
+    return !langs.size || langs.has(want) || multi || (!!CFG.srAudio && CFG.srAudio !== 'any' && langs.has(CFG.srAudio));
   },
 };
 function visibleStreams(streams) {
@@ -8214,7 +8214,7 @@ const SECTIONS = [
     { key: 'castOpen', label: 'Phone remote', help: 'Scan a QR code and your phone becomes a remote for this screen: touchpad or D-pad, play and seek, and a keyboard or your voice for search. Phones stay paired.', type: 'button', text: 'Pair a phone', icon: 'qr-code', run: () => { closeLayer('settings'); Cast.open('remote'); } },
     { key: 'remoteNew', label: 'Unpair all phones', help: 'Makes a new pairing code. Phones paired before stop working until they scan the new one.', type: 'button', text: 'New code', icon: 'refresh-cw', run: () => Remote.renew() },
     { key: 'remoteJoin', label: 'Use this phone as a remote', help: 'Opens MKCinema Remote, where you type the code shown on the TV. It remembers the TV for next time.', type: 'button', text: 'Open remote', icon: 'smartphone', run: () => Remote.join('') },
-    { key: 'partyOpen', label: 'Watch party', help: 'Synced playback, voice chat that lowers the film while people talk, text chat and reactions. Works peer to peer; some strict networks (some offices and mobile carriers) block direct connections.', type: 'button', text: Party.code ? `Party ${Party.code}` : 'Start or join', icon: 'users', run: () => { closeLayer('settings'); Party.openPanel(); } },
+    { key: 'partyOpen', label: 'Watch party', help: 'Synced playback, voice chat with its own volume (or on your phone), text chat and reactions. Works peer to peer; some strict networks (some offices and mobile carriers) block direct connections.', type: 'button', text: Party.code ? `Party ${Party.code}` : 'Start or join', icon: 'users', run: () => { closeLayer('settings'); Party.openPanel(); } },
     { key: 'install', label: 'Install as an app', help: PWA.installed() ? 'MKCinema is running as an installed app.' : 'Adds MKCinema to your home screen or dock, with its own window and faster start.', type: 'button', text: 'Install', icon: 'download', run: () => PWA.install() },
   ] },
   { id: 'home', icon: 'layout-dashboard', label: 'Home', intro: 'Choose what MKCinema opens on and what your Home shows.', rows: () => [
@@ -8496,7 +8496,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.22.1';
+const APP_VERSION = '2.24.0';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -10191,15 +10191,29 @@ body.tvc-on #video{opacity:.18}
 .d-honours{display:flex;align-items:flex-start;gap:8px;margin:10px 0 0;font-size:13px;color:var(--mute)}
 .d-honours svg.lucide{width:16px;height:16px;flex:none;color:var(--champ,var(--gold));margin-top:1px}
 .d-honours b{color:var(--ink);font-weight:600}
-.wtw{margin-top:18px}
-.wtw .sec-title{margin-bottom:8px}
-.wtw-r{font-family:var(--f-mono);font-size:11px;color:var(--dim);font-weight:400}
-.wtw-g{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0}
-.wtw-l{font-size:12px;color:var(--dim);width:84px;flex:none}
-.wtw-p{display:inline-flex;align-items:center;gap:8px;padding:4px 10px 4px 4px;border-radius:999px;border:1px solid var(--line);color:var(--ink);text-decoration:none;font-size:12.5px}
-.wtw-p:hover,.wtw-p.nav-focus{border-color:var(--line-hi)}
-.wtw-p img{width:24px;height:24px;border-radius:6px;display:block}
-.wtw-src{font-size:11px;color:var(--dim);margin:6px 0 0}
+.wtw{margin:18px 0 18px}
+.wtw-d{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.wtw-sum{list-style:none;display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;min-height:48px}
+.wtw-sum::-webkit-details-marker{display:none}
+.wtw-sum:hover,.wtw-sum.nav-focus{background:rgba(255,255,255,.04)}
+.wtw-h{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.wtw-h b{font-size:14px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px}
+.wtw-h b svg{width:16px;height:16px;color:var(--dim)}
+.wtw-h small{font-size:12px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wtw-r{font-family:var(--f-mono);font-size:10.5px;color:var(--dim);font-weight:400}
+.wtw-stack{display:flex;flex:none}
+.wtw-stack img{width:26px;height:26px;border-radius:7px;border:2px solid var(--bg,#0b0b0c);display:block;margin-left:-8px}
+.wtw-stack img:first-child{margin-left:0}
+.wtw-chev{width:18px;height:18px;color:var(--dim);flex:none;transition:transform .2s ease}
+.wtw-d[open] .wtw-chev{transform:rotate(180deg)}
+.wtw-list{border-top:1px solid var(--line);padding:6px 6px 8px}
+.wtw-l{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);padding:10px 10px 4px}
+.wtw-p{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;color:var(--ink);text-decoration:none;font-size:14px}
+.wtw-p:hover,.wtw-p.nav-focus{background:rgba(255,255,255,.06)}
+.wtw-p img{width:28px;height:28px;border-radius:7px;display:block;flex:none}
+.wtw-p span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wtw-p svg{width:15px;height:15px;color:var(--dim);flex:none}
+.wtw-src{font-size:11px;color:var(--dim);margin:6px 10px 0}
 
 /* Seats */
 .seat-wrap{margin:auto;display:flex;flex-direction:column;align-items:center;gap:22px;padding:24px;text-align:center}
@@ -10261,7 +10275,7 @@ body.tvc-on #video{opacity:.18}
 
 /* TV: light on dark, no fades */
 html.tv .seat.nav-focus .seat-av{box-shadow:0 0 0 3px #000,0 0 0 6px #f2f2f3}
-html.tv .x8-key.nav-focus,html.tv .sp-item.nav-focus,html.tv .at-sw.nav-focus,html.tv .pin-keys button.nav-focus,html.tv .wtw-p.nav-focus{border-color:#f2f2f3;box-shadow:inset 0 0 0 1px #f2f2f3}
+html.tv .x8-key.nav-focus,html.tv .sp-item.nav-focus,html.tv .at-sw.nav-focus,html.tv .pin-keys button.nav-focus,html.tv .wtw-p.nav-focus,html.tv .wtw-sum.nav-focus{border-color:#f2f2f3;box-shadow:inset 0 0 0 1px #f2f2f3}
 html.tv .sl-card{transition:none}
 /* kids seat: no Peak Cinema (it surfs any film) */
 .kids-seat #pkStrip{display:none!important}
@@ -11646,11 +11660,19 @@ const WhereToWatch = {
     if (!r) { box.remove(); return; }
     // each service shows once: streaming first, and rent and buy share one row (Drake: no duplicate rent/buy buttons)
     const seen = new Set(), pick = (keys) => keys.flatMap((k) => r[k] || []).filter((x) => !seen.has(x.provider_id) && seen.add(x.provider_id)).slice(0, 6);
-    const grp = [['Stream', ['flatrate']], ['Free', ['free']], ['With ads', ['ads']], ['Rent or buy', ['rent', 'buy']]].map(([l, k]) => [l, pick(k)]).filter(([, x]) => x.length);
+    // the same service once: "HBO Max Amazon Channel" and "Peacock Premium Plus" fold into HBO Max and Peacock Premium
+    const tidy = (list) => list.filter((x) => !list.some((y) => y !== x && x.provider_name.startsWith(`${y.provider_name} `)));
+    const grp = [['Stream', ['flatrate']], ['Free', ['free']], ['With ads', ['ads']], ['Rent or buy', ['rent', 'buy']]].map(([l, k]) => [l, tidy(pick(k))]).filter(([, x]) => x.length);
     if (!grp.length) { box.remove(); return; }
-    box.innerHTML = `<h3 class="sec-title"><i data-lucide="tv"></i>Where to watch <small class="wtw-r">${esc(this.region())}</small></h3>
-      ${grp.map(([l, list]) => `<div class="wtw-g"><span class="wtw-l">${l}</span>${list.map((p) => `<a class="wtw-p" href="${esc(r.link || '#')}" target="_blank" rel="noopener" data-nav title="${esc(p.provider_name)}">${p.logo_path ? `<img src="https://image.tmdb.org/t/p/w92${esc(p.logo_path)}" alt="" loading="lazy">` : ''}<span>${esc(p.provider_name)}</span></a>`).join('')}</div>`).join('')}
-      <p class="wtw-src">Availability from JustWatch, via TMDB.</p>`;
+    const all = grp.flatMap(([, x]) => x), [l0, f0] = grp[0];
+    const line = `${l0 === 'Rent or buy' ? 'Rent or buy on' : l0 === 'Stream' ? 'Stream on' : `${l0} on`} ${f0[0].provider_name}${all.length > 1 ? ` + ${all.length - 1} more` : ''}`;
+    const logo = (p, w) => (p.logo_path ? `<img src="https://image.tmdb.org/t/p/${w}${esc(p.logo_path)}" alt="" loading="lazy">` : '');
+    // one closed row with the top services' logos; it opens into a plain list
+    box.innerHTML = `<details class="wtw-d"><summary class="wtw-sum" data-nav>
+        <span class="wtw-h"><b><i data-lucide="tv"></i>Where to watch <small class="wtw-r">${esc(this.region())}</small></b><small>${esc(line)}</small></span>
+        <span class="wtw-stack">${all.slice(0, 3).map((p) => logo(p, 'w92')).join('')}</span><i data-lucide="chevron-down" class="wtw-chev"></i></summary>
+      <div class="wtw-list">${grp.map(([l, list]) => `<div class="wtw-l">${l}</div>${list.map((p) => `<a class="wtw-p" href="${esc(r.link || '#')}" target="_blank" rel="noopener" data-nav>${logo(p, 'w92')}<span>${esc(p.provider_name)}</span><i data-lucide="external-link"></i></a>`).join('')}`).join('')}
+      <p class="wtw-src">Availability from JustWatch, via TMDB.</p></div></details>`;
     icons();
   },
   init() {
@@ -12986,11 +13008,20 @@ MediaKeys.init();
    If the rules would leave nothing at all, the size, resolution and HDR limits are dropped first, then the full list is used, so a film never just refuses to play. */
 const SourceRules = {
   RES: { '4K UHD': 4, '1440p': 3.5, '1080p': 3, '720p': 2, SD: 1 },
+  isEpisode() { try { const m = (!$('#detail').hidden && D.meta) || (P.ctx && P.ctx.meta) || D.meta; return !!m && m.type === 'series'; } catch (e) { return false; } },
+  // 2.23.0 preferred audio language: +150 for a match (untagged counts as English), +60 for MULTi or Dual Audio
+  audioBonus(s, t) {
+    const want = CFG.srAudio; if (!want || want === 'any' || !t || t.isTrailer || t.kind === 'yt') return 0;
+    const { langs, multi } = AudioPref.langs(s);
+    if (langs.has(want) || (want === 'eng' && !langs.size)) return 150;
+    return multi ? 60 : 0;
+  },
   words() { return String(CFG.srWords || '').split(',').map((w) => w.trim().toLowerCase()).filter(Boolean); },
   text(s) { return [s.name, s.title, s.description, s.behaviorHints && s.behaviorHints.filename].filter(Boolean).join(' '); },
   ok(s, loose) {
     const t = s._tel; if (!t || t.isTrailer || t.kind === 'yt' || s._srv) return true;
     const gb = loose ? 0 : Number(CFG.srMaxGB) || 0; if (gb && t.sizeBytes && t.sizeBytes > gb * 1073741824) return false;
+    const mgb = loose ? 0 : Number(CFG.srMinGB) || 0; if (mgb && t.sizeBytes && t.sizeBytes < mgb * (this.isEpisode() ? 0.25 : 1) * 1073741824) return false;
     const min = loose ? 0 : this.RES[CFG.srMinRes] || 0; if (min && t.res && (this.RES[t.res] || 0) < min) return false;
     const txt = this.text(s);
     if (CFG.srNoCam !== false && (/\b(cam|camrip|hdcam|telesync|hdts|telecine|screener|dvdscr|bdscr)\b/i.test(txt) || /[\s.[(_-](ts|tc|scr|r5)[\s.\])_-]/i.test(` ${txt} `))) return false;
@@ -13009,17 +13040,19 @@ const SourceRules = {
       return loose.length ? loose : list;
     };
     const parse = Telemetry.parse.bind(Telemetry);
-    Telemetry.parse = function (s) { const t = parse(s); if (CFG.srHdr === 'prefer' && t.hdr) t.score += 60; return t; };
+    Telemetry.parse = function (s) { const t = parse(s); if (CFG.srHdr === 'prefer' && t.hdr) t.score += 60; try { t.score += SourceRules.audioBonus(s, t); } catch (e) { /* no title open */ } return t; };
     CFG_HOOKS.push((key) => { if (/^sr/.test(key)) { engine.clearCache(); if (!$('#detail').hidden && D.meta && typeof loadDetailStreams === 'function') loadDetailStreams(); } });
     SECTIONS.splice(SECTIONS.findIndex((s) => s.id === 'streams') + 1, 0, this.section());
     const g = SET_GROUPS.find(([n]) => n === 'Watching'); if (g) g[1].splice(g[1].indexOf('streams') + 1, 0, 'rules');
-    SET_BLURB.rules = 'Size, quality, no cam copies, debrid order';
+    SET_BLURB.rules = 'Size, quality, audio language, no cam copies, debrid order';
   },
   section() {
     return { id: 'rules', icon: 'sliders-horizontal', label: 'Source rules', intro: 'Decide which sources Smart Play and the source list use. If the rules would leave nothing, MKCinema falls back to every source so a film still plays.', bind: () => this.bind(), rows: () => [
       { key: 'srNoCam', label: 'Hide cam and screener copies', help: 'Recordings made in a cinema (CAM, TS, telesync) and screeners.', type: 'toggle', get: () => CFG.srNoCam !== false },
       { key: 'srMinRes', label: 'Lowest resolution', help: 'Sources below this are hidden.', type: 'select', options: [['', 'Any'], ['720p', '720p'], ['1080p', '1080p'], ['4K UHD', '4K']] },
       { key: 'srMaxGB', label: 'Largest file', help: 'Skips very large files on a slow or capped connection. 0 means no limit.', type: 'range', min: 0, max: 100, step: 5, fmt: (v) => (Number(v) ? `${v} GB` : 'No limit') },
+      { key: 'srMinGB', label: 'Smallest file', help: 'Hides very small files, which are often fakes or poor quality. Episodes use a quarter of this. Files that list no size stay.', type: 'select', options: [['', 'No limit'], ['0.2', '200 MB'], ['0.5', '500 MB'], ['1', '1 GB'], ['2', '2 GB'], ['4', '4 GB']] },
+      { key: 'srAudio', label: 'Preferred audio language', help: 'Sources in this language move to the top, so Smart Play picks them first, and the Audio language setting never hides them. MULTi and Dual Audio releases move up a little.', type: 'select', options: [['', 'No preference'], ['eng', 'English'], ['spa', 'Spanish'], ['fre', 'French'], ['ger', 'German'], ['ita', 'Italian'], ['por', 'Portuguese'], ['hin', 'Hindi'], ['tam', 'Tamil'], ['tel', 'Telugu'], ['jpn', 'Japanese'], ['kor', 'Korean'], ['rus', 'Russian'], ['ara', 'Arabic'], ['pol', 'Polish'], ['tur', 'Turkish']] },
       { key: 'srHdr', label: 'HDR and Dolby Vision', help: 'Avoid HDR on a screen that shows it washed out; prefer it on a TV that supports it.', type: 'select', options: [['', 'No preference'], ['prefer', 'Prefer HDR'], ['avoid', 'Avoid HDR']] },
       { key: 'srWords', label: 'Blocked words', help: 'Sources whose name contains any of these are hidden. Separate words with commas.', type: 'text', get: () => CFG.srWords || '', set: (v) => setCfg('srWords', v.trim()) },
       { html: () => this.debridHTML() },
@@ -17788,6 +17821,173 @@ AnimeComic.init();
 .pp-badge,.pp-word{white-space:nowrap}
 .sup-ask .pp-word b{display:inline;font-size:inherit}
 </style>
+<style id="mkc-224css">
+/* 2.24.0 party voice controls */
+.pzv{display:grid;gap:10px;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.025)}
+.pzv-row{display:flex;align-items:center;justify-content:space-between;gap:8px 14px;flex-wrap:wrap}
+.pzv-l{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--ink);min-width:0}
+.pzv-l svg{width:16px;height:16px;color:var(--mute);flex:none}
+.pzv-c{display:flex;align-items:center;gap:10px}
+input[type=range].pzv-rng{width:min(180px,44vw)}
+.pzv-n{font-size:12.5px;color:var(--mute);min-width:40px;text-align:right;font-weight:600}
+.pzv-seg button{height:32px;padding-inline:12px;font-size:12.5px}
+.pzv-st{min-width:44px;justify-content:center;font-size:18px}
+.pzv-sel{max-width:260px;height:36px}
+.pzv-note{margin:0;font-size:12px;color:var(--mute);line-height:1.4;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pzv-note.ok{color:var(--ok,#9ccfb0)}
+.pm-v{margin-left:6px}
+html.tv .pzv-seg button{height:40px}
+/* phones: reactions get their own row instead of a one-emoji-wide column between Mic and Leave */
+@media (max-width:560px){.pz-ctl{justify-content:space-between}.pz-ctl .py-reacts{order:3;flex:1 1 100%}}
+html.tv .pzv .nav-focus{outline:2px solid #f2f2f3;outline-offset:2px}
+</style>
+<script id="mkc-224">
+/* ---------------- 2.24.0 Watch party voice: its own channel, and voices on your phone ----------------
+   Voices play on their own audio elements, apart from the film, so they get their own volume (and, on a computer,
+   their own speakers or headset). How far the film dips while people talk is a choice. Voices can also move to the
+   phone paired as a remote: the phone joins the party as a voice-only member, hears everyone and talks with its own
+   mic, and this screen mutes voices once the phone is in. A phone that belongs to this screen is never played here,
+   because it is in the same room. */
+{
+  const DIPS = [[1, 'Off'], [0.6, 'A little'], [0.35, 'A lot']];
+  const vol = () => { const v = Number(CFG.partyVoiceVol); return CFG.partyVoiceVol == null || CFG.partyVoiceVol === '' || !isFinite(v) ? 1 : clamp(v, 0, 1); };
+  const dip = () => { const d = Number(CFG.partyDip); return DIPS.some(([x]) => x === d) ? d : 0.35; };
+  const pct = () => Math.round(vol() * 100);
+  const canSink = !IS_TV && !TOUCH_UI && typeof HTMLMediaElement !== 'undefined' && 'setSinkId' in HTMLMediaElement.prototype;
+
+  // the film's dip follows the setting; "Off" never touches the film
+  Duck.set = function (on) {
+    if (on && dip() >= 1) on = false;
+    const tgt = on ? dip() : 1; if (tgt === this.target) return; this.target = tgt;
+    if (DSP.n) { const g = DSP.n.duck.gain, t = DSP.ctx.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(tgt, t + 0.15); return; }
+    cancelAnimationFrame(this.raf);
+    if (on && !P.ducking) { this.base = video.volume; P.ducking = true; }
+    const from = video.volume, to = this.base * tgt, t0 = performance.now();
+    const step = (now) => {
+      const k = Math.min(1, (now - t0) / 150); video.volume = clamp(from + (to - from) * k, 0, 1);
+      if (k < 1) this.raf = requestAnimationFrame(step); else if (!on) P.ducking = false;
+    };
+    this.raf = requestAnimationFrame(step);
+  };
+
+  Party.ownPhone = function (p) { return !!p && !!p.voice && p.of === this.me.id; };
+  Party.phoneIn = function () { return [...this.peers.values()].some((p) => this.ownPhone(p) && p.pc.connectionState === 'connected'); };
+  Party.applyVoice = function () {
+    const phone = !!CFG.partyVoicePhone && this.phoneIn(), v = vol(), out = CFG.partyVoiceOut || '';
+    this.peers.forEach((p) => {
+      if (this.ownPhone(p)) { p.an = null; this.speaking.delete(p.id); } // your own voice never dips your own film
+      const a = p.audio; if (!a) return;
+      if (a.volume !== v) a.volume = v;
+      const mute = phone || this.ownPhone(p); if (a.muted !== mute) a.muted = mute;
+      if (canSink && a.sinkId !== out) a.setSinkId(out).catch(() => {});
+    });
+  };
+
+  const onMsg = Party.onMsg;
+  Party.onMsg = function (m) {
+    const r = onMsg.call(this, m);
+    if (m && m.t === 'hello') {
+      const p = this.peers.get(m._from);
+      if (p) { p.voice = !!m.voice; p.of = p.voice ? String(m.of || '') : ''; if (p.voice && this.hostId === p.id) { this.hostId = ''; this.electHost(); } this.applyVoice(); this.renderMembers(); }
+    }
+    return r;
+  };
+  // a voice-only phone never leads playback
+  Party.electHost = function () {
+    const h = this.peers.get(this.hostId);
+    if (this.hostId && (this.hostId === this.me.id || (h && !h.voice))) return;
+    const ids = [this.me.id, ...[...this.peers.values()].filter((p) => !p.voice).map((p) => p.id)].sort(); this.hostId = ids[0]; this.render();
+  };
+  const vin = Party.voiceIn;
+  Party.voiceIn = function (p, stream) { vin.call(this, p, stream); this.applyVoice(); };
+
+  const note = () => {
+    if (!CFG.partyVoicePhone) return { t: 'Voices have their own volume, apart from the film’s.' };
+    if (Party.phoneIn()) return { t: 'Voices are on your phone, and its mic talks to the party. This screen plays only the film.', ok: true };
+    if (Remote.peers.size) return { t: 'On your phone’s remote, tap Party voice. Until then, voices play here.' };
+    return { t: 'Pair your phone as a remote first. Until then, voices play here.', pair: true };
+  };
+  const paintVoice = () => {
+    const n = note(), html = `<span>${esc(n.t)}</span>${n.pair ? '<button class="btn btn-ghost btn-sm pzv-pair" type="button" data-nav><i data-lucide="qr-code"></i>Pair a phone</button>' : ''}`;
+    $$('.pzv').forEach((box) => {
+      const p = $('.pzv-note', box);
+      if (p && p.dataset.h !== html) {
+        p.dataset.h = html; p.innerHTML = html; p.classList.toggle('ok', !!n.ok);
+        const b = $('.pzv-pair', p); if (b) { b.onclick = () => Cast.open('remote'); icons(); }
+      }
+      $$('[data-vw]', box).forEach((b) => { const on = (b.dataset.vw === 'phone') === !!CFG.partyVoicePhone; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+      $$('[data-dip]', box).forEach((b) => { const on = Number(b.dataset.dip) === dip(); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+      $$('.pzv-n', box).forEach((b) => { b.textContent = `${pct()}%`; });
+      const r = $('.pzv-rng', box); if (r && document.activeElement !== r) r.value = String(pct());
+    });
+  };
+  const voiceHtml = () => {
+    const step = (d, l) => `<button class="btn btn-ghost btn-sm pzv-st" type="button" data-vstep="${d}" data-nav aria-label="${l}">${d < 0 ? '−' : '+'}</button>`;
+    return `<section class="pzv" aria-label="Voice chat">
+      <div class="pzv-row"><span class="pzv-l"><i data-lucide="volume-2"></i><span>Voice volume</span></span>
+        <span class="pzv-c">${IS_TV ? step(-1, 'Quieter voices') : `<input type="range" class="rng pzv-rng" min="0" max="100" step="5" value="${pct()}" aria-label="Voice volume" data-nav>`}<b class="pzv-n tnum">${pct()}%</b>${IS_TV ? step(1, 'Louder voices') : ''}</span></div>
+      <div class="pzv-row"><span class="pzv-l"><i data-lucide="film"></i><span>Film dips while people talk</span></span>
+        <span class="segc pzv-seg" role="group" aria-label="Film dips while people talk">${DIPS.map(([v, l]) => `<button type="button" data-dip="${v}" data-nav>${l}</button>`).join('')}</span></div>
+      <div class="pzv-row"><span class="pzv-l"><i data-lucide="smartphone"></i><span>Voices play on</span></span>
+        <span class="segc pzv-seg" role="group" aria-label="Voices play on"><button type="button" data-vw="screen" data-nav>This screen</button><button type="button" data-vw="phone" data-nav>My phone</button></span></div>
+      <div class="pzv-row pzv-out" hidden><span class="pzv-l"><i data-lucide="headphones"></i><span>Voices come out of</span></span><select class="inp pzv-sel" aria-label="Voices come out of" data-nav></select></div>
+      <p class="pzv-note"></p>
+    </section>`;
+  };
+  const html = Party.html;
+  Party.html = function () { const h = html.call(this); return this.code ? h.replace('<div class="py-chat"', `${voiceHtml()}<div class="py-chat"`) : h; };
+
+  const render = Party.render;
+  Party.render = function (...a) {
+    const r = render.apply(this, a);
+    $$('.pzv').forEach((box) => {
+      if (box.dataset.w) return; box.dataset.w = '1';
+      const rng = $('.pzv-rng', box);
+      if (rng) {
+        rng.addEventListener('input', () => { setCfg('partyVoiceVol', Number(rng.value) / 100, { silent: true }); this.applyVoice(); paintVoice(); });
+        rng.addEventListener('keydown', (e) => { if (/^Arrow/.test(e.key)) e.stopPropagation(); });
+      }
+      $$('[data-vstep]', box).forEach((b) => b.addEventListener('click', () => { setCfg('partyVoiceVol', clamp(Math.round((vol() + Number(b.dataset.vstep) * 0.1) * 10) / 10, 0, 1), { silent: true }); this.applyVoice(); paintVoice(); }));
+      $$('[data-dip]', box).forEach((b) => b.addEventListener('click', () => { setCfg('partyDip', Number(b.dataset.dip), { silent: true }); if (Duck.target < 1) Duck.set(true); paintVoice(); }));
+      $$('[data-vw]', box).forEach((b) => b.addEventListener('click', () => {
+        const ph = b.dataset.vw === 'phone'; setCfg('partyVoicePhone', ph, { silent: true });
+        if (ph && !Remote.bus) Remote.host();
+        this.applyVoice(); paintVoice(); Remote.soon();
+      }));
+      const sel = $('.pzv-sel', box);
+      if (canSink && sel && navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+        navigator.mediaDevices.enumerateDevices().then((list) => {
+          const outs = list.filter((d) => d.kind === 'audiooutput' && d.deviceId && d.deviceId !== 'default' && d.deviceId !== 'communications');
+          // labels only show once this site may use the mic; without them the choice would be guesswork
+          if (outs.length < 2 || !outs.some((d) => d.label)) return;
+          sel.innerHTML = `<option value="">Same as the film</option>${outs.map((d, i) => `<option value="${esc(d.deviceId)}"${d.deviceId === CFG.partyVoiceOut ? ' selected' : ''}>${esc(d.label || `Speaker ${i + 1}`)}</option>`).join('')}`;
+          sel.closest('.pzv-out').hidden = false;
+        }).catch(() => {});
+        sel.addEventListener('change', () => { setCfg('partyVoiceOut', sel.value, { silent: true }); this.applyVoice(); });
+      }
+    });
+    paintVoice();
+    return r;
+  };
+  const members = Party.renderMembers;
+  Party.renderMembers = function (...a) {
+    const r = members.apply(this, a);
+    this.peers.forEach((p) => {
+      if (!p.voice) return;
+      $$(`.pm-row[data-pid="${CSS.escape(p.id)}"]`).forEach((row) => { if (!$('.pm-v', row)) row.insertAdjacentHTML('beforeend', `<span class="pm-host pm-v">${this.ownPhone(p) ? 'Your phone' : 'Phone'}</span>`); });
+    });
+    this.applyVoice(); paintVoice();
+    return r;
+  };
+
+  // the paired phone learns the party code from the remote state, only while voices are set to the phone
+  const st = Remote.state.bind(Remote);
+  Remote.state = function () { const s = st(); if (Party.code && CFG.partyVoicePhone) s.pv = { code: Party.code, tv: Party.me.id, name: Party.name() }; return s; };
+  const join = Party.join, leave = Party.leave;
+  Party.join = async function (...a) { const r = await join.apply(this, a); Remote.soon(); return r; };
+  Party.leave = function (...a) { const r = leave.apply(this, a); Remote.soon(); return r; };
+}
+</script>
 <script id="mkc-cfwa">
 /* 2.9.7 Cloudflare Web Analytics: one anonymous report per visit (page, referrer, browser, country, load speed).
    No cookies, no storage, no IDs. Live host only, off with Settings > Data > Share anonymous visit counts, loaded after
