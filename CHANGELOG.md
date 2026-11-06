@@ -10,7 +10,7 @@ All notable changes to MKCinema. The web app version and the native app versions
 
 ## Android app 1.8.1 (2026-11-06)
 
-- **New built-in player** based on ExoPlayer, for smoother playback on phones, tablets and Android TV.
+- **New built-in player** based on ExoPlayer, on phones, tablets and Android TV.
 
 ## Web app 2.37.2 (2026-11-06)
 
