@@ -2,6 +2,21 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.35.0 (2026-11-06)
+
+Ten features built on one idea: MKCinema already knows when people speak in each release (subtitle auto-sync), so the dialogue works as a clock that is the same in every version of a film.
+
+- **Watch party on any version.** Guests can each use their own source, even a different release or frame rate. Every state message also carries the sender's place in the room's script (the host's subtitle file), so everyone hears the same line together. Without a sure match, two lengths that differ by a frame-rate change are scaled, and a nudge (±¼ s, ±1 s) lines it up by hand.
+- **Same line on any source.** Resume, automatic source switching and links land on the line you left, also when the new source is a different version (for example 25 fps against 23.976 fps, nearly 5 minutes apart by the end of a 2-hour film).
+- **Find a line.** Type words someone says and play from that moment. In the player (More tab, X-Ray's This scene) and on a film's page. Search runs on the device.
+- **Subtitles on your phone.** Paired phones pick their own language and show the lines in step with the TV. The phone downloads the subtitle file itself; the TV sends its timing.
+- **Last time…** Coming back after two days or more, the last lines before you stopped show first, with Carry on and Rewind 1 min. Only what you already saw.
+- **Notes at the moment (Margins).** Leave a note at a scene; it pops up at that moment for the other seats, and can be shared with friends as a link that holds the notes. Stored on the device, no server.
+- **Couch match.** Phones scan the TV's code and swipe through titles from everyone's watchlists and on-device picks. The first title every phone likes is the match. From the Your Picks row, Settings › Devices, or search.
+- **Shows per day for kids.** A kids seat can have a daily limit. It stops at the end of an episode, never mid-scene, with a calm goodnight screen; the grown-up PIN allows one more.
+- **Share this moment.** A link (or a QR code on TV) that opens a friend's MKCinema at the same line, on their own source.
+- **Never miss a line.** After a pause, playback picks up at the start of the sentence that was being spoken.
+
 ## Web app 2.32.1 (2026-11-06)
 
 - **Balanced buttons on phones.** On a phone held upright, the featured banner on Home shows Smart Play on its own row with Trailer, Details and Watchlist as three even buttons underneath (icon over label), instead of two half-width rows with Watchlist left alone. Film pages use the same layout: every secondary button (Trailer, Watchlist, Share, Lists, Download, IMDb) shares one even row, or two rows of three when there are six. Heights are fixed in CSS and follow the Text size setting.
