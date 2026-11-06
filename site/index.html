@@ -341,6 +341,7 @@ section{position:relative;padding:clamp(88px,12vw,150px) 0}
 
 /* Import band */
 .band{position:relative;border-radius:32px;padding:clamp(36px,6vw,72px);background:radial-gradient(70% 120% at 100% 0%,rgba(217,212,199,.16),transparent 60%),linear-gradient(160deg,#141417,#070708);box-shadow:inset 0 0 0 1px var(--line2);display:grid;grid-template-columns:1.3fr 1fr;gap:40px;align-items:center;overflow:hidden}
+.vows{list-style:none;margin:0;padding:0;display:grid;gap:12px}.vows li{display:flex;gap:14px;align-items:center;padding:16px 18px;border-radius:16px;background:#101012;box-shadow:inset 0 0 0 1px var(--line2)}.vows svg{width:22px;height:22px;color:var(--champ);flex:none}.vows span{font-size:14px;color:var(--mute)}.vows b{display:block;color:var(--ink);font:500 19px var(--serif);margin-bottom:2px}#free-forever .lead+.lead{margin-top:14px}
 .band h2{font-size:clamp(32px,4.4vw,54px)}
 .band .flow{display:flex;align-items:center;gap:16px;justify-content:center}
 .band .flow .box{padding:16px 18px;border-radius:16px;background:#101012;box-shadow:inset 0 0 0 1px var(--line2);font-size:14px;color:var(--mute);text-align:center;min-width:110px}
@@ -617,7 +618,7 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
         <a class="btn btn-ghost" href="#install" id="heroDl"><svg><use href="#i-down"/></svg>Download the app</a>
       </div>
       <div class="trust rv d3">
-        <span><svg><use href="#i-check"/></svg>Free, no ads</span>
+        <span><svg><use href="#i-check"/></svg>Free forever, no ads</span>
         <span><svg><use href="#i-check"/></svg>Open source</span>
         <span><svg><use href="#i-check"/></svg>No account needed</span>
       </div>
@@ -1008,7 +1009,7 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
     <div class="faq rv">
       <details><summary>What is MKCinema?<i></i></summary><div class="a">A premium player for Stremio-compatible addons. It brings your catalogues, sources and subtitles together in one library you can style your way, with a player built for phones, tablets and big screens.</div></details>
       <details><summary>Does MKCinema provide movies or shows?<i></i></summary><div class="a">No. MKCinema hosts no titles, channels or streams. Catalogues come from Cinemeta, subtitles from OpenSubtitles, and the only built-in source is official trailers. Anything else comes from addons you choose to install, and you are responsible for using them lawfully where you live.</div></details>
-      <details><summary>Is it free and open source?<i></i></summary><div class="a">Yes to both. Every feature is included, with no ads and no paid tier, and the code is public on <a href="https://github.com/itbelikethatbruh/MKCinema" target="_blank" rel="noopener">GitHub</a> under GPL-3.0. If you enjoy it, you can support development on <a href="https://ko-fi.com/mkcinema" target="_blank" rel="noopener">Ko-fi</a> with an optional donation (card or PayPal).</div></details>
+      <details><summary>Is it free and open source?<i></i></summary><div class="a">Yes to both, and it stays free forever: MKCinema will never charge for anything. Every feature is included, with no ads and no paid tier, and the code is public on <a href="https://github.com/itbelikethatbruh/MKCinema" target="_blank" rel="noopener">GitHub</a> under GPL-3.0. If you enjoy it, you can support development on <a href="https://ko-fi.com/mkcinema" target="_blank" rel="noopener">Ko-fi</a> with an optional donation (card or PayPal). Donations never unlock anything.</div></details>
       <details><summary>Do I need an account?<i></i></summary><div class="a">No. Everything works without one. Signing in with email and password adds sync of your library, progress, addons and settings across your devices.</div></details>
       <details><summary>What is debrid, and which service should I use?<i></i></summary><div class="a">A debrid service fetches files for you and streams them back over a fast, direct connection. MKCinema works with the major debrid services using your own key, so use whichever you prefer. Settings › Get started walks you through adding it.</div></details>
       <details><summary>Why do you recommend VLC?<i></i></summary><div class="a">Browsers can't decode some common formats, such as HEVC video or Dolby and DTS sound. VLC plays nearly everything, and MKCinema hands a stream to it in one tap. If you can't install a player, turn on Browser only mode.</div></details>
@@ -1045,10 +1046,29 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
 </section>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<section id="free-forever" style="padding-top:0">
+  <div class="wrap">
+    <div class="band rv">
+      <div>
+        <span class="eyebrow">Our promise</span>
+        <h2>Free forever.<br><em>Nothing to pay, ever.</em></h2>
+        <p class="lead">MKCinema will never charge for anything. There is no paid plan, no premium tier and no feature behind a paywall, and there never will be. What you get today stays free, and everything we add later is free too.</p>
+        <p class="lead">Donations on Ko-fi are optional and never unlock anything. The code is open under GPL-3.0, so nobody can ever take the free version away.</p>
+      </div>
+      <ul class="vows">
+        <li><svg><use href="#i-check"/></svg><span><b>No paid plan</b>Not now, not later</span></li>
+        <li><svg><use href="#i-check"/></svg><span><b>Nothing locked</b>Every feature for everyone</span></li>
+        <li><svg><use href="#i-check"/></svg><span><b>No ads</b>No cookies, no tracking profiles</span></li>
+        <li><svg><use href="#i-check"/></svg><span><b>Donations unlock nothing</b>They only say thank you</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
 <section id="support" style="padding-top:0">
   <div class="wrap">
     <div class="support rv">
-      <div><span class="eyebrow">Support</span><h3 style="margin-top:14px">Keep MKCinema free</h3><p>MKCinema is made by Drake Christopher, with no ads and no paid tier. If it's become your favourite way to watch, a coffee on Ko-fi of any size keeps it growing.</p></div>
+      <div><span class="eyebrow">Support</span><h3 style="margin-top:14px">Keep MKCinema free</h3><p>MKCinema is made by Drake Christopher, with no ads and no paid tier, and it stays free forever. Donations are optional and never unlock anything. If it's become your favourite way to watch, a coffee on Ko-fi of any size keeps it growing.</p></div>
       <div class="sup-btns"><a class="btn btn-plat" href="https://ko-fi.com/mkcinema" target="_blank" rel="noopener"><svg><use href="#b-kofi"/></svg>Support on Ko-fi</a></div>
     </div>
   </div>
@@ -1062,7 +1082,7 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
       <nav aria-label="Footer"><a href="#features">Features</a><a href="#compare">Why MKCinema</a><a href="#install">Download</a><a href="#faq">FAQ</a><a href="#support">Donate</a><a href="https://ko-fi.com/mkcinema" target="_blank" rel="noopener">Ko-fi</a><a href="https://mkcinema.pages.dev/">Open app</a><a class="gh" href="https://github.com/itbelikethatbruh/MKCinema" target="_blank" rel="noopener"><svg><use href="#b-github"/></svg>GitHub</a></nav>
     </div>
     <p class="legal">MKCinema does not host, provide or link to any copyrighted content. It plays sources from third-party addons that users install themselves. Stremio is a trademark of its owner; MKCinema is an independent project, not affiliated with or endorsed by Stremio. VLC, debrid services and other names belong to their owners.</p>
-    <p class="legal">© <span id="yr">2026</span> MKCinema · Open source under GPL-3.0 · Brand logos belong to their owners and show compatibility only.</p>
+    <p class="legal">© <span id="yr">2026</span> MKCinema · Free forever · Open source under GPL-3.0 · Brand logos belong to their owners and show compatibility only.</p>
   </div>
 </footer>
 
