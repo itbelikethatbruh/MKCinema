@@ -2,8 +2,21 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.42.0 (2026-11-06)
+
+- **A new welcome tour.** Redesigned from the first screen to the last, with everything MKCinema does today. It fits your screen, so nothing scrolls, on a phone, a computer or a TV.
+- **Get started, rewritten.** Pick the MKCinema player or any player app you like, install a few popular addons in one tap, and skip the debrid step if you don't use one. There's a separate path for people coming from Stremio.
+- **Addon looks.** Addons can choose how their rows look (wide, square or Top 10), add small badges and info panels, and show any of their lists as a Library tab. Spec: docs/addon-looks.md.
+- **Smoother switching.** Switching lists, genres and seasons now flows: new posters glide in instead of snapping, and Anime lists you've already opened come back instantly.
+
+## Web app 2.41.0 (2026-11-06)
+
+- **Find addons.** Search the community addon list right from Addons and install most addons in one press. The list opens instantly and filters by streams, catalogs, subtitles, anime and more.
+- **Easier addon setup.** Addons that need your settings walk you through it in their own row. On a TV, scan a QR code to set it up on your phone.
+
 ## Web app 2.40.0 (2026-11-06)
 
+- **Settings, redesigned.** A search box that finds any option, clearer groups, larger titles and shorter explanations, with More when you want the detail.
 - **Troubleshooting guide.** Settings › Help now opens with quick fixes for no streams, buffering, sound, subtitles, addons, debrid keys, sign-in, TV remotes, updates, watch parties and trailers. Each fix has buttons that take you straight to the right setting, with the Diagnostic and Send log underneath. Also in the command palette and at app.mkcinema.app/#help.
 - **Terms of use and privacy, inside the app.** New terms of use page, a fuller privacy policy, and both readable in Settings › About & licenses on every device, TVs included. A *Why no streams?* link on an empty source list opens the right fix.
 - Legal and privacy requests now go to a private address, legal@mkcinema.app. Sent logs are deleted after 90 days. TMDB attribution is in Settings › About & licenses.
@@ -12,6 +25,10 @@ All notable changes to MKCinema. The web app version and the native app versions
 
 - **Subtitles in your language.** When no subtitle exists in your language, MKCinema translates the best one it finds, line by line as you watch, and marks it *Translated* in the subtitle menu. Chrome and Edge translate on your device; other browsers and the Android and TV apps use MKCinema's translation service. Turn it off in Settings › Subtitles.
 - **One tidy subtitle list.** Subtitles from all your add-ons now arrive as one list without repeats. The ones made for your exact file come first, then the closest release. Auto-sync works on every one, translated ones included.
+
+## Web app 2.38.2 (2026-11-06)
+
+- **Side menu fits every window.** In short and small windows the rows tighten up, and the menu scrolls inside itself if there still isn't enough room.
 
 ## Web app 2.38.1 (2026-11-06)
 
