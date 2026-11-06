@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.27.2 (2026-11-06)
+
+- **Samsung TVs (beta).** MKCinema runs on Samsung TVs from 2023 on through TizenBrew, a free community app loader (Samsung only installs apps from its own store). The remote's Back key closes what's open and then asks before leaving, and play/pause, stop, fast-forward and rewind work in the player. Setup steps are in `tizen/README.md` and on the download page.
+- LG webOS: the app now has a listing ready for the webOS Homebrew Channel.
+
 ## Android and Android TV app 1.7.0 (2026-11-06)
 
 - **New TV player engine: ExoPlayer** (Media3), the engine most Android TV apps use. It reads MKV files more reliably, plays HLS, shows picture subtitles (PGS) from Blu-ray rips, names every audio track with its format (E-AC3 5.1, Atmos, DTS and so on), hides audio tracks your TV can't decode, sends a source's request headers on every request, and picks up again by itself when the connection drops mid-film.
