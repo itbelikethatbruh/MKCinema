@@ -38,7 +38,7 @@ const inject = args.includes('--inject');
 const srcFile = path.join(web, 'index.html');
 let html = fs.readFileSync(srcFile, 'utf8');
 const stats = { scripts: 0, regex: 0, styles: 0, focus: 0, is: 0, has: 0, minmax: 0, gaps: 0, ratios: 0 };
-const GAPS = [], RATIOS = [];
+const GAPS = [], RATIOS = [], GRIDSELS = new Set();
 
 /* ---------- scripts ---------- */
 function lowerJs(code) {
@@ -143,18 +143,23 @@ function fixDecls(body, selector, media) {
     if (/\b(dvh|svh|lvh)\b/.test(val) || /\d(dvh|svh|lvh)\b/.test(val)) d = `${prop}: ${val.replace(/(\d)(dvh|svh|lvh)\b/g, '$1vh')}`;
     const v2 = d.slice(d.indexOf(':') + 1).trim();
     let low = null;
+    /* Replace rather than add a fallback: a declaration that uses var() is kept by these engines at parse time and
+       only fails when computed, which would wipe out a fallback written before it. One that cannot be worked out is
+       dropped, so the value from earlier rules applies (as the old engine would do for a value it can't parse). */
     if (/\b(min|max|clamp)\(/.test(v2)) {
       low = lowerMinMax(v2.replace(/\s*!important$/, ''));
       const imp = /!important$/.test(v2) ? ' !important' : '';
-      if (low && prop.startsWith('--')) { d = `${prop}: ${low}`; stats.minmax++; }
-      else if (low) { out.push(`${prop}: ${low}${imp}`); stats.minmax++; }
-    } else if (/env\(/.test(v2) && !prop.startsWith('--')) out.push(`${prop}: ${noEnv(v2)}`);
+      if (!low) { stats.dropped = (stats.dropped || 0) + 1; continue; }
+      d = `${prop}: ${low}${prop.startsWith('--') ? '' : imp}`; stats.minmax++;
+    } else if (/env\(/.test(v2)) d = `${prop}: ${noEnv(v2)}`;
+    if (/color-mix\(/.test(d) && !prop.startsWith('--')) { stats.dropped = (stats.dropped || 0) + 1; continue; }
     if (prop === 'gap' || prop === 'row-gap' || prop === 'column-gap') {
-      const gv = low || v2;
+      const gv = d.slice(d.indexOf(':') + 1).trim();
       out.push(`grid-${prop}: ${gv}`);
       const [r, cgap] = prop === 'gap' ? (splitTop(gv, ' ').length > 1 ? splitTop(gv, ' ') : [gv, gv]) : prop === 'row-gap' ? [gv, '0px'] : ['0px', gv];
       if (selector && !/^0(px)?$/.test(gv)) { GAPS.push([selector, r.trim(), cgap.trim(), media || '']); stats.gaps++; }
     }
+    if (prop === 'display' && /^(inline-)?grid\b/.test(v2) && selector) splitTop(selector, ',').forEach((x) => GRIDSELS.add(x.trim()));
     if (prop === 'aspect-ratio' && selector && !hasHeight) {
       const m = /^(\d*\.?\d+)\s*(?:\/\s*(\d*\.?\d+))?$/.exec(v2);
       if (m) { RATIOS.push([selector, Number(m[1]) / Number(m[2] || 1), media || '']); stats.ratios++; }
@@ -263,6 +268,23 @@ async function main() {
   out = out.replace(/<head>([^]*?)(<script)/i, (all, a, b) => `<head>${a}${head}${b}`);
   out = out.replace(/<\/body>(?![^]*<\/body>)/i, `<script id="mkc-legacy-layout">${layoutMin}</script>\n</body>`);
   out = out.replace(/<html\b([^>]*)>/i, (all, a) => (/class=/.test(a) ? all.replace(/class="/, 'class="legacy ') : `<html${a} class="legacy">`));
+
+  /* "grid-box > child" rules also have to reach the children that layout.js moves into <span class="mkc-bg"> inside a
+     grid <button> (older engines cannot make a button a grid) */
+  let variants = 0;
+  out = out.replace(/(<style\b[^>]*>)([^]*?)(<\/style>)/gi, (all, a, css, c) => a + css.replace(/(^|\n)([^@{}\n][^{}]*?)\s*\{/g, (m, nl, prelude) => {
+    const sels = splitTop(prelude, ',').map((x) => x.trim());
+    const extra = [];
+    for (const sel of sels) {
+      const k = sel.lastIndexOf(' > '); if (k < 0) continue;
+      const left = sel.slice(0, k).trim(), last = left.split(/\s+/).pop();
+      if (GRIDSELS.has(left) || GRIDSELS.has(last)) extra.push(`${left} > .mkc-bg > ${sel.slice(k + 3).trim()}`);
+    }
+    if (!extra.length) return m;
+    variants += extra.length;
+    return `${nl}${sels.concat(extra).join(', ')} {`;
+  }) + c);
+  stats.btnGridVariants = variants;
 
   /* every script must now parse as ES2018 (Chromium 63-64) */
   const bad = [];

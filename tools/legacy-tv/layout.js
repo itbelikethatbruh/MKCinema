@@ -46,6 +46,19 @@
       }
     }
   }
+  /* <button> could not be a grid container before Chromium 83: its children just stack. The children are moved into a
+     <span class="mkc-bg"> that takes the button's grid settings (build.js also adds "button > .mkc-bg > child"
+     versions of the app's child selectors). */
+  function wrapButtons() {
+    var list = document.getElementsByTagName('button');
+    for (var i = 0; i < list.length; i++) {
+      var b = list[i]; if (!b.firstChild || (b.firstChild.className === 'mkc-bg' && !b.firstChild.nextSibling)) continue;
+      var d = getComputedStyle(b).display; if (d !== 'grid' && d !== 'inline-grid') continue;
+      var sp = document.createElement('span'); sp.className = 'mkc-bg';
+      while (b.firstChild) sp.appendChild(b.firstChild);
+      b.appendChild(sp);
+    }
+  }
   function ratios() {
     for (var i = 0; i < RATIOS.length; i++) {
       var r = RATIOS[i], list;
@@ -65,12 +78,20 @@
     d.appendChild(document.createElement('div')); d.appendChild(document.createElement('div'));
     document.body.appendChild(d); var ok = d.scrollHeight === 1; d.parentNode.removeChild(d); return ok;
   }
-  var force = window.MKC_LEGACY_TEST, needGap, needRatio = force || !(window.CSS && CSS.supports && CSS.supports('aspect-ratio', '1'));
-  function run() { timer = 0; try { if (needGap) { gaps(); wrapText(); } if (needRatio) ratios(); } catch (e) {} }
+  function buttonGrid() {
+    var b = document.createElement('button'); b.style.cssText = 'display:grid;grid-template-columns:10px 10px;padding:0;border:0;position:absolute';
+    var x = document.createElement('i'), y = document.createElement('i'); x.style.display = y.style.display = 'block';
+    b.appendChild(x); b.appendChild(y); document.body.appendChild(b); var ok = y.offsetLeft - x.offsetLeft === 10 && y.offsetTop === x.offsetTop;
+    b.parentNode.removeChild(b); return ok;
+  }
+  var force = window.MKC_LEGACY_TEST, needGap, needBtn, needRatio = force || !(window.CSS && CSS.supports && CSS.supports('aspect-ratio', '1'));
+  function run() { timer = 0; try { if (needBtn) wrapButtons(); if (needGap) { gaps(); wrapText(); } if (needRatio) ratios(); } catch (e) {} }
   function soon() { if (!timer) timer = setTimeout(run, 200); }
   function start() {
     needGap = force || !flexGap(); /* MKC_LEGACY_TEST: the test page forces both fixes on */
-    if (!needGap && !needRatio) return;
+    needBtn = !buttonGrid();
+    if (needBtn) rule('.mkc-bg{display:grid;grid-template-columns:inherit;grid-template-rows:inherit;grid-template-areas:inherit;grid-auto-flow:inherit;grid-auto-rows:inherit;grid-auto-columns:inherit;grid-row-gap:inherit;grid-column-gap:inherit;align-items:inherit;justify-items:inherit;align-content:inherit;justify-content:inherit;width:100%;min-height:100%;text-align:inherit}');
+    if (!needGap && !needRatio && !needBtn) return;
     run();
     new MutationObserver(soon).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
     addEventListener('resize', soon);
