@@ -2981,8 +2981,10 @@ class StremioEngine {
   pickBest(streams, { bingeGroup } = {}) {
     // a source the debrid service has not cached yet only plays a "downloading" notice, so it is a last resort
     const ok = (s) => s._tel.cached !== false;
-    if (bingeGroup) { const m = streams.find((s) => s.behaviorHints?.bingeGroup === bingeGroup && ok(s) && (s._tel.webReady || s.ytId)); if (m) return m; }
-    return streams.find((s) => s._tel.webReady && !s._tel.isTrailer && ok(s)) || streams.find((s) => s._tel.webReady && !s._tel.isTrailer) || streams.find((s) => s._tel.webReady) || streams.find((s) => s.ytId) || null;
+    /* 2.26.1: never auto-pick a trailer */ if (bingeGroup) { const m = streams.find((s) => s.behaviorHints?.bingeGroup === bingeGroup && ok(s) && s._tel.webReady && !s._tel.isTrailer && !s.ytId); if (m) return m; }
+    // a trailer is never a stand-in for the film: with no playable source the caller opens the source list instead
+    const film = (s) => s._tel.webReady && !s._tel.isTrailer && !s.ytId;
+    return streams.find((s) => film(s) && ok(s)) || streams.find(film) || null;
   }
 
   /* ---------- Subtitles ---------- */
@@ -4167,7 +4169,7 @@ function showMsg(title, body, actions = '') {
 }
 function hideMsg() { $('#pMsg').hidden = true; $('#pMsg').innerHTML = ''; }
 function playerAct(a) {
-  if (a === 'next-src') { const list = P.ctx.streams.filter((s) => s._tel.webReady || s.ytId); const i = list.indexOf(P.stream); const n = list[i + 1]; if (n) playStream(P.ctx, n, { startAt: 0 }); else toast('No other playable sources', 'err'); }
+  if (a === 'next-src') { const list = P.ctx.streams.filter((s) => (s._tel.webReady && !s._tel.isTrailer && !s.ytId) || s === P.stream); const i = list.indexOf(P.stream); const n = list[i + 1]; if (n) playStream(P.ctx, n, { startAt: 0 }); else toast('No other playable sources', 'err'); }
   if (a === 'sources') openDrawer('src');
   if (a === 'close') closePlayer();
   if (a === 'force') { P.force = true; playStream(P.ctx, P.stream, { startAt: 0 }); }
