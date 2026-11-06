@@ -2,6 +2,12 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.23.0 (2026-11-06)
+
+- **Smallest file** (Settings › Source rules): hides very small files, which are often fakes or poor quality. Pick 200 MB, 500 MB, 1 GB, 2 GB or 4 GB. Episodes use a quarter of the limit, and files that list no size stay. Like the other limits, it is dropped if it would leave no sources at all.
+- **Preferred audio language** (Settings › Source rules): sources in your language move to the top of the list and Smart Play picks them first, across every addon. The Audio language filter never hides them, and MULTi and Dual Audio releases move up a little. 15 languages.
+- Both settings are translated into all interface languages.
+
 ## Web app 2.22.1 (2026-11-05)
 
 - **Ko-fi**: MKCinema now has a Ko-fi page at [ko-fi.com/mkcinema](https://ko-fi.com/mkcinema). Ko-fi replaces the PayPal button everywhere (Ko-fi itself takes cards and PayPal). Settings › Support and the occasional thank-you note show a "Support on Ko-fi" button, and the QR code opens Ko-fi.
