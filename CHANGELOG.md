@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.40.0 (2026-11-06)
+
+- **Troubleshooting guide.** Settings › Help now opens with quick fixes for no streams, buffering, sound, subtitles, addons, debrid keys, sign-in, TV remotes, updates, watch parties and trailers. Each fix has buttons that take you straight to the right setting, with the Diagnostic and Send log underneath. Also in the command palette and at app.mkcinema.app/#help.
+- **Terms of use and privacy, inside the app.** New terms of use page, a fuller privacy policy, and both readable in Settings › About & licenses on every device, TVs included. A *Why no streams?* link on an empty source list opens the right fix.
+
 ## Web app 2.39.0 (2026-11-06)
 
 - **Subtitles in your language.** When no subtitle exists in your language, MKCinema translates the best one it finds, line by line as you watch, and marks it *Translated* in the subtitle menu. Chrome and Edge translate on your device; other browsers and the Android and TV apps use MKCinema's translation service. Turn it off in Settings › Subtitles.
