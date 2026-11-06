@@ -44,10 +44,10 @@ code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
   <button id="out" type="button" class="ghost">Sign out</button>
 </div>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous"></script>
 <script>
 'use strict';
-const sb = supabase.createClient('https://wogffhgdixgrayowewnf.supabase.co', 'sb_publishable_ZpiFwB_oM579GwCunYpHWg_jelRazT-', { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'mkc:auth' } });
+const sb = supabase.createClient('https://wogffhgdixgrayowewnf.supabase.co', 'sb_publishable_ZpiFwB_oM579GwCunYpHWg_jelRazT-', { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'mkc:logs-auth' } });
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 async function show() {
