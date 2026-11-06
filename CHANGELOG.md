@@ -2,6 +2,14 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.28.2 (2026-11-06)
+
+- **Steady title pages.** Tapping a film or show no longer flickers before its page opens. The title logo had no size until its picture arrived, so everything under it (Smart Play, Trailer, Watchlist, the synopsis) jumped down about 100 px in the middle of the fade-in, and the backdrop popped in at the same moment. The logo now keeps its place from the first frame, the backdrop and logo fade in, the second draw (when the full details arrive) keeps the pictures already on screen instead of rebuilding them, and on phones the info line keeps room for its second line so the buttons no longer drop when the runtime arrives.
+
+## Web app 2.28.1 (2026-11-06)
+
+- **Free forever.** MKCinema will never charge for anything: no paid plan, no premium tier and nothing locked, now or later. The promise is in Settings › About, Settings › Support and the welcome tour, and on the website and README. Ko-fi donations stay optional and never unlock a feature. Translated into all six interface languages.
+
 ## Web app 2.28.0 (2026-11-06)
 
 - **Arrange Home.** Hide, move or rename any row on Home, addon catalogs included. Open it from the Arrange Home button under the rows, from Settings › Home or from the search bar. Each seat keeps its own arrangement, and it syncs with your account. Reset Home puts everything back. Works by touch, mouse and TV remote.

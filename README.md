@@ -8,6 +8,7 @@
   <a href="LICENSE"><img alt="License: GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-d9d4c7?style=for-the-badge&labelColor=0a0a0b"></a>
   <a href="https://github.com/itbelikethatbruh/MKCinema/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/itbelikethatbruh/MKCinema?style=for-the-badge&labelColor=0a0a0b&color=d9d4c7"></a>
   <a href="https://mkcinema.pages.dev"><img alt="Open the web app" src="https://img.shields.io/badge/web%20app-live-d9d4c7?style=for-the-badge&labelColor=0a0a0b&logo=googlechrome&logoColor=white"></a>
+  <a href="#free"><img alt="Free forever" src="https://img.shields.io/badge/free-forever-d9d4c7?style=for-the-badge&labelColor=0a0a0b"></a>
   <a href="https://ko-fi.com/mkcinema"><img alt="Support on Ko-fi" src="https://img.shields.io/badge/support-Ko--fi-72a4f2?style=for-the-badge&labelColor=0a0a0b&logo=kofi&logoColor=white"></a>
 </p>
 
@@ -27,6 +28,7 @@
   <a href="https://mkcinema-site.pages.dev"><b>Website</b></a> &nbsp;·&nbsp;
   <a href="#download"><b>Download</b></a> &nbsp;·&nbsp;
   <a href="#features"><b>Features</b></a> &nbsp;·&nbsp;
+  <a href="#free"><b>Free forever</b></a> &nbsp;·&nbsp;
   <a href="#new"><b>What's new</b></a> &nbsp;·&nbsp;
   <a href="#compare"><b>Compare</b></a> &nbsp;·&nbsp;
   <a href="#marquee"><b>Now showing</b></a> &nbsp;·&nbsp;
@@ -37,6 +39,8 @@
 <br>
 
 > **MKCinema** is a free, open-source premium player for the Stremio addons you choose. It brings your catalogues, debrid account and subtitles together in one library you can style your way (five looks, a colour wheel and an Anime mode), with a player built for phones, tablets, desktops and TVs that can even send the sound to your phone.
+>
+> **Free forever.** MKCinema will never charge for anything: no paid plan, no premium tier, no ads and nothing locked, now or in the future. Ko-fi donations are optional and never unlock anything.
 >
 > It ships no titles, channels or streams of its own. Catalogues come from Cinemeta, subtitles from OpenSubtitles, and the only built-in source is official trailers. Everything else comes from addons you install yourself.
 
@@ -155,9 +159,13 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 </table>
 
 <a name="free"></a>
-## Free, all of it
+## Free forever
 
-Everything below ships today and costs nothing. No plans, no ads.
+**MKCinema will never charge for anything.** There is no paid plan, no premium tier and no feature behind a paywall, and there never will be. Everything that ships today stays free, and everything added later is free too. No ads, ever.
+
+Donations on Ko-fi are optional and only say thank you: they never unlock a feature, a seat, a look or anything else. The code is open under GPL-3.0, so the free version can never be taken away. Addons and debrid services are run by other people and may cost money; that is their choice, not ours.
+
+Everything below ships today and costs nothing:
 
 - **Seats** for the whole house (main seat plus 7), each with its own watchlist, progress, picks and Home, and an optional PIN.
 - **Kids seats by age rating** where you live (US, Brazil, India, UK or Germany), not just by genre. Pick up to 6, 9 or 12.
@@ -415,7 +423,7 @@ Yes. Settings › Account › Import from Stremio copies your library, progress 
 
 <p align="center"><img src="https://raw.githubusercontent.com/itbelikethatbruh/MKCinema/readme-assets/stats.svg" width="100%" alt="MKCinema on GitHub: latest release, app downloads, commits and platforms"></p>
 
-MKCinema is made by **Drake Christopher**, with no ads and no paid tier. If it has become your favourite way to watch, you can help in three ways:
+MKCinema is made by **Drake Christopher**, with no ads and no paid tier, and it is [free forever](#free). Donations never unlock anything. If it has become your favourite way to watch, you can help in three ways:
 
 - **Star the repo.** It's free and helps other people find MKCinema.
 - **Share it** with a friend who still juggles five apps to watch one film.

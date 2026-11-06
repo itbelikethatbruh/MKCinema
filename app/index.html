@@ -1844,6 +1844,13 @@ html.tv .rail{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-rig
 .hero-logo.logo-dark,.pk-det-logo.logo-dark,#pLoadArt img.logo-dark{filter:brightness(0) invert(1) drop-shadow(0 4px 18px rgba(0,0,0,.65))!important}
 @media (hover:none){.foot>span:last-child{display:none}}
 html.tv .foot>span:last-child{display:none}
+/* 2.28.2 steady details */
+.d-hero .logo3d.has-logo .hero-logo{height:120px;width:auto}
+@media (orientation:landscape) and (max-height:540px){.d-hero .logo3d.has-logo .hero-logo{height:84px}}
+.d-hero .bg,.d-hero .hero-logo{transition:opacity .32s ease-out}
+.d-hero .bg.d-wait,.d-hero .hero-logo.d-wait{opacity:0}
+/* while the full details load, a phone keeps room for the second line the runtime and source tags usually need */
+@media (max-width:600px){.d-hero .metaline.ml-wait{min-height:55px}}
 </style>
 </head>
 <body class="locked">
@@ -3697,6 +3704,34 @@ async function loadDetailStreams() {
   D.streams = r.streams; D.status = { pending: false, answered: r.addons, total: r.addons, errors: r.errors.map((e) => `${e.addon.manifest.name}: ${e.error}`) };
   renderStreamsPanel();
 }
+/* 2.28.2: the details page draws twice (card data first, full details a moment later). The backdrop and logo that
+   are already on screen are carried over to the second draw when they are the same pictures, so they never blank
+   out while a new copy decodes; pictures still on their way fade in when they arrive. */
+const DetailImgs = {
+  SEL: '.d-hero > img.bg, .d-hero .hero-logo',
+  take(panel) {
+    const m = new Map();
+    panel.querySelectorAll(this.SEL).forEach((im) => { if (im.dataset.osrc) m.set(`${im.classList.contains('bg') ? 'bg' : 'logo'}|${im.dataset.osrc}`, im); });
+    return m;
+  },
+  settle(panel, keep) {
+    panel.querySelectorAll(this.SEL).forEach((im) => {
+      const src = im.getAttribute('src') || ''; im.dataset.osrc = src;
+      const old = keep.get(`${im.classList.contains('bg') ? 'bg' : 'logo'}|${src}`);
+      if (old && old !== im) {
+        im.replaceWith(old);
+        // a logo that failed earlier stays hidden, and its title text shows in its place
+        if (old.hidden) { const alt = old.nextElementSibling; if (alt && alt.hasAttribute('data-logo-alt')) alt.hidden = false; }
+        return;
+      }
+      if (im.complete && im.naturalWidth) return;
+      im.classList.add('d-wait');
+      const done = () => im.classList.remove('d-wait');
+      im.addEventListener('load', done, { once: true }); im.addEventListener('error', done, { once: true });
+      setTimeout(done, 6000);
+    });
+  },
+};
 function renderDetail(loading) {
   const m = D.meta, panel = $('#detailPanel');
   const logo = metaLogo(m);
@@ -3708,13 +3743,14 @@ function renderDetail(loading) {
   // pick the animation up where it is, through --t0, so it never restarts or jumps
   if (renderDetail.popId !== m.id) { renderDetail.popId = m.id; renderDetail.popAt = performance.now(); }
   const t0 = ((performance.now() - renderDetail.popAt) / 1000).toFixed(3);
+  const keepImgs = DetailImgs.take(panel);
   panel.innerHTML = `
     <button class="ibtn panel-close" type="button" data-close aria-label="Close"><i data-lucide="x"></i></button>
     <div class="d-hero">
       ${imgTag(metaBg(m), m.name, m.id, { wide: true, cls: 'bg', lazy: false })}
       <div class="d-body" style="padding-top:80px;width:100%">
         <div class="logo3d pop${logo ? ' has-logo' : ''}" style="--t0:${t0}s${logo ? `;--logo:url(&quot;${esc(logo)}&quot;)` : ''}">${logo ? imgTag(logo, m.name, m.id, { nofb: true, cls: 'hero-logo', lazy: false }) : ''}<h1 class="hero-title" data-logo-alt ${logo ? 'hidden' : ''}>${esc(m.name)}</h1>${logo ? '<span class="lg-sheen" aria-hidden="true"><i></i></span>' : ''}</div>
-        <div class="metaline">${[m.imdbRating ? `<span class="imdb ${rateTier(m.imdbRating)}"><b>IMDb</b>${esc(m.imdbRating)}</span>` : '', yearOf(m) ? `<span>${esc(yearOf(m))}</span>` : '', m.runtime ? `<span>${esc(m.runtime)}</span>` : '', genresOf(m).slice(0, 4).map(esc).join(' · '), `<span class="tag-s">${esc(m.type)}</span>`, m._addon ? `<span class="tag-s v">${esc(m._addon)}</span>` : ''].filter(Boolean).join('')}</div>
+        <div class="metaline${loading ? ' ml-wait' : ''}">${[m.imdbRating ? `<span class="imdb ${rateTier(m.imdbRating)}"><b>IMDb</b>${esc(m.imdbRating)}</span>` : '', yearOf(m) ? `<span>${esc(yearOf(m))}</span>` : '', m.runtime ? `<span>${esc(m.runtime)}</span>` : '', genresOf(m).slice(0, 4).map(esc).join(' · '), `<span class="tag-s">${esc(m.type)}</span>`, m._addon ? `<span class="tag-s v">${esc(m._addon)}</span>` : ''].filter(Boolean).join('')}</div>
         <div class="actions">
           <button class="btn btn-bolt" type="button" id="dSmart" data-nav><i data-lucide="play"></i><span class="sp-l">Smart Play<small>Best stream, picked for you</small></span></button>
           <button class="btn btn-ghost" type="button" id="dTrailer" data-nav><i data-lucide="clapperboard"></i>Trailer</button>
@@ -3739,6 +3775,7 @@ function renderDetail(loading) {
         </div>`}
       </div>
     </div>`;
+  DetailImgs.settle(panel, keepImgs);
   icons();
   panel.querySelector('[data-close]').onclick = () => { closeLayer('detail'); };
   $('#dSmart').onclick = () => smartPlayDetail();
@@ -5787,6 +5824,7 @@ const TOUR = [
       <span class="tw-rule"></span>
       <p class="tw-lede">Bring your own Stremio addons and MKCinema turns them into one private cinema: the best source chosen for you, played here or in your favourite player, on every screen you own.</p>
       <div class="tw-pillars">${[['Library', 'Every addon you choose'], ['Privacy', 'No ads. No cookies, no profiles.'], ['Everywhere', 'Phone, tablet, PC and TV']].map(([k, t]) => `<div><small>${k}</small><b>${t}</b></div>`).join('')}</div>
+      <p class="tw-free">Free forever. Nothing to pay, now or later.</p>
     </div>` },
   { id: 'features', html: () => `<div class="tw-sec"><span class="tw-kicker">Only on MKCinema</span><h2 class="tw-h">Made for movie night</h2><ol class="tw-list">${[
     ['Smart Play', 'Scores every source for quality, format and speed, starts the best one, and quietly switches if it stalls.'],
@@ -5800,7 +5838,7 @@ const TOUR = [
   ].map(([t, d], k) => `<li style="--k:${k}"><em>${String(k + 1).padStart(2, '0')}</em><div><b>${t}</b><small>${d}</small></div></li>`).join('')}</ol></div>` },
   { id: 'why', html: () => `<div class="tw-sec"><span class="tw-kicker">Why MKCinema</span><h2 class="tw-h">Built differently</h2><div class="tw-cmp"><div class="tw-ch"><span></span><b>MKCinema</b><b>Typical streaming app</b></div>${[
     ['What you can watch', 'Every addon you choose', 'One company’s library'],
-    ['Price', 'Free. No ads, no cookies', 'A monthly plan, ads on cheaper tiers'],
+    ['Price', 'Free forever. No ads, no cookies', 'A monthly plan, ads on cheaper tiers'],
     ['Picture', 'The best source found, up to 4K HDR', 'Capped by the plan you pay for'],
     ['If a stream stalls', 'The next source takes over, same second', 'You wait for it to buffer'],
     ['Watching together', 'Built in, with voice chat', 'Often a separate add-on, or none'],
@@ -8010,6 +8048,7 @@ const Support = {
     return `<div class="sup">
       <div class="sup-qr">${QR.svg(DONATE.kofi)}<small class="sup-qr-cap">Scan for Ko-fi</small></div>
       <div class="sup-t"><b>Keep MKCinema going</b>
+        <div class="free-pledge"><b>Free forever</b><p>MKCinema is free and always will be. No paid plan, no premium tier, no ads and nothing locked, now or later. Every feature is for everyone.</p><p>Donations on Ko-fi are optional and never unlock anything.</p></div>
         <p>MKCinema is built and kept online by ${esc(DONATE.name)}, with no ads, no cookies and no profiles. Donations pay for hosting, the domain and the hours that go into new features. If it has made your movie nights better, a coffee’s worth goes a long way.</p>
         <p class="sup-thanks">Thank you for watching, and for keeping this project alive. · ${esc(DONATE.name.split(' ')[0])}</p>
         <div class="inrow">${kfBadge()}</div>
@@ -8023,7 +8062,7 @@ const Support = {
       if (!$('#player').hidden || document.body.classList.contains('layer-open') || $('.focus-ask')) return;
       st.at = Date.now(); Store.set('support', st);
       const t = document.createElement('div'); t.className = 'sup-ask glass-solid'; t.setAttribute('role', 'dialog'); t.setAttribute('aria-label', 'Support MKCinema');
-      t.innerHTML = `<button class="ibtn sup-x" type="button" aria-label="Close"><i data-lucide="x"></i></button><b><i data-lucide="heart"></i>Enjoying MKCinema?</b><small>It is made by ${esc(DONATE.name)} and runs on donations. Thank you for keeping it alive.</small><div class="inrow">${kfBadge(true)}<button class="btn btn-ghost btn-sm" type="button" data-sup="later">Maybe later</button><button class="linkish" type="button" data-sup="never">Don’t ask again</button></div>`;
+      t.innerHTML = `<button class="ibtn sup-x" type="button" aria-label="Close"><i data-lucide="x"></i></button><b><i data-lucide="heart"></i>Enjoying MKCinema?</b><small>It is made by ${esc(DONATE.name)} and runs on donations, which never unlock anything: MKCinema stays free either way. Thank you for keeping it alive.</small><div class="inrow">${kfBadge(true)}<button class="btn btn-ghost btn-sm" type="button" data-sup="later">Maybe later</button><button class="linkish" type="button" data-sup="never">Don’t ask again</button></div>`;
       document.body.appendChild(t); icons(); if (IS_TV) { tvBackHook(); Nav.settle(); }
       const close = () => { t.remove(); if (IS_TV) { tvBackHook(); Nav.settle(); } };
       $('.sup-x', t).onclick = close; $('[data-sup="later"]', t).onclick = close;
@@ -8252,7 +8291,7 @@ const SECTIONS = [
     { key: 'resetCfg', label: 'Reset settings', help: 'Keeps your library and addons.', type: 'button', text: 'Reset settings', icon: 'undo-2', danger: true, run: (b) => confirmTwice(b, () => { Object.keys(CFG).forEach((k) => delete CFG[k]); Object.assign(CFG, CFG_DEFAULTS); CFG.quality = applyPreset(CFG.quality); saveCfg(); applyAll(); renderSettings(); toast('Settings reset', 'ok'); }) },
     { key: 'resetAll', label: 'Reset everything', help: 'Removes settings, library, progress, addons and Studio projects from this browser.', type: 'button', text: 'Erase all data', icon: 'trash-2', danger: true, run: (b) => confirmTwice(b, () => { try { Object.keys(localStorage).filter((k) => k.startsWith('mkc:')).forEach((k) => localStorage.removeItem(k)); } catch (e) { /* storage blocked */ } location.reload(); }) },
   ] },
-  { id: 'support', icon: 'heart', label: 'Support', intro: 'MKCinema is free, with no ads. It is made and kept online by Drake Christopher.', rows: () => [{ html: () => Support.html() }] },
+  { id: 'support', icon: 'heart', label: 'Support', intro: 'MKCinema is free forever, with no ads and nothing locked. It is made and kept online by Drake Christopher.', rows: () => [{ html: () => Support.html() }] },
 ];
 function confirmTwice(btn, fn) {
   if (btn.dataset.armed) { fn(); delete btn.dataset.armed; btn.lastChild.textContent = btn.dataset.orig; return; }
@@ -8495,7 +8534,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.28.0';
+const APP_VERSION = '2.28.2';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -8529,6 +8568,7 @@ const licItem = (x) => `<details class="lic"><summary data-nav><span class="lic-
 SECTIONS.push({ id: 'about', icon: 'scale', label: 'About & licenses', intro: 'Version, MKCinema\'s own license, and the third-party software, fonts and services it uses.', rows: () => [
   { html: () => `<div class="ab-hero"><div class="ab-mark">MKCinema</div><small>Version ${APP_VERSION} · © 2026 Drake Christopher</small>
     <p class="ab-gpl">MKCinema is free software under the GNU General Public License, version 3. It comes with ABSOLUTELY NO WARRANTY. You are welcome to share and change it under the terms of that license.</p>
+    <div class="free-pledge"><b>Free forever</b><p>MKCinema is free and always will be. No paid plan, no premium tier, no ads and nothing locked, now or later. Every feature is for everyone.</p><p>Donations on Ko-fi are optional and never unlock anything.</p></div>
     <div class="ab-links"><a class="btn btn-ghost btn-sm" href="https://github.com/itbelikethatbruh/MKCinema" target="_blank" rel="noopener" data-nav><i data-lucide="code"></i>Source code</a><a class="btn btn-ghost btn-sm" href="https://github.com/itbelikethatbruh/MKCinema/blob/main/LICENSE" target="_blank" rel="noopener" data-nav><i data-lucide="scale"></i>GPL-3.0 license</a></div></div>` },
   { group: 'Stremio' },
   { html: () => `<div class="lic-feature"><div class="lic-fh"><span class="lic-n"><b>Stremio Add-on SDK and stremio-core</b><small>The companion server uses the Stremio Add-on SDK to serve its add-on. Stremio import reads watched history in the format stremio-core stores it (its watched-bitfield module). Both are MIT licensed under this notice.</small></span><span class="lic-tag">MIT</span></div>
@@ -18983,6 +19023,7 @@ html.kids-seat .arr-home{display:none}
 .fs-list{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:8px}
 .fs-list li{display:flex;align-items:center;gap:10px;color:var(--ink);font-size:14px}
 .fs-list svg,.fs-list i{width:18px;height:18px;color:var(--gold);flex:none}
+.free-pledge{margin:14px 0 4px;padding:14px 16px;border-radius:14px;border:1px solid color-mix(in srgb,var(--champ,var(--gold)) 45%,transparent);background:color-mix(in srgb,var(--champ,var(--gold)) 8%,transparent)}.free-pledge b{display:block;color:var(--champ,var(--gold));font-size:1.05em;letter-spacing:.02em;margin-bottom:6px}.free-pledge p{margin:0 0 6px;line-height:1.5}.free-pledge p:last-child{margin:0;opacity:.8}.tw-free{margin:18px 0 0;color:var(--champ,var(--gold));font-weight:600;letter-spacing:.02em;text-align:center}
 .fs-free{margin:0 0 14px;color:var(--champ,var(--gold));font-weight:600;letter-spacing:.01em}
 .fs-empty{justify-content:center;margin-top:10px}
 </style>
@@ -19328,7 +19369,7 @@ const FromStremio = {
     return `<div class="tw-sec fs-step"><span class="tw-kicker">Coming from Stremio?</span><h2 class="tw-h">Bring everything over</h2>
       <p class="tw-lede">Sign in with your Stremio account once and MKCinema copies your addons, library, Continue watching and watched episodes. Your password goes only to Stremio and is never saved.</p>
       <ul class="fs-list">${[['users', 'Seats for the whole house, with PINs and kids seats'], ['layout-list', 'Hide, move and rename any Home row'], ['download', 'Downloads in the Android and Windows apps'], ['captions', 'Subtitles that sync themselves'], ['palette', 'Four looks and your own colour']].map(([i, t]) => `<li><i data-lucide="${i}"></i><span>${t}</span></li>`).join('')}</ul>
-      <p class="fs-free">All free. No plans, no ads.</p>
+      <p class="fs-free">All free, forever. No plans, no ads.</p>
       <div class="inrow"><button class="btn btn-prime" type="button" data-nav data-fs-import><i data-lucide="download"></i>Import from Stremio</button></div>
       <p class="tour-note">New to all this? Press Next. You can import any time from Settings or the search bar.</p></div>`;
   },
@@ -19384,6 +19425,12 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
+  { v: '2.28.2', date: '2026-11-06', items: [
+    ['fixed', 'Steady title pages', 'Opening a film or show no longer flickers. The logo keeps its place from the first frame, and the backdrop and logo fade in instead of popping in.'],
+  ] },
+  { v: '2.28.1', date: '2026-11-06', items: [
+    ['new', 'Free forever', 'MKCinema will never charge for anything. No paid plan, no premium tier and nothing locked, now or later. Ko-fi donations stay optional and never unlock a feature. The promise is in Settings › About.'],
+  ] },
   { v: '2.28.0', date: '2026-11-06', items: [
     ['new', 'Arrange Home', 'Hide, move or rename any row on Home, addon catalogs included. Each seat keeps its own. Find it under the rows or in Settings › Home.'],
     ['new', 'Kids seats go by age rating', 'A kids seat now checks the title’s age rating where you live, so adult cartoons stay off it. Pick up to 6, 9 or 12 in Settings › Seats.'],
