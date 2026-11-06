@@ -6,7 +6,7 @@ All notable changes to MKCinema. The web app version and the native app versions
 
 - **Scroll rows with your mouse.** On a computer, arrows appear at the ends of a row when you point at it, and you can click and drag a row sideways. TVs and touch screens work as before.
 
-## Mac app
+## Mac app 1.1.1 (2026-11-06)
 
 - Fixed the Mac app closing with "protocol does not exist" on start (#101). The app now writes a launch log to `~/Library/Logs/MKCinema/launch.log`.
 

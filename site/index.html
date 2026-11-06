@@ -630,7 +630,7 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
         <div class="qgrid">
           <a class="qd" href="download/MKCinema.apk" download="MKCinema.apk"><svg><use href="#b-android"/></svg><span><b>Android</b><small>.apk · 12 MB</small></span></a>
           <a class="qd" href="download/MKCinema.exe" download="MKCinema.exe"><svg><use href="#b-windows"/></svg><span><b>Windows</b><small>.exe · 14 MB</small></span></a>
-          <a class="qd" href="download/MKCinema-1.1-mac.zip" download="MKCinema-1.1-mac.zip"><svg><use href="#b-apple"/></svg><span><b>Mac</b><small>.zip · 12 MB</small></span></a>
+          <a class="qd" href="download/MKCinema-1.1.1-mac.zip" download="MKCinema-1.1.1-mac.zip"><svg><use href="#b-apple"/></svg><span><b>Mac</b><small>.zip · 12 MB</small></span></a>
           <a class="qd" href="download/mkcinema_1.1_amd64.deb" download><svg><use href="#b-linux"/></svg><span><b>Linux</b><small>.deb · 5 MB</small></span></a>
         </div>
         <span class="quick-n">On a TV? Open Downloader and type <b>tv.mkcinema.app</b>, or see the <a href="#tv">Smart TV app</a>. Linux without apt? Get the <a href="download/mkcinema-1.1-linux-x86_64.tar.gz" download>.tar.gz</a>. Install help is in <a href="#install">Download</a>.</span>
@@ -897,8 +897,8 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
         <div class="dl-top"><div class="ic brand-ic"><svg><use href="#b-apple"/></svg></div><span class="pill ok">Available now</span></div>
         <h3>Mac</h3>
         <p>A native window built on the WebKit in macOS, with the menu bar, full screen and keyboard shortcuts you expect.</p>
-        <a class="btn btn-plat" href="download/MKCinema-1.1-mac.zip" download="MKCinema-1.1-mac.zip"><svg><use href="#i-down"/></svg>Download for Mac</a>
-        <span class="fine">Version 1.1 · 12 MB · macOS 11 or later, Intel and Apple silicon</span>
+        <a class="btn btn-plat" href="download/MKCinema-1.1.1-mac.zip" download="MKCinema-1.1.1-mac.zip"><svg><use href="#i-down"/></svg>Download for Mac</a>
+        <span class="fine">Version 1.1.1 · 12 MB · macOS 11 or later, Intel and Apple silicon</span>
       </div>
       <div class="dlc rv d3">
         <div class="dl-top"><div class="ic brand-ic"><svg><use href="#b-linux"/></svg></div><span class="pill ok">Available now</span></div>
@@ -956,7 +956,7 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
     <details class="apk-help rv">
       <summary>How to install on Mac<i></i></summary>
       <ol>
-        <li>Open <b>MKCinema-1.1-mac.zip</b> (Safari unzips it into Downloads) and drag <b>MKCinema</b> into <b>Applications</b>.</li>
+        <li>Open <b>MKCinema-1.1.1-mac.zip</b> (Safari unzips it into Downloads) and drag <b>MKCinema</b> into <b>Applications</b>.</li>
         <li>Open MKCinema from Applications. The first time, macOS says it can't check the app for malware; click <b>Done</b> (or <b>OK</b>).</li>
         <li>Open <b>System Settings › Privacy &amp; Security</b>, scroll down and click <b>Open Anyway</b> next to MKCinema, then confirm.</li>
       </ol>
@@ -1183,7 +1183,7 @@ footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));border-top:1px so
   if (/AFT[A-Z]|Android TV|GoogleTV|BRAVIA|SMART-TV|SmartTV/i.test(ua) && /Android/i.test(ua)) pick('MKCinema-TV.apk', 'Download for your TV');
   else if (/Android/i.test(ua) && !/MKCinemaAndroid/.test(ua)) pick('MKCinema.apk', 'Download for Android');
   else if (/Windows NT/.test(ua)) pick('MKCinema.exe', 'Download for Windows');
-  else if (/Macintosh/.test(ua) && !('ontouchend' in document)) pick('MKCinema-1.1-mac.zip', 'Download for Mac');
+  else if (/Macintosh/.test(ua) && !('ontouchend' in document)) pick('MKCinema-1.1.1-mac.zip', 'Download for Mac');
   else if (/Linux/.test(ua) && !/Android|CrOS/.test(ua)) pick('mkcinema_1.1_amd64.deb', 'Download for Linux');
 
   // Only one FAQ open at a time
