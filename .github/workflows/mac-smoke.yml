@@ -25,6 +25,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Build
         run: |
+          command -v go >/dev/null || brew install go
           go version
           sh mac/package.sh
           rm -rf /tmp/inst && mkdir /tmp/inst && cd /tmp/inst && unzip -q "$GITHUB_WORKSPACE/mac/build/MKCinema-1.1-mac.zip"
