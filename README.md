@@ -115,7 +115,7 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 <tr>
 <td width="33%" valign="top"><img src="docs/readme/icon-skip.svg" width="52" alt=""><br><b>Skip Intro, next episode</b><br><sub>Skip intros, endings and credits (anime too, from any addon), with a 10-second countdown to the next episode while its sources load.</sub></td>
 <td width="33%" valign="top"><img src="docs/readme/icon-sync.svg" width="52" alt=""><br><b>Automatic failover</b><br><sub>If a source shows no picture or stalls, MKCinema moves to the next one by itself.</sub></td>
-<td width="33%" valign="top"><img src="docs/readme/icon-wave.svg" width="52" alt=""><br><b>Night Mode audio</b><br><sub>Brings whispers and explosions closer together, plus Vocal Boost and Spatial Widen presets.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-wave.svg" width="52" alt=""><br><b>Audio languages</b><br><sub>When a stream carries several languages or a commentary, pick one in the player’s Audio tab. Files the browser can’t switch open in VLC or your own player.</sub></td>
 </tr>
 <tr>
 <td width="33%" valign="top"><img src="docs/readme/icon-film.svg" width="52" alt=""><br><b>A real Library</b><br><sub>Watchlist, In progress, Watched and your own lists, with sorting and filters. Lists follow your account.</sub></td>
@@ -225,7 +225,7 @@ VLC is a great file player, and MKCinema keeps it one tap away for the formats a
 <td width="20%" align="center" rowspan="2"><img src="docs/screenshots/app-phone-anime.webp" alt="The Anime tab on a phone"><br><sub>Phones are first-class</sub></td>
 </tr>
 <tr>
-<td align="center"><img src="docs/screenshots/app-player.webp" alt="The rebuilt player with the Audio tab open"><br><sub>The 2.20 player: tabs, 200 % volume, Listen on phone</sub></td>
+<td align="center"><img src="docs/screenshots/app-player.webp" alt="The player’s Audio tab listing English, Spanish and Commentary tracks for Elephants Dream"><br><sub>The Audio tab: 200 % volume, Listen on phone and a film’s audio languages</sub></td>
 <td align="center"><img src="docs/screenshots/app-tv.webp" alt="MKCinema on a TV"><br><sub>On a TV: big type, a focus ring and remembered rows</sub></td>
 </tr>
 </table>
