@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.38.2 (2026-11-06)
+
+- **Side menu fits every window.** The side menu now fits short and small windows: rows tighten up, and if there is still not enough room it scrolls instead of squeezing. On a TV the remote keeps the highlighted item in view.
+
 ## Web app 2.38.1 (2026-11-06)
 
 - **Smoother remote in the welcome tour.** On a TV, the remote now reaches every option in the welcome tour and always keeps a button highlighted.
