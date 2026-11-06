@@ -1,0 +1,63 @@
+/* ===== 2.29.0 Anime look: manga frames =====
+   Replaces the 2.22 zigzag borders with a quieter manga design language: thin pink ink outlines with cut corners,
+   corner brackets, small hatch ticks and a faint halftone, used only on a few surfaces. Static: nothing here
+   animates, and hover only swaps a glow and brackets in. Every piece is a reusable class, and the app's own
+   elements are mapped onto them in the lists below.
+     .mg-panel    cut-corner panel + thin outline (the banner, the Anime splash)
+     .mg-bar      the same outline on an ink bar that never clips its children (menu bar, phone tab bar, drawer)
+     .mg-section  corner brackets + hairline, no clipping (settings cards, pop-up windows)
+     .mg-pick     a poster or tile that shows brackets and a soft pink glow when hovered or focused
+     .mg-tone     a halftone that fades out from one corner (panel surfaces only, never over poster art)
+     .mg-rule     a heading with a double ink slash in front */
+html[data-look="anime"]{--mg-pink:#ff8fb4;--mg-pink-c:255,143,180;--mg-hot:#ff4f8b;--mg-hot-c:255,79,139;--mg-cut:12px;
+  --mg-clip:polygon(var(--mg-cut) 0,100% 0,100% calc(100% - var(--mg-cut)),calc(100% - var(--mg-cut)) 100%,0 100%,0 var(--mg-cut));
+  --mg-frame:%SVG_FRAME% 20 / 20px / 0 stretch;--mg-bracket:%SVG_BRACKET% 10 / 10px / 5px stretch;
+  --mg-section:%SVG_SECTION% 14 / 14px / 0 stretch;--mg-tone:%SVG_TONE% left bottom/520px 340px no-repeat;
+  --mg-glow:0 0 0 1px rgba(var(--mg-pink-c),.75),0 0 24px -4px rgba(var(--mg-hot-c),.6);
+  --mg-hair:0 0 0 1px rgba(var(--mg-pink-c),.16)}
+
+/* --- .mg-panel: the banner and the Anime splash --- */
+html[data-look="anime"] :is(.mg-panel,.hero,.an-splash){border:0;border-radius:0;box-shadow:none;clip-path:var(--mg-clip)}
+html[data-look="anime"] :is(.mg-panel,.hero)::after,html[data-look="anime"] .an-splash::before{content:"";position:absolute;inset:0;pointer-events:none;border:0 solid transparent;border-image:var(--mg-frame)}
+html[data-look="anime"] :is(.mg-panel,.hero)::after{z-index:-1;background:var(--mg-tone)}
+html[data-look="anime"] .an-splash::before{z-index:3}
+html[data-look="anime"] .an-lines{opacity:.6}
+html[data-look="anime"] .an-splash::after{background:radial-gradient(rgba(0,0,0,.22) 1.2px,transparent 1.6px) 0 0/8px 8px}
+
+/* --- .mg-bar: the menu bar (top and side), the phone tab bar, the phone drawer --- */
+html[data-look="anime"] :is(.mg-bar,.dock,#mtabs)::before,html[data-look="anime"].nav-side .dock::before{inset:0;clip-path:var(--mg-clip);background:radial-gradient(rgba(var(--mg-pink-c),.07) 1px,transparent 1.4px) 0 0/7px 7px,linear-gradient(180deg,rgba(29,11,38,.97),rgba(14,6,22,.97))}
+html[data-look="anime"] :is(.mg-bar,.dock,#mtabs)::after,html[data-look="anime"].nav-side .dock::after{inset:0;clip-path:none;background:none;border:0 solid transparent;border-image:var(--mg-frame)}
+html[data-look="anime"] .mg-bar{position:relative;isolation:isolate}
+html[data-look="anime"] .mg-bar::before,html[data-look="anime"] .mg-bar::after{content:"";position:absolute;pointer-events:none;z-index:-1}
+html[data-look="anime"] #sideDrawer .sd-panel{clip-path:var(--mg-clip);background:var(--mg-tone),radial-gradient(rgba(var(--mg-pink-c),.06) 1px,transparent 1.4px) 0 0/7px 7px,linear-gradient(180deg,#1d0b26,#0b0410);border:0 solid transparent;border-image:var(--mg-frame)}
+/* hover: a soft pink glow on the label, no box */
+@media (hover:hover){html[data-look="anime"] :is(#tabs .tab:not(.on),#sideDrawer .sd-list button:not(.on)):hover{color:#fff;text-shadow:0 0 14px rgba(var(--mg-hot-c),.85)}
+  html[data-look="anime"] .dock-tools .ibtn:hover{box-shadow:0 0 0 1px rgba(var(--mg-pink-c),.6),0 0 18px -4px rgba(var(--mg-hot-c),.7)}}
+
+/* --- .mg-section: settings cards and pop-up windows --- */
+html[data-look="anime"] :is(.mg-section,.set-card,.modal){border-radius:3px;border-image:var(--mg-section)}
+html[data-look="anime"] :is(.mg-section,.modal):not(.set-card){border-width:1px;border-style:solid;border-color:transparent}
+
+/* --- .mg-pick: posters stay clean; brackets and a glow appear on the one you point at --- */
+html[data-look="anime"] .card .card-inner,html[data-look="anime"]:not(.tv) .card-inner{border-image:none;border-radius:4px;box-shadow:var(--mg-hair);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+html[data-look="anime"]:not(.tv) :is(.mg-pick,.card:is(:hover,:focus-visible,.nav-focus)) .card-inner,html[data-look="anime"]:not(.tv) .mg-pick:is(:hover,:focus-visible){border-image:var(--mg-bracket);box-shadow:var(--mg-glow)}
+html.an-fx .card.an-tilt .card-inner{box-shadow:var(--mg-glow);border-image:var(--mg-bracket);border-image-outset:7px}
+/* the tilt keeps its light sheen but loses the halftone dots, so the art stays clear */
+html.an-fx .card.an-tilt .card-inner::after{background:radial-gradient(circle at var(--gx,50%) 0,rgba(255,255,255,.14),transparent 55%)}
+@media (max-width:760px){html[data-look="anime"]:not(.tv) .card-inner{border-image-outset:0}}
+
+/* --- .mg-rule: headings get a thin double slash instead of a block --- */
+html[data-look="anime"] :is(.mg-rule,.row-title)::before{width:8px;box-shadow:none;background:linear-gradient(90deg,var(--an-red) 0 4px,transparent 4px 6px,var(--mg-pink) 6px 7px,transparent 7px)}
+html[data-look="anime"] .mg-rule{position:relative;padding-left:16px}
+html[data-look="anime"] .mg-rule::before{content:"";position:absolute;left:0;top:.12em;bottom:.12em;transform:skewX(-14deg)}
+html[data-look="anime"] :is(.page-title,.x8-h){text-shadow:2px 2px 0 var(--an-red),4px 4px 0 var(--an-ink)}
+
+/* --- buttons: hairline pink outline, a glow on hover --- */
+html[data-look="anime"] .btn-ghost{border:1px solid rgba(var(--mg-pink-c),.5)!important;box-shadow:none!important}
+@media (hover:hover){html[data-look="anime"] .btn-ghost:hover{border-color:var(--mg-pink)!important;box-shadow:0 0 20px -4px rgba(var(--mg-hot-c),.7)!important}
+  html[data-look="anime"] .btn-prime:hover{filter:drop-shadow(0 0 10px rgba(var(--mg-hot-c),.65))}}
+
+/* TV: the same lines, no hover states, and the strong focus ring stays */
+html.tv[data-look="anime"] .card-inner{box-shadow:0 0 0 1px rgba(var(--mg-pink-c),.22)}
+html.tv[data-look="anime"] .card.nav-focus .card-inner{box-shadow:0 0 0 2px var(--an-ink),0 0 0 6px #fff,0 0 0 9px var(--an-red)}
+html.an-measure .dock::before,html.an-measure .dock::after{display:none!important}
