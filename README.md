@@ -44,18 +44,18 @@
 <p><img src="docs/readme/h-download.svg" width="100%" alt="Download"></p>
 
 <p align="center">
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.4/MKCinema.apk"><img src="docs/readme/download-android.svg" width="290" alt="Download for Android"></a>
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.4/MKCinema-TV.apk"><img src="docs/readme/download-tv.svg" width="290" alt="Download for Android TV, Google TV and Fire TV"></a>
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.4/com.mkcinema.app_1.1.0_all.ipk"><img src="docs/readme/download-webos.svg" width="290" alt="Download for LG webOS"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.6/MKCinema.apk"><img src="docs/readme/download-android.svg" width="290" alt="Download for Android"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.6/MKCinema-TV.apk"><img src="docs/readme/download-tv.svg" width="290" alt="Download for Android TV, Google TV and Fire TV"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.6/com.mkcinema.app_1.1.0_all.ipk"><img src="docs/readme/download-webos.svg" width="290" alt="Download for LG webOS"></a>
   <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.exe"><img src="docs/readme/download-windows.svg" width="290" alt="Download for Windows"></a>
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.4/MKCinema-1.1-mac.zip"><img src="docs/readme/download-macos.svg" width="290" alt="Download for macOS"></a>
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.4/mkcinema_1.1_amd64.deb"><img src="docs/readme/download-linux.svg" width="290" alt="Download for Linux"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.6/MKCinema-1.1-mac.zip"><img src="docs/readme/download-macos.svg" width="290" alt="Download for macOS"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.6/mkcinema_1.1_amd64.deb"><img src="docs/readme/download-linux.svg" width="290" alt="Download for Linux"></a>
   <a href="https://mkcinema.pages.dev"><img src="docs/readme/download-web.svg" width="290" alt="Open the web app"></a>
 </p>
 
 <p align="center"><sub>
-  Release <a href="https://github.com/itbelikethatbruh/MKCinema/releases/tag/v1.4">v1.4</a> &nbsp;·&nbsp;
-  Linux also as <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.4/mkcinema-1.1-linux-x86_64.tar.gz">.tar.gz</a> &nbsp;·&nbsp;
+  Release <a href="https://github.com/itbelikethatbruh/MKCinema/releases/tag/v1.6">v1.6</a> &nbsp;·&nbsp;
+  Linux also as <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.6/mkcinema-1.1-linux-x86_64.tar.gz">.tar.gz</a> &nbsp;·&nbsp;
   Fire TV: type <code>mkctv.pages.dev</code> into the Downloader app
 </sub></p>
 

@@ -13268,14 +13268,18 @@ const TvPlayer = {
       (async () => {
         const subUrl = await TvPlayer.subUrl(ctx);
         if (P.stream !== stream) return;
-        const ok = (() => { try { return MKAndroid.play(JSON.stringify({ url: src, title: ctx.meta.name || '', sub: v ? `S${v.season} · E${v.episode}${v.name || v.title ? ` · ${v.name || v.title}` : ''}` : [yearOf(ctx.meta), stream._tel && stream._tel.res].filter(Boolean).join(' · '), startMs: Math.round((startAt || 0) * 1000), subUrl, matchRate: CFG.matchRate !== false, headers: nativeHdr ? headers : undefined })); } catch (e) { return false; } })();
+        const ok = (() => { try { return MKAndroid.play(JSON.stringify({ url: src, title: ctx.meta.name || '', sub: v ? `S${v.season} · E${v.episode}${v.name || v.title ? ` · ${v.name || v.title}` : ''}` : [yearOf(ctx.meta), stream._tel && stream._tel.res].filter(Boolean).join(' · '), startMs: Math.round((startAt || 0) * 1000), subUrl, matchRate: CFG.matchRate !== false, audioLang: CFG.audioOnly || '', headers: nativeHdr ? headers : undefined })); } catch (e) { return false; } })();
         if (!ok) { TvPlayer.cur = null; lu.call(this, stream, startAt); return; }
         Loader.hide && Loader.hide();
       })();
     };
     window.MKNative = {
-      done(pos, dur, ended, next, err) {
+      done(pos, dur, ended, next, err, act) { // MKNative 1.6.1: act = 'sources' | 'web' from the TV player's options row
         const c = TvPlayer.cur; if (!c) return;
+        if (act === 'web') {
+          // keep watching in MKCinema's own player (subtitle search and styling, every audio track, sources drawer)
+          TvPlayer.save(pos, dur); TvPlayer.cur = null; c.stream._noNative = true; lu(c.stream, pos > 0 ? pos / 1000 : c.startAt); return;
+        }
         if (err && !(pos > 0)) {
           // the TV player could not open it: the in-app player tries the same source
           TvPlayer.cur = null; c.stream._noNative = true; toast('Playing in the MKCinema player instead', 'info', 3000); lu(c.stream, c.startAt); return;
@@ -13286,6 +13290,14 @@ const TvPlayer = {
         if (hasNext && (next || (ended && CFG.autoNext))) { playNext(); return; }
         if (!$('#player').hidden) closePlayer();
         if (S.view === 'home') renderHome(); else if (S.view === 'library') renderLibrary();
+        // like outside players, leaving the TV player lands on the film's page with its sources, never back on Home
+        const m = c.ctx.meta, onIt = !$('#detail').hidden && D.meta && D.meta.id === m.id;
+        if (!onIt) openDetail(m, { videoId: c.ctx.video ? videoIdFor(m, c.ctx.video) : undefined });
+        if (act === 'sources') {
+          let n = 0; const go = () => { const st = $('#dStreams'), f = st && st.querySelector('[data-nav],button,a');
+            if (f) { st.scrollIntoView({ block: 'start' }); Nav.focus(f, true); } else if (++n < 20) setTimeout(go, 250); };
+          setTimeout(go, onIt ? 60 : 400);
+        }
       },
     };
     const sec = SECTIONS.find((s) => s.id === 'playback');
