@@ -265,7 +265,7 @@ VLC is a great file player, and MKCinema keeps it one tap away for the formats a
 <table>
 <tr>
 <td width="40%" align="center"><img src="docs/screenshots/app-anime.webp" alt="The Anime tab"><br><sub>The Anime tab: trending, airing now, most popular, top rated</sub></td>
-<td width="40%" align="center"><img src="docs/screenshots/app-anime-home.webp" alt="Home in the Anime look"><br><sub>The Anime look, with sakura and Miko</sub></td>
+<td width="40%" align="center"><img src="docs/screenshots/app-anime-home.webp" alt="Home in the Anime look"><br><sub>Home in the Anime look, with sakura</sub></td>
 <td width="20%" align="center" rowspan="2"><img src="docs/screenshots/app-phone-anime.webp" alt="The Anime tab on a phone"><br><sub>Phones are first-class</sub></td>
 </tr>
 <tr>
