@@ -217,8 +217,6 @@ MKCinema does more out of the box than Stremio, Plex, Jellyfin or Kodi in the ro
 
 <sub>✅ built in · ◐ partly, or only on some devices · ❌ not built in · — doesn't apply</sub>
 
-**Where Nuvio is ahead:** it has native apps for iPhone (via AltStore/SideStore), Samsung Tizen and LG webOS, a Google Play listing, a native ExoPlayer/mpv player on Android TV, and automatic subtitle sync. It also has offline downloads, torrents without debrid and its own account sync, like MKCinema.
-
 <details>
 <summary><b>Notes and sources</b></summary>
 
