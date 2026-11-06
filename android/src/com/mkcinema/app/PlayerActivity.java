@@ -96,7 +96,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
         touch = !getPackageManager().hasSystemFeature("android.software.leanback") && getResources().getConfiguration().touchscreen != android.content.res.Configuration.TOUCHSCREEN_NOTOUCH;
         if (touch) setupTouch(seekBox, d); else playBtn.setVisibility(View.GONE);
         note.setText("Loading…");
-        if (matchRate && Build.VERSION.SDK_INT >= 23) new Thread(this::matchFrameRate).start();
+        // 1.6.1: frame-rate matching reads the file only once the player has opened it (see onPrepared), not at the same time
         if (subUrl != null && !subUrl.isEmpty()) new Thread(this::loadSubs).start();
         h.post(tick);
     }
@@ -149,7 +149,12 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
             mp.setDataSource(this, Uri.parse(url), hdr);
             mp.setDisplay(holder);
             mp.setScreenOnWhilePlaying(true);
-            mp.setOnPreparedListener(m -> { prepared = true; fit(); if (startMs > 0) m.seekTo(startMs); m.start(); note.setText(""); show(4000); });
+            mp.setOnPreparedListener(m -> {
+                prepared = true; fit(); if (startMs > 0) m.seekTo(startMs); m.start(); note.setText(""); show(4000);
+                // 1.6.1: a second connection to the same file while the player was still opening it doubled the memory and
+                // network load on 2 GB TVs (and some debrid links allow one connection at a time)
+                if (matchRate && Build.VERSION.SDK_INT >= 23) new Thread(this::matchFrameRate).start();
+            });
             mp.setOnVideoSizeChangedListener((m, w, hh) -> fit());
             mp.setOnCompletionListener(m -> { ended = true; finishWithResult(); });
             mp.setOnErrorListener((m, what, extra) -> { note.setText("This source won’t play here"); h.postDelayed(() -> { setResult(RESULT_CANCELED, new Intent().putExtra("error", what + ":" + extra)); finish(); }, 1800); return true; });
