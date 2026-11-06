@@ -173,30 +173,32 @@ Coming from Stremio? **Settings › Account › Import from Stremio** (also in t
 <a name="compare"></a>
 ## How MKCinema compares
 
-MKCinema does more out of the box than Stremio, Plex, Jellyfin or Kodi in the rows below. Every row is something you can check in each app's own docs or issue tracker. If a row is wrong, [open an issue](https://github.com/itbelikethatbruh/MKCinema/issues) and we'll fix it.
+MKCinema does more out of the box than Stremio, Plex, Jellyfin or Kodi in the rows below. Nuvio is the closest match and has many of the same features, so its column says where. Where we couldn't confirm a Nuvio feature either way, it's marked **?** rather than ❌. Every row is something you can check in each app's own docs, source or issue tracker. If a row is wrong, [open an issue](https://github.com/itbelikethatbruh/MKCinema/issues) and we'll fix it.
 
-| | **MKCinema** | Stremio | Plex | Jellyfin | Kodi |
-|---|:---:|:---:|:---:|:---:|:---:|
-| Stremio addons and your own Plex, Jellyfin or Emby server in one library | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Watch party with synced playback, chat and voice | ✅ | ❌ | ◐ ¹ | ◐ ² | ❌ |
-| Skip intro, ending and credits, anime included from any addon | ✅ | ◐ ³ | ◐ ⁴ | ◐ ⁵ | ❌ |
-| Moves to another source by itself if one stalls | ✅ | ❌ | — | — | ❌ |
-| Source rules across every addon: hide cam copies and fakes, set a lowest resolution and a largest file size, block words | ✅ | ◐ ¹³ | — | — | ◐ ¹³ |
-| Subtitle sync you can drag into place, with a transcript | ✅ | ◐ ⁶ | ◐ ⁶ | ◐ ⁶ | ◐ ⁶ |
-| Seats for the household, with PINs and kids seats by age rating | ✅ | ◐ ⁷ | ✅ | ✅ | ✅ |
-| Phone becomes a remote by scanning a code, no app needed | ✅ | ❌ | ◐ ⁸ | ◐ ⁸ | ◐ ⁸ |
-| Your own M3U or Xtream channels with an XMLTV guide | ✅ | ❌ | ❌ ⁹ | ✅ | ✅ |
-| Split Screen, up to four streams at once | ✅ | ❌ | ❌ | ❌ | ❌ |
-| The TV's sound on your phone, for headphones, with no app to install | ✅ | ❌ | ❌ | ❌ | ❌ ¹⁴ |
-| Ask for picks in plain words, worked out on your device | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Browse films by their best 90-second scenes (Peak Cinema) | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Design your own Stremio addon visually (Addon Studio) | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Plugins and themes from a reviewed gallery, each file checked before it runs | ✅ | ❌ ¹² | ❌ | ✅ | ✅ |
-| Import your Stremio library, progress and addons | ✅ | — | ❌ | ❌ | ❌ |
-| Runs in a browser with nothing to install or host | ✅ | ✅ | ◐ ¹⁰ | ❌ ¹⁰ | ❌ |
-| Free and open source | ✅ GPL-3.0 | ◐ ¹¹ | ❌ | ✅ | ✅ |
+| | **MKCinema** | Stremio | Plex | Jellyfin | Kodi | Nuvio |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| Stremio addons and your own Plex, Jellyfin or Emby server in one library | ✅ | ❌ | ❌ | ❌ | ❌ | ◐ ¹⁵ |
+| Watch party with synced playback, chat and voice | ✅ | ❌ | ◐ ¹ | ◐ ² | ❌ | ◐ ¹⁶ |
+| Skip intro, ending and credits, anime included from any addon | ✅ | ◐ ³ | ◐ ⁴ | ◐ ⁵ | ❌ | ✅ |
+| Moves to another source by itself if one stalls | ✅ | ❌ | — | — | ❌ | ? |
+| Source rules across every addon: hide cam copies and fakes, set a lowest resolution and a largest file size, block words | ✅ | ◐ ¹³ | — | — | ◐ ¹³ | ◐ ¹⁷ |
+| Subtitle sync you can drag into place, with a transcript | ✅ | ◐ ⁶ | ◐ ⁶ | ◐ ⁶ | ◐ ⁶ | ◐ ¹⁸ |
+| Seats for the household, with PINs and kids seats by age rating | ✅ | ◐ ⁷ | ✅ | ✅ | ✅ |◐ ²² |
+| Phone becomes a remote by scanning a code, no app needed | ✅ | ❌ | ◐ ⁸ | ◐ ⁸ | ◐ ⁸ | ? ¹⁹ |
+| Your own M3U or Xtream channels with an XMLTV guide | ✅ | ❌ | ❌ ⁹ | ✅ | ✅ | ? |
+| Split Screen, up to four streams at once | ✅ | ❌ | ❌ | ❌ | ❌ | ? |
+| The TV's sound on your phone, for headphones, with no app to install | ✅ | ❌ | ❌ | ❌ | ❌ ¹⁴ | ? |
+| Ask for picks in plain words, worked out on your device | ✅ | ❌ | ❌ | ❌ | ❌ | ? |
+| Browse films by their best 90-second scenes (Peak Cinema) | ✅ | ❌ | ❌ | ❌ | ❌ | ? |
+| Design your own Stremio addon visually (Addon Studio) | ✅ | ❌ | ❌ | ❌ | ❌ | ? |
+| Plugins and themes from a reviewed gallery, each file checked before it runs | ✅ | ❌ ¹² | ❌ | ✅ | ✅ | ◐ ²⁰ |
+| Import your Stremio library, progress and addons | ✅ | — | ❌ | ❌ | ❌ | ? |
+| Runs in a browser with nothing to install or host | ✅ | ✅ | ◐ ¹⁰ | ❌ ¹⁰ | ❌ | ? ²¹ |
+| Free and open source | ✅ GPL-3.0 | ◐ ¹¹ | ❌ | ✅ | ✅ | ✅ GPL-3.0 |
 
-<sub>✅ built in · ◐ partly, or only on some devices · ❌ not built in · — doesn't apply</sub>
+<sub>✅ built in · ◐ partly, or only on some devices · ❌ not built in · — doesn't apply · ? couldn't confirm either way</sub>
+
+**Where Nuvio is ahead:** it has native apps for iPhone (via AltStore/SideStore), Samsung Tizen and LG webOS, a Google Play listing, a native ExoPlayer/mpv player on Android TV, and automatic subtitle sync. It also has offline downloads, torrents without debrid and its own account sync, like MKCinema.
 
 <details>
 <summary><b>Notes and sources</b></summary>
@@ -215,10 +217,18 @@ MKCinema does more out of the box than Stremio, Plex, Jellyfin or Kodi in the ro
 12. Stremio has no plugin or theme support of its own. Third-party mods add some to its desktop app.
 13. Some Stremio addons and Kodi add-ons have their own filters, but each is set up separately inside that addon. Neither app filters across all sources.
 14. Some TV makers offer private listening through their own remote app (Roku, for example), but only for their own devices. None of these four apps has it built in.
+15. Nuvio connects Jellyfin and Emby (both marked beta on [nuvio.tv](https://nuvio.tv)). We found no Plex support.
+16. Nuvio has a watch party with synced playback and QR invites. We found no chat or voice in it.
+17. Nuvio's debrid stream settings filter by resolution, file size and audio. We couldn't confirm they apply to every addon.
+18. Nuvio has automatic subtitle sync and a delay setting, but no drag-to-sync or transcript that we found.
+19. Nuvio's QR codes handle sign-in and managing addons from your phone. We found no playback remote.
+20. Nuvio has plugins and custom theme colours. We found no reviewed gallery.
+21. Nuvio lists "NuvioWeb" releases on its news page, but we couldn't confirm a public browser player.
+22. Nuvio has up to six profiles with PINs. We found no kids mode based on age ratings.
 
 </details>
 
-<sub>Checked November 2026 against each app's public docs and issue trackers. Apps change, so open an issue if something's out of date.</sub>
+<sub>Checked November 2026 against each app's public docs and issue trackers, and for Nuvio its [site](https://nuvio.tv), [FAQ](https://nuvio.tv/faq) and [source on GitHub](https://github.com/NuvioMedia). Apps change, so open an issue if something's out of date.</sub>
 
 ### Coming from VLC?
 
