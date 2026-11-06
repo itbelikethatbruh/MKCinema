@@ -7,6 +7,8 @@ All notable changes to MKCinema. The web app version and the native app versions
 - **Smallest file** (Settings › Source rules): hides very small files, which are often fakes or poor quality. Pick 200 MB, 500 MB, 1 GB, 2 GB or 4 GB. Episodes use a quarter of the limit, and files that list no size stay. Like the other limits, it is dropped if it would leave no sources at all.
 - **Preferred audio language** (Settings › Source rules): sources in your language move to the top of the list and Smart Play picks them first, across every addon. The Audio language filter never hides them, and MULTi and Dual Audio releases move up a little. 15 languages.
 - Both settings are translated into all interface languages.
+- **Where to watch** on phones is now one tidy dropdown instead of a wall of service pills.
+- Android and Android TV app 1.6.1: if Android closes the app's page in the background while a stream plays, the page is rebuilt instead of the app restarting on Home.
 
 ## Web app 2.22.1 (2026-11-05)
 
