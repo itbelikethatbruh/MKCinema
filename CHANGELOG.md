@@ -7,6 +7,7 @@ All notable changes to MKCinema. The web app version and the native app versions
 - **Arrange Home.** Hide, move or rename any row on Home, addon catalogs included. Open it from the Arrange Home button under the rows, from Settings › Home or from the search bar. Each seat keeps its own arrangement, and it syncs with your account. Reset Home puts everything back. Works by touch, mouse and TV remote.
 - **Kids seats go by age rating.** Before, a kids seat let in anything tagged Animation or Family, so adult cartoons got through. Now a title also has to be rated for the seat's age: up to 6, 9 or 12 (Settings › Seats). MKCinema uses the rating where you live (US, Brazil, India, UK or Germany), else the US one. Ratings for about 1,350 popular animated, family and kids titles are built in, and others are looked up as they appear (with your own TMDB key if you added one, otherwise films through Wikidata). A title with no rating anywhere falls back to the old genre rule.
 - **Coming from Stremio?** The welcome tour has a new step that imports your addons, library, Continue watching and watched episodes in one go, and an empty Home offers the same button.
+- **What's new.** The first time MKCinema opens after an update, one card lists what's new, improved and fixed since the version you last used (up to three releases). Settings › More › What's new keeps the list, with a switch to turn the card off. It never shows on a first visit.
 
 ## Web app 2.27.2 (2026-11-06)
 
