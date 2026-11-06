@@ -2,6 +2,14 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.25.0 (2026-11-06)
+
+- **Sports**, a new section in the menu (top bar, phone bar, side menu and TV). It gathers live sports from your own sources and sorts them by sport: Football, American football, Basketball, Baseball, Ice hockey, Fight sports, Motorsport, Tennis, Cricket, Rugby, Golf, Cycling, More sports and Sports channels.
+- It reads the live TV and channel catalogs of the addons you installed, any catalog whose name says it is about sport, and your own TV playlists (M3U or Xtream). MKCinema ships no sports streams or channels of its own, so the page stays empty until you add a source.
+- Games and channels are sorted by their name, genre and group, including league names (Premier League, NBA, UFC, F1 and so on) and team names for matchups like "Lakers vs Celtics".
+- Show everything as rows, or pick one sport for a full grid, and narrow it to one source. Channels tune straight away like Live TV; events open their page so you can pick a source.
+- Hidden on kids seats, because live sports come straight from your sources and are not filtered for age.
+
 ## Web app 2.24.1 (2026-11-06)
 
 - **Streams play in Safari on iPhone and iPad.** Every source used to fail with "That source was slow to start" because each one got only 3.5 seconds, Safari often waits for a tap before it loads anything, and it can't open MKV files at all. On Safari (and every iPhone browser, which all use Safari underneath):
