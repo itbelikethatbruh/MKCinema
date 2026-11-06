@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.36.0 (2026-11-06)
+
+- **Sharp upscaling.** Videos smaller than the screen are drawn by MKCinema on the device's GPU (WebGL) instead of being stretched by the browser: contrast-adaptive sharpening at the video's own size (after AMD FidelityFX CAS, MIT), then a Catmull-Rom upscale to the screen's real pixels, clamped to the nearest source pixels so edges get no halos. It only runs when the screen clearly has more pixels than the video; a file that already matches the screen plays untouched. Off by default (Off / Natural / Crisp in Player › Picture and Settings › Playback), not offered on TVs, and it switches itself off for the session if frames start dropping. Browsers only allow this for hosts that send CORS headers; other hosts play as before and no stream is ever routed through a server for it. While it is on, subtitles are drawn above the picture in the same style.
+
 ## Web app 2.35.1 (2026-11-06)
 
 - **Universes header on phones.** The franchise cards rose 14 px over the row header and covered "See all" and the "every film in order" line. The Universes and Networks rails now cancel only the top padding they actually have (outside TV).
