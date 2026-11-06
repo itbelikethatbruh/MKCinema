@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mkcinema.app" android:versionCode="18" android:versionName="1.7.0">
+    package="com.mkcinema.app" android:versionCode="19" android:versionName="1.8.0">
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <!-- 1.5.0 new-episode notifications: post them (Android 13+ asks), and keep the twice-daily check after a reboot -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
@@ -63,6 +65,7 @@
         <activity android:name=".PlayerActivity" android:exported="false" android:theme="@style/Noir"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|uiMode|density"/>
         <!-- 1.5.0: twice-daily check for new episodes of the series you follow (no server; see EpisodeAlerts.java) -->
+        <service android:name=".DlService" android:exported="false" android:foregroundServiceType="dataSync"/>
         <service android:name=".EpisodeAlerts" android:exported="false" android:permission="android.permission.BIND_JOB_SERVICE"/>
     </application>
 </manifest>

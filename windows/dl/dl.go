@@ -53,6 +53,8 @@ type Manager struct {
 	base    string
 	srv     *http.Server
 	closing bool
+	share   *http.Server // 1.4.0: finished downloads for the TV, on the home network
+	shareAt string
 }
 
 const reserve = 512 << 20 // keep this much disk free
@@ -456,8 +458,17 @@ func (m *Manager) serve() (string, error) {
 	_, _ = rand.Read(b)
 	tok := hex.EncodeToString(b)
 	mux := http.NewServeMux()
-	mux.HandleFunc("/"+tok+"/f/", func(w http.ResponseWriter, r *http.Request) {
-		p, err := m.FilePath(strings.TrimPrefix(r.URL.Path, "/"+tok+"/f/"))
+	mux.HandleFunc("/"+tok+"/f/", m.fileHandler("/"+tok+"/f/"))
+	m.srv = &http.Server{Handler: cors(mux), ReadHeaderTimeout: 10 * time.Second}
+	go func() { _ = m.srv.Serve(ln) }()
+	m.base = fmt.Sprintf("http://127.0.0.1:%d/%s", ln.Addr().(*net.TCPAddr).Port, tok)
+	return m.base, nil
+}
+
+// fileHandler serves a finished download by id under prefix, with Range support for seeking.
+func (m *Manager) fileHandler(prefix string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		p, err := m.FilePath(strings.TrimPrefix(r.URL.Path, prefix))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
@@ -477,11 +488,87 @@ func (m *Manager) serve() (string, error) {
 			w.Header().Set("Content-Type", ct)
 		}
 		http.ServeContent(w, r, "", st.ModTime(), f)
-	})
-	m.srv = &http.Server{Handler: cors(mux), ReadHeaderTimeout: 10 * time.Second}
-	go func() { _ = m.srv.Serve(ln) }()
-	m.base = fmt.Sprintf("http://127.0.0.1:%d/%s", ln.Addr().(*net.TCPAddr).Port, tok)
-	return m.base, nil
+	}
+}
+
+// SharePort is the fixed port for sharing with a TV, so the address the TV keeps stays the same between starts.
+const SharePort = 47990
+
+// Share starts (on) or stops serving finished downloads to other devices on the home network, for "Play on your TV"
+// (Windows app 1.4.0). Every address carries a secret key kept in keyPath, so only devices that were given the
+// address (through the user's own account) can list or play anything. Windows asks once whether MKCinema may use
+// private networks. It returns {"on", "base", "name"}: base is http://<this PC's home network address>:<port>/<key>.
+func (m *Manager) Share(on bool, keyPath string) (string, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	host, _ := os.Hostname()
+	if !on {
+		if m.share != nil {
+			_ = m.share.Close()
+			m.share, m.shareAt = nil, ""
+		}
+		b, _ := json.Marshal(map[string]any{"on": false, "name": host})
+		return string(b), nil
+	}
+	key := ""
+	if b, err := os.ReadFile(keyPath); err == nil && regexp.MustCompile(`^[0-9a-f]{32}$`).Match(b) {
+		key = string(b)
+	} else {
+		b := make([]byte, 16)
+		_, _ = rand.Read(b)
+		key = hex.EncodeToString(b)
+		_ = os.WriteFile(keyPath, []byte(key), 0o600)
+	}
+	ip := LANAddr()
+	if ip == "" {
+		return "", errors.New("this computer isn't connected to a home network")
+	}
+	if m.share == nil {
+		ln, err := net.Listen("tcp", fmt.Sprintf(":%d", SharePort))
+		if err != nil {
+			if ln, err = net.Listen("tcp", ":0"); err != nil {
+				return "", err
+			}
+		}
+		mux := http.NewServeMux()
+		mux.HandleFunc("/"+key+"/f/", m.fileHandler("/"+key+"/f/"))
+		mux.HandleFunc("/"+key+"/list", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = io.WriteString(w, m.List())
+		})
+		m.share = &http.Server{Handler: mux, ReadHeaderTimeout: 10 * time.Second}
+		port := ln.Addr().(*net.TCPAddr).Port
+		go func(s *http.Server) { _ = s.Serve(ln) }(m.share)
+		m.shareAt = fmt.Sprintf(":%d/%s", port, key)
+	}
+	b, _ := json.Marshal(map[string]any{"on": true, "base": "http://" + ip + m.shareAt, "name": host})
+	return string(b), nil
+}
+
+// LANAddr is this computer's address on the home network: the one its internet traffic leaves from (no packet is
+// sent), or else the first private IPv4 address of a network adapter.
+func LANAddr() string {
+	private := func(ip net.IP) bool { return ip != nil && ip.To4() != nil && ip.IsPrivate() }
+	if c, err := net.Dial("udp", "192.0.2.1:9"); err == nil {
+		a := c.LocalAddr().(*net.UDPAddr).IP
+		c.Close()
+		if private(a) {
+			return a.String()
+		}
+	}
+	ifs, _ := net.Interfaces()
+	for _, i := range ifs {
+		if i.Flags&net.FlagUp == 0 || i.Flags&net.FlagLoopback != 0 || regexp.MustCompile(`(?i)vEthernet|VirtualBox|VMware|Hyper-V|WSL|Loopback`).MatchString(i.Name) {
+			continue
+		}
+		as, _ := i.Addrs()
+		for _, a := range as {
+			if n, ok := a.(*net.IPNet); ok && private(n.IP) {
+				return n.IP.String()
+			}
+		}
+	}
+	return ""
 }
 
 func cors(h http.Handler) http.Handler {
@@ -513,9 +600,12 @@ func (m *Manager) Close() {
 		}
 	}
 	m.saveLocked(true)
-	srv := m.srv
+	srv, sh := m.srv, m.share
 	m.mu.Unlock()
 	if srv != nil {
 		_ = srv.Close()
+	}
+	if sh != nil {
+		_ = sh.Close()
 	}
 }

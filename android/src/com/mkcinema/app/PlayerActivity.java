@@ -35,7 +35,7 @@ import java.nio.charset.StandardCharsets;
     MKCinema with the position so it is saved. With frame-rate matching on, the TV switches to the film's frame rate
     (24p films without judder) while the film plays and switches back afterwards. */
 public class PlayerActivity extends Activity implements SurfaceHolder.Callback, Engine.Listener {
-    Engine eng; boolean fellBack; String engineName; File subFile; boolean subsWaited;
+    Engine eng; boolean fellBack, slow; String engineName; File subFile; boolean subsWaited;
     ImageView subImg; int vw, vh; float par = 1f;
     SurfaceView surface;
     FrameLayout root;
@@ -65,6 +65,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         audioLang = i.getStringExtra("audioLang");
         startMs = i.getIntExtra("startMs", 0); matchRate = i.getBooleanExtra("matchRate", true);
         engineName = i.getStringExtra("engine"); if (engineName == null || engineName.isEmpty()) engineName = "exo";
+        slow = i.getBooleanExtra("slow", false);
         float d = getResources().getDisplayMetrics().density;
 
         root = new FrameLayout(this); root.setBackgroundColor(Color.BLACK);
@@ -163,7 +164,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
 
     void maybeStart() {
         if (eng != null || !surfaceReady || !subsWaited || isFinishing()) return;
-        try { eng = "system".equals(engineName) ? new MpEngine(this, this) : new ExoEngine(this, this); }
+        try { if ("system".equals(engineName)) eng = new MpEngine(this, this); else { ExoEngine x = new ExoEngine(this, this); x.slow = slow; eng = x; } }
         catch (Throwable t) { fellBack = true; eng = new MpEngine(this, this); } // ExoPlayer missing or broken on this device
         eng.open(url, hdr, subFile, audioLang, startMs, surface.getHolder());
     }

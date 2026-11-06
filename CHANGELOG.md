@@ -2,6 +2,21 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.33.0 (2026-11-06)
+
+- **Download films on your TV.** With the TV app 1.8.0, the Download button on film and episode pages works on Android TV, Google TV and Fire TV too. Save to the TV itself or to a USB drive plugged into it. The Download list shows how much room each one has and whether each version fits ("Too big for this TV"), and a download that won't fit never starts. Downloads play with no internet in Library › Downloads, and on the "You're offline" page. Phones with an SD card get the same choice.
+- **Play your computer's downloads on your TV.** In the Windows app 1.4.0, Library › Downloads › Share with my TV. MKCinema on your TV, signed in to the same account, lists them under "On <your computer>" and plays them over your home Wi-Fi. The films stay on the computer; only the list goes to your account. Works with every TV app version.
+- **Slow internet mode** (Settings › Playback): smaller versions of films come first, the player loads further ahead before it starts and after a stall, and the TV player (1.8.0) keeps minutes of the film ready instead of seconds. After three long stalls MKCinema suggests it once.
+
+## Android and Android TV app 1.8.0 (2026-11-06)
+
+- Downloads on TVs, to the TV or a USB drive (SD card on phones). USB downloads run in the app's own downloader: one at a time, resuming after a dropped connection, and they keep going with the app in the background.
+- Slow internet mode for the TV player: keeps 1 to 4 minutes ready, starts after 10 seconds and waits for 20 seconds after a stall.
+
+## Windows app 1.4.0 (2026-11-06)
+
+- Share with my TV: serves finished downloads on the home network (port 47990, with a secret key in the address) so MKCinema on a TV can play them. Windows asks once to allow MKCinema on private networks.
+
 ## Web app 2.31.2 (2026-11-06)
 
 - **Credit for Pictorium.** The Custom poster URL setting, the What's new card and the credits list now credit Pictorium's creator, [Eful97](https://github.com/Eful97), who suggested the integration. The README and the website mention it too.

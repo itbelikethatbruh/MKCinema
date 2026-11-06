@@ -92,6 +92,8 @@ func mkDL(cmd, arg string) (string, error) {
 		return "", nil
 	case "folder":
 		return "", dl.Reveal(m.Dir)
+	case "share": // 1.4.0: "1" or "0" → {on, base, name}
+		return m.Share(arg == "1", filepath.Join(dataDir, "share.key"))
 	}
 	return "", errors.New("unknown command")
 }
@@ -123,6 +125,7 @@ func desktopInit() string {
 d.p2p={start:function(){return window.mkP2P('start')},stop:function(){return window.mkP2P('stop')}};
 if(d.presence)d.setPresence=function(a){return window.mkPresence(a?JSON.stringify(a):'')};
 d.dl={start:function(o){return window.mkDL('start',JSON.stringify(o))},list:function(){return window.mkDL('list','').then(function(s){return JSON.parse(s||'[]')})},
-remove:function(id){return window.mkDL('remove',String(id))},url:function(id){return window.mkDL('url',String(id))},open:function(id){return window.mkDL('open',String(id))},folder:function(){return window.mkDL('folder','')}};
+remove:function(id){return window.mkDL('remove',String(id))},url:function(id){return window.mkDL('url',String(id))},open:function(id){return window.mkDL('open',String(id))},folder:function(){return window.mkDL('folder','')},
+share:function(on){return window.mkDL('share',on?'1':'0').then(function(s){return JSON.parse(s||'{}')})}};
 window.MKDesktop=d;})();`
 }

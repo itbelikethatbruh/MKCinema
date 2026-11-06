@@ -29,6 +29,14 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in /mnt/project-files/patches/2.19.0-episode-alerts/README.md.
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.8.0 (versionCode 19): downloads on TVs, USB drives, Slow internet mode
+
+- `dlStart`, `dlList`, `dlRemove`, `dlPlay` and the offline page's download links now work on TVs too.
+- `dlSpace()` lists storage: `[{vol, removable, free, total}]`, vol 0 is the device, 1+ a USB drive or SD card (from `getExternalFilesDirs`, so no storage permission). `dlStart` takes `vol` and `size` and refuses a file that won't fit.
+- vol 0 still uses the system download manager. Removable drives use `DlService`, a foreground service (type dataSync) that downloads one file at a time with Range resume, up to 20 retries, and holds a Wi-Fi and wake lock while it runs. Its records sit in the same list, marked `own`; `Downloads.list()` restarts the service if downloads are waiting.
+- `setSlow(boolean)` stores Slow internet mode; `play()` passes it to PlayerActivity, and ExoEngine then buffers 60 to 240 s (start after 10 s, 20 s after a stall).
+- Not tested on a device yet (no emulator here).
+
 ## 1.7.0 (versionCode 18): ExoPlayer engine for the TV player
 
 `PlayerActivity` talks to an `Engine`: `ExoEngine` (Media3 ExoPlayer 1.8.0, the default) or `MpEngine` (the system MediaPlayer

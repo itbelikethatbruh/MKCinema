@@ -32,3 +32,11 @@ The exe is not code-signed, so Windows SmartScreen shows "Windows protected your
 They resume after a dropped connection or a restart while the link still allows it. Finished files are served to the
 in-app player on 127.0.0.1 with a random token, and "Open in my player" hands the file to Windows' default video app.
 Subtitles are saved next to the film as .srt or .vtt, so VLC picks them up.
+
+## 1.4.0: share downloads with a TV
+
+`Manager.Share` (dl/dl.go) serves finished downloads on all network adapters at port 47990 (another free port if
+that one is taken), under a secret key kept in `share.key` in the data folder: `/<key>/f/<id>` (Range supported) and
+`/<key>/list`. The page turns it on with `MKDesktop.dl.share(true)` and gets `{on, base, name}`; base uses the PC's
+home network address. The web app puts that address and the list of finished films in the user's synced settings
+(`CFG.pcShare`), and the TV plays `base/f/<id>` in its own player. Windows Firewall asks once the first time.
