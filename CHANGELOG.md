@@ -2,6 +2,14 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.24.0 (2026-11-06)
+
+- **Watch party voice gets its own channel.** Voices always played apart from the film; now they have their own **Voice volume** in the party panel, separate from the film's volume. On a computer you can also send voices to a different output (for example a headset while the film stays on the speakers).
+- **Film dips while people talk** is now a choice: Off, A little or A lot (A lot is the old behaviour).
+- **Voices on your phone.** Set "Voices play on" to **My phone** and the phone paired as a remote shows a **Party voice** button. Tap it and the phone joins the party as a voice-only member: you hear everyone on the phone or its headphones with their own slider, and the phone's mic talks to the party (handy, since most TVs have no mic). The TV mutes voices once the phone is in and plays only the film. With Listen on this phone, the film also gets its own slider on the phone.
+- A voice-only phone never becomes the party host, and your own phone's voice never plays on your own TV or dips your film.
+- Phones: party reactions sit on their own row instead of a one-emoji column.
+
 ## Web app 2.23.0 (2026-11-06)
 
 - **Smallest file** (Settings › Source rules): hides very small files, which are often fakes or poor quality. Pick 200 MB, 500 MB, 1 GB, 2 GB or 4 GB. Episodes use a quarter of the limit, and files that list no size stay. Like the other limits, it is dropped if it would leave no sources at all.
