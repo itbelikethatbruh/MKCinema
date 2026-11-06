@@ -30,7 +30,18 @@ FONTS = {
     'deco':      ('Deco',      '"Josefin Sans"',     '"Jost"',           'Josefin+Sans:wght@300..700&family=Jost:wght@400..700'),
     'slab':      ('Slab',      '"Zilla Slab"',       '"IBM Plex Sans"',  'Zilla+Slab:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700'),
     'techno':    ('Techno',    '"Chakra Petch"',     '"Barlow"',         'Chakra+Petch:wght@400;600;700&family=Barlow:wght@400;500;600;700'),
+    # Bold: loud heading faces in the spirit of street / Y2K lettering; body text stays Onest so it reads well
+    'groovy':    ('Groovy',    '"Shrikhand"',        '"Onest"',          'Shrikhand'),
+    'bubble':    ('Bubble',    '"Bagel Fat One"',    '"Onest"',          'Bagel+Fat+One'),
+    'graffiti':  ('Graffiti',  '"Sedgwick Ave Display"', '"Onest"',      'Sedgwick+Ave+Display'),
+    'gothic':    ('Gothic',    '"Pirata One"',       '"Onest"',          'Pirata+One'),
+    'street':    ('Street',    '"Bungee"',           '"Onest"',          'Bungee'),
+    'outline':   ('Outline',   '"Rampart One"',      '"Onest"',          'Rampart+One'),
+    'drip':      ('Drip',      '"Rubik Wet Paint"',  '"Onest"',          'Rubik+Wet+Paint'),
+    'heavy':     ('Heavy',     '"Climate Crisis"',   '"Onest"',          'Climate+Crisis'),
+    'brush':     ('Brush',     '"Kaushan Script"',   '"Onest"',          'Kaushan+Script'),
 }
+BOLD = ['groovy', 'bubble', 'graffiti', 'gothic', 'street', 'outline', 'drip', 'heavy', 'brush']
 SANS = 'system-ui,-apple-system,"Segoe UI",sans-serif'
 SERIF = 'Georgia,"Times New Roman",serif'
 SERIFS = {'editorial', 'classic', 'slab'}
@@ -42,12 +53,14 @@ HEAD = ("try{var _fn=JSON.parse(localStorage.getItem('mkc:cfg')||'{}').font,_FF=
         "_fl.rel='stylesheet';_fl.id='mkcFont';_fl.href='https://fonts.googleapis.com/css2?family='+_FF[_fn]+'&display=swap';"
         "document.head.appendChild(_fl)}}catch(e){}")
 
+CSS_BOLDSEL = ','.join(f'[data-font="{k}"]' for k in BOLD)
 font_css = []
 for k, (label, d, b, q) in FONTS.items():
     if not q:
         continue
     font_css.append(f'html[data-font="{k}"]{{--f-display:{d},{SERIF if k in SERIFS else SANS};--f-body:{b},{SANS}}}')
 FONT_CSS = '\n'.join(font_css)
+
 
 CSS = r"""
 /* ===== 2.27.0 fonts: the logo and the intro title keep their own type ===== */
@@ -72,6 +85,16 @@ html[data-font="rounded"] .row-title{font-weight:800}
 html[data-font="slab"] .row-title{font-size:clamp(17px,1.8vw,22px)}
 html[data-font="techno"] .row-title{font-weight:600;letter-spacing:.01em}
 html[data-font="techno"] :is(.hero-title,.page-title){letter-spacing:0}
+/* Bold set: one-weight display faces, drawn as designed (no faux bold), a little larger so their character shows */
+html:is(__BOLDSEL__){font-synthesis-weight:none}
+html:is(__BOLDSEL__) :is(.row-title,.page-title,.hero-title,.sec-title,.modal h2,.s-card h3){font-weight:400;letter-spacing:0;text-transform:none}
+html:is(__BOLDSEL__) .row-title{font-size:clamp(18px,2vw,25px);line-height:1.15}
+html:is([data-font="street"],[data-font="heavy"]) .row-title{font-size:clamp(15px,1.6vw,20px)}
+html[data-font="heavy"] :is(.hero-title,.page-title){font-size:clamp(22px,3.2vw,40px)}
+html[data-font="graffiti"] .row-title{font-size:clamp(21px,2.3vw,29px)}
+html[data-font="brush"] .row-title{font-size:clamp(20px,2.2vw,27px)}
+html[data-font="gothic"] .row-title{font-size:clamp(21px,2.3vw,28px)}
+.fnt-sub{margin:14px 0 4px;font-size:12px;color:var(--mute)}
 
 /* Settings > Appearance > Font */
 .fnt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:6px 0}
@@ -79,9 +102,14 @@ html[data-font="techno"] :is(.hero-title,.page-title){letter-spacing:0}
 .fnt-opt:hover{border-color:var(--line-hi)}
 .fnt-opt.on{border-color:var(--ink);background:rgba(255,255,255,.045)}
 .fnt-opt .fs{font-size:26px;line-height:1.1;white-space:nowrap;overflow:hidden;max-width:100%}
-.fnt-opt[data-font="wide"] .fs{font-size:20px;line-height:1.4}
 .fnt-opt .fb{font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 html.tv .fnt-grid{grid-template-columns:repeat(3,1fr)}
+/* the sample scales to the card so it never gets cut off (smaller fixed size for older browsers) */
+.fnt-opt{container-type:inline-size}
+.fnt-opt .fs{font-size:20px;font-size:min(26px,15cqi);text-overflow:clip}
+.fnt-opt[data-font="wide"] .fs,.fnt-opt[data-font="heavy"] .fs{font-size:16px;font-size:min(20px,11cqi)}
+.fnt-opt[data-font="street"] .fs{font-size:17px;font-size:min(22px,12.5cqi)}
+@media (max-width:760px){.fnt-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 html.tv .fnt-opt.nav-focus{box-shadow:inset 0 0 0 3px #f2f2f3;border-color:transparent}
 
 /* ===== 2.27.0 side menu: faint liquid glass + logo lockup ===== */
@@ -128,6 +156,8 @@ html[data-look="anime"] #sideDrawer .sd-brand :is(.mk,.sd-word){display:none}
 html[data-look="anime"] #sideDrawer .sd-top::after{display:none}
 """
 
+CSS = CSS.replace('__BOLDSEL__', CSS_BOLDSEL)
+
 JS = r"""
 /* ---------------- 2.27.0 App fonts ----------------
    Settings › Appearance › Font. Each choice pairs a display face (titles, headings) with a readable body face.
@@ -160,10 +190,12 @@ const AppFont = {
   },
   html() {
     const cur = this.cur();
-    return `<div class="fnt-grid" role="radiogroup" aria-label="Font">${Object.entries(this.LIST).map(([id, f]) => `<button type="button" class="fnt-opt${id === cur ? ' on' : ''}" data-nav data-font="${id}" role="radio" aria-checked="${id === cur}"><span class="fs" style="font-family:${f.d}">Film night</span><span class="fb" style="font-family:${f.b}">${f.label}</span></button>`).join('')}</div>`;
+    const card = ([id, f]) => `<button type="button" class="fnt-opt${id === cur ? ' on' : ''}" data-nav data-font="${id}" role="radio" aria-checked="${id === cur}"><span class="fs" style="font-family:${f.d}">Film night</span><span class="fb">${f.label}</span></button>`;
+    const all = Object.entries(this.LIST), clean = all.filter(([, f]) => !f.bold), bold = all.filter(([, f]) => f.bold);
+    return `<div class="fnt-box" role="radiogroup" aria-label="Font"><div class="fnt-grid">${clean.map(card).join('')}</div><p class="fnt-sub">Bold headings (your text stays easy to read)</p><div class="fnt-grid">${bold.map(card).join('')}</div></div>`;
   },
   bind() {
-    const box = $('#setBody .fnt-grid'); if (!box) return;
+    const box = $('#setBody .fnt-box'); if (!box) return;
     this.preview();
     $$('[data-font]', box).forEach((b) => b.addEventListener('click', () => {
       setCfg('font', b.dataset.font);
@@ -209,17 +241,20 @@ def rep(s, a, b):
 def main(root):
     p = os.path.join(root, 'index.html')
     s = open(p, encoding='utf-8').read()
-    if MARK in s:
-        print('already applied'); return
+    # re-runnable: an earlier run of this patch is taken out and written again, so newer fonts and fixes land
+    s = re.sub(r"try\{var _fn=JSON\.parse.*?catch\(e\)\{\}(?=try\{var _lk=)", '', s, count=1, flags=re.S)
+    s = re.sub(r'<style id="' + MARK + r'">.*?</style>\n<script id="mkc-227f">.*?</script>\n', '', s, count=1, flags=re.S)
     # head: data-font + stylesheet before first paint
     s = rep(s, "try{var _lk=JSON.parse", HEAD + "try{var _lk=JSON.parse")
     # subtitles keep the default faces whatever the app font is
-    s = rep(s, "sans: 'var(--f-body)'", "sans: '\"Onest\", system-ui, sans-serif'")
-    s = rep(s, "display: 'var(--f-display)'", "display: '\"Sora\", system-ui, sans-serif'")
+    if "sans: 'var(--f-body)'" in s:
+        s = rep(s, "sans: 'var(--f-body)'", "sans: '\"Onest\", system-ui, sans-serif'")
+        s = rep(s, "display: 'var(--f-display)'", "display: '\"Sora\", system-ui, sans-serif'")
     # drawer logo lockup
-    s = rep(s, DRAWER_OLD, DRAWER_NEW)
+    if DRAWER_OLD in s:
+        s = rep(s, DRAWER_OLD, DRAWER_NEW)
     lst = {k: {'label': v[0], 'd': v[1].replace('"', "'") + (',serif' if k in SERIFS or k == 'classic' else ',sans-serif'),
-               'b': v[2].replace('"', "'") + ',sans-serif', 'q': v[3]} for k, v in FONTS.items()}
+               'b': v[2].replace('"', "'") + ',sans-serif', 'q': v[3], 'bold': k in BOLD} for k, v in FONTS.items()}
     js = JS.replace('__FONTS__', json.dumps(lst, ensure_ascii=False))
     s = rep(s, '</body>', f'<style id="{MARK}">{CSS}</style>\n<script id="mkc-227f">{js}</script>\n</body>')
 
