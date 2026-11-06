@@ -2,6 +2,14 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.37.2 (2026-11-06)
+
+- **Scroll rows with your mouse.** On a computer, arrows appear at the ends of a row when you point at it, and you can click and drag a row sideways. TVs and touch screens work as before.
+
+## Mac app
+
+- Fixed the Mac app closing with "protocol does not exist" on start (#101). The app now writes a launch log to `~/Library/Logs/MKCinema/launch.log`.
+
 ## Web app 2.37.1 (2026-11-06)
 
 - **Service notices.** When something is being updated or fixed, a short note shows at the top of the app and on the status page (`status.html`). Only the project owner's account can set it, from Settings › Account.
