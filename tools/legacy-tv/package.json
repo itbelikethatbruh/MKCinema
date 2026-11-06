@@ -1,0 +1,15 @@
+{
+  "name": "mkcinema-legacy-tv",
+  "private": true,
+  "description": "Builds tv-legacy.html, the version of the web app for older Samsung and LG TVs (Chromium 63-87).",
+  "scripts": { "build": "node build.js" },
+  "dependencies": {
+    "acorn": "8.14.0",
+    "acorn-walk": "8.3.4",
+    "core-js": "3.39.0",
+    "esbuild": "0.24.0",
+    "fflate": "0.8.2",
+    "lightningcss": "1.28.2",
+    "regexpu-core": "6.2.0"
+  }
+}
