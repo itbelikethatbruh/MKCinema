@@ -2,14 +2,14 @@
 // MyAnimeList's API and its token endpoint send no CORS headers, so a web page cannot call them directly. This forwards
 // only those two things, only from MKCinema's own sites: api.myanimelist.net/v2/* and myanimelist.net/v1/oauth2/token.
 // The user's token arrives in x-mal-auth and their own API client ID in x-mal-client; neither is stored or logged.
-const ORIGINS = [/^https:\/\/([a-z0-9-]+\.)?mkcinema\.pages\.dev$/, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/];
+const ORIGINS = [/^https:\/\/([a-z0-9-]+\.)?mkcinema\.pages\.dev$/, /^https:\/\/([a-z0-9-]+\.)?mkcinema\.app$/, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/];
 const allowed = (u: URL) => u.protocol === 'https:' && ((u.hostname === 'api.myanimelist.net' && u.pathname.startsWith('/v2/')) || (u.hostname === 'myanimelist.net' && u.pathname === '/v1/oauth2/token'));
 
 Deno.serve(async (req) => {
   const origin = req.headers.get('origin') || '';
   const okOrigin = ORIGINS.some((r) => r.test(origin));
   const cors: Record<string, string> = {
-    'access-control-allow-origin': okOrigin ? origin : 'https://mkcinema.pages.dev',
+    'access-control-allow-origin': okOrigin ? origin : 'https://app.mkcinema.app',
     'access-control-allow-methods': 'GET, POST, PATCH, DELETE, OPTIONS',
     'access-control-allow-headers': 'x-mal-auth, x-mal-client, content-type, accept',
     'access-control-expose-headers': 'x-mkc-relay',

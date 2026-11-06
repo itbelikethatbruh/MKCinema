@@ -1,13 +1,13 @@
 <a name="top"></a>
 <p align="center">
-  <a href="https://mkcinema-site.pages.dev"><img src="docs/readme/hero.svg" width="100%" alt="MKCinema. Your addons. A private cinema. A premium player for the Stremio addons you choose."></a>
+  <a href="https://mkcinema.app"><img src="docs/readme/hero.svg" width="100%" alt="MKCinema. Your addons. A private cinema. A premium player for the Stremio addons you choose."></a>
 </p>
 
 <p align="center">
   <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/itbelikethatbruh/MKCinema?style=for-the-badge&labelColor=0a0a0b&color=d9d4c7&label=release"></a>
   <a href="LICENSE"><img alt="License: GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-d9d4c7?style=for-the-badge&labelColor=0a0a0b"></a>
   <a href="https://github.com/itbelikethatbruh/MKCinema/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/itbelikethatbruh/MKCinema?style=for-the-badge&labelColor=0a0a0b&color=d9d4c7"></a>
-  <a href="https://mkcinema.pages.dev"><img alt="Open the web app" src="https://img.shields.io/badge/web%20app-live-d9d4c7?style=for-the-badge&labelColor=0a0a0b&logo=googlechrome&logoColor=white"></a>
+  <a href="https://app.mkcinema.app"><img alt="Open the web app" src="https://img.shields.io/badge/web%20app-live-d9d4c7?style=for-the-badge&labelColor=0a0a0b&logo=googlechrome&logoColor=white"></a>
   <a href="#free"><img alt="Free forever" src="https://img.shields.io/badge/free-forever-d9d4c7?style=for-the-badge&labelColor=0a0a0b"></a>
   <a href="https://ko-fi.com/mkcinema"><img alt="Support on Ko-fi" src="https://img.shields.io/badge/support-Ko--fi-72a4f2?style=for-the-badge&labelColor=0a0a0b&logo=kofi&logoColor=white"></a>
 </p>
@@ -24,8 +24,8 @@
 </p>
 
 <p align="center">
-  <a href="https://mkcinema.pages.dev"><b>Open the app</b></a> &nbsp;·&nbsp;
-  <a href="https://mkcinema-site.pages.dev"><b>Website</b></a> &nbsp;·&nbsp;
+  <a href="https://app.mkcinema.app"><b>Open the app</b></a> &nbsp;·&nbsp;
+  <a href="https://mkcinema.app"><b>Website</b></a> &nbsp;·&nbsp;
   <a href="#download"><b>Download</b></a> &nbsp;·&nbsp;
   <a href="#features"><b>Features</b></a> &nbsp;·&nbsp;
   <a href="#free"><b>Free forever</b></a> &nbsp;·&nbsp;
@@ -54,20 +54,20 @@
   <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.exe"><img src="docs/readme/download-windows.svg" width="290" alt="Download for Windows"></a>
   <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.6/MKCinema-1.1-mac.zip"><img src="docs/readme/download-macos.svg" width="290" alt="Download for macOS"></a>
   <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.6/mkcinema_1.1_amd64.deb"><img src="docs/readme/download-linux.svg" width="290" alt="Download for Linux"></a>
-  <a href="https://mkcinema.pages.dev"><img src="docs/readme/download-web.svg" width="290" alt="Open the web app"></a>
+  <a href="https://app.mkcinema.app"><img src="docs/readme/download-web.svg" width="290" alt="Open the web app"></a>
 </p>
 
 <p align="center"><sub>
   Release <a href="https://github.com/itbelikethatbruh/MKCinema/releases/tag/v1.6">v1.6</a> &nbsp;·&nbsp;
   Linux also as <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.6/mkcinema-1.1-linux-x86_64.tar.gz">.tar.gz</a> &nbsp;·&nbsp;
-  Fire TV: type <code>mkctv.pages.dev</code> into the Downloader app &nbsp;·&nbsp;
+  Fire TV: type <code>tv.mkcinema.app</code> into the Downloader app &nbsp;·&nbsp;
   Samsung TV (2023+): <a href="tizen/README.md">install with TizenBrew</a>
 </sub></p>
 
 Every app opens the same MKCinema in its own window, so it always runs the latest version. Sign in with email and your library, progress, addons and settings follow you between devices.
 
 > [!NOTE]
-> The Windows and Mac apps are not code-signed by Microsoft or Apple yet. On Windows, click **More info › Run anyway** the first time. On a Mac, open the app once, then go to **System Settings › Privacy & Security › Open Anyway**. Android asks you to allow installs from your browser; on a TV, allow the Downloader app instead. LG TVs only install store apps, so the webOS package needs Developer Mode. Samsung (Tizen) isn't supported yet because Samsung requires apps to be signed through its developer program. Only download MKCinema from this repository or [the website](https://mkcinema-site.pages.dev).
+> The Windows and Mac apps are not code-signed by Microsoft or Apple yet. On Windows, click **More info › Run anyway** the first time. On a Mac, open the app once, then go to **System Settings › Privacy & Security › Open Anyway**. Android asks you to allow installs from your browser; on a TV, allow the Downloader app instead. LG TVs only install store apps, so the webOS package needs Developer Mode. Samsung (Tizen) isn't supported yet because Samsung requires apps to be signed through its developer program. Only download MKCinema from this repository or [the website](https://mkcinema.app).
 
 <a name="features"></a>
 <p><img src="docs/readme/h-features.svg" width="100%" alt="Features"></p>
@@ -300,7 +300,7 @@ VLC is a great file player, and MKCinema keeps it one tap away for the formats a
 | Folder | What it is |
 |---|---|
 | [`app/`](app) | The web app (`index.html`), PWA files, the companion server (`mkcinema-server.js`), the Supabase schema (`supabase.sql`) and the debrid relay Edge Function. See [`app/README.md`](app/README.md). |
-| [`site/`](site) | The website at [mkcinema-site.pages.dev](https://mkcinema-site.pages.dev). |
+| [`site/`](site) | The website at [mkcinema.app](https://mkcinema.app). |
 | [`android/`](android) | Android, Android TV, Google TV and Fire TV app: a full-screen WebView with intent hand-off to video players, a TV launcher banner and remote control support. `MKCinema.apk` and `MKCinema-TV.apk` are the same file. |
 | [`webos/`](webos) | LG webOS app (beta): a hosted web app package. See [`webos/README.md`](webos/README.md). |
 | [`tizen/`](tizen) | Samsung TV module for TizenBrew (beta): opens the web app and registers the remote's media keys. See [`tizen/README.md`](tizen/README.md). |

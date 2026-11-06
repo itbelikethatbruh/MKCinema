@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Security fixes go into the latest web app at https://mkcinema.pages.dev and the latest native app release. The native apps load the web app, so most fixes reach every platform without a new download.
+Security fixes go into the latest web app at https://app.mkcinema.app and the latest native app release. The native apps load the web app, so most fixes reach every platform without a new download.
 
 ## Reporting a vulnerability
 

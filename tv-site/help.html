@@ -23,17 +23,17 @@ li b{color:var(--ink)}
 <body><main>
 <div class="brand"><img src="/icon-192.png" alt="">MKCinema</div>
 <h1>Get MKCinema on your TV</h1>
-<p>On a Fire Stick or Android TV, open the <b>Downloader</b> app and type <span class="url">mkctv.pages.dev</span>, then press Go. The app downloads and asks to install.</p>
+<p>On a Fire Stick or Android TV, open the <b>Downloader</b> app and type <span class="url">tv.mkcinema.app</span>, then press Go. The app downloads and asks to install.</p>
 <a class="btn" href="/MKCinema-TV.apk" autofocus>Download the TV app</a>
 <ol>
 <li>First time only: install <b>Downloader</b> from the Amazon Appstore (search "Downloader").</li>
 <li>Allow it to install apps: <b>Settings › My Fire TV › Developer options › Install unknown apps › Downloader › On</b>. If Developer options is missing, open <b>My Fire TV › About</b> and press Select on your device name 7 times.</li>
-<li>In Downloader, type <b>mkctv.pages.dev</b> and press <b>Go</b>, then choose <b>Install</b>.</li>
+<li>In Downloader, type <b>tv.mkcinema.app</b> and press <b>Go</b>, then choose <b>Install</b>.</li>
 <li>Open MKCinema, then sign in by scanning the QR code with your phone (Settings › Account).</li>
 </ol>
-<p class="dim">Works on Fire TV, Android TV and Google TV. Phones and computers: mkcinema-site.pages.dev</p>
+<p class="dim">Works on Fire TV, Android TV and Google TV. Phones and computers: mkcinema.app</p>
 </main>
 <script>document.querySelector('.btn').focus()</script>
 <!-- Cloudflare Web Analytics: anonymous visit counts, no cookies, no IDs (live host only) -->
-<script>if (location.hostname === 'mkctv.pages.dev') { var s = document.createElement('script'); s.defer = true; s.src = 'https://static.cloudflareinsights.com/beacon.min.js'; s.setAttribute('data-cf-beacon', '{"token": "7c5b64c514b2499fb551116fdadafd0a"}'); document.head.appendChild(s); }</script>
+<script>if (/^(tv\.mkcinema\.app|mkctv\.pages\.dev)$/.test(location.hostname)) { var s = document.createElement('script'); s.defer = true; s.src = 'https://static.cloudflareinsights.com/beacon.min.js'; s.setAttribute('data-cf-beacon', '{"token": "7c5b64c514b2499fb551116fdadafd0a"}'); document.head.appendChild(s); }</script>
 </body></html>

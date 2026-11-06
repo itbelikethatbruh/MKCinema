@@ -4,6 +4,45 @@
 <meta charset="utf-8">
 <script>try{var _ul=JSON.parse(localStorage.getItem('mkc:cfg')||'{}').uiLang||'auto',_uc=_ul!=='auto'?_ul:((navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en']).map(function(x){return String(x).slice(0,2).toLowerCase()}).filter(function(x){return /^(en|es|pt|fr|de|it|hi)$/.test(x)})[0]||'en');if(/^(es|pt|fr|de|it|hi)$/.test(_uc))window.__i18nP=fetch('i18n/'+_uc+'.json')}catch(e){}if (/MKCinemaTV|Android TV|GoogleTV|AFT[A-Z]|SMART-TV|SmartTV|Web0S|webOS|Tizen|BRAVIA/i.test(navigator.userAgent)) document.documentElement.classList.add('tv');try{if(JSON.parse(localStorage.getItem('mkc:navMode')||'0')==='side'){document.documentElement.classList.add('nav-side');if(document.documentElement.classList.contains('tv')||innerWidth<1200)document.documentElement.classList.add('side-mini')}}catch(e){}try{var _fn=JSON.parse(localStorage.getItem('mkc:cfg')||'{}').font,_FF={"editorial":"Bodoni+Moda:opsz,wght@6..96,400..900&family=Manrope:wght@400..800","classic":"DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400..700","wide":"Unbounded:wght@400..800&family=Inter:opsz,wght@14..32,400..700","condensed":"Oswald:wght@400..700&family=Barlow:wght@400;500;600;700","rounded":"Nunito:wght@400..900","deco":"Josefin+Sans:wght@300..700&family=Jost:wght@400..700","slab":"Zilla+Slab:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700","techno":"Chakra+Petch:wght@400;600;700&family=Barlow:wght@400;500;600;700","groovy":"Shrikhand","bubble":"Bagel+Fat+One","graffiti":"Sedgwick+Ave+Display","gothic":"Pirata+One","street":"Bungee","outline":"Rampart+One","drip":"Rubik+Wet+Paint","heavy":"Climate+Crisis","brush":"Kaushan+Script"};if(_FF[_fn]){document.documentElement.setAttribute('data-font',_fn);var _fl=document.createElement('link');_fl.rel='stylesheet';_fl.id='mkcFont';_fl.href='https://fonts.googleapis.com/css2?family='+_FF[_fn]+'&display=swap';document.head.appendChild(_fl)}}catch(e){}try{var _lk=JSON.parse(localStorage.getItem('mkc:cfg')||'{}').look;if(_lk&&_lk!=='noir'&&/^[a-z]+$/.test(_lk))document.documentElement.setAttribute('data-look',_lk);if(_lk==='atelier'){var _ac=JSON.parse(localStorage.getItem('mkc:atelierCss')||'null');if(typeof _ac==='string'){var _st=document.createElement('style');_st.id='atelier';_st.textContent=_ac;document.head.appendChild(_st);}}}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script id="mkc-domain">
+/* 2.28.4 MKCinema lives at app.mkcinema.app. mkcinema.pages.dev keeps serving the installed apps (Android, TVs, Windows,
+   Mac, Linux, webOS, Samsung) and installed web apps untouched. A plain browser tab that isn't signed in moves right away,
+   keeping the path and #link; a signed-in tab gets a bar (moving origin means signing in once, synced data follows).
+   OAuth callbacks (MyAnimeList ?code=) are never moved. */
+(function () {
+  try {
+    if (location.hostname !== 'mkcinema.pages.dev' || window.top !== window) return;
+    var ua = navigator.userAgent;
+    if (/MKCinema|; wv\)|Android TV|GoogleTV|AFT[A-Z]|SMART-TV|SmartTV|Web0S|webOS|Tizen|BRAVIA/i.test(ua)) return;
+    if (window.MKAndroid || window.tizen || (window.chrome && window.chrome.webview) || (window.webkit && window.webkit.messageHandlers)) return;
+    if ((window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone) return;
+    if (/[?&](code|state|error)=/.test(location.search)) return;
+    var to = 'https://app.mkcinema.app' + location.pathname + location.search + location.hash, signed = false;
+    try { signed = !!localStorage.getItem('mkc:auth'); } catch (e) { signed = false; }
+    if (!signed) { location.replace(to); return; }
+    var later = 0; try { later = +localStorage.getItem('mkc:movedLater') || 0; } catch (e) { later = 0; }
+    if (Date.now() - later < 3 * 864e5) return;
+    var show = function () {
+      if (document.getElementById('mkcMove')) return;
+      var b = document.createElement('div'); b.id = 'mkcMove'; b.setAttribute('role', 'status');
+      b.innerHTML = '<span>MKCinema has a new home: <b>app.mkcinema.app</b>. Sign in there once and your synced library comes with you.</span>' +
+        '<a class="mv-go" href="' + to.replace(/"/g, '&quot;') + '">Open app.mkcinema.app</a><button type="button" class="mv-x" aria-label="Later">Later</button>';
+      b.querySelector('.mv-x').onclick = function () { try { localStorage.setItem('mkc:movedLater', String(Date.now())); } catch (e) { /* private mode */ } b.remove(); };
+      document.body.appendChild(b);
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(show, 1200); }); else setTimeout(show, 1200);
+  } catch (e) { /* never block the app */ }
+})();
+</script>
+<style id="mkc-domain-css">
+#mkcMove { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 2147483000;
+  width: min(680px, calc(100vw - 32px)); display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 14px 16px;
+  background: #121212; color: #f2efe8; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; box-shadow: 0 18px 50px rgba(0,0,0,.55);
+  font: 500 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+#mkcMove span { flex: 1 1 260px; min-width: 0; }
+#mkcMove .mv-go { background: #e8dcc0; color: #111; text-decoration: none; padding: 9px 14px; border-radius: 999px; font-weight: 700; white-space: nowrap; }
+#mkcMove .mv-x { background: transparent; color: #f2efe8; border: 1px solid rgba(255,255,255,.22); padding: 8px 12px; border-radius: 999px; font: inherit; cursor: pointer; }
+</style>
 <title>MKCinema</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -2378,6 +2417,7 @@ if (CFG.quality !== 'custom') CFG.quality = applyPreset(CFG.quality);
 /* Devices without hover (phones, tablets) can never reveal "on hover" poster text, so they get the title below instead */
 const NO_HOVER = matchMedia('(hover: none)');
 /* Smart TVs (the MKCinema Android TV / Fire TV app, LG webOS, TV browsers): a D-pad remote, sofa distance and a slow GPU */
+const PUBLIC_ORIGIN = location.hostname === 'mkcinema.pages.dev' ? 'https://app.mkcinema.app' : location.origin;
 const IS_TV = document.documentElement.classList.contains('tv') || /MKCinemaTV|Android TV|GoogleTV|AFT[A-Z]|SMART-TV|SmartTV|Web0S|webOS|Tizen|BRAVIA/i.test(navigator.userAgent);
 if (IS_TV) document.documentElement.classList.add('tv');
 /* Phones and tablets: Chrome on Android can black out tiles of backdrop-filtered or 3D-layered elements while scrolling, so these get a flat, unblurred UI */
@@ -6877,7 +6917,7 @@ class Bus {
   }
   close() { try { this.bc && this.bc.close(); } catch (e) { /* ignore */ } if (this.ch) { this.ch.unsubscribe().catch(() => {}); try { this.ch.socket && this.ch.socket.remove && this.ch.socket.remove(this.ch); } catch (e) { /* ignore */ } } this.ch = null; this.online = false; }
 }
-const appLink = (hash) => (/^https?:$/.test(location.protocol) ? `${location.origin}${location.pathname}#${hash}` : '');
+const appLink = (hash) => (/^https?:$/.test(location.protocol) ? `${PUBLIC_ORIGIN}${location.pathname}#${hash}` : '');
 
 /* ---------------- Phone: QR handoff (watch this on your phone) and remote control (your phone drives this screen) ---------------- */
 const Cast = {
@@ -6942,7 +6982,7 @@ const Remote = {
     // a screen on its own Supabase project hands the phone that project too (url and publishable key, both public)
     let extra = ''; const c = Account.config();
     if (code && c && c.url && c.anonKey && c.url.replace(/\/+$/, '') !== SUPABASE_PROJECT.url) extra = `.${btoa(JSON.stringify({ u: c.url.replace(/\/+$/, ''), k: c.anonKey })).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_')}`;
-    return `${location.origin}${location.pathname.replace(/[^/]*$/, '')}remote${code ? `#${code}${extra}` : ''}`;
+    return `${PUBLIC_ORIGIN}${location.pathname.replace(/[^/]*$/, '')}remote${code ? `#${code}${extra}` : ''}`;
   },
   async host() {
     if (this.bus) return this.bus.online;
@@ -6962,7 +7002,7 @@ const Remote = {
   /* this device becomes the remote: the remote page is its own, lighter app */
   join(code) {
     const l = this.link(RM_CODE.test(code || '') ? code : '');
-    if (!l) { toast('The phone remote needs MKCinema on a web address, such as mkcinema.pages.dev.', 'err', 6000); return; }
+    if (!l) { toast('The phone remote needs MKCinema on a web address, such as app.mkcinema.app.', 'err', 6000); return; }
     location.href = l;
   },
   leave() { /* the remote lives on its own page now */ },
@@ -7456,7 +7496,7 @@ const TvLogin = {
   html() {
     const st = this.state, head = '<h5><i data-lucide="smartphone"></i>Sign in with your phone</h5>';
     if (!st) return `<div class="tvl" id="tvl">${head}<p>Scan a code with your phone and sign in there. Handy on a TV, where typing is slow.</p><div class="inrow"><button class="btn btn-ghost btn-sm" type="button" id="tvl-go"><i data-lucide="qr-code"></i>Show QR code</button></div></div>`;
-    if (st === 'unsupported') return `<div class="tvl" id="tvl">${head}<p>This needs MKCinema opened from its web address, such as mkcinema.pages.dev.</p></div>`;
+    if (st === 'unsupported') return `<div class="tvl" id="tvl">${head}<p>This needs MKCinema opened from its web address, such as app.mkcinema.app.</p></div>`;
     if (st === 'expired' || st === 'offline') return `<div class="tvl" id="tvl">${head}<p>${st === 'expired' ? 'That code expired.' : 'Could not reach the sign-in service. Check the connection and try again.'}</p><div class="inrow"><button class="btn btn-ghost btn-sm" type="button" id="tvl-go"><i data-lucide="refresh-cw"></i>New code</button></div></div>`;
     const line = st === 'connecting' ? 'Getting a code ready…' : st === 'phone' ? 'Phone connected. Finish signing in on your phone.' : 'Scan with your phone camera, then sign in on the phone. The code works for 10 minutes.';
     return `<div class="tvl" id="tvl">${head}<div class="qr-wrap sm">${QR.svg(this.link())}</div><p>${line}</p></div>`;
@@ -8534,7 +8574,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.28.3';
+const APP_VERSION = '2.28.4';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -10870,7 +10910,7 @@ const TvCast = {
       yt: 'Trailers play from YouTube. Open the YouTube app on your TV for those.',
       none: 'Start a film or episode first, then send it to your TV.',
       fail: `Your TV could not be reached${err && err.message ? ` (${esc(err.message)})` : ''}. Make sure the TV and this device are on the same Wi-Fi, then try again.`,
-      browser: IS_TV ? 'This screen is already the big one.' : /; wv\)|MKCinema/i.test(navigator.userAgent) ? 'The MKCinema app can’t cast by itself. Open the source in VLC and tap VLC’s cast icon, or open mkcinema.pages.dev in Chrome to cast from there.' : 'Casting works in Chrome (computer or Android) to a Chromecast or Google TV, and in Safari on a Mac to AirPlay. This browser offers neither.',
+      browser: IS_TV ? 'This screen is already the big one.' : /; wv\)|MKCinema/i.test(navigator.userAgent) ? 'The MKCinema app can’t cast by itself. Open the source in VLC and tap VLC’s cast icon, or open app.mkcinema.app in Chrome to cast from there.' : 'Casting works in Chrome (computer or Android) to a Chromecast or Google TV, and in Safari on a Mac to AirPlay. This browser offers neither.',
     }[why] || '';
     X8.body('tvcLayer').innerHTML = `<h3 class="x8-h">Send to TV</h3><p class="sub">${lead}</p>
       <ul class="x8-list"><li><b>Chromecast and Google TV</b><span>Chrome on a computer or an Android phone</span></li><li><b>AirPlay</b><span>Safari on a Mac</span></li><li><b>Any other TV</b><span>Install MKCinema on it: Android TV, Fire TV, LG webOS and Samsung (TizenBrew) have apps</span></li></ul>
@@ -13135,7 +13175,7 @@ const Updater = {
     let el = $('#updBar'); if (el) el.remove();
     const tvApp = IS_TV, canSelf = (() => { try { return typeof MKAndroid.update === 'function'; } catch (e) { return false; } })();
     const msg = kind === 'web' ? `MKCinema ${esc(v.web)} is ready` : `${tvApp ? 'TV app' : 'Android app'} ${esc(v.android)} is ready`;
-    const sub = kind === 'web' ? 'Refresh to get the newest version.' : canSelf ? 'Download it and install over this one. Your settings stay.' : tvApp ? 'Open Downloader on your TV and enter mkctv.pages.dev, then install over this one.' : 'Download it and install over this one. Your settings stay.';
+    const sub = kind === 'web' ? 'Refresh to get the newest version.' : canSelf ? 'Download it and install over this one. Your settings stay.' : tvApp ? 'Open Downloader on your TV and enter tv.mkcinema.app, then install over this one.' : 'Download it and install over this one. Your settings stay.';
     el = document.createElement('div'); el.id = 'updBar'; el.setAttribute('role', 'status');
     el.innerHTML = `<div><b>${msg}</b><small>${sub}</small></div><div class="inrow">${kind === 'app' && !canSelf && tvApp ? '' : `<button class="btn btn-prime btn-sm" type="button" data-nav id="updGo">${kind === 'web' ? 'Refresh' : 'Update'}</button>`}<button class="btn btn-ghost btn-sm" type="button" data-nav id="updLater">Later</button></div>`;
     document.body.appendChild(el);
@@ -13145,7 +13185,7 @@ const Updater = {
     const go = $('#updGo');
     if (go) go.onclick = () => {
       if (kind === 'web') { location.reload(); return; }
-      const url = v.apk || 'https://mkcinema-site.pages.dev/download/MKCinema.apk';
+      const url = v.apk || 'https://mkcinema.app/download/MKCinema.apk';
       if (canSelf) { let ok = false; try { ok = MKAndroid.update(url); } catch (e) { ok = false; } toast(ok ? 'Downloading the update… the installer opens when it is done' : 'The download could not start', ok ? 'info' : 'err', 6000); if (ok) { el.remove(); Nav.settle(); } return; }
       window.open(url, '_blank', 'noopener');
     };
@@ -17045,7 +17085,7 @@ const PxListen = {
 'use strict';
 /* =====================================================================
    MKCinema 2.21.0 · the "what MKCinema still needs" list
-   - Delete account (Settings › Account, and mkcinema.pages.dev/#delete-account for Google Play)
+   - Delete account (Settings › Account, and app.mkcinema.app/#delete-account for Google Play)
    - Privacy policy, status page and the owner's log reader (privacy.html, status.html, logs.html)
    - Duplicate sources from several addons fold into one row ("also in …")
    - Audio sync: delay the sound when it runs ahead of the picture
@@ -17055,7 +17095,7 @@ const PxListen = {
    ===================================================================== */
 
 const Gaps = {
-  BASE: 'https://mkcinema.pages.dev/',
+  BASE: 'https://app.mkcinema.app/',
   sync() { try { if (Account.user && CFG.cloudSync !== false) Account.schedule(); } catch (e) { /* not signed in */ } },
 };
 
@@ -17087,7 +17127,7 @@ const DeleteAccount = {
       help: 'Removes your MKCinema account and everything synced with it: library, progress, addons, settings and saved keys. This cannot be undone. Anything stored only on this device is cleared too.',
       run: (el) => this.run(el),
     }];
-    // the public link stores ask for: mkcinema.pages.dev/#delete-account
+    // the public link stores ask for: app.mkcinema.app/#delete-account
     const go = () => { if (location.hash !== '#delete-account') return; history.replaceState(null, '', location.pathname); setTimeout(() => { openSettings('account'); setTimeout(() => { const b = $('#set-deleteAccount'); if (b) { b.scrollIntoView({ block: 'center' }); if (IS_TV) Nav.focus(b); } }, 120); }, 300); };
     addEventListener('hashchange', go); go();
   },
@@ -19547,7 +19587,7 @@ try { WhatsNew.init(); } catch (e) { console.warn('What’s new:', e); }
    No cookies, no storage, no IDs. Live host only, off with Settings > Data > Share anonymous visit counts, loaded after
    the app so it never slows the start. */
 (function () {
-  if (location.hostname !== 'mkcinema.pages.dev' || (typeof CFG !== 'undefined' && CFG.anonStats === false)) return;
+  if (!/^(mkcinema\.pages\.dev|app\.mkcinema\.app)$/.test(location.hostname) || (typeof CFG !== 'undefined' && CFG.anonStats === false)) return;
   var go = function () { var sc = document.createElement('script'); sc.defer = true; sc.src = 'https://static.cloudflareinsights.com/beacon.min.js';
     sc.setAttribute('data-cf-beacon', '{"token": "2ef8fe3029554590815952216270061a", "spa": false}'); document.body.appendChild(sc); };
   if (document.readyState === 'complete') setTimeout(go, 1500); else addEventListener('load', function () { setTimeout(go, 1500); });

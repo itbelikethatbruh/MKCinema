@@ -24,7 +24,7 @@ Trailers open in a clean pop-up (from the featured banner, a title's page or the
 
 ### Deploying to Cloudflare Pages
 
-The site lives at https://mkcinema.pages.dev. To publish a new version, open the Cloudflare dashboard, go to Workers & Pages › mkcinema › Create deployment, and upload the whole folder (not only `index.html`). The app also needs `manifest.webmanifest`, `sw.js`, `apple-touch-icon.png` and the `icon-*.png` files next to `index.html`. Without them it still works; it just cannot be installed and has no offline shell. After a redeploy the service worker picks up the new `index.html` on the next visit (it always asks the network first).
+The app lives at https://app.mkcinema.app (the Cloudflare Pages project `mkcinema`, also at https://mkcinema.pages.dev, which the native apps load). To publish a new version, open the Cloudflare dashboard, go to Workers & Pages › mkcinema › Create deployment, and upload the whole folder (not only `index.html`). The app also needs `manifest.webmanifest`, `sw.js`, `apple-touch-icon.png` and the `icon-*.png` files next to `index.html`. Without them it still works; it just cannot be installed and has no offline shell. After a redeploy the service worker picks up the new `index.html` on the next visit (it always asks the network first).
 
 Environment variables: `PORT` (7000), `HOST` (127.0.0.1; use 0.0.0.0 for TVs/phones on your LAN), `PUBLIC_URL` (base used in subtitle/relay links), `PROXY_ALLOW_PRIVATE=1` (let the proxy reach LAN addresses; blocked by default to prevent SSRF), `PROXY_ALLOW_HOSTS=a.com,b.com` (optional upstream allowlist), `SUPABASE_URL` and `SUPABASE_ANON_KEY` (optional, for accounts), `FFMPEG_PATH` / `FFPROBE_PATH` (if ffmpeg is not on your PATH).
 
@@ -166,7 +166,7 @@ Settings › Support has a Ko-fi button and QR code (ko-fi.com/mkcinema) for don
 ### Debrid relay
 TorBox and the other debrid services refuse calls made directly from a web page (the browser blocks them, CORS). A Cloudflare Pages site uploaded from the dashboard only serves files (dashboard uploads do not deploy Pages Functions), so MKCinema needs a small relay to pass those calls on. It tries, in order:
 1. `/debrid` on the same site, which exists when `mkcinema-server.js` serves the app. On Pages this path returns the app page with no `x-mkc-relay` header, so MKCinema skips it.
-2. The `debrid-relay` Edge Function on the Supabase project the app signs in with (`supabase/functions/debrid-relay`, deployed with JWT verification off). It answers only https://mkcinema.pages.dev, its preview subdomains and localhost, and it is what makes debrid work on the dashboard-uploaded site.
+2. The `debrid-relay` Edge Function on the Supabase project the app signs in with (`supabase/functions/debrid-relay`, deployed with JWT verification off). It answers only mkcinema.app and its subdomains, https://mkcinema.pages.dev, its preview subdomains and localhost, and it is what makes debrid work on the dashboard-uploaded site.
 3. The proxy URL from Settings (your own `mkcinema-server.js`).
 
 Every relay only reaches the four debrid API hosts, takes the user's own key per request and stores nothing.
