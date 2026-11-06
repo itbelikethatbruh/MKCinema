@@ -41,6 +41,8 @@ The build stops with an error if any script in the result still has syntax that 
 | `gap` in grid layouts (Chromium 66) | `grid-gap` added |
 | `gap` in flex layouts (Chromium 84) | `layout.js` adds the same space as margins, at runtime |
 | `aspect-ratio` (Chromium 88) | `layout.js` sets the height from the width, at runtime |
+| `<button>` as a grid container (Chromium 83) | `layout.js` moves the button's children into a grid `<span class="mkc-bg">`; build.js adds `button > .mkc-bg > child` selectors |
+| `var()` next to an unsupported function (the whole declaration fails when computed, wiping out any fallback) | the value is replaced, not given a fallback; values that cannot be worked out are dropped so earlier rules apply |
 
 Not converted: `:has()` rules (dropped), `backdrop-filter` (no blur), the individual `translate`/`scale` properties,
 and CSS that the app writes at runtime (themes, plugins). Samsung TVs from 2018 (Chromium 56) have no CSS grid at
@@ -48,5 +50,6 @@ all and are not supported.
 
 ## Testing
 
-Checked in a current Chromium with the newer CSS removed (a simulation of the older engine). It has not run on a
-real 2019-2022 Samsung or LG TV yet, so treat it as a beta.
+Tested in a real Chromium 68 (the engine of LG webOS 5 and close to Samsung Tizen 5.5) from Google's snapshot archive,
+under Xvfb, driven over the DevTools protocol with a webOS user agent: the redirect, setup tour, Home, rows, remote
+navigation, the film page and episode list all work with no script errors. Not yet tried on a real TV.
