@@ -2,6 +2,16 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.38.0 (2026-11-06)
+
+- **Mouse scrolling everywhere.** Season pickers, filter chips, tabs, cast and every other sideways list now have the arrows and click-and-drag on a computer, like the Home rows.
+- **Signs & Songs with dubs.** Watching an anime dub with subtitles on? The player picks the file's Signs & Songs track, so you get on-screen text and lyrics without dialogue lines that don't match the dub. Turn it off in Settings › Subtitles.
+- Chrome-based players (including the Windows app) now pick the right audio track when a file lists its dub second.
+
+## Android app 1.8.1 (2026-11-06)
+
+- **New built-in player** based on ExoPlayer, for smoother playback on phones, tablets and Android TV.
+
 ## Web app 2.37.2 (2026-11-06)
 
 - **Scroll rows with your mouse.** On a computer, arrows appear at the ends of a row when you point at it, and you can click and drag a row sideways. TVs and touch screens work as before.
