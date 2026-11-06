@@ -51,6 +51,10 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
     boolean prepared, matchRate, ended, wantNext, surfaceReady;
     long hideAt;
     int pendingSeek = -1;
+    /** 1.6.1: the options row under the bar (Audio, Subtitles, Sources, Full player); sel is the highlighted one, -1 for none */
+    LinearLayout opts; final java.util.List<TextView> optBtns = new java.util.ArrayList<>(); int sel = -1;
+    String audioLang, action;
+    boolean hinted;
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
@@ -60,6 +64,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
         url = i.getStringExtra("url"); subUrl = i.getStringExtra("subUrl");
         // request headers some sources need (Referer, User-Agent...), sent by the player itself
         try { String hj = i.getStringExtra("headers"); if (hj != null && !hj.isEmpty()) { org.json.JSONObject ho = new org.json.JSONObject(hj); java.util.Iterator<String> it = ho.keys(); while (it.hasNext()) { String k = it.next(); hdr.put(k, ho.optString(k)); } } } catch (Exception ignored) { }
+        audioLang = i.getStringExtra("audioLang");
         startMs = i.getIntExtra("startMs", 0); matchRate = i.getBooleanExtra("matchRate", true);
         float d = getResources().getDisplayMetrics().density;
 
@@ -91,12 +96,23 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
         row.addView(playBtn);
         row.addView(time, new LinearLayout.LayoutParams(0, -2, 1)); row.addView(note);
         bar.addView(row);
+        opts = new LinearLayout(this); opts.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams ol = new LinearLayout.LayoutParams(-2, -2); ol.topMargin = (int) (12 * d); bar.addView(opts, ol);
+        String[][] ob = { { "audio", "Audio" }, { "subs", "Subtitles" }, { "sources", "Other sources" }, { "web", "Full player" } };
+        for (String[] o : ob) {
+            TextView t = text(15, Color.WHITE, Typeface.BOLD); t.setText(o[1]); t.setTag(o[0]);
+            t.setPadding((int) (16 * d), (int) (8 * d), (int) (16 * d), (int) (8 * d));
+            LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(-2, -2); bl.rightMargin = (int) (10 * d);
+            t.setOnClickListener(v -> runOpt((String) v.getTag()));
+            opts.addView(t, bl); optBtns.add(t);
+        }
+        paintOpts();
         root.addView(bar, new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM));
         setContentView(root);
         touch = !getPackageManager().hasSystemFeature("android.software.leanback") && getResources().getConfiguration().touchscreen != android.content.res.Configuration.TOUCHSCREEN_NOTOUCH;
         if (touch) setupTouch(seekBox, d); else playBtn.setVisibility(View.GONE);
         note.setText("Loading…");
-        if (matchRate && Build.VERSION.SDK_INT >= 23) new Thread(this::matchFrameRate).start();
+        // 1.6.1: frame-rate matching reads the file only once the player has opened it (see onPrepared), not at the same time
         if (subUrl != null && !subUrl.isEmpty()) new Thread(this::loadSubs).start();
         h.post(tick);
     }
@@ -149,7 +165,13 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
             mp.setDataSource(this, Uri.parse(url), hdr);
             mp.setDisplay(holder);
             mp.setScreenOnWhilePlaying(true);
-            mp.setOnPreparedListener(m -> { prepared = true; fit(); if (startMs > 0) m.seekTo(startMs); m.start(); note.setText(""); show(4000); });
+            mp.setOnPreparedListener(m -> {
+                prepared = true; fit(); pickAudio(); if (startMs > 0) m.seekTo(startMs); m.start();
+                note.setText(touch || hinted ? "" : "Press ▼ for audio, subtitles and sources"); hinted = true; show(touch ? 4000 : 6000);
+                // 1.6.1: a second connection to the same file while the player was still opening it doubled the memory and
+                // network load on 2 GB TVs (and some debrid links allow one connection at a time)
+                if (matchRate && Build.VERSION.SDK_INT >= 23) new Thread(this::matchFrameRate).start();
+            });
             mp.setOnVideoSizeChangedListener((m, w, hh) -> fit());
             mp.setOnCompletionListener(m -> { ended = true; finishWithResult(); });
             mp.setOnErrorListener((m, what, extra) -> { note.setText("This source won’t play here"); h.postDelayed(() -> { setResult(RESULT_CANCELED, new Intent().putExtra("error", what + ":" + extra)); finish(); }, 1800); return true; });
@@ -240,6 +262,62 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
         } catch (Exception ignored) { }
     }
 
+    void paintOpts() {
+        float d = getResources().getDisplayMetrics().density;
+        for (int k = 0; k < optBtns.size(); k++) {
+            GradientDrawable g = new GradientDrawable(); g.setCornerRadius(999);
+            boolean on = k == sel;
+            g.setColor(on ? 0xFFE9E6DE : 0x33FFFFFF); if (!on) g.setStroke((int) Math.max(1, d), 0x40FFFFFF);
+            optBtns.get(k).setBackground(g); optBtns.get(k).setTextColor(on ? 0xFF0B0B0C : Color.WHITE);
+        }
+    }
+
+    void runOpt(String o) {
+        if ("audio".equals(o)) cycleAudio();
+        else if ("subs".equals(o)) cycleSubs();
+        else { action = o; finishWithResult(); } // MKCinema opens the film's source list, or plays it in its own player
+    }
+
+    /** Multi-language files (MULTi, Dual Audio) start in the audio language picked in Settings › Playback. */
+    void pickAudio() {
+        if (audioLang == null || audioLang.isEmpty() || "any".equals(audioLang)) return;
+        try {
+            java.util.Set<String> want = langCodes(audioLang);
+            MediaPlayer.TrackInfo[] tr = mp.getTrackInfo(); int first = -1;
+            for (int k = 0; k < tr.length; k++) {
+                if (tr[k].getTrackType() != MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_AUDIO) continue;
+                if (first < 0) first = k;
+                String l = tr[k].getLanguage();
+                if (l != null && want.contains(l.toLowerCase(java.util.Locale.ROOT))) { if (k != first) mp.selectTrack(k); return; }
+            }
+        } catch (Exception ignored) { }
+    }
+    static java.util.Set<String> langCodes(String c) {
+        java.util.Set<String> s = new java.util.HashSet<>(); c = c.toLowerCase(java.util.Locale.ROOT); s.add(c);
+        String[][] same = { { "eng", "en" }, { "spa", "es" }, { "fre", "fra", "fr" }, { "ger", "deu", "de" }, { "ita", "it" }, { "por", "pt" }, { "hin", "hi" }, { "jpn", "ja" }, { "kor", "ko" } };
+        for (String[] g : same) if (java.util.Arrays.asList(g).contains(c)) s.addAll(java.util.Arrays.asList(g));
+        return s;
+    }
+
+    /** Subtitles: off, then each subtitle track the file or MKCinema provided. */
+    void cycleSubs() {
+        if (!prepared) return;
+        try {
+            MediaPlayer.TrackInfo[] tr = mp.getTrackInfo(); java.util.List<Integer> st = new java.util.ArrayList<>();
+            for (int k = 0; k < tr.length; k++) { int t = tr[k].getTrackType(); if (t == MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_TIMEDTEXT || t == MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_SUBTITLE) st.add(k); }
+            if (st.isEmpty()) { note.setText("No subtitles for this source. Full player can search for more"); show(4000); return; }
+            int cur = -1;
+            for (int k : st) { int s2 = mp.getSelectedTrack(tr[k].getTrackType()); if (s2 == k) { cur = k; break; } }
+            int idx = st.indexOf(cur), next = idx + 1;
+            if (cur >= 0) { mp.deselectTrack(cur); subLine.setText(""); }
+            if (next < st.size()) {
+                int k = st.get(next); mp.selectTrack(k); String lang = tr[k].getLanguage();
+                note.setText("Subtitles: " + (lang == null || "und".equals(lang) ? "track " + (next + 1) : new java.util.Locale(lang).getDisplayLanguage()));
+            } else note.setText("Subtitles off");
+            show(3000);
+        } catch (Exception e) { note.setText("Subtitles can’t be switched on this source"); show(2500); }
+    }
+
     void cycleAudio() {
         if (!prepared) return;
         try {
@@ -263,7 +341,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
                 if (touch) playBtn.setText(mp.isPlaying() ? "❚❚  Pause" : "▶  Play");
             } catch (Exception ignored) { }
         }
-        if (hideAt > 0 && System.currentTimeMillis() > hideAt && mp != null && mp.isPlaying()) { bar.setVisibility(View.GONE); hideAt = 0; }
+        if (hideAt > 0 && System.currentTimeMillis() > hideAt && mp != null && mp.isPlaying()) { bar.setVisibility(View.GONE); hideAt = 0; if (sel >= 0) { sel = -1; paintOpts(); } }
         h.postDelayed(this, 500);
     } };
     static String fmt(int ms) { int s = Math.max(0, ms / 1000); return s >= 3600 ? String.format(java.util.Locale.US, "%d:%02d:%02d", s / 3600, s / 60 % 60, s % 60) : String.format(java.util.Locale.US, "%d:%02d", s / 60, s % 60); }
@@ -280,6 +358,17 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
     @Override public boolean dispatchKeyEvent(KeyEvent e) {
         if (e.getAction() != KeyEvent.ACTION_DOWN) return super.dispatchKeyEvent(e);
         int k = e.getKeyCode(); boolean held = e.getRepeatCount() > 0;
+        // the options row: Down opens it, Left/Right move, OK picks, Up or Back leaves it
+        if (sel >= 0) {
+            switch (k) {
+                case KeyEvent.KEYCODE_DPAD_LEFT: sel = Math.max(0, sel - 1); paintOpts(); show(8000); return true;
+                case KeyEvent.KEYCODE_DPAD_RIGHT: sel = Math.min(optBtns.size() - 1, sel + 1); paintOpts(); show(8000); return true;
+                case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER: runOpt((String) optBtns.get(sel).getTag()); return true;
+                case KeyEvent.KEYCODE_DPAD_UP: case KeyEvent.KEYCODE_BACK: case KeyEvent.KEYCODE_ESCAPE: sel = -1; paintOpts(); show(3000); return true;
+                case KeyEvent.KEYCODE_DPAD_DOWN: show(8000); return true;
+            }
+        }
+        if (k == KeyEvent.KEYCODE_DPAD_DOWN && prepared) { sel = 0; paintOpts(); show(8000); if (note.getText().toString().startsWith("Press")) note.setText(""); return true; }
         switch (k) {
             case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER: case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE: case KeyEvent.KEYCODE_SPACE:
                 if (prepared) { if (mp.isPlaying()) { mp.pause(); show(Long.MAX_VALUE / 4); } else { mp.start(); show(2500); } } return true;
@@ -289,7 +378,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
             case KeyEvent.KEYCODE_DPAD_RIGHT: skip(held ? 30000 : 10000); return true;
             case KeyEvent.KEYCODE_MEDIA_REWIND: skip(-30000); return true;
             case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD: skip(30000); return true;
-            case KeyEvent.KEYCODE_DPAD_UP: case KeyEvent.KEYCODE_DPAD_DOWN: show(4000); return true;
+            case KeyEvent.KEYCODE_DPAD_UP: show(4000); return true;
             case KeyEvent.KEYCODE_MENU: cycleAudio(); return true;
             case KeyEvent.KEYCODE_MEDIA_NEXT: wantNext = true; finishWithResult(); return true;
             case KeyEvent.KEYCODE_BACK: case KeyEvent.KEYCODE_ESCAPE: finishWithResult(); return true;
@@ -300,7 +389,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
     void finishWithResult() {
         Intent r = new Intent();
         try { if (prepared) { r.putExtra("pos", pendingSeek >= 0 ? pendingSeek : mp.getCurrentPosition()); r.putExtra("dur", mp.getDuration()); } } catch (Exception ignored) { }
-        r.putExtra("ended", ended); r.putExtra("next", wantNext);
+        r.putExtra("ended", ended); r.putExtra("next", wantNext); if (action != null) r.putExtra("action", action);
         setResult(RESULT_OK, r); finish();
     }
 

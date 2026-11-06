@@ -269,8 +269,9 @@ public class MainActivity extends Activity {
         if (req == REQ_PLAY) {
             int pos = data != null ? data.getIntExtra("pos", -1) : -1, dur = data != null ? data.getIntExtra("dur", -1) : -1;
             boolean ended = data != null && data.getBooleanExtra("ended", false), next = data != null && data.getBooleanExtra("next", false);
-            String err = data != null ? data.getStringExtra("error") : null;
-            web.evaluateJavascript("window.MKNative&&MKNative.done(" + pos + "," + dur + "," + ended + "," + next + "," + (err == null ? "null" : JSONObject.quote(err)) + ")", null);
+            String err = data != null ? data.getStringExtra("error") : null, act = data != null ? data.getStringExtra("action") : null;
+            // 1.6.1: act is "sources" (show the film's source list) or "web" (keep watching in MKCinema's own player)
+            web.evaluateJavascript("window.MKNative&&MKNative.done(" + pos + "," + dur + "," + ended + "," + next + "," + (err == null ? "null" : JSONObject.quote(err)) + "," + (act == null ? "null" : JSONObject.quote(act)) + ")", null);
             if (tv) web.requestFocus();
             return;
         }
@@ -413,7 +414,7 @@ public class MainActivity extends Activity {
                 JSONObject o = new JSONObject(json);
                 Intent i = new Intent(MainActivity.this, PlayerActivity.class)
                     .putExtra("url", o.getString("url")).putExtra("title", o.optString("title")).putExtra("sub", o.optString("sub"))
-                    .putExtra("startMs", o.optInt("startMs", 0)).putExtra("subUrl", o.optString("subUrl", "")).putExtra("matchRate", o.optBoolean("matchRate", true))
+                    .putExtra("startMs", o.optInt("startMs", 0)).putExtra("subUrl", o.optString("subUrl", "")).putExtra("matchRate", o.optBoolean("matchRate", true)).putExtra("audioLang", o.optString("audioLang", ""))
                     .putExtra("headers", o.has("headers") ? o.getJSONObject("headers").toString() : "");
                 runOnUiThread(() -> { try { startActivityForResult(i, REQ_PLAY); } catch (Exception ignored) { } });
                 return true;
