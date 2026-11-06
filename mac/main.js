@@ -153,7 +153,10 @@ function failed(webView, error) {
 try {
 ObjC.registerSubclass({
   name: 'MKCinemaDelegate',
-  protocols: ['WKUIDelegate', 'WKNavigationDelegate', 'NSApplicationDelegate', 'WKScriptMessageHandler'],
+  // Only protocols the JXA bridge can find at this point are declared. WKScriptMessageHandler is not registered
+  // until WebKit uses it (declaring it fails with "protocol does not exist"), and NSApplicationDelegate's BOOL
+  // methods do not match JXA's type strings. Cocoa and WebKit only check that the methods exist, so both still work.
+  protocols: ['WKUIDelegate', 'WKNavigationDelegate'],
   methods: {
     'userContentController:didReceiveScriptMessage:': {
       types: ['void', ['id', 'id']],
