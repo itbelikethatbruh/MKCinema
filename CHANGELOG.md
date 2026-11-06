@@ -2,6 +2,21 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Android and Android TV app 1.6.2 (2026-11-06)
+
+- **The TV player has VLC-style track lists**: audio and subtitle tracks are listed by language and name, and you can switch them during playback.
+- **TV player options row**: Audio, Subtitles, Other sources (back to the film's sources) and Full player (keep watching in MKCinema's own player). The TV player starts in your Audio language from Settings › Playback, and leaving it lands on the film's page instead of Home.
+- Includes the 1.6.1 fixes: the app no longer restarts on Home when Android closes its page during a stream, and the TV player reads the frame rate only after the film opens.
+
+## Web app 2.26.0 (2026-11-06)
+
+- **Pick your player before you start.** The welcome walkthrough now asks, right after the welcome screen, where streams should play: the MKCinema player or another player app (VLC, Infuse, MX Player and others, with the ones that work on your device). On the Android TV and Fire TV app it asks between the TV player and the MKCinema player instead.
+- It explains **Browser only mode** in plain words (for a work laptop, a school Chromebook or a TV browser where you can't install apps) and turns it on with one switch.
+- It marks the best option for your device and says why, for example that Safari on iPhone and iPad can't open MKV files, or that this browser can't play HEVC (x265).
+- Your choice goes to the same settings as Settings › Playback and syncs to your account. Nothing changes unless you tap an option, and Skip keeps everything as it is.
+- It shows once per device. If you skip the walkthrough before this step, or you set MKCinema up before 2.26.0 and never picked a player, you get this one question on its own, once.
+- Translated into all interface languages.
+
 ## Web app 2.25.1 (2026-11-06)
 
 - **Night Mode audio is gone** (Vocal Clarity Boost, Late-Night Mode and 3D Spatial Theater). These modes could freeze the player: the browser can only process a stream's sound when its host allows it, so picking a mode reloaded the film, and on many hosts it stalled. Once the sound was routed that way it couldn't be switched back without reloading the app. Anyone who had a mode on is set back to the normal sound.
