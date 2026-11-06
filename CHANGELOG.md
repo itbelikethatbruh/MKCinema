@@ -2,6 +2,15 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.24.1 (2026-11-06)
+
+- **Streams play in Safari on iPhone and iPad.** Every source used to fail with "That source was slow to start" because each one got only 3.5 seconds, Safari often waits for a tap before it loads anything, and it can't open MKV files at all. On Safari (and every iPhone browser, which all use Safari underneath):
+  - Playback starts right away. If Safari wants a tap first, a **Play** button asks for it instead of skipping the source.
+  - MKV and AVI files, which Safari can't open, go to the bottom of the list with a **Not for Safari** tag and are skipped when switching sources.
+  - HLS (.m3u8) streams use Safari's own player.
+  - A source gets 10 seconds to start, and longer while data is still arriving.
+  - After four automatic switches, or when nothing playable is left, MKCinema says so plainly and offers VLC, Infuse and the other iPhone players, the source list, or **Try anyway**, instead of looping.
+
 ## Web app 2.24.0 (2026-11-06)
 
 - **Watch party voice gets its own channel.** Voices always played apart from the film; now they have their own **Voice volume** in the party panel, separate from the film's volume. On a computer you can also send voices to a different output (for example a headset while the film stays on the speakers).
