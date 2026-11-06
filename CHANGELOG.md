@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.35.1 (2026-11-06)
+
+- **Universes header on phones.** The franchise cards rose 14 px over the row header and covered "See all" and the "every film in order" line. The Universes and Networks rails now cancel only the top padding they actually have (outside TV).
+
 ## Web app 2.35.0 (2026-11-06)
 
 Ten features built on one idea: MKCinema already knows when people speak in each release (subtitle auto-sync), so the dialogue works as a clock that is the same in every version of a film.
