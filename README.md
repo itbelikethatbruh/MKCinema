@@ -175,6 +175,7 @@ Everything below ships today and costs nothing:
 - **Skip intro**, ending and credits.
 - **Downloads** in the Android and Windows apps.
 - **Four looks** and a colour wheel.
+- **Custom poster URL** for poster services such as [Pictorium](https://github.com/Eful97/Pictorium), with ratings, logos and landscape art. Thanks to its creator, [Eful97](https://github.com/Eful97), for suggesting it.
 
 Coming from Stremio? **Settings › Account › Import from Stremio** (also in the welcome tour) copies your addons, library, Continue watching and watched episodes in one step. Your password goes only to Stremio and is never saved.
 

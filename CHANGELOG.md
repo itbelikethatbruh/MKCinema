@@ -2,9 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.31.2 (2026-11-06)
+
+- **Credit for Pictorium.** The Custom poster URL setting, the What's new card and the credits list now credit Pictorium's creator, [Eful97](https://github.com/Eful97), who suggested the integration. The README and the website mention it too.
+
 ## Web app 2.31.0 (2026-11-06)
 
-- **Custom poster URL.** Settings › Appearance › Posters has a new **Custom poster URL** field for poster services such as [Pictorium](https://github.com/Eful97/Pictorium) (free public instance at pictorium.elfhosted.com, or your own on Vercel or Docker). Paste the link template from Pictorium's Install Hub (Nuvio tab). MKCinema fills in `{type}`, `{imdb_id}`, `{tmdb_id}`, `{tmdb_id|imdb_id}` and `{shape}`; with `{shape}` in the link, wide cards ask for landscape art. It takes over from RPDB while set, and any title the service cannot draw keeps its normal poster. The link syncs with your account like your other keys (unless key sync is off). No Pictorium code is bundled: MKCinema only loads the images your instance serves.
+- **Custom poster URL.** Settings › Appearance › Posters has a new **Custom poster URL** field for poster services such as [Pictorium](https://github.com/Eful97/Pictorium) by [Eful97](https://github.com/Eful97), who suggested it (free public instance at pictorium.elfhosted.com, or your own on Vercel or Docker). Paste the link template from Pictorium's Install Hub (Nuvio tab). MKCinema fills in `{type}`, `{imdb_id}`, `{tmdb_id}`, `{tmdb_id|imdb_id}` and `{shape}`; with `{shape}` in the link, wide cards ask for landscape art. It takes over from RPDB while set, and any title the service cannot draw keeps its normal poster. The link syncs with your account like your other keys (unless key sync is off). No Pictorium code is bundled: MKCinema only loads the images your instance serves.
 
 ## Web app 2.29.0 (2026-11-06)
 
