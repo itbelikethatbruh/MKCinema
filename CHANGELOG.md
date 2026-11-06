@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.42.0 (2026-11-06)
+
+- **A new welcome tour.** Redesigned from the first screen to the last, with what MKCinema does today: Smart Play, subtitles in your language, Find a line, Your Picks, Universes, Anime and Sports, watch party, the phone remote and seats. It fits the screen, so nothing scrolls, on a phone, a computer or a TV, and the favorites step shows only the posters that fit, with Show others to see more.
+- **Get started, rewritten.** Choose the MKCinema player or any player app your device supports, install popular catalog and subtitle addons in one tap, and mark debrid as not needed if you don't use one. Used Stremio before? Its own tab imports everything, installs a whole list of addon links at once, and points to the advanced settings.
+
 ## Web app 2.40.0 (2026-11-06)
 
 - **Troubleshooting guide.** Settings › Help now opens with quick fixes for no streams, buffering, sound, subtitles, addons, debrid keys, sign-in, TV remotes, updates, watch parties and trailers. Each fix has buttons that take you straight to the right setting, with the Diagnostic and Send log underneath. Also in the command palette and at app.mkcinema.app/#help.
