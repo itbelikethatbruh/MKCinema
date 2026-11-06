@@ -1,7 +1,7 @@
 {
   "name": "mkcinema-tizen",
   "appName": "MKCinema",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "MKCinema on Samsung TVs: your watchlist, add-ons and player, with the Samsung remote's Back and media keys.",
   "packageType": "mods",
   "websiteURL": "https://mkcinema.pages.dev/",

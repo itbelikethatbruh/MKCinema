@@ -25,8 +25,10 @@ Updates need nothing: every launch loads the current MKCinema from the web.
 
 ## Which TVs
 
-Samsung TVs from **2023 or newer** (Tizen 7 and later). Older Samsung TVs have a browser engine that is too old
-for MKCinema's layout. Playback uses the TV's own video engine through the web player, so what plays depends on
+Samsung TVs from **2019 or newer** (Tizen 5 and later). TVs from 2023 on run the regular app. TVs from 2019-2022
+have an older browser, so they are sent to a version of the app converted for it (`tv-legacy.html`, built at each
+release by `tools/legacy-tv`). That version is an early beta: it has not been tried on a real 2019-2022 TV yet.
+Samsung TVs from 2018 and older are not supported: their browser cannot lay out the app. Playback uses the TV's own video engine through the web player, so what plays depends on
 the TV. For files the TV can't play, use VLC on another device or the phone remote's "Listen on phone".
 
 ## Files

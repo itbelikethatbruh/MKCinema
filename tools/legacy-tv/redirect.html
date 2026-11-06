@@ -1,0 +1,12 @@
+<script id="mkc-legacy-tv">/* Older Samsung and LG TVs (browser older than Chromium 88) open tv-legacy.html, the same app converted for them.
+   Only TV browsers are sent there; add ?modern to the address to skip it. */
+(function () {
+  try {
+    var ua = navigator.userAgent;
+    if (!/Tizen|Web0S|webOS|SMART-TV|SmartTV|NetCast|BRAVIA|HbbTV|VIDAA/i.test(ua) || /MKCinemaTV/.test(ua)) return;
+    if (/[?&]modern\b/.test(location.search)) return;
+    if (window.CSS && CSS.supports && CSS.supports('aspect-ratio', '1')) return;
+    location.replace('tv-legacy.html' + location.search + location.hash);
+  } catch (e) {}
+})();
+</script>
