@@ -18378,7 +18378,7 @@ SportsHub.init();
    that refuse, the film stalled, and because a video can never be detached from Web Audio again, the only way out was
    reloading the app. Volume boost and Listen on phone still use the graph (they ask first, per stream).
    Audio language now draws at once from what the source already says (flags, ENG / ITA / MULTi tags, the file name).
-   The TorBox / MKCinema server lookup still runs quietly behind it and only adds buttons if it finds switchable tracks. */
+   The debrid / MKCinema server lookup still runs quietly behind it and only adds buttons if it finds switchable tracks. */
 (() => {
   if (CFG.dsp && CFG.dsp !== 'flat') setCfg('dsp', 'flat');
   DSP.pick = function () { if (CFG.dsp !== 'flat') setCfg('dsp', 'flat'); };
