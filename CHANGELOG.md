@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.39.0 (2026-11-06)
+
+- **Subtitles in your language.** When no subtitle exists in your language, MKCinema translates the best one it finds, line by line as you watch, and marks it *Translated* in the subtitle menu. Chrome and Edge translate on your device; other browsers and the Android and TV apps use MKCinema's translation service. Turn it off in Settings › Subtitles.
+- **One tidy subtitle list.** Subtitles from all your add-ons now arrive as one list without repeats. The ones made for your exact file come first, then the closest release. Auto-sync works on every one, translated ones included.
+
 ## Web app 2.38.1 (2026-11-06)
 
 - **Smoother remote in the welcome tour.** On a TV, the remote now reaches every option in the welcome tour and always keeps a button highlighted.

@@ -48,6 +48,7 @@ code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
 <li>Title and artwork sources: Cinemeta and Metahub, Kitsu for anime, and TMDB or Fanart.tv if you add a key.</li>
 <li>Trailers from Apple (iTunes) and YouTube. Skip-intro times from TheIntroDB. Subtitles from the subtitle addons you install, such as OpenSubtitles.</li>
 <li>Services you connect yourself: Trakt, Simkl, AniList, MyAnimeList and MDBList.</li>
+<li>Subtitle translation. When no subtitle exists in your language and your browser has no built-in translator, the subtitle lines (and nothing else) are sent to MKCinema’s translation service at subs.mkcinema.app, which runs on Cloudflare Workers AI. Translations are cached by their text so the same file is not translated twice; nothing about you is stored. Turn it off in <b>Settings › Subtitles</b>.</li>
 <li>Two small relays run by MKCinema on Supabase. They forward requests for services that block browsers, which are some debrid services and MyAnimeList. Requests pass through them and nothing is stored.</li>
 </ul>
 
