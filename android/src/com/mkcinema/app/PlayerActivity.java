@@ -273,8 +273,8 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
     }
 
     void runOpt(String o) {
-        if ("audio".equals(o)) cycleAudio();
-        else if ("subs".equals(o)) cycleSubs();
+        if ("audio".equals(o)) openTracks(false);
+        else if ("subs".equals(o)) openTracks(true);
         else { action = o; finishWithResult(); } // MKCinema opens the film's source list, or plays it in its own player
     }
 
@@ -299,38 +299,79 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
         return s;
     }
 
-    /** Subtitles: off, then each subtitle track the file or MKCinema provided. */
-    void cycleSubs() {
-        if (!prepared) return;
+    /** Track list like VLC's: every audio or subtitle track inside the file, picked from a list at any time.
+        Up/Down move, OK picks, Back or Left closes. Tapping works on phones. */
+    LinearLayout picker; final java.util.List<TextView> pickRows = new java.util.ArrayList<>(); final java.util.List<Runnable> pickActs = new java.util.ArrayList<>(); int pickSel;
+
+    String trackLabel(MediaPlayer.TrackInfo t, int n) {
+        String lang = t.getLanguage(), name = lang == null || lang.isEmpty() || "und".equals(lang) ? "" : new java.util.Locale(lang).getDisplayLanguage();
+        String extra = "";
         try {
-            MediaPlayer.TrackInfo[] tr = mp.getTrackInfo(); java.util.List<Integer> st = new java.util.ArrayList<>();
-            for (int k = 0; k < tr.length; k++) { int t = tr[k].getTrackType(); if (t == MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_TIMEDTEXT || t == MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_SUBTITLE) st.add(k); }
-            if (st.isEmpty()) { note.setText("No subtitles for this source. Full player can search for more"); show(4000); return; }
-            int cur = -1;
-            for (int k : st) { int s2 = mp.getSelectedTrack(tr[k].getTrackType()); if (s2 == k) { cur = k; break; } }
-            int idx = st.indexOf(cur), next = idx + 1;
-            if (cur >= 0) { mp.deselectTrack(cur); subLine.setText(""); }
-            if (next < st.size()) {
-                int k = st.get(next); mp.selectTrack(k); String lang = tr[k].getLanguage();
-                note.setText("Subtitles: " + (lang == null || "und".equals(lang) ? "track " + (next + 1) : new java.util.Locale(lang).getDisplayLanguage()));
-            } else note.setText("Subtitles off");
-            show(3000);
-        } catch (Exception e) { note.setText("Subtitles can’t be switched on this source"); show(2500); }
+            MediaFormat f = Build.VERSION.SDK_INT >= 19 ? t.getFormat() : null;
+            if (f != null) {
+                String mime = f.getString(MediaFormat.KEY_MIME);
+                if (mime != null) { String m = mime.replaceFirst("^[a-z]+/", "").replace("vnd.dts.hd", "DTS-HD").replace("vnd.dts", "DTS").replace("eac3-joc", "Atmos").replace("eac3", "E-AC3").replace("ac3", "AC3").replace("mp4a-latm", "AAC").replace("true-hd", "TrueHD"); extra = m.toUpperCase(java.util.Locale.ROOT).replace("ATMOS", "Atmos"); }
+                if (f.containsKey(MediaFormat.KEY_CHANNEL_COUNT)) { int ch = f.getInteger(MediaFormat.KEY_CHANNEL_COUNT); extra += (extra.isEmpty() ? "" : " ") + (ch == 6 ? "5.1" : ch == 8 ? "7.1" : ch == 2 ? "stereo" : ch == 1 ? "mono" : ch + " ch"); }
+            }
+        } catch (Exception ignored) { }
+        String label = name.isEmpty() ? "Track " + n : name;
+        return extra.isEmpty() ? label : label + "  ·  " + extra;
     }
 
-    void cycleAudio() {
+    void openTracks(boolean subs) {
         if (!prepared) return;
+        MediaPlayer.TrackInfo[] tr;
+        try { tr = mp.getTrackInfo(); } catch (Exception e) { note.setText("Tracks can’t be read on this source"); show(2500); return; }
+        java.util.List<Integer> list = new java.util.ArrayList<>();
+        for (int k = 0; k < tr.length; k++) {
+            int t = tr[k].getTrackType();
+            if (subs ? (t == MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_TIMEDTEXT || t == MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_SUBTITLE) : t == MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_AUDIO) list.add(k);
+        }
+        if (!subs && list.size() < 2) { note.setText(list.isEmpty() ? "No audio tracks reported" : "This file has one audio track" + (list.isEmpty() ? "" : ": " + trackLabel(tr[list.get(0)], 1))); show(3500); return; }
+        if (subs && list.isEmpty()) { note.setText("No subtitles in this file. Full player can search for more"); show(4000); return; }
+        int cur = -1;
         try {
-            MediaPlayer.TrackInfo[] tr = mp.getTrackInfo(); java.util.List<Integer> au = new java.util.ArrayList<>();
-            for (int k = 0; k < tr.length; k++) if (tr[k].getTrackType() == MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_AUDIO) au.add(k);
-            if (au.size() < 2) { note.setText("Only one audio track"); show(2500); return; }
-            int cur = Build.VERSION.SDK_INT >= 21 ? mp.getSelectedTrack(MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_AUDIO) : -1;
-            int next = au.get((au.indexOf(cur) + 1) % au.size());
-            mp.selectTrack(next);
-            String lang = tr[next].getLanguage(); note.setText("Audio: " + (lang == null || "und".equals(lang) ? "track " + (au.indexOf(next) + 1) : new java.util.Locale(lang).getDisplayLanguage()));
-            show(3000);
-        } catch (Exception e) { note.setText("Audio can’t be switched on this source"); show(2500); }
+            if (!subs) cur = mp.getSelectedTrack(MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_AUDIO);
+            else for (int k : list) if (mp.getSelectedTrack(tr[k].getTrackType()) == k) { cur = k; break; }
+        } catch (Exception ignored) { }
+        closePicker();
+        float d = getResources().getDisplayMetrics().density;
+        picker = new LinearLayout(this); picker.setOrientation(LinearLayout.VERTICAL);
+        int pp = (int) (14 * d); picker.setPadding(pp, pp, pp, pp);
+        GradientDrawable bg = new GradientDrawable(); bg.setColor(0xF0141417); bg.setCornerRadius(16 * d); bg.setStroke((int) Math.max(1, d), 0x26FFFFFF); picker.setBackground(bg);
+        TextView head = text(13, 0xFFB9B9C0, Typeface.BOLD); head.setText(subs ? "SUBTITLES" : "AUDIO"); head.setPadding((int) (12 * d), 0, 0, (int) (8 * d)); picker.addView(head);
+        pickRows.clear(); pickActs.clear(); pickSel = 0;
+        final MediaPlayer.TrackInfo[] T = tr; final int curF = cur;
+        if (subs) addPick("Off", cur < 0, () -> { try { if (curF >= 0) mp.deselectTrack(curF); } catch (Exception ignored) { } subLine.setText(""); note.setText("Subtitles off"); });
+        int n = 1;
+        for (int k : list) {
+            final int idx = k; final String lab = trackLabel(T[k], n++);
+            if (k == cur) pickSel = pickRows.size();
+            addPick(lab, k == cur, () -> {
+                try { if (subs && curF >= 0 && curF != idx) mp.deselectTrack(curF); mp.selectTrack(idx); note.setText((subs ? "Subtitles: " : "Audio: ") + lab); }
+                catch (Exception e) { note.setText(subs ? "That subtitle can’t be shown here" : "That audio track can’t be played here"); }
+            });
+        }
+        android.widget.ScrollView sc = new android.widget.ScrollView(this); sc.addView(picker);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams((int) (360 * d), -2, Gravity.END | Gravity.CENTER_VERTICAL); lp.rightMargin = (int) (40 * d);
+        root.addView(sc, lp); paintPick(); bar.setVisibility(View.GONE); hideAt = 0;
     }
+    void addPick(String label, boolean on, Runnable act) {
+        float d = getResources().getDisplayMetrics().density;
+        TextView t = text(16, Color.WHITE, Typeface.NORMAL); t.setText((on ? "✓  " : "     ") + label);
+        t.setPadding((int) (12 * d), (int) (10 * d), (int) (12 * d), (int) (10 * d));
+        final int i = pickRows.size(); t.setOnClickListener(v -> { pickSel = i; choosePick(); });
+        picker.addView(t, new LinearLayout.LayoutParams(-1, -2)); pickRows.add(t); pickActs.add(act);
+    }
+    void paintPick() {
+        float d = getResources().getDisplayMetrics().density;
+        for (int k = 0; k < pickRows.size(); k++) {
+            boolean on = k == pickSel; GradientDrawable g = new GradientDrawable(); g.setCornerRadius(10 * d); g.setColor(on ? 0xFFE9E6DE : 0x00000000);
+            pickRows.get(k).setBackground(g); pickRows.get(k).setTextColor(on ? 0xFF0B0B0C : Color.WHITE);
+        }
+    }
+    void choosePick() { Runnable r = pickActs.get(pickSel); closePicker(); r.run(); show(3000); }
+    void closePicker() { if (picker != null) { root.removeView((View) picker.getParent()); picker = null; } }
 
     final Runnable tick = new Runnable() { @Override public void run() {
         if (prepared && mp != null) {
@@ -358,6 +399,15 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
     @Override public boolean dispatchKeyEvent(KeyEvent e) {
         if (e.getAction() != KeyEvent.ACTION_DOWN) return super.dispatchKeyEvent(e);
         int k = e.getKeyCode(); boolean held = e.getRepeatCount() > 0;
+        if (picker != null) {
+            switch (k) {
+                case KeyEvent.KEYCODE_DPAD_UP: pickSel = Math.max(0, pickSel - 1); paintPick(); return true;
+                case KeyEvent.KEYCODE_DPAD_DOWN: pickSel = Math.min(pickRows.size() - 1, pickSel + 1); paintPick(); return true;
+                case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER: choosePick(); return true;
+                case KeyEvent.KEYCODE_BACK: case KeyEvent.KEYCODE_ESCAPE: case KeyEvent.KEYCODE_DPAD_LEFT: closePicker(); show(8000); return true;
+                case KeyEvent.KEYCODE_DPAD_RIGHT: return true;
+            }
+        }
         // the options row: Down opens it, Left/Right move, OK picks, Up or Back leaves it
         if (sel >= 0) {
             switch (k) {
@@ -379,7 +429,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
             case KeyEvent.KEYCODE_MEDIA_REWIND: skip(-30000); return true;
             case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD: skip(30000); return true;
             case KeyEvent.KEYCODE_DPAD_UP: show(4000); return true;
-            case KeyEvent.KEYCODE_MENU: cycleAudio(); return true;
+            case KeyEvent.KEYCODE_MENU: openTracks(false); return true;
             case KeyEvent.KEYCODE_MEDIA_NEXT: wantNext = true; finishWithResult(); return true;
             case KeyEvent.KEYCODE_BACK: case KeyEvent.KEYCODE_ESCAPE: finishWithResult(); return true;
         }
