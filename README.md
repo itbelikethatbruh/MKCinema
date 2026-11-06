@@ -52,7 +52,7 @@
   <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.6/MKCinema-TV.apk"><img src="docs/readme/download-tv.svg" width="290" alt="Download for Android TV, Google TV and Fire TV"></a>
   <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.6/com.mkcinema.app_1.1.0_all.ipk"><img src="docs/readme/download-webos.svg" width="290" alt="Download for LG webOS"></a>
   <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.exe"><img src="docs/readme/download-windows.svg" width="290" alt="Download for Windows"></a>
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.6/MKCinema-1.1-mac.zip"><img src="docs/readme/download-macos.svg" width="290" alt="Download for macOS"></a>
+  <a href="https://mkcinema.app/download/MKCinema-1.1.1-mac.zip"><img src="docs/readme/download-macos.svg" width="290" alt="Download for macOS"></a>
   <a href="https://github.com/itbelikethatbruh/MKCinema/releases/download/v1.6/mkcinema_1.1_amd64.deb"><img src="docs/readme/download-linux.svg" width="290" alt="Download for Linux"></a>
   <a href="https://app.mkcinema.app"><img src="docs/readme/download-web.svg" width="290" alt="Open the web app"></a>
 </p>
@@ -382,7 +382,7 @@ The app is a standard `.app` bundle that runs `main.js` with the system's JavaSc
 
 ```sh
 cd mac
-DMGTOOLS=/path/to/libdmg-hfsplus/build sh package.sh   # writes build/MKCinema-1.1-mac.zip (and .dmg)
+DMGTOOLS=/path/to/libdmg-hfsplus/build sh package.sh   # writes build/MKCinema-1.1.1-mac.zip (and .dmg)
 ```
 </details>
 

@@ -21,7 +21,7 @@ Out of scope: third-party addons, debrid services and other services MKCinema co
 Every release on the [Releases page](https://github.com/itbelikethatbruh/mkcinema/releases) lists the SHA-256 checksum of each file in its notes, and attaches the same list as `SHA256SUMS`. Download only from mkcinema.app or that page, then check the file before you install it:
 
 - **Windows** (PowerShell): `Get-FileHash .\MKCinema.exe -Algorithm SHA256`
-- **Mac**: `shasum -a 256 MKCinema-1.1-mac.zip`
+- **Mac**: `shasum -a 256 MKCinema-1.1.1-mac.zip`
 - **Linux**: put the file next to `SHA256SUMS` and run `sha256sum --ignore-missing -c SHA256SUMS`
 - **Android**: on a computer, `sha256sum MKCinema.apk`. Android also checks the app's signature on every update; the MKCinema signing certificate's SHA-256 is
   `9F:B8:08:4D:9A:61:2D:3A:3B:80:49:21:A2:92:95:9F:D2:FE:DD:F1:9B:8C:DF:81:C0:AC:E8:24:B1:CF:7F:D9`
