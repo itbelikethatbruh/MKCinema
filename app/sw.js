@@ -2,7 +2,7 @@
    The app shell is fetched fresh first (so a redeploy shows up right away) and served from cache when offline.
    Script libraries and fonts from CDNs are cached and refreshed in the background.
    Addons, streams, debrid, accounts and everything else always go straight to the network and are never stored. */
-const VERSION = 'mkc-2.27.2';
+const VERSION = 'mkc-2.28.0';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'remote.html', 'remote.webmanifest'];
 const CDN = /^https:\/\/(cdn\.jsdelivr\.net|unpkg\.com|cdnjs\.cloudflare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;
 
@@ -38,7 +38,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
   // CDN libraries, and the interface language files (i18n/*.json), are cached and refreshed in the background
-  if (CDN.test(req.url) || (url.origin === location.origin && /\/i18n\/[a-z]{2}\.json$/.test(url.pathname))) {
+  if (CDN.test(req.url) || (url.origin === location.origin && /\/(i18n\/[a-z]{2}|kids\/ages)\.json$/.test(url.pathname))) {
     e.respondWith((async () => {
       const c = await caches.open(VERSION), hit = await c.match(req);
       const net = fetch(req).then((r) => { if (r.ok || r.type === 'opaque') c.put(req, r.clone()); return r; }).catch(() => hit);

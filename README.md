@@ -154,6 +154,22 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 </tr>
 </table>
 
+<a name="free"></a>
+## Free, all of it
+
+Everything below ships today and costs nothing. No plans, no ads.
+
+- **Seats** for the whole house (main seat plus 7), each with its own watchlist, progress, picks and Home, and an optional PIN.
+- **Kids seats by age rating** where you live (US, Brazil, India, UK or Germany), not just by genre. Pick up to 6, 9 or 12.
+- **Arrange Home:** hide, move or rename any row, addon catalogs included. Each seat keeps its own, synced with your account.
+- **Source rules** across every addon: lowest resolution, largest or smallest file, preferred audio language, blocked words.
+- **Subtitles that sync themselves** in the built-in player, plus a delay you can drag into place.
+- **Skip intro**, ending and credits.
+- **Downloads** in the Android and Windows apps.
+- **Four looks** and a colour wheel.
+
+Coming from Stremio? **Settings › Account › Import from Stremio** (also in the welcome tour) copies your addons, library, Continue watching and watched episodes in one step. Your password goes only to Stremio and is never saved.
+
 <a name="compare"></a>
 ## How MKCinema compares
 
@@ -163,11 +179,11 @@ MKCinema does more out of the box than Stremio, Plex, Jellyfin or Kodi in the ro
 |---|:---:|:---:|:---:|:---:|:---:|
 | Stremio addons and your own Plex, Jellyfin or Emby server in one library | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Watch party with synced playback, chat and voice | ✅ | ❌ | ◐ ¹ | ◐ ² | ❌ |
-| Skip intro, ending and credits, anime included from any addon | ✅ | ❌ ³ | ◐ ⁴ | ◐ ⁵ | ❌ |
+| Skip intro, ending and credits, anime included from any addon | ✅ | ◐ ³ | ◐ ⁴ | ◐ ⁵ | ❌ |
 | Moves to another source by itself if one stalls | ✅ | ❌ | — | — | ❌ |
 | Source rules across every addon: hide cam copies and fakes, set a lowest resolution and a largest file size, block words | ✅ | ◐ ¹³ | — | — | ◐ ¹³ |
 | Subtitle sync you can drag into place, with a transcript | ✅ | ◐ ⁶ | ◐ ⁶ | ◐ ⁶ | ◐ ⁶ |
-| Seats for the household, with PINs and kids seats | ✅ | ❌ ⁷ | ✅ | ✅ | ✅ |
+| Seats for the household, with PINs and kids seats by age rating | ✅ | ◐ ⁷ | ✅ | ✅ | ✅ |
 | Phone becomes a remote by scanning a code, no app needed | ✅ | ❌ | ◐ ⁸ | ◐ ⁸ | ◐ ⁸ |
 | Your own M3U or Xtream channels with an XMLTV guide | ✅ | ❌ | ❌ ⁹ | ✅ | ✅ |
 | Split Screen, up to four streams at once | ✅ | ❌ | ❌ | ❌ | ❌ |
@@ -187,11 +203,11 @@ MKCinema does more out of the box than Stremio, Plex, Jellyfin or Kodi in the ro
 
 1. Plex removed Watch Together from its new mobile and TV apps in 2025. It stays in the Plex web app, without voice. ([Android Authority](https://www.androidauthority.com/plex-watch-together-removed-3529939/))
 2. Jellyfin SyncPlay keeps playback in sync, but has no built-in voice.
-3. Still an open request in Stremio's tracker. ([stremio-features #1756](https://github.com/Stremio/stremio-features/issues/1756))
+3. Skip Intro is one of the perks of Stremio's paid Supporter plan, launched in June 2026 at $39.99 a year. ([Stremio plans](https://www.stremio.com/plans), [launch coverage](https://troypoint.com/stremio-supporters/))
 4. Needs a Plex Pass.
 5. Jellyfin 10.10 can show a skip button, but a plugin has to find the intros first. Support varies by client.
 6. These apps offer a subtitle delay setting only.
-7. Stremio has no profiles. Everyone on an account shares one Continue watching. ([stremio-features #320](https://github.com/Stremio/stremio-features/issues/320))
+7. Up to 6 profiles, PINs and child-safe profiles come with Stremio's paid Supporter plan ($39.99 a year, since June 2026). The free plan has one profile per account. ([Stremio plans](https://www.stremio.com/plans))
 8. You need the app installed on the phone (Plex, Jellyfin, or Kore/Yatse for Kodi).
 9. Plex Live TV needs a tuner. M3U playlists need a third-party bridge.
 10. Plex and Jellyfin need a media server that you run yourself to play your own files.
