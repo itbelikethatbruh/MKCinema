@@ -175,26 +175,26 @@ Coming from Stremio? **Settings › Account › Import from Stremio** (also in t
 
 MKCinema does more out of the box than Stremio, Plex, Jellyfin or Kodi in the rows below. Nuvio is the closest match and has many of the same features, so its column says where. Every Nuvio mark was checked against Nuvio's own source code (mobile, TV, Smart TV and desktop), its FAQ and its release notes. Every row is something you can check in each app's own docs, source or issue tracker. If a row is wrong, [open an issue](https://github.com/itbelikethatbruh/MKCinema/issues) and we'll fix it.
 
-| | **MKCinema** | Stremio | Plex | Jellyfin | Kodi | Nuvio |
+| | **MKCinema** | Nuvio | Stremio | Plex | Jellyfin | Kodi |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
-| Stremio addons and your own Plex, Jellyfin or Emby server in one library | ✅ | ❌ | ❌ | ❌ | ❌ | ◐ ¹⁵ |
-| Watch party with synced playback, chat and voice | ✅ | ❌ | ◐ ¹ | ◐ ² | ❌ | ◐ ¹⁶ |
-| Skip intro, ending and credits, anime included from any addon | ✅ | ◐ ³ | ◐ ⁴ | ◐ ⁵ | ❌ | ✅ |
-| Moves to another source by itself if one stalls | ✅ | ❌ | — | — | ❌ | ❌ ²³ |
-| Source rules across every addon: hide cam copies and fakes, set a lowest resolution and a largest file size, block words | ✅ | ◐ ¹³ | — | — | ◐ ¹³ | ◐ ¹⁷ |
-| Subtitle sync you can drag into place, with a transcript | ✅ | ◐ ⁶ | ◐ ⁶ | ◐ ⁶ | ◐ ⁶ | ◐ ¹⁸ |
-| Seats for the household, with PINs and kids seats by age rating | ✅ | ◐ ⁷ | ✅ | ✅ | ✅ | ◐ ²² |
-| Phone becomes a remote by scanning a code, no app needed | ✅ | ❌ | ◐ ⁸ | ◐ ⁸ | ◐ ⁸ | ❌ ¹⁹ |
-| Your own M3U or Xtream channels with an XMLTV guide | ✅ | ❌ | ❌ ⁹ | ✅ | ✅ | ❌ |
+| Stremio addons and your own Plex, Jellyfin or Emby server in one library | ✅ | ◐ ¹⁵ | ❌ | ❌ | ❌ | ❌ |
+| Watch party with synced playback, chat and voice | ✅ | ◐ ¹⁶ | ❌ | ◐ ¹ | ◐ ² | ❌ |
+| Skip intro, ending and credits, anime included from any addon | ✅ | ✅ | ◐ ³ | ◐ ⁴ | ◐ ⁵ | ❌ |
+| Moves to another source by itself if one stalls | ✅ | ❌ ²³ | ❌ | — | — | ❌ |
+| Source rules across every addon: hide cam copies and fakes, set a lowest resolution and a largest file size, block words | ✅ | ◐ ¹⁷ | ◐ ¹³ | — | — | ◐ ¹³ |
+| Subtitle sync you can drag into place, with a transcript | ✅ | ◐ ¹⁸ | ◐ ⁶ | ◐ ⁶ | ◐ ⁶ | ◐ ⁶ |
+| Seats for the household, with PINs and kids seats by age rating | ✅ | ◐ ²² | ◐ ⁷ | ✅ | ✅ | ✅ |
+| Phone becomes a remote by scanning a code, no app needed | ✅ | ❌ ¹⁹ | ❌ | ◐ ⁸ | ◐ ⁸ | ◐ ⁸ |
+| Your own M3U or Xtream channels with an XMLTV guide | ✅ | ❌ | ❌ | ❌ ⁹ | ✅ | ✅ |
 | Split Screen, up to four streams at once | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| The TV's sound on your phone, for headphones, with no app to install | ✅ | ❌ | ❌ | ❌ | ❌ ¹⁴ | ❌ |
+| The TV's sound on your phone, for headphones, with no app to install | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ ¹⁴ |
 | Ask for picks in plain words, worked out on your device | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Browse films by their best 90-second scenes (Peak Cinema) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Design your own Stremio addon visually (Addon Studio) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Plugins and themes from a reviewed gallery, each file checked before it runs | ✅ | ❌ ¹² | ❌ | ✅ | ✅ | ◐ ²⁰ |
-| Import your Stremio library, progress and addons | ✅ | — | ❌ | ❌ | ❌ | ❌ |
-| Runs in a browser with nothing to install or host | ✅ | ✅ | ◐ ¹⁰ | ❌ ¹⁰ | ❌ | ❌ ²¹ |
-| Free and open source | ✅ GPL-3.0 | ◐ ¹¹ | ❌ | ✅ | ✅ | ✅ GPL-3.0 |
+| Plugins and themes from a reviewed gallery, each file checked before it runs | ✅ | ◐ ²⁰ | ❌ ¹² | ❌ | ✅ | ✅ |
+| Import your Stremio library, progress and addons | ✅ | ❌ | — | ❌ | ❌ | ❌ |
+| Runs in a browser with nothing to install or host | ✅ | ❌ ²¹ | ✅ | ◐ ¹⁰ | ❌ ¹⁰ | ❌ |
+| Free and open source | ✅ GPL-3.0 | ✅ GPL-3.0 | ◐ ¹¹ | ❌ | ✅ | ✅ |
 
 <sub>✅ built in · ◐ partly, or only on some devices · ❌ not built in · — doesn't apply</sub>
 
