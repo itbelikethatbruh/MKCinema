@@ -2,6 +2,12 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.28.0 (2026-11-06)
+
+- **Arrange Home.** Hide, move or rename any row on Home, addon catalogs included. Open it from the Arrange Home button under the rows, from Settings › Home or from the search bar. Each seat keeps its own arrangement, and it syncs with your account. Reset Home puts everything back. Works by touch, mouse and TV remote.
+- **Kids seats go by age rating.** Before, a kids seat let in anything tagged Animation or Family, so adult cartoons got through. Now a title also has to be rated for the seat's age: up to 6, 9 or 12 (Settings › Seats). MKCinema uses the rating where you live (US, Brazil, India, UK or Germany), else the US one. Ratings for about 1,350 popular animated, family and kids titles are built in, and others are looked up as they appear (with your own TMDB key if you added one, otherwise films through Wikidata). A title with no rating anywhere falls back to the old genre rule.
+- **Coming from Stremio?** The welcome tour has a new step that imports your addons, library, Continue watching and watched episodes in one go, and an empty Home offers the same button.
+
 ## Web app 2.27.2 (2026-11-06)
 
 - **Samsung TVs (beta).** MKCinema runs on Samsung TVs from 2023 on through TizenBrew, a free community app loader (Samsung only installs apps from its own store). The remote's Back key closes what's open and then asks before leaving, and play/pause, stop, fast-forward and rewind work in the player. Setup steps are in `tizen/README.md` and on the download page.
