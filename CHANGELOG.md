@@ -2,6 +2,18 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Android and Android TV app 1.7.0 (2026-11-06)
+
+- **New TV player engine: ExoPlayer** (Media3), the engine most Android TV apps use. It reads MKV files more reliably, plays HLS, shows picture subtitles (PGS) from Blu-ray rips, names every audio track with its format (E-AC3 5.1, Atmos, DTS and so on), hides audio tracks your TV can't decode, sends a source's request headers on every request, and picks up again by itself when the connection drops mid-film.
+- If ExoPlayer can't open a file, the TV's basic player (the engine from 1.2.5 to 1.6.2) tries it before MKCinema's own player does. Settings › Playback › TV player engine can switch to the basic player for good.
+- Frame-rate matching now reads the frame rate from the player itself, so it no longer opens a second connection to the file.
+
+## Web app 2.27.0 (2026-11-06)
+
+- **Subtitles line up by themselves.** When you turn on a downloaded subtitle, MKCinema compares it with the subtitles inside the file (an MKV's subtitle index, in any language, read without downloading the film) and shifts it to match. It also fixes the common frame-rate mix-ups (23.976, 24 and 25 fps). When the browser can hear the film, it can line up with the dialogue instead. Only a clear match is applied, a timing you set by hand always wins, and Undo puts the old timing back. Subtitles › Auto-sync now runs it on demand. Turn it off in Settings › Subtitles.
+- **Manage add-ons from your phone.** The Add-ons screen on a TV shows a QR code. Scan it and the phone remote opens a list of the TV's add-ons: paste a link with your phone's keyboard, turn add-ons on or off, move them up or remove them. Add-on addresses (which can hold your settings) never leave the TV.
+- **TV player engine** setting for the TV app 1.7.0 (ExoPlayer or the basic player).
+
 ## Android and Android TV app 1.6.2 (2026-11-06)
 
 - **The TV player has VLC-style track lists**: audio and subtitle tracks are listed by language and name, and you can switch them during playback.

@@ -1,0 +1,21 @@
+/* 2.27.0 Add-ons on your TV */
+.sheet.ads{max-height:calc(100dvh - 36px);overflow-y:auto;overscroll-behavior:contain}
+.ads .acts{grid-template-columns:1fr}
+.ad-list{margin-top:14px}
+.ad-row{display:flex;align-items:center;gap:10px;padding:12px 2px;border-bottom:1px solid var(--line)}
+.ad-row:last-child{border-bottom:0}
+.ad-logo{width:40px;height:40px;border-radius:11px;flex:none;background:rgba(255,255,255,.06) center/cover no-repeat;display:grid;place-items:center;font:600 13px/1 var(--f-display);color:var(--mute);overflow:hidden}
+.ad-txt{flex:1;min-width:0}
+.ad-txt b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.ad-txt small{display:block;color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.ad-row.off .ad-txt,.ad-row.off .ad-logo{opacity:.45}
+.ad-ib{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--mute);flex:none;transition:transform .18s var(--ease)}
+.ad-ib:active{transform:scale(.92)}
+.ad-ib svg.i{width:18px;height:18px}
+.ad-ib.rm.sure{width:auto;padding:0 12px;border-radius:999px;background:rgba(239,122,125,.14);color:var(--bad);font:600 13px/1 var(--f-body)}
+.ad-ib[disabled]{opacity:.25;pointer-events:none}
+.ad-sw{position:relative;width:46px;height:28px;border-radius:999px;background:rgba(255,255,255,.12);flex:none;transition:background .2s}
+.ad-sw i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .25s var(--ease)}
+.ad-sw[aria-checked="true"]{background:var(--champ)}
+.ad-sw[aria-checked="true"] i{transform:translateX(18px);background:#0a0a0b}
+.ad-empty{color:var(--dim);font-size:13px;padding:16px 2px}
