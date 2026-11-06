@@ -3,13 +3,13 @@
 // so this forwards the call. Only the four debrid API hosts are reachable and only from MKCinema's own sites.
 // The user's key arrives in x-debrid-auth (so it never collides with Supabase's own Authorization header) and is not stored or logged.
 const HOSTS = ['api.real-debrid.com', 'api.torbox.app', 'api.alldebrid.com', 'www.premiumize.me'];
-const ORIGINS = [/^https:\/\/([a-z0-9-]+\.)?mkcinema\.pages\.dev$/, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/];
+const ORIGINS = [/^https:\/\/([a-z0-9-]+\.)?mkcinema\.pages\.dev$/, /^https:\/\/([a-z0-9-]+\.)?mkcinema\.app$/, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/];
 
 Deno.serve(async (req) => {
   const origin = req.headers.get('origin') || '';
   const okOrigin = ORIGINS.some((r) => r.test(origin));
   const cors: Record<string, string> = {
-    'access-control-allow-origin': okOrigin ? origin : 'https://mkcinema.pages.dev',
+    'access-control-allow-origin': okOrigin ? origin : 'https://app.mkcinema.app',
     'access-control-allow-methods': 'GET, POST, DELETE, PUT, OPTIONS',
     'access-control-allow-headers': 'x-debrid-auth, content-type, accept',
     'access-control-expose-headers': 'x-mkc-relay',

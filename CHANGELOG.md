@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.28.4 (2026-11-06)
+
+- **MKCinema has its own address: [mkcinema.app](https://mkcinema.app).** The web app is at [app.mkcinema.app](https://app.mkcinema.app), and on a Fire TV you type `tv.mkcinema.app` into Downloader. Every link, QR code and share in the app and on the website now uses the new address.
+- The old addresses still work. A browser tab on mkcinema.pages.dev that isn't signed in moves to app.mkcinema.app by itself. A signed-in tab shows a bar with the new address instead: sign in there once and your synced library comes with you. The installed apps for Android, TVs, Windows, Mac and Linux keep working as they are.
+
 ## Web app 2.28.2 (2026-11-06)
 
 - **Steady title pages.** Tapping a film or show no longer flickers before its page opens. The title logo had no size until its picture arrived, so everything under it (Smart Play, Trailer, Watchlist, the synopsis) jumped down about 100 px in the middle of the fade-in, and the backdrop popped in at the same moment. The logo now keeps its place from the first frame, the backdrop and logo fade in, the second draw (when the full details arrive) keeps the pictures already on screen instead of rebuilding them, and on phones the info line keeps room for its second line so the buttons no longer drop when the runtime arrives.
