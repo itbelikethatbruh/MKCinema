@@ -196,12 +196,14 @@ a.btn{color:var(--ink);text-decoration:none}
 .row-more:hover{color:var(--ink)}
 .rail{display:flex;gap:18px;overflow-x:auto;overflow-y:visible;scroll-snap-type:x mandatory;scroll-padding-inline:4px;padding:18px 4px 26px;margin:-18px -4px -10px;scrollbar-width:none}
 .rail::-webkit-scrollbar{display:none}
-.rail-nav{position:fixed;z-index:40;width:44px;height:44px;margin-top:-22px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);color:inherit;opacity:0;transform:scale(.9);transition:opacity .18s,transform .18s;pointer-events:none;cursor:pointer}
+.rail-nav{position:fixed;z-index:9400;width:40px;height:40px;margin-top:-20px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);color:inherit;opacity:0;transform:scale(.9);transition:opacity .18s,transform .18s;pointer-events:none;cursor:pointer}
+.rail-nav.sm{width:30px;height:30px;margin-top:-15px}
 .rail-nav.on{opacity:1;transform:none;pointer-events:auto}
 .rail-nav:hover{transform:scale(1.06)}
-.rail-nav .lucide{width:22px;height:22px}
-.rail.dragging{scroll-snap-type:none;cursor:grabbing}
-.rail.dragging *{pointer-events:none}
+.rail-nav .lucide{width:20px;height:20px}
+.rail-nav.sm .lucide{width:16px;height:16px}
+.mk-dragging{scroll-snap-type:none!important;scroll-behavior:auto!important;cursor:grabbing;user-select:none}
+.mk-dragging *{pointer-events:none}
 
 .rail>.card{scroll-snap-align:start;flex:none;width:clamp(132px,14vw,192px)}
 .rail-empty{padding:30px 4px}
@@ -2319,7 +2321,7 @@ const CFG_DEFAULTS = {
   partyName: '', partyShareLink: false, governor: true, syncKeys: true, anonStats: true,
   ambilight: true, ambIntensity: 85, rememberVolume: true, extPlayers: {},
   // subtitles
-  subAuto: true, subLang: 'eng', subSize: 100, subColor: '#ffffff', subBg: 65, subPos: 'bottom', subFont: 'sans', subOutline: true,
+  subAuto: true, subDubSigns: true, subLang: 'eng', subSize: 100, subColor: '#ffffff', subBg: 65, subPos: 'bottom', subFont: 'sans', subOutline: true,
   // streams
   hideP2P: false, browserOnly: false, audioOnly: 'eng', showTrailers: true, timeout: 15, alwaysProxy: false,
   // intro, sound, trailers
@@ -9151,54 +9153,66 @@ const Notice = {
     setInterval(() => { if (!document.hidden) this.load(); }, 120000);
   },
 };
-/* Rows with a mouse: arrow buttons appear at both ends of the row under the pointer, and a row can be dragged
-   sideways. Only for a fine pointer that can hover (mouse or trackpad) and never on a TV, where the remote moves focus. */
+/* Sideways strips with a mouse: any element that scrolls sideways (Home rows, season pills, filter chips, tabs, cast,
+   episode strips) gets arrow buttons at its ends while the pointer is over it, and can be dragged sideways. Only for a
+   fine pointer that can hover (mouse or trackpad) and never on a TV, where the remote moves focus. */
 const RailMouse = {
   rail: null, hideT: 0, drag: null, moved: false,
   ok: () => !IS_TV && matchMedia('(hover: hover) and (pointer: fine)').matches,
+  // the nearest ancestor (or el itself) that really scrolls sideways
+  find(el) {
+    for (let n = el; n && n !== document.body && n.nodeType === 1; n = n.parentElement) {
+      if (n.classList.contains('rail-nav') || n.matches('input,textarea,select,[contenteditable="true"],video')) return null;
+      if (n.scrollWidth > n.clientWidth + 2) { const ox = getComputedStyle(n).overflowX; if (ox === 'auto' || ox === 'scroll') return n; }
+    }
+    return null;
+  },
   init() {
     if (!this.ok()) return;
     const mk = (dir) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'rail-nav glass-solid'; b.dataset.dir = dir; b.tabIndex = -1; b.setAttribute('aria-label', dir < 0 ? 'Scroll left' : 'Scroll right'); b.innerHTML = `<i data-lucide="chevron-${dir < 0 ? 'left' : 'right'}"></i>`; document.body.appendChild(b); return b; };
     this.prev = mk(-1); this.next = mk(1); icons();
     [this.prev, this.next].forEach((b) => {
-      b.addEventListener('click', () => { const r = this.rail; if (r) r.scrollBy({ left: Number(b.dataset.dir) * Math.max(240, r.clientWidth * 0.85), behavior: 'smooth' }); });
+      b.addEventListener('click', () => { const r = this.rail; if (r) r.scrollBy({ left: Number(b.dataset.dir) * Math.max(160, r.clientWidth * 0.8), behavior: 'smooth' }); });
       b.addEventListener('mouseenter', () => clearTimeout(this.hideT));
       b.addEventListener('mouseleave', () => this.hideSoon());
     });
-    document.addEventListener('mouseover', (e) => { const r = e.target.closest && e.target.closest('.rail'); if (r) { clearTimeout(this.hideT); this.show(r); } }, { passive: true });
-    document.addEventListener('mouseout', (e) => { const r = e.target.closest && e.target.closest('.rail'); if (r && !(e.relatedTarget && r.contains(e.relatedTarget))) this.hideSoon(); }, { passive: true });
+    document.addEventListener('mouseover', (e) => { if (this.drag) return; const r = this.find(e.target); if (r) { clearTimeout(this.hideT); if (r !== this.rail) this.show(r); } else if (this.rail && !this.rail.contains(e.target) && !e.target.closest?.('.rail-nav')) this.hideSoon(); }, { passive: true });
+    document.addEventListener('mouseout', (e) => { const r = this.rail; if (r && r.contains(e.target) && !(e.relatedTarget && (r.contains(e.relatedTarget) || e.relatedTarget.closest?.('.rail-nav')))) this.hideSoon(); }, { passive: true });
     document.addEventListener('scroll', (e) => { if (this.rail && (e.target === this.rail || e.target === document || e.target.contains && e.target.contains(this.rail))) this.place(); }, { capture: true, passive: true });
     addEventListener('resize', () => this.place(), { passive: true });
     // click and drag
     document.addEventListener('pointerdown', (e) => {
       if (e.pointerType !== 'mouse' || e.button !== 0) return;
-      const r = e.target.closest && e.target.closest('.rail'); if (!r || r.scrollWidth <= r.clientWidth + 2) return;
+      const r = this.find(e.target); if (!r) return;
       this.drag = { r, x: e.clientX, left: r.scrollLeft, id: e.pointerId }; this.moved = false;
     }, { passive: true });
     document.addEventListener('pointermove', (e) => {
       const d = this.drag; if (!d || e.pointerId !== d.id) return;
+      if (!(e.buttons & 1)) { this.drag = null; return; }
       const dx = e.clientX - d.x;
       if (!this.moved && Math.abs(dx) < 6) return;
-      if (!this.moved) { this.moved = true; d.r.classList.add('dragging'); }
+      if (!this.moved) { this.moved = true; d.r.classList.add('mk-dragging'); getSelection()?.removeAllRanges?.(); }
       d.r.scrollLeft = d.left - dx;
     }, { passive: true });
-    const end = () => { const d = this.drag; this.drag = null; if (!d) return; if (this.moved) { const r = d.r; requestAnimationFrame(() => r.classList.remove('dragging')); setTimeout(() => { this.moved = false; }, 0); } };
+    const end = () => { const d = this.drag; this.drag = null; if (!d) return; if (this.moved) { const r = d.r; requestAnimationFrame(() => r.classList.remove('mk-dragging')); setTimeout(() => { this.moved = false; }, 0); } };
     document.addEventListener('pointerup', end, { passive: true });
     document.addEventListener('pointercancel', end, { passive: true });
-    // a drag never opens the card it started on, and pictures are never dragged out of the row
-    document.addEventListener('click', (e) => { if (this.moved && e.target.closest && e.target.closest('.rail')) { e.preventDefault(); e.stopPropagation(); this.moved = false; } }, true);
-    document.addEventListener('dragstart', (e) => { if (e.target.closest && e.target.closest('.rail')) e.preventDefault(); });
+    // a drag never presses the card or button it started on, and pictures are never dragged out of the strip
+    document.addEventListener('click', (e) => { if (this.moved) { e.preventDefault(); e.stopPropagation(); this.moved = false; } }, true);
+    document.addEventListener('dragstart', (e) => { if (this.find(e.target)) e.preventDefault(); });
   },
   show(r) { this.rail = r; this.place(); },
   hideSoon() { clearTimeout(this.hideT); this.hideT = setTimeout(() => { this.prev.classList.remove('on'); this.next.classList.remove('on'); this.rail = null; }, 220); },
   place() {
     const r = this.rail; if (!r || !this.prev) return;
-    if (!r.isConnected) { this.prev.classList.remove('on'); this.next.classList.remove('on'); this.rail = null; return; }
-    const b = r.getBoundingClientRect(), y = Math.round(b.top + b.height / 2);
+    if (!r.isConnected || !r.offsetParent) { this.prev.classList.remove('on'); this.next.classList.remove('on'); this.rail = null; return; }
+    const b = r.getBoundingClientRect(), y = Math.round(b.top + b.height / 2), sm = b.height < 90;
     const can = r.scrollWidth > r.clientWidth + 2, atStart = r.scrollLeft <= 8, atEnd = r.scrollLeft + r.clientWidth >= r.scrollWidth - 8;
+    const w = sm ? 30 : 40;
+    this.prev.classList.toggle('sm', sm); this.next.classList.toggle('sm', sm);
     this.prev.style.top = this.next.style.top = `${y}px`;
-    this.prev.style.left = `${Math.max(4, Math.round(b.left) + 6)}px`;
-    this.next.style.left = `${Math.min(innerWidth - 48, Math.round(b.right) - 50)}px`;
+    this.prev.style.left = `${Math.max(4, Math.round(b.left) + (sm ? 2 : 6))}px`;
+    this.next.style.left = `${Math.min(innerWidth - w - 4, Math.round(b.right) - w - (sm ? 2 : 6))}px`;
     this.prev.classList.toggle('on', can && !atStart);
     this.next.classList.toggle('on', can && !atEnd);
   },
@@ -9297,6 +9311,7 @@ const SECTIONS = [
   { id: 'subtitles', icon: 'captions', label: 'Subtitles', intro: 'OpenSubtitles v3 is installed by default. You can also load .srt, .vtt, .ass, .ssa or .sub files from your device in the player.', rows: () => [
     { html: () => `<div style="margin:6px 0 10px;border-radius:14px;overflow:hidden;background:linear-gradient(120deg,#203040,#402030);aspect-ratio:21/6;display:grid;place-items:end center;padding-bottom:6%"><span style="background:var(--sub-bg);color:var(--sub-color);font-family:var(--sub-font);font-size:calc(var(--sub-size) * .2);text-shadow:var(--sub-shadow);padding:2px 8px;border-radius:3px">This is how subtitles will look.</span></div>` },
     { key: 'subAuto', label: 'Turn on subtitles automatically', help: 'Picks your language when a stream has it.', type: 'toggle' },
+    { key: 'subDubSigns', label: 'Signs & Songs with dubs', help: 'When a dual-audio anime plays its dub in your subtitle language, picks the file\u2019s Signs & Songs track (on-screen text and lyrics) instead of full subtitles made for the original voices.', type: 'toggle' },
     { key: 'subLang', label: 'Preferred language', type: 'select', options: LANG_CHOICES },
     { key: 'subSize', label: 'Size', type: 'range', min: 50, max: 220, step: 10, fmt: pct, live: true },
     { key: 'subColor', label: 'Text color', type: 'color' },
@@ -9663,7 +9678,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.37.2';
+const APP_VERSION = '2.38.0';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -20950,6 +20965,12 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
+  { v: '2.38.0', date: '2026-11-06', items: [
+    ['new', 'Signs & Songs with dubs', 'Watching an anime dub with subtitles on? The player now picks the file\u2019s Signs & Songs track, so you get on-screen text and lyrics without dialogue lines that don\u2019t match the dub. Turn it off in Settings \u203a Subtitles.'],
+  ] },
+  { v: '2.37.3', date: '2026-11-06', items: [
+    ['better', 'Mouse scrolling everywhere', 'Season pickers, filters, tabs, cast and every other sideways list now have the arrows and click-and-drag too.'],
+  ] },
   { v: '2.37.2', date: '2026-11-06', items: [
     ['better', 'Scroll rows with your mouse', 'Arrows appear at the ends of a row when you point at it, and you can click and drag a row sideways.'],
   ] },
@@ -21496,6 +21517,76 @@ MascotHud.init();
   .pc .pc-opt{padding:12px 2px}
 }
 </style>
+<script id="mkc-2380-dubsigns">
+/* 2.38.0 Signs & Songs with dubs. Full subtitles in a dual-audio file are written for the original voices, so they don't
+   match an English dub. When the voices playing are in your subtitle language and the title is anime (or the audio
+   track says it's a dub), MKCinema picks the file's Signs & Songs (forced) track instead: on-screen text and lyrics only.
+   - Chromium (Chrome, Edge, Android WebView, the Windows app) plays a file's FIRST audio track whatever its default
+     flag says (checked in Chromium with two-audio MKVs), so that is the track assumed unless the Audio menu chose another.
+   - After a language is picked in the Audio menu (TorBox's own stream), the subtitles are still read from the original
+     file, which has the same timeline. */
+const DubSigns = {
+  on: () => CFG.subDubSigns !== false,
+  // the file's audio track that is playing, as { i, t }
+  audio(f) {
+    const aud = f.tracks.filter((t) => t.type === 2); if (!aud.length) return null;
+    const s = P.stream, at = video.audioTracks;
+    if (s && s._audio != null && s._audio >= 0 && aud[s._audio]) return { i: s._audio, t: aud[s._audio] };
+    if (at && at.length === aud.length) for (let i = 0; i < at.length; i++) if (at[i].enabled) return { i, t: aud[i] };
+    return { i: 0, t: aud[0] };
+  },
+  // a dub in your subtitle language: two or more audio languages, yours is playing, and it's anime or says "dub"
+  isDub(f, a, want) {
+    const langs = new Set(f.tracks.filter((t) => t.type === 2).map((t) => langName(t.lang)));
+    if (langs.size < 2 || langName(a.t.lang) !== want) return false;
+    if (/\bdub/i.test(a.t.name || '')) return true;
+    try { return !!(P.ctx && P.ctx.meta && AnimeIds.anime(P.ctx)); } catch (e) { return false; }
+  },
+  // the Signs & Songs track in your language: forced flag or the name says so, never "Full", and it has an index
+  pick(f, want) {
+    const c = P.subs.map((s, i) => [s, i]).filter(([s]) => s.kind === 'mkv' && langName(s.lang) === want && s._mkv
+      && (s._mkv.forced || /sign|song|forced/i.test(s._mkv.name || '')) && !/\bfull\b|dialog/i.test(s._mkv.name || '')
+      && f.cues.some((x) => x.track === s._mkv.num));
+    const score = (t) => (t.forced ? 2 : 0) + (/sign|song/i.test(t.name || '') ? 2 : 0) + (t.ass ? 1 : 0);
+    c.sort((a, b) => score(b[0]._mkv) - score(a[0]._mkv));
+    return c.length ? c[0][1] : -1;
+  },
+};
+{
+  const pick0 = MkvSubs.autoPick, isMkv0 = MkvSubs.isMkv, reader0 = MkvSubs.reader;
+  MkvSubs.autoPick = function () {
+    const f = this.file;
+    if (DubSigns.on() && f && CFG.subAuto && !P.subUserChoice && CFG.subLang && CFG.subLang !== 'off') {
+      const cur = P.subs[P.curSub];
+      if (!(cur && cur.kind === 'mkv')) {
+        const want = langName(CFG.subLang), a = DubSigns.audio(f);
+        if (a && DubSigns.isDub(f, a, want)) {
+          const i = DubSigns.pick(f, want);
+          if (i >= 0) {
+            MKLog.add('info', `Dub in ${want} (audio track ${a.i + 1}): Signs & Songs subtitles "${P.subs[i]._mkv.name || 'forced'}"`);
+            selectSub(i, { auto: true });
+            toast(`Signs & Songs subtitles for the ${want} dub`, 'info', 3200, 'dubsigns');
+            return;
+          }
+        }
+      }
+    }
+    return pick0.apply(this, arguments);
+  };
+  // after a language is picked in the Audio menu the stream becomes TorBox's HLS; its subtitles still come from the file
+  const base = (s) => s && s._audioBase && s._audioBase !== s.url ? s._audioBase : null;
+  MkvSubs.isMkv = function (stream) {
+    const b = base(stream); if (!b) return isMkv0.call(this, stream);
+    const h = P.hls; P.hls = null;
+    try { return isMkv0.call(this, { ...stream, url: b }); } finally { P.hls = h; }
+  };
+  MkvSubs.reader = function (stream) { const b = base(stream); return reader0.call(this, b ? { ...stream, url: b } : stream); };
+  video.addEventListener('loadedmetadata', () => { const st = P.stream; if (st && P.hls && base(st)) setTimeout(() => { if (P.stream === st) MkvSubs.probe(st); }, 700); });
+  // the Audio menu treated the file's default-flagged track as the one playing. In Chromium that's the first track, so
+  // picking a default-flagged dub listed second fell back to the original file and played the first language again.
+  if (/Chrome\//.test(navigator.userAgent) && !('audioTracks' in HTMLMediaElement.prototype)) AudioLang.defIndex = () => 0;
+}
+</script>
 <script id="mkc-cfwa">
 /* 2.9.7 Cloudflare Web Analytics: one anonymous report per visit (page, referrer, browser, country, load speed).
    No cookies, no storage, no IDs. Live host only, off with Settings > Data > Share anonymous visit counts, loaded after
