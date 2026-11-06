@@ -130,6 +130,13 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .login.lsn.on b{color:var(--champ)}
 .login b{display:block;font-weight:600}.login small{color:var(--mute);font-size:12px}
 .login .grow{flex:1}
+/* 2.24.0 party voice on this phone */
+.pv-ctl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:8px;padding:10px 14px;border-radius:16px;border:1px solid var(--line);background:var(--glass)}
+.pv-mic{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line-hi);font-size:13px;font-weight:600}
+.pv-mic .i{width:18px;height:18px}
+.pv-mic.on{background:var(--plat);color:#08080a;border-color:transparent}
+.pv-vol{display:flex;align-items:center;gap:8px;flex:1;min-width:140px;font-size:12px;color:var(--mute)}
+.pv-vol input{flex:1;min-width:0;accent-color:var(--champ)}
 
 /* control surface */
 .surface{position:relative;flex:1;min-height:220px;margin-top:14px}
@@ -295,6 +302,14 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
   </div>
   <button class="login" type="button" id="loginBtn" hidden><svg class="i"><use href="#i-login"/></svg><span class="grow"><b>Sign in your TV from here</b><small>Faster than typing on the TV</small></span><svg class="i"><use href="#i-right"/></svg></button>
   <button class="login lsn" type="button" id="lsnBtn" hidden><svg class="i"><use href="#i-head"/></svg><span class="grow"><b id="lsnT">Listen on this phone</b><small id="lsnS">Plug in headphones to watch without waking anyone</small></span></button>
+  <div id="pvBox" hidden>
+    <button class="login lsn" type="button" id="pvBtn"><svg class="i"><use href="#i-mic"/></svg><span class="grow"><b id="pvT">Party voice on this phone</b><small id="pvS">Hear your friends here instead of on the TV</small></span></button>
+    <div class="pv-ctl" id="pvCtl" hidden>
+      <button class="pv-mic" type="button" id="pvMic" aria-pressed="false"><svg class="i"><use href="#i-mic"/></svg><span id="pvMicT">Mic off</span></button>
+      <label class="pv-vol"><span>Voices</span><input type="range" id="pvVol" min="0" max="100" step="5" aria-label="Voice volume"></label>
+      <label class="pv-vol" id="pvFilmRow" hidden><span>Film</span><input type="range" id="pvFilm" min="0" max="100" step="5" aria-label="Film volume"></label>
+    </div>
+  </div>
 
   <div class="seg" id="seg" data-m="pad" role="tablist"><i></i><button type="button" data-m="pad" class="on">Touch</button><button type="button" data-m="dpad">D-pad</button></div>
 
@@ -394,10 +409,11 @@ const TVs = {
 
 /* ---------- Realtime link: Phoenix protocol, JSON serializer ---------- */
 class Link {
-  constructor(code, onMsg, onState, sb) {
-    this.sb = sb || SB_DEFAULT; this.code = code; this.topic = `realtime:mkc-remote-${code}`; this.onMsg = onMsg; this.onState = onState;
+  constructor(code, onMsg, onState, sb, opt) {
+    opt = opt || {}; this.id = opt.id || ME;
+    this.sb = sb || SB_DEFAULT; this.code = code; this.topic = opt.topic || `realtime:mkc-remote-${code}`; this.onMsg = onMsg; this.onState = onState;
     this.ws = null; this.joined = false; this.ref = 0; this.joinRef = ''; this.seen = new Set(); this.closed = false; this.tries = 0; this.hbT = 0; this.reT = 0;
-    try { this.bc = new BroadcastChannel(`mkc:remote-${code}`); this.bc.onmessage = (e) => this.recv(e.data); } catch (e) { this.bc = null; }
+    try { this.bc = new BroadcastChannel(opt.bc || `mkc:remote-${code}`); this.bc.onmessage = (e) => this.recv(e.data); } catch (e) { this.bc = null; }
     this.open();
   }
   open() {
@@ -431,14 +447,14 @@ class Link {
   kick() { if (this.closed) return; if (this.ws) { const w = this.ws; this.ws = null; try { w.close(); } catch (e) { /* gone */ } } this.joined = false; this.tries = 0; this.open(); }
   raw(o) { try { if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify(o)); } catch (e) { /* closing */ } }
   send(msg) {
-    const m = { ...msg, _from: ME, _id: rid(8) }; this.seen.add(m._id);
+    const m = { ...msg, _from: this.id, _id: rid(8) }; this.seen.add(m._id);
     try { this.bc && this.bc.postMessage(m); } catch (e) { /* closed */ }
     if (this.joined) this.raw({ topic: this.topic, event: 'broadcast', payload: { type: 'broadcast', event: 'm', payload: m }, ref: String(++this.ref), join_ref: this.joinRef });
   }
   recv(m) {
-    if (!m || m._from === ME || this.seen.has(m._id)) return; this.seen.add(m._id);
+    if (!m || m._from === this.id || this.seen.has(m._id)) return; this.seen.add(m._id);
     if (this.seen.size > 1500) this.seen = new Set([...this.seen].slice(-400));
-    if (m._to && m._to !== ME) return;
+    if (m._to && m._to !== this.id) return;
     this.onMsg(m);
   }
   close() {
@@ -878,6 +894,133 @@ const Listen = {
   $('#lsnBtn').onclick = () => Listen.toggle();
   // the clock offset is refreshed now and then while listening along
   setInterval(() => { if (Listen.on && Listen.mode === 'direct') Listen.ping(); }, 15000);
+}
+
+/* ---------- 2.24.0 Party voice on this phone ----------
+   When the TV is in a watch party with "Voices play on: My phone", this phone can join the party as a voice-only
+   member. It hears everyone through its own speaker or headphones, with a volume of its own, and can talk with its
+   own mic. The TV mutes voices once the phone is in, and never plays this phone's voice (you are in the same room).
+   This phone does the same for the TV's mic. The film's sound stays separate: Listen on this phone has its own slider. */
+const PV = {
+  on: false, link: null, id: '', code: '', tv: '', name: '', net: '', peers: new Map(), mic: null,
+  ICE: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] }],
+  vol() { return clamp(Number(Store.get('pvVol', 1)), 0, 1); },
+  film() { return clamp(Number(Store.get('pvFilm', 1)), 0, 1); },
+  info() { const s = R.st, v = s && s.pv; return v && /^[A-Z0-9]{6}$/.test(String(v.code || '')) ? v : null; },
+  others() { let n = 0; this.peers.forEach((p) => { if (p.id !== this.tv && p.pc.connectionState === 'connected') n++; }); return n; },
+  paint() {
+    const box = $('#pvBox'); if (!box) return;
+    box.hidden = !(this.info() || this.on);
+    const live = this.on && [...this.peers.values()].some((p) => p.pc.connectionState === 'connected'), n = this.others();
+    $('#pvBtn').classList.toggle('on', this.on);
+    $('#pvT').textContent = this.on ? (live ? `Party voice · ${this.code}` : 'Joining the party voice…') : 'Party voice on this phone';
+    $('#pvS').textContent = this.on ? (live ? `${n ? `${n} ${n === 1 ? 'friend' : 'friends'} connected` : 'Only you so far'} · Tap to leave` : this.net === 'online' ? 'Finding the others…' : 'Connecting…')
+      : 'Hear your friends here instead of on the TV';
+    $('#pvCtl').hidden = !this.on;
+    const m = $('#pvMic'); m.classList.toggle('on', !!this.mic); m.setAttribute('aria-pressed', String(!!this.mic)); $('#pvMicT').textContent = this.mic ? 'Mic on' : 'Mic off';
+    $('#pvVol').value = String(Math.round(this.vol() * 100));
+    $('#pvFilmRow').hidden = !(this.on && Listen.on); $('#pvFilm').value = String(Math.round(this.film() * 100));
+  },
+  toggle() { if (this.on) this.leave(); else this.join(); },
+  join() {
+    const pv = this.info(); if (!pv || this.on || !R.link) return;
+    this.on = true; this.code = pv.code; this.tv = String(pv.tv || ''); this.name = `${String(pv.name || 'Guest').slice(0, 20)} (phone)`; this.id = `~${rid()}`; this.net = '';
+    buzz(10);
+    // a tap is the user gesture the phone needs before it may play the voices that arrive later
+    try { const a = new Audio(); a.muted = true; a.play().catch(() => {}); } catch (e) { /* nothing to unlock */ }
+    this.link = new Link(this.code, (m) => this.onMsg(m), (s) => { this.net = s; if (s === 'online') this.hello(); this.paint(); }, R.sb,
+      { topic: `realtime:mkc-party-${this.code}`, bc: `mkc:party-${this.code}`, id: this.id });
+    this.paint();
+  },
+  leave(why) {
+    if (!this.on) return;
+    this.on = false;
+    [...this.peers.keys()].forEach((id) => this.drop(id));
+    if (this.mic) { this.mic.getTracks().forEach((t) => t.stop()); this.mic = null; }
+    if (this.link) this.link.close(); this.link = null; this.code = ''; this.net = '';
+    if (why) toast(why, 3200);
+    this.paint();
+  },
+  hello(to) { if (this.link) this.link.send({ t: 'hello', name: this.name, host: false, voice: true, of: this.tv, ...(to ? { reply: true, _to: to } : {}) }); },
+  send(to, data) { if (this.link) this.link.send({ t: 'signal', _to: to, data }); },
+  onMsg(m) {
+    const from = m && m._from; if (!from || !this.on) return;
+    if (m.t === 'hello') { this.peer(from, m.name); if (!m.reply) this.hello(from); }
+    else if (m.t === 'signal') this.signal(from, m.data || {});
+    else if (m.t === 'bye') this.drop(from);
+  },
+  /* the same "perfect negotiation" the app's party uses; this phone's id sorts last, so it is always the polite side */
+  peer(id, name) {
+    let p = this.peers.get(id); if (p) { if (name) p.name = name; return p; }
+    const pc = new RTCPeerConnection({ iceServers: this.ICE });
+    p = { id, name: name || 'Guest', pc, polite: this.id > id, makingOffer: false, ignoreOffer: false, audio: null, dc: null };
+    this.peers.set(id, p);
+    pc.onnegotiationneeded = async () => { try { p.makingOffer = true; await pc.setLocalDescription(); this.send(id, { description: pc.localDescription && pc.localDescription.toJSON() }); } catch (e) { /* retried on the next change */ } finally { p.makingOffer = false; } };
+    pc.onicecandidate = ({ candidate }) => { if (candidate) this.send(id, { candidate: candidate.toJSON() }); };
+    pc.ondatachannel = (e) => { p.dc = e.channel; }; // party sync and chat are for screens; a voice phone only keeps the channel open
+    pc.ontrack = (e) => this.voice(p, e.streams[0] || new MediaStream([e.track]));
+    pc.onconnectionstatechange = () => { if (pc.connectionState === 'failed') { try { pc.restartIce(); } catch (x) { /* closed */ } } this.paint(); };
+    if (this.mic) this.mic.getTracks().forEach((t) => pc.addTrack(t, this.mic));
+    this.paint(); return p;
+  },
+  async signal(from, { description, candidate }) {
+    const p = this.peer(from), pc = p.pc;
+    try {
+      if (description) {
+        const collision = description.type === 'offer' && (p.makingOffer || pc.signalingState !== 'stable');
+        p.ignoreOffer = !p.polite && collision; if (p.ignoreOffer) return;
+        await pc.setRemoteDescription(description);
+        if (description.type === 'offer') { await pc.setLocalDescription(); this.send(from, { description: pc.localDescription.toJSON() }); }
+      } else if (candidate) { try { await pc.addIceCandidate(candidate); } catch (e) { if (!p.ignoreOffer) throw e; } }
+    } catch (e) { console.warn('party voice signaling', e); }
+  },
+  voice(p, stream) {
+    if (!p.audio) { const a = p.audio = document.createElement('audio'); a.autoplay = true; a.setAttribute('playsinline', ''); document.body.appendChild(a); }
+    p.audio.srcObject = stream; this.level();
+    p.audio.play().catch(() => toast('Tap Party voice again to let this phone play sound', 3600));
+  },
+  level() { const v = this.vol(); this.peers.forEach((p) => { if (p.audio) { p.audio.volume = v; p.audio.muted = p.id === this.tv; } }); },
+  drop(id) {
+    const p = this.peers.get(id); if (!p) return;
+    try { p.pc.close(); } catch (e) { /* closed */ }
+    if (p.audio) { p.audio.srcObject = null; p.audio.remove(); }
+    this.peers.delete(id); this.paint();
+  },
+  async toggleMic() {
+    if (this.mic) {
+      this.mic.getTracks().forEach((t) => t.stop());
+      this.peers.forEach((p) => p.pc.getSenders().forEach((s) => { if (s.track && s.track.kind === 'audio') { try { p.pc.removeTrack(s); } catch (e) { /* closed */ } } }));
+      this.mic = null; buzz(6); this.paint(); return;
+    }
+    let mic;
+    try { mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); }
+    catch (e) { toast('Microphone permission was not given', 3600); return; }
+    if (!this.on) { mic.getTracks().forEach((t) => t.stop()); return; }
+    this.mic = mic; this.peers.forEach((p) => mic.getTracks().forEach((t) => p.pc.addTrack(t, mic)));
+    buzz(10); this.paint();
+  },
+};
+{
+  const on = R.onMsg;
+  R.onMsg = (m) => {
+    on(m);
+    if (m.t !== 'st') return;
+    const pv = PV.info();
+    if (PV.on && !pv) PV.leave('Party voice moved back to the TV');
+    else if (PV.on && pv.code !== PV.code) PV.leave('The TV joined another party. Tap Party voice to join it.');
+    PV.paint();
+  };
+  const lv = R.leave;
+  R.leave = () => { PV.leave(); lv(); };
+  const la = Listen.audio.bind(Listen);
+  Listen.audio = () => { const a = la(); a.volume = PV.film(); return a; };
+  const lp = Listen.paint.bind(Listen);
+  Listen.paint = () => { lp(); PV.paint(); };
+  $('#pvBtn').onclick = () => PV.toggle();
+  $('#pvMic').onclick = () => PV.toggleMic();
+  $('#pvVol').addEventListener('input', (e) => { Store.set('pvVol', Number(e.target.value) / 100); PV.level(); });
+  $('#pvFilm').addEventListener('input', (e) => { Store.set('pvFilm', Number(e.target.value) / 100); if (Listen.el) Listen.el.volume = PV.film(); });
+  addEventListener('pagehide', () => { if (PV.on && PV.link) PV.link.close(); });
 }
 
 /* ---------- Start ---------- */
