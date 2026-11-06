@@ -156,7 +156,12 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback {
             mp.setOnInfoListener((m, what, extra) -> { if (what == MediaPlayer.MEDIA_INFO_BUFFERING_START) note.setText("Buffering…"); else if (what == MediaPlayer.MEDIA_INFO_BUFFERING_END) note.setText(""); return false; });
             mp.setOnTimedTextListener((m, t) -> subLine.setText(t == null ? "" : t.getText()));
             mp.prepareAsync();
-        } catch (Exception e) { note.setText("This source won’t play here"); setResult(RESULT_CANCELED); h.postDelayed(this::finish, 1500); }
+        } catch (Exception e) {
+            // 1.6.1: report it as an error so MKCinema tries its own player, instead of closing as if you pressed Back
+            note.setText("This source won’t play here");
+            setResult(RESULT_CANCELED, new Intent().putExtra("error", "open:" + e.getClass().getSimpleName()));
+            h.postDelayed(this::finish, 1500);
+        }
     }
 
     /** Letterbox the surface to the video's shape. */

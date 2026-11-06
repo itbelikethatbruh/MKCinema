@@ -46,11 +46,15 @@ public class MainActivity extends Activity {
     static final String HOME = "https://mkcinema.pages.dev/";
     static final String HOST = "mkcinema.pages.dev";
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6;
-    static final String VER = "1.6.0";
+    static final String VER = "1.6.1";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
     WebView web;
+    /** 1.6.1: the page's renderer was stopped while MKCinema was hidden (see onRenderProcessGone) */
+    boolean webDead, resumed;
+    String lastUrl;
+    long goneAt;
     FrameLayout root;
     View customView;
     WebChromeClient.CustomViewCallback customCb;
@@ -71,6 +75,16 @@ public class MainActivity extends Activity {
                 || getPackageManager().hasSystemFeature("amazon.hardware.fire_tv");
         root = new FrameLayout(this);
         root.setBackgroundColor(Color.BLACK);
+        setContentView(root);
+        buildWeb();
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        if (b != null) web.restoreState(b);
+        else web.loadUrl(startUrl(getIntent()));
+    }
+
+    /** Creates and sets up the page's WebView (also used to rebuild it after its renderer was stopped). */
+    void buildWeb() {
         web = new WebView(this);
         web.setBackgroundColor(Color.BLACK);
         // No native scrollbars or edge glow: the WebView flashed a white bar down the right edge at start-up on TVs
@@ -78,8 +92,7 @@ public class MainActivity extends Activity {
         web.setHorizontalScrollBarEnabled(false);
         web.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
         web.setOverScrollMode(View.OVER_SCROLL_NEVER);
-        root.addView(web, new FrameLayout.LayoutParams(-1, -1));
-        setContentView(root);
+        root.addView(web, 0, new FrameLayout.LayoutParams(-1, -1));
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -110,6 +123,22 @@ public class MainActivity extends Activity {
             @Override public void onPageFinished(WebView v, String url) { if (tv) v.evaluateJavascript(TV_JS, null); }
             @Override public void onReceivedError(WebView v, WebResourceRequest r, WebResourceError e) {
                 if (r.isForMainFrame()) v.loadDataWithBaseURL(null, offline(), "text/html", "utf-8", null);
+            }
+            /* 1.6.1: Android can stop the page's renderer to free memory, most often on 1-2 GB TV sticks while the TV
+               player decodes a film over it (the renderer's priority drops once it is hidden). Unhandled, that kills the
+               whole app, the film stops and MKCinema reopens on Home. Now the film keeps playing and only the page is
+               rebuilt: right away when it is on screen, or when the player closes. */
+            @Override public boolean onRenderProcessGone(WebView v, android.webkit.RenderProcessGoneDetail d) {
+                if (v != web) return true;
+                // the same page stopping again within 15 s reopens on Home instead, so it can't loop
+                long now = System.currentTimeMillis();
+                lastUrl = now - goneAt < 15000 ? null : v.getUrl(); goneAt = now;
+                root.removeView(v);
+                try { v.destroy(); } catch (Exception ignored) { }
+                pageHost = "";
+                buildWeb(); // empty until it loads, so every web call stays safe
+                if (resumed) reloadWeb(); else webDead = true;
+                return true;
             }
         });
         web.setWebChromeClient(new WebChromeClient() {
@@ -143,10 +172,14 @@ public class MainActivity extends Activity {
             }
         });
         web.setDownloadListener((url, ua, cd, mime, len) -> { if (!url.startsWith("blob:") && !url.startsWith("data:")) open(Uri.parse(url)); });
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
 
-        if (b != null) web.restoreState(b);
-        else web.loadUrl(startUrl(getIntent()));
+    /** The page's renderer was stopped: the fresh WebView reopens MKCinema where it was. */
+    void reloadWeb() {
+        webDead = false;
+        String u = lastUrl != null && HOST.equals(Uri.parse(lastUrl).getHost()) ? lastUrl : HOME;
+        web.loadUrl(u);
+        if (tv) web.requestFocus();
     }
 
     String startUrl(Intent i) {
@@ -542,11 +575,11 @@ public class MainActivity extends Activity {
 
     @Override protected void onSaveInstanceState(Bundle b) { super.onSaveInstanceState(b); web.saveState(b); }
     @Override protected void onPause() {
-        super.onPause();
+        super.onPause(); resumed = false;
         // In the picture-in-picture window the page keeps playing
         if (!(Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode())) web.onPause();
         CookieManager.getInstance().flush();
     }
-    @Override protected void onResume() { super.onResume(); web.onResume(); if (wasPip && !(Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode())) wasPip = false; }
+    @Override protected void onResume() { super.onResume(); resumed = true; web.onResume(); if (webDead) reloadWeb(); if (wasPip && !(Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode())) wasPip = false; }
     @Override protected void onDestroy() { if (isFinishing()) new Thread(() -> P2P.stop(getApplicationContext())).start(); if (recognizer != null) recognizer.destroy(); if (web != null) { ((ViewGroup) web.getParent()).removeView(web); web.destroy(); } super.onDestroy(); }
 }
