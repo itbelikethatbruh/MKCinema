@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.38.1 (2026-11-06)
+
+- **Smoother remote in the welcome tour.** On a TV, the remote now reaches every option in the welcome tour and always keeps a button highlighted.
+
 ## Web app 2.38.0 (2026-11-06)
 
 - **Mouse scrolling everywhere.** Season pickers, filter chips, tabs, cast and every other sideways list now have the arrows and click-and-drag on a computer, like the Home rows.
