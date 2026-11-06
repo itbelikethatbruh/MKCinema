@@ -6,3 +6,6 @@ build/
 node_modules/
 .env
 *.syso
+
+# 1.7.0: ExoPlayer/Guava jars, downloaded by android/libs/fetch.sh
+android/libs/*.jar

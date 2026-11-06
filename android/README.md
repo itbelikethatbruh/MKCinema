@@ -26,3 +26,14 @@ When the app can't load at all, the "You're offline" page lists finished downloa
 from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEnable`/`epOn` turn it on or off (Android 13+
 asks for permission). There is no server. Details are in /mnt/project-files/patches/2.19.0-episode-alerts/README.md.
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
+
+## 1.7.0 (versionCode 18): ExoPlayer engine for the TV player
+
+`PlayerActivity` talks to an `Engine`: `ExoEngine` (Media3 ExoPlayer 1.8.0, the default) or `MpEngine` (the system MediaPlayer
+used from 1.2.5 to 1.6.2). If ExoPlayer can't open a file, the activity retries it once with `MpEngine` before reporting the
+error to the page (which then plays it in MKCinema's own player). The page can force the basic engine with
+`MKAndroid.setEngine("system")` (Settings › Playback › TV player engine); the choice is kept in SharedPreferences "mk".
+The jars live in `libs/` and `libs/fetch.sh` downloads them (checked against `libs/SHA256SUMS`); build.sh calls it when they
+are missing. Only the AARs' classes.jar is used: ExoPlayer needs no Android resources for what the player calls, except
+`androidx.collection` (async MediaCodec queue on Android 12+), which is included. `android:largeHeap` is on so the
+buffer (a third of the large-heap budget, 48 to 160 MB) fits.
