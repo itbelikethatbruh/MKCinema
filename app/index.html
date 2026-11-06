@@ -2147,7 +2147,7 @@ html.tv .foot>span:last-child{display:none}
           <input type="range" class="vol" id="pVol" min="0" max="1" step="0.02" value="1" aria-label="Volume">
           <span class="time tnum" id="pTime">0:00 / 0:00</span>
           <span class="sp"></span>
-          <button class="ibtn pp-desk" id="pDsp" type="button" title="Night Mode audio (A)" aria-label="Night Mode audio"><i data-lucide="audio-lines"></i></button>
+          <button class="ibtn pp-desk" id="pDsp" type="button" title="Audio (A)" aria-label="Audio"><i data-lucide="audio-lines"></i></button>
           <button class="ibtn pp-desk" id="pParty" type="button" title="Watch party (P)" aria-label="Watch party"><i data-lucide="users"></i></button>
           <button class="ibtn pp-desk" id="pCast" type="button" title="Send to phone, or use your phone as a remote" aria-label="Phone handoff and remote"><i data-lucide="smartphone"></i></button>
           <button class="ibtn" id="pSubs" type="button" title="Subtitles (C)" aria-label="Subtitles"><i data-lucide="captions"></i></button>
@@ -5793,7 +5793,6 @@ const TOUR = [
     ['Instant debrid', 'Connect the debrid service you use and cached sources start in about a second.'],
     ['Spoiler Guard', 'Unwatched episode titles, stills and synopses stay hidden until you want them.'],
     ['Skip intro, next episode', 'Openings skipped in one tap; the next episode is ready before the credits roll.'],
-    ['Night Mode', 'Quiet scenes louder, explosions softer, so nobody reaches for the remote.'],
     ['Your Picks', 'A "For you" row and plain-language asks, worked out on your own device.'],
     ['Follows you', 'Sign in once: addons, watchlist, progress, keys and your profile photo sync.'],
   ].map(([t, d], k) => `<li style="--k:${k}"><em>${String(k + 1).padStart(2, '0')}</em><div><b>${t}</b><small>${d}</small></div></li>`).join('')}</ol></div>` },
@@ -5991,7 +5990,7 @@ const DSP_PRESETS = {
 const DSP_ORDER = ['flat', 'vocal', 'night', 'spatial'];
 const DSP = {
   ctx: null, n: null, attached: false, raf: 0, probes: new Map(),
-  wants() { return CFG.dsp !== 'flat' || this.attached; },
+  wants() { return this.attached; },
   /* Is what the video element plays right now readable by Web Audio? */
   clean() {
     if (!P.stream) return false;
@@ -6039,7 +6038,7 @@ const DSP = {
     } catch (e) { console.warn('Night Mode could not attach', e); return false; }
   },
   apply(name, instant) {
-    const p = DSP_PRESETS[name] || DSP_PRESETS.flat, n = this.n; if (!n) return;
+    const p = DSP_PRESETS.flat, n = this.n; if (!n) return;
     const t = this.ctx.currentTime, k = instant ? 0.001 : 0.06, set = (prm, v) => prm.setTargetAtTime(v, t, k);
     const c = p.comp || { threshold: 0, knee: 0, ratio: 1, attack: 0.003, release: 0.25 };
     set(n.hp.frequency, p.hp); set(n.eq.gain, p.eq);
@@ -6459,7 +6458,7 @@ const XRay = {
       ['Dropped frames', q ? `${q.droppedVideoFrames} of ${q.totalVideoFrames}` : '—'],
       ['Bitrate', rate || '—'],
       ['Buffered ahead', `${ahead.toFixed(0)} s`],
-      ['Audio', DSP.attached ? DSP_PRESETS[CFG.dsp].label : P.remux ? 'Rescued · AAC stereo' : 'Unprocessed'],
+      ['Audio', DSP.attached ? 'Processed' : P.remux ? 'Rescued · AAC stereo' : 'Unprocessed'],
       ['Codec', [tel.codec, (tel.audio || []).join(' ')].filter(Boolean).join(' · ') || '—'],
       ['Addon', P.stream._addon || '—'],
     ];
@@ -6662,7 +6661,6 @@ const PlayerPlus = {
   renderOptMenu = function () {
     base(); const m = $('#optMenu');
     m.insertAdjacentHTML('afterbegin', `<h5>More</h5>
-      <button type="button" data-pp="dsp"><i data-lucide="audio-lines"></i>Night Mode audio · ${esc(DSP_PRESETS[CFG.dsp].label)}</button>
       <button type="button" data-pp="party"><i data-lucide="users"></i>${Party.code ? `Watch party · ${esc(Party.code)}` : 'Start a watch party'}</button>
       <button type="button" data-pp="cast"><i data-lucide="smartphone"></i>Send to phone or use it as a remote</button>
       <button type="button" data-pp="mark"><i data-lucide="bookmark-plus"></i>Bookmark this scene</button>`);
@@ -8148,7 +8146,6 @@ const SECTIONS = [
     { key: 'browserOnly', label: 'Browser only mode', help: 'For devices where you cannot install VLC or another player. Lists only sources this browser can play with working picture and sound (H.264 or a codec this device supports, AAC/Opus sound), and torrents only through your debrid service. Fewer sources, but the ones you see play right here.', type: 'toggle' },
     { key: 'audioOnly', label: 'Audio language', help: 'Hides sources dubbed only in other languages, so Smart Play and auto-switch never pick them. Releases that name no language, or MULTi and Dual Audio releases, stay listed.', type: 'select', options: [['eng', 'English'], ['spa', 'Spanish'], ['fre', 'French'], ['ger', 'German'], ['ita', 'Italian'], ['por', 'Portuguese'], ['hin', 'Hindi'], ['any', 'Any language']] },
     { key: 'failover', label: 'Switch sources automatically', help: 'If a source has not started after 3.5 s, errors, or stalls for 12 s, the next best one takes over at the same spot.', type: 'toggle' },
-    { key: 'dsp', label: 'Night Mode audio', help: 'Processes the sound in your browser. Works on every HLS stream and local file, and on other sources when the host allows it or mkcinema-server.js relays it.', type: 'select', options: DSP_ORDER.map((k) => [k, DSP_PRESETS[k].label]), set: (v) => DSP.pick(v) },
     { key: 'skipIntro', label: 'Skip Intro button', help: 'Shows for 8 s when an intro is known: from chapters in the file, AniSkip for anime, or your own skips on earlier episodes. Enter or gamepad A presses it.', type: 'toggle' },
     { key: 'autoSkipIntro', label: 'Skip intros automatically', type: 'toggle' },
     { key: 'xray', label: 'X-Ray when paused', help: 'Cast, picture and audio details, and a scene bookmark, a moment after you pause.', type: 'toggle' },
@@ -8237,14 +8234,14 @@ const SECTIONS = [
   { id: 'keys', icon: 'keyboard', label: 'Shortcuts', intro: 'Player keys follow VLC where it makes sense. A gamepad works too: D-pad moves, A selects, B goes back, Y opens sources or search, LB/RB switch tabs or skip 30 s.', rows: () => [{ html: () => `<div class="kbd-grid">${[
     ['Ctrl/⌘ K or /', 'Search titles, addons and commands'], ['Arrows', 'Move between items (seek and volume in the player)'], ['Enter', 'Open or play'], ['Esc / Backspace', 'Back'],
     ['Space or K', 'Play / pause'], ['J / L', `Back / forward ${CFG.seekStep}s`], ['F', 'Fullscreen'], ['M', 'Mute'], ['N', 'Next episode'], ['S / E', 'Sources / episodes drawer'],
-    ['C', 'Subtitle menu'], ['V', 'Cycle subtitles'], ['G / H', 'Subtitle delay −/+ 0.25s'], ['B', 'Cycle audio track'], ['[ / ] / =', 'Slower / faster / normal speed'], ['O', 'Speed, quality and audio menu'], ['A', 'Night Mode audio'], ['P', 'Watch party'], ['Enter / A button', 'Skip intro, when shown'],
+    ['C', 'Subtitle menu'], ['V', 'Cycle subtitles'], ['G / H', 'Subtitle delay −/+ 0.25s'], ['B', 'Cycle audio track'], ['[ / ] / =', 'Slower / faster / normal speed'], ['O', 'Speed, quality and audio menu'], ['A', 'Audio menu'], ['P', 'Watch party'], ['Enter / A button', 'Skip intro, when shown'],
   ].map(([k, d]) => `<span class="kbd">${esc(k)}</span><span>${esc(d)}</span>`).join('')}</div>` }] },
   { id: 'data', icon: 'database', label: 'Data', intro: 'Your setup lives in this browser (and your account, if you sign in). The Setup Cloner moves all of it to another device in one code.', rows: () => [
     { group: 'Privacy' },
     { key: 'anonStats', label: 'Share anonymous visit counts', help: 'Once per visit, Cloudflare Web Analytics counts the page, the site you came from, browser, country and load speed. No cookies, no IDs, nothing about your addons, keys or what you watch. Off sends nothing.', type: 'toggle' },
     { group: 'Setup Cloner' },
     { html: () => `<div class="set-row"><div><b>Include my private keys</b><small>Adds debrid, RPDB and OMDb keys. Only for your own devices: anyone with the code can use them.</small></div><div class="set-ctl"><button class="switch" type="button" id="cl-secrets" role="switch" aria-checked="false" aria-label="Include private keys"></button></div></div>` },
-    { key: 'cloneCode', label: 'Setup code', help: 'Addons, Studio project, settings, Night Mode, proxy, watchlist, progress and Home layout, packed into one mkc:// code.', type: 'button', text: 'Copy setup code', icon: 'copy', run: async () => copyText(await Cloner.code({ secrets: $('#cl-secrets').classList.contains('on') })) },
+    { key: 'cloneCode', label: 'Setup code', help: 'Addons, Studio project, settings, proxy, watchlist, progress and Home layout, packed into one mkc:// code.', type: 'button', text: 'Copy setup code', icon: 'copy', run: async () => copyText(await Cloner.code({ secrets: $('#cl-secrets').classList.contains('on') })) },
     { key: 'cloneFile', label: 'Setup file', help: 'The same, as a .mkcinema file.', type: 'button', text: 'Download .mkcinema', icon: 'download', run: () => Cloner.file({ secrets: $('#cl-secrets').classList.contains('on') }) },
     { html: () => `<div class="set-row" style="grid-template-columns:minmax(0,1fr)"><div><b>Restore</b><small>Paste a setup code (mkc://…) or an older JSON export, or pick a .mkcinema file. It applies right away, no reload.</small></div><textarea class="inp" id="set-import" rows="3" placeholder="mkc://…"></textarea><div class="inrow"><button class="btn btn-prime btn-sm" type="button" id="set-import-go"><i data-lucide="upload"></i>Restore</button><button class="btn btn-ghost btn-sm" type="button" id="set-import-file"><i data-lucide="file-up"></i>Choose file…</button><input type="file" id="set-import-pick" accept=".mkcinema,.json,application/json" hidden></div></div>` },
     { group: 'Reset' },
@@ -8496,7 +8493,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.25.0';
+const APP_VERSION = '2.25.1';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -9299,6 +9296,7 @@ body.saver-full #app{visibility:hidden}
 @media (max-width:760px){.sv-logo{width:auto;right:6vw;height:clamp(70px,15vh,140px)}.sv-f.r .sv-logo{left:6vw}.sv-cut{height:60vh;max-width:96vw;right:-4vw}.sv-hint{display:none}.sv-brand{font-size:15px}}
 </style>
 <style>
+#optMenu .al-row{cursor:default}#optMenu .al-row:not(.on){opacity:.82}
 #optMenu .al-note{display:flex;gap:8px;align-items:flex-start;margin:2px 0 8px;font-size:12.5px;line-height:1.45;color:var(--mute)}
 #optMenu .al-note svg{width:14px;height:14px;flex:none;margin-top:2px}
 /* About & licenses (2.7.18) */
@@ -13294,7 +13292,7 @@ const TvPlayer = {
     if (sec && IS_TV && window.MKAndroid) {
       const rows = sec.rows;
       sec.rows = () => [...rows(),
-        { key: 'tvPlayer', label: 'TV player', help: 'The TV player uses your TV’s own video hardware: MKV, HEVC, HDR and Dolby Vision play smoothly. The MKCinema player keeps subtitle styling, Night Mode and X-Ray. Needs the MKCinema TV app 1.2.5 or later.', type: 'select', options: [['native', 'TV player (smoothest)'], ['web', 'MKCinema player']], get: () => CFG.tvPlayer || 'native' },
+        { key: 'tvPlayer', label: 'TV player', help: 'The TV player uses your TV’s own video hardware: MKV, HEVC, HDR and Dolby Vision play smoothly. The MKCinema player keeps subtitle styling and X-Ray. Needs the MKCinema TV app 1.2.5 or later.', type: 'select', options: [['native', 'TV player (smoothest)'], ['web', 'MKCinema player']], get: () => CFG.tvPlayer || 'native' },
         { key: 'matchRate', label: 'Match the film’s frame rate', help: 'The TV switches to 24 Hz for films shot at 24 frames, so panning shots don’t judder, and switches back afterwards. Some TVs blank for a second while switching.', type: 'toggle', get: () => CFG.matchRate !== false },
       ];
     }
@@ -16612,7 +16610,7 @@ const PxAudio = {
     const boostOk = !P.stream || !P.stream.url ? false : true;
     const lis = PxListen.count();
     return `<h5>Volume</h5><div class="seg-row px-boost">${[1, 1.25, 1.5, 2].map((g) => `<button type="button" class="${Math.abs(PxBoost.g - g) < 0.01 ? 'on' : ''}" data-boost="${g}">${Math.round(g * 100)}%</button>`).join('')}</div>
-      <p class="px-note">${boostOk ? 'Above 100 % lifts quiet films and dialogue. Night Mode below evens out loud scenes.' : ''}</p>
+      <p class="px-note">${boostOk ? 'Above 100 % lifts quiet films and dialogue.' : ''}</p>
       <h5>Listen on phone</h5>
       <button type="button" data-pxlisten><i data-lucide="headphones"></i>${lis ? `${lis === 1 ? 'A phone is' : `${lis} phones are`} playing the sound` : 'Play the sound on your phone'}</button>
       <p class="px-note">Pair your phone as a remote, then tap <b>Listen</b> on it. The sound plays on the phone or its headphones, and this screen goes quiet.</p>`;
@@ -18372,6 +18370,53 @@ const SportsHub = {
   },
 };
 SportsHub.init();
+</script>
+<script id="mkc-2251">
+/* ---------------- 2.25.1 Audio menu: no sound modes, no "Checking the languages" wait ----------------
+   Night Mode / Vocal Clarity / Late-Night / 3D Spatial are gone. They needed Web Audio, which only reads a stream's
+   sound when its host sends CORS headers. Picking one reloaded the stream through a CORS check or the proxy; on hosts
+   that refuse, the film stalled, and because a video can never be detached from Web Audio again, the only way out was
+   reloading the app. Volume boost and Listen on phone still use the graph (they ask first, per stream).
+   Audio language now draws at once from what the source already says (flags, ENG / ITA / MULTi tags, the file name).
+   The debrid / MKCinema server lookup still runs quietly behind it and only adds buttons if it finds switchable tracks. */
+(() => {
+  if (CFG.dsp && CFG.dsp !== 'flat') setCfg('dsp', 'flat');
+  DSP.pick = function () { if (CFG.dsp !== 'flat') setCfg('dsp', 'flat'); };
+  DSP.cycle = function () {};
+  DSP.toggle = function () { if (typeof PxMenu !== 'undefined' && PxMenu.open) PxMenu.open('audio'); };
+  DSP.started = function () { if (this.attached && this.ctx && this.ctx.state !== 'running') this.ctx.resume().catch(() => {}); };
+  // Android Chrome stalls a video whose sound runs through a paused audio graph: wake it whenever playback resumes
+  video.addEventListener('playing', () => { if (DSP.attached && DSP.ctx && DSP.ctx.state !== 'running') DSP.ctx.resume().catch(() => {}); });
+  DSP.blockedMsg = function (stream) {
+    showMsg('This source can’t be boosted', 'Volume boost or Listen on phone is processing the sound in this session, and this host does not let browsers read its audio. Pick another source, or reload the app to play it normally. Your place is saved.',
+      `<button class="btn btn-prime" type="button" data-act="next-src"><i data-lucide="skip-forward"></i>Try next source</button><button class="btn btn-ghost" type="button" id="dspOffReload"><i data-lucide="rotate-ccw"></i>Reload and play normally</button>${handoffHTML(stream)}`);
+    $('#dspOffReload').onclick = () => { saveProgress(true); setCfg('dsp', 'flat'); location.reload(); };
+  };
+
+  const full = AudioLang.section.bind(AudioLang);
+  AudioLang.section = function (s) {
+    const st = this.info.get(s);
+    if (!st) this.probe(s); // quiet: it only redraws the menu, and only adds buttons when it finds tracks that can be switched
+    if (st && st.state === 'ok') return full(s);
+    const head = '<h5>Audio language</h5>';
+    let known = [], multi = false;
+    try { const r = AudioPref.langs(s); known = [...r.langs].map((c) => langName(c)); multi = r.multi; } catch (e) { /* no tags */ }
+    known = known.filter((x, i, a) => x && a.indexOf(x) === i);
+    if (st && st.tracks && st.tracks.length === 1) known = [st.tracks[0].label];
+    const row = (label, on) => `<button type="button" class="al-row${on ? ' on' : ''}" data-alinfo tabindex="-1"><i data-lucide="audio-lines"></i>${esc(label)}${on ? ' · playing' : ''}</button>`;
+    if (known.length <= 1 && !multi) return `${head}${row(known[0] || 'Original audio', true)}`;
+    let xp = null;
+    try { xp = handoffUrl(s) ? (extPlayer() || playersHere().find((p) => !p.m3u)) : null; } catch (e) { xp = null; }
+    const list = known.length ? known.map((l) => row(l, false)).join('') : row('Several languages (MULTi)', false);
+    return `${head}${list}<p class="al-note">The file’s default track plays here. Browsers can’t switch tracks inside a file${xp ? `, so open it in ${esc(playerName(xp))} to pick another` : ''}.</p>${xp ? `<button type="button" data-alxp="${esc(xp.id)}"><i data-lucide="external-link"></i>Switch language in ${esc(playerName(xp))}</button>` : ''}`;
+  };
+  const base = renderOptMenu;
+  renderOptMenu = function () {
+    base(); const m = $('#optMenu'); if (!m) return;
+    $$('[data-alinfo]', m).forEach((b) => { b.onclick = (e) => e.preventDefault(); });
+    const x = $('[data-alxp]', m); if (x) x.onclick = () => { const t = $(`[data-xp="${x.dataset.alxp}"]`, m); if (t) t.click(); };
+  };
+})();
 </script>
 <script id="mkc-cfwa">
 /* 2.9.7 Cloudflare Web Analytics: one anonymous report per visit (page, referrer, browser, country, load speed).

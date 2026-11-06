@@ -2,6 +2,12 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.25.1 (2026-11-06)
+
+- **Night Mode audio is gone** (Vocal Clarity Boost, Late-Night Mode and 3D Spatial Theater). These modes could freeze the player: the browser can only process a stream's sound when its host allows it, so picking a mode reloaded the film, and on many hosts it stalled. Once the sound was routed that way it couldn't be switched back without reloading the app. Anyone who had a mode on is set back to the normal sound.
+- **Audio language shows straight away.** No more "Checking the languages in this file…". The menu lists the languages the source names (flags, ENG, ITA, MULTi and so on), or "Original audio" when it names none. When a file has several languages, the menu says the browser plays the file's default track and offers your video app (VLC and others) to switch. If a debrid service or your MKCinema server can switch tracks, the buttons still appear once they’re found.
+- Volume boost above 100 % and Listen on phone are unchanged.
+
 ## Web app 2.25.0 (2026-11-06)
 
 - **Sports**, a new section in the menu (top bar, phone bar, side menu and TV). It gathers live sports from your own sources and sorts them by sport: Football, American football, Basketball, Baseball, Ice hockey, Fight sports, Motorsport, Tennis, Cricket, Rugby, Golf, Cycling, More sports and Sports channels.
