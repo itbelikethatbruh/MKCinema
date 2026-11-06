@@ -10,6 +10,24 @@ const HOST = 'mkcinema.pages.dev';
 const HOSTS = [HOST, 'app.mkcinema.app'];
 const isAppHost = (h) => HOSTS.indexOf(String(h || '').toLowerCase()) >= 0;
 const VERSION = '1.1';
+// Each launch writes its steps to ~/Library/Logs/MKCinema/launch.log, so a start that fails leaves something readable.
+const LOG = $.NSHomeDirectory().js + '/Library/Logs/MKCinema/launch.log';
+$.NSFileManager.defaultManager.createDirectoryAtPathWithIntermediateDirectoriesAttributesError(LOG.replace(/\/[^/]+$/, ''), true, $(), null);
+$.NSFileManager.defaultManager.removeItemAtPathError(LOG, null);
+function logLine(text) {
+  try {
+    const f = $.NSFileManager.defaultManager;
+    if (!f.fileExistsAtPath(LOG)) f.createFileAtPathContentsAttributes(LOG, $(), $());
+    const h = $.NSFileHandle.fileHandleForWritingAtPath(LOG);
+    if (h.isNil()) return;
+    h.seekToEndOfFile;
+    h.writeData($(new Date().toISOString() + ' ' + text + '\n').dataUsingEncoding($.NSUTF8StringEncoding));
+    h.closeFile;
+  } catch (e) { /* logging never stops the app */ }
+}
+logLine('started ' + VERSION + ' on macOS ' + $.NSProcessInfo.processInfo.operatingSystemVersionString.js);
+// The launch test (.github/workflows/mac-smoke.yml) sets this flag: load the page, ping the bridge once, then quit.
+const SELFTEST = $.NSFileManager.defaultManager.fileExistsAtPath($.NSHomeDirectory().js + '/Library/Caches/MKCinema/selftest');
 const app = $.NSApplication.sharedApplication;
 app.setActivationPolicy($.NSApplicationActivationPolicyRegular);
 
@@ -83,7 +101,7 @@ const bridgeJs = "(function(){if(location.protocol!=='https:'||" + JSON.stringif
   + "function call(c){return new Promise(function(a,b){var i=++n;w[i]=[a,b];h.postMessage({id:i,cmd:c})})}"
   + "var d={platform:'mac',version:'" + VERSION + "'};"
   + (hasEngine ? "d.p2p={start:function(){return call('p2p-start')},stop:function(){return call('p2p-stop')}};" : '')
-  + "window.MKDesktop=d;})();";
+  + "window.MKDesktop=d;" + (SELFTEST ? "setTimeout(function(){call('ping')},1500);" : '') + "})();";
 
 // Only MKCinema's own top-level page may use the bridge: not frames inside it (trailers and their ads), not other
 // sites.
@@ -107,7 +125,10 @@ function bridge(msg) {
     return;
   }
   try {
-    if (cmd === 'p2p-start') val = engineStart();
+    if (cmd === 'ping') {
+      val = 'pong'; logLine('bridge ping ok');
+      if (SELFTEST) { logLine('selftest: quitting'); app.performSelectorWithObjectAfterDelay('terminate:', $(), 1.0); }
+    } else if (cmd === 'p2p-start') val = engineStart();
     else if (cmd === 'p2p-stop') engineStop();
   } catch (e) { err = String(e && e.message || e) || 'the engine did not start'; }
   msg.webView.evaluateJavaScriptCompletionHandler('window.__mkdDone&&window.__mkdDone(' + JSON.stringify(id) + ',' + JSON.stringify(err) + ',' + JSON.stringify(val) + ')', null);
@@ -129,9 +150,13 @@ function failed(webView, error) {
   if (error.domain.js === 'NSURLErrorDomain') webView.loadHTMLStringBaseURL(offlinePage, $.NSURL.URLWithString(HOME));
 }
 
+try {
 ObjC.registerSubclass({
   name: 'MKCinemaDelegate',
-  protocols: ['WKUIDelegate', 'WKNavigationDelegate', 'NSApplicationDelegate', 'WKScriptMessageHandler'],
+  // Only protocols the JXA bridge can find at this point are declared. WKScriptMessageHandler is not registered
+  // until WebKit uses it (declaring it fails with "protocol does not exist"), and NSApplicationDelegate's BOOL
+  // methods do not match JXA's type strings. Cocoa and WebKit only check that the methods exist, so both still work.
+  protocols: ['WKUIDelegate', 'WKNavigationDelegate'],
   methods: {
     'userContentController:didReceiveScriptMessage:': {
       types: ['void', ['id', 'id']],
@@ -157,6 +182,10 @@ ObjC.registerSubclass({
       types: ['void', ['id', 'id', 'id']],
       implementation: function (webView, nav, error) { failed(webView, error); }
     },
+    'webView:didFinishNavigation:': {
+      types: ['void', ['id', 'id']],
+      implementation: function (webView) { logLine('page loaded ' + (webView.URL.isNil() ? '' : webView.URL.host.js)); }
+    },
     'webView:didFailNavigation:withError:': {
       types: ['void', ['id', 'id', 'id']],
       implementation: function (webView, nav, error) { failed(webView, error); }
@@ -167,6 +196,7 @@ ObjC.registerSubclass({
     }
   }
 });
+} catch (e) { logLine('error: native setup failed: ' + e); throw e; }
 const delegate = $.MKCinemaDelegate.alloc.init;
 app.delegate = delegate;
 
@@ -217,4 +247,5 @@ web.loadRequest($.NSURLRequest.requestWithURL($.NSURL.URLWithString(HOME)));
 
 win.makeKeyAndOrderFront(null);
 app.activateIgnoringOtherApps(true);
+logLine('window shown');
 app.run;

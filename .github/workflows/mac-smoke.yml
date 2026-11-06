@@ -1,0 +1,64 @@
+name: Mac app launch test
+
+# Builds the Mac app and opens it the way Finder does (LaunchServices), on real macOS runners. The app's self-test
+# (a flag file) loads MKCinema, sends one message from the page to the app, writes each step to its launch log and
+# quits. The job passes only when every step is in the log and the app exited by itself.
+on:
+  push:
+    paths: ['mac/**', '.github/workflows/mac-smoke.yml']
+  pull_request:
+    paths: ['mac/**', '.github/workflows/mac-smoke.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  launch:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, macos-26]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build
+        run: |
+          command -v go >/dev/null || brew install go
+          go version
+          sh mac/package.sh
+          rm -rf /tmp/inst && mkdir /tmp/inst && cd /tmp/inst && unzip -q "$GITHUB_WORKSPACE/mac/build/MKCinema-1.1-mac.zip"
+          cp -R /tmp/inst/MKCinema.app /Applications/
+      - name: Launch from LaunchServices and run the self-test
+        run: |
+          sw_vers
+          LOG="$HOME/Library/Logs/MKCinema/launch.log"
+          mkdir -p "$HOME/Library/Caches/MKCinema"; touch "$HOME/Library/Caches/MKCinema/selftest"; rm -f "$LOG"
+          open /Applications/MKCinema.app
+          for i in $(seq 90); do
+            if grep -q 'selftest: quitting' "$LOG" 2>/dev/null; then break; fi
+            sleep 1
+          done
+          sleep 3
+          screencapture -x "$RUNNER_TEMP/screen.png" || true
+          echo "---- launch.log"; cat "$LOG" || true
+          echo "---- processes"; pgrep -fl 'MKCinema|osascript' || true
+          for want in 'started' 'window shown' 'page loaded' 'bridge ping ok' 'selftest: quitting'; do
+            grep -q "$want" "$LOG" || { echo "missing: $want"; exit 1; }
+          done
+          for i in $(seq 15); do pgrep -f 'MKCinema.app/Contents/Resources/main.js' >/dev/null || break; sleep 1; done
+          if pgrep -f 'MKCinema.app/Contents/Resources/main.js' >/dev/null; then echo 'the app did not quit'; exit 1; fi
+          grep -q 'error' "$LOG" && { echo 'the log has an error'; exit 1; } || true
+          echo 'PASS'
+      - name: Screenshot and log
+        if: always()
+        run: |
+          mkdir -p out; cp "$RUNNER_TEMP/screen.png" out/ 2>/dev/null || screencapture -x out/screen.png || true
+          cp "$HOME/Library/Logs/MKCinema/launch.log" out/ 2>/dev/null || true
+          log show --last 5m --style compact --predicate 'process == "osascript"' > out/system.log 2>/dev/null || true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: mac-launch-${{ matrix.os }}
+          path: out/
