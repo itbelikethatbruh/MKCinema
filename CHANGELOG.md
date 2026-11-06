@@ -2,6 +2,12 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.27.0 (2026-11-06)
+
+- **The side menu is now faint glass.** On computers the left menu is a barely-there smoked glass with a soft light along its edge, so the page shows through very slightly when the menu opens over it. Phones, tablets, TVs and Low graphics get the same tint as a solid panel, with no blur.
+- **A new logo in the side menu**: the MK emblem with a soft glow, a stacked platinum "MK / CINEMA" wordmark and a fine line under it, in the computer side menu and the phone menu drawer.
+- **Pick a font for the app** in Settings › Appearance › Font: Studio (the current look), Editorial, Classic, Wide, Condensed, Rounded, Deco, Slab and Techno. Each one pairs a heading font with an easy-to-read text font. They are all free, open-licence fonts and load only when you pick them. The logo and subtitles keep their own fonts, and your choice syncs to your account.
+
 ## Android and Android TV app 1.6.2 (2026-11-06)
 
 - **The TV player has VLC-style track lists**: audio and subtitle tracks are listed by language and name, and you can switch them during playback.
