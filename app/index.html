@@ -18810,9 +18810,10 @@ const SubTranslate = {
         }
       } else {
         if (!SubCloud.ready()) return;
-        // fixed blocks of 40 lines, so everyone watching the same subtitle file asks for the same blocks
-        const k = cues.indexOf(todo[0]), a = Math.floor(k / 40) * 40;
-        const batch = cues.slice(a, a + 40).filter((c) => !this.orig.has(c));
+        // fixed blocks, so everyone watching the same subtitle file asks for the same blocks (and hits the cache).
+        // A line about to show gets a small block of 10 (a few seconds); lines further ahead go 40 at a time.
+        const k = cues.indexOf(todo[0]), n = todo[0].startTime < now + 8 ? 10 : 40, a = Math.floor(k / n) * n;
+        const batch = cues.slice(a, a + n).filter((c) => !this.orig.has(c));
         const send = batch.filter((c) => c.text.replace(/<[^>]+>/g, '').trim());
         batch.forEach((c) => { if (!send.includes(c)) this.orig.set(c, c.text); });
         if (!send.length) return;
