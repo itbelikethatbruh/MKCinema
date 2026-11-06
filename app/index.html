@@ -7998,10 +7998,10 @@ const Layout = {
   },
 };
 /* ---------------- Support the creator ----------------
-   One PayPal link (it also takes cards). A gentle thank-you shows at most every 21 days, only after real use,
+   One Ko-fi link (it takes cards and PayPal). A gentle thank-you shows at most every 21 days, only after real use,
    never during playback, and "Don't ask again" means it. */
 const DONATE = { name: 'Drake Christopher', paypal: 'https://www.paypal.com/qrcodes/p2pqrc/W7NTDVZTZVQMU', kofi: 'https://ko-fi.com/mkcinema' };
-// Ko-fi sits beside PayPal (cards, Apple Pay, Google Pay, PayPal; one-off or monthly)
+// Ko-fi is the one donation link (it takes cards and PayPal; one-off or monthly). ppBadge is kept but unused.
 const kfBadge = (small) => `<a class="kf-badge${small ? ' sm' : ''}" href="${esc(DONATE.kofi)}" target="_blank" rel="noopener noreferrer" aria-label="Support on Ko-fi"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M3 6.5h13.5v6.2a5.3 5.3 0 0 1-5.3 5.3H8.3A5.3 5.3 0 0 1 3 12.7z"/><path fill="none" stroke="#fff" stroke-width="2" d="M16.5 8h1.2a2.8 2.8 0 0 1 0 5.6h-1.6"/><path fill="#ff5e5b" d="M9.75 9.2c.6-.9 2.4-.7 2.4.8 0 1.3-1.6 2.4-2.4 3-.8-.6-2.4-1.7-2.4-3 0-1.5 1.8-1.7 2.4-.8z"/></svg><span>Support on Ko-fi</span></a>`;
 // A "Donate with PayPal" button in PayPal's own colours, so it is recognised at a glance
 const ppBadge = (small) => `<a class="pp-badge${small ? ' sm' : ''}" href="${esc(DONATE.paypal)}" target="_blank" rel="noopener noreferrer" aria-label="Donate with PayPal"><span>Donate with</span><span class="pp-word"><b>Pay</b><i>Pal</i></span></a>`;
@@ -8012,8 +8012,8 @@ const Support = {
       <div class="sup-t"><b>Keep MKCinema going</b>
         <p>MKCinema is built and kept online by ${esc(DONATE.name)}, with no ads, no cookies and no profiles. Donations pay for hosting, the domain and the hours that go into new features. If it has made your movie nights better, a coffee’s worth goes a long way.</p>
         <p class="sup-thanks">Thank you for watching, and for keeping this project alive. · ${esc(DONATE.name.split(' ')[0])}</p>
-        <div class="inrow">${kfBadge()}${ppBadge()}</div>
-        <small class="sup-note">Opens Ko-fi’s or PayPal’s own secure page, so MKCinema never sees your payment details.</small>
+        <div class="inrow">${kfBadge()}</div>
+        <small class="sup-note">Opens Ko-fi’s own secure page (card or PayPal), so MKCinema never sees your payment details.</small>
       </div></div>`;
   },
   maybe() {
@@ -8023,7 +8023,7 @@ const Support = {
       if (!$('#player').hidden || document.body.classList.contains('layer-open') || $('.focus-ask')) return;
       st.at = Date.now(); Store.set('support', st);
       const t = document.createElement('div'); t.className = 'sup-ask glass-solid'; t.setAttribute('role', 'dialog'); t.setAttribute('aria-label', 'Support MKCinema');
-      t.innerHTML = `<button class="ibtn sup-x" type="button" aria-label="Close"><i data-lucide="x"></i></button><b><i data-lucide="heart"></i>Enjoying MKCinema?</b><small>It is made by ${esc(DONATE.name)} and runs on donations. Thank you for keeping it alive.</small><div class="inrow">${kfBadge(true)}${ppBadge(true)}<button class="btn btn-ghost btn-sm" type="button" data-sup="later">Maybe later</button><button class="linkish" type="button" data-sup="never">Don’t ask again</button></div>`;
+      t.innerHTML = `<button class="ibtn sup-x" type="button" aria-label="Close"><i data-lucide="x"></i></button><b><i data-lucide="heart"></i>Enjoying MKCinema?</b><small>It is made by ${esc(DONATE.name)} and runs on donations. Thank you for keeping it alive.</small><div class="inrow">${kfBadge(true)}<button class="btn btn-ghost btn-sm" type="button" data-sup="later">Maybe later</button><button class="linkish" type="button" data-sup="never">Don’t ask again</button></div>`;
       document.body.appendChild(t); icons(); if (IS_TV) { tvBackHook(); Nav.settle(); }
       const close = () => { t.remove(); if (IS_TV) { tvBackHook(); Nav.settle(); } };
       $('.sup-x', t).onclick = close; $('[data-sup="later"]', t).onclick = close;
