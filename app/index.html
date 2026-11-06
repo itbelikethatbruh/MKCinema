@@ -462,6 +462,29 @@ textarea.inp{height:auto;padding-block:10px;resize:vertical;font-family:var(--f-
 #mkNotice .lucide{flex:none;width:18px;height:18px;opacity:.8}
 #mkNotice span{flex:1;min-width:0;overflow-wrap:anywhere}
 #mkNotice button{flex:none}
+.lg-doc h2{font:600 calc(17px * var(--ts,1))/1.3 var(--f-head,inherit);margin:26px 0 6px;color:var(--ink)}
+.lg-doc p,.lg-doc li{color:var(--mute);line-height:1.6}.lg-doc b{color:var(--ink)}
+.lg-doc ul{padding-left:20px;margin:6px 0}.lg-doc li{margin:4px 0}
+.lg-doc .card{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:12px 0;color:var(--ink);line-height:1.6}
+.lg-doc .sub{margin:4px 0 12px}
+.lg-doc a{color:var(--ink);text-underline-offset:3px}
+.lg-doc [tabindex="0"]:focus-visible{outline:2px solid var(--ink);outline-offset:4px;border-radius:6px}
+.lg-foot{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.ts-search{display:flex;align-items:center;gap:10px;margin:4px 0 10px}.ts-search .lucide{width:18px;height:18px;flex:none;opacity:.7}.ts-search .inp{flex:1;min-width:0}
+.ts-item{border-bottom:1px solid var(--line)}.ts-item[hidden]{display:none}
+.ts-item summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:22px minmax(0,1fr) 18px;align-items:center;gap:12px;padding:14px 4px;border-radius:10px}
+.ts-item summary::-webkit-details-marker{display:none}
+.ts-item summary b{font-weight:600;color:var(--ink)}
+.ts-ic{width:20px;height:20px;opacity:.75}
+.ts-item[open] .lic-chev{transform:rotate(180deg)}
+.ts-body{padding:0 4px 16px 38px}
+.ts-body ol{margin:0;padding-left:18px}.ts-body li{margin:6px 0;color:var(--mute);line-height:1.55}.ts-body li b{color:var(--ink)}
+.ts-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.ts-still{margin-top:20px;padding:16px 18px;border:1px solid var(--line);border-radius:14px}.ts-still p{color:var(--mute);margin:6px 0 0;line-height:1.55}
+.ts-hl{box-shadow:0 0 0 2px var(--ink);border-radius:12px}
+.acct-legal{margin:10px 0 0;font-size:calc(12.5px * var(--ts,1));color:var(--mute);line-height:1.5}.acct-legal .linkish{font-size:inherit}
+.empty .linkish{margin-left:4px}
+@media (max-width:560px){.ts-body{padding-left:4px}}
 #toasts{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:95;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:min(560px,calc(100% - 32px))}
 .toast{display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:calc(13.5px * var(--ts,1));pointer-events:auto;}
 .toast.err .lucide{color:var(--bad)}
@@ -3921,7 +3944,7 @@ function renderStreamsPanel() {
     ${(() => { const n = D.streams.filter((x) => !AudioPref.ok(x)).length; return n ? `<div class="status-line bo-line"><i data-lucide="languages"></i><span>${n} source${n === 1 ? '' : 's'} dubbed in other languages ${n === 1 ? 'is' : 'are'} hidden (only ${esc(langName(CFG.audioOnly))} audio). Change it in Settings › Playback.</span></div>` : ''; })()}
     ${st.errors.length ? `<div class="status-line" style="color:var(--bad)"><i data-lucide="alert-triangle"></i><span>${esc(st.errors.slice(0, 3).join(' · '))}</span></div>` : ''}
     <div class="chips" style="margin-bottom:10px">${filterChips(D.streams, D.filter)}</div>
-    <div class="streams">${list.map((s) => streamRowHTML(s, D.streams.indexOf(s), { best: s === best })).join('') || (st.pending ? skeletons(0) + '<div class="empty">Waiting for addons…</div>' : '<div class="empty">No streams for this filter. Install more stream addons from the addon manager.</div>')}</div>`;
+    <div class="streams">${list.map((s) => streamRowHTML(s, D.streams.indexOf(s), { best: s === best })).join('') || (st.pending ? skeletons(0) + '<div class="empty">Waiting for addons…</div>' : '<div class="empty">No streams for this filter. Install more stream addons from the addon manager.<button type="button" class="linkish" data-nav data-trouble="nostreams">Why no streams?</button></div>')}</div>`;
   icons();
   $$('[data-filter]', box).forEach((b) => b.addEventListener('click', () => { D.filter = b.dataset.filter; renderStreamsPanel(); }));
   $$('[data-si]', box).forEach((b) => b.addEventListener('click', () => { playStream({ meta: D.meta, video: D.video, streams: D.streams }, D.streams[Number(b.dataset.si)]); }));
@@ -4568,9 +4591,9 @@ async function loadSubtitles(ctx, stream) {
   try {
     const subs = await engine.fetchSubtitles(ctx.meta.type, id, extra);
     if (P.stream !== stream) return;
-    P.subs = P.subs.concat(subs.map((x) => ({ ...x, kind: 'url' })));
+    P.subs = SubRank.merge(P.subs.concat(subs.map((x) => ({ ...x, kind: 'url' }))), stream);
   } catch (e) { /* no subtitle addons answered */ }
-  P.subsLoading = false; renderSubMenu(); autoPickSub();
+  P.subsLoading = false; renderSubMenu(); autoPickSub(); SubAuto.offer();
 }
 function addEmbeddedSubs() {
   P.subs = P.subs.filter((s) => s.kind !== 'hls' && s.kind !== 'native');
@@ -4579,22 +4602,22 @@ function addEmbeddedSubs() {
   renderSubMenu(); autoPickSub();
 }
 function autoPickSub() {
-  if (!CFG.subAuto || P.subUserChoice || P.curSub >= 0 || !CFG.subLang) return;
-  const want = langName(CFG.subLang);
-  const i = P.subs.findIndex((s) => langName(s.lang) === want);
-  if (i >= 0) selectSub(i, { auto: true });
+  const cur = P.subs && P.subs[P.curSub];
+  if (!CFG.subAuto || P.subUserChoice || (P.curSub >= 0 && !(cur && cur._tr)) || !CFG.subLang || CFG.subLang === 'off') return;
+  const i = SubRank.pick(P.subs);
+  if (i >= 0) selectSub(i, { auto: true }); else SubAuto.offer();
 }
 const subLabel = (s) => s._label || `${langName(s.lang)}${s._addon ? ` · ${s._addon}` : ''}`;
 function renderSubMenu() {
   const m = $('#subMenu'); if (!P.subs) return;
-  const byLang = P.subs.map((s, i) => [s, i]).sort((a, b) => (langName(a[0].lang) === langName(CFG.subLang) ? -1 : 0) - (langName(b[0].lang) === langName(CFG.subLang) ? -1 : 0) || subLabel(a[0]).localeCompare(subLabel(b[0])));
+  const byLang = SubRank.order(P.subs);
   const subAddons = engine.addons.filter((a) => a.enabled && StremioEngine.resources(a.manifest).some((r) => r.name === 'subtitles')).length;
   const hasOS = engine.addons.some((a) => /opensubtitles/i.test(a.baseUrl) && !a.error);
   m.innerHTML = `<h5>Subtitles · ${P.subsLoading ? 'searching…' : `${P.subs.length} found`}</h5>
     <div class="seg-row"><button type="button" data-delay="-0.25">−0.25s</button><button type="button" data-delay="0" title="Reset delay">${P.subDelay >= 0 ? '+' : ''}${P.subDelay.toFixed(2)}s</button><button type="button" data-delay="0.25">+0.25s</button></div>
     <h5>Size · position</h5><div class="seg-row"><button type="button" data-ssize="-10" aria-label="Smaller subtitles">A−</button><button type="button" data-ssize="0" title="Reset size">${CFG.subSize}%</button><button type="button" data-ssize="10" aria-label="Larger subtitles">A+</button>${[['bottom', 'Low'], ['higher', 'Raised'], ['top', 'Top']].map(([v, l]) => `<button type="button" class="${CFG.subPos === v ? 'on' : ''}" data-spos="${v}">${l}</button>`).join('')}</div>
     <button type="button" class="${P.curSub < 0 ? 'on' : ''}" data-sub="-1"><i data-lucide="captions-off"></i>Off</button>
-    ${byLang.slice(0, 120).map(([s, i]) => `<button type="button" class="${P.curSub === i ? 'on' : ''}" data-sub="${i}"><i data-lucide="${s.kind === 'file' ? 'file-text' : s.kind === 'url' ? 'captions' : 'film'}"></i>${esc(subLabel(s))}</button>`).join('')}
+    ${byLang.slice(0, 120).map(([s, i]) => `<button type="button" class="${P.curSub === i ? 'on' : ''}" data-sub="${i}"><i data-lucide="${s._tr ? 'languages' : s.kind === 'file' ? 'file-text' : s.kind === 'url' ? 'captions' : 'film'}"></i>${esc(subLabel(s))}</button>`).join('')}
     ${!P.subs.length && !P.subsLoading ? `<p style="color:var(--mute);font-size:calc(12.5px * var(--ts,1));margin:6px 12px 8px;max-width:30ch">${subAddons ? 'Your subtitle addons had nothing for this title.' : 'No subtitle addon is installed or reachable.'}${hasOS ? '' : ' Add OpenSubtitles v3 to search thousands of languages.'}</p>` : ''}
     <button type="button" data-subfile><i data-lucide="file-up"></i>Load subtitle file…</button>
     ${hasOS ? '' : '<button type="button" data-addos><i data-lucide="plus"></i>Add OpenSubtitles v3</button>'}`;
@@ -6065,6 +6088,7 @@ const Account = {
       <label class="fld"><span>Email</span><input class="inp" id="acc-email" type="email" autocomplete="email" placeholder="you@example.com"></label>
       <label class="fld"><span>Password</span><input class="inp" id="acc-pass" type="password" autocomplete="current-password"></label>
       <div class="inrow"><button class="btn btn-prime" type="button" id="acc-in"><i data-lucide="log-in"></i>Sign in</button>${this.signupOff ? '' : `<button class="btn btn-ghost" type="button" id="acc-up">Create account</button>`}</div>
+      ${this.signupOff ? '' : `<p class="acct-legal">Creating an account means you agree to the <button type="button" class="linkish" data-nav data-legal="terms">Terms of use</button> and the <button type="button" class="linkish" data-nav data-legal="privacy">Privacy policy</button>.</p>`}
       ${web ? `<div class="inrow acct-links"><button type="button" class="linkish" id="acc-reset">Forgot password</button></div>` : ''}
       ${c.source === 'settings' ? `<p class="acct-note">Project: <span class="mono">${proj}</span> · <button type="button" class="linkish" id="acc-forget">change</button></p>` : ''}
       ${typeof TvLogin !== 'undefined' && !TvLogin.isTV() ? TvLogin.html() : ''}
@@ -9678,7 +9702,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.38.1';
+const APP_VERSION = '2.40.0';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -18736,61 +18760,105 @@ const AudioSync = {
   },
 };
 
-/* ---------------- Subtitle translation on the device ---------------- */
+/* ---------------- Subtitle translation ----------------
+   Uses the browser's own Translator (Chrome, Edge) when it has the language pair. Everywhere else (Firefox, Safari,
+   the Android and TV apps) the lines go to MKCinema's translation service (SubCloud, 2.39.0) in small batches just
+   ahead of the playhead. Original lines are kept, so stopping puts them back. */
 const SubTranslate = {
-  on: false, tr: null, from: '', orig: new WeakMap(), timer: 0, busy: false,
+  on: false, tr: null, from: '', to: '', engine: '', orig: new WeakMap(), timer: 0, busy: false,
   api: () => typeof self.Translator !== 'undefined',
-  target() { const ui = CFG.uiLang && CFG.uiLang !== 'auto' ? CFG.uiLang : ''; return String(CFG.subTranslateTo || ui || navigator.language || 'en').slice(0, 2).toLowerCase(); },
+  target() { const ui = CFG.uiLang && CFG.uiLang !== 'auto' ? CFG.uiLang : ''; return SubLang.bcp(CFG.subTranslateTo || ui || navigator.language || 'en') || 'en'; },
   track() { return Array.from(video.textTracks).find((t) => t.mode === 'showing' || (t.mode === 'hidden' && t.cues && t.cues.length)); },
+  race(p, ms) { return Promise.race([p, new Promise((r) => setTimeout(() => r(null), ms))]); },
+  async waitTrack(ms) {
+    const end = Date.now() + ms;
+    for (;;) { const t = this.track(); if (t && t.cues && t.cues.length) return t; if (Date.now() >= end) return null; await new Promise((r) => setTimeout(r, 200)); }
+  },
   async detect(text) {
-    const cur = P.subs && P.subs[P.curSub]; const l = cur && cur.lang ? String(cur.lang).slice(0, 2).toLowerCase() : '';
-    if (l && /^[a-z]{2}$/.test(l)) return l;
+    const cur = P.subs && P.subs[P.curSub]; const l = cur && cur.lang ? SubLang.bcp(cur.lang) : '';
+    if (l) return l;
     try { if (self.LanguageDetector) { const d = await LanguageDetector.create(); const r = await d.detect(text); return r[0] && r[0].detectedLanguage; } } catch (e) { /* no detector */ }
     return 'en';
   },
-  async start() {
-    const t = this.track(); if (!t || !t.cues || !t.cues.length) { toast('Pick a subtitle first, then translate it', 'err'); return; }
-    const sample = Array.from(t.cues).slice(0, 20).map((c) => c.text).join('\n');
-    const from = await this.detect(sample), to = this.target();
-    if (from === to) { toast('These subtitles are already in your language', 'info'); return; }
-    try {
-      const av = await Translator.availability({ sourceLanguage: from, targetLanguage: to });
-      if (av === 'unavailable') { toast(`Your browser cannot translate ${langName(from)} to ${langName(to)}`, 'err', 5000); return; }
-      if (av !== 'available') toast('Downloading the translation model once. It stays on this device…', 'info', 4000);
-      this.tr = await Translator.create({ sourceLanguage: from, targetLanguage: to });
-    } catch (e) { toast(`Translation could not start: ${e.message || e}`, 'err', 5000); return; }
-    this.on = true; this.from = from; this.tick(); clearInterval(this.timer); this.timer = setInterval(() => this.tick(), 1500);
-    toast(`Translating subtitles to ${langName(to)} on this device`, 'ok');
-    renderSubMenu();
+  /* the browser's translator, trying the exact language first (pt-BR) and then its base (pt) */
+  async device(from, to, quiet) {
+    if (!this.api()) return null;
+    for (const t of [...new Set([to, SubLang.base(to)])]) {
+      for (const f of [...new Set([from, SubLang.base(from)])]) {
+        try {
+          const av = await this.race(Translator.availability({ sourceLanguage: f, targetLanguage: t }), 3000);
+          if (av == null) return null; // the translator does not answer here
+          if (av !== 'available' && (quiet || !av || av === 'unavailable')) continue; // a model download needs a tap; auto uses the service
+          if (av !== 'available') toast('Downloading the translation model once. It stays on this device…', 'info', 4000);
+          const tr = await this.race(Translator.create({ sourceLanguage: f, targetLanguage: t }), av === 'available' ? 8000 : 120000);
+          if (tr) return tr;
+        } catch (e) { /* not this pair */ }
+      }
+    }
+    return null;
   },
-  stop() {
-    this.on = false; clearInterval(this.timer); const t = this.track();
-    if (t && t.cues) Array.from(t.cues).forEach((c) => { const o = this.orig.get(c); if (o != null) c.text = o; });
-    try { this.tr && this.tr.destroy && this.tr.destroy(); } catch (e) { /* gone */ } this.tr = null;
+  async start(o = {}) {
+    const auto = !!o.auto;
+    const t = await this.waitTrack(auto ? 8000 : 1500);
+    if (!t) { if (!auto) toast('Pick a subtitle first, then translate it', 'err'); return false; }
+    const from = o.from || await this.detect(Array.from(t.cues).slice(0, 20).map((c) => c.text).join('\n'));
+    const to = o.to || this.target();
+    if (from === to || (!o.to && SubLang.base(from) === SubLang.base(to))) { if (!auto) toast('These subtitles are already in your language', 'info'); return false; }
+    this.stop(true);
+    const tr = await this.device(from, to, auto);
+    if (tr) { this.tr = tr; this.engine = 'device'; }
+    else if (SubCloud.can(from, to)) this.engine = 'cloud';
+    else { if (!auto) toast(`Translation from ${SubLang.name(from)} to ${SubLang.name(to)} is not available`, 'err', 5000); return false; }
+    this.on = true; this.from = from; this.to = to; this.tick(); clearInterval(this.timer); this.timer = setInterval(() => this.tick(), 1500);
+    if (!auto) toast(this.engine === 'device' ? `Translating subtitles to ${SubLang.name(to)} on this device` : `Translating subtitles to ${SubLang.name(to)}`, 'ok');
     if (!$('#subMenu').hidden) renderSubMenu();
+    return true;
+  },
+  stop(quiet) {
+    const was = this.on; this.on = false; clearInterval(this.timer); const t = this.track();
+    if (t && t.cues) Array.from(t.cues).forEach((c) => { const o = this.orig.get(c); if (o != null) c.text = o; });
+    this.orig = new WeakMap();
+    try { this.tr && this.tr.destroy && this.tr.destroy(); } catch (e) { /* gone */ } this.tr = null; this.engine = '';
+    if (was && !quiet && !$('#subMenu').hidden) renderSubMenu();
   },
   async tick() {
-    if (!this.on || this.busy || !this.tr) return; const t = this.track(); if (!t || !t.cues) return;
-    const now = video.currentTime, todo = Array.from(t.cues).filter((c) => c.endTime > now - 2 && c.startTime < now + 90 && !this.orig.has(c)).slice(0, 12);
+    if (!this.on || this.busy) return; const t = this.track(); if (!t || !t.cues) return;
+    const cues = Array.from(t.cues), now = video.currentTime, ahead = this.engine === 'cloud' ? 150 : 90;
+    const todo = cues.filter((c) => c.endTime > now - 2 && c.startTime < now + ahead && !this.orig.has(c));
     if (!todo.length) return; this.busy = true;
     try {
-      for (const c of todo) {
-        if (!this.on) break; const o = c.text; this.orig.set(c, o);
-        try { const tags = o.match(/^(<[^>]+>)+/); const plain = o.replace(/<[^>]+>/g, ''); const out = await this.tr.translate(plain); c.text = tags ? tags[0] + out : out; } catch (e) { /* keep original line */ }
+      if (this.engine === 'device') {
+        for (const c of todo.slice(0, 12)) {
+          if (!this.on) break; const o = c.text; this.orig.set(c, o);
+          try { const tags = o.match(/^(<[^>]+>)+/); const plain = o.replace(/<[^>]+>/g, ''); const out = await this.tr.translate(plain); c.text = tags ? tags[0] + out : out; } catch (e) { /* keep original line */ }
+        }
+      } else {
+        if (!SubCloud.ready()) return;
+        // fixed blocks, so everyone watching the same subtitle file asks for the same blocks (and hits the cache).
+        // A line about to show gets a small block of 10 (a few seconds); lines further ahead go 40 at a time.
+        const k = cues.indexOf(todo[0]), n = todo[0].startTime < now + 8 ? 10 : 40, a = Math.floor(k / n) * n;
+        const batch = cues.slice(a, a + n).filter((c) => !this.orig.has(c));
+        const send = batch.filter((c) => c.text.replace(/<[^>]+>/g, '').trim());
+        batch.forEach((c) => { if (!send.includes(c)) this.orig.set(c, c.text); });
+        if (!send.length) return;
+        const out = await SubCloud.run(this.from, this.to, send.map((c) => c.text));
+        if (!this.on || this.track() !== t) return;
+        send.forEach((c, j) => { const o = c.text; this.orig.set(c, o); if (out[j]) c.text = out[j]; });
       }
-    } finally { this.busy = false; }
+    } catch (e) { SubCloud.fail(e); } finally { this.busy = false; }
   },
   init() {
-    if (!this.api()) return;
     const rs = renderSubMenu;
     renderSubMenu = function () {
       const r = rs.apply(this, arguments); const m = $('#subMenu'); if (!m || !P.subs) return r;
-      const lbl = SubTranslate.on ? 'Stop translating' : `Translate to ${langName(SubTranslate.target())}`;
+      const cur = P.subs[P.curSub];
+      if (cur && cur._tr) return r;
+      const lbl = SubTranslate.on ? 'Stop translating' : `Translate to ${SubLang.name(SubTranslate.target())}`;
       m.insertAdjacentHTML('beforeend', `<button type="button" data-subtr class="${SubTranslate.on ? 'on' : ''}"><i data-lucide="languages"></i>${esc(lbl)}</button>`);
       $('[data-subtr]', m).onclick = () => (SubTranslate.on ? SubTranslate.stop() : SubTranslate.start()); icons(); return r;
     };
-    const ss = selectSub; selectSub = function () { if (SubTranslate.on) SubTranslate.stop(); return ss.apply(this, arguments); };
-    const td = teardown; teardown = function () { if (SubTranslate.on) SubTranslate.stop(); return td.apply(this, arguments); };
+    const ss = selectSub; selectSub = function () { if (SubTranslate.on) SubTranslate.stop(true); return ss.apply(this, arguments); };
+    const td = teardown; teardown = function () { if (SubTranslate.on) SubTranslate.stop(true); return td.apply(this, arguments); };
   },
 };
 
@@ -20971,6 +21039,14 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
+  { v: '2.40.0', date: '2026-11-06', items: [
+    ['new', 'Troubleshooting guide', 'Settings › Help now opens with quick fixes for no streams, buffering, sound, subtitles, addons, TV remotes and updates. Each fix has a button that takes you straight to the right setting.'],
+    ['new', 'Terms of use and privacy, inside the app', 'Read the privacy policy and the new terms of use in Settings › About & licenses, on any device, TVs included.'],
+  ] },
+  { v: '2.39.0', date: '2026-11-06', items: [
+    ['new', 'Subtitles in your language', 'No subtitles in your language? MKCinema now translates the best one it finds, line by line as you watch, and marks it Translated in the subtitle menu. Turn it off in Settings \u203a Subtitles.'],
+    ['better', 'One tidy subtitle list', 'Subtitles from all your add-ons now arrive as one list without repeats. The ones made for your exact file come first, then the closest release.'],
+  ] },
   { v: '2.38.1', date: '2026-11-06', items: [
     ['better', 'Smoother remote in the welcome tour', 'On a TV, the remote now reaches every option in the welcome tour and always keeps a button highlighted.'],
   ] },
@@ -21595,6 +21671,429 @@ const DubSigns = {
   // picking a default-flagged dub listed second fell back to the original file and played the first language again.
   if (/Chrome\//.test(navigator.userAgent) && !('audioTracks' in HTMLMediaElement.prototype)) AudioLang.defIndex = () => 0;
 }
+</script>
+<script id="mkc-239s">
+'use strict';
+/* ---------------- 2.39.0 Subtitles: one ranked list, and a translated track when your language is missing ----------------
+   SubRank merges what every subtitle add-on returned into one list: the same file offered twice (two add-ons, or an
+   add-on plus the stream itself) shows once. Order inside the menu: your language, then the same language from another
+   region (Portuguese for Portuguese (BR)), then a Translated track, then the rest. Inside each group: subtitles made for
+   this exact file (hash match from the add-on, or inside the file), then the closest release name, then add-on order.
+   SubAuto adds "<your language> · Translated" when no subtitle in your language exists, and turns it on by itself when
+   Auto-select is on. It translates the best English track (or the best other one) with the browser's Translator when
+   there is one, otherwise with SubCloud. Auto-sync (CFG.subAutoSync) runs on it like on any downloaded subtitle. */
+const SubLang = {
+  T: { eng: 'en', spa: 'es', fre: 'fr', fra: 'fr', ger: 'de', deu: 'de', ita: 'it', por: 'pt', pob: 'pt-BR', pb: 'pt-BR', rus: 'ru', jpn: 'ja', kor: 'ko', chi: 'zh', zho: 'zh', zht: 'zh-TW', ara: 'ar', hin: 'hi', dut: 'nl', nld: 'nl', pol: 'pl', tur: 'tr', swe: 'sv', nor: 'no', nob: 'no', dan: 'da', fin: 'fi', gre: 'el', ell: 'el', heb: 'he', cze: 'cs', ces: 'cs', hun: 'hu', rum: 'ro', ron: 'ro', vie: 'vi', tha: 'th', ind: 'id', ukr: 'uk', bul: 'bg', hrv: 'hr', srp: 'sr', slv: 'sl', slo: 'sk', slk: 'sk', est: 'et', lav: 'lv', lit: 'lt', per: 'fa', fas: 'fa', may: 'ms', msa: 'ms', ben: 'bn', tam: 'ta', tel: 'te', cat: 'ca', glg: 'gl', baq: 'eu', eus: 'eu', alb: 'sq', sqi: 'sq', mac: 'mk', mkd: 'mk', bos: 'bs', ice: 'is', isl: 'is', fil: 'fil', tgl: 'tl', mal: 'ml', urd: 'ur', ea: 'es-419', spl: 'es-419' },
+  /* any code the add-ons or settings use -> a BCP 47 tag ('' when unknown) */
+  bcp(code) {
+    const c = String(code || '').trim(); if (!c) return ''; const l = c.toLowerCase().replace('_', '-');
+    if (this.T[l]) return this.T[l];
+    if (/^[a-z]{2}$/.test(l)) return l;
+    const m = /^([a-z]{2})-([a-z]{2,4})$/.exec(l); if (m) return `${m[1]}-${m[2].length === 2 ? m[2].toUpperCase() : m[2][0].toUpperCase() + m[2].slice(1)}`;
+    const n = LANGS[l]; if (n) { const k = Object.keys(LANGS).find((x) => x.length === 2 && LANGS[x] === n); if (k) return k; }
+    return '';
+  },
+  base(tag) { return String(tag || '').split('-')[0]; },
+  name(tag) { const t = String(tag || ''); return t === 'pt-BR' ? langName('pob') : LANGS[t.toLowerCase()] ? langName(t) : langName(this.base(t)); },
+  want() { return CFG.subLang && CFG.subLang !== 'off' ? this.bcp(CFG.subLang) : ''; },
+};
+
+/* MKCinema's translation service for browsers without a Translator (subs.mkcinema.app, Cloudflare Workers AI).
+   Only the subtitle lines are sent, 40 at a time, just ahead of what is playing. When it is busy or its daily
+   allowance is used up, the original lines simply stay on screen. */
+const SubCloud = {
+  url: 'https://subs.mkcinema.app/translate', until: 0, told: 0, memo: new Map(),
+  can(from, to) { return !!(from && to) && from !== to && navigator.onLine !== false; },
+  ready() { return Date.now() >= this.until; },
+  async post(from, to, lines) {
+    const key = `${from}>${to}\u0001${lines.join('\u0001')}`; if (this.memo.has(key)) return this.memo.get(key);
+    const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 30000);
+    try {
+      const r = await fetch(this.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ from, to, lines }), signal: ctl.signal });
+      if (!r.ok) { const e = new Error(`HTTP ${r.status}`); e.status = r.status; throw e; }
+      const j = await r.json(); const out = Array.isArray(j.lines) ? j.lines : [];
+      if (this.memo.size > 400) this.memo.clear(); this.memo.set(key, out); return out;
+    } finally { clearTimeout(tm); }
+  },
+  /* lines -> translated lines (null where a line could not be translated); long blocks are split */
+  async run(from, to, lines) {
+    const size = lines.reduce((n, l) => n + l.length, 0);
+    if (lines.length > 1 && (size > 5500 || lines.length > 60)) {
+      const h = Math.ceil(lines.length / 2);
+      return (await this.run(from, to, lines.slice(0, h))).concat(await this.run(from, to, lines.slice(h)));
+    }
+    return this.post(from, to, lines);
+  },
+  fail(e) {
+    const st = e && e.status;
+    this.until = Date.now() + (st === 429 ? 20000 : st === 503 ? 10 * 60000 : 60000);
+    MKLog.add('info', `Subtitle translation paused: ${e && e.message}`);
+    if (st === 503 && Date.now() - this.told > 30 * 60000) { this.told = Date.now(); toast('Subtitle translation is busy right now, so the original lines stay on. It tries again in a few minutes.', 'info', 6000, 'subtr'); }
+  },
+};
+
+const SubRank = {
+  words(t) { return String(t || '').toLowerCase().replace(/\.(srt|vtt|ass|ssa|sub|mkv|mp4|avi)\b/g, ' ').split(/[^a-z0-9]+/).filter((w) => w.length > 1 && !/^(the|and|of|a|eng|english|subs?|subtitles?|cd\d|forced|sdh|hi|utf8)$/.test(w)); },
+  release(stream) {
+    if (!stream) return null; const bh = stream.behaviorHints || {};
+    const name = bh.filename || [stream.title, stream.name, stream.description].filter(Boolean).join(' ');
+    const w = new Set(this.words(name)); if (!w.size) return null;
+    const grp = (/-([a-z0-9]+)(?:\.[a-z0-9]{2,4})?$/i.exec(String(bh.filename || '').trim()) || [])[1];
+    return { w, grp: grp ? grp.toLowerCase() : '' };
+  },
+  /* 0..1: how close a subtitle's release name is to the file being played */
+  match(s, rel) {
+    if (!rel) return 0;
+    const name = [s.subtitleFileName, s.movieReleaseName, s.releaseName, s.release, s.fileName, s.name, s.title, s.label].filter((x) => typeof x === 'string').join(' ');
+    const w = new Set(this.words(name)); if (!w.size) return 0;
+    let hit = 0; w.forEach((x) => { if (rel.w.has(x)) hit++; });
+    let m = hit / Math.min(w.size, rel.w.size);
+    const g = String(s.releaseGroup || '').toLowerCase(); if (rel.grp && (g === rel.grp || w.has(rel.grp))) m = Math.max(m, 0.6) + 0.3;
+    return Math.min(1, m);
+  },
+  hash(s) { return s.m === 'h' || s.hashMatch === true || /hash/i.test(String(s.matchedBy || s.match || '')); },
+  keys(s) {
+    const k = [];
+    if (s.url) k.push(`u:${String(s.url).replace(/^https?:\/\//, '').replace(/\/+$/, '')}`);
+    if (s.id != null && /^\d+$/.test(String(s.id)) && /strem\.io|opensubtitles/i.test(String(s.url || ''))) k.push(`o:${s.id}`);
+    return k;
+  },
+  /* one list without duplicates; the copy kept is the better-ranked one */
+  merge(list, stream) {
+    const rel = this.release(stream), seen = new Map(), out = [];
+    for (const s of list) {
+      if (s.kind !== 'url' || s._tr) { out.push(s); continue; }
+      s._hash = this.hash(s); s._rel = this.match(s, rel); s._own = !!(stream && s._addon === stream._addon && (stream.subtitles || []).some((x) => x.url === s.url));
+      const ks = this.keys(s), dup = ks.map((k) => seen.get(k)).find((x) => x);
+      if (dup) {
+        dup._also = (dup._also || 1) + 1;
+        if (s._hash && !dup._hash) { dup._hash = true; }
+        dup._rel = Math.max(dup._rel || 0, s._rel || 0);
+        ks.forEach((k) => seen.set(k, dup)); continue;
+      }
+      ks.forEach((k) => seen.set(k, s)); out.push(s);
+    }
+    out.forEach((s) => { if (s.kind === 'url' && !s._tr && !s._label) s._label = this.label(s); });
+    return out;
+  },
+  label(s) {
+    const tag = s._hash ? ' · made for this file' : s._own ? ' · from this source' : s._rel >= 0.75 ? ' · same release' : '';
+    return `${langName(s.lang)}${s._addon ? ` · ${s._addon}` : ''}${tag}`;
+  },
+  /* 0 your language, 1 same language from another region, 2 translated, 3 the rest */
+  tier(s) {
+    const w = SubLang.want(); if (!w) return s._tr ? 2 : 3;
+    if (s._tr) return 2;
+    if (langName(s.lang) === langName(CFG.subLang)) return 0;
+    const b = SubLang.bcp(s.lang); if (b && b === w) return 0;
+    if (b && SubLang.base(b) === SubLang.base(w)) return 1;
+    return 3;
+  },
+  score(s) {
+    const own = s.kind === 'mkv' || s.kind === 'native' || s.kind === 'hls';
+    return (s._hash ? 100 : 0) + (own ? 90 : 0) + (s._own ? 70 : 0) + Math.round((s._rel || 0) * 60) + (s.kind === 'file' ? 200 : 0) - ((s._mkv && s._mkv.forced) ? 50 : 0);
+  },
+  order(list) {
+    return list.map((s, i) => [s, i]).sort((a, b) => (this.tier(a[0]) - this.tier(b[0])) || (this.score(b[0]) - this.score(a[0])) || (a[1] - b[1]));
+  },
+  /* the best real subtitle in your language (then the same language from another region), or -1 */
+  pick(list) {
+    const best = this.order(list).find(([s]) => this.tier(s) <= 1 && !(s._mkv && s._mkv.forced));
+    return best ? best[1] : -1;
+  },
+};
+
+const SubAuto = {
+  on() { return CFG.subAutoTranslate !== false; },
+  usable(s) { return !s._tr && (s.kind === 'url' || s.kind === 'file' || (s.kind === 'mkv' && s._mkv && !s._mkv.forced && !(s._mkv.ass && AssR.enabled()))) && !!SubLang.bcp(s.lang); },
+  /* English first (the strongest source for translation), then the language of the app, then the best of the rest */
+  source(to) {
+    const ui = SubLang.bcp(CFG.uiLang && CFG.uiLang !== 'auto' ? CFG.uiLang : navigator.language);
+    const cand = P.subs.map((s, i) => [s, i]).filter(([s]) => this.usable(s) && SubLang.base(SubLang.bcp(s.lang)) !== SubLang.base(to));
+    if (!cand.length) return null;
+    const pref = (s) => { const b = SubLang.base(SubLang.bcp(s.lang)); return b === 'en' ? 2 : ui && b === SubLang.base(ui) ? 1 : 0; };
+    cand.sort((a, b) => (pref(b[0]) - pref(a[0])) || (SubRank.score(b[0]) - SubRank.score(a[0])) || (a[1] - b[1]));
+    return cand[0][0];
+  },
+  offer() {
+    if (!P.subs || P.subsLoading || !P.stream) return;
+    const to = SubLang.want(); if (!to) return;
+    // a subtitle in your exact language: nothing to add. The same language from another region still gets the offer,
+    // but the human one stays the automatic pick.
+    const have = P.subs.some((s) => !s._tr && SubRank.tier(s) === 0);
+    const old = P.subs.findIndex((s) => s._tr);
+    if (have || !this.on()) return;
+    if (old < 0) {
+      const src = this.source(to); if (!src) return;
+      const from = SubLang.bcp(src.lang);
+      P.subs.push({ ...src, text: src.kind === 'url' ? null : src.text, lang: CFG.subLang, _tr: { from, to, src }, _label: `${langName(CFG.subLang)} · Translated from ${langName(src.lang)}` });
+      renderSubMenu();
+    }
+    const i = P.subs.findIndex((s) => s._tr);
+    if (i >= 0 && CFG.subAuto && !P.subUserChoice && P.curSub < 0 && !P.subs.some((s) => !s._tr && SubRank.tier(s) <= 1)) selectSub(i, { auto: true });
+  },
+};
+
+{
+  // the translated entry downloads its source as plain timed text (styled files become plain lines), then translates
+  const sel = selectSub;
+  selectSub = async function (i, opts = {}) {
+    const s = i >= 0 && P.subs ? P.subs[i] : null;
+    if (s && s._tr && (s.kind === 'url' || s.kind === 'file') && !s._vtt) {
+      try {
+        const src = s._tr.src; let text = src.text;
+        if (text == null) { const r = await fetch(s.url); if (!r.ok) throw new Error(`HTTP ${r.status}`); text = await r.text(); src.text = text; }
+        s.text = StremioEngine.toVtt(text, s.fileName || s.url || ''); s._vtt = true;
+      } catch (e) { if (!opts.auto) toast(`Could not load those subtitles (${e.message})`, 'err'); return; }
+    }
+    const r = await sel.apply(this, arguments);
+    if (s && s._tr && P.curSub === i) {
+      const ok = await SubTranslate.start({ from: s._tr.from, to: s._tr.to, auto: true });
+      if (P.curSub !== i) { if (SubTranslate.on) SubTranslate.stop(true); return r; }
+      if (ok) toast(`${langName(CFG.subLang)} subtitles on, translated${SubTranslate.engine === 'device' ? ' on this device' : ''}`, 'info', 3200, 'subs');
+      else if (!opts.auto) toast('Translation could not start here. Showing the original subtitles.', 'err', 5000);
+    }
+    return r;
+  };
+  // a real subtitle in your language that turns up later (a slow add-on, the file's own tracks) replaces the translated one
+  const amk = MkvSubs.autoPick.bind(MkvSubs);
+  MkvSubs.autoPick = function () { const r = amk(); SubAuto.offer(); return r; };
+  // Settings › Subtitles
+  const sec = SECTIONS.find((x) => x.id === 'subtitles');
+  if (sec) {
+    const rows = sec.rows;
+    sec.rows = () => { const r = rows(); const at = r.findIndex((x) => x.key === 'subLang'); r.splice(at < 0 ? r.length : at + 1, 0, { key: 'subAutoTranslate', label: 'Translate when your language is missing', help: 'When no subtitle exists in your language, MKCinema translates the best one it finds and marks it Translated. It uses your browser’s built-in translator when it has one; otherwise the lines are translated by MKCinema’s translation service.', type: 'toggle', get: () => CFG.subAutoTranslate !== false }); return r; };
+  }
+}
+</script>
+<script id="mkc-240l">
+/* ---------------- 2.40.0 Legal pages and the troubleshooting guide ----------------
+   Legal: privacy.html and terms.html are the single source. Inside the app they open in a reader pop-up (the page's
+   <main>, fetched from the same site), so TVs and the Android apps never need a browser. Offline, the page opens in a tab.
+   Troubleshoot: short fixes for the problems people hit most, each with one-tap buttons into the tool or setting that
+   fixes it, and the Diagnostic / Send log pair at the bottom for anything the guide doesn't solve. */
+const Legal = {
+  PAGES: { privacy: ['privacy.html', 'Privacy policy', 'shield-check'], terms: ['terms.html', 'Terms of use', 'scale'], copyright: ['terms.html#copyright', 'Copyright concerns', 'copyright'], disclaimer: ['terms.html#disclaimer', 'No content is hosted', 'scale'] },
+  cache: {},
+  async open(which) {
+    const p = this.PAGES[which] || this.PAGES.terms; const [file, anchor] = p[0].split('#');
+    X8.layer('legalLayer', { label: p[1], icon: 'scale', eyebrow: 'Legal', wide: true });
+    const b = X8.body('legalLayer'); b.innerHTML = '<div class="lg-doc"><p class="sub">Loading…</p></div>'; X8.open('legalLayer');
+    let html = this.cache[file];
+    if (!html) {
+      try { const r = await fetch(file, { cache: 'no-cache' }); if (!r.ok) throw new Error(`HTTP ${r.status}`); html = await r.text(); this.cache[file] = html; } catch (e) {
+        b.innerHTML = `<div class="lg-doc"><h3 class="x8-h">${esc(p[1])}</h3><p class="sub">This page needs a connection. You can read it any time at app.mkcinema.app/${esc(file)}.</p><div class="actions"><a class="btn btn-ghost" data-nav href="${esc(file)}" target="_blank" rel="noopener"><i data-lucide="external-link"></i>Open in a tab</a></div></div>`;
+        icons(); if (IS_TV) Nav.settle(); return;
+      }
+    }
+    const doc = new DOMParser().parseFromString(html, 'text/html'); const main = doc.querySelector('main');
+    if (!main) { window.open(p[0], '_blank', 'noopener'); X8.close('legalLayer'); return; }
+    main.querySelectorAll('script,style,.brand,button,input,form').forEach((x) => x.remove());
+    main.querySelectorAll('h1').forEach((h) => { h.className = 'x8-h'; });
+    main.querySelectorAll('a[href]').forEach((a) => {
+      const h = a.getAttribute('href') || ''; const m = h.match(/^(privacy|terms)\.html(#[\w-]+)?$/);
+      if (m) { a.setAttribute('href', '#'); a.dataset.legal = m[2] && this.PAGES[m[2].slice(1)] ? m[2].slice(1) : m[1]; } else { a.target = '_blank'; a.rel = 'noopener'; }
+      a.setAttribute('data-nav', '');
+    });
+    // a TV remote moves between focusable things, so every paragraph becomes a stop and the page scrolls with it
+    if (IS_TV) main.querySelectorAll('h2,p,li,.card').forEach((x) => { if (!x.querySelector('a')) { x.tabIndex = 0; x.setAttribute('data-nav', ''); } });
+    b.innerHTML = `<article class="lg-doc">${main.innerHTML}</article>
+      <div class="lg-foot">${['privacy', 'terms'].filter((k) => k !== (file === 'terms.html' ? 'terms' : 'privacy')).map((k) => `<button class="btn btn-ghost btn-sm" type="button" data-nav data-legal="${k}"><i data-lucide="${this.PAGES[k][2]}"></i>${esc(this.PAGES[k][1])}</button>`).join('')}<button class="btn btn-ghost btn-sm" type="button" data-nav data-legal-ab><i data-lucide="scale"></i>Licenses</button></div>`;
+    icons();
+    const box = b.closest('.modal') || b;
+    requestAnimationFrame(() => {
+      const t = anchor && b.querySelector(`#${CSS.escape(anchor)}`);
+      if (t) { t.scrollIntoView({ block: 'start' }); if (IS_TV) Nav.focus(t.matches('[data-nav]') ? t : (t.nextElementSibling || t)); } else { box.scrollTop = 0; b.scrollTop = 0; if (IS_TV) Nav.settle(); }
+    });
+  },
+  rows() {
+    return [
+      { group: 'Legal' },
+      { key: 'privacyPage', label: 'Privacy policy', help: 'What MKCinema stores, where it is kept, and how to delete it.', type: 'button', text: 'Read', icon: 'shield-check', run: () => this.open('privacy') },
+      { key: 'termsPage', label: 'Terms of use', help: 'What MKCinema is and isn’t: it hosts no films or streams, addons are run by others, and it comes with no warranty.', type: 'button', text: 'Read', icon: 'scale', run: () => this.open('terms') },
+      { key: 'copyrightPage', label: 'Copyright concerns', help: 'Where to send a takedown request, and how to report something MKCinema itself publishes.', type: 'button', text: 'Read', icon: 'copyright', run: () => this.open('copyright') },
+    ];
+  },
+};
+
+const Troubleshoot = {
+  STOP: new Set(['the', 'and', 'not', 'wont', 'won', 'doesn', 'don', 'can', 'cant', 'isn', 'why', 'how', 'what', 'when', 'with', 'for', 'any', 'all', 'keeps', 'does', 'this', 'that', 'there', 'working', 'work', 'help', 'problem', 'issue']),
+  /* [id, icon, title, words people search with, steps (HTML), actions] ; an action is [label, icon, what] */
+  TOPICS: [
+    ['nostreams', 'search-x', 'No streams for a film or episode', 'no sources empty nothing found streams list addon missing',
+      ['MKCinema hosts nothing itself, so streams only appear once you add a <b>stream addon</b>. Catalog addons (like Cinemeta) show titles but no streams.',
+        'Open <b>Installed addons</b> and check a stream addon is there and switched on for films and series.',
+        'If your addon needs a debrid service, check its key in <b>Settings › Debrid</b>. An expired plan gives empty lists.',
+        'Filters can hide everything. <b>Only sources that play here</b> is in Settings › Playback; <b>Hide cam and screener copies</b>, <b>Smallest file</b> and <b>Blocked words</b> are in Settings › Source rules.',
+        'Brand-new episodes and very old or obscure titles often have nothing yet. Try another title to see if the problem is everywhere.',
+        'If it is everywhere, the addon itself may be down. The status page checks it from your connection.'],
+      [['Installed addons', 'puzzle', 'addons'], ['Debrid keys', 'zap', 'set:debrid'], ['Source rules', 'filter', 'set:rules'], ['Service status', 'activity', 'status']]],
+    ['wontplay', 'circle-alert', 'A stream won’t start, or shows a black screen', 'error black screen wont play fails codec hevc mkv format unsupported loading forever',
+      ['Pick another source from the list. One broken link doesn’t mean the title is broken.',
+        'Browsers can’t decode every file. HEVC/x265, some MKV files, and DTS or TrueHD audio often fail in a browser but play fine in a video player app.',
+        'Hand the stream to an outside player in <b>Settings › Playback › Play streams in</b>. On Android that can be VLC, MX Player, Just Player or mpv; on a Mac, Infuse or IINA; on Windows, PotPlayer or any player through an .m3u file.',
+        'Turn on <b>Only sources that play here</b> so the list shows files this device can play.',
+        'Run the Diagnostic. It tests which video this device decodes and sets things up to match.'],
+      [['Run Diagnostic', 'activity', 'diag'], ['Play streams in', 'external-link', 'row:playback:extPlayer'], ['Only sources that play here', 'filter', 'row:playback:browserOnly']]],
+    ['buffering', 'loader', 'Buffering or stuttering', 'buffer buffering stutter lag slow pause loading spinner choppy 4k',
+      ['Run the speed test. It tells you the highest quality your connection plays without pauses.',
+        'Set <b>Highest quality for Smart Play</b> to that, or turn on <b>Slow internet mode</b>.',
+        'Large 4K remuxes need 60–100 Mbps. A smaller 1080p file of the same title usually plays smoothly.',
+        'With a debrid service, cached results start instantly. Uncached ones may stall until the service has the file.',
+        'Video that stutters while the network is fine is the device struggling: try <b>Settings › Performance</b> at Low, or an outside player.'],
+      [['Speed test', 'gauge', 'row:help:speedRun'], ['Highest quality', 'sliders-horizontal', 'row:playback:maxQuality'], ['Performance', 'gauge', 'set:performance']]],
+    ['audio', 'volume-x', 'No sound, or sound out of sync', 'no sound audio silent mute sync delay dts eac3 ac3 truehd language dub',
+      ['Silent video with a moving picture usually means the audio is DTS, TrueHD or E-AC3, which many browsers can’t play. Pick another source or use an outside player.',
+        'Running the MKCinema server with ffmpeg converts that audio on the fly.',
+        'For sound that is early or late, open the player’s <b>Audio</b> menu and move the sync slider.',
+        'Wrong language? Set <b>Preferred audio language</b> once and Smart Play picks matching sources.'],
+      [['Play streams in', 'external-link', 'row:playback:extPlayer'], ['Audio language', 'languages', 'row:rules:srAudio']]],
+    ['subs', 'captions', 'Subtitles missing or out of sync', 'subtitles subs captions missing sync timing wrong language opensubtitles ass anime',
+      ['Subtitles come from subtitle addons. Install one such as OpenSubtitles v3 from the community directory if the list is empty.',
+        'Set your <b>Preferred language</b> in Settings › Subtitles so the right one is picked first.',
+        'Lines early or late? Open the player’s subtitle menu and use the delay buttons, or turn on <b>Auto-sync subtitles</b>.',
+        'Anime signs or karaoke look heavy on a slow device: set <b>Styled subtitles</b> to Light.'],
+      [['Subtitle settings', 'captions', 'set:subtitles'], ['Community addons', 'compass', 'dir']]],
+    ['addons', 'puzzle', 'An addon won’t install or load', 'addon install manifest link fails error directory community load configure',
+      ['Paste the addon’s <b>manifest link</b>: the address that ends in <span class="mono">manifest.json</span>. A link to the addon’s website isn’t enough.',
+        'Many addons need configuring first. Open the addon’s configure page, save, then copy the link it gives you.',
+        'If an addon installs but its rows or streams never load, it may be down or slow. Raise <b>Addon timeout</b>, or remove it and install it again.',
+        'The community directory lists addons other people publish. If it is slow, give it a moment the first time; after that it opens straight away.'],
+      [['Installed addons', 'puzzle', 'addons'], ['Community addons', 'compass', 'dir'], ['Addon timeout', 'timer', 'row:streams:timeout']]],
+    ['debrid', 'zap', 'Debrid key not accepted', 'debrid key api token invalid premium real-debrid alldebrid premiumize torbox expired',
+      ['Copy the whole API key from your debrid account page, with no spaces at either end.',
+        'Check the plan is still active. Most services stop giving links the day a plan ends.',
+        'Some services block new devices or VPN addresses until you confirm by email. Check your inbox.',
+        'Keys stay on this device unless <b>Sync keys with my account</b> is on. A new device needs the key again, or that setting.'],
+      [['Debrid settings', 'zap', 'set:debrid']]],
+    ['account', 'circle-user-round', 'Sign-in or sync problems', 'sign in login password account sync cloud missing watchlist progress',
+      ['Check the email for typos. Passwords are case-sensitive.',
+        'Use <b>Forgot password</b> on the sign-in card in a browser to set a new one.',
+        'Library or progress missing on another device? Make sure both are signed in to the same account and <b>Cloud sync</b> is on. Changes upload a few seconds after they happen.',
+        'Moving everything at once is quickest with the <b>Setup Cloner</b> in Settings › Data.'],
+      [['Account', 'circle-user-round', 'set:account'], ['Data and Setup Cloner', 'database', 'set:data']]],
+    ['tv', 'tv', 'TV remote or focus gets stuck', 'tv remote focus stuck fire stick android tv back button keyboard typing webos samsung',
+      ['Press <b>Back</b> to close whatever is open. On Home, Back asks before it leaves the app.',
+        'Typing on a TV is slow: pair your phone as a remote and type there. Open <b>Settings › Devices</b> on the TV and scan the code.',
+        'If the TV feels slow, run the Diagnostic on it. It picks the right player and effects for that TV.'],
+      [['Phone remote', 'smartphone', 'set:devices'], ['Run Diagnostic', 'activity', 'diag']]],
+    ['update', 'refresh-ccw', 'It keeps asking me to update', 'update loop keeps asking new version refresh stuck old version cache apk',
+      ['Press <b>Refresh</b> on the update bar and give it a few seconds. The new version downloads first, then the app reloads.',
+        'Still asking? Close MKCinema fully and open it again. On a computer, a hard reload (Ctrl+Shift+R, or Cmd+Shift+R on a Mac) works too.',
+        'On Android, the app update bar means a new APK: install it from mkcinema.app over the old one. Your setup stays.',
+        'Last resort: clear the site data for app.mkcinema.app in your browser settings. Sign in afterwards to get your synced library back.'],
+      [['Reload now', 'refresh-ccw', 'reload']]],
+    ['party', 'users', 'Watch party or phone remote won’t connect', 'watch party remote phone pair connect join code voice chat',
+      ['Both devices need internet. They don’t need to be on the same Wi-Fi.',
+        'Check the code was typed exactly, or scan the QR code instead.',
+        'Work and school networks, and some VPNs, block the direct connection. The party then falls back to a slower relay; voice chat may not work there.',
+        'Everyone in a party needs a source for the title. The host can share which one.'],
+      [['Watch party', 'users', 'row:devices:partyOpen'], ['Service status', 'activity', 'status']]],
+    ['slow', 'gauge', 'The app feels slow', 'slow lag laggy janky battery hot performance animations scrolling',
+      ['Set <b>Settings › Performance</b> to Low on older phones and TVs. It switches off the heavier effects.',
+        'Turn on <b>Reduce motion</b> if animations bother you.',
+        'Lots of addons with Home rows means more to load. Hide the rows you don’t use in Settings › Home.',
+        'The Diagnostic measures how smooth this device is and suggests settings for it.'],
+      [['Performance', 'gauge', 'set:performance'], ['Run Diagnostic', 'activity', 'diag']]],
+    ['trailer', 'clapperboard', 'A trailer won’t play', 'trailer youtube unavailable blocked region',
+      ['Trailers come from YouTube and Apple. Some are blocked in some countries or by the studio.',
+        'Switch <b>Trailer source</b> between Apple and YouTube in Settings › Playback.',
+        'Ad blockers and some privacy extensions block YouTube’s player. Allow it for app.mkcinema.app.'],
+      [['Trailer source', 'clapperboard', 'row:playback:trailerSource']]],
+  ],
+  act(what) {
+    const [kind, sec, key] = String(what || '').split(':');
+    const leave = () => X8.close('tsLayer');
+    if (kind === 'diag') { leave(); Diagnostic.open(); }
+    else if (kind === 'log') { leave(); SendLog.open(); }
+    else if (kind === 'bug') window.open(SendLog.issueUrl((SendLog.last() || {}).code), '_blank', 'noopener');
+    else if (kind === 'status') window.open('status.html', '_blank', 'noopener');
+    else if (kind === 'reload') { try { if (typeof Updater !== 'undefined') Updater.swFetch(4000).then(() => location.reload()); else location.reload(); } catch (e) { location.reload(); } }
+    else if (kind === 'addons') { leave(); closeLayer('settings'); const b = $('#openAddons'); if (b) b.click(); }
+    else if (kind === 'dir') { leave(); if (typeof AddonDir !== 'undefined') (typeof Seats !== 'undefined' && Seats.kids() ? Seats.guard(() => AddonDir.open()) : AddonDir.open()); }
+    else if (kind === 'set' || kind === 'row') { leave(); this.goRow(sec, kind === 'row' ? key : ''); }
+  },
+  /* opens a Settings section and, when given, brings one row into view and lights it for a moment */
+  goRow(sec, key) {
+    if (!SECTIONS.some((x) => x.id === sec)) sec = 'help';
+    openSettings(sec);
+    if (!key) return;
+    setTimeout(() => {
+      const r = $(`#set-${key}`); if (!r) return; const row = r.closest('.set-row') || r;
+      row.scrollIntoView({ block: 'center' }); row.classList.add('ts-hl'); setTimeout(() => row.classList.remove('ts-hl'), 2200);
+      if (IS_TV) Nav.focus(row.querySelector('[data-nav],button,select,input') || r);
+    }, 160);
+  },
+  item(t, open) {
+    const [id, icon, title, , steps, acts] = t;
+    return `<details class="ts-item" data-ts="${id}"${open ? ' open' : ''}><summary data-nav><i data-lucide="${icon}" class="ts-ic"></i><b>${esc(title)}</b><i data-lucide="chevron-down" class="lic-chev"></i></summary>
+      <div class="ts-body"><ol>${steps.map((s) => `<li>${s}</li>`).join('')}</ol>
+      ${acts.length ? `<div class="ts-acts">${acts.map(([l, ic, w]) => `<button class="btn btn-ghost btn-sm" type="button" data-nav data-tsact="${esc(w)}"><i data-lucide="${ic}"></i>${esc(l)}</button>`).join('')}</div>` : ''}</div></details>`;
+  },
+  open(topic) {
+    const el = X8.layer('tsLayer', { label: 'Troubleshooting', icon: 'life-buoy', eyebrow: 'Help', wide: true });
+    const b = X8.body('tsLayer');
+    if (!b.dataset.built) {
+      b.dataset.built = '1';
+      b.innerHTML = `<h3 class="x8-h">Troubleshooting</h3><p class="sub">Quick fixes for the problems people hit most. Each one has buttons that take you straight to the fix.</p>
+        ${IS_TV ? '' : '<label class="ts-search"><i data-lucide="search"></i><input class="inp" id="tsQ" type="search" placeholder="Describe the problem, like “no sound” or “buffering”" autocomplete="off"></label>'}
+        <div class="ts-list">${this.TOPICS.map((t) => this.item(t)).join('')}<p class="sub ts-none" hidden>Nothing matches. Try other words, or run the Diagnostic below.</p></div>
+        <div class="ts-still"><b>Still stuck?</b><p>Run the Diagnostic first: it checks this ${IS_TV ? 'TV' : 'device'} and fixes what it can. If that doesn’t help, send a log and quote its 6-character code in your bug report. Logs never include keys or links.</p>
+          <div class="ts-acts"><button class="btn btn-prime btn-sm" type="button" data-nav data-tsact="diag"><i data-lucide="activity"></i>Run Diagnostic</button><button class="btn btn-ghost btn-sm" type="button" data-nav data-tsact="log"><i data-lucide="send"></i>Send log</button>${IS_TV ? '' : '<button class="btn btn-ghost btn-sm" type="button" data-nav data-tsact="bug"><i data-lucide="bug"></i>Report a bug</button>'}<button class="btn btn-ghost btn-sm" type="button" data-nav data-tsact="status"><i data-lucide="activity"></i>Service status</button></div></div>`;
+      b.addEventListener('click', (e) => { const a = e.target.closest('[data-tsact]'); if (a) { e.preventDefault(); this.act(a.dataset.tsact); } });
+      // one open at a time keeps the list short
+      b.addEventListener('toggle', (e) => { const d = e.target; if (d.open && d.classList && d.classList.contains('ts-item')) $$('.ts-item[open]', b).forEach((x) => { if (x !== d) x.open = false; }); }, true);
+      const q = $('#tsQ', b);
+      if (q) q.addEventListener('input', () => {
+        const words = q.value.toLowerCase().split(/[^\p{L}\p{N}-]+/u).filter((w) => w.length > 2 && !Troubleshoot.STOP.has(w)); let n = 0;
+        this.TOPICS.forEach((t) => { const hay = `${t[2]} ${t[3]}`.toLowerCase(); const hit = !words.length || words.some((w) => hay.includes(w)); const d = $(`.ts-item[data-ts="${t[0]}"]`, b); if (d) { d.hidden = !hit; if (hit) n++; } });
+        $('.ts-none', b).hidden = n > 0;
+      });
+      icons();
+    }
+    $$('.ts-item', b).forEach((d) => { d.hidden = false; d.open = d.dataset.ts === topic; });
+    const q = $('#tsQ', b); if (q) q.value = ''; const none = $('.ts-none', b); if (none) none.hidden = true;
+    X8.open('tsLayer');
+    requestAnimationFrame(() => {
+      const d = topic && $(`.ts-item[data-ts="${topic}"]`, b);
+      if (d) { d.scrollIntoView({ block: 'start' }); if (IS_TV) Nav.focus(d.querySelector('summary')); }
+      else { const m = el.querySelector('.modal'); if (m) m.scrollTop = 0; }
+    });
+  },
+};
+
+(function legalHelpInit() {
+  // About: a Legal group on top (replaces the older single privacy row)
+  const ab = secById('about');
+  if (ab) { const rows = ab.rows; ab.rows = () => [...Legal.rows(), ...rows().filter((r) => r.key !== 'privacyPage')]; }
+  // Help: the guide comes first, before the tools
+  const hp = secById('help');
+  if (hp) {
+    const rows = hp.rows;
+    hp.intro = 'Start with the troubleshooting guide. If it doesn’t fix things, run the Diagnostic, then send a log.';
+    hp.rows = () => [{ key: 'tsGuide', label: 'Troubleshooting guide', help: 'Quick fixes for no streams, buffering, sound, subtitles, addons, TV remotes and updates, with buttons to the right setting.', type: 'button', text: 'Open guide', icon: 'life-buoy', run: () => Troubleshoot.open() }, ...rows()];
+  }
+  COMMANDS.push(
+    { label: 'Troubleshooting guide', icon: 'life-buoy', run: () => Troubleshoot.open() },
+    { label: 'Privacy policy', icon: 'shield-check', run: () => Legal.open('privacy') },
+    { label: 'Terms of use', icon: 'scale', run: () => Legal.open('terms') });
+  // links anywhere in the app: data-legal="privacy|terms|copyright", data-trouble="<topic>"
+  document.addEventListener('click', (e) => {
+    const l = e.target.closest('[data-legal],[data-legal-ab],[data-trouble]'); if (!l) return;
+    e.preventDefault();
+    if (l.hasAttribute('data-trouble')) { Troubleshoot.open(l.dataset.trouble); return; }
+    if (l.hasAttribute('data-legal-ab')) { X8.close('legalLayer'); openSettings('about'); return; }
+    Legal.open(l.dataset.legal);
+  });
+  // shareable links: app.mkcinema.app/#terms, #privacy, #help
+  const go = () => {
+    const h = location.hash.slice(1); if (!/^(terms|privacy|copyright|help)$/.test(h)) return;
+    history.replaceState(null, '', location.pathname + location.search);
+    setTimeout(() => (h === 'help' ? Troubleshoot.open() : Legal.open(h)), 400);
+  };
+  addEventListener('hashchange', go); go();
+})();
+
 </script>
 <script id="mkc-cfwa">
 /* 2.9.7 Cloudflare Web Analytics: one anonymous report per visit (page, referrer, browser, country, load speed).
