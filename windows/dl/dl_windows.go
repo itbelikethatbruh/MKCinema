@@ -3,6 +3,7 @@
 package dl
 
 import (
+	"os"
 	"os/exec"
 	"path/filepath"
 
@@ -37,4 +38,10 @@ func Reveal(path string) error {
 		return exec.Command("explorer.exe", path).Start()
 	}
 	return exec.Command("explorer.exe", "/select,", path).Start()
+}
+
+// MarkFromInternet gives a downloaded file the Mark of the Web (a Zone.Identifier stream, Internet zone), the same
+// mark a browser download gets, so Windows SmartScreen and Office treat it as coming from the internet.
+func MarkFromInternet(path string) {
+	_ = os.WriteFile(path+":Zone.Identifier", []byte("[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=about:internet\r\n"), 0o644)
 }

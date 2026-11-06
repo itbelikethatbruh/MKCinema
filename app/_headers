@@ -1,0 +1,19 @@
+# MKCinema web app: response headers on Cloudflare Pages.
+# The app talks to addons, debrid services, media servers and image hosts the user chooses, so connect/img/media stay
+# open to http(s) (http: for LAN servers and localhost helpers that the Android app and desktop apps reach). Scripts are
+# limited to this site and the exact CDNs the app uses; 'unsafe-inline' is needed for the app's inline scripts and
+# 'unsafe-eval' for plugins (new Function) and the subtitle renderer's WebAssembly. Nothing may frame the app.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://www.youtube.com https://s.ytimg.com https://www.gstatic.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https:; font-src 'self' https: data:; img-src 'self' https: http: data: blob:; media-src 'self' https: http: data: blob:; connect-src 'self' https: http: wss: ws: data: blob:; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; worker-src 'self' blob:; child-src 'self' blob: https://www.youtube.com https://www.youtube-nocookie.com; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), geolocation=(), payment=(), usb=(), serial=(), hid=(), bluetooth=(), midi=(), magnetometer=(), gyroscope=(), accelerometer=(), display-capture=(), browsing-topics=(), microphone=(self)
+  ! Access-Control-Allow-Origin
+
+# The service worker must always be checked for a new version
+/sw.js
+  Cache-Control: no-cache
+
+/version.json
+  Cache-Control: no-store

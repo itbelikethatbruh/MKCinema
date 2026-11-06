@@ -1,0 +1,78 @@
+name: Android APK
+
+# builds and signs MKCinema.apk from the source in android/, with the signing key
+# taken from secrets instead of a shared folder. Run it from Actions › Android APK › Run workflow.
+# The signed APK and its SHA-256 are kept as a workflow artifact for 7 days, with a provenance attestation.
+#
+# Off until both secrets exist (in the "android-release" environment, or as repository secrets):
+#   ANDROID_KEYSTORE_B64   the keystore file, base64 (base64 -w0 mkcinema.jks)
+#   ANDROID_KEYSTORE_PASS  its password
+# Give the "android-release" environment a required reviewer so every signing run needs the owner's OK.
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    environment: android-release
+    permissions:
+      contents: read
+      id-token: write      # provenance attestation (Sigstore, keyless)
+      attestations: write
+    steps:
+      - name: Signing key present?
+        id: gate
+        env:
+          HAS_KS: ${{ secrets.ANDROID_KEYSTORE_B64 != '' && secrets.ANDROID_KEYSTORE_PASS != '' }}
+        run: |
+          if [ "$HAS_KS" != "true" ]; then
+            echo "::notice::ANDROID_KEYSTORE_B64 and ANDROID_KEYSTORE_PASS are not both set, so nothing was built."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.gate.outputs.ok == 'true'
+        with:
+          persist-credentials: false
+      - name: Android SDK parts
+        if: steps.gate.outputs.ok == 'true'
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;35.0.0" "platforms;android-35" > /dev/null
+      - name: Build and sign
+        if: steps.gate.outputs.ok == 'true'
+        env:
+          ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          ANDROID_KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+        run: |
+          umask 077
+          ks=android/keystore
+          trap 'rm -rf "$ks"' EXIT
+          mkdir -p "$ks"
+          printf '%s' "$ANDROID_KEYSTORE_B64" | base64 -d > "$ks/mkcinema.jks"
+          printf '%s\n' "$ANDROID_KEYSTORE_PASS" > "$ks/password.txt"
+          unset ANDROID_KEYSTORE_B64 ANDROID_KEYSTORE_PASS
+          SDK="$ANDROID_HOME" OUT="$RUNNER_TEMP/apk" sh android/build.sh
+      - name: Verify and checksum
+        if: steps.gate.outputs.ok == 'true'
+        working-directory: ${{ runner.temp }}/apk
+        run: |
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify -v --print-certs MKCinema.apk | grep -E "Verified using|Signer #1 certificate SHA-256"
+          sha256sum MKCinema.apk | tee MKCinema.apk.sha256
+      - name: Provenance attestation
+        if: steps.gate.outputs.ok == 'true'
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: ${{ runner.temp }}/apk/MKCinema.apk
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: steps.gate.outputs.ok == 'true'
+        with:
+          name: MKCinema-apk
+          path: |
+            ${{ runner.temp }}/apk/MKCinema.apk
+            ${{ runner.temp }}/apk/MKCinema.apk.sha256
+          retention-days: 7
+          if-no-files-found: error

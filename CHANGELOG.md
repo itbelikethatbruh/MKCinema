@@ -2,6 +2,29 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.37.1 (2026-11-06)
+
+- **Service notices.** When something is being updated or fixed, a short note shows at the top of the app and on the status page (`status.html`). Only the project owner's account can set it, from Settings › Account.
+
+## Web app 2.37.0 (2026-11-06)
+
+- **Opens faster.** The app starts from the copy already on your device and checks `version.json` in the background. A new version downloads only when there is one, and the Refresh bar offers it.
+- **Smoother Home.** Fewer timers and resize listeners, a 3 KB Universes file for Home (the full list loads when you open one), and light SVG placeholders for missing posters. Home and the player use less battery and memory.
+- **Works offline.** Network logos and Universes stay on Home without a connection.
+- **Lighter sync.** Changes from all your devices merge section by section and entry by entry, instead of the last device overwriting the others. Watching a film no longer re-uploads your profile every few seconds, and changes arrive when you come back to the app. Big pictures are shrunk before they sync.
+- **Phone remote.** The TV asks "Allow this phone?" the first time a phone connects, and Settings › Devices lists allowed phones with Remove. Phones paired before need one Allow.
+- **Watch party.** The person who starts the party leads it. They can hand over with "Make host", and if they drop out the party passes to someone else after about 20 seconds.
+- **Smaller app.** The deployed app is minified (about 18 % smaller over the network); the source in `app/` stays readable.
+- Many smaller fixes across addons, debrid, ratings, MyAnimeList, Trakt, Simkl and the TV apps.
+
+## Web app 2.36.2 (2026-11-06)
+
+- **Your addons stay put.** Addons you installed, their order and the ones you switched off no longer reset when the app starts.
+
+## Web app 2.36.1 (2026-11-06)
+
+- **Cleaner Universes row.** The row is just its name now, and the cards sit below "See all" on phones.
+
 ## Web app 2.36.0 (2026-11-06)
 
 - **Sharp upscaling.** Videos smaller than the screen are drawn by MKCinema on the device's GPU (WebGL) instead of being stretched by the browser: contrast-adaptive sharpening at the video's own size (after AMD FidelityFX CAS, MIT), then a Catmull-Rom upscale to the screen's real pixels, clamped to the nearest source pixels so edges get no halos. It only runs when the screen clearly has more pixels than the video; a file that already matches the screen plays untouched. Off by default (Off / Natural / Crisp in Player › Picture and Settings › Playback), not offered on TVs, and it switches itself off for the session if frames start dropping. Browsers only allow this for hosts that send CORS headers; other hosts play as before and no stream is ever routed through a server for it. While it is on, subtitles are drawn above the picture in the same style.

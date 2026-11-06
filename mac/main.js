@@ -3,8 +3,12 @@
 ObjC.import('Cocoa');
 ObjC.import('WebKit');
 
+// The app opens HOME (its saved sign-in and settings live on that origin). Both of the web app's hosts count as
+// MKCinema wherever a page is checked: app.mkcinema.app is the public home, mkcinema.pages.dev serves the apps.
 const HOME = 'https://mkcinema.pages.dev/';
 const HOST = 'mkcinema.pages.dev';
+const HOSTS = [HOST, 'app.mkcinema.app'];
+const isAppHost = (h) => HOSTS.indexOf(String(h || '').toLowerCase()) >= 0;
 const VERSION = '1.1';
 const app = $.NSApplication.sharedApplication;
 app.setActivationPolicy($.NSApplicationActivationPolicyRegular);
@@ -15,7 +19,23 @@ const iconPath = (here.isNil() ? res : here.js) + '/MKCinema.icns';
 const icon = $.NSImage.alloc.initWithContentsOfFile(iconPath);
 if (!icon.isNil()) app.applicationIconImage = icon;
 
-function openOutside(url) { $.NSWorkspace.sharedWorkspace.openURL(url); }
+// Only these kinds of links are handed to other apps: web and mail links, magnet and Stremio links, and the video
+// players the web app offers. file:, smb:, afp: and any other scheme are dropped, so a link can never open a file,
+// a network share or a program.
+const OUTSIDE = ['http', 'https', 'mailto', 'magnet', 'stremio', 'vlc', 'vlc-x-callback', 'iina', 'infuse', 'mpv', 'potplayer', 'outplayer', 'nplayer-http', 'nplayer-https'];
+function openOutside(url) {
+  const scheme = url.isNil() || url.scheme.isNil() ? '' : url.scheme.js.toLowerCase();
+  if (OUTSIDE.indexOf(scheme) < 0) return;
+  $.NSWorkspace.sharedWorkspace.openURL(url);
+}
+
+// The same address on HOME's host: app.mkcinema.app links open on the app's own origin, where the user is signed in.
+function atHome(url) {
+  const c = $.NSURLComponents.componentsWithURLResolvingAgainstBaseURL(url, false);
+  if (c.isNil()) return url;
+  c.scheme = 'https'; c.host = HOST; c.port = $(); c.user = $(); c.password = $();
+  return c.URL.isNil() ? url : c.URL;
+}
 
 // ---- Torrents on this Mac (window.MKDesktop.p2p) ----
 // The engine is the separate mkp2p program in Resources. It only downloads (never uploads or seeds), listens on
@@ -58,17 +78,34 @@ function engineStart() {
   return engBase;
 }
 
-const bridgeJs = "(function(){if(location.hostname!=='" + HOST + "')return;var h=window.webkit.messageHandlers.mkd,n=0,w={};"
+const bridgeJs = "(function(){if(location.protocol!=='https:'||" + JSON.stringify(HOSTS) + ".indexOf(location.hostname)<0)return;var h=window.webkit.messageHandlers.mkd,n=0,w={};"
   + "Object.defineProperty(window,'__mkdDone',{value:function(i,e,v){var p=w[i];delete w[i];if(p){if(e)p[1](new Error(e));else p[0](v)}}});"
   + "function call(c){return new Promise(function(a,b){var i=++n;w[i]=[a,b];h.postMessage({id:i,cmd:c})})}"
   + "var d={platform:'mac',version:'" + VERSION + "'};"
   + (hasEngine ? "d.p2p={start:function(){return call('p2p-start')},stop:function(){return call('p2p-stop')}};" : '')
   + "window.MKDesktop=d;})();";
 
+// Only MKCinema's own top-level page may use the bridge: not frames inside it (trailers and their ads), not other
+// sites.
+function fromApp(msg) {
+  try {
+    const f = msg.frameInfo;
+    if (f.isNil() || !f.isMainFrame) return false;
+    const o = f.securityOrigin;
+    return !o.isNil() && o.protocol.js === 'https' && isAppHost(o.host.js) && Number(o.port) === 0;
+  } catch (e) { return false; }
+}
+
 function bridge(msg) {
   const body = msg.body;
-  const id = body.objectForKey('id').js, cmd = body.objectForKey('cmd').js;
+  let id = 0, cmd = '';
+  try { id = body.objectForKey('id').js; cmd = body.objectForKey('cmd').js; } catch (e) { return; }
   let err = '', val = null;
+  if (!fromApp(msg)) {
+    // answer the main frame so its promise settles; frames get nothing
+    try { if (msg.frameInfo.isMainFrame) msg.webView.evaluateJavaScriptCompletionHandler('window.__mkdDone&&window.__mkdDone(' + JSON.stringify(id) + ',"not allowed on this page",null)', null); } catch (e) { /* nothing */ }
+    return;
+  }
   try {
     if (cmd === 'p2p-start') val = engineStart();
     else if (cmd === 'p2p-stop') engineStop();
@@ -110,7 +147,7 @@ ObjC.registerSubclass({
       implementation: function (webView, config, action, features) {
         const url = action.request.URL;
         if (!url.isNil()) {
-          if (!url.host.isNil() && url.host.js === HOST) webView.loadRequest($.NSURLRequest.requestWithURL(url));
+          if (!url.host.isNil() && isAppHost(url.host.js)) webView.loadRequest($.NSURLRequest.requestWithURL(atHome(url)));
           else openOutside(url);
         }
         return null;

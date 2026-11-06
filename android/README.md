@@ -4,7 +4,7 @@ A WebView wrapper around https://mkcinema.pages.dev: full-screen video, intent:/
 
 Free forever: the app is free and will never charge for anything, with no in-app purchases, no paid tier and no ads. Ko-fi donations are optional and never unlock anything. The promise is shown in the app under Settings › About and Settings › Support (it comes from the web app). Any store listing must say the same and must never add in-app purchases.
 
-Build: `OUT=/some/dir sh build.sh` with Android SDK build-tools 35 and platform 35 at $SDK.
+Build: `OUT=/some/dir sh build.sh` with Android SDK build-tools 35 and platform 35 at $SDK (defaults to $ANDROID_HOME). The signing key defaults to keystore/; set `KS=/path/mkcinema.jks KS_PASS=file:/path/password.txt` to use one kept elsewhere.
 
 KEEP keystore/ SAFE AND PRIVATE. Every future update must be signed with keystore/mkcinema.jks, or Android refuses to install it over the old version. Never publish keystore/.
 Bump android:versionCode in AndroidManifest.xml for each release.

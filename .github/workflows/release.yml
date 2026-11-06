@@ -2,6 +2,11 @@ name: Release
 
 # Publishes a GitHub release with the app files from site/download and the notes in
 # .github/release/<tag>.md. Run it from Actions › Release › Run workflow, or push a tag like v1.0.
+#
+# every release also gets
+# - SHA256SUMS, a list of the SHA-256 of every file, attached to the release and printed in the notes
+# - a build provenance attestation for every file (check with: gh attestation verify <file> -R <owner>/<repo>)
+# How users check a download is in SECURITY.md ("Verifying downloads").
 on:
   workflow_dispatch:
     inputs:
@@ -12,19 +17,50 @@ on:
   push:
     tags: ["v*"]
 
-permissions:
-  contents: write
+permissions: {}
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write      # create the release
+      id-token: write      # sign the provenance attestation (Sigstore, keyless)
+      attestations: write  # store the attestation
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Checksums and notes
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          [[ "$TAG" =~ ^v[0-9A-Za-z._-]+$ ]] || { echo "::error::Unexpected tag: $TAG"; exit 1; }
+          (cd site/download && find . -maxdepth 1 -type f ! -name SHA256SUMS -printf '%f\n' | LC_ALL=C sort | xargs -d '\n' sha256sum) > "$RUNNER_TEMP/SHA256SUMS"
+          cat "$RUNNER_TEMP/SHA256SUMS"
+          notes=".github/release/${TAG}.md"
+          {
+            [ -f "$notes" ] && cat "$notes"
+            echo
+            echo "### Checksums (SHA-256)"
+            echo
+            echo "Check that a download is the real file before you install it. The same list is attached as \`SHA256SUMS\`."
+            echo
+            echo '```'
+            cat "$RUNNER_TEMP/SHA256SUMS"
+            echo '```'
+            echo
+            echo "How to check: https://github.com/${GITHUB_REPOSITORY}/blob/main/SECURITY.md#verifying-downloads"
+          } > "$RUNNER_TEMP/notes.md"
+      - name: Provenance attestation
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            site/download/*
+            ${{ runner.temp }}/SHA256SUMS
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag || github.ref_name }}
         run: |
-          notes=".github/release/${TAG}.md"
-          [ -f "$notes" ] || notes=/dev/null
-          gh release create "$TAG" --target "$GITHUB_SHA" --title "MKCinema ${TAG#v}" --notes-file "$notes" site/download/*
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "MKCinema ${TAG#v}" \
+            --notes-file "$RUNNER_TEMP/notes.md" site/download/* "$RUNNER_TEMP/SHA256SUMS"

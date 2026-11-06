@@ -35,7 +35,7 @@ import java.nio.charset.StandardCharsets;
     MKCinema with the position so it is saved. With frame-rate matching on, the TV switches to the film's frame rate
     (24p films without judder) while the film plays and switches back afterwards. */
 public class PlayerActivity extends Activity implements SurfaceHolder.Callback, Engine.Listener {
-    Engine eng; boolean fellBack; String engineName; File subFile; boolean subsWaited;
+    Engine eng; boolean fellBack, slow; String engineName; File subFile; boolean subsWaited;
     ImageView subImg; int vw, vh; float par = 1f;
     SurfaceView surface;
     FrameLayout root;
@@ -60,11 +60,14 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         Intent i = getIntent();
         url = i.getStringExtra("url"); subUrl = i.getStringExtra("subUrl");
+        // 1.8.1: films come over http(s), or from this app's own downloads folders; subtitles the same
+        if (!allowed(url, false) || (subUrl != null && !subUrl.isEmpty() && !allowed(subUrl, true))) { setResult(RESULT_CANCELED, new Intent().putExtra("error", "blocked")); finish(); return; }
         // request headers some sources need (Referer, User-Agent...), sent by the player itself
         try { String hj = i.getStringExtra("headers"); if (hj != null && !hj.isEmpty()) { org.json.JSONObject ho = new org.json.JSONObject(hj); java.util.Iterator<String> it = ho.keys(); while (it.hasNext()) { String k = it.next(); hdr.put(k, ho.optString(k)); } } } catch (Exception ignored) { }
         audioLang = i.getStringExtra("audioLang");
         startMs = i.getIntExtra("startMs", 0); matchRate = i.getBooleanExtra("matchRate", true);
         engineName = i.getStringExtra("engine"); if (engineName == null || engineName.isEmpty()) engineName = "exo";
+        slow = i.getBooleanExtra("slow", false);
         float d = getResources().getDisplayMetrics().density;
 
         root = new FrameLayout(this); root.setBackgroundColor(Color.BLACK);
@@ -122,6 +125,22 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     TextView playBtn;
     boolean touch;
 
+    /** http(s), or a file inside one of this app's Movies folders (the device, a USB drive or an SD card), where downloads go */
+    boolean allowed(String u, boolean path) {
+        if (u == null) return false;
+        String l = u.toLowerCase(java.util.Locale.US);
+        if (l.startsWith("https://") || l.startsWith("http://")) return true;
+        String f = path && u.startsWith("/") ? u : !path && l.startsWith("file:") ? android.net.Uri.parse(u).getPath() : null;
+        if (f == null) return false;
+        try {
+            String c = new File(f).getCanonicalPath();
+            for (File d : getExternalFilesDirs(android.os.Environment.DIRECTORY_MOVIES)) {
+                if (d != null && c.startsWith(d.getCanonicalPath() + File.separator)) return true;
+            }
+        } catch (Exception ignored) { }
+        return false;
+    }
+
     /** Phones and tablets: tap shows or hides the bar, double-tap the left or right side skips 10 s, double-tap the
         middle pauses, the bar can be dragged, and the Play/Pause label works. Films turn the phone sideways. */
     void setupTouch(FrameLayout seekBox, float d) {
@@ -163,7 +182,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
 
     void maybeStart() {
         if (eng != null || !surfaceReady || !subsWaited || isFinishing()) return;
-        try { eng = "system".equals(engineName) ? new MpEngine(this, this) : new ExoEngine(this, this); }
+        try { if ("system".equals(engineName)) eng = new MpEngine(this, this); else { ExoEngine x = new ExoEngine(this, this); x.slow = slow; eng = x; } }
         catch (Throwable t) { fellBack = true; eng = new MpEngine(this, this); } // ExoPlayer missing or broken on this device
         eng.open(url, hdr, subFile, audioLang, startMs, surface.getHolder());
     }
@@ -323,10 +342,11 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
             } catch (Exception ignored) { }
         }
         if (hideAt > 0 && System.currentTimeMillis() > hideAt && eng != null && eng.playing()) { bar.setVisibility(View.GONE); hideAt = 0; if (sel >= 0) { sel = -1; paintOpts(); } }
-        h.postDelayed(this, 500);
+        // nothing to update while the bar is hidden; show() starts it again
+        if (bar.getVisibility() == View.VISIBLE) h.postDelayed(this, 500);
     } };
     static String fmt(int ms) { int s = Math.max(0, ms / 1000); return s >= 3600 ? String.format(java.util.Locale.US, "%d:%02d:%02d", s / 3600, s / 60 % 60, s % 60) : String.format(java.util.Locale.US, "%d:%02d", s / 60, s % 60); }
-    void show(long ms) { bar.setVisibility(View.VISIBLE); hideAt = System.currentTimeMillis() + ms; }
+    void show(long ms) { boolean was = bar.getVisibility() == View.VISIBLE; bar.setVisibility(View.VISIBLE); hideAt = System.currentTimeMillis() + ms; if (!was) { h.removeCallbacks(tick); h.post(tick); } }
 
     final Runnable doSeek = () -> { if (pendingSeek >= 0 && eng != null) { try { eng.seek(pendingSeek); } catch (Exception ignored) { } pendingSeek = -1; } };
     void skip(int ms) {

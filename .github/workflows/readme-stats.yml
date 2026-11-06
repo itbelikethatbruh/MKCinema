@@ -4,6 +4,11 @@ name: README stats
 # branch, so main never gets bot commits:
 # - stats.svg: latest release, app downloads and commits from the GitHub API
 # - marquee.svg: "Now showing", a major 2025-2026 film, a new one each day
+#
+# Security: actions are pinned to full commit SHAs, pip and npm installs are pinned
+# and hash-checked, and the work is split in two jobs. "draw" runs the third-party code
+# (fonttools, pillow, brotli, fonts) with a read-only token. "publish" holds the write token and
+# runs no third-party code: it only pushes the two finished images.
 on:
   schedule:
     - cron: "17 5 * * *"
@@ -16,27 +21,33 @@ on:
     paths: [".github/readme/**", ".github/workflows/readme-stats.yml"]
   workflow_dispatch:
 
-permissions:
-  contents: write
-  issues: write
+permissions: {}
 
 concurrency:
   group: readme-stats
   cancel-in-progress: true
 
 jobs:
-  stats:
+  draw:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
       - name: Fonts and tools
         working-directory: .github/readme
         run: |
-          pip install --quiet fonttools brotli pillow
-          npm pack --silent @fontsource/fraunces@5 @fontsource/space-grotesk@5
+          pip install --quiet --require-hashes --only-binary=:all: -r requirements.txt
+          # Exact font versions, checked against the npm registry's sha512 before use
+          check() { [ "$(openssl dgst -sha512 -binary "$1" | base64 -w0)" = "$2" ] || { echo "::error::$1 failed its integrity check"; exit 1; }; }
+          npm pack --silent @fontsource/fraunces@5.3.0 @fontsource/space-grotesk@5.3.0
+          check fontsource-fraunces-5.3.0.tgz LEHTOBiZufQzAvnAe2rZ8ZknbDS28Q9kzwb0L+gZJEmjLGr8hhZ/5NuHXwDuHBWhVXYoiGGXmrb0H6Ko/RrHTg==
+          check fontsource-space-grotesk-5.3.0.tgz ksnGizDPXIDuvqcTYTSrmZ+evx9sDlS8rp7+42BQ7wU+spt3twEoXfbJz672C+5CLg6VeUQwRy5RXshWb67LcQ==
           for f in *.tgz; do mkdir -p "${f%.tgz}" && tar xzf "$f" -C "${f%.tgz}" --strip-components 1; done
       - name: Draw the images
         working-directory: .github/readme
@@ -45,11 +56,30 @@ jobs:
         run: |
           python3 stats.py "$RUNNER_TEMP/out/stats.svg"
           python3 marquee.py "$RUNNER_TEMP/out/marquee.svg"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: readme-images
+          path: ${{ runner.temp }}/out/*.svg
+          retention-days: 1
+          if-no-files-found: error
+
+  publish:
+    needs: draw
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: readme-images
+          path: ${{ runner.temp }}/out
       - name: Publish to readme-assets
         working-directory: ${{ runner.temp }}/out
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
+          # Only the two images, and only if they really are SVG
+          for f in stats.svg marquee.svg; do head -c 200 "$f" | grep -q '<svg' || { echo "::error::$f is not an SVG"; exit 1; }; done
           git init -q -b readme-assets
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

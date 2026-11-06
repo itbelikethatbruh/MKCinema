@@ -39,3 +39,6 @@ func Reveal(path string) error {
 	}
 	return exec.Command("xdg-open", path).Start()
 }
+
+// MarkFromInternet does nothing here: the downloads feature ships in the Windows app only.
+func MarkFromInternet(path string) {}

@@ -73,6 +73,16 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 <p><img src="docs/readme/h-features.svg" width="100%" alt="Features"></p>
 
 <a name="new"></a>
+### New in 2.37
+
+<table>
+<tr>
+<td width="33%" valign="top"><img src="docs/readme/icon-bolt.svg" width="52" alt=""><br><b>Opens faster</b><br><sub>MKCinema starts from the copy on your device and only downloads an update when there is one. Home uses less battery and memory, and network logos and Universes show even offline.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-sync.svg" width="52" alt=""><br><b>Sync that merges</b><br><sub>Changes from all your devices come together instead of the last one winning, and they show up when you come back to the app. Watching no longer re-uploads your profile every few seconds.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-phone.svg" width="52" alt=""><br><b>Your TV, your phones</b><br><sub>The TV asks before a new phone can take control, and Settings › Devices lists allowed phones. In a watch party the host leads and can hand over with one tap.</sub></td>
+</tr>
+</table>
+
 ### New in 2.15 to 2.20
 
 <table>

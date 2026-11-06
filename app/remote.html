@@ -130,6 +130,13 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .login.lsn.on b{color:var(--champ)}
 .login b{display:block;font-weight:600}.login small{color:var(--mute);font-size:12px}
 .login .grow{flex:1}
+/* 2.37 pairing: the TV allows each phone first */
+.pw{margin-top:12px;padding:14px 16px;border-radius:18px;border:1px solid rgba(217,212,199,.35);background:rgba(217,212,199,.06);display:flex;flex-direction:column;gap:6px;animation:rise .45s var(--ease) both}
+.pw b{font:600 calc(15px * var(--ts,1))/1.25 var(--f-display)}
+.pw span{color:var(--mute);font-size:calc(13px * var(--ts,1))}
+.pw .pw-n{font:700 calc(30px * var(--ts,1))/1 var(--f-display);letter-spacing:.3em;color:var(--champ);margin:4px 0 2px}
+.pw button{align-self:flex-start;margin-top:4px;padding:9px 16px;border-radius:999px;border:1px solid var(--line-hi);font-weight:600}
+#ctl.pairing #surface,#ctl.pairing .keys,#ctl.pairing #transport,#ctl.pairing .seg{opacity:.3;pointer-events:none}
 /* 2.24.0 party voice on this phone */
 .pv-ctl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:8px;padding:10px 14px;border-radius:16px;border:1px solid var(--line);background:var(--glass)}
 .pv-mic{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line-hi);font-size:13px;font-weight:600}
@@ -350,6 +357,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
     </div>
     <button class="cc" type="button" id="ccBtn" hidden aria-label="Subtitles"><svg class="i"><use href="#i-cc"/></svg>CC</button>
   </div>
+  <div class="pw" id="pw" hidden role="status"><b id="pwT">Allow this phone on your TV</b><span id="pwS"></span><span class="pw-n tnum" id="pwN" hidden></span><button type="button" id="pwGo" hidden>Ask again</button></div>
   <button class="login" type="button" id="loginBtn" hidden><svg class="i"><use href="#i-login"/></svg><span class="grow"><b>Sign in your TV from here</b><small>Faster than typing on the TV</small></span><svg class="i"><use href="#i-right"/></svg></button>
   <button class="login lsn" type="button" id="lsnBtn" hidden><svg class="i"><use href="#i-head"/></svg><span class="grow"><b id="lsnT">Listen on this phone</b><small id="lsnS">Plug in headphones to watch without waking anyone</small></span></button>
   <!-- 2.35.0 --><button class="login" type="button" id="psBtn" hidden><svg class="i"><use href="#i-cc"/></svg><span class="grow"><b>Subtitles on this phone</b><small>Read your own language, in step with the TV</small></span><svg class="i"><use href="#i-right"/></svg></button><!-- /2.35.0 -->
@@ -485,8 +493,10 @@ function toast(t, ms = 2600) { const el = $('#toast'); el.textContent = t; el.cl
 /* ---------- Paired TVs ---------- */
 const TVs = {
   list() { return Store.get('tvs', []).filter((t) => t && CODE_RE.test(t.code)); },
-  save(code, name, sb) { const old = this.list().find((t) => t.code === code), l = this.list().filter((t) => t.code !== code); l.unshift({ code, name: name || 'TV', at: Date.now(), sb: sb || (old && old.sb) || null }); Store.set('tvs', l.slice(0, 8)); },
-  sb(code) { const t = this.list().find((x) => x.code === code); return (t && t.sb) || null; },
+  save(code, name, sb, extra) { const old = this.list().find((t) => t.code === code), l = this.list().filter((t) => t.code !== code); l.unshift({ ...(old || {}), ...(extra || {}), code, name: name || (old && old.name) || 'TV', at: Date.now(), sb: sb || (old && old.sb) || null }); Store.set('tvs', l.slice(0, 8)); },
+  get(code) { return this.list().find((x) => x.code === code) || null; },
+  patch(code, extra) { const l = this.list(), t = l.find((x) => x.code === code); if (!t) return; Object.assign(t, extra); Store.set('tvs', l); },
+  sb(code) { const t = this.list().find((x) => x.code === code); return t && t.sb && /^https:\/\/[a-z0-9]{20}\.supabase\.co$/.test(t.sb.url || '') ? t.sb : null; },
   forget(code) { Store.set('tvs', this.list().filter((t) => t.code !== code)); },
   name(code) { const t = this.list().find((x) => x.code === code); return t ? t.name : ''; },
 };
@@ -494,7 +504,7 @@ const TVs = {
 /* ---------- Realtime link: Phoenix protocol, JSON serializer ---------- */
 class Link {
   constructor(code, onMsg, onState, sb, opt) {
-    opt = opt || {}; this.id = opt.id || ME;
+    opt = opt || {}; this.id = opt.id || ME; this.seal = null; this.unseal = opt.unseal || null; this.sq = Promise.resolve(); this.rq = Promise.resolve();
     this.sb = sb || SB_DEFAULT; this.code = code; this.topic = opt.topic || `realtime:mkc-remote-${code}`; this.onMsg = onMsg; this.onState = onState;
     this.ws = null; this.joined = false; this.ref = 0; this.joinRef = ''; this.seen = new Set(); this.closed = false; this.tries = 0; this.hbT = 0; this.reT = 0;
     try { this.bc = new BroadcastChannel(opt.bc || `mkc:remote-${code}`); this.bc.onmessage = (e) => this.recv(e.data); } catch (e) { this.bc = null; }
@@ -530,22 +540,29 @@ class Link {
   /* after the phone wakes, the socket can look open but be dead: reopen it straight away */
   kick() { if (this.closed) return; if (this.ws) { const w = this.ws; this.ws = null; try { w.close(); } catch (e) { /* gone */ } } this.joined = false; this.tries = 0; this.open(); }
   raw(o) { try { if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify(o)); } catch (e) { /* closing */ } }
+  /* with a seal (a TV that allowed this phone), every message goes out encrypted, in order */
   send(msg) {
+    if (!this.seal) { this.sendPlain(msg); return; }
+    const seal = this.seal; this.sq = this.sq.then(() => seal(msg)).then((env) => { if (env) this.sendPlain(env); }).catch(() => {});
+  }
+  sendPlain(msg, ws, jr) {
     const m = { ...msg, _from: this.id, _id: rid(8) }; this.seen.add(m._id);
-    try { this.bc && this.bc.postMessage(m); } catch (e) { /* closed */ }
-    if (this.joined) this.raw({ topic: this.topic, event: 'broadcast', payload: { type: 'broadcast', event: 'm', payload: m }, ref: String(++this.ref), join_ref: this.joinRef });
+    if (!ws) { try { this.bc && this.bc.postMessage(m); } catch (e) { /* closed */ } }
+    const w = ws || (this.joined ? this.ws : null);
+    if (w && w.readyState === 1) { try { w.send(JSON.stringify({ topic: this.topic, event: 'broadcast', payload: { type: 'broadcast', event: 'm', payload: m }, ref: String(++this.ref), join_ref: jr || this.joinRef })); } catch (e) { /* closing */ } }
   }
   recv(m) {
     if (!m || m._from === this.id || this.seen.has(m._id)) return; this.seen.add(m._id);
     if (this.seen.size > 1500) this.seen = new Set([...this.seen].slice(-400));
     if (m._to && m._to !== this.id) return;
-    this.onMsg(m);
+    if (!this.unseal) { this.onMsg(m); return; }
+    this.rq = this.rq.then(() => this.unseal(m)).then((x) => { if (x && !this.closed) this.onMsg(x); }).catch(() => {});
   }
   close() {
     this.closed = true; clearTimeout(this.reT); clearInterval(this.hbT);
-    if (this.joined) this.send({ t: 'bye' });
-    const ws = this.ws; this.ws = null; this.joined = false;
-    setTimeout(() => { try { ws && ws.close(); } catch (e) { /* gone */ } }, 60);
+    const ws = this.ws, jr = this.joinRef, joined = this.joined, seal = this.seal; this.ws = null; this.joined = false;
+    const bye = !joined ? Promise.resolve(null) : seal ? this.sq.then(() => seal({ t: 'bye' })).catch(() => null) : Promise.resolve({ t: 'bye' });
+    bye.then((m) => { if (m) this.sendPlain(m, ws, jr); setTimeout(() => { try { ws && ws.close(); } catch (e) { /* gone */ } }, 60); });
     try { this.bc && this.bc.close(); } catch (e) { /* gone */ }
   }
 }
@@ -554,21 +571,118 @@ class Link {
 const R = {
   code: '', link: null, st: null, lastSt: 0, net: 'conn', hiT: 0, watchT: 0, kbAuto: false, kbWas: false, typingAt: 0,
   base: { cur: 0, dur: 0, at: 0, paused: true }, raf: 0,
-  connect(code, sb) {
+  /* 2.37: modes. sec = allowed by the TV, everything sealed with this phone's own key; pair = asking the TV to allow
+     this phone; plain/plainpair = a page or TV without WebCrypto (plain http); legacy = a TV from before 2.37;
+     denied = the TV said no (or removed this phone) */
+  mode: '', pk: null, sn: '', qk: '', pairing: null, why: '', tvId: '', tvAt: 0, secAt: 0,
+  connect(code, sb, qk) {
     if (this.link) this.link.close();
+    const rec = TVs.get(code);
     this.sb = sb || TVs.sb(code); this.code = code; this.st = null; this.lastSt = 0; this.kbWas = false;
+    this.qk = qk || (rec && rec.k) || ''; this.pk = null; this.sn = ''; this.pairing = null; this.why = ''; this.tvId = ''; this.secAt = 0;
+    this.mode = !Sec.can ? (rec && rec.plain ? 'plain' : 'plainpair') : rec && rec.pk ? 'sec' : 'pair';
     $('#tvName').textContent = TVs.name(code) || 'Your TV';
-    show('ctl'); this.paintNow(); this.paintState();
-    this.link = new Link(code, (m) => this.onMsg(m), (s) => { this.net = s; if (s === 'online') this.hello(); this.paintState(); }, this.sb);
+    show('ctl'); this.paintNow(); this.paintState(); Pw.paint();
+    const link = this.link = new Link(code, (m) => this.onMsg(m), (s) => { this.net = s; if (s === 'online') this.hello(); this.paintState(); }, this.sb, { unseal: (m) => this.unseal(m) });
+    if (this.mode === 'sec') this.useKey(rec.pk, link); else if (this.mode === 'pair') this.startPair();
     clearInterval(this.hiT); this.hiT = setInterval(() => this.hello(), 4000);
     clearInterval(this.watchT); this.watchT = setInterval(() => this.paintState(), 1000);
   },
-  hello() { if (this.link) this.link.send({ t: 'hi', name: phoneName(), v: 2 }); },
-  leave() { clearInterval(this.hiT); clearInterval(this.watchT); if (this.link) this.link.close(); this.link = null; this.code = ''; this.st = null; cancelAnimationFrame(this.raf); },
-  send(msg) { if (this.link) this.link.send(msg); },
+  hello() {
+    if (!this.link) return;
+    if (this.mode === 'pair' || this.mode === 'plainpair') { this.sendPair(); return; }
+    if (this.mode === 'denied') return;
+    this.send({ t: 'hi', name: phoneName(), v: 3 });
+  },
+  leave() { clearInterval(this.hiT); clearInterval(this.watchT); if (this.link) this.link.close(); this.link = null; this.code = ''; this.st = null; cancelAnimationFrame(this.raf); this.mode = ''; this.pairing = null; this.pk = null; Pw.paint(); },
+  /* nothing reaches the TV until it has allowed this phone */
+  send(msg) {
+    if (!this.link) return;
+    if (this.mode === 'sec') { if (this.link.seal) this.link.send(msg); return; }
+    if (this.mode === 'legacy' || this.mode === 'plain') this.link.send(msg);
+  },
+  seal(m) { const k = this.pk; return k ? Sec.seal(k, { ...m, sn: this.sn }, Sec.aad('p2t', this.code, ME)).then((env) => ({ t: 'x', ...env })) : Promise.resolve(null); },
+  async useKey(b64, link) {
+    try { const k = await Sec.aesKey(Sec.dec(b64)); if (this.link !== link) return; this.pk = k; link.seal = (m) => this.seal(m); this.hello(); }
+    catch (e) { if (this.link === link) this.startPair(); }
+  },
+  async startPair(why) {
+    if (!this.link) return;
+    if (!Sec.can) { this.mode = 'plainpair'; this.why = why || ''; Pw.paint(); this.paintState(); this.sendPair(); return; }
+    this.mode = 'pair'; this.why = why || ''; this.pairing = null; Pw.paint(); this.paintState();
+    try {
+      const kp = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, false, ['deriveBits']);
+      const pub = Sec.enc(new Uint8Array(await crypto.subtle.exportKey('raw', kp.publicKey)));
+      if (this.mode !== 'pair') return;
+      this.pairing = { kp, pub, cands: new Map(), sas: '', dev: '' }; Pw.paint(); this.sendPair();
+    } catch (e) { this.mode = 'denied'; this.why = 'https'; Pw.paint(); }
+  },
+  async sendPair() {
+    const link = this.link; if (!link) return;
+    if (this.mode === 'plainpair') { link.sendPlain({ t: 'pair', v: 3, name: phoneName(), plain: true }); return; }
+    const p = this.pairing; if (this.mode !== 'pair' || !p) return;
+    const m = { t: 'pair', v: 3, name: phoneName(), pub: p.pub };
+    // scanned from the TV's QR code: prove it with the key that only the code carries
+    if (this.qk) { try { const q = await Sec.sealText(await Sec.aesKey(Sec.dec(this.qk)), `pair|${this.code}|${ME}|${p.pub}`); m.q = q.e; m.qiv = q.iv; } catch (e) { /* typed */ } }
+    if (this.link === link) link.sendPlain(m);
+  },
+  async onPairTv(m) {
+    if (m.plain) { if (this.mode === 'plainpair') { this.pairDev = String(m.dev || '').slice(0, 30); Pw.paint(); } else if (this.mode === 'pair') { this.mode = 'denied'; this.why = 'plain'; Pw.paint(); } return; }
+    const p = this.pairing; if (this.mode !== 'pair' || !p || typeof m.pub !== 'string' || m.pub.length > 120 || p.cands.has(m.pub) || p.cands.size > 4) return;
+    try {
+      if (this.qk) { const t = await Sec.openText(await Sec.aesKey(Sec.dec(this.qk)), m.q, m.qiv); if (t !== `tv|${this.code}|${ME}|${p.pub}|${m.pub}`) return; }
+      const theirs = await crypto.subtle.importKey('raw', Sec.dec(m.pub), { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+      const bits = new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: theirs }, p.kp.privateKey, 256));
+      const raw = await Sec.hash(Sec.cat(bits, Sec.te.encode(`mkc-rm3|${this.code}|${ME}|${p.pub}|${m.pub}`)));
+      const c = { raw, key: await Sec.aesKey(raw), sas: await Sec.sas(p.pub, m.pub), dev: String(m.dev || '').slice(0, 30) };
+      if (this.pairing !== p) return;
+      p.cands.set(m.pub, c); if (!p.sas) { p.sas = c.sas; p.dev = c.dev; buzz(10); }
+      Pw.paint();
+    } catch (e) { /* not this TV's answer */ }
+  },
+  async adopt(c) {
+    this.pk = c.key; this.mode = 'sec'; this.pairing = null; this.why = '';
+    if (this.link) this.link.seal = (m) => this.seal(m);
+    TVs.save(this.code, TVs.name(this.code) || c.dev || 'TV', this.sb, { pk: Sec.enc(c.raw), k: this.qk || '', sec: true, plain: false });
+    history.replaceState(null, '', location.pathname); buzz([10, 40, 10]); toast('Your TV allowed this phone', 2600);
+    Pw.paint(); this.paintState(); setTimeout(() => this.hello(), 0);
+  },
+  pin(m) {
+    const now = Date.now();
+    if (!this.tvId || (this.tvId !== m._from && now - this.tvAt > 12000)) this.tvId = m._from;
+    if (m._from !== this.tvId) return false; this.tvAt = now; return true;
+  },
+  /* what the channel brings, before the rest of the remote sees it */
+  async unseal(m) {
+    if (m.t === 'x') {
+      const p = this.pairing, keys = this.pk ? [[this.pk, null]] : p ? [...p.cands.values()].map((c) => [c.key, c]) : [];
+      for (const [k, c] of keys) {
+        let x; try { x = await Sec.open(k, m, Sec.aad('t2p', this.code, ME)); } catch (e) { continue; }
+        if (!x || typeof x.t !== 'string') return null;
+        if (x.sn) this.sn = x.sn; this.secAt = Date.now();
+        if (c) { if (x.t !== 'paired') return null; await this.adopt(c); }
+        const { sn, ...rest } = x; return { ...rest, _from: m._from, _sec: true };
+      }
+      return null;
+    }
+    // in the clear: only the pairing talk, and everything from a TV that can't encrypt (or is older than 2.37)
+    if (m.t === 'pair-tv') { this.onPairTv(m); return null; }
+    if (m.t === 'pair-no') { if (this.mode === 'pair' || this.mode === 'plainpair') { this.mode = 'denied'; this.why = m.why || ''; this.pairing = null; Pw.paint(); this.paintState(); buzz([10, 40, 10]); } return null; }
+    if (m.t === 'unpaired') { if (this.mode === 'sec' && Date.now() - this.secAt > 20000) this.startPair('forgot'); return null; }
+    if (m.t === 'paired') { if (m.plain && this.mode === 'plainpair') { this.mode = 'plain'; TVs.save(this.code, TVs.name(this.code) || this.pairDev || 'TV', this.sb, { plain: true }); toast('Your TV allowed this phone', 2600); Pw.paint(); this.paintState(); this.hello(); } return null; }
+    if (!TV_T.has(m.t) || ((m.t === 'lrtc' || m.t === 'lice') && m._to !== ME) || (m.t === 'cm' && !/^(deck|match|end)$/.test(m.op))) return null;
+    if (this.mode === 'legacy' || this.mode === 'plain') return this.pin(m) ? m : null;
+    // a TV from before 2.37 answers in the clear and knows nothing of pairing: keep working with it, and say so
+    if (this.mode === 'pair' && m.t === 'st' && !m.caps && !m.upd && !this.qk && !(TVs.get(this.code) || {}).sec) {
+      this.mode = 'legacy'; this.pairing = null; this.pin(m); Pw.paint(); this.paintState();
+      toast('This TV runs an older MKCinema. Update it there for a safer remote.', 5200); this.hello(); return m;
+    }
+    return null;
+  },
   key(k) { this.send({ t: 'key', k }); },
   live() { return this.net === 'online' && this.lastSt && Date.now() - this.lastSt < 11000; },
   onMsg(m) {
+    if (m.t === 'unpaired') { TVs.patch(this.code, { pk: '' }); this.pk = null; if (this.link) this.link.seal = null; this.mode = 'denied'; this.why = 'removed'; Pw.paint(); this.paintState(); return; }
     if (m.t === 'st') {
       const first = !this.lastSt; this.lastSt = Date.now(); this.st = m;
       if (m.dev) { $('#tvName').textContent = m.dev; if (!first && TVs.name(this.code) !== m.dev) TVs.save(this.code, m.dev); }
@@ -582,6 +696,11 @@ const R = {
   },
   paintState() {
     const chip = $('#tvChip'), st = $('#tvState');
+    if (this.mode === 'pair' || this.mode === 'plainpair' || this.mode === 'denied') {
+      const s = this.mode === 'denied' || this.net === 'offline' ? 'off' : this.net === 'online' ? 'wait' : 'conn';
+      const txt = this.mode === 'denied' ? 'Not allowed on this TV' : this.net === 'online' ? 'Waiting for the TV to allow this phone' : this.net === 'offline' ? 'Reconnecting…' : 'Connecting…';
+      if (chip.dataset.s !== s) chip.dataset.s = s; if (st.textContent !== txt) st.textContent = txt; return;
+    }
     let s, txt;
     if (this.net === 'online' && this.live()) { s = 'live'; txt = this.st && this.st.v === 'player' ? (this.st.paused ? 'Paused' : 'Playing') : 'Connected'; }
     else if (this.net === 'online') { s = 'wait'; txt = this.lastSt ? 'TV not answering. Is MKCinema still open?' : 'Looking for your TV…'; }
@@ -608,7 +727,7 @@ const R = {
     $('#playIco').setAttribute('href', playing && !m.paused ? '#i-pause' : '#i-play');
     const step = String((m && m.step) || 10); $('#stepA').textContent = step; $('#stepB').textContent = step;
     $('#tDur').textContent = fmt(m && m.dur);
-    $('#loginBtn').hidden = !(m && m.login);
+    $('#loginBtn').hidden = !(m && appLogin(m.login));
     this.tick(true);
   },
   /* the progress bar runs on its own between updates, so it moves smoothly instead of jumping once a second */
@@ -769,7 +888,9 @@ const Scrub = (() => {
   return S;
 })();
 $('#ccBtn').onclick = () => { R.send({ t: 'cmd', c: 'subs' }); buzz(8); };
-$('#loginBtn').onclick = () => { if (R.st && R.st.login && /^https?:\/\//.test(R.st.login)) location.href = R.st.login; };
+// only a sign-in link on this site's own address: whoever sent it, the phone never opens another page from here
+function appLogin(l) { try { const u = new URL(String(l || '')); return u.origin === location.origin && /^#login=[A-Z0-9]{6}\.[A-Za-z0-9_-]+(\.\d)?$/.test(u.hash) ? u.href : ''; } catch (e) { return ''; } }
+$('#loginBtn').onclick = () => { const l = R.st && appLogin(R.st.login); if (l) location.href = l; };
 
 /* ---------- Sheets ---------- */
 let sheet = null;
@@ -847,7 +968,14 @@ $('#mForget').onclick = () => { const c = R.code; closeSheet(); R.leave(); TVs.f
 $('#mInstall').onclick = async () => { closeSheet(); if (!installEv) return; installEv.prompt(); try { await installEv.userChoice; } catch (e) { /* dismissed */ } installEv = null; };
 
 /* ---------- Waking up: phones drop sockets when the screen goes off ---------- */
-document.addEventListener('visibilitychange', () => { if (document.hidden || !R.link) return; if (!R.link.alive()) R.link.kick(); else R.hello(); R.tick(true); });
+document.addEventListener('visibilitychange', () => {
+  if (!R.link) return;
+  // a hidden phone stops saying hello every 4 s and repainting every second (unless it is listening)
+  if (document.hidden) { if (!(typeof Listen !== 'undefined' && Listen.on)) { clearInterval(R.hiT); clearInterval(R.watchT); R.hiT = R.watchT = 0; } return; }
+  if (!R.hiT) R.hiT = setInterval(() => R.hello(), 4000);
+  if (!R.watchT) R.watchT = setInterval(() => R.paintState(), 1000);
+  if (!R.link.alive()) R.link.kick(); else R.hello(); R.tick(true);
+});
 addEventListener('online', () => { if (R.link) R.link.kick(); });
 addEventListener('pageshow', (e) => { if (e.persisted && R.link) R.link.kick(); });
 /* the Android app maps its Back button to back() */
@@ -928,7 +1056,7 @@ const Listen = {
   },
   loadHls() {
     if (window.Hls) return Promise.resolve(window.Hls);
-    return this.hlsP || (this.hlsP = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js'; s.onload = () => res(window.Hls); s.onerror = () => { this.hlsP = null; rej(new Error('hls')); }; document.head.appendChild(s); }));
+    return this.hlsP || (this.hlsP = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js'; s.integrity = 'sha384-w6Gb3fXHb5e1LUYa/hYA5Q41bEDglN5ZPCG7Jvnoo8/X90oGnlPqBlBJCe38mEMm'; s.crossOrigin = 'anonymous'; s.onload = () => res(window.Hls); s.onerror = () => { this.hlsP = null; rej(new Error('hls')); }; document.head.appendChild(s); }));
   },
   /* where the TV is right now, by this phone's clock */
   target() { const b = this.base; if (!b) return null; const tvNow = Date.now() + this.off; return b.cur + (b.paused ? 0 : Math.max(0, tvNow - b.at) / 1000 * (b.rate || 1)); },
@@ -1077,8 +1205,10 @@ const PV = {
       this.mic = null; buzz(6); this.paint(); return;
     }
     let mic;
+    // a plain http address is not a secure context: the browser hides the microphone there entirely
+    if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { toast('The mic needs this page on an https address, such as app.mkcinema.app', 4200); return; }
     try { mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); }
-    catch (e) { toast('Microphone permission was not given', 3600); return; }
+    catch (e) { toast(e && e.name === 'NotFoundError' ? 'No microphone was found on this phone' : 'Microphone permission was not given', 3600); return; }
     if (!this.on) { mic.getTracks().forEach((t) => t.stop()); return; }
     this.mic = mic; this.peers.forEach((p) => mic.getTracks().forEach((t) => p.pc.addTrack(t, mic)));
     buzz(10); this.paint();
@@ -1145,13 +1275,14 @@ const Ads = {
     if (!this.list) { box.innerHTML = '<div class="ad-empty">Asking your TV…</div>'; return; }
     if (!this.list.length) { box.innerHTML = '<div class="ad-empty">No add-ons on this TV yet.</div>'; return; }
     box.innerHTML = this.list.map((a, i) => {
-      const logo = a.logo ? `<span class="ad-logo" style="background-image:url('${this.h(a.logo).replace(/'/g, '%27')}')"></span>` : `<span class="ad-logo">${this.h(String(a.name || '?').slice(0, 2).toUpperCase())}</span>`;
+      const logo = a.logo ? `<span class="ad-logo" data-bg="${this.h(a.logo)}"></span>` : `<span class="ad-logo">${this.h(String(a.name || '?').slice(0, 2).toUpperCase())}</span>`;
       const sub = [a.v ? `v${a.v}` : '', a.err ? 'can’t be reached' : (a.res || []).join(', '), a.host].filter(Boolean).join(' · ');
       return `<div class="ad-row${a.on ? '' : ' off'}" data-id="${this.h(a.id)}">${logo}<span class="ad-txt"><b>${this.h(a.name)}</b><small>${this.h(sub)}</small></span>
         <button class="ad-ib" type="button" data-op="up"${i === 0 ? ' disabled' : ''} aria-label="Move ${this.h(a.name)} up"><svg class="i"><use href="#i-up"/></svg></button>
         ${a.fixed ? '' : `<button class="ad-ib rm${this.sure === a.id ? ' sure' : ''}" type="button" data-op="rm" aria-label="Remove ${this.h(a.name)}">${this.sure === a.id ? 'Remove' : '<svg class="i"><use href="#i-trash"/></svg>'}</button>`}
         <button class="ad-sw" type="button" role="switch" data-op="tog" aria-checked="${!!a.on}" aria-label="${this.h(a.name)}"><i></i></button></div>`;
     }).join('');
+    Bg.apply(box);
   },
   st(m) {
     const b = $('#adBtn'); if (b) b.hidden = !(m.v === 'browse' && m.where === 'Addons');
@@ -1212,6 +1343,7 @@ const PSub = {
   },
   async load(m) {
     this.k = Number(m.k) || 1; this.off = Number(m.off) || 0;
+    if (!/^https?:\/\//i.test(String(m.url || ''))) return;
     if (m.url !== this.url) {
       this.url = m.url; this.lang = m.lang || ''; this.cues = [];
       this.show(`Loading ${this.lang} subtitles…`);
@@ -1277,6 +1409,7 @@ const CM = {
       this.deck = Array.isArray(m.list) ? m.list : [];
       if (left.length) this.i = Math.max(0, this.deck.findIndex((x) => x.id === left[0]));
       if (sheet !== 'cm') openSheet('cm');
+      if (m.matched) { const x = this.deck.find((d) => d.id === m.matched); this.paint(`It’s a match: ${x ? x.name : 'one for everyone'}! Look at the TV.`); return true; }
       this.card(); return true;
     }
     if (m.op === 'match') { const x = this.deck.find((d) => d.id === m.mid); buzz([20, 60, 20]); this.paint(`It’s a match: ${x ? x.name : 'one for everyone'}! Look at the TV.`); return true; }
@@ -1286,9 +1419,9 @@ const CM = {
   card() {
     const x = this.deck[this.i];
     if (!x) { this.paint('That’s every title. Waiting for the others…'); R.send({ t: 'cm', id: this.id, op: 'done' }); return; }
-    $('#cmBody').innerHTML = `<div class="cm-card" id="cmCard"><div class="cm-art" style="background-image:url('${this.h(x.poster).replace(/'/g, '%27')}')"></div><div class="cm-meta"><b>${this.h(x.name)}</b><small>${this.h([x.year, x.g, x.r ? `IMDb ${x.r}` : ''].filter(Boolean).join(' · '))}</small></div></div>
+    $('#cmBody').innerHTML = `<div class="cm-card" id="cmCard"><div class="cm-art" data-bg="${this.h(x.poster)}"></div><div class="cm-meta"><b>${this.h(x.name)}</b><small>${this.h([x.year, x.g, x.r ? `IMDb ${x.r}` : ''].filter(Boolean).join(' · '))}</small></div></div>
       <div class="cm-acts"><button class="cm-b no" type="button" data-cm="0" aria-label="Not tonight"><svg class="i"><use href="#i-x"/></svg></button><span class="tnum cm-n">${this.i + 1} / ${this.deck.length}</span><button class="cm-b yes" type="button" data-cm="1" aria-label="Yes">Yes</button></div>`;
-    this.swipe($('#cmCard'));
+    Bg.apply($('#cmBody')); this.swipe($('#cmCard'));
   },
   vote(yes) {
     const x = this.deck[this.i]; if (!x) return;
@@ -1313,14 +1446,65 @@ $('#mMatch').onclick = () => CM.join();
   R.leave = function () { PSub.close(); if (sheet === 'psub' || sheet === 'cm') closeSheet(true); return lv.apply(this, arguments); };
 }
 
+/* ---------- 2.37 Pairing: encryption helpers, the pairing panel and what the TV can do ---------- */
+const TV_T = new Set(['st', 'gone', 'adl', 'psl', 'psm', 'cm', 'lsn-st', 'lpong', 'lsync', 'lrtc', 'lice']);
+const Sec = {
+  can: !!(window.crypto && crypto.subtle && window.isSecureContext !== false),
+  te: new TextEncoder(), td: new TextDecoder(),
+  enc(b) { let s = ''; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); },
+  dec(s) { s = String(s || ''); return Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)), (c) => c.charCodeAt(0)); },
+  cat(a, b) { const o = new Uint8Array(a.length + b.length); o.set(a); o.set(b, a.length); return o; },
+  async hash(b) { return new Uint8Array(await crypto.subtle.digest('SHA-256', b)); },
+  aesKey(raw) { return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']); },
+  aad(dir, code, id) { return Sec.te.encode(`mkc-rm3|${dir}|${code}|${id}`); },
+  async seal(key, obj, aad) { const iv = crypto.getRandomValues(new Uint8Array(12)); const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: aad }, key, Sec.te.encode(JSON.stringify(obj))); return { iv: Sec.enc(iv), e: Sec.enc(new Uint8Array(ct)) }; },
+  async open(key, m, aad) { const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: Sec.dec(m.iv), additionalData: aad }, key, Sec.dec(m.e)); return JSON.parse(Sec.td.decode(pt)); },
+  async sealText(key, text) { const iv = crypto.getRandomValues(new Uint8Array(12)); const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, Sec.te.encode(text)); return { iv: Sec.enc(iv), e: Sec.enc(new Uint8Array(ct)) }; },
+  async openText(key, e, iv) { return Sec.td.decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: Sec.dec(iv) }, key, Sec.dec(e))); },
+  async sas(a, b) { const h = await Sec.hash(Sec.te.encode(`${a}|${b}`)); return String((((h[0] << 24) | (h[1] << 16) | (h[2] << 8) | h[3]) >>> 0) % 10000).padStart(4, '0'); },
+};
+const Pw = {
+  paint() {
+    const box = $('#pw'); if (!box) return;
+    const md = R.mode, on = !!R.code && (md === 'pair' || md === 'plainpair' || md === 'denied');
+    box.hidden = !on; $('#ctl').classList.toggle('pairing', on); if (!on) return;
+    const p = R.pairing; let t = 'Allow this phone on your TV', s, n = '', again = false;
+    if (md === 'denied') {
+      again = R.why !== 'https' && R.why !== 'plain';
+      [t, s] = ({ https: ['Open the remote from an https address', 'This TV only takes encrypted remotes. Scan the QR code on the TV again.'], plain: ['This TV can’t encrypt the remote', 'MKCinema on the TV runs from a plain http address. Open it from its https address, such as app.mkcinema.app, to use this remote.'], removed: ['The TV removed this phone', 'To use it again, ask again and choose Allow on the TV.'], later: ['The TV didn’t answer', 'Ask again, then choose Allow on the TV.'] })[R.why] || ['The TV didn’t allow this phone', 'If that was a mistake, ask again and choose Allow on the TV.'];
+    } else if (p && p.sas) { s = 'Choose Allow on the TV if it shows this number:'; n = p.sas; }
+    else s = R.why === 'forgot' ? 'Your TV doesn’t know this phone any more. Choose Allow on the TV to pair it again.' : 'Your TV asks whether this phone may control it. Choose Allow there.';
+    $('#pwT').textContent = t; $('#pwS').textContent = s; const ne = $('#pwN'); ne.textContent = n; ne.hidden = !n; $('#pwGo').hidden = !again;
+  },
+};
+$('#pwGo').onclick = () => { buzz(8); R.startPair(); };
+/* add-on logos and posters: set from here, only for https links, never spliced into a style attribute */
+const Bg = { apply(root) { $$('[data-bg]', root).forEach((el) => { const u = el.getAttribute('data-bg'); el.removeAttribute('data-bg'); try { if (new URL(u).protocol === 'https:') el.style.backgroundImage = `url(${JSON.stringify(u)})`; } catch (e) { /* not a link */ } }); } };
+/* the TV lists what it can do (2.37+): features it lacks are hidden instead of timing out */
+const Caps = {
+  has(c) { const l = R.st && R.st.caps; return !Array.isArray(l) || l.includes(c); },
+  apply() {
+    [['#adBtn', 'ad'], ['#psBtn', 'ps'], ['#lsnBtn', 'lsn'], ['#pvBox', 'pv']].forEach(([id, c]) => { const el = $(id); if (el && !this.has(c)) el.hidden = true; });
+    [['#mAddons', 'ad'], ['#mSubs', 'ps'], ['#mMatch', 'cm']].forEach(([id, c]) => { const el = $(id); if (el) el.hidden = !this.has(c); });
+  },
+};
+{
+  const on = R.onMsg;
+  R.onMsg = (m) => { on(m); if (m.t === 'st') Caps.apply(); };
+  const guard = (fn, c) => function () { if (!Caps.has(c)) { toast('Update MKCinema on the TV to use this from your phone', 4200); return undefined; } return fn.apply(this, arguments); };
+  Ads.open = guard(Ads.open, 'ad'); PSub.open = guard(PSub.open, 'ps'); CM.join = guard(CM.join, 'cm');
+}
+
 /* ---------- Start ---------- */
 (() => {
   setMode(Store.get('mode', 'pad'));
   const raw = decodeURIComponent(location.hash.replace(/^#/, '')).replace(/^(remote=|code=)/i, '').replace(/~addons$/i, () => { Ads.want = true; return ''; }).replace(/~(subs|match)$/i, (x, w) => { if (/subs/i.test(w)) PSub.want = true; else CM.want = true; return ''; }), [c, cfg] = raw.split('.');
-  const code = (c || '').toUpperCase().slice(0, 6);
-  // a TV on its own Supabase project puts that project in the QR code after the dot
-  let sb = null; try { if (cfg) { const o = JSON.parse(atob(cfg.replace(/-/g, '+').replace(/_/g, '/'))); if (/^https:\/\/[^\s"]+$/.test(o.u) && typeof o.k === 'string') sb = { url: o.u, key: o.k }; } } catch (e) { sb = null; }
-  if (CODE_RE.test(code)) { R.connect(code, sb); return; }
+  // 2.37: the TV's QR code adds its pairing key after the code (CODE_KEY); older links have only the code
+  const code = (c || '').toUpperCase().slice(0, 6), qk = /^_[A-Za-z0-9_-]{22}$/.test((c || '').slice(6)) ? c.slice(7) : '';
+  // a TV on its own Supabase project puts that project in the QR code after the dot. Only a Supabase project address
+  // is taken, so a crafted link can't point this phone at somebody else's server.
+  let sb = null; try { if (cfg) { const o = JSON.parse(atob(cfg.replace(/-/g, '+').replace(/_/g, '/'))); if (/^https:\/\/[a-z0-9]{20}\.supabase\.co$/.test(o.u) && typeof o.k === 'string' && o.k.length < 400) sb = { url: o.u, key: o.k }; else toast('This link names a server the remote doesn’t know, so it was ignored.', 4200); } } catch (e) { sb = null; }
+  if (CODE_RE.test(code)) { R.connect(code, sb, qk); return; }
   const last = TVs.list()[0];
   if (last) R.connect(last.code); else Pair.show();
 })();

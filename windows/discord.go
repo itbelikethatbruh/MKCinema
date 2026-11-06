@@ -9,7 +9,9 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -20,11 +22,35 @@ var discordAppID = "1567818702479425586"
 type activity struct {
 	Title   string `json:"title"`
 	Sub     string `json:"sub"`
-	Start   int64  `json:"start"` // unix ms when playback started (0 = paused)
-	End     int64  `json:"end"`   // unix ms when it ends
+	Start   int64  `json:"-"` // unix ms when playback started (0 = paused)
+	End     int64  `json:"-"` // unix ms when it ends
 	Paused  bool   `json:"paused"`
 	Image   string `json:"image"`
 	PageURL string `json:"url"`
+}
+
+// parseActivity reads the page's status. The page works out start and end from the video's current time, so they
+// arrive with fractions of a millisecond: they are read as numbers and rounded.
+func parseActivity(raw string) (activity, error) {
+	var a activity
+	if err := json.Unmarshal([]byte(raw), &a); err != nil {
+		return a, err
+	}
+	var t struct {
+		Start *float64 `json:"start"`
+		End   *float64 `json:"end"`
+	}
+	if err := json.Unmarshal([]byte(raw), &t); err != nil {
+		return a, err
+	}
+	ms := func(f *float64) int64 {
+		if f == nil || math.IsNaN(*f) || *f <= 0 || *f > 1e15 {
+			return 0
+		}
+		return int64(math.Round(*f))
+	}
+	a.Start, a.End = ms(t.Start), ms(t.End)
+	return a, nil
 }
 
 var (
@@ -106,7 +132,7 @@ func trim(s string, n int) string {
 
 func presenceSet(a activity) bool {
 	img := a.Image
-	if len(img) > 250 || img == "" {
+	if len(img) > 250 || !strings.HasPrefix(img, "https://") {
 		img = "https://mkcinema.pages.dev/icon-512.png"
 	}
 	act := map[string]any{

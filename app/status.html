@@ -25,6 +25,18 @@ code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
 <main>
 <a class="brand" href="./">MK<em>CINEMA</em></a>
 <h1>Service status</h1>
+<div id="notice" hidden style="margin:0 0 18px;padding:12px 16px;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:rgba(255,255,255,.04)"></div>
+<script>
+(function () {
+  var u = 'https://wogffhgdixgrayowewnf.supabase.co/rest/v1/mkcinema_notice?select=text,updated_at&id=eq.1';
+  var k = 'sb_publishable_ZpiFwB_oM579GwCunYpHWg_jelRazT-';
+  fetch(u, { headers: { apikey: k, Accept: 'application/json' }, cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).then(function (j) {
+    var row = j && j[0], t = row && String(row.text || '').trim(); if (!t) return;
+    var el = document.getElementById('notice'); el.textContent = t; el.hidden = false;
+  }).catch(function () {});
+})();
+</script>
+
 <p class="sub">Checked live from your connection, so this also shows whether your network can reach each service. <span id="when"></span></p>
 <div class="st" id="st"></div>
 <button type="button" id="again" class="ghost">Check again</button>

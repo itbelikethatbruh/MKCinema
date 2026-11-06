@@ -3,9 +3,32 @@
 #include <webkit2/webkit2.h>
 #include <string.h>
 
+/* The app opens HOME (its saved sign-in and settings live on that origin). Both of the web app's hosts count as
+   MKCinema everywhere a page is checked: app.mkcinema.app is the public home, mkcinema.pages.dev serves the apps. */
 #define HOME "https://mkcinema.pages.dev/"
 #define HOST "mkcinema.pages.dev"
+#define HOST2 "app.mkcinema.app"
 #define VERSION "1.1"
+
+/* Address schemes handed to other apps: web and mail links, magnet and Stremio links, and the video players the web
+   app offers. Everything else (file:, smb:, custom schemes) is dropped, so a link can't open a file or a program. */
+static const char *const outside_schemes[] = {"http", "https", "mailto", "magnet", "stremio", "vlc", "mpv", "iina", "infuse",
+                                              "potplayer", "outplayer", "nplayer-http", "nplayer-https", "vlc-x-callback", NULL};
+
+static gboolean app_host(const char *h) { return h && (!g_ascii_strcasecmp(h, HOST) || !g_ascii_strcasecmp(h, HOST2)); }
+
+/* true when uri is an https page on one of the app's hosts (default port) */
+static gboolean app_page(const char *uri) {
+  if (!uri) return FALSE;
+  g_autoptr(GUri) u = g_uri_parse(uri, G_URI_FLAGS_NONE, NULL);
+  return u && !g_strcmp0(g_uri_get_scheme(u), "https") && g_uri_get_port(u) < 0 && !g_uri_get_userinfo(u) && app_host(g_uri_get_host(u));
+}
+
+/* The page shown in the window is MKCinema's own (updated when a page commits). Bridge calls and the microphone
+   are only answered then. A per-launch secret that only the top MKCinema page's injected script knows keeps
+   frames inside the page (trailers and their ads) from calling the bridge. */
+static gboolean page_is_ours;
+static char bridge_key[33];
 
 /* ---- Torrents on this computer (window.MKDesktop.p2p) ----
    The torrent engine is the separate mkp2p program shipped next to this one. It only downloads (never uploads or
@@ -91,9 +114,15 @@ static void engine_start(WebKitScriptMessageReply *r) {
   g_data_input_stream_read_line_async(eng_out, G_PRIORITY_DEFAULT, NULL, engine_line, eng);
 }
 
-/* window.webkit.messageHandlers.mkd.postMessage('p2p-start' | 'p2p-stop') returns a promise */
-static gboolean on_desktop(WebKitUserContentManager *m, JSCValue *msg, WebKitScriptMessageReply *r, gpointer x) {
-  g_autofree char *cmd = jsc_value_is_string(msg) ? jsc_value_to_string(msg) : NULL;
+/* window.webkit.messageHandlers.mkd.postMessage('<key>:p2p-start' | '<key>:p2p-stop') returns a promise */
+static gboolean on_desktop(WebKitUserContentManager *m, JSCValue *msg, WebKitScriptMessageReply *r, gpointer view) {
+  g_autofree char *raw = jsc_value_is_string(msg) ? jsc_value_to_string(msg) : NULL;
+  gsize kl = strlen(bridge_key);
+  if (!raw || !page_is_ours || strncmp(raw, bridge_key, kl) || raw[kl] != ':') {
+    webkit_script_message_reply_return_error_message(r, "not allowed on this page");
+    return TRUE;
+  }
+  const char *cmd = raw + kl + 1;
   if (!g_strcmp0(cmd, "p2p-start")) { engine_start(r); return TRUE; }
   if (!g_strcmp0(cmd, "p2p-stop")) engine_stop();
   g_autoptr(JSCContext) c = jsc_context_new();
@@ -102,21 +131,26 @@ static gboolean on_desktop(WebKitUserContentManager *m, JSCValue *msg, WebKitScr
   return TRUE;
 }
 
-static void add_desktop(WebKitUserContentManager *m) {
+static void add_desktop(WebKitUserContentManager *m, WebKitWebView *view) {
   g_autofree char *bin = engine_path();
+  for (int i = 0; i < 4; i++) g_snprintf(bridge_key + i * 8, 9, "%08x", g_random_int());
+  g_autofree char *p2p = bin ? g_strdup_printf("d.p2p={start:function(){return h.postMessage('%s:p2p-start')},stop:function(){return h.postMessage('%s:p2p-stop')}};", bridge_key, bridge_key) : g_strdup("");
   g_autofree char *js = g_strdup_printf(
-    "(function(){if(location.hostname!=='" HOST "')return;var h=window.webkit.messageHandlers.mkd;"
+    "(function(){if(location.protocol!=='https:'||(location.hostname!=='" HOST "'&&location.hostname!=='" HOST2 "'))return;var h=window.webkit.messageHandlers.mkd;"
     "var d={platform:'linux',version:'" VERSION "'};"
-    "%s window.MKDesktop=d;})();",
-    bin ? "d.p2p={start:function(){return h.postMessage('p2p-start')},stop:function(){return h.postMessage('p2p-stop')}};" : "");
+    "%s window.MKDesktop=d;})();", p2p);
   WebKitUserScript *s = webkit_user_script_new(js, WEBKIT_USER_CONTENT_INJECT_TOP_FRAME, WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_START, NULL, NULL);
   webkit_user_content_manager_add_script(m, s);
   webkit_user_script_unref(s);
-  g_signal_connect(m, "script-message-with-reply-received::mkd", G_CALLBACK(on_desktop), NULL);
+  g_signal_connect(m, "script-message-with-reply-received::mkd", G_CALLBACK(on_desktop), view);
   webkit_user_content_manager_register_script_message_handler_with_reply(m, "mkd", NULL);
 }
 
 static void open_external(const char *uri) {
+  g_autofree char *scheme = g_uri_parse_scheme(uri);
+  gboolean ok = FALSE;
+  for (int i = 0; scheme && outside_schemes[i]; i++) if (!g_ascii_strcasecmp(scheme, outside_schemes[i])) ok = TRUE;
+  if (!ok) { g_warning("not opening a %s: link", scheme ? scheme : "(no scheme)"); return; }
   GError *e = NULL;
   if (!g_app_info_launch_default_for_uri(uri, NULL, &e)) { g_warning("open %s: %s", uri, e->message); g_clear_error(&e); }
 }
@@ -126,7 +160,46 @@ static gboolean is_ours(const char *uri) {
   if (!u) return FALSE;
   const char *s = g_uri_get_scheme(u), *h = g_uri_get_host(u);
   if (!g_strcmp0(s, "about") || !g_strcmp0(s, "blob") || !g_strcmp0(s, "data")) return TRUE;
-  return (!g_strcmp0(s, "https") || !g_strcmp0(s, "http")) && h && !strcmp(h, HOST);
+  return (!g_strcmp0(s, "https") || !g_strcmp0(s, "http")) && app_host(h);
+}
+
+/* the same address on HOME's host, over https */
+static char *at_home(GUri *u) {
+  return g_uri_join(G_URI_FLAGS_NONE, "https", NULL, HOST, -1, g_uri_get_path(u), g_uri_get_query(u), g_uri_get_fragment(u));
+}
+
+static gboolean load_home_later(gpointer view) {
+  const char *to = g_object_get_data(G_OBJECT(view), "mkc-home");
+  if (to) webkit_web_view_load_uri(WEBKIT_WEB_VIEW(view), to);
+  g_object_set_data(G_OBJECT(view), "mkc-home", NULL);
+  return G_SOURCE_REMOVE;
+}
+
+/* MyAnimeList sign-in opens in the window on purpose (it can only send people back to mkcinema.pages.dev). */
+static gboolean sign_in_host(const char *h) { return h && (!g_ascii_strcasecmp(h, "myanimelist.net") || g_str_has_suffix(h, ".myanimelist.net")); }
+
+/* Top-level page loads: MKCinema pages and a sign-in hop stay in the window; any other site opens in the browser
+   instead and the current page stays. (Load events are only sent for the window's main page, never for frames.) */
+static gboolean in_app = TRUE;
+static void on_load(WebKitWebView *v, WebKitLoadEvent ev, gpointer x) {
+  const char *uri = webkit_web_view_get_uri(v);
+  if (ev == WEBKIT_LOAD_COMMITTED) { page_is_ours = app_page(uri); return; }
+  if (ev != WEBKIT_LOAD_STARTED && ev != WEBKIT_LOAD_REDIRECTED) return;
+  if (!uri || !(g_str_has_prefix(uri, "http:") || g_str_has_prefix(uri, "https:"))) return;
+  g_autoptr(GUri) u = g_uri_parse(uri, G_URI_FLAGS_NONE, NULL);
+  const char *h = u ? g_uri_get_host(u) : NULL;
+  if (app_host(h)) {
+    in_app = TRUE;
+    if (g_ascii_strcasecmp(h, HOST)) { /* app.mkcinema.app links open on the app's own origin, where the user is signed in */
+      webkit_web_view_stop_loading(v);
+      g_object_set_data_full(G_OBJECT(v), "mkc-home", at_home(u), g_free);
+      g_idle_add(load_home_later, v);
+    }
+    return;
+  }
+  if (ev == WEBKIT_LOAD_REDIRECTED || !in_app || sign_in_host(h)) { in_app = FALSE; return; }
+  webkit_web_view_stop_loading(v);
+  open_external(uri);
 }
 
 /* MKCinema pages stay in the window; players (vlc:// and similar), stores and other sites open in their own apps. */
@@ -137,7 +210,7 @@ static gboolean on_policy(WebKitWebView *v, WebKitPolicyDecision *d, WebKitPolic
   if (!uri) return FALSE;
   gboolean web = g_str_has_prefix(uri, "http:") || g_str_has_prefix(uri, "https:");
   if (t == WEBKIT_POLICY_DECISION_TYPE_NEW_WINDOW_ACTION || !web) {
-    if (is_ours(uri) && t == WEBKIT_POLICY_DECISION_TYPE_NEW_WINDOW_ACTION) webkit_web_view_load_uri(v, uri);
+    if (is_ours(uri) && t == WEBKIT_POLICY_DECISION_TYPE_NEW_WINDOW_ACTION) webkit_web_view_load_uri(v, uri); /* on_load moves app.mkcinema.app to HOME */
     else if (!is_ours(uri)) open_external(uri);
     webkit_policy_decision_ignore(d);
     return TRUE;
@@ -146,7 +219,8 @@ static gboolean on_policy(WebKitWebView *v, WebKitPolicyDecision *d, WebKitPolic
 }
 
 static gboolean on_permission(WebKitWebView *v, WebKitPermissionRequest *r, gpointer x) {
-  if (WEBKIT_IS_USER_MEDIA_PERMISSION_REQUEST(r) && webkit_user_media_permission_is_for_audio_device(WEBKIT_USER_MEDIA_PERMISSION_REQUEST(r))
+  /* voice search: the microphone only for MKCinema's own page */
+  if (WEBKIT_IS_USER_MEDIA_PERMISSION_REQUEST(r) && page_is_ours && webkit_user_media_permission_is_for_audio_device(WEBKIT_USER_MEDIA_PERMISSION_REQUEST(r))
       && !webkit_user_media_permission_is_for_video_device(WEBKIT_USER_MEDIA_PERMISSION_REQUEST(r))) webkit_permission_request_allow(r);
   else if (WEBKIT_IS_NOTIFICATION_PERMISSION_REQUEST(r) || WEBKIT_IS_USER_MEDIA_PERMISSION_REQUEST(r)) webkit_permission_request_deny(r);
   else return FALSE;
@@ -185,8 +259,8 @@ static void activate(GtkApplication *app, gpointer x) {
   webkit_cookie_manager_set_accept_policy(cm, WEBKIT_COOKIE_POLICY_ACCEPT_ALWAYS);
 
   WebKitUserContentManager *ucm = webkit_user_content_manager_new();
-  add_desktop(ucm);
   WebKitWebView *v = WEBKIT_WEB_VIEW(g_object_new(WEBKIT_TYPE_WEB_VIEW, "web-context", ctx, "user-content-manager", ucm, NULL));
+  add_desktop(ucm, v);
   WebKitSettings *s = webkit_web_view_get_settings(v);
   webkit_settings_set_media_playback_requires_user_gesture(s, FALSE);
   webkit_settings_set_enable_fullscreen(s, TRUE);
@@ -207,6 +281,7 @@ static void activate(GtkApplication *app, gpointer x) {
   g_signal_connect(v, "decide-policy", G_CALLBACK(on_policy), NULL);
   g_signal_connect(v, "permission-request", G_CALLBACK(on_permission), NULL);
   g_signal_connect(v, "load-failed", G_CALLBACK(on_failed), NULL);
+  g_signal_connect(v, "load-changed", G_CALLBACK(on_load), NULL);
   g_signal_connect(win, "key-press-event", G_CALLBACK(on_key), v);
   webkit_web_view_load_uri(v, HOME);
   gtk_widget_show_all(win);

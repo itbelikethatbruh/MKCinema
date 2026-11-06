@@ -1,0 +1,5 @@
+# changes here need the owner's review once branch protection on main
+# has "Require review from Code Owners" turned on (Settings > Branches).
+/plugins/           @itbelikethatbruh
+/.github/           @itbelikethatbruh
+/SECURITY.md        @itbelikethatbruh

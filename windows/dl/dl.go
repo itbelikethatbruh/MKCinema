@@ -25,6 +25,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"mkcinema/origins"
 )
 
 // Item is one download. URL and Headers stay in the index (to resume) but never go back to the page.
@@ -91,6 +93,57 @@ type startReq struct {
 	Meta    json.RawMessage   `json:"meta"`
 }
 
+// VideoExt are the only file types a download is saved as or opened with: anything else is saved as .mkv,
+// so a page can never drop an .exe, .lnk, .hta or script into Videos\MKCinema or have Windows run it.
+var VideoExt = map[string]bool{".mkv": true, ".mp4": true, ".m4v": true, ".webm": true, ".avi": true, ".mov": true, ".ts": true, ".m2ts": true}
+
+// SubExt are the subtitle files saved next to a film.
+var SubExt = map[string]bool{".srt": true, ".vtt": true}
+
+// dropHeaders are request headers a page may not set on a download: hop-by-hop and connection headers, and cookies
+// (the page could otherwise replay a session against any site).
+var dropHeaders = map[string]bool{"host": true, "cookie": true, "cookie2": true, "connection": true, "keep-alive": true, "proxy-authorization": true,
+	"proxy-connection": true, "te": true, "trailer": true, "transfer-encoding": true, "upgrade": true, "range": true, "content-length": true, "expect": true}
+
+func cleanHeaders(h map[string]string) map[string]string {
+	if len(h) == 0 {
+		return nil
+	}
+	out := map[string]string{}
+	for k, v := range h {
+		lk := strings.ToLower(strings.TrimSpace(k))
+		if lk == "" || dropHeaders[lk] || strings.HasPrefix(lk, "sec-") || strings.HasPrefix(lk, "proxy-") || strings.ContainsAny(k+v, "\r\n") {
+			continue
+		}
+		out[k] = v
+	}
+	return out
+}
+
+// videoName makes a safe file name that always ends in a video extension.
+func videoName(file string) string {
+	name := safeName(file)
+	if ext := strings.ToLower(filepath.Ext(name)); !VideoExt[ext] {
+		if ext != "" && len(ext) <= 6 {
+			name = strings.TrimSpace(strings.TrimSuffix(name, filepath.Ext(name)))
+		}
+		if name == "" {
+			name = "MKCinema"
+		}
+		name += ".mkv"
+	}
+	return name
+}
+
+// inDir reports whether p sits strictly inside dir.
+func inDir(dir, p string) bool {
+	if dir == "" || p == "" {
+		return false
+	}
+	rel, err := filepath.Rel(filepath.Clean(dir), filepath.Clean(p))
+	return err == nil && rel != "." && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) && !filepath.IsAbs(rel)
+}
+
 var unsafeName = regexp.MustCompile(`[\\/:*?"<>|\x00-\x1f]+`)
 
 func safeName(n string) string {
@@ -119,11 +172,8 @@ func (m *Manager) Start(raw string) (string, error) {
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	name := safeName(r.File)
+	name := videoName(r.File)
 	ext := filepath.Ext(name)
-	if ext == "" {
-		ext, name = ".mkv", name+".mkv"
-	}
 	base := strings.TrimSuffix(name, ext)
 	p := filepath.Join(m.Dir, name)
 	for i := 2; m.taken(p) && i < 1000; i++ {
@@ -131,7 +181,7 @@ func (m *Manager) Start(raw string) (string, error) {
 	}
 	b := make([]byte, 6)
 	_, _ = rand.Read(b)
-	it := &Item{ID: hex.EncodeToString(b), URL: r.URL, Headers: r.Headers, File: filepath.Base(p), Path: p, Meta: r.Meta, Created: time.Now().UnixMilli(), State: "queued", Size: -1}
+	it := &Item{ID: hex.EncodeToString(b), URL: r.URL, Headers: cleanHeaders(r.Headers), File: filepath.Base(p), Path: p, Meta: r.Meta, Created: time.Now().UnixMilli(), State: "queued", Size: -1}
 	m.items = append(m.items, it)
 	m.saveLocked(true)
 	m.run(it)
@@ -175,7 +225,9 @@ func fetchSubs(url, base string) {
 	if strings.HasPrefix(strings.TrimPrefix(string(b[:min(len(b), 16)]), "\uFEFF"), "WEBVTT") {
 		ext = ".vtt"
 	}
-	_ = os.WriteFile(base+ext, b, 0o644)
+	if os.WriteFile(base+ext, b, 0o644) == nil {
+		MarkFromInternet(base + ext)
+	}
 }
 
 func (m *Manager) find(id string) *Item {
@@ -257,7 +309,7 @@ func (m *Manager) fetch(ctx context.Context, it *Item) error {
 	if err != nil {
 		return err
 	}
-	for k, v := range it.Headers {
+	for k, v := range cleanHeaders(it.Headers) {
 		req.Header.Set(k, v)
 	}
 	if req.Header.Get("User-Agent") == "" {
@@ -333,7 +385,11 @@ func (m *Manager) fetch(ctx context.Context, it *Item) error {
 		return io.ErrUnexpectedEOF
 	}
 	m.set(it, func() { it.Size = got })
-	return os.Rename(part, it.Path)
+	if err := os.Rename(part, it.Path); err != nil {
+		return err
+	}
+	MarkFromInternet(it.Path)
+	return nil
 }
 
 func (m *Manager) set(it *Item, f func()) {
@@ -400,6 +456,11 @@ func (m *Manager) Remove(id string) error {
 	m.items = keep
 	m.saveLocked(true)
 	m.mu.Unlock()
+	if !inDir(m.Dir, it.Path) {
+		// an index entry pointing outside the downloads folder (edited or very old): forget it, delete nothing
+		log.Printf("dl %s: not deleting %q, it is outside %q", id, it.Path, m.Dir)
+		return nil
+	}
 	go func() {
 		// let the worker close the file first (Windows can't delete an open file)
 		for i := 0; i < 20; i++ {
@@ -430,9 +491,25 @@ func (m *Manager) FilePath(id string) (string, error) {
 	return it.Path, nil
 }
 
+// MediaPath is a finished download's file when it is safe to hand to the user's own video player: a video file
+// inside the downloads folder. Anything else is refused, so "open" can never run a program.
+func (m *Manager) MediaPath(id string) (string, error) {
+	p, err := m.FilePath(id)
+	if err != nil {
+		return "", err
+	}
+	if !VideoExt[strings.ToLower(filepath.Ext(p))] || !inDir(m.Dir, p) {
+		return "", errors.New("only films in the downloads folder can be opened")
+	}
+	if st, err := os.Lstat(p); err != nil || !st.Mode().IsRegular() {
+		return "", errors.New("only films in the downloads folder can be opened")
+	}
+	return p, nil
+}
+
 // URL is where the in-app player can play a finished download.
 func (m *Manager) URL(id string) (string, error) {
-	if _, err := m.FilePath(id); err != nil {
+	if _, err := m.MediaPath(id); err != nil {
 		return "", err
 	}
 	base, err := m.serve()
@@ -457,7 +534,7 @@ func (m *Manager) serve() (string, error) {
 	tok := hex.EncodeToString(b)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/"+tok+"/f/", func(w http.ResponseWriter, r *http.Request) {
-		p, err := m.FilePath(strings.TrimPrefix(r.URL.Path, "/"+tok+"/f/"))
+		p, err := m.MediaPath(strings.TrimPrefix(r.URL.Path, "/"+tok+"/f/"))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
@@ -487,11 +564,12 @@ func (m *Manager) serve() (string, error) {
 func cors(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		o := r.Header.Get("Origin")
-		if o == "https://mkcinema.pages.dev" || strings.HasSuffix(o, ".mkcinema.pages.dev") {
+		if origins.Allowed(o) {
 			w.Header().Set("Access-Control-Allow-Origin", o)
 			w.Header().Set("Access-Control-Allow-Private-Network", "true")
 			w.Header().Set("Access-Control-Allow-Headers", "Range")
 			w.Header().Set("Access-Control-Expose-Headers", "Content-Length, Content-Range, Accept-Ranges")
+			w.Header().Add("Vary", "Origin")
 		}
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)

@@ -99,6 +99,32 @@ func (e *Chromium) OnNewWindow(fn func(uri string) bool) bool {
 	})
 }
 
+// OnNavigationStarting calls fn before the top-level page navigates (iframes don't trigger it), with the address
+// and whether the navigation is a server redirect. When fn returns false the navigation is cancelled.
+func (e *Chromium) OnNavigationStarting(fn func(uri string, redirected bool) bool) bool {
+	return e.addEvent(e.webview.vtbl.AddNavigationStarting, func(_, args uintptr) uintptr {
+		if args == 0 {
+			return 0
+		}
+		// ICoreWebView2NavigationStartingEventArgs: IUnknown(3), get_Uri, get_IsUserInitiated, get_IsRedirected,
+		// get_RequestHeaders, get_Cancel, put_Cancel, get_NavigationId
+		vt := *(*[10]uintptr)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(args))))
+		var p *uint16
+		_, _, _ = ComProc(vt[3]).Call(args, uintptr(unsafe.Pointer(&p)))
+		uri := ""
+		if p != nil {
+			uri = windows.UTF16PtrToString(p)
+			windows.CoTaskMemFree(unsafe.Pointer(p))
+		}
+		var redirected int32
+		_, _, _ = ComProc(vt[5]).Call(args, uintptr(unsafe.Pointer(&redirected)))
+		if !fn(uri, redirected != 0) {
+			_, _, _ = ComProc(vt[8]).Call(args, 1)
+		}
+		return 0
+	})
+}
+
 // OnProcessFailed calls fn with the COREWEBVIEW2_PROCESS_FAILED_KIND
 // (0 browser exited, 1 page renderer exited, 2 page unresponsive, ...).
 func (e *Chromium) OnProcessFailed(fn func(kind int32)) bool {

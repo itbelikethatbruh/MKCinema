@@ -32,3 +32,19 @@ The exe is not code-signed, so Windows SmartScreen shows "Windows protected your
 They resume after a dropped connection or a restart while the link still allows it. Finished files are served to the
 in-app player on 127.0.0.1 with a random token, and "Open in my player" hands the file to Windows' default video app.
 Subtitles are saved next to the film as .srt or .vtt, so VLC picks them up.
+
+## 1.3.1
+
+- Torrent engine (`p2p/`, also `mkp2p` on Android, Mac and Linux): each torrent lives in its own `p2p/<info hash>`
+  folder, and cleanup only ever removes those folders.
+- The bound functions (`mkP2P`, `mkPresence`, `mkDL`) and `window.MKDesktop` are available on
+  https://mkcinema.pages.dev and https://app.mkcinema.app, and run off the window's thread so a slow call can't
+  freeze it. Other sites open in the default browser (the MyAnimeList sign-in still opens in the window), and
+  app.mkcinema.app links open on mkcinema.pages.dev, where the user is signed in.
+- Downloads are saved as video files (.mkv .mp4 .m4v .webm .avi .mov .ts .m2ts; anything else becomes .mkv).
+  "Open in my player" opens finished films from the downloads folder.
+- The local p2p and download servers answer the two app hosts, plus http://localhost and http://127.0.0.1 for testing.
+- Discord status accepts the page's fractional timestamps (it used to fail while a film played).
+
+`go vet ./...` and `go test ./...` run on Linux too (the Windows-only files are build-tagged; `origins/`, `p2p/`,
+`dl/` and the Discord status parsing have tests).

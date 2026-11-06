@@ -9,3 +9,7 @@ node_modules/
 
 # 1.7.0: ExoPlayer/Guava jars, downloaded by android/libs/fetch.sh
 android/libs/*.jar
+**/password.txt
+**/keystore/
+*.p12
+*.key

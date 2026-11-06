@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mkcinema.app" android:versionCode="18" android:versionName="1.7.0">
+    package="com.mkcinema.app" android:versionCode="20" android:versionName="1.8.1">
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <!-- 1.5.0 new-episode notifications: post them (Android 13+ asks), and keep the twice-daily check after a reboot -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
@@ -35,7 +37,7 @@
          monogram-and-wordmark tile. Fire OS draws sideloaded apps' icons in a square box on a grey tile; the 16:9 banner
          used from 1.2.3 was squeezed into that square. The 16:9 banner stays as android:banner for Android TV / Google TV. -->
     <application android:label="MKCinema" android:icon="@drawable/ic_launcher"
-        android:banner="@drawable/banner" android:theme="@style/Noir" android:hardwareAccelerated="true" android:allowBackup="false" android:supportsRtl="true" android:usesCleartextTraffic="true" android:extractNativeLibs="true" android:largeHeap="true">
+        android:banner="@drawable/banner" android:theme="@style/Noir" android:hardwareAccelerated="true" android:allowBackup="false" android:supportsRtl="true" android:networkSecurityConfig="@xml/network_security_config" android:extractNativeLibs="true" android:largeHeap="true">
         <activity android:name=".MainActivity" android:exported="true" android:icon="@drawable/ic_launcher" android:banner="@drawable/banner" android:launchMode="singleTask"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|uiMode|density"
             android:supportsPictureInPicture="true" android:resizeableActivity="true"
@@ -50,6 +52,15 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="https" android:host="mkcinema.pages.dev"/>
+                <!-- 1.8.1: the web app's public home (shared links), opened on mkcinema.pages.dev where the sign-in lives -->
+                <data android:scheme="https" android:host="app.mkcinema.app"/>
+            </intent-filter>
+            <!-- 1.8.1: mkcinema.app's front page only (its /download links keep opening in the browser) -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="mkcinema.app" android:path="/"/>
             </intent-filter>
             <!-- 1.2.8: an addon setup page's Install button (stremio://...manifest.json) opens MKCinema, which asks before installing -->
             <intent-filter>
@@ -63,6 +74,9 @@
         <activity android:name=".PlayerActivity" android:exported="false" android:theme="@style/Noir"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|uiMode|density"/>
         <!-- 1.5.0: twice-daily check for new episodes of the series you follow (no server; see EpisodeAlerts.java) -->
+        <service android:name=".DlService" android:exported="false" android:foregroundServiceType="dataSync"/>
+        <!-- 1.8.1: the checked update APK, handed to the system installer (see UpdateFiles.java) -->
+        <provider android:name=".UpdateFiles" android:authorities="com.mkcinema.app.update" android:exported="false" android:grantUriPermissions="true"/>
         <service android:name=".EpisodeAlerts" android:exported="false" android:permission="android.permission.BIND_JOB_SERVICE"/>
     </application>
 </manifest>

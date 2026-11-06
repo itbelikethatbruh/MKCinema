@@ -17,6 +17,7 @@ html,body{margin:0;height:100%;background:#000;color:#f2f2f3;font:28px system-ui
 <!-- MKCinema for LG webOS: opens the web app full screen. -->
 <div id="off"><div><h1>You're offline</h1><p>MKCinema needs a connection to load. Check your network, then try again.</p><button id="retry">Try again</button></div></div>
 <script>
+// The TV's saved sign-in and settings live on this origin; app.mkcinema.app is the same app at its public address.
 var HOME = 'https://mkcinema.pages.dev/';
 function go() {
   if (navigator.onLine === false) {
@@ -29,7 +30,14 @@ function go() {
 document.getElementById('retry').onclick = go;
 document.addEventListener('keydown', function (e) {
   if (e.keyCode === 13) go();
-  if (e.keyCode === 461 && window.webOS && webOS.platformBack) webOS.platformBack();
+  // Back on the offline screen closes the app. webOSSystem is built into the TV's web engine; webOS.platformBack
+  // only exists when webOSTV.js is loaded, which this launcher doesn't need.
+  if (e.keyCode === 461) {
+    e.preventDefault();
+    if (window.webOSSystem && webOSSystem.close) webOSSystem.close();
+    else if (window.webOS && webOS.platformBack) webOS.platformBack();
+    else window.close();
+  }
 });
 go();
 </script>

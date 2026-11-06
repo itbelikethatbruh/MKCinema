@@ -3,6 +3,10 @@
 // It is off until the user switches it on in Settings, listens on 127.0.0.1 with a random port and a random
 // token in every path, never uploads (NoUpload, no seeding, no port forwarding), keeps at most two torrents,
 // and deletes everything it downloaded when it stops.
+//
+// Each torrent is stored in its own folder named after its info hash (<dataDir>/p2p/<40 hex>), and the engine only
+// ever deletes folders it built from a hash. Names inside a torrent's metadata are never used to pick what to delete
+// (a torrent named "../../.." used to make it delete the user's home folder).
 package p2p
 
 import (
@@ -17,6 +21,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -25,11 +30,15 @@ import (
 
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/metainfo"
+	"github.com/anacrolix/torrent/storage"
+
+	"mkcinema/origins"
 )
 
 type Engine struct {
 	Base  string // http://127.0.0.1:PORT/TOKEN
 	cl    *torrent.Client
+	store storage.ClientImplCloser
 	srv   *http.Server
 	dir   string
 	token string
@@ -57,13 +66,23 @@ func StartOpts(dataDir string, o Options) (*Engine, error) {
 	if o.Keep <= 0 {
 		o.Keep = 2
 	}
-	dir := filepath.Join(dataDir, "p2p")
+	if dataDir == "" {
+		return nil, errors.New("no cache folder")
+	}
+	abs, err := filepath.Abs(dataDir)
+	if err != nil {
+		return nil, err
+	}
+	// The cache is always the fixed "p2p" folder inside the data folder, so this wipe can't reach anything else.
+	dir := filepath.Join(abs, "p2p")
 	_ = os.RemoveAll(dir)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, err
 	}
+	store := newStorage(dir)
 	cfg := torrent.NewDefaultClientConfig()
 	cfg.DataDir = dir
+	cfg.DefaultStorage = store
 	cfg.NoUpload = true
 	cfg.Seed = false
 	cfg.NoDefaultPortForwarding = true
@@ -78,18 +97,20 @@ func StartOpts(dataDir string, o Options) (*Engine, error) {
 		log.Printf("p2p: %v, retrying without IPv6", err)
 		cfg.DisableIPv6 = true
 		if cl, err = torrent.NewClient(cfg); err != nil {
+			_ = store.Close()
 			return nil, err
 		}
 	}
 	b := make([]byte, 16)
 	_, _ = rand.Read(b)
-	e := &Engine{cl: cl, dir: dir, token: hex.EncodeToString(b), opt: o, done: make(chan struct{})}
+	e := &Engine{cl: cl, store: store, dir: dir, token: hex.EncodeToString(b), opt: o, done: make(chan struct{})}
 	if o.Reserve > 0 {
 		go e.watchSpace()
 	}
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		cl.Close()
+		_ = store.Close()
 		return nil, err
 	}
 	mux := http.NewServeMux()
@@ -119,20 +140,23 @@ func (e *Engine) Close() {
 			log.Printf("p2p: close: %v", err)
 		}
 	}
+	if e.store != nil {
+		_ = e.store.Close()
+	}
 	_ = os.RemoveAll(e.dir)
 	log.Printf("p2p: engine stopped, cache removed")
 }
 
-// cors lets the app page (https://mkcinema.pages.dev) reach this local server, including Chrome's
-// private network access preflight.
+// cors lets the app page reach this local server, including Chrome's private network access preflight.
 func cors(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		o := r.Header.Get("Origin")
-		if o == "https://mkcinema.pages.dev" || strings.HasSuffix(o, ".mkcinema.pages.dev") || strings.HasPrefix(o, "http://localhost") || strings.HasPrefix(o, "http://127.0.0.1") {
+		if origins.Allowed(o) {
 			w.Header().Set("Access-Control-Allow-Origin", o)
 			w.Header().Set("Access-Control-Allow-Private-Network", "true")
 			w.Header().Set("Access-Control-Allow-Headers", "Range")
 			w.Header().Set("Access-Control-Expose-Headers", "Content-Length, Content-Range, Accept-Ranges")
+			w.Header().Add("Vary", "Origin")
 		}
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
@@ -172,7 +196,106 @@ func (e *Engine) add(r *http.Request) (*torrent.Torrent, error) {
 	case <-r.Context().Done():
 		return nil, r.Context().Err()
 	}
+	if !safeInfo(t.Info()) {
+		e.drop(h)
+		return nil, errors.New("this torrent has unsafe file names")
+	}
 	return t, nil
+}
+
+// safeInfo refuses torrents whose name or file paths try to climb out of their folder. Storage already keeps every
+// file inside the torrent's own folder; this drops such torrents before anything is written.
+func safeInfo(i *metainfo.Info) bool {
+	if i == nil {
+		return false
+	}
+	bad := func(p string) bool {
+		return p == "." || p == ".." || strings.ContainsAny(p, "/\\\x00") || filepath.IsAbs(p) || filepath.VolumeName(p) != "" ||
+			(runtime.GOOS == "windows" && strings.ContainsRune(p, ':')) // drive letters and NTFS streams
+	}
+	// the torrent's own name (both spellings a torrent may carry); an empty name is fine, storage doesn't use it
+	for _, n := range []string{i.Name, i.NameUtf8} {
+		if n != "" && bad(n) {
+			return false
+		}
+	}
+	for _, f := range i.UpvertedFiles() {
+		for _, p := range f.BestPath() {
+			if bad(p) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// newStorage keeps each torrent in <dir>/<info hash>. File paths inside that folder come from the torrent but are
+// checked by the storage to stay inside it; a single-file torrent is stored as <dir>/<hash>/data.
+func newStorage(dir string) storage.ClientImplCloser {
+	pc, err := storage.NewDefaultPieceCompletionForDir(dir)
+	if err != nil {
+		log.Printf("p2p: piece completion: %v, keeping it in memory", err)
+		pc = storage.NewMapPieceCompletion()
+	}
+	return storage.NewFileOpts(storage.NewFileClientOpts{
+		ClientBaseDir: dir,
+		TorrentDirMaker: func(base string, _ *metainfo.Info, h metainfo.Hash) string {
+			return filepath.Join(base, h.HexString())
+		},
+		FilePathMaker: func(o storage.FilePathMakerOpts) string {
+			parts := o.File.BestPath()
+			if len(parts) == 0 {
+				return "data"
+			}
+			return filepath.Join(parts...)
+		},
+		PieceCompletion: pc,
+	})
+}
+
+// hashDir is the only kind of path the engine deletes: <e.dir>/<40 hex characters>, checked to sit directly
+// inside e.dir. It returns "" when the check fails.
+func (e *Engine) hashDir(h metainfo.Hash) string {
+	name := h.HexString()
+	if len(name) != 40 || strings.Trim(name, "0123456789abcdef") != "" {
+		return ""
+	}
+	p := filepath.Join(e.dir, name)
+	if !inside(e.dir, p) {
+		return ""
+	}
+	return p
+}
+
+// inside reports whether p is strictly inside dir (not dir itself, not above it).
+func inside(dir, p string) bool {
+	rel, err := filepath.Rel(filepath.Clean(dir), filepath.Clean(p))
+	if err != nil || rel == "." || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) || filepath.IsAbs(rel) {
+		return false
+	}
+	return true
+}
+
+// drop forgets a torrent and deletes its folder.
+func (e *Engine) drop(h metainfo.Hash) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	for i, x := range e.order {
+		if x == h {
+			e.order = append(e.order[:i], e.order[i+1:]...)
+			break
+		}
+	}
+	e.dropLocked(h)
+}
+
+func (e *Engine) dropLocked(h metainfo.Hash) {
+	if t, ok := e.cl.Torrent(h); ok {
+		t.Drop()
+	}
+	if p := e.hashDir(h); p != "" {
+		_ = os.RemoveAll(p)
+	}
 }
 
 // remember keeps the two most recent torrents and drops (and deletes) older ones.
@@ -183,16 +306,7 @@ func (e *Engine) remember(h metainfo.Hash) {
 	for len(e.order) > e.opt.Keep {
 		old := e.order[len(e.order)-1]
 		e.order = e.order[:len(e.order)-1]
-		if t, ok := e.cl.Torrent(old); ok {
-			name := ""
-			if t.Info() != nil {
-				name = t.Info().BestName()
-			}
-			t.Drop()
-			if name != "" {
-				_ = os.RemoveAll(filepath.Join(e.dir, filepath.Clean(name)))
-			}
-		}
+		e.dropLocked(old)
 	}
 }
 
@@ -288,13 +402,16 @@ func (e *Engine) watchSpace() {
 					t.Drop()
 				}
 			}
+			hs := e.order
 			e.order = nil
-			go func(dir string) {
-				ents, _ := os.ReadDir(dir)
-				for _, x := range ents {
-					_ = os.RemoveAll(filepath.Join(dir, x.Name()))
+			// delete only the torrents' own hash folders (the piece-completion database stays)
+			go func(hs []metainfo.Hash) {
+				for _, h := range hs {
+					if p := e.hashDir(h); p != "" {
+						_ = os.RemoveAll(p)
+					}
 				}
-			}(e.dir)
+			}(hs)
 			log.Printf("p2p: storage nearly full (%d bytes free), dropped torrents", free)
 		} else if free > e.opt.Reserve*2 {
 			e.full = false

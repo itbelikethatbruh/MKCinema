@@ -1,3 +1,5 @@
+//go:build windows
+
 package main
 
 // Desktop-only extras the web app can use through window.MKDesktop:
@@ -84,7 +86,7 @@ func mkDL(cmd, arg string) (string, error) {
 	case "url":
 		return m.URL(arg)
 	case "open":
-		p, err := m.FilePath(arg)
+		p, err := m.MediaPath(arg) // only a finished film inside the downloads folder, never a program
 		if err != nil {
 			return "", err
 		}
@@ -110,8 +112,9 @@ func mkPresence(raw string) (bool, error) {
 		presenceClear()
 		return true, nil
 	}
-	var a activity
-	if err := json.Unmarshal([]byte(raw), &a); err != nil {
+	a, err := parseActivity(raw)
+	if err != nil {
+		log.Printf("discord: %v", err)
 		return false, err
 	}
 	return presenceSet(a), nil
@@ -119,7 +122,7 @@ func mkPresence(raw string) (bool, error) {
 
 func desktopInit() string {
 	b, _ := json.Marshal(map[string]any{"platform": "windows", "version": version, "presence": discordAppID != ""})
-	return `(function(){var d=` + string(b) + `;
+	return `(function(){if(!(` + pageGuardJS + `))return;var d=` + string(b) + `;
 d.p2p={start:function(){return window.mkP2P('start')},stop:function(){return window.mkP2P('stop')}};
 if(d.presence)d.setPresence=function(a){return window.mkPresence(a?JSON.stringify(a):'')};
 d.dl={start:function(o){return window.mkDL('start',JSON.stringify(o))},list:function(){return window.mkDL('list','').then(function(s){return JSON.parse(s||'[]')})},
