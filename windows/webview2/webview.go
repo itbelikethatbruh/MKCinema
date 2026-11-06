@@ -56,6 +56,9 @@ type webview struct {
 	m          sync.Mutex
 	bindings   map[string]interface{}
 	dispatchq  []func()
+	allow      func(source string) bool
+	guard      string
+	async      bool
 }
 
 type WindowOptions struct {
@@ -93,6 +96,14 @@ type WebViewOptions struct {
 	// WindowOptions customizes the window that is created to embed the
 	// WebView2 widget.
 	WindowOptions WindowOptions
+
+	// MKCinema: AllowSource, when set, gets the address of the top-level page behind every bound-function call;
+	// calls from pages it refuses are rejected without running any Go code.
+	AllowSource func(source string) bool
+	// MKCinema: BindGuard is a JavaScript expression; bound functions are only defined in documents where it is true.
+	BindGuard string
+	// MKCinema: AsyncBindings runs bound Go functions off the window's thread, so a slow call can't freeze the window.
+	AsyncBindings bool
 }
 
 // New creates a new webview in a new window.
@@ -113,6 +124,10 @@ func NewWithOptions(options WebViewOptions) WebView {
 
 	chromium := edge.NewChromium()
 	chromium.MessageCallback = w.msgcb
+	w.allow, w.guard, w.async = options.AllowSource, options.BindGuard, options.AsyncBindings
+	if w.allow != nil {
+		chromium.MessageSourceCallback = w.msgcbFrom
+	}
 	chromium.DataPath = options.DataPath
 	chromium.SetPermission(edge.CoreWebView2PermissionKindClipboardRead, edge.CoreWebView2PermissionStateAllow)
 
@@ -147,14 +162,45 @@ type rpcMessage struct {
 
 func jsString(v interface{}) string { b, _ := json.Marshal(v); return string(b) }
 
+// msgcbFrom checks which page sent a call before running it.
+func (w *webview) msgcbFrom(source, msg string) {
+	if w.allow != nil && !w.allow(source) {
+		d := rpcMessage{}
+		if json.Unmarshal([]byte(msg), &d) == nil && d.ID > 0 {
+			id := strconv.Itoa(d.ID)
+			w.Dispatch(func() {
+				w.Eval("window._rpc&&window._rpc[" + id + "]&&(window._rpc[" + id + "].reject('not allowed on this page'),window._rpc[" + id + "]=undefined)")
+			})
+		}
+		log.Printf("refused a bound call from %q", source)
+		return
+	}
+	w.msgcb(msg)
+}
+
 func (w *webview) msgcb(msg string) {
 	d := rpcMessage{}
 	if err := json.Unmarshal([]byte(msg), &d); err != nil {
 		log.Printf("invalid RPC message: %v", err)
 		return
 	}
+	if w.async {
+		go w.answer(d)
+		return
+	}
+	w.answer(d)
+}
 
+func (w *webview) answer(d rpcMessage) {
 	id := strconv.Itoa(d.ID)
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("bound call %q panicked: %v", d.Method, r)
+			w.Dispatch(func() {
+				w.Eval("window._rpc[" + id + "]&&(window._rpc[" + id + "].reject('internal error'),window._rpc[" + id + "]=undefined)")
+			})
+		}
+	}()
 	if res, err := w.callbinding(d); err != nil {
 		w.Dispatch(func() {
 			w.Eval("window._rpc[" + id + "].reject(" + jsString(err.Error()) + "); window._rpc[" + id + "] = undefined")
@@ -493,7 +539,11 @@ func (w *webview) Bind(name string, f interface{}) error {
 	w.bindings[name] = f
 	w.m.Unlock()
 
-	w.Init("(function() { var name = " + jsString(name) + ";" + `
+	guard := ""
+	if w.guard != "" {
+		guard = "if(!(" + w.guard + "))return;"
+	}
+	w.Init("(function() { " + guard + "var name = " + jsString(name) + ";" + `
 		var RPC = window._rpc = (window._rpc || {nextSeq: 1});
 		window[name] = function() {
 		  var seq = RPC.nextSeq++;

@@ -1,7 +1,9 @@
 # MKCinema plugins and themes
 
 This folder is the gallery shown in **Settings › Plugins & themes**. The app only installs files listed in
-`registry.json`, from this folder, and checks each file's SHA-256 before running it.
+`registry.json`, from this folder, and checks each file's SHA-256 before running it. `registry.json` itself is
+signed (`registry.json.sig`, Ed25519); the app checks that signature against the public key built into it
+(`registry-signing.pub` here) and refuses a list that was changed without being signed again.
 
 - `themes/*.css`: a stylesheet added after MKCinema's own styles.
 - `scripts/*.js`: a plugin. It runs with one argument, `MK`:
@@ -12,5 +14,6 @@ This folder is the gallery shown in **Settings › Plugins & themes**. The app o
 ## Submitting one
 
 Open a pull request that adds your file and its entry in `registry.json` (run `python3 build_registry.py`, which
-fills in the checksums). Plugins can read everything the app can, so every submission is reviewed line by line
+fills in the checksums). Don't touch `registry.json.sig`: after the merge, the "Plugin gallery" workflow signs the
+new list once the maintainer approves the run (`sign_registry.py` does the same by hand, with the private key). Plugins can read everything the app can, so every submission is reviewed line by line
 before it is merged. No trackers, no remote code loading, no network calls except to the service the plugin is about.

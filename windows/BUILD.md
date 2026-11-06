@@ -32,3 +32,23 @@ The exe is not code-signed, so Windows SmartScreen shows "Windows protected your
 They resume after a dropped connection or a restart while the link still allows it. Finished files are served to the
 in-app player on 127.0.0.1 with a random token, and "Open in my player" hands the file to Windows' default video app.
 Subtitles are saved next to the film as .srt or .vtt, so VLC picks them up.
+
+## 1.3.1: security fixes (audit 2.37.0)
+
+- Torrent engine (`p2p/`, also `mkp2p` on Android, Mac and Linux): each torrent lives in `p2p/<info hash>` and only
+  those hash folders are ever deleted, so a torrent's own name can't point a delete outside the cache. Torrents whose
+  names or file paths try to leave their folder are dropped. `go test ./p2p` covers a torrent named `../../..`.
+- The bound functions (`mkP2P`, `mkPresence`, `mkDL`) and `window.MKDesktop` exist and answer only on
+  https://mkcinema.pages.dev and https://app.mkcinema.app (the page address behind every call is checked), and they
+  run off the window's thread. The window itself stays on MKCinema: other sites open in the default browser (the
+  MyAnimeList sign-in still opens in the window), and app.mkcinema.app links open on mkcinema.pages.dev, where the
+  user is signed in.
+- Downloads are always saved as video files (.mkv .mp4 .m4v .webm .avi .mov .ts .m2ts; anything else becomes .mkv)
+  with the Mark of the Web (Zone.Identifier, Internet zone). "Open in my player" opens only finished films inside the
+  downloads folder. Cookie, Host and connection headers from the page are dropped.
+- The local p2p and download servers answer only exact origins (the two app hosts, and http://localhost or
+  http://127.0.0.1 for testing); Pages preview branches and look-alike hosts are refused.
+- Discord status accepts the page's fractional timestamps (it used to fail while a film played).
+
+`go vet ./...` and `go test ./...` run on Linux too (the Windows-only files are build-tagged; `origins/`, `p2p/`,
+`dl/` and the Discord status parsing have tests).

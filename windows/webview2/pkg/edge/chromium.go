@@ -38,7 +38,10 @@ type Chromium struct {
 	globalPermission *CoreWebView2PermissionState
 
 	// Callbacks
-	MessageCallback              func(string)
+	MessageCallback func(string)
+	// MessageSourceCallback, when set, is used instead of MessageCallback and also gets the address of the top-level
+	// document that sent the message (MKCinema checks it before running a bound Go function).
+	MessageSourceCallback        func(source, message string)
 	WebResourceRequestedCallback func(request *ICoreWebView2WebResourceRequest, args *ICoreWebView2WebResourceRequestedEventArgs)
 	NavigationCompletedCallback  func(sender *ICoreWebView2, args *ICoreWebView2NavigationCompletedEventArgs)
 	AcceleratorKeyCallback       func(uint) bool
@@ -262,6 +265,22 @@ func (e *Chromium) MessageReceived(sender *ICoreWebView2, args *iCoreWebView2Web
 		uintptr(unsafe.Pointer(args)),
 		uintptr(unsafe.Pointer(&message)),
 	)
+	if e.MessageSourceCallback != nil {
+		var src *uint16
+		_, _, _ = args.vtbl.GetSource.Call(
+			uintptr(unsafe.Pointer(args)),
+			uintptr(unsafe.Pointer(&src)),
+		)
+		source := ""
+		if src != nil {
+			source = w32.Utf16PtrToString(src)
+			windows.CoTaskMemFree(unsafe.Pointer(src))
+		}
+		// MKCinema: the message is not echoed back to the page (nothing listens for it).
+		e.MessageSourceCallback(source, w32.Utf16PtrToString(message))
+		windows.CoTaskMemFree(unsafe.Pointer(message))
+		return 0
+	}
 	if e.MessageCallback != nil {
 		e.MessageCallback(w32.Utf16PtrToString(message))
 	}

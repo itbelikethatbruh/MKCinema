@@ -8,6 +8,7 @@ for a in exoplayer common datasource decoder extractor container database exopla
   [ -f media3-$a-1.8.0.jar ] && continue
   curl -sSfL -o x.aar $G/media3-$a/1.8.0/media3-$a-1.8.0.aar && unzip -p x.aar classes.jar > media3-$a-1.8.0.jar && rm x.aar
 done
+[ -f webkit-1.12.1.jar ] || { curl -sSfL -o x.aar https://dl.google.com/android/maven2/androidx/webkit/webkit/1.12.1/webkit-1.12.1.aar && unzip -p x.aar classes.jar > webkit-1.12.1.jar && rm x.aar; }  # 1.8.1: document-start script for the bridge key
 [ -f collection-1.2.0.jar ] || curl -sSfL -o collection-1.2.0.jar https://dl.google.com/android/maven2/androidx/collection/collection/1.2.0/collection-1.2.0.jar  # ExoPlayer's async MediaCodec queue (Android 12+)
 [ -f guava-33.3.1-android.jar ] || curl -sSfL -o guava-33.3.1-android.jar $M/guava/33.3.1-android/guava-33.3.1-android.jar
 [ -f failureaccess-1.0.2.jar ] || curl -sSfL -o failureaccess-1.0.2.jar $M/failureaccess/1.0.2/failureaccess-1.0.2.jar

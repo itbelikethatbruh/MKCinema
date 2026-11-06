@@ -39,7 +39,7 @@ import java.util.Map;
     TV can't decode, sends request headers on every request, and keeps the buffer inside the app's memory budget. */
 class ExoEngine implements Engine {
     final Context ctx; final Listener l; final Handler h = new Handler(Looper.getMainLooper());
-    ExoPlayer p; MediaItem item; String url; File subs; boolean everReady, fpsSent; int retries;
+    ExoPlayer p; MediaItem item; String url; File subs; boolean everReady, fpsSent, slow; int retries;
 
     ExoEngine(Context ctx, Listener l) { this.ctx = ctx; this.l = l; }
     public String name() { return "exo"; }
@@ -76,7 +76,8 @@ class ExoEngine implements Engine {
             DefaultTrackSelector.Parameters.Builder pb = ts.buildUponParameters();
             if (audioLang != null && !audioLang.isEmpty() && !"any".equals(audioLang)) pb.setPreferredAudioLanguage(audioLang);
             ts.setParameters(pb.build());
-            DefaultLoadControl lc = new DefaultLoadControl.Builder().setBufferDurationsMs(15000, 50000, 2500, 5000)
+            // 1.8.0 Slow internet mode: keep 1 to 4 minutes ready, start after 10 s and wait for 20 s after a stall, so it stops less often
+            DefaultLoadControl lc = new DefaultLoadControl.Builder().setBufferDurationsMs(slow ? 60000 : 15000, slow ? 240000 : 50000, slow ? 10000 : 2500, slow ? 20000 : 5000)
                 .setTargetBufferBytes((int) bufferBytes()).setPrioritizeTimeOverSizeThresholds(false).build();
             p = new ExoPlayer.Builder(ctx, rf).setTrackSelector(ts).setLoadControl(lc).setMediaSourceFactory(msf).build();
             p.setAudioAttributes(new AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build(), true);

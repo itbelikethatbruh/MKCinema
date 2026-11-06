@@ -1,5 +1,8 @@
 // MKCinema for Windows: the MKCinema web app in its own window, using the
 // Microsoft Edge WebView2 runtime that ships with Windows 10 and 11.
+
+//go:build windows
+
 package main
 
 import (
@@ -10,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -19,12 +23,13 @@ import (
 	"github.com/jchv/go-webview2/pkg/edge"
 	"github.com/jchv/go-webview2/webviewloader"
 	"golang.org/x/sys/windows"
+
+	"mkcinema/origins"
 )
 
 const (
-	version     = "1.3.0"
-	home        = "https://mkcinema.pages.dev/"
-	appHost     = "mkcinema.pages.dev"
+	version     = "1.3.1"
+	home        = "https://mkcinema.pages.dev/" // origins.Hosts[0]: the saved sign-in and settings live on this origin
 	title       = "MKCinema"
 	runtimeLink = "https://go.microsoft.com/fwlink/p/?LinkId=2124703"
 )
@@ -123,6 +128,11 @@ func main() {
 	w := webview2.NewWithOptions(webview2.WebViewOptions{
 		AutoFocus: true,
 		DataPath:  dataDir,
+		// Bound Go functions (mkP2P, mkPresence, mkDL) exist and answer only on MKCinema's own pages (SEC-N-02,
+		// TR-NAT-07), and run off the window's thread so a slow call can't freeze it.
+		AllowSource:   origins.AppURL,
+		BindGuard:     pageGuardJS,
+		AsyncBindings: true,
 		WindowOptions: webview2.WindowOptions{
 			Title:  title,
 			Width:  uint(width),
@@ -148,7 +158,7 @@ func main() {
 	w.SetSize(minW, minH, webview2.HintMin)
 
 	if c := w.(interface{ Chromium() *edge.Chromium }).Chromium(); c != nil {
-		setupBrowser(c, hwnd)
+		setupBrowser(c, hwnd, w.Dispatch)
 	}
 
 	_ = w.Bind("mkP2P", mkP2P)
@@ -165,7 +175,7 @@ func main() {
 }
 
 // setupBrowser wires up video fullscreen, F11, outside links and crash recovery.
-func setupBrowser(c *edge.Chromium, hwnd uintptr) {
+func setupBrowser(c *edge.Chromium, hwnd uintptr, later func(func())) {
 	if ctl := c.GetController(); ctl != nil {
 		if c2 := ctl.GetICoreWebView2Controller2(); c2 != nil {
 			_ = c2.PutDefaultBackgroundColor(edge.COREWEBVIEW2_COLOR{A: 255})
@@ -202,8 +212,8 @@ func setupBrowser(c *edge.Chromium, hwnd uintptr) {
 		}
 		switch strings.ToLower(u.Scheme) {
 		case "http", "https":
-			if strings.EqualFold(u.Hostname(), appHost) {
-				c.Navigate(uri)
+			if origins.AppHost(u.Hostname()) {
+				c.Navigate(atHome(u))
 				return true
 			}
 			openExternal(uri)
@@ -213,6 +223,39 @@ func setupBrowser(c *edge.Chromium, hwnd uintptr) {
 			return true
 		}
 		return false // other schemes (external players) keep WebView2's own handling and prompt
+	})
+
+	// The window itself only shows MKCinema. Other sites the page tries to open in place go to the default browser,
+	// except sign-in pages the app sends people to on purpose (MyAnimeList) and the redirects that follow them.
+	inApp := true
+	c.OnNavigationStarting(func(uri string, redirected bool) bool {
+		u, err := url.Parse(uri)
+		if err != nil {
+			return false
+		}
+		switch strings.ToLower(u.Scheme) {
+		case "http", "https":
+		default:
+			return true // about:, data:, blob: and player hand-offs keep WebView2's own handling
+		}
+		host := strings.ToLower(u.Hostname())
+		if origins.AppHost(host) {
+			if hh, _ := url.Parse(home); host != hh.Hostname() || !strings.EqualFold(u.Scheme, "https") {
+				to := atHome(u)
+				// app.mkcinema.app links open on the installed app's own origin, where the user is signed in
+				later(func() { c.Navigate(to) })
+				return false
+			}
+			inApp = true
+			return true
+		}
+		if redirected || !inApp || signInHost(host) {
+			inApp = false
+			return true
+		}
+		log.Printf("opening %s in the browser", u.Host)
+		openExternal(uri)
+		return false
 	})
 
 	c.OnProcessFailed(func(kind int32) {
@@ -454,7 +497,31 @@ func darkTitleBar(hwnd uintptr) {
 	}
 }
 
+// pageGuardJS is true only on MKCinema's own https pages; the bridge scripts do nothing anywhere else.
+const pageGuardJS = `location.protocol==='https:'&&/^(mkcinema\.pages\.dev|app\.mkcinema\.app)$/.test(location.hostname)`
+
+// atHome moves an address on any of the app's hosts to the home host over https, keeping path, query and #link.
+func atHome(u *url.URL) string {
+	h, _ := url.Parse(home)
+	v := *u
+	v.Scheme, v.Host, v.User = "https", h.Host, nil
+	return v.String()
+}
+
+// signInHost lists sites the app deliberately opens in its own window to sign in (MyAnimeList can only send people
+// back to mkcinema.pages.dev).
+func signInHost(h string) bool {
+	return h == "myanimelist.net" || strings.HasSuffix(h, ".myanimelist.net")
+}
+
+// openExternal hands an address or a file to Windows. It may run on any thread, so it sets up COM for itself as
+// ShellExecute requires.
 func openExternal(uri string) {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+	if err := windows.CoInitializeEx(0, windows.COINIT_APARTMENTTHREADED|0x4); err == nil { // 0x4: COINIT_DISABLE_OLE1DDE
+		defer windows.CoUninitialize()
+	}
 	verb, _ := windows.UTF16PtrFromString("open")
 	u, _ := windows.UTF16PtrFromString(uri)
 	_, _, _ = pShellExecuteW.Call(0, uintptr(unsafe.Pointer(verb)), uintptr(unsafe.Pointer(u)), 0, 0, 1)

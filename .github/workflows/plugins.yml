@@ -1,0 +1,77 @@
+name: Plugin gallery
+
+# SEC-N-08 / SEC-W-12: the app only shows the gallery when plugins/registry.json carries a valid Ed25519
+# signature (plugins/registry.json.sig) from the key whose public half is built into the app.
+# - Pull requests: check that every checksum in registry.json matches its file (no secrets, read-only).
+# - Merges to main: sign registry.json with the PLUGIN_SIGNING_KEY secret and commit the new signature.
+#   The "sign" job runs in the "plugin-signing" environment. Give that environment a required reviewer
+#   (Settings › Environments) so nothing is signed until the owner approves the run. Without the secret
+#   the job does nothing, and the gallery keeps the last signed registry.
+on:
+  pull_request:
+    paths: ["plugins/**", ".github/workflows/plugins.yml"]
+  push:
+    branches: [main]
+    paths: ["plugins/**", ".github/workflows/plugins.yml"]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: plugin-gallery-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Checksums match their files
+        run: python3 -I plugins/build_registry.py --check
+
+  sign:
+    needs: check
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: plugin-signing
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Sign registry.json
+        id: sign
+        env:
+          # Only this step sees the key. openssl only: no third-party code runs next to it.
+          PLUGIN_SIGNING_KEY: ${{ secrets.PLUGIN_SIGNING_KEY }}
+        run: |
+          if [ -z "$PLUGIN_SIGNING_KEY" ]; then
+            echo "::notice::PLUGIN_SIGNING_KEY is not set, so registry.json was not signed."
+            echo "signed=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          umask 077
+          k="$RUNNER_TEMP/plugin-signing.pem"
+          trap 'rm -f "$k"' EXIT
+          printf '%s\n' "$PLUGIN_SIGNING_KEY" > "$k"
+          openssl pkeyutl -sign -rawin -inkey "$k" -in plugins/registry.json -out "$RUNNER_TEMP/sig.bin"
+          { base64 -w0 "$RUNNER_TEMP/sig.bin"; echo; } > plugins/registry.json.sig
+          echo "signed=true" >> "$GITHUB_OUTPUT"
+      - name: Check the signature against the app's public key
+        if: steps.sign.outputs.signed == 'true'
+        run: python3 -I plugins/sign_registry.py --verify
+      - name: Commit the signature
+        if: steps.sign.outputs.signed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- plugins/registry.json.sig; then echo "Signature already up to date"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add plugins/registry.json.sig
+          git commit -q -m "Sign plugin registry"
+          git push -q "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main
