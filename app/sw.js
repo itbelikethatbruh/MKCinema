@@ -7,10 +7,10 @@
    CDN libraries with an exact version in the URL, and font files, are kept for good. Font stylesheets, interface
    languages and the app's own artwork and data files are served from the cache and refreshed in the background.
    Addons, streams, debrid, accounts and everything else always go straight to the network and are never stored. */
-const VERSION = 'mkc-2.40.0';
+const VERSION = 'mkc-2.41.0';
 const PINNED = /^https:\/\/(?:(?:cdn\.jsdelivr\.net|unpkg\.com|cdnjs\.cloudflare\.com)\/\S*?(?:@|\/)\d+\.\d+\.\d+(?:\/|$)|fonts\.gstatic\.com\/)/;
 const REFRESHED = /^https:\/\/fonts\.googleapis\.com\//;
-const LOCAL = /\/(?:i18n\/[a-z]{2}\.json|kids\/ages\.json|universes(?:-home)?\.json|(?:net|rate|anime)\/[\w-]+\.(?:svg|webp|png)|manifest\.webmanifest|remote\.webmanifest|icon-[\w-]+\.png|apple-touch-icon\.png)$/;
+const LOCAL = /\/(?:addons\/directory\.json|i18n\/[a-z]{2}\.json|kids\/ages\.json|universes(?:-home)?\.json|(?:net|rate|anime)\/[\w-]+\.(?:svg|webp|png)|manifest\.webmanifest|remote\.webmanifest|icon-[\w-]+\.png|apple-touch-icon\.png)$/;
 const META = '__mkc-shell/'; // META + page -> { v, at }: the web version of the stored page
 const pending = {}; // page -> the refresh under way
 let lastCheck = 0, latestP = null, noVersion = false;
