@@ -2,7 +2,7 @@
 
 A hosted web app that opens https://mkcinema.pages.dev full screen on LG TVs (webOS 5 or later, 2020 models on; TVs older than webOS 22 get the converted app in `tv-legacy.html`, an early beta).
 
-Build: `npx @webos-tools/cli ares-package webos -o site/download` from the repo root makes `com.mkcinema.app_1.1.0_all.ipk`.
+Build: `npx @webos-tools/cli ares-package webos -o site/download` from the repo root makes `com.mkcinema.app_1.1.0_all.ipk`. Packages are not committed: upload the .ipk to the website and attach it to the GitHub release.
 
 Installing needs the TV in Developer Mode (LG Developer Mode app, an LG developer account, and `ares-install`) or a rooted TV with Homebrew Channel. Normal users can only get webOS apps through the LG Content Store, which needs an LG Seller Lounge account and LG's review.
 

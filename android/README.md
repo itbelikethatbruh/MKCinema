@@ -26,7 +26,7 @@ When the app can't load at all, the "You're offline" page lists finished downloa
 
 `EpisodeAlerts.java` is a JobService that runs every 12 h, reads the followed series from Cinemeta and notifies about episodes
 from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEnable`/`epOn` turn it on or off (Android 13+
-asks for permission). There is no server. Details are in /mnt/project-files/patches/2.19.0-episode-alerts/README.md.
+asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
 ## 1.7.0 (versionCode 18): ExoPlayer engine for the TV player
