@@ -309,7 +309,7 @@ function needToken(req, res, next) {
    another website open in the same browser can't use it to read your router or local services */
 const corsOk = (req) => {
   const o = req.get('origin');
-  if (!o || o === 'null' || CORS_LIST.includes('*') || APP_ORIGINS.has(o)) return true;
+  if (!o || (o === 'null' && process.env.ALLOW_NULL_ORIGIN === '1') || CORS_LIST.includes('*') || APP_ORIGINS.has(o)) return true;
   const host = req.get('host');
   return o === `http://${host}` || o === `https://${host}`;
 };
@@ -415,7 +415,7 @@ app.get('/remux/probe', needToken, async (req, res) => {
   p.stdout.on('data', (d) => { out += d; }); p.stderr.on('data', (d) => { err += d; });
   p.on('close', (code) => {
     clearTimeout(kill);
-    if (code !== 0) return res.status(502).json({ error: (err.trim().split('\n').pop() || 'ffprobe failed').slice(0, 300) });
+    if (code !== 0) { console.warn('[probe]', (err.trim().split('\n').pop() || `exit ${code}`).replace(/token=[^&\s]+/g, 'token=…')); return res.status(502).json({ error: 'could not read this stream' }); }
     try {
       const j = JSON.parse(out), v = (j.streams || []).find((s) => s.codec_type === 'video'), a = (j.streams || []).filter((s) => s.codec_type === 'audio');
       res.json({ duration: Number(j.format && j.format.duration) || null, video: v ? v.codec_name : null, audio: a.map((s) => `${s.codec_name}${s.channels ? ` ${s.channels}ch` : ''}${s.tags && s.tags.language ? ` ${s.tags.language}` : ''}`),
@@ -465,7 +465,7 @@ app.get('/remux', needToken, async (req, res) => {
   const finish = () => { if (done) return; done = true; remuxRunning--; try { ff.kill('SIGKILL'); } catch (e) { /* gone */ } };
   ff.stderr.on('data', (d) => { err = (err + d).slice(-2000); });
   ff.on('error', () => { if (!res.headersSent) res.status(500).json({ error: 'could not start ffmpeg' }); finish(); });
-  ff.on('close', (code) => { if (code && !res.headersSent) res.status(502).json({ error: (err.trim().split('\n').pop() || `ffmpeg exited ${code}`).slice(0, 300) }); else res.end(); finish(); });
+  ff.on('close', (code) => { if (code && !res.headersSent) { console.warn('[remux]', (err.trim().split('\n').pop() || `exit ${code}`).replace(/token=[^&\s]+/g, 'token=…')); res.status(502).json({ error: 'could not convert this stream' }); } else res.end(); finish(); });
   req.on('close', finish);
   ff.stdout.once('data', () => { if (!res.headersSent) res.set({ 'Content-Type': 'video/mp4', 'Cache-Control': 'no-store', 'X-Remux-Start': String(t) }); });
   ff.stdout.pipe(res);
@@ -478,10 +478,17 @@ app.get('/remux', needToken, async (req, res) => {
 const DEBRID_HOSTS = ['api.real-debrid.com', 'api.torbox.app', 'api.alldebrid.com', 'www.premiumize.me'];
 app.all('/debrid', (req, res, next) => (req.query.ping ? next() : needToken(req, res, next)), express.raw({ type: '*/*', limit: '1mb' }), async (req, res) => {
   res.set('X-MKC-Relay', '1');
-  if (req.query.ping) return res.json({ ok: true, relay: 'server' });
+  if (req.query.ping) return res.json({ ok: true, relay: 'server', v: 2 });
   if (!['GET', 'POST', 'DELETE', 'PUT'].includes(req.method)) return res.status(405).json({ error: 'method not allowed' });
   let u; try { u = new URL(String(req.query.url || '')); } catch (e) { return res.status(400).json({ error: 'bad url' }); }
   if (u.protocol !== 'https:' || !DEBRID_HOSTS.includes(u.hostname)) return res.status(403).json({ error: 'only debrid API hosts are relayed' });
+  // v2 apps send key-like query parameters (apikey=, token=) in x-debrid-query, so they never sit in a request URL
+  const xq = String(req.get('x-debrid-query') || '');
+  if (xq) {
+    const parts = xq.split('&').filter(Boolean);
+    if (xq.length > 2048 || !parts.every((p) => /^(apikey|token|presigned_token)=[A-Za-z0-9%._~+!*'()-]*$/.test(p))) return res.status(400).json({ error: 'bad x-debrid-query' });
+    u.search = u.search ? `${u.search}&${parts.join('&')}` : `?${parts.join('&')}`;
+  }
   const headers = {}; ['authorization', 'content-type', 'accept'].forEach((k) => { if (req.get(k)) headers[k] = req.get(k); });
   try {
     const r = await fetch(u.href, { method: req.method, headers, body: ['GET', 'HEAD'].includes(req.method) ? undefined : req.body, signal: AbortSignal.timeout(30000) });

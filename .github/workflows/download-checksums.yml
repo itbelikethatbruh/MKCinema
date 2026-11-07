@@ -1,0 +1,27 @@
+name: Download checksums
+
+# site/download/SHA256SUMS is what mkcinema.app links for checking a download. This fails a change that updates a
+# file there without updating the list (regenerate it with tools/download-checksums.sh).
+on:
+  pull_request:
+    paths: ["site/download/**"]
+  push:
+    branches: [main]
+    paths: ["site/download/**"]
+
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Compare
+        run: |
+          cd site/download
+          want=$(find . -maxdepth 1 -type f ! -name SHA256SUMS -printf '%f\n' | LC_ALL=C sort | xargs -d '\n' sha256sum)
+          diff <(printf '%s\n' "$want") SHA256SUMS || { echo "::error::site/download/SHA256SUMS is out of date. Run tools/download-checksums.sh"; exit 1; }

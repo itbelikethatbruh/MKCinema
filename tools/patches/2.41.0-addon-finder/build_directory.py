@@ -10,8 +10,9 @@ addons are marked 's'). Only https transport URLs are kept.
 
 Usage: python3 -I build_directory.py <webroot> [--keep-old]
   --keep-old  if every source fails, keep the existing file (exit 0) instead of failing
+  --clean     only re-filter the existing addons/directory.json (no network)
 """
-import json, pathlib, sys, time, urllib.request, datetime
+import base64, datetime, json, pathlib, re, sys, time, urllib.parse, urllib.request
 
 SOURCES = [
     ('https://stremio-addons.net/api/addon_catalog/all/stremio-addons.net.json', 'community'),
@@ -29,6 +30,42 @@ def fetch(url, tries=4):
             last = e; time.sleep(2 ** i * 2)
     raise RuntimeError(f'{url}: {last}')
 
+# Some community entries are a person's own configured link: their settings, sometimes with an account token or email,
+# packed into the path. Those are theirs, not a public addon, so they never go into the directory.
+CRED_KEY = re.compile(r'(?i)(token|secret|pass(word|wd)?|api_?key|apikey|auth|session|cookie|e-?mail|debrid)')
+CRED_TEXT = re.compile(r'(?i)(real-?debrid|all-?debrid|premiumize|torbox|debrid-?link|offcloud|put\.?io|easydebrid|api_?key|apikey|token|password|passwd|secret)=[^|&/,;]{6,}')
+EMAIL = re.compile(r'[^\s@/"\'{}]+@[^\s@/"\'{}]+\.[A-Za-z]{2,}')
+
+def _decode(seg):
+    out = [urllib.parse.unquote(seg)]
+    if len(seg) >= 16 and re.fullmatch(r'[A-Za-z0-9_\-+/=]+', seg):
+        try: out.append(base64.b64decode(seg.replace('-', '+').replace('_', '/') + '=' * (-len(seg) % 4)).decode('utf-8'))
+        except Exception: pass  # noqa: BLE001
+    return out
+
+def _json_has_cred(v, k=''):
+    if isinstance(v, dict): return any(_json_has_cred(x, str(kk)) for kk, x in v.items())
+    if isinstance(v, list): return any(_json_has_cred(x, k) for x in v)
+    if isinstance(v, (int, float)) and not isinstance(v, bool) and CRED_KEY.search(k) and v: return True
+    if isinstance(v, str) and v.strip():
+        return bool(CRED_KEY.search(k)) or bool(EMAIL.search(v))
+    return False
+
+def personal(u):
+    """True when an addon link carries someone's credentials or account details."""
+    p = urllib.parse.urlsplit(u)
+    if p.username or p.password or p.query or p.fragment: return True
+    for seg in p.path.split('/'):
+        for t in _decode(seg):
+            t = t.strip()
+            if t.startswith('{') or t.startswith('['):
+                try:
+                    if _json_has_cred(json.loads(t)): return True
+                    continue
+                except Exception: pass  # noqa: BLE001
+            if CRED_TEXT.search(t) or EMAIL.search(t): return True
+    return False
+
 def clip(s, n):
     s = ' '.join(str(s or '').split())
     return s if len(s) <= n else s[:n - 1].rstrip() + '…'
@@ -36,7 +73,7 @@ def clip(s, n):
 def slim(a, stremio):
     m = a.get('manifest') or {}
     u = str(a.get('transportUrl') or '').strip()
-    if not u.lower().startswith('https://') or not m.get('name'):
+    if not u.lower().startswith('https://') or not m.get('name') or personal(u):
         return None
     res = []
     for r in m.get('resources') or []:
@@ -78,6 +115,11 @@ def build():
 def main():
     root = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else '.')
     out = root / 'addons' / 'directory.json'
+    if '--clean' in sys.argv:  # drop personal links from the existing file without fetching anything
+        doc = json.loads(out.read_text(encoding='utf-8')); before = len(doc.get('addons') or [])
+        doc['addons'] = [r for r in doc.get('addons') or [] if r and not personal(str(r.get('u') or ''))]
+        out.write_text(json.dumps(doc, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+        print(f'directory: removed {before - len(doc["addons"])} personal links -> {out}'); return
     ok, rows = build()
     if 'community' not in ok or len(rows) < 100:
         if '--keep-old' in sys.argv and out.exists():

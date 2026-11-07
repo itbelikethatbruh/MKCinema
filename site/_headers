@@ -35,3 +35,6 @@
 /download/*.zip
   Content-Type: application/zip
   Cache-Control: no-cache
+/download/SHA256SUMS
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: no-cache

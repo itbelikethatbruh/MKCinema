@@ -1,0 +1,295 @@
+<!-- mk-ds:start -->
+<style id="mkc-ds-css">
+/* ===== Design system: one set of tokens for type, weight, corners, surfaces, layers, icons and focus =====
+   Type: 12 sizes. Every calc(Npx * var(--ts,1)) in the app is snapped to one of them, so new code should use
+   calc(var(--fs-…) * var(--ts,1)). Weights: the four that are loaded (400, 500, 600, 700).
+   Corners: every fixed radius is a multiple of --r-s / --r-m / --r-l, so the Corners setting reaches all of them.
+   Roles: name colours by what they do (surface, text, accent, border), not by their value. */
+:root{
+  --fs-micro:10px;--fs-caption:11px;--fs-label:12px;--fs-small:13px;--fs-body:14px;--fs-ui:15px;--fs-lead:16px;
+  --fs-sub:18px;--fs-title:20px;--fs-h3:24px;--fs-h2:28px;--fs-h1:32px;
+  --fw-regular:400;--fw-medium:500;--fw-semibold:600;--fw-bold:700;
+  --r-xs:calc(var(--r-s) * .5);--r-pill:999px;
+  --surface-0:var(--void);--surface-1:var(--s1);--surface-2:var(--s2);--surface-3:var(--s3);
+  --text:var(--ink);--text-muted:var(--mute);--accent:var(--champ);--accent-soft:rgba(var(--nd9d4c7-c,217,212,199),.32);
+  --border:var(--line);--border-soft:var(--line-soft);--border-strong:var(--line-hi);
+  --z-raised:10;--z-sticky:100;--z-dock:1000;--z-overlay:5000;--z-modal:9000;--z-toast:10000;
+  --icon-stroke:2;
+  --focus-ring:var(--nf2f2f3,#f2f2f3);--focus-halo:rgba(0,0,0,.72);
+}
+
+/* Focus: a 2 px ring with a 2 px gap and a dark halo, so it shows on bright and dark artwork alike. TV keeps its 3 px ring. */
+html:not(.tv) :focus-visible,html:not(.tv) .neon-focus:focus-visible,html:not(.tv) .nav-focus{outline:2px solid var(--focus-ring);outline-offset:2px;box-shadow:0 0 0 6px var(--focus-halo)}
+html:not(.tv) .card:focus-visible,html:not(.tv) .card.nav-focus{outline:none;box-shadow:none}
+html:not(.tv) .card.nav-focus .card-inner,html:not(.tv) .card:focus-visible .card-inner{box-shadow:0 0 0 2px var(--focus-ring),0 0 0 6px var(--focus-halo),0 22px 44px -22px var(--n000000,#000)}
+
+/* Numbers that change (runtimes, ratings, episodes, ranks) keep the same width */
+.metaline,.metaline>*,.imdb,.badge-r,.rt,.card-sub,.ep .num,.crit,.t10c,.sl-n,.tx-t,.prog-l{font-variant-numeric:tabular-nums}
+
+/* Icons: one stroke width everywhere */
+svg.lucide,.qp-ck .lucide,.btn-bolt>svg.lucide,.gs-n svg.lucide,.dock .ibtn .lucide,.dock .searchbtn .lucide,#tabs .tab .lucide,#mtabs button .lucide,.stream .s-best .lucide,.t4-ic svg,.g4-pro .t4-ic svg{stroke-width:var(--icon-stroke)}
+.st-ic{width:.85em;height:.85em;vertical-align:-.08em;display:inline-block;flex:none}
+.badge-r>i{display:inline-flex;align-items:center}
+.crit-ic{width:14px;height:14px;vertical-align:-2px;margin-right:4px}
+.tx-sync .ds-ic{width:13px;height:13px;vertical-align:-2px;margin-right:4px;flex:none}
+.pm-row.talk b::after{content:"";display:inline-block;width:.8em;height:.8em;margin-left:.4em;vertical-align:-.05em;background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z'/%3E%3Cpath d='M19 10v2a7 7 0 0 1-14 0v-2'/%3E%3Cpath d='M12 19v3'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z'/%3E%3Cpath d='M19 10v2a7 7 0 0 1-14 0v-2'/%3E%3Cpath d='M12 19v3'/%3E%3C/svg%3E") center/contain no-repeat}
+
+/* Layout transitions: nothing animates width, height or padding any more */
+.tour-dots i{transition:background-color .3s}
+.hero-dots button{transition:background-color .35s}
+.seek .knob,.tr-seek b{transition:none}
+.seek .trk,.tr-trk{transition:none}
+/* Side rail: the rail is always full width and a clip opens it, so the page never re-lays out while it slides */
+@media (min-width:761px){
+  :root.nav-side.side-mini:not(.tv):not([data-look="anime"]) .dock-wrap .dock{width:276px;clip-path:inset(0 calc(276px - var(--side-w,96px)) 0 0 round 22px);transition:clip-path .46s cubic-bezier(.22,1,.36,1),background-color .3s}
+  :root.nav-side.side-mini:not(.tv):not([data-look="anime"]) .dock-wrap:is(:hover,:focus-within) .dock{clip-path:inset(0 0 0 0 round 22px)}
+}
+@media (prefers-reduced-motion:reduce){:root.nav-side.side-mini .dock-wrap .dock{transition:none!important}}
+
+/* Phone banner: one genre, no type tag, so the line never cuts a word */
+@media (max-width:600px){.hero .metaline .tag-s,.hero .metaline .hm-g1,.hero .metaline .hm-g2{display:none}}
+/* Phone tab bar: five places at most, the rest sit behind More */
+#mtabs button.ds-hide{display:none!important}
+#mtabs .ds-ic{width:20px;height:20px}
+/* Big screens: use the room instead of a 1480 px column */
+@media (min-width:1800px){
+  html:not(.tv):not(.nav-side) .dock,html:not(.tv) .wrap{max-width:min(2240px,92vw)}
+}
+/* Tall screens: the tour stays one compact card, so Next sits under the content */
+@media (min-width:900px) and (min-height:1100px){
+  #tour .tour-modal{height:min(calc(100vh - 40px),1040px);max-height:min(calc(100vh - 40px),1040px)}
+}
+/* Top menu: the wordmark comes back whenever it fits (DockFit decides) */
+body.ds-w:not(.dk2) .dock .brand .word{display:inline!important}
+
+/* Early access: quiet, follows the look, no glow or motion */
+.ea-badge{display:inline-flex;align-items:center;margin-left:10px;padding:3px 7px 2px;border-radius:var(--r-pill);border:1px solid var(--accent-soft);background:rgba(var(--nd9d4c7-c,217,212,199),.06);color:var(--gold);
+  font:600 calc(var(--fs-micro) * var(--ts,1))/1.1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;font-style:normal;white-space:nowrap;vertical-align:middle;text-shadow:none}
+body.ds-nob:not(.dk2) .dock .ea-badge{display:none}
+html.nav-side:not(.tv) .dock .brand{padding-bottom:10px}
+html.nav-side .dock .brand .word .ea-badge{margin:7px 0 0;align-self:flex-start;letter-spacing:.12em;font-size:calc(var(--fs-micro) * var(--ts,1));line-height:1.1;padding:2px 6px 1px}
+.sd-word .ea-badge{margin:6px 0 0;align-self:flex-start;letter-spacing:.12em;padding:2px 6px 1px}
+.ea-dot{display:none}
+@media (min-width:761px){
+  html.side-mini:not(.tv) .dock .brand{position:relative}
+  html.side-mini:not(.tv) .dock .brand .ea-dot{display:block;position:absolute;width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 2px var(--n000000,#000);top:var(--ea-dot-y,2px);left:var(--ea-dot-x,58px);transition:opacity .2s}
+  html.side-mini:not(.tv) .dock-wrap:is(:hover,:focus-within) .dock .brand .ea-dot{opacity:0}
+}
+html.tv .ea-badge,html.tv .ea-dot{display:none!important}
+
+/* Tour: the home-layout question lives on the favourites step */
+.ds-focus{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin:10px 0 2px}
+.ds-focus>span{color:var(--mute);font-size:calc(var(--fs-small) * var(--ts,1))}
+.ds-focus .chip.on{color:var(--n0b0b0c,#0b0b0c);background:var(--ink);border-color:var(--ink)}
+
+/* Browser offline notice */
+.ds-off{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:var(--z-toast);transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:min(560px,calc(100vw - 32px));padding:11px 16px;border-radius:var(--r-l);
+  background:var(--glass-solid);border:1px solid var(--line);color:var(--ink);font-size:calc(var(--fs-small) * var(--ts,1));line-height:1.4;box-shadow:0 18px 40px -18px var(--n000000,#000);transition:opacity .25s}
+.ds-off[hidden]{display:none}
+.ds-off svg{width:18px;height:18px;flex:none;color:var(--gold)}
+.ds-off span{color:var(--mute)}
+.ds-off b{color:var(--ink);font-weight:600}
+@media (max-width:760px){.ds-off{bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
+</style>
+<script id="mkc-ds">
+/* Design system runtime: one first-run card per session, the taste question inside the tour, keyboard-ready cards,
+   look-matched glow, the phone More tab, the top-menu wordmark, the Early access badge and the browser offline notice */
+(function () {
+  'use strict';
+  const q = (s, r) => (r || document).querySelector(s), qa = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const safe = (n, f) => { try { f(); } catch (e) { try { MKLog.add('error', `ds ${n}: ${e.message}`); } catch (_) { /* no log */ } console.warn('ds', n, e); } };
+
+  /* ---- one first-run card per session ---- */
+  const Gate = window.MKPrompt = {
+    K: 'mkc:prompt1', mem: '',
+    cur() { try { return sessionStorage.getItem(this.K) || this.mem; } catch (e) { return this.mem; } },
+    free(n) { const c = this.cur(); return !c || c === n; },
+    take(n) { if (!this.free(n)) return false; this.mem = n; try { sessionStorage.setItem(this.K, n); } catch (e) { /* memory only */ } return true; },
+  };
+  const FOCUS = [['movies-first', 'Movies'], ['series-first', 'Series'], ['both', 'Both']];
+  const tasteStep = () => {
+    const st = (typeof TOUR !== 'undefined' ? TOUR : []).find((s) => s && s.id === 'taste');
+    if (!st || st._ds) return; st._ds = true;
+    const h = st.html, a = st.after;
+    st.html = function () {
+      const out = h.apply(this, arguments);
+      if (Store.get('askedFocus', false) && !st._dsKeep) return out;
+      st._dsKeep = true;
+      const cur = (Store.get('homeLayout', null) || {}).focus;
+      const row = `<div class="ds-focus" role="group" aria-label="What do you watch most?"><span>I mostly watch</span>${FOCUS.map(([v, l]) => `<button type="button" class="chip${cur === v ? ' on' : ''}" data-nav data-dsf="${v}" aria-pressed="${cur === v}">${l}</button>`).join('')}</div>`;
+      return out.includes('<div id="tourPick">') ? out.replace('<div id="tourPick">', `${row}<div id="tourPick">`) : out + row;
+    };
+    st.after = function () {
+      const r = a ? a.apply(this, arguments) : undefined;
+      qa('#tour [data-dsf]').forEach((b) => b.addEventListener('click', () => {
+        try { Layout.set({ focus: b.dataset.dsf }); } catch (e) { /* layout unchanged */ }
+        Store.set('askedFocus', true);
+        qa('#tour [data-dsf]').forEach((x) => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', String(x === b)); });
+      }));
+      return r;
+    };
+  };
+  safe('tour', () => {
+    tasteStep();
+    const ot = window.openTour;
+    if (typeof ot === 'function' && !ot._ds) {
+      window.openTour = function () { tasteStep(); if (!Store.get('toured', false)) Gate.take('tour'); return ot.apply(this, arguments); };
+      window.openTour._ds = true;
+    }
+  });
+  safe('nav', () => {
+    if (typeof SideNav === 'undefined' || SideNav.chooser._ds) return;
+    const ch = SideNav.chooser;
+    SideNav.chooser = function () {
+      if (!Gate.take('nav')) { if (this.fresh) try { localStorage.setItem('mkc:dsNavFresh', '1'); } catch (e) { /* asks as new */ } return; }
+      try { if (localStorage.getItem('mkc:dsNavFresh')) { this.fresh = true; localStorage.removeItem('mkc:dsNavFresh'); } } catch (e) { /* fine */ }
+      return ch.apply(this, arguments);
+    };
+    SideNav.chooser._ds = true;
+  });
+  safe('player', () => {
+    if (typeof PlayerAsk === 'undefined' || PlayerAsk.openSolo._ds) return;
+    const os = PlayerAsk.openSolo;
+    PlayerAsk.openSolo = function () { if (!Gate.take('player')) return; return os.apply(this, arguments); };
+    PlayerAsk.openSolo._ds = true;
+  });
+  safe('whatsnew', () => {
+    if (typeof WhatsNew === 'undefined' || WhatsNew.open._ds) return;
+    const op = WhatsNew.open;
+    WhatsNew.open = function (prev) {
+      // another card already showed this session: keep the update for the next launch
+      if (!Gate.take('whatsnew')) { try { Store.raw.set(this.KEY, prev || ''); } catch (e) { /* shown next update */ } return; }
+      return op.apply(this, arguments);
+    };
+    WhatsNew.open._ds = true;
+  });
+  safe('focus', () => {
+    if (typeof Layout === 'undefined' || Layout.ask._ds) return;
+    const la = Layout.ask;
+    Layout.ask = function () { if (Store.get('askedFocus', false) || Store.get('homeLayout', null) || !Gate.free('focus')) return; return la.apply(this, arguments); };
+    Layout.ask._ds = true;
+  });
+  safe('support', () => {
+    if (typeof Support === 'undefined' || Support.maybe._ds) return;
+    const sm = Support.maybe;
+    Support.maybe = function () { if (!Gate.free('support')) return; return sm.apply(this, arguments); };
+    Support.maybe._ds = true;
+  });
+  // the two small cards are added straight to the page: claim the session's slot, or wait for the next launch
+  safe('cards', () => new MutationObserver((ms) => ms.forEach((m) => m.addedNodes.forEach((n) => {
+    if (n.nodeType !== 1 || !n.classList) return;
+    const k = n.classList.contains('sup-ask') ? 'support' : n.classList.contains('focus-ask') ? 'focus' : '';
+    if (!k || Gate.take(k)) return;
+    n.remove();
+    if (k === 'focus') Store.set('askedFocus', false);
+    else { const st = Store.get('support', null); if (st) { st.at = 0; Store.set('support', st); } }
+    if (typeof IS_TV !== 'undefined' && IS_TV) { try { tvBackHook(); Nav.settle(); } catch (e) { /* focus stays */ } }
+  }))).observe(document.body, { childList: true }));
+
+  /* ---- cards and Reveal work from the keyboard (Space as well as Enter) ---- */
+  document.addEventListener('keydown', (e) => {
+    const t = e.target; if (!t || !t.matches) return;
+    if (e.key === 'Enter' && t.matches('[data-reveal]')) { e.preventDefault(); e.stopPropagation(); t.click(); return; }
+    if (e.key !== ' ' && e.key !== 'Spacebar') return;
+    if (!t.matches('[data-card],[data-bm],[data-reveal]')) return;
+    e.preventDefault(); e.stopPropagation(); t.click();
+  }, true);
+
+  /* ---- trailer glow takes its colours from the look ---- */
+  safe('mood', () => {
+    if (typeof moodFor !== 'function') return;
+    window.moodFor = function () {
+      const cs = getComputedStyle(document.documentElement);
+      const a = (cs.getPropertyValue('--champ') || cs.getPropertyValue('--gold') || '').trim() || '#d9d4c7';
+      const b = (cs.getPropertyValue('--s3') || '').trim() || '#19191c';
+      return [a, b];
+    };
+  });
+
+  /* ---- phone tab bar: at most five, the rest behind More ---- */
+  const MORE_SVG = '<svg class="ds-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>';
+  const KEEP = ['home', 'movie', 'series', 'anime', 'library'];
+  const Tabs = {
+    fit() {
+      const bar = q('#mtabs'); if (!bar) return;
+      const all = qa('[data-view]', bar);
+      let more = q('[data-dsmore]', bar);
+      if (all.length <= 5) { all.forEach((b) => b.classList.remove('ds-hide')); if (more) more.hidden = true; return; }
+      const keep = KEEP.filter((v) => all.some((b) => b.dataset.view === v)).slice(0, 4);
+      all.forEach((b) => b.classList.toggle('ds-hide', !keep.includes(b.dataset.view)));
+      if (!more) {
+        bar.insertAdjacentHTML('beforeend', `<button type="button" data-nav data-dsmore aria-label="More sections">${MORE_SVG}<span>More</span></button>`);
+        more = q('[data-dsmore]', bar);
+        more.addEventListener('click', () => { try { SideNav.open(); } catch (e) { /* drawer missing */ } });
+      }
+      more.hidden = false;
+      const on = all.some((b) => b.classList.contains('ds-hide') && b.classList.contains('on'));
+      if (more.classList.contains('on') !== on) more.classList.toggle('on', on);
+    },
+    init() {
+      const bar = q('#mtabs'); if (!bar) return;
+      let t = 0; const later = () => { clearTimeout(t); t = setTimeout(() => safe('tabs', () => this.fit()), 30); };
+      new MutationObserver((ms) => { if (ms.some((m) => m.type === 'childList' || (m.target.dataset && m.target.dataset.view))) later(); })
+        .observe(bar, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+      this.fit();
+    },
+  };
+  safe('tabs', () => Tabs.init());
+
+  /* ---- top menu: show the wordmark (and the badge) whenever they fit ---- */
+  safe('dock', () => {
+    if (typeof DockFit === 'undefined' || DockFit.run._ds) return;
+    const dr = DockFit.run;
+    DockFit.run = function () {
+      const b = document.body; b.classList.remove('ds-w', 'ds-nob');
+      const r = dr.apply(this, arguments);
+      safe('dockfit', () => {
+        const de = document.documentElement; if (innerWidth <= 860 || de.classList.contains('nav-side') || de.classList.contains('tv') || de.dataset.look === 'anime') return;
+        if (b.classList.contains('dk2')) { if (this.over()) b.classList.add('ds-nob'); return; }
+        if (b.classList.contains('dkw')) return;
+        const word = q('.dock .brand .word'); if (!word) return;
+        if (getComputedStyle(word).display !== 'none') { if (this.over()) b.classList.add('ds-nob'); return; }
+        b.classList.add('ds-w'); if (!this.over()) return;
+        b.classList.add('ds-nob'); if (this.over()) b.classList.remove('ds-w', 'ds-nob');
+      });
+      return r;
+    };
+    DockFit.run._ds = true;
+    DockFit.run();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => DockFit.run());
+  });
+
+  /* ---- Early access in the phone menu drawer ---- */
+  const BADGE = '<span class="ea-badge" aria-hidden="true">Early access</span>';
+  safe('drawer', () => {
+    if (typeof SideNav === 'undefined' || SideNav.open._dsb) return;
+    const so = SideNav.open;
+    SideNav.open = function () {
+      const r = so.apply(this, arguments);
+      safe('drawer badge', () => { const w = q('#sideDrawer .sd-word'); if (w && !q('.ea-badge', w)) { w.insertAdjacentHTML('beforeend', BADGE); w.parentNode.setAttribute('aria-label', 'MKCinema, early access'); } });
+      return r;
+    };
+    SideNav.open._dsb = true;
+  });
+  // the collapsed rail's dot sits on the logo's top-right edge
+  safe('dot', () => {
+    const place = () => { const br = q('.dock .brand'), mk = br && q('svg.mk', br); if (!mk) return; const a = br.getBoundingClientRect(), m = mk.getBoundingClientRect(); if (!m.width) return; br.style.setProperty('--ea-dot-x', `${Math.round(m.right - a.left - 6)}px`); br.style.setProperty('--ea-dot-y', `${Math.round(m.top - a.top - 1)}px`); };
+    if (document.documentElement.classList.contains('side-mini')) { setTimeout(place, 600); addEventListener('resize', () => setTimeout(place, 100)); }
+  });
+
+  /* ---- offline notice for every browser (apps with downloads already have their own) ---- */
+  safe('offline', () => {
+    if (typeof Offline !== 'undefined' && Offline.api) return;
+    const bar = document.createElement('div'); bar.id = 'dsOffline'; bar.className = 'ds-off'; bar.setAttribute('role', 'status'); bar.hidden = true;
+    bar.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h.01"/><path d="M8.5 16.4a5 5 0 0 1 7 0"/><path d="M5 12.9a10 10 0 0 1 5.2-2.8"/><path d="M19 12.9a10 10 0 0 0-2.3-1.7"/><path d="M2 8.8a15 15 0 0 1 4.2-2.6"/><path d="M22 8.8a15 15 0 0 0-11.3-3.8"/><path d="m2 2 20 20"/></svg><div><b>You’re offline.</b> <span>Films and shows need a connection. Your lists and settings still open.</span></div>';
+    document.body.appendChild(bar);
+    const set = (off) => { bar.hidden = !off; };
+    addEventListener('offline', () => set(true));
+    addEventListener('online', () => { if (!bar.hidden) { set(false); try { toast('Back online', 'ok', 2500, 'offline'); } catch (e) { /* quiet */ } } });
+    if (navigator.onLine === false) set(true);
+  });
+})();
+</script>
+<!-- mk-ds:end -->
