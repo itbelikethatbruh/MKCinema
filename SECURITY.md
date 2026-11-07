@@ -18,7 +18,7 @@ Out of scope: third-party addons, debrid services and other services MKCinema co
 
 ## Verifying downloads
 
-Every release on the [Releases page](https://github.com/itbelikethatbruh/mkcinema/releases) lists the SHA-256 checksum of each file in its notes, and attaches the same list as `SHA256SUMS`. Download only from mkcinema.app or that page, then check the file before you install it:
+Every release on the [Releases page](https://github.com/itbelikethatbruh/mkcinema/releases) from v1.7 on lists the SHA-256 checksum of each file in its notes, and attaches the same list as `SHA256SUMS`. Releases up to v1.6 don't include checksums; use the latest release. Download only from mkcinema.app or that page, then check the file before you install it:
 
 - **Windows** (PowerShell): `Get-FileHash .\MKCinema.exe -Algorithm SHA256`
 - **Mac**: `shasum -a 256 MKCinema-1.1.1-mac.zip`

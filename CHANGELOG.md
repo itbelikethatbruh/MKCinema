@@ -2,12 +2,44 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.46.4 (2026-11-07)
+
+- **Faster start on phones.** The featured banner shows up sooner and the first screen downloads less.
+- **Intro once a day.** The opening animation plays on your first launch each day, so later launches go straight to Home. Change it in Settings.
+
+## Web app 2.46.3 (2026-11-07)
+
+- **Simpler player.** Menus that fit your phone either way round, a cleaner font, and only the sound options your source supports. Split Screen stays on phones, under More.
+
+## Web app 2.46.2 (2026-11-07)
+
+- **Cleaner banner swipes.** The next featured title slides in beside your finger, with no blink after the swipe.
+
+## Web app 2.46.1 (2026-11-07)
+
+- **Smoother pages.** No flashes or jumps when opening pages, switching chips or changing settings.
+- **Featured banner swipes like a card.** It follows your finger and flies off, and short swipes spring back.
+- The colour wheel is centred on phones.
+
+## Web app 2.46.0 (2026-11-07)
+
+- **Universe logos.** Universes show each franchise's own title logo, and network logos are bigger.
+- **Anime look switch.** Turn the Anime look on or off in Settings › Appearance, or right on the Anime page.
+- **Sources that just play.** While a film starts, MKCinema checks the next sources in the background. If one fails it switches straight to one that works, and it stops with a clear message instead of trying forever.
+- **Tidier Top 10 rows.** Top 10 numbers no longer overlap titles on phones.
+
 ## Web app 2.45.0 (2026-11-07)
 
 - **Ratings where you look.** Ratings addons that used to add a row to the source list (IMDb Ratings, Ratings Aggregator and similar) now show their scores on the title line with the real IMDb, TMDB and Rotten Tomatoes icons, and an IMDb rating next to each episode. The rows leave the source list. Nothing changes for the addon.
 - **Clearer source problems.** When a debrid addon plays a short notice clip instead of the film (not downloaded yet, a limit, a link that failed), MKCinema says what happened in plain words and moves on to the next source. The clip is still one tap away.
 - **Addon settings, TV included.** Addons built with Stremio's addon SDK that describe their settings can be set up right on the Addons screen, with a remote too. Saving keeps the addon where it was in your list.
 - Both of the first two can be turned off in Settings › Playback › Addons as they are.
+
+## Web app 2.44.0 (2026-11-06)
+
+- **Ratings from your addons, everywhere.** Rating addons can put their scores on posters from any catalog, on film pages and next to each episode, instead of in the source list. MKCinema asks you first.
+- **Your watchlist in your addons.** An addon can keep a copy of your watchlist so it shows up in its own lists, only if you allow it.
+- **Discover follows the addon.** Wide and square catalogs keep their shape on Discover pages, and catalogs an addon keeps off Home stay off it.
 
 ## Web app 2.43.0 (2026-11-07)
 
@@ -59,6 +91,10 @@ All notable changes to MKCinema. The web app version and the native app versions
 ## Android app 1.8.1 (2026-11-06)
 
 - **New built-in player** based on ExoPlayer, on phones, tablets and Android TV.
+
+## Web app 2.37.3 (2026-11-06)
+
+- **Mouse scrolling everywhere.** Season pickers, filters, tabs, cast and every other sideways list have the arrows and click-and-drag too.
 
 ## Web app 2.37.2 (2026-11-06)
 

@@ -7,11 +7,11 @@
 <p align="center">
   <b>Your addons look better here.</b><br>
   A free, open-source player for Stremio addons, built for phones, computers and TVs.<br>
-  <i>No ads. No paywalls. No tracking. Just your addons, at their best.</i>
+  <i>No ads. No paywalls. No cookies. Just your addons, at their best.</i>
 </p>
 
 > [!IMPORTANT]
-> **Web 2.45 is live.** Ratings addons now show real IMDb, TMDB and Rotten Tomatoes scores, debrid notice clips are caught, and SDK addons get a settings screen, all with no changes from the addon's developer. [See what's new](CHANGELOG.md).
+> **Web 2.46 is live.** Sources are checked in the background so a failed one switches straight to one that works, Universes show each franchise's own logo, the player is simpler on phones, and the app starts faster. [See what's new](CHANGELOG.md).
 
 <p align="center">
   <img alt="Platforms" src="https://img.shields.io/badge/platforms-Web%20%7C%20Android%20%7C%20TV%20%7C%20Windows%20%7C%20macOS%20%7C%20Linux-2ea44f?style=flat-square">
@@ -27,7 +27,7 @@
   <a href="docs/install.md"><b>Download</b></a> ·
   <a href="https://mkcinema.app">Website</a> ·
   <a href="#what-makes-mkcinema-different"><b>What makes it different</b></a> ·
-  <a href="docs/features.md">Features</a> ·
+  <a href="docs/features.md">Screenshots and FAQ</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
   <a href="https://ko-fi.com/mkcinema">Ko-fi</a>
 </p>
@@ -46,8 +46,8 @@
 <td width="50%" align="center"><img src="docs/screenshots/app-more-like.webp" alt="More like this"><br><sub>More like this on every film page</sub></td>
 </tr>
 <tr>
-<td width="50%" align="center"><img src="docs/screenshots/app-player.webp" alt="The player Audio tab"><br><sub>The player: audio languages, 200% volume, Listen on phone</sub></td>
-<td width="50%" align="center"><img src="docs/screenshots/app-tv.webp" alt="MKCinema on a TV"><br><sub>On a TV: built for the remote</sub></td>
+<td width="50%" align="center"><img src="site/shots/player.webp" alt="The player Audio tab"><br><sub>The player: audio languages, 200% volume, Listen on phone</sub></td>
+<td width="50%" align="center"><img src="site/shots/tv.webp" alt="MKCinema on a TV"><br><sub>On a TV: built for the remote</sub></td>
 </tr>
 <tr>
 <td width="50%" align="center"><img src="docs/screenshots/app-seats.webp" alt="Seats"><br><sub>Seats for everyone in the house, with PINs and kids seats</sub></td>
@@ -58,16 +58,16 @@
 <td width="50%" align="center"><img src="docs/screenshots/app-studio.webp" alt="Addon Studio"><br><sub>Addon Studio: build a Stremio addon visually</sub></td>
 </tr>
 <tr>
-<td width="50%" align="center"><img src="docs/screenshots/app-anime-home.webp" alt="Home in the Anime look"><br><sub>The Anime look</sub></td>
-<td width="50%" align="center"><img src="docs/screenshots/app-party.webp" alt="Watch party"><br><sub>Watch parties with synced playback and voice</sub></td>
+<td width="50%" align="center"><img src="site/shots/anime-home.webp" alt="Home in the Anime look"><br><sub>The Anime look</sub></td>
+<td width="50%" align="center"><img src="site/shots/party.webp" alt="Watch party"><br><sub>Watch parties with synced playback and voice</sub></td>
 </tr>
 </table>
 
 <table>
 <tr>
 <td width="33%" align="center"><img src="docs/screenshots/app-remote.webp" alt="Phone remote pairing"><br><sub>Your phone as a remote, no app needed</sub></td>
-<td width="33%" align="center"><img src="docs/screenshots/app-listen.webp" alt="Listen on this phone"><br><sub>Listen on phone</sub></td>
-<td width="33%" align="center"><img src="docs/screenshots/app-phone-anime.webp" alt="The Anime tab on a phone"><br><sub>Phones are first-class</sub></td>
+<td width="33%" align="center"><img src="site/shots/listen.webp" alt="Listen on this phone"><br><sub>Listen on phone</sub></td>
+<td width="33%" align="center"><img src="site/shots/phone-anime.webp" alt="The Anime tab on a phone"><br><sub>Phones are first-class</sub></td>
 </tr>
 </table>
 
@@ -263,20 +263,20 @@ Everything below is live today. ★ marks the features we haven't seen in any ot
 
 - **Free forever.** No paid tier, no ads, nothing locked. Ko-fi donations are optional and unlock nothing.
 - **Open source, GPL-3.0.**
-- **Private.** Picks are on-device, there are anonymous visit counts only (they can be switched off), and no account is needed.
+- **Private.** Picks are on-device, the only measurement is an anonymous, cookie-free visit count (it can be switched off), and no account is needed.
 - **Help built in.** Troubleshooting guide, Diagnostic, Send log codes, a status page with service notices, and terms and privacy inside the app.
 
 ## Platforms
 
 | Platform | Package | Notes |
 |---|---|---|
-| Web | [app.mkcinema.app](https://app.mkcinema.app) | Installable as a PWA |
-| Android | [APK](https://github.com/itbelikethatbruh/MKCinema/releases/latest) | Phones and tablets |
-| Android TV, Google TV, Fire TV | [APK](https://github.com/itbelikethatbruh/MKCinema/releases/latest) | Fire TV: enter `tv.mkcinema.app` in Downloader |
-| Windows | [EXE](https://github.com/itbelikethatbruh/MKCinema/releases/latest) | Not code-signed yet |
-| macOS | [ZIP](https://mkcinema.app/download/MKCinema-1.1.1-mac.zip) | Not notarized yet |
-| Linux | [DEB, tar.gz](https://github.com/itbelikethatbruh/MKCinema/releases/latest) | x86_64, WebKitGTK 4.1 |
-| LG webOS | [IPK](https://github.com/itbelikethatbruh/MKCinema/releases/latest) | Beta, needs Developer Mode |
+| Web | [app.mkcinema.app](https://app.mkcinema.app) | Installable as a PWA. Every app below loads it, so all platforms update together |
+| Android | [APK](https://github.com/itbelikethatbruh/MKCinema/releases/latest) (1.8.1) | Phones and tablets |
+| Android TV, Google TV, Fire TV | [APK](https://github.com/itbelikethatbruh/MKCinema/releases/latest) (1.8.1, same file) | Fire TV: enter `tv.mkcinema.app` in Downloader |
+| Windows | [EXE](https://github.com/itbelikethatbruh/MKCinema/releases/latest) (1.3.0) | Not code-signed yet |
+| macOS | [ZIP](https://github.com/itbelikethatbruh/MKCinema/releases/latest) (1.1.1) | Not notarized yet |
+| Linux | [DEB, tar.gz](https://github.com/itbelikethatbruh/MKCinema/releases/latest) (1.1) | x86_64, WebKitGTK 4.1 |
+| LG webOS | [IPK](https://github.com/itbelikethatbruh/MKCinema/releases/latest) (1.1.0) | Beta, needs Developer Mode |
 | Samsung Tizen | [TizenBrew module](tizen/README.md) | Beta, 2023 models and later |
 
 iOS is not supported. Per-platform install notes are in [docs/install.md](docs/install.md).
@@ -319,7 +319,7 @@ The web app also runs from any static host. Build steps for Android, Windows, ma
 
 ## Privacy
 
-The only measurement is an anonymous visit count from Cloudflare Web Analytics, which can be turned off in Settings › Data. It never sees your addons, keys or what you watch. MKCinema only plays what your addons return, and you are responsible for using them lawfully where you live. See the [terms of use](https://app.mkcinema.app/terms.html) and [privacy policy](https://app.mkcinema.app/privacy.html).
+MKCinema counts anonymous visits with Cloudflare Web Analytics (page, referring site, browser, country and load speed; no cookies or IDs), and it never sees your addons, keys or what you watch. In the app you can turn it off in Settings › Data. Nothing else leaves your device unless you sign in to sync or choose to send a log code. MKCinema only plays what your addons return, and you are responsible for using them lawfully where you live. See the [terms of use](https://app.mkcinema.app/terms.html) and [privacy policy](https://app.mkcinema.app/privacy.html).
 
 ## Contributing
 
