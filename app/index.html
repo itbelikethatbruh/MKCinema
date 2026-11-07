@@ -30832,7 +30832,7 @@ const CatchUp = {
     const body = X8.body('catchUp'), back = Math.max(0, at - 600);
     body.innerHTML = `<h2 class="x8-h">They’re ${F52.fmt(at)} in</h2>
       <p class="sc-p">Jump in where they are, or catch up at 1.5× with subtitles on. You rejoin their playback by yourself when you reach them.</p>
-      <div class="cu-acts"><button class="btn btn-primary" type="button" data-nav data-cu="now"><i data-lucide="users"></i>Jump in now</button>
+      <div class="cu-acts"><button class="btn btn-prime" type="button" data-nav data-cu="now"><i data-lucide="users"></i>Jump in now</button>
       ${at > 900 ? `<button class="btn btn-ghost" type="button" data-nav data-cu="${back}"><i data-lucide="rewind"></i>Catch up from ten minutes back</button>` : ''}
       <button class="btn btn-ghost" type="button" data-nav data-cu="0"><i data-lucide="fast-forward"></i>Catch up from the start</button></div>
       <p class="sc-p cu-note">At 1.5× you gain half a minute every minute, so ${F52.mins(at > 900 ? 600 : at)} behind takes about ${F52.mins((at > 900 ? 600 : at) * 2)}.</p>`;
@@ -31018,7 +31018,7 @@ const FilmNight = {
         <p class="sc-p">Seats take turns. ${esc(s.name)} chooses up to three from their watchlist, then the room votes on their phones, or it goes straight to a watch party for friends who aren’t here.</p>
         ${wl.length ? `<div class="fn-grid">${wl.map((m, i) => `<button type="button" class="fn-t${pick.has(i) ? ' on' : ''}" data-nav data-fn="${i}" aria-pressed="${pick.has(i)}">${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy">` : ''}<span>${esc(m.name)}</span></button>`).join('')}</div>`
     : `<p class="sc-p">${esc(s.name)}’s watchlist is empty. Add a few films to it, or skip to the next seat.</p>`}
-        <div class="fn-acts">${pick.size ? `${pick.size > 1 ? '<button class="btn btn-primary" type="button" data-nav data-fna="vote"><i data-lucide="smartphone"></i>Vote on our phones</button>' : '<button class="btn btn-primary" type="button" data-nav data-fna="play"><i data-lucide="play"></i>Play it</button>'}<button class="btn btn-ghost" type="button" data-nav data-fna="party"><i data-lucide="users"></i>${pick.size > 1 ? 'Party with the first' : 'Make it a watch party'}</button>` : ''}
+        <div class="fn-acts">${pick.size ? `${pick.size > 1 ? '<button class="btn btn-prime" type="button" data-nav data-fna="vote"><i data-lucide="smartphone"></i>Vote on our phones</button>' : '<button class="btn btn-prime" type="button" data-nav data-fna="play"><i data-lucide="play"></i>Play it</button>'}<button class="btn btn-ghost" type="button" data-nav data-fna="party"><i data-lucide="users"></i>${pick.size > 1 ? 'Party with the first' : 'Make it a watch party'}</button>` : ''}
         <button class="btn btn-ghost" type="button" data-nav data-fna="skip"><i data-lucide="skip-forward"></i>Next seat’s turn</button></div>`;
       icons();
     };
