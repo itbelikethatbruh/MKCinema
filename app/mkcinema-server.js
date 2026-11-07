@@ -400,8 +400,6 @@ app.get('/proxy', needToken, async (req, res) => {
  * Audio rescue: on-the-fly remux with ffmpeg
  * ------------------------------------------------------------------ */
 // ffmpeg takes request headers as one CRLF-separated string
-const ffHeaders = (h) => { const parts = Object.entries(h).filter(([k]) => !/^user-agent$/i.test(k)).map(([k, v]) => `${k}: ${v}\r\n`); return parts.length ? ['-headers', parts.join('')] : []; };
-const ffAgent = (h) => ['-user_agent', Object.entries(h).find(([k]) => /^user-agent$/i.test(k))?.[1] || DEFAULT_UA];
 /* ffmpeg and ffprobe never fetch the upstream themselves: they read it through this server's own /proxy, which checks
    every address, redirect and HLS child link, and adds the request headers. They may only speak plain http to it. */
 const ffInput = (href, headersParam) => `${SELF_BASE}/proxy?url=${encodeURIComponent(href)}${headersParam ? `&headers=${encodeURIComponent(String(headersParam))}` : ''}&token=${INTERNAL_TOKEN}`;
