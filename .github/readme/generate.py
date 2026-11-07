@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Draws the download buttons in docs/readme/.
+"""Draws the download buttons in docs/readme/, and holds the fonts and helpers
+that stats.py and marquee.py import.
 
 Everything is plain SVG with text converted to outlines, so it looks the same on
 every machine and needs no web fonts. The art is drawn still: write() strips the
@@ -7,7 +8,7 @@ CSS animation out, because GitHub's mobile app re-renders animated SVGs and the
 README flashes in and out there.
 
     cd .github/readme
-    npm pack @fontsource/space-grotesk   # font (SIL OFL)
+    npm pack @fontsource/fraunces @fontsource/space-grotesk   # fonts (SIL OFL)
     for f in *.tgz; do mkdir -p "${f%.tgz}" && tar xzf "$f" -C "${f%.tgz}" --strip-components 1; done
     pip install fonttools brotli
     python3 generate.py
@@ -60,6 +61,8 @@ class Face:
         return pen.getCommands()
 
 
+SERIF = Face(font_file("fraunces", "fraunces-latin-600-normal.woff2"))
+SERIF_IT = Face(font_file("fraunces", "fraunces-latin-400-italic.woff2"))
 SANS = Face(font_file("space-grotesk", "space-grotesk-latin-400-normal.woff2"))
 SANS_MD = Face(font_file("space-grotesk", "space-grotesk-latin-500-normal.woff2"))
 SANS_SB = Face(font_file("space-grotesk", "space-grotesk-latin-600-normal.woff2"))
