@@ -9110,7 +9110,7 @@ const Layout = {
 /* ---------------- Support the creator ----------------
    One Ko-fi link (it takes cards and PayPal). A gentle thank-you shows at most every 21 days, only after real use,
    never during playback, and "Don't ask again" means it. */
-const DONATE = { name: 'Drake Christopher', kofi: 'https://ko-fi.com/mkcinema' };
+const DONATE = { name: 'Dee Lavish', kofi: 'https://ko-fi.com/mkcinema' };
 // Ko-fi is the one donation link (one-off or monthly).
 const kfBadge = (small) => `<a class="kf-badge${small ? ' sm' : ''}" href="${esc(DONATE.kofi)}" target="_blank" rel="noopener noreferrer" aria-label="Support on Ko-fi"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M3 6.5h13.5v6.2a5.3 5.3 0 0 1-5.3 5.3H8.3A5.3 5.3 0 0 1 3 12.7z"/><path fill="none" stroke="#fff" stroke-width="2" d="M16.5 8h1.2a2.8 2.8 0 0 1 0 5.6h-1.6"/><path fill="#ff5e5b" d="M9.75 9.2c.6-.9 2.4-.7 2.4.8 0 1.3-1.6 2.4-2.4 3-.8-.6-2.4-1.7-2.4-3 0-1.5 1.8-1.7 2.4-.8z"/></svg><span>Support on Ko-fi</span></a>`;
 const Support = {
@@ -9493,7 +9493,7 @@ const SECTIONS = [
     { key: 'resetCfg', label: 'Reset settings', help: 'Keeps your library and addons.', type: 'button', text: 'Reset settings', icon: 'undo-2', danger: true, run: (b) => confirmTwice(b, () => { Object.keys(CFG).forEach((k) => delete CFG[k]); Object.assign(CFG, CFG_DEFAULTS); CFG.quality = applyPreset(CFG.quality); saveCfg(); applyAll(); renderSettings(); toast('Settings reset', 'ok'); }) },
     { key: 'resetAll', label: 'Reset everything', help: 'Removes settings, library, progress, addons and Studio projects from this browser.', type: 'button', text: 'Erase all data', icon: 'trash-2', danger: true, run: (b) => confirmTwice(b, () => { try { Object.keys(localStorage).filter((k) => k.startsWith('mkc:')).forEach((k) => localStorage.removeItem(k)); } catch (e) { /* storage blocked */ } location.reload(); }) },
   ] },
-  { id: 'support', icon: 'heart', label: 'Support', intro: 'MKCinema is free forever, with no ads and nothing locked. It is made and kept online by Drake Christopher.', rows: () => [{ html: () => Support.html() }] },
+  { id: 'support', icon: 'heart', label: 'Support', intro: 'MKCinema is free forever, with no ads and nothing locked. It is made and kept online by Dee Lavish.', rows: () => [{ html: () => Support.html() }] },
 ];
 function confirmTwice(btn, fn) {
   if (btn.dataset.armed) { fn(); delete btn.dataset.armed; btn.lastChild.textContent = btn.dataset.orig; return; }
@@ -9768,7 +9768,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.45.0';
+const APP_VERSION = '2.45.2';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -9800,7 +9800,7 @@ const LIC_GROUPS = [
 const licItem = (x) => `<details class="lic"><summary data-nav><span class="lic-n"><b>${esc(x.name)}</b><small>${x.ver ? `${esc(x.ver)} · ` : ''}${esc(x.use)}</small></span><span class="lic-tag">${esc(x.lic)}</span><i data-lucide="chevron-down" class="lic-chev"></i></summary>
   <div class="lic-body"><pre class="lic-pre">${esc(x.text)}${x.extra ? `\n\n${esc(x.extra)}` : ''}</pre>${x.url ? `<a class="lic-link" href="${esc(x.url)}" target="_blank" rel="noopener" data-nav><i data-lucide="external-link"></i>${x.lic.startsWith('CC') ? 'License details' : 'Project page'}</a>` : ''}</div></details>`;
 SECTIONS.push({ id: 'about', icon: 'scale', label: 'About & licenses', intro: 'Version, MKCinema\'s own license, and the third-party software, fonts and services it uses.', rows: () => [
-  { html: () => `<div class="ab-hero"><div class="ab-mark">MKCinema</div><small>Version ${APP_VERSION} · © 2026 Drake Christopher</small>
+  { html: () => `<div class="ab-hero"><div class="ab-mark">MKCinema</div><small>Version ${APP_VERSION} · © 2026 Dee Lavish</small>
     <p class="ab-gpl">MKCinema is free software under the GNU General Public License, version 3. It comes with ABSOLUTELY NO WARRANTY. You are welcome to share and change it under the terms of that license.</p>
     <div class="free-pledge"><b>Free forever</b><p>MKCinema is free and always will be. No paid plan, no premium tier, no ads and nothing locked, now or later. Every feature is for everyone.</p><p>Donations on Ko-fi are optional and never unlock anything.</p></div>
     <div class="ab-links"><a class="btn btn-ghost btn-sm" href="https://github.com/itbelikethatbruh/MKCinema" target="_blank" rel="noopener" data-nav><i data-lucide="code"></i>Source code</a><a class="btn btn-ghost btn-sm" href="https://github.com/itbelikethatbruh/MKCinema/blob/main/LICENSE" target="_blank" rel="noopener" data-nav><i data-lucide="scale"></i>GPL-3.0 license</a></div></div>` },
@@ -11571,7 +11571,7 @@ html.tv{scrollbar-width:none}html.tv ::-webkit-scrollbar{display:none}
 /* 2.8.3: Top 10 numbers are solid and crisp (the thin outline showed the font's inner joins and looked sketchy) */
 .card.t10c::before{-webkit-text-stroke:0;color:transparent;background:linear-gradient(180deg,rgba(246,246,248,.96) 0%,rgba(206,206,212,.78) 45%,rgba(120,120,128,.34) 100%);-webkit-background-clip:text;background-clip:text;font-weight:800;letter-spacing:-.07em;padding-right:.04em}
 
-/* 2.8.3: Networks show each service's real logo (Drake) */
+/* 2.8.3: Networks show each service's real logo */
 .net-rail .net-tile{display:grid;place-items:center;padding:18px 22px}
 .net-tile .net-logo{position:absolute;top:0;bottom:0;margin:auto;object-fit:contain;object-position:center;pointer-events:none}
 
@@ -11579,7 +11579,7 @@ html.tv{scrollbar-width:none}html.tv ::-webkit-scrollbar{display:none}
 #netBody .net-title::before{display:none}
 #netBody .net-title .net-logo{display:block;height:clamp(56px,7vw,96px);width:auto;max-width:min(320px,70vw)}
 
-/* 2.8.3: lifted logos (Drake). Light and shadow only: no preserve-3d, no backdrop-filter, motion is transform/opacity */
+/* 2.8.3: lifted logos. Light and shadow only: no preserve-3d, no backdrop-filter, motion is transform/opacity */
 
 .net-tile::before{content:"";position:absolute;left:50%;top:50%;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--nc) 55%,transparent),transparent);pointer-events:none;transition:opacity .25s ease,transform .25s ease}
 .net-tile .net-logo{z-index:1;transition:transform .25s cubic-bezier(.2,.7,.2,1)}
@@ -11592,7 +11592,7 @@ html.tv .net-tile::before{width:180px;height:112px;margin:-56px 0 0 -90px}
 @media (prefers-reduced-motion:reduce){.net-tile .net-logo,.net-tile::before,.net-tile .net-shade{transition:none}}
 html.tv .net-tile .net-logo,html.tv .net-tile::before,html.tv .net-tile .net-shade{transition:none}
 
-/* 2.8.5: floating network logos with parallax (Drake). Compositor-only: the float animates `translate`/`scale`,
+/* 2.8.5: floating network logos with parallax. Compositor-only: the float animates `translate`/`scale`,
    the parallax is a transform from CSS variables; no preserve-3d, nothing on the rows themselves */
 @keyframes netFloat{0%,100%{translate:0 0}50%{translate:0 -5px}}
 @keyframes netGlow{0%,100%{translate:var(--gx,0px) 0}50%{translate:var(--gx,0px) 3px}}
@@ -11605,7 +11605,7 @@ html.tv .net-tile .net-logo,html.tv .net-tile::before,html.tv .net-tile .net-sha
 body.reduce-motion .net-tile .net-logo,body.reduce-motion .net-tile::before,body.reduce-motion .net-tile .net-shade{animation:none}
 @media (prefers-reduced-motion:reduce){.net-tile .net-logo,.net-tile::before,.net-tile .net-shade{animation:none}}
 
-/* 2.8.6: networks without a box (Drake): the logo itself is the button, raised in 3D with a stepped edge and a soft
+/* 2.8.6: networks without a box: the logo itself is the button, raised in 3D with a stepped edge and a soft
    shadow under it; the frame is see-through and only shows as a faint glass edge when selected */
 
 .net-tile::after{display:none}
@@ -11620,7 +11620,7 @@ html.tv .net-tile.nav-focus{outline:none;border-color:rgba(255,255,255,.4)}
 html.tv .net-tile .net-logo,html.tv .net-tile::before,html.tv .net-tile .net-shade{animation:none}
 
 
-/* 2.8.8 Seats with room to breathe (Drake: "looks squished"): one line per name, status on the line under it */
+/* 2.8.8 Seats with room to breathe ("looks squished"): one line per name, status on the line under it */
 .seat-rows{gap:8px;padding:4px 0 10px}
 .seat-row{gap:14px;padding:14px 16px;border:1px solid rgba(255,255,255,.07);border-radius:16px;background:rgba(255,255,255,.025)}
 .seat-row.here{border-color:rgba(255,255,255,.14)}
@@ -11633,7 +11633,7 @@ html.tv .net-tile .net-logo,html.tv .net-tile::before,html.tv .net-tile .net-sha
 .seat-row .inrow{flex:none;gap:8px}
 @media (max-width:420px){.seat-row{padding:12px 12px;gap:12px}.seat-row .btn-sm{padding-left:12px;padding-right:12px}}
 
-/* 2.8.8 calm ratings (Drake: the green/yellow/red badges "look cheap"): one quiet smoked pill, white figure,
+/* 2.8.8 calm ratings (the green/yellow/red badges "look cheap"): one quiet smoked pill, white figure,
    a small champagne star; no traffic-light colours by score */
 .badge-r.badge-r,html.tv .badge-r.badge-r{color:#f4f1ea;background:rgba(10,10,12,.74);border:1px solid rgba(255,255,255,.14);box-shadow:0 6px 14px -6px rgba(0,0,0,.8);font-weight:700;letter-spacing:.02em}
 .badge-r.badge-r i{color:#cdb47e}
@@ -11678,7 +11678,7 @@ html.tv .net-tile .net-logo,html.tv .net-tile::before,html.tv .net-tile .net-sha
 @media (max-width:560px){.lib-bar .lib-q{flex-basis:100%}}
 @media (max-width:560px){.lib-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:2px 16px}.lib-tabs::-webkit-scrollbar{display:none}.lib-tabs .chip{flex:none}.lib-bar{gap:8px}.lib-bar .segc{flex:1 1 auto}.lib-bar .lib-sort{flex:1 1 140px}}
 
-/* 2.9.0 (Drake, TV photo): the banner arrows sat on the IMDb line and the description; they now sit as a pair in the
+/* 2.9.0 (TV photo): the banner arrows sat on the IMDb line and the description; they now sit as a pair in the
    bottom-right corner beside the dots, over the picture, never over text */
 .hero .hero-nav{top:auto;bottom:18px;margin-top:0;width:44px;height:44px}
 .hero .hero-nav.prev{left:auto;right:74px}.hero .hero-nav.next{right:20px}
@@ -12943,7 +12943,7 @@ const WhereToWatch = {
     const box = $('#dWtw'); if (!box || !this.key() || !/^(movie|series)$/.test(m.type)) return;
     const r = await this.get(m); if (!$('#dWtw') || D.meta !== m) return;
     if (!r) { box.remove(); return; }
-    // each service shows once: streaming first, and rent and buy share one row (Drake: no duplicate rent/buy buttons)
+    // each service shows once: streaming first, and rent and buy share one row (no duplicate rent/buy buttons)
     const seen = new Set(), pick = (keys) => keys.flatMap((k) => r[k] || []).filter((x) => !seen.has(x.provider_id) && seen.add(x.provider_id)).slice(0, 6);
     // the same service once: "HBO Max Amazon Channel" and "Peacock Premium Plus" fold into HBO Max and Peacock Premium
     const tidy = (list) => list.filter((x) => !list.some((y) => y !== x && x.provider_name.startsWith(`${y.provider_name} `)));
@@ -13824,7 +13824,7 @@ const Report = {
 }
 COMMANDS.push({ label: 'Report a problem', icon: 'bug', run: () => Report.open() }, { label: 'Test my connection speed', icon: 'gauge', run: () => LineCheck.run() });
 
-/* ---------------- 2.8.2 TV Home (Drake, 2026-11-05) ----------------
+/* ---------------- 2.8.2 TV Home ----------------
    - the featured banner gets arrows the remote can reach and press (Left from Smart Play, Right from Watchlist)
    - Left/Right at either end of a row stays put instead of jumping to a far-off button in another row
    - Networks: browse what is on Netflix, Disney+, HBO Max and others. The lists come from the public
@@ -13854,7 +13854,7 @@ const Networks = {
     this.parallax(sec);
     return sec;
   },
-  // 2.8.5 parallax (Drake): as the row moves, each logo drifts against its tile and its glow drifts the other way;
+  // 2.8.5 parallax: as the row moves, each logo drifts against its tile and its glow drifts the other way;
   // on a computer the logo also leans toward the pointer. Only CSS variables change, once per frame. TVs keep the float.
   parallax(sec) {
     if (IS_TV) return;
@@ -13959,7 +13959,7 @@ const TvHome = {
       }
       return move(dir, fast);
     };
-    // 2.8.3/2.8.6 (Drake: rows lagged, then "cycling is jittery"). On TV the focused poster is pinned to the row's left
+    // 2.8.3/2.8.6 (rows lagged, then "cycling is jittery"). On TV the focused poster is pinned to the row's left
     // edge and the row glides under it, as on Netflix. One animation per row that retargets from where it is, so presses
     // never queue or jump; a held button glides faster. Moving along a row never scrolls the page up or down (that
     // re-centring on every press was the jitter); the page only moves when the focus changes row.
@@ -14003,7 +14003,7 @@ const TvHome = {
         return r;
       };
 
-      // 2.8.6 (Drake: "it sometimes just freezes and you can't scroll back up ... you have to exit out").
+      // 2.8.6 ("it sometimes just freezes and you can't scroll back up ... you have to exit out").
       // A drop-down (the Catalog picker on Movies and Series) kept every arrow press for itself on a remote, so the
       // focus was trapped there. Arrows now leave drop-downs and multi-line boxes; OK still opens them.
       document.addEventListener('keydown', (e) => {
@@ -14042,7 +14042,7 @@ if (!$('#view-network')) {
 Networks.init(); TvHome.init();
 if (S.view === 'home') Networks.place();
 
-/* ---------------- 2.8.4 Simple Home (Drake, 2026-11-05: "the ease of use and simple functionality of how Netflix sorts
+/* ---------------- 2.8.4 Simple Home ("the ease of use and simple functionality of how Netflix sorts
    their movies ... everything seamless and make sense") ----------------
    - one clear order: Continue watching, My watchlist, Top 10, Networks, Popular, your picks, the themed rows,
      critically acclaimed, then the extras (Shortlist, Peak Cinema) and an unfilled "For you" invitation last
@@ -19257,7 +19257,7 @@ const TvBridge = {
 @media (hover:hover){.seat-ed{opacity:.75;transition:opacity .15s}.seat:hover .seat-ed,.seat-ed:hover{opacity:1}}
 </style>
 <script id="mkc-2211">
-/* ---------------- 2.21.1 Small fixes from Drake ----------------
+/* ---------------- 2.21.1 Small fixes ----------------
    1. Phones: picking Side menu inside Settings changed nothing you could see (Settings covers the screen and the
       side menu on a phone is only a menu button). Now Settings closes, the menu slides in once, and a toast says
       where it lives. The "Top menu" card says "Bottom bar" on phones, which is where that bar is.
@@ -19439,7 +19439,7 @@ html.an-fx #anSlash.go{display:block}
 
 @media (prefers-reduced-motion:reduce){#anSlash,.an-burst{display:none!important}.an-splash *{animation:none!important}}
 
-/* ===== round 2 (Drake): jagged comic frames, icons that break out, the side menu ===== */
+/* ===== round 2: jagged comic frames, icons that break out, the side menu ===== */
 /* posters: a crimson burst frame behind every poster */
 html[data-look="anime"] .card-inner{box-shadow:0 0 0 2px var(--an-ink)}
 html[data-look="anime"]:not(.tv) .card-inner{border:0 solid transparent;border-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2048%2048%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ff2d55%22/%3E%3Cstop%20offset%3D%22.6%22%20stop-color%3D%22%23b0123f%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%235a0f3e%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath%20fill%3D%22url%28%23g%29%22%20fill-rule%3D%22evenodd%22%20d%3D%22M0.0%200.0%20L6.0%207.0%20L12.0%200.0%20L18.0%207.0%20L24.0%200.0%20L30.0%207.0%20L36.0%200.0%20L42.0%207.0%20L48.0%200.0%20L41.0%206.0%20L48.0%2012.0%20L41.0%2018.0%20L48.0%2024.0%20L41.0%2030.0%20L48.0%2036.0%20L41.0%2042.0%20L48.0%2048.0%20L42.0%2041.0%20L36.0%2048.0%20L30.0%2041.0%20L24.0%2048.0%20L18.0%2041.0%20L12.0%2048.0%20L6.0%2041.0%20L0.0%2048.0%20L7.0%2042.0%20L0.0%2036.0%20L7.0%2030.0%20L0.0%2024.0%20L7.0%2018.0%20L0.0%2012.0%20L7.0%206.0Z%20M14%2014%20V34%20H34%20V14Z%22/%3E%3C/svg%3E") 16 / 14px / 9px round}
@@ -19521,7 +19521,7 @@ const AN_ICONS = {
 };
 
 /* =====================================================================
-   MKCinema 2.22.0 · Anime look, comic edition (Drake, 2026-11-05)
+   MKCinema 2.22.0 · Anime look, comic edition
    The Anime look turns into a manga: a new MKCinema anime logo, Dela Gothic One titles with ink and crimson
    shadows, an anime icon set, comic-panel posters and caption-box row titles, slash wipes between sections,
    impact bursts on presses, a redrawn Miko and a layered night city with parallax.
@@ -22526,7 +22526,7 @@ html[data-look="anime"] #sideDrawer .sd-top::after{display:none}
 }
 </style>
 <style id="mkc-2340css">
-/* 2.34.0 Networks: the logos float on their own, no box and no border (Drake). Only transform/opacity move. */
+/* 2.34.0 Networks: the logos float on their own, no box and no border. Only transform/opacity move. */
 .net-rail{padding-block:6px 14px}
 .net-rail .net-tile{border:0;background:none;box-shadow:none;overflow:visible;border-radius:18px}
 .net-rail .net-tile::after{display:none}
