@@ -9,7 +9,7 @@
     "core-js": "3.39.0",
     "esbuild": "0.24.0",
     "fflate": "0.8.2",
-    "lightningcss": "1.28.2",
+    "lightningcss": "1.33.0",
     "regexpu-core": "6.2.0"
   }
 }
