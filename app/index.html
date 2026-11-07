@@ -22594,6 +22594,40 @@ html.tv .net-tile .net-logo[src$="dnp.svg"]{height:92px}
 .dock-wrap::before{content:"";position:absolute;left:0;right:0;top:0;height:calc(100% - var(--dock-h,64px) / 2);background:linear-gradient(180deg,var(--void) 78%,rgba(0,0,0,0));pointer-events:none;z-index:-1}
 @media (min-width:761px){html.nav-side .dock-wrap::before{display:none}}
 </style>
+<style id="mkc-246unicss">
+/* 2.46 Universes: each franchise's own title logo floats over its dimmed art. Only transform/translate/opacity move */
+.uni-card.has-logo img.uni-art.in{opacity:.55}
+.uni-card.has-logo::after{background:radial-gradient(ellipse 70% 60% at 50% 45%,rgba(0,0,0,.5),rgba(0,0,0,.12) 75%),linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,0,0,.8) 100%)}
+.uni-card img.uni-logo{inset:auto;left:50%;top:45%;width:auto;height:auto;max-width:76%;max-height:48%;object-fit:contain;z-index:2;
+  transform:translate(-50%,-50%);transition:transform .35s cubic-bezier(.2,.7,.2,1),opacity .4s ease;
+  filter:drop-shadow(0 2px 0 rgba(0,0,0,.55)) drop-shadow(0 12px 14px rgba(0,0,0,.85))}
+.uni-card img.uni-logo.in{opacity:1}
+.uni-card.has-logo .uni-txt b{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (hover:hover){.uni-card.has-logo:hover img.uni-art{opacity:.75}.uni-card:hover img.uni-logo{transform:translate(-50%,-50%) scale(1.08)}}
+.uni-card:focus-visible img.uni-logo,.uni-card.nav-focus img.uni-logo{transform:translate(-50%,-50%) scale(1.08)}
+html.tv .uni-card img.uni-logo{transition:none}
+@keyframes uniFloat{0%,100%{translate:0 0}50%{translate:0 -6px}}
+@media (hover:hover){html:not(.tv) .uni-rail .uni-card img.uni-logo{animation:uniFloat 6s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.7s)}}
+body.reduce-motion .uni-card img.uni-logo{animation:none}
+@media (prefers-reduced-motion:reduce){.uni-card img.uni-logo{animation:none;transition:none}}
+@media (max-width:600px){.uni-card img.uni-logo{max-width:80%;max-height:50%}}
+.uni-grid .uni-card img.uni-logo{max-height:46%}
+#uniBody .uni-hero img.uni-hero-logo{position:static;display:block;width:auto;height:auto;max-height:clamp(64px,9vw,128px);max-width:min(460px,78vw);object-fit:contain;opacity:1;
+  filter:drop-shadow(0 2px 0 rgba(0,0,0,.55)) drop-shadow(0 14px 18px rgba(0,0,0,.85))}
+#uniBody .uni-title{margin-bottom:12px}
+/* 2.46 network logos: about a third bigger everywhere */
+.net-rail .net-tile{width:290px;height:164px}
+.net-tile .net-logo{height:86px;left:20px;right:20px;width:calc(100% - 40px)}
+.net-tile .net-logo[src$="dnp.svg"]{height:110px}
+.net-tile .net-shade{bottom:6px;height:20px}
+.net-tile::before{width:240px;height:140px;margin:-70px 0 0 -120px}
+@media (max-width:600px){.net-rail .net-tile{width:220px;height:136px}.net-tile .net-logo{height:72px;left:14px;right:14px;width:calc(100% - 28px)}.net-tile .net-logo[src$="dnp.svg"]{height:94px}.net-tile::before{width:190px;height:116px;margin:-58px 0 0 -95px}}
+html.tv .net-rail .net-tile{width:320px;height:180px}
+html.tv .net-tile .net-logo{height:94px}
+html.tv .net-tile .net-logo[src$="dnp.svg"]{height:120px}
+html.tv .net-tile::before{width:250px;height:146px;margin:-73px 0 0 -125px}
+</style>
+
 <style id="mkc-2320css">
 /* 2.32.0: the chosen font also sets the menu words (top menu, phone tab bar, side rail, phone side drawer) */
 html[data-font]:not([data-look="anime"]) :where(#tabs .tab,#tabs .tab .lbl,.dock .searchbtn .lbl,#mtabs button,#mtabs button span,#sideDrawer .sd-list button,#sideDrawer .sd-list button span){font-family:var(--f-display)}
@@ -22689,9 +22723,10 @@ const Universes = {
   loadHome() { if (!this.homeP) this.homeP = fetch('universes-home.json').then((r) => (r.ok ? r.json() : null)).then((j) => (j && Array.isArray(j.universes) && j.universes.length ? j : null)).catch(() => null).then((j) => j || this.load().then(() => null)); return this.homeP; },
   get(id) { return (this.data || []).find((u) => u.id === id); },
   cats() { return [...new Set((this.data || []).map((u) => u.cat || 'More'))]; },
-  card(u) {
-    const n = u.films ? u.films.length : (u.n || 0);
-    return `<button type="button" class="uni-card" data-nav data-uni="${esc(u.id)}" aria-label="${esc(u.name)}: ${n} films"><img src="${esc(u.art)}" alt="" loading="lazy" decoding="async" draggable="false" onload="this.classList.add('in')"><span class="uni-txt"><b>${esc(u.name)}</b><small>${n} ${n === 1 ? 'film' : 'films'}</small></span></button>`;
+  logo(u, w) { return u && u.logo ? `https://image.tmdb.org/t/p/${w || 'w500'}${u.logo}` : ''; },
+  card(u, i) {
+    const n = u.films ? u.films.length : (u.n || 0), lg = this.logo(u);
+    return `<button type="button" class="uni-card${lg ? ' has-logo' : ''}" style="--i:${i || 0}" data-nav data-uni="${esc(u.id)}" aria-label="${esc(u.name)}: ${n} films"><img class="uni-art" src="${esc(u.art)}" alt="" loading="lazy" decoding="async" draggable="false" onload="this.classList.add('in')">${lg ? `<img class="uni-logo" src="${esc(lg)}" alt="" loading="lazy" decoding="async" draggable="false" onload="this.classList.add('in')" onerror="this.parentNode.classList.remove('has-logo');this.remove()">` : ''}<span class="uni-txt"><b>${esc(u.name)}</b><small>${n} ${n === 1 ? 'film' : 'films'}</small></span></button>`;
   },
   bindCards(box) { $$('[data-uni]', box).forEach((b) => b.addEventListener('click', () => this.open(b.dataset.uni))); },
   async place() {
@@ -22702,7 +22737,7 @@ const Universes = {
     if (!sec) {
       const pick = hm ? hm.universes : this.HOME.map((id) => this.get(id)).filter(Boolean), total = hm ? hm.total : this.data.length;
       sec = document.createElement('section'); sec.className = 'row uni-row'; sec.id = 'uniRow';
-      sec.innerHTML = `<div class="row-head"><h2 class="row-title">Universes</h2><button class="row-more" type="button" data-nav id="uniAll">See all<i data-lucide="chevron-right"></i></button></div><div class="rail uni-rail">${pick.map((u) => this.card(u)).join('')}<button class="rail-all" type="button" data-nav id="uniAll2"><i data-lucide="layout-grid"></i><span>See all ${total}</span></button></div>`;
+      sec.innerHTML = `<div class="row-head"><h2 class="row-title">Universes</h2><button class="row-more" type="button" data-nav id="uniAll">See all<i data-lucide="chevron-right"></i></button></div><div class="rail uni-rail">${pick.map((u, i) => this.card(u, i)).join('')}<button class="rail-all" type="button" data-nav id="uniAll2"><i data-lucide="layout-grid"></i><span>See all ${total}</span></button></div>`;
       this.bindCards(sec);
       $('#uniAll', sec).onclick = () => this.open(null); $('#uniAll2', sec).onclick = () => this.open(null);
       icons();
@@ -22725,7 +22760,7 @@ const Universes = {
       this.bindCards(box);
     } else {
       const sib = this.data.filter((x) => (x.cat || 'More') === (u.cat || 'More'));
-      box.innerHTML = `<div class="uni-hero"><img src="${esc(u.art)}" alt="" decoding="async"><div><h1 class="page-title">${esc(u.name)}</h1><p class="page-sub">${u.films.length} ${u.films.length === 1 ? 'film' : 'films'} in release order. Playing uses your own addons.</p></div></div>
+      box.innerHTML = `<div class="uni-hero"><img src="${esc(u.art)}" alt="" decoding="async"><div>${this.logo(u) ? `<h1 class="page-title uni-title" aria-label="${esc(u.name)}"><img class="uni-hero-logo" src="${esc(this.logo(u))}" alt="" decoding="async" onerror="const h=this.parentNode;h.textContent=h.getAttribute('aria-label')"></h1>` : `<h1 class="page-title">${esc(u.name)}</h1>`}<p class="page-sub">${u.films.length} ${u.films.length === 1 ? 'film' : 'films'} in release order. Playing uses your own addons.</p></div></div>
         <div class="net-switch"><button type="button" class="chip" data-nav data-uback><i data-lucide="layout-grid"></i>All universes</button>${sib.map((x) => `<button type="button" class="chip ${x.id === u.id ? 'on' : ''}" data-nav data-usw="${esc(x.id)}">${esc(x.name)}</button>`).join('')}</div>
         <div class="grid" id="uniGrid">${u.films.map((f, i) => cardHTML({ id: f.id, type: 'movie', name: f.name, poster: f.poster || undefined, releaseInfo: String(f.year) }, { sub: `${i + 1} · ${f.year}` })).join('')}</div>`;
       $$('[data-usw]', box).forEach((b) => b.addEventListener('click', () => { this.cur = b.dataset.usw; this.render(); scrollTo({ top: 0 }); }));
