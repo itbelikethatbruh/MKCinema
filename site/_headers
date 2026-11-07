@@ -5,6 +5,15 @@
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+/shots/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+/logos/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+/og.jpg
+  Cache-Control: public, max-age=86400
 /download/*.exe
   Content-Type: application/vnd.microsoft.portable-executable
   Content-Disposition: attachment; filename="MKCinema.exe"
