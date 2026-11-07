@@ -23,13 +23,17 @@
 
 <p align="center"><img src="docs/screenshots/app-home.webp" width="100%" alt="MKCinema Home screen"></p>
 
-## Overview
+## About
 
-MKCinema plays content from the Stremio addons you install. It ships no titles or streams of its own: catalogs come from Cinemeta, subtitles from OpenSubtitles, and the only built-in source is official trailers.
+MKCinema is an independent project, designed, built and maintained by Drake Christopher. It started as a better-looking way to watch from Stremio addons and grew into a full media app: one codebase that runs in the browser and on eight platforms, with a player, a library, account sync, TV support, watch parties and tools for addon developers.
 
-The project's focus is making existing addons work better without asking their developers to change anything. Any addon that speaks the Stremio addon protocol works as it is, and addons that want more can opt into an optional, data-only manifest field.
+A few principles shape everything in it:
 
-MKCinema is free. There is no paid tier, no ads and nothing locked behind donations.
+- **Free forever.** MKCinema will never charge for anything. There is no paid tier, no ads and no feature behind a paywall. Donations on [Ko-fi](https://ko-fi.com/mkcinema) are optional and unlock nothing.
+- **Your addons, your accounts.** MKCinema ships no titles or streams. Catalogs come from Cinemeta, subtitles from OpenSubtitles, and the only built-in source is official trailers. Everything else comes from addons and debrid accounts you add yourself, and your keys stay in your own account.
+- **Addons first.** Any addon that speaks the Stremio addon protocol works as it is, and MKCinema does extra work to make it look and behave better without its developer changing anything.
+- **Private by default.** No ads, cookies or tracking profiles, and recommendations are worked out on your device.
+- **Open source.** The full code is here under GPL-3.0.
 
 ## Addon support
 
@@ -48,18 +52,63 @@ Opt-in for addon developers, through an optional `mkcinema` object in manifest a
 
 Everything is validated data. MKCinema draws it with its own components and never runs addon code, HTML or CSS, and other clients ignore the field. Specs: [docs/addon-looks.md](docs/addon-looks.md) and [docs/addon-extras.md](docs/addon-extras.md).
 
-## Features
+## What's built
 
-- **Sources:** parallel addon queries, debrid with your own key, cached-result detection, source rules (resolution, file size, blocked words), fake and sample filtering, and automatic failover when a stream stalls.
-- **Player:** HLS and direct playback, styled ASS subtitles via libass, embedded MKV subtitles and chapters, audio track selection, volume boost, skip intro and credits, and hand-off to external players such as VLC and mpv.
-- **Library:** watchlist, progress, custom lists, new-episode alerts, Trakt, Simkl, AniList and MyAnimeList sync, and import from a Stremio account.
-- **Households:** profiles with PINs, and kids profiles filtered by age rating.
-- **TV:** remote-first navigation, a phone remote paired by QR code, TV sound on your phone for headphones, and the TV's hardware player on Android TV and Fire TV.
-- **Social:** watch parties with synced playback, chat and push-to-talk, peer to peer.
-- **Media servers and live TV:** Plex, Jellyfin and Emby libraries next to addon sources, and M3U or Xtream playlists with an XMLTV guide.
-- **Recommendations:** a For you row computed entirely on the device.
+**Sources and debrid**
+- Every installed addon is queried in parallel, and results appear as each one answers.
+- Debrid support for the common services with your own key, a connection test, and cached results marked so they play right away.
+- Smart Play picks the best source and explains why. Source Check hides fakes, samples, archives and wrong episodes, and flags cinema recordings.
+- Source rules across all addons: lowest resolution, largest file size, HDR preference, blocked words and debrid order.
+- Automatic failover to the next source when a stream shows no picture or stalls.
+- Plex, Jellyfin and Emby libraries next to addon sources, with your own copy picked first.
+- Optional torrent playback in the desktop, Android and TV apps, off until you turn it on.
 
-The full list, with screenshots, is in [docs/features.md](docs/features.md).
+**Player**
+- HLS and direct playback, with hand-off to VLC, mpv, IINA, Infuse, MX Player, Just Player or PotPlayer.
+- Styled ASS subtitles through libass, embedded MKV subtitles and chapters, OpenSubtitles built in, drag-to-sync timing, and automatic translation when no subtitle exists in your language.
+- Audio track selection, sound modes (Clear voices, Night), audio delay and volume boost to 200%.
+- Skip intro, recap and credits from TheIntroDB, AniSkip, the file's chapters and addons, with a countdown to the next episode.
+- X-Ray on pause (cast, bios, release facts, picture and sound details), touch gestures, picture-in-picture, Chromecast and media keys.
+- Optional on-device sharpening and upscaling.
+
+**Library and discovery**
+- Watchlist, Continue watching, Watched and custom lists, with sorting and filters.
+- New-episode row and alerts, and sync with Trakt, Simkl, AniList and MyAnimeList.
+- One-step import of addons, library and progress from a Stremio account.
+- Your Picks: a For you row and plain-language search ("funny crime series"), worked out entirely on the device.
+- Top 10 today, Universes, More like this, MDBList rows, an Anime section, and Peak Cinema for browsing films by their best scenes.
+- Live TV from your own M3U or Xtream playlists with an XMLTV guide, and Split Screen for up to four streams.
+
+**TV and the living room**
+- Apps for Android TV, Google TV, Fire TV, LG webOS and Samsung (TizenBrew), built for the remote.
+- On Android TV and Fire TV, streams play in the TV's hardware player, with HEVC, HDR, Dolby Vision and frame-rate matching.
+- Your phone becomes a remote by scanning a QR code, with no app to install.
+- Listen on phone: the film plays on the TV and the sound comes out of your phone, for headphones.
+- Ambient Mode turns an idle TV into a screensaver of your films.
+
+**Household and social**
+- Seats for everyone in the house, each with its own picture, watchlist, progress and Home, with optional PINs.
+- Kids seats filtered by the age rating where you live.
+- Watch parties with synced playback, chat, reactions and push-to-talk, peer to peer.
+- Discord status from the Windows app, off until you turn it on.
+
+**Make it yours**
+- Five looks (Noir, Midnight, Velvet, Sepia, Anime) and a colour wheel that tints the whole app.
+- Menus in English, Spanish, Portuguese, French, German, Italian and Hindi.
+- Arrange Home: hide, move or rename any row, per seat.
+- Plugins and themes from a reviewed gallery, each checked against its checksum before it runs.
+
+**For addon developers**
+- Addon Studio: design a Stremio addon visually, test it in the app, and export a ready-to-run server.
+- Addon Finder: search the community addon list and install in one press.
+- One-tap install links from an addon's setup page.
+- The optional `mkcinema` manifest field described above, with a built-in checker.
+
+**Support**
+- A troubleshooting guide in Settings with buttons that go straight to the right setting.
+- A Diagnostic, a speed test, and Send log, which gives you a short code to paste into a bug report.
+
+Screenshots and longer descriptions are in [docs/features.md](docs/features.md).
 
 ## Platforms
 
@@ -114,11 +163,11 @@ The web app also runs from any static host. Build steps for Android, Windows, ma
 
 ## Privacy
 
-No ads, cookies or tracking profiles. The only measurement is an anonymous visit count from Cloudflare Web Analytics, which can be turned off in Settings › Data. Recommendations are computed on the device. MKCinema only plays what your addons return, and you are responsible for using them lawfully where you live. See the [terms of use](https://app.mkcinema.app/terms.html) and [privacy policy](https://app.mkcinema.app/privacy.html).
+The only measurement is an anonymous visit count from Cloudflare Web Analytics, which can be turned off in Settings › Data. It never sees your addons, keys or what you watch. MKCinema only plays what your addons return, and you are responsible for using them lawfully where you live. See the [terms of use](https://app.mkcinema.app/terms.html) and [privacy policy](https://app.mkcinema.app/privacy.html).
 
 ## Contributing
 
-Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first, and report security issues privately as described in [SECURITY.md](SECURITY.md). Donations on [Ko-fi](https://ko-fi.com/mkcinema) are optional and unlock nothing.
+Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first, and report security issues privately as described in [SECURITY.md](SECURITY.md). If MKCinema is useful to you, a star helps other people find it.
 
 ## License
 
