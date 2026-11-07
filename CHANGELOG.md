@@ -2,6 +2,16 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.50.0 (household and phone)
+
+- **Family Helper.** The person who set MKCinema up for you can help from their phone, from anywhere: see what's on the screen, turn subtitles on, fix the sound, start a film and send a message to the screen. The screen shows when they're connected, and Settings › Devices removes them. "Ask for help" leaves a note their phone remote shows the next time it opens.
+- **Take it with you.** Tap Take it with you on the phone remote and the film carries on on your phone at the same line. "Send back to your TV" in the phone's player options hands it back.
+- **MK Channel.** Switch on and something is already playing: Up next, Your watchlist, Films on now (runs on the clock), a Series marathon and Scenes. Settings › Playback, or the command palette.
+- **Learn mode.** Tap any word in the subtitles to translate it, see the line translated underneath, pause after each line, replay a line with R, and keep a list of your words.
+- **Sound from another source.** Keep one source's picture and play another release's sound, such as a dub. Frame-rate differences are lined up automatically; a nudge fixes the rest and is remembered. Phones and computers.
+- **Sleep timer stops at a good moment.** It waits for a pause in the dialogue nearby instead of stopping mid-sentence.
+- **Subtitles when you go back.** Going back a few seconds turns subtitles on until you're past the part you missed.
+
 ## Web app 2.49.0 (stream info and scene times)
 
 - **Sources, side by side.** Addons can describe each source as data, so quality, HDR, sound, size and cache state look the same for every addon. Filter by HDR or Atmos, and sort by size.

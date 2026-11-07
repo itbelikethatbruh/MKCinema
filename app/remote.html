@@ -279,6 +279,23 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .cm-b.yes{background:#fff;color:#000;border-color:#fff}
 .cm-n{color:var(--dim);font-size:13px}
 </style>
+<style id="rm-250css">
+/* 2.50 Family Helper + Take it with you */
+.sheet.fh{max-height:calc(100dvh - 36px);overflow-y:auto;overscroll-behavior:contain}
+#fhInfo{display:flex;flex-direction:column;gap:2px;margin:6px 0 14px}
+.fh-r{display:flex;justify-content:space-between;gap:14px;padding:9px 2px;border-bottom:1px solid var(--line)}
+.fh-r span{color:var(--dim);font-size:13px;flex-shrink:0}
+.fh-r b{color:#fff;font:500 13.5px/1.35 var(--f-body);text-align:right;word-break:break-word}
+.fh-r.warn b{color:#f2c46d}
+.fh-ask{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(242,196,109,.12);color:#f2c46d;font-size:13.5px;margin-bottom:6px}
+.fh-ask button{border:1px solid rgba(242,196,109,.5);background:transparent;color:#f2c46d;border-radius:999px;padding:5px 12px;font:600 12.5px/1 var(--f-body)}
+.fh-fix{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0 14px}
+.fh-fix button{min-height:48px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:#fff;font:600 12.5px/1.2 var(--f-body);padding:6px}
+.fh-fix button.warn{color:#f2c46d}
+.fh-h{color:var(--dim);font:600 11.5px/1 var(--f-body);letter-spacing:.1em;text-transform:uppercase;margin:6px 0 8px}
+.login.ask{border-color:rgba(242,196,109,.45)}
+.login.ask b{color:#f2c46d}
+</style>
 </head>
 <body>
 <div class="amb"></div>
@@ -316,6 +333,8 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
     <symbol id="i-clip" viewBox="0 0 24 24"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></symbol>
     <symbol id="i-plug" viewBox="0 0 24 24"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/></symbol>
       <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+      <symbol id="i-life" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></symbol>
   </defs>
 </svg>
 
@@ -361,6 +380,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
   <button class="login" type="button" id="loginBtn" hidden><svg class="i"><use href="#i-login"/></svg><span class="grow"><b>Sign in your TV from here</b><small>Faster than typing on the TV</small></span><svg class="i"><use href="#i-right"/></svg></button>
   <button class="login lsn" type="button" id="lsnBtn" hidden><svg class="i"><use href="#i-head"/></svg><span class="grow"><b id="lsnT">Listen on this phone</b><small id="lsnS">Plug in headphones to watch without waking anyone</small></span></button>
   <!-- 2.35.0 --><button class="login" type="button" id="psBtn" hidden><svg class="i"><use href="#i-cc"/></svg><span class="grow"><b>Subtitles on this phone</b><small>Read your own language, in step with the TV</small></span><svg class="i"><use href="#i-right"/></svg></button><!-- /2.35.0 -->
+<!-- 2.50 --><button class="login" type="button" id="tkBtn" hidden><svg class="i"><use href="#i-phone"/></svg><span class="grow"><b>Take it with you</b><small>The film carries on on this phone, at the same line</small></span><svg class="i"><use href="#i-right"/></svg></button><button class="login ask" type="button" id="fhAskBtn" hidden><svg class="i"><use href="#i-life"/></svg><span class="grow"><b>Your TV asked for help</b><small>See what’s on its screen and fix it from here</small></span><svg class="i"><use href="#i-right"/></svg></button><button class="login" type="button" id="fhBtn" hidden><svg class="i"><use href="#i-life"/></svg><span class="grow"><b>Help on this screen</b><small>See what’s on it and fix things, from anywhere</small></span><svg class="i"><use href="#i-right"/></svg></button><!-- /2.50 -->
 <button class="login" type="button" id="adBtn" hidden><svg class="i"><use href="#i-plug"/></svg><span class="grow"><b>Manage add-ons from this phone</b><small>Paste links with your phone’s keyboard</small></span><svg class="i"><use href="#i-right"/></svg></button>
   <div id="pvBox" hidden>
     <button class="login lsn" type="button" id="pvBtn"><svg class="i"><use href="#i-mic"/></svg><span class="grow"><b id="pvT">Party voice on this phone</b><small id="pvS">Hear your friends here instead of on the TV</small></span></button>
@@ -429,6 +449,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
   <div id="menuTvs"></div>
   <button class="item" type="button" id="mPair"><svg class="i"><use href="#i-plus"/></svg>Pair another TV</button>
   <!-- 2.35.0 --><button class="item" type="button" id="mSubs"><svg class="i"><use href="#i-cc"/></svg>Subtitles on this phone</button><button class="item" type="button" id="mMatch"><svg class="i"><use href="#i-users"/></svg>Couch match</button><!-- /2.35.0 -->
+<!-- 2.50 --><button class="item" type="button" id="mHelp" hidden><svg class="i"><use href="#i-life"/></svg>Help on this screen</button><!-- /2.50 -->
 <button class="item" type="button" id="mAddons"><svg class="i"><use href="#i-plug"/></svg>Add-ons on your TV</button>
   <button class="item" type="button" id="mInstall" hidden><svg class="i"><use href="#i-install"/></svg>Add the remote to your home screen</button>
   <a class="item" href="./" id="mApp"><svg class="i"><use href="#i-open"/></svg>Open MKCinema on this phone</a>
@@ -465,6 +486,16 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
   <div id="psText"></div>
   <div class="ps-ctl"><button type="button" id="psSmall">A−</button><button type="button" id="psBig">A+</button><button type="button" id="psEarly">−0.5 s</button><button type="button" id="psLate">+0.5 s</button></div>
 </div><!-- /2.35.0 -->
+<!-- 2.50 --><div class="sheet fh" id="fh" role="dialog" aria-label="Help on this screen">
+  <div class="grab"></div>
+  <h3>Help on this screen</h3>
+  <p class="kbnote">The TV shows that you’re helping. This works from anywhere.</p>
+  <div id="fhInfo"></div>
+  <div class="fh-h">Quick fixes</div>
+  <div class="fh-fix" id="fhFix"><button type="button" data-fx="home">Go home</button><button type="button" data-fx="back">Back</button><button type="button" data-fx="resume">Play</button><button type="button" data-fx="subs-on">Subtitles on</button><button type="button" data-fx="subs-off">Subtitles off</button><button type="button" data-fx="unmute">Sound on</button><button type="button" data-fx="louder">Louder</button><button type="button" data-fx="quieter">Quieter</button><button type="button" data-fx="sources">Other source</button><button type="button" data-fx="close">Close the film</button><button type="button" data-fx="pause">Pause</button><button type="button" class="warn" data-fx="reload">Restart app</button></div>
+  <div class="fh-h">Message on the TV</div>
+  <div class="field"><input id="fhMsg" type="text" maxlength="280" autocomplete="off" enterkeyhint="send" placeholder="Press OK on the big Play button"><button class="iconbtn" type="button" id="fhSend" aria-label="Send"><svg class="i"><use href="#i-enter"/></svg></button></div>
+</div><!-- /2.50 -->
 <div class="toast" id="toast" role="status"></div>
 
 <script>
@@ -1493,6 +1524,114 @@ const Caps = {
   R.onMsg = (m) => { on(m); if (m.t === 'st') Caps.apply(); };
   const guard = (fn, c) => function () { if (!Caps.has(c)) { toast('Update MKCinema on the TV to use this from your phone', 4200); return undefined; } return fn.apply(this, arguments); };
   Ads.open = guard(Ads.open, 'ad'); PSub.open = guard(PSub.open, 'ps'); CM.join = guard(CM.join, 'cm');
+}
+
+/* ---------- 2.50 Family Helper and Take it with you ----------
+   Phone 'fh' {op: hello|peek|fix|note|seen|bye} <-> TV 'fh' {op: peek|noted|ask|stop}. Phone 'tk' {op: take|back}
+   -> TV 'tk' {op: link|none}. Everything goes over the sealed channel of a phone the TV allowed. */
+const FH = {
+  want: false, on: false, info: null, pollT: 0, asked: 0,
+  h: (s) => PSub.h(s),
+  open() {
+    closeSheet(true); openSheet('fh'); this.on = true; this.info = null; this.paint();
+    R.send({ t: 'fh', op: 'hello', name: phoneName() });
+    clearInterval(this.pollT); this.pollT = setInterval(() => { if (sheet !== 'fh') { this.close(); return; } R.send({ t: 'fh', op: 'peek' }); }, 3000);
+    clearTimeout(this.waitT); this.waitT = setTimeout(() => { if (!this.info && sheet === 'fh') $('#fhInfo').innerHTML = '<div class="ad-empty">The TV hasn’t answered. Check that MKCinema is open on it and up to date.</div>'; }, 8000);
+  },
+  close() { if (!this.on) return; this.on = false; clearInterval(this.pollT); R.send({ t: 'fh', op: 'bye' }); },
+  time(s) { s = Math.max(0, Math.round(s || 0)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return `${h ? `${h}:${String(m).padStart(2, '0')}` : m}:${String(x).padStart(2, '0')}`; },
+  paint() {
+    const box = $('#fhInfo'); if (!box) return;
+    const i = this.info; if (!i) { box.innerHTML = '<div class="ad-empty">Asking the TV what’s on its screen…</div>'; return; }
+    const row = (k, v, warn) => `<div class="fh-r${warn ? ' warn' : ''}"><span>${this.h(k)}</span><b>${this.h(v)}</b></div>`;
+    const p = i.player, rows = [
+      row('Screen', [i.where, i.title && i.title !== i.where ? i.title : ''].filter(Boolean).join(' · ') || 'Home'),
+      i.focus ? row('Highlighted', i.focus) : '',
+      p ? row('Playing', `${p.title} · ${this.time(p.pos)}${p.dur ? ` of ${this.time(p.dur)}` : ''}${p.paused ? ' · paused' : ''}${p.waiting ? ' · loading' : ''}`, p.waiting) : '',
+      p ? row('Subtitles', p.subs === 'off' ? (p.nsubs ? `off (${p.nsubs} available)` : 'none for this film') : p.subs) : '',
+      p ? row('Sound', p.muted ? 'muted' : `${p.vol}%`, p.muted || p.vol < 15) : '',
+      row('Add-ons', i.addons ? String(i.addons) : 'none installed', !i.addons),
+      row('Internet', i.online ? 'connected' : 'offline', !i.online),
+      i.seat ? row('Seat', i.seat) : '',
+      row('App', `MKCinema ${i.app} on ${i.dev}`),
+      i.errors && i.errors.length ? row('Last problem', i.errors[i.errors.length - 1].replace(/^\d\d:\d\d:\d\d /, ''), true) : '',
+    ].join('');
+    box.innerHTML = `${this.asked ? '<div class="fh-ask">They asked for help. <button type="button" id="fhSeen">Got it</button></div>' : ''}${rows}`;
+    const s = $('#fhSeen'); if (s) s.onclick = () => { this.asked = 0; R.send({ t: 'fh', op: 'seen' }); this.paint(); paintAsk(); };
+  },
+  fix(what) { buzz(10); R.send({ t: 'fh', op: 'fix', what }); toast('Sent to the TV', 1200); },
+  note() { const el = $('#fhMsg'), v = el.value.trim(); if (!v) return; R.send({ t: 'fh', op: 'note', text: v.slice(0, 280) }); el.value = ''; buzz(10); toast('Showing it on the TV', 1600); },
+  onMsg(m) {
+    if (!m || m.t !== 'fh') return false;
+    clearTimeout(this.waitT);
+    if (m.op === 'peek') { this.info = m.info || null; if (m.asked != null) this.asked = m.asked || 0; if (m.done) toast('Done', 1000); this.paint(); return true; }
+    if (m.op === 'ask') { this.asked = Date.now(); buzz([20, 60, 20]); toast('Your TV is asking for help', 3600); paintAsk(); this.paint(); return true; }
+    if (m.op === 'stop') { this.on = false; clearInterval(this.pollT); if (sheet === 'fh') closeSheet(true); toast('They stopped the help on the TV', 3200); return true; }
+    return true;
+  },
+};
+function paintAsk() {
+  const b = $('#fhAskBtn'); if (!b) return;
+  const a = (R.st && R.st.help) || FH.asked; b.hidden = !a || !Caps.has('fh');
+}
+const TK = {
+  wantBack: false,
+  take() { buzz(10); R.send({ t: 'tk', op: 'take' }); toast('Asking your TV…', 2400); clearTimeout(this.waitT); this.waitT = setTimeout(() => toast('Your TV didn’t answer. Is the film still playing there?', 3600), 7000); },
+  ok(url) { try { const u = new URL(url); return (u.origin === location.origin || (u.protocol === 'https:' && /^(app\.mkcinema\.app|mkcinema\.pages\.dev)$/.test(u.hostname))) && /^#play\?/.test(u.hash); } catch (e) { return false; } },
+  onMsg(m) {
+    if (!m || m.t !== 'tk') return false;
+    clearTimeout(this.waitT);
+    if (m.op === 'none') { toast('Start a film on the TV first', 3000); return true; }
+    if (m.op === 'landed') { if (!this.landed) { this.landed = true; clearTimeout(this.backT); toast('Back on your TV', 2400); buzz(14); } return true; }
+    if (m.op === 'link' && this.ok(m.url)) {
+      try { localStorage.setItem('mkc:tk', JSON.stringify({ code: R.code, at: Date.now() })); } catch (e) { /* private mode */ }
+      toast(`Opening ${m.title || 'the film'} here…`, 2000); setTimeout(() => { location.href = m.url; }, 300);
+    }
+    return true;
+  },
+  /* the phone app asked to send the film back: the TV lands on the same line */
+  sendBack() {
+    let x = null; try { x = JSON.parse(localStorage.getItem('mkc:tkback') || 'null'); } catch (e) { x = null; }
+    try { localStorage.removeItem('mkc:tkback'); } catch (e) { /* gone */ }
+    if (!x || Date.now() - (x.at || 0) > 10 * 60000 || !x.type || !x.id) return;
+    const msg = { t: 'tk', op: 'back', type: String(x.type), id: String(x.id).slice(0, 200), video: String(x.video || '').slice(0, 200), pos: Number(x.t) || 0, d: Number(x.d) || 0, su: String(x.su || '').slice(0, 400), ss: x.ss == null ? null : Number(x.ss) };
+    // sent again until the TV says it landed: the first message after opening can arrive before the TV knows this page
+    let n = 0; const go = () => { if (n++ >= 5 || this.landed) return; R.send(msg); this.backT = setTimeout(go, 1500); };
+    this.landed = false; clearTimeout(this.backT); setTimeout(go, 600);
+    toast('Sending it back to your TV…', 2400);
+  },
+};
+$('#fhBtn').onclick = () => FH.open();
+$('#mHelp').onclick = () => FH.open();
+$('#fhAskBtn').onclick = () => FH.open();
+$('#tkBtn').onclick = () => TK.take();
+$('#fhSend').onclick = () => FH.note();
+$('#fhMsg').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); FH.note(); } });
+$('#fhFix').addEventListener('click', (e) => { const b = e.target.closest('[data-fx]'); if (!b) return; if (b.dataset.fx === 'reload' && !confirm('Restart MKCinema on the TV?')) return; FH.fix(b.dataset.fx); });
+{
+  // the start-up reads the code from the address: take our own endings off first
+  const h = decodeURIComponent(location.hash || '');
+  if (/~help$/i.test(h) || /~back$/i.test(h)) {
+    if (/~help$/i.test(h)) FH.want = true; else TK.wantBack = true;
+    history.replaceState(null, '', location.pathname + location.search + h.replace(/~(help|back)$/i, ''));
+  }
+  const on = R.onMsg;
+  R.onMsg = (m) => {
+    if (FH.onMsg(m) || TK.onMsg(m)) return;
+    on(m);
+    if (m.t === 'st') {
+      const pl = m.v === 'player', fh = Caps.has('fh'), tk = Caps.has('tk');
+      const t = $('#tkBtn'); if (t) t.hidden = !(pl && tk && Array.isArray(m.caps));
+      const f = $('#fhBtn'); if (f) f.hidden = !(fh && Array.isArray(m.caps));
+      const mh = $('#mHelp'); if (mh) mh.hidden = !(fh && Array.isArray(m.caps));
+      paintAsk();
+      if (FH.want && fh && Array.isArray(m.caps)) { FH.want = false; FH.open(); }
+      if (TK.wantBack && tk && Array.isArray(m.caps)) { TK.wantBack = false; TK.sendBack(); }
+    }
+  };
+  const lv = R.leave;
+  R.leave = function () { FH.close(); if (sheet === 'fh') closeSheet(true); return lv.apply(this, arguments); };
+  addEventListener('pagehide', () => FH.close());
 }
 
 /* ---------- Start ---------- */
