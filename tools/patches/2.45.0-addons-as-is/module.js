@@ -1,10 +1,10 @@
 /* ---------------- 2.45.0 Addons as they are, shown better ----------------
    Nothing here needs an addon developer to change anything. MKCinema reads what addons already send:
    1. InfoRows: ratings addons that put a fake "stream" in the source list (IMDb Ratings, Ratings Aggregator and the
-      like) become a rating badge, a ratings panel on the film page and a rating next to each episode. The rows leave
+      like) become the same score icons as the title line (IMDb, TMDB, Rotten Tomatoes…) and a rating next to each episode. The rows leave
       the source list. Only rows MKCinema understands are moved: no link to play, an https page link, and a score.
-   2. AddonNotice: debrid addons answer a failed or not-yet-downloaded source with a short notice clip (Torrentio
-      sends 30 s clips, MediaFusion 20 or 30 s), from their own host. That clip is caught when it loads, explained in
+   2. AddonNotice: debrid addons answer a failed or not-yet-downloaded source with a short notice clip (20 or 30 s,
+      from their own host). That clip is caught when it loads, explained in
       plain words, and the next source plays instead. The clip is still one tap away.
    3. AddonSettings: addons built with Stremio's addon SDK describe their settings in manifest.config. The Addons
       screen shows that form itself, so it works on a TV, and saving swaps the addon in place, order kept.
@@ -15,7 +15,6 @@ const InfoRows = {
   SHORT: { 'rotten tomatoes': 'RT', rt: 'RT', tomatometer: 'RT', metacritic: 'MC', mc: 'MC', letterboxd: 'LB', kinopoisk: 'KP', 'кинопоиск': 'KP',
     imdb: 'IMDb', episode: 'IMDb', tmdb: 'TMDb', trakt: 'Trakt', mal: 'MAL', myanimelist: 'MAL', anilist: 'AniList', simkl: 'Simkl', series: 'Series' },
   AGE: /^(G|PG|PG-13|R|NC-17|NR|U|12A?|15|18|TV-(?:Y7?|G|PG|14|MA)|FSK ?\d{1,2}|\d{1,2}\+)$/i,
-  merged: false,
   data: new Map(), // `${type}/${id}` -> { by: Map(aid -> { from, title, eps, flat }), seasons: Set }
   on() { return CFG.infoRows !== false && !AddonUI.safe; },
   known() { const o = Store.raw.get(this.KEY, {}); return o && typeof o === 'object' ? o : {}; },
@@ -102,26 +101,52 @@ const InfoRows = {
     }));
     return got;
   },
-  /* ---- into the 2.44 film-page drawing (badges under the credits, panels, episode chips) ---- */
-  entries(k) {
-    const rec = this.data.get(k); if (!rec || !this.on()) return [];
-    const out = [];
-    rec.by.forEach((x, aid) => {
-      const t = x.title, badges = [], panels = [], eps = {};
-      if (t) {
-        t.ratings.slice(0, 2).forEach((r) => badges.push({ text: AddonUI.txt(`${r.short} ${r.score}`, 10), tone: 'gold', icon: 'star' }));
-        if (t.age) badges.push({ text: AddonUI.txt(t.age, 10), tone: 'plain', icon: '' });
-        const items = t.ratings.map((r) => ({ source: AddonUI.txt(r.label === 'Series' ? 'Series' : r.short === 'IMDb' ? 'IMDb' : r.label, 24), score: AddonUI.txt(r.score, 12) }));
-        const v = t.ratings.find((r) => r.votes); if (v) items.push({ source: 'Votes', score: v.votes });
-        if (t.age) items.push({ source: 'Age rating', score: AddonUI.txt(t.age, 12) });
-        if (items.length) panels.push({ kind: 'ratings', title: 'Ratings', items: items.slice(0, 8), links: t.link ? [{ label: 'Source page', url: t.link }] : [] });
-      }
-      Object.entries(x.eps).forEach(([vid, p]) => { const r = p && p.ratings.find((q) => q.short !== 'Series'); if (r) eps[vid] = [{ text: AddonUI.txt(r.score, 10), tone: 'gold', icon: 'star' }]; });
-      if (badges.length || panels.length || Object.keys(eps).length) out.push({ x: { badges, panels, from: x.from, aid }, eps });
-    });
-    return out;
+  /* ---- drawing: the same score icons as the title line (rate/*.svg), never a generic panel ---- */
+  ICON: { IMDb: 'imdb', TMDb: 'tmdb', RT: 'tomatoes', MC: 'metacritic', Trakt: 'trakt', LB: 'letterboxd' },
+  NAME: { imdb: 'IMDb', tmdb: 'TMDB', tomatoes: 'Rotten Tomatoes', metacritic: 'Metacritic', trakt: 'Trakt', letterboxd: 'Letterboxd' },
+  key(r) { return r.label === 'Series' ? 'imdb' : this.ICON[r.short] || ''; },
+  badge(r, cls) {
+    const k = this.key(r), sc = esc(AddonUI.txt(String(r.score).replace(/\/10$/, ''), 12));
+    if (k === 'imdb') return `<span class="imdb ${cls} ${typeof rateTier === 'function' ? rateTier(parseFloat(r.score)) : ''}"><b>IMDb</b>${sc}</span>`;
+    if (k) return `<span class="rbadge ${cls}" data-s="${k}" title="${esc(this.NAME[k])}"><img src="rate/${k}.svg" alt="${esc(this.NAME[k])}">${sc}</span>`;
+    return `<span class="rbadge ${cls}" title="${esc(r.label)}"><b class="ir-src">${esc(AddonUI.txt(r.short, 7))}</b>${sc}</span>`;
   },
-  mine(vid) { const m = D.meta; if (!m) return []; return this.entries(`${m.type}/${m.id}`).flatMap((g) => g.eps[vid] || []); },
+  rec() { const m = D.meta; return m && this.on() ? this.data.get(`${m.type}/${m.id}`) : null; },
+  paintTitle() {
+    const line = $('#detailPanel .metaline'); if (!line) return;
+    $$('.ir-x', line).forEach((x) => x.remove());
+    const rec = this.rec(); if (!rec) return;
+    const have = new Set($$('.rbadges [data-s]', line).map((x) => x.dataset.s)), im = $('.imdb', line);
+    if (im) have.add('imdb');
+    const parts = [], seen = new Set(); let age = '', votes = '';
+    rec.by.forEach((x) => {
+      const t = x.title; if (!t) return;
+      t.ratings.forEach((r) => {
+        const k = this.key(r) || `x:${r.short}`;
+        if (k === 'imdb' && r.votes && !votes) votes = r.votes;
+        if (seen.has(k) || have.has(k)) return; seen.add(k);
+        if (k === 'imdb') parts.push(`<span class="imdb ir-x ${typeof rateTier === 'function' ? rateTier(parseFloat(r.score)) : ''}"><b>IMDb</b>${esc(AddonUI.txt(r.score, 6))}</span>`);
+        else parts.push(this.badge(r, 'ir-x'));
+      });
+      if (t.age && !age) age = t.age;
+    });
+    let html = parts.join('');
+    if (votes) html = `<span class="ir-votes ir-x">${esc(votes)} votes</span>` + html;
+    if (age) html += `<span class="tag-s ir-x" title="Age rating">${esc(AddonUI.txt(age, 10))}</span>`;
+    if (!html) return;
+    const at = $('.rbadges', line) || im;
+    if (at) at.insertAdjacentHTML('afterend', html); else line.insertAdjacentHTML('afterbegin', html);
+  },
+  paintEps(root) {
+    const rec = this.rec(); if (!root || !rec) return;
+    $$('.ep[data-vid]', root).forEach((b) => {
+      const num = b.querySelector('.num'); if (!num) return;
+      const old = num.querySelector('.ir-ep'); if (old) old.remove();
+      let r = null; rec.by.forEach((x) => { const p = !r && x.eps[b.dataset.vid]; if (p) r = p.ratings.find((q) => q.label !== 'Series') || null; });
+      if (r) num.insertAdjacentHTML('beforeend', this.badge(r, 'ir-ep'));
+    });
+  },
+  paint() { try { this.paintTitle(); this.paintEps(document.getElementById('detail')); } catch (e) { /* the page works without it */ } },
   rows() {
     return [
       { group: 'Addons as they are' },
@@ -133,25 +158,17 @@ const InfoRows = {
     // the rows leave the source list (and so automatic picking, which never chose them anyway)
     const vs = visibleStreams;
     visibleStreams = function (streams) { return vs.call(this, streams).filter((s) => !InfoRows.info(s)); };
-    // the film page: 2.44 draws AddonUI.detail; these entries are added for the length of that drawing
-    const pd = AddonUI.paintDetail;
-    AddonUI.paintDetail = function () {
-      const m = D.meta; const k = m && `${m.type}/${m.id}`; const add = k ? InfoRows.entries(k) : [];
-      if (!add.length) return pd.apply(this, arguments);
-      const had = this.detail.has(k), own = this.detail.get(k);
-      this.detail.set(k, [...(own || []), ...add]); InfoRows.merged = true;
-      try { return pd.apply(this, arguments); } finally { InfoRows.merged = false; if (had) this.detail.set(k, own); else this.detail.delete(k); }
-    };
-    const eb = AddonUI.epBadges;
-    AddonUI.epBadges = function (vid) { const own = eb.apply(this, arguments); return InfoRows.merged ? own : [...own, ...InfoRows.mine(vid)].slice(0, 2); };
     const eh = episodesHTML;
-    episodesHTML = function () { const h = eh.apply(this, arguments); const m = D.meta; if (!m || !InfoRows.data.has(`${m.type}/${m.id}`)) return h; const box = document.createElement('div'); box.innerHTML = h; AddonUI.paintEpisodes(box); return box.innerHTML; };
+    episodesHTML = function () { const h = eh.apply(this, arguments); if (!InfoRows.rec()) return h; const box = document.createElement('div'); box.innerHTML = h; InfoRows.paintEps(box); return box.innerHTML; };
+    // scores from the viewer's own keys (2.34) arrive later; ours step aside for any site they already show
+    const rp = RateBadges.put;
+    RateBadges.put = function () { const r = rp.apply(this, arguments); InfoRows.paintTitle(); return r; };
     const rd = renderDetail;
     renderDetail = function () {
       const r = rd.apply(this, arguments);
       try {
         const m = D.meta;
-        if (m && m.id && InfoRows.on()) InfoRows.load(m).then((got) => { if (got && D.meta && D.meta.id === m.id) AddonUI.paintDetail(); }).catch(() => {});
+        if (m && m.id && InfoRows.on()) { InfoRows.paint(); InfoRows.load(m).then((got) => { if (got && D.meta && D.meta.id === m.id) InfoRows.paint(); }).catch(() => {}); }
       } catch (e) { /* the page works without it */ }
       return r;
     };
