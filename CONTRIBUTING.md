@@ -14,7 +14,7 @@ These are product decisions, and pull requests that break them won't be merged:
 
 1. **No built-in content.** MKCinema ships no titles, streams, demo sources or links to pirated material. The only built-in source is official trailers. Content always comes from addons the user installs.
 2. **Users bring their own keys.** Never ship anyone's addon config, debrid key or account. Keys stay in the user's browser and their own account row.
-3. **Privacy first.** No analytics, tracking or outside AI services. Your Picks runs on the device.
+3. **Privacy first.** No tracking, profiles or outside AI services, and no new measurement. MKCinema counts anonymous visits with Cloudflare Web Analytics (page, referring site, browser, country and load speed; no cookies or IDs), and it never sees your addons, keys or what you watch. In the app you can turn it off in Settings › Data. Your Picks runs on the device.
 4. **Do not cover or strip YouTube's player branding or ads** in trailers.
 5. **Five looks, Noir by default.** Noir (black, graphite and platinum type), Midnight, Velvet, Sepia and Anime (early access), plus the colour wheel (Atelier), which recolours the same tokens. Colours come from theme tokens (`var(--nXXXXXX, fallback)`), so new CSS should use those instead of hard-coded neutrals. Video surfaces stay true black in every theme. No interface sounds. Animations use `transform` and `opacity` only. Avoid `backdrop-filter` and `preserve-3d` inside scrolling rows (they cause black tiles on Android Chrome).
 6. **Phones are first-class.** Test at 390 px wide on Android Chrome. Nothing may scroll sideways.

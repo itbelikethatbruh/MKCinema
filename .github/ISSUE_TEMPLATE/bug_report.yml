@@ -19,7 +19,7 @@ body:
     attributes:
       label: MKCinema version
       description: Shown in Settings › About.
-      placeholder: e.g. 2.18.0
+      placeholder: e.g. 2.46.4
   - type: dropdown
     id: platform
     attributes:

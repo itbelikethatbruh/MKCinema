@@ -1,9 +1,13 @@
 name: Release
 
-# Publishes a GitHub release with the app files from site/download and the notes in
+# Publishes a GitHub release with the app files the website serves today and the notes in
 # .github/release/<tag>.md. Run it from Actions › Release › Run workflow, or push a tag like v1.0.
-# A change to site/download on main also publishes a release (tag files-<date>-<commit>), so the checksums on
-# GitHub always cover the files the website serves.
+#
+# The files are not kept in git. They are downloaded from https://mkcinema.app/download/ and each one must match
+# site/download/SHA256SUMS (the list the website publishes), so a release always carries exactly what the website
+# hands out. FILES is the list a release carries: update the versioned names (Mac, Linux, webOS) when a new build
+# goes up. The TV app is the phone APK. A change to site/download/SHA256SUMS on main also publishes a release
+# (tag files-<date>-<commit>), so the checksums on GitHub always cover the files the website serves.
 #
 # every release also gets
 # - SHA256SUMS, a list of the SHA-256 of every file, attached to the release and printed in the notes
@@ -19,9 +23,19 @@ on:
   push:
     tags: ["v*"]
     branches: [main]
-    paths: ["site/download/**"]
+    paths: ["site/download/SHA256SUMS"]
 
 permissions: {}
+
+env:
+  SITE: https://mkcinema.app/download
+  FILES: >-
+    MKCinema.apk
+    MKCinema.exe
+    MKCinema-1.1.1-mac.zip
+    mkcinema_1.1_amd64.deb
+    mkcinema-1.1-linux-x86_64.tar.gz
+    com.mkcinema.app_1.1.0_all.ipk
 
 jobs:
   release:
@@ -34,17 +48,33 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Download the app files from the website
+        run: |
+          mkdir -p "$RUNNER_TEMP/dist"
+          for f in $FILES; do
+            type=$(curl -fsSL --retry 3 -o "$RUNNER_TEMP/dist/$f" -w '%{content_type}' "$SITE/$f")
+            size=$(stat -c %s "$RUNNER_TEMP/dist/$f")
+            # Unknown paths on the site return the home page, so reject HTML and tiny files.
+            if [[ "$type" == text/html* || "$size" -lt 100000 ]]; then
+              echo "::error::$f is missing on the website ($type, $size bytes)"; exit 1
+            fi
+            echo "$f  $size bytes  $type"
+            # the file must be the one the website's SHA256SUMS lists
+            want=$(awk -v f="$f" '$2 == f {print $1}' site/download/SHA256SUMS)
+            got=$(sha256sum "$RUNNER_TEMP/dist/$f" | cut -d' ' -f1)
+            if [ -z "$want" ] || [ "$want" != "$got" ]; then
+              echo "::error::$f does not match site/download/SHA256SUMS (listed ${want:-nothing}, got $got)"; exit 1
+            fi
+          done
+          cp "$RUNNER_TEMP/dist/MKCinema.apk" "$RUNNER_TEMP/dist/MKCinema-TV.apk"
       - name: Checksums and notes
         env:
           TAG: ${{ inputs.tag || (github.ref_type == 'tag' && github.ref_name) || '' }}
         run: |
           [ -n "$TAG" ] || TAG="files-$(date -u +%Y.%m.%d)-${GITHUB_SHA::7}"
           echo "TAG=$TAG" >> "$GITHUB_ENV"
-          (cd site/download && [ ! -f SHA256SUMS ] || sha256sum -c --quiet SHA256SUMS) || { echo "::error::site/download/SHA256SUMS is out of date"; exit 1; }
           [[ "$TAG" =~ ^(v|files-)[0-9A-Za-z._-]+$ ]] || { echo "::error::Unexpected tag: $TAG"; exit 1; }
-          (cd site/download && find . -maxdepth 1 -type f ! -name SHA256SUMS -printf '%f\n' | LC_ALL=C sort | xargs -d '\n' sha256sum) > "$RUNNER_TEMP/SHA256SUMS"
-          # the files that go out: everything in site/download except the site's own copy of SHA256SUMS
-          mkdir "$RUNNER_TEMP/out" && find site/download -maxdepth 1 -type f ! -name SHA256SUMS -exec cp {} "$RUNNER_TEMP/out/" \; && cp "$RUNNER_TEMP/SHA256SUMS" "$RUNNER_TEMP/out/"
+          (cd "$RUNNER_TEMP/dist" && find . -maxdepth 1 -type f -printf '%f\n' | LC_ALL=C sort | xargs -d '\n' sha256sum) > "$RUNNER_TEMP/SHA256SUMS"
           cat "$RUNNER_TEMP/SHA256SUMS"
           notes=".github/release/${TAG}.md"
           {
@@ -64,10 +94,11 @@ jobs:
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: |
-            ${{ runner.temp }}/out/*
+            ${{ runner.temp }}/dist/*
+            ${{ runner.temp }}/SHA256SUMS
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "MKCinema ${TAG#v}" \
-            --notes-file "$RUNNER_TEMP/notes.md" "$RUNNER_TEMP"/out/*
+            --notes-file "$RUNNER_TEMP/notes.md" "$RUNNER_TEMP"/dist/* "$RUNNER_TEMP/SHA256SUMS"
