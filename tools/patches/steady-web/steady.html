@@ -22,6 +22,8 @@ body.reduce-motion #uniBody .uni-swap{animation:none}
 @media (prefers-reduced-motion:reduce){#uniBody .uni-swap{animation:none}#uniBody .uni-hero img.mk-hf{transition:none}}
 /* Featured banner swipe: the slide-in is the motion, so the text's own entrance does not run on top of it */
 .hero.mk-flung .hero-body.swap>*{animation:none!important}
+#hero .mk-peek{pointer-events:none}
+#hero .mk-peek img{width:100%;height:100%;object-fit:cover}
 #heroBg,#hero .hero-body{will-change:auto}
 .hero.dragging #heroBg,.hero.dragging .hero-body,.hero.mk-flung #heroBg,.hero.mk-flung .hero-body{will-change:transform,opacity}
 /* settings: re-drawing a section never nudges the scroll position */
@@ -153,30 +155,58 @@ body.reduce-motion #uniBody .uni-swap{animation:none}
     const el = $('#hero'), bg = $('#heroBg'), body = el && el.querySelector('.hero-body');
     if (!el || !bg || !body || IS_TV) return;
     const layers = [bg, body];
-    let st = null, dragged = false, busy = false;
-    const set = (x, o, t) => layers.forEach((l) => { l.style.transition = t || 'none'; l.style.transform = x ? `translate3d(${x.toFixed(1)}px,0,0)` : ''; if (o != null) l.style.opacity = String(o); });
+    let st = null, dragged = false, busy = false, peek = null, peekDir = 0;
+    const tf = (x) => (x ? `translate3d(${x.toFixed(1)}px,0,0)` : '');
+    const set = (x, o, t) => layers.forEach((l) => { l.style.transition = t || 'none'; l.style.transform = tf(x); if (o != null) l.style.opacity = String(o); });
     const clear = () => layers.forEach((l) => { l.style.transition = ''; l.style.transform = ''; l.style.opacity = ''; });
     const resume = () => { clearTimeout(S.heroTimer); S.heroTimer = setTimeout(nextHero, 9000); };
+    // the next (or previous) title's art rides in right beside the current one, like a real carousel
+    const dropPeek = () => { if (peek) peek.remove(); peek = null; peekDir = 0; };
+    const makePeek = (dir) => {
+      if (peek && peekDir === dir) return;
+      dropPeek();
+      const n = S.hero.length, m = S.hero[(S.heroIdx + dir + n) % n]; if (!m) return;
+      peek = document.createElement('div'); peek.className = 'hero-bg mk-peek'; peek.setAttribute('aria-hidden', 'true'); peekDir = dir;
+      peek.innerHTML = imgTag(metaBg(m), m.name, m.id, { wide: true, lazy: false });
+      const im = peek.firstElementChild; if (im) { im.classList.add('in'); im.style.cssText = 'position:absolute;inset:0;opacity:1;transition:none'; im.draggable = false; }
+      bg.after(peek);
+    };
+    const movePeek = (x, t) => { if (!peek) return; peek.style.transition = t || 'none'; peek.style.transform = tf(x); };
     const fling = (dir, from = 0, v = 0) => {
       if (busy || S.hero.length < 2) return;
-      if (reduce()) { showHero(S.heroIdx + dir, dir); return; }
+      if (reduce()) { dropPeek(); clear(); showHero(S.heroIdx + dir, dir); return; }
       busy = true; clearTimeout(S.heroTimer);
       const w = el.clientWidth, left = Math.max(40, w - Math.abs(from));
-      const d = Math.round(Math.min(320, Math.max(170, left / Math.max(Math.abs(v), 1.8))));
-      set(-dir * (w + 24), .55, `transform ${d}ms cubic-bezier(.33,.6,.45,1),opacity ${d}ms linear`);
+      const d = Math.round(Math.min(340, Math.max(200, left / Math.max(Math.abs(v), 1.6))));
+      if (!peek || peekDir !== dir) { makePeek(dir); movePeek(dir * w + from); }
+      void el.offsetWidth;
+      const ease = `${d}ms cubic-bezier(.25,.75,.35,1)`;
+      bg.style.transition = `transform ${ease}`; bg.style.transform = tf(-dir * w);
+      body.style.transition = `transform ${ease},opacity ${Math.round(d * .7)}ms linear`; body.style.transform = tf(-dir * w * .6); body.style.opacity = '0';
+      movePeek(0, `transform ${ease}`);
       setTimeout(() => {
+        // swap under cover of the peek: same picture, already on screen, so nothing blinks
         el.classList.add('mk-flung');
-        set(dir * w * .3, .45);
+        bg.style.transition = 'none'; bg.style.transform = '';
+        body.style.transition = 'none'; body.style.transform = tf(dir * 28); body.style.opacity = '0';
         showHero(S.heroIdx + dir, dir);
-        // the old art goes at once, so it never shows through while the new one slides in
         const imgs = $$('img', bg); imgs.slice(0, -1).forEach((o) => o.remove());
-        const ni = imgs[imgs.length - 1]; if (ni) { ni.style.transition = 'none'; ni.style.opacity = '1'; }
-        void el.offsetWidth;
+        const ni = imgs[imgs.length - 1]; if (ni) { ni.style.transition = 'none'; ni.style.opacity = '1'; ni.classList.add('in'); }
+        const pk = peek; peek = null; peekDir = 0;
+        let gone = false; const lift = () => { if (gone) return; gone = true; requestAnimationFrame(() => { if (pk) pk.remove(); }); };
+        if (ni && ni.decode) ni.decode().then(lift, lift); else lift();
+        setTimeout(lift, 700);
+        void body.offsetWidth;
         requestAnimationFrame(() => {
-          set(0, 1, 'transform .52s cubic-bezier(.16,1,.3,1),opacity .3s ease-out');
-          setTimeout(() => { clear(); el.classList.remove('mk-flung'); if (ni) ni.style.transition = ''; busy = false; }, 540);
+          body.style.transition = 'transform .4s cubic-bezier(.16,1,.3,1),opacity .28s ease-out'; body.style.transform = ''; body.style.opacity = '1';
+          setTimeout(() => {
+            // the text's own entrance would restart (and blink) once mk-flung goes, so it is spent first
+            body.classList.remove('swap');
+            clear(); el.classList.remove('mk-flung'); if (ni) ni.style.transition = '';
+            busy = false;
+          }, 440);
         });
-      }, Math.round(d * .6));
+      }, d);
     };
     el.addEventListener('pointerdown', (e) => {
       if (S.hero.length < 2 || (e.pointerType === 'mouse' && e.button)) return;
@@ -199,7 +229,10 @@ body.reduce-motion #uniBody .uni-swap{animation:none}
       const now = performance.now(), dt = now - st.lt;
       if (dt > 0) { st.v = .75 * ((e.clientX - st.lx) / dt) + .25 * st.v; st.lx = e.clientX; st.lt = now; }
       st.dx = e.clientX - st.x;
-      set(st.dx, 1 - Math.min(.3, Math.abs(st.dx) / (el.clientWidth * 2.2)));
+      const w = el.clientWidth, dir = st.dx < 0 ? 1 : -1;
+      bg.style.transition = 'none'; bg.style.transform = tf(st.dx);
+      body.style.transition = 'none'; body.style.transform = tf(st.dx); body.style.opacity = String(1 - Math.min(.6, Math.abs(st.dx) / (w * .9)));
+      if (st.dx) { makePeek(dir); movePeek(st.dx + dir * w); }
     }, true);
     const end = (e) => {
       if (!st || e.pointerId !== st.id) return;
@@ -211,6 +244,7 @@ body.reduce-motion #uniBody .uni-swap{animation:none}
       const commit = e.type !== 'pointercancel' && (Math.abs(dx) > w * .25 || (Math.abs(v) > .4 && Math.sign(v) === Math.sign(dx) && Math.abs(dx) > 24));
       if (commit) { fling(dir, dx, v); return; }
       set(0, 1, 'transform .45s cubic-bezier(.2,.9,.3,1.12),opacity .3s ease-out');
+      if (peek) { movePeek(peekDir * w, 'transform .45s cubic-bezier(.2,.9,.3,1.12)'); const pk = peek; setTimeout(() => { if (peek === pk) dropPeek(); }, 470); }
       setTimeout(() => { if (!st && !busy) clear(); }, 470);
       resume();
     };
