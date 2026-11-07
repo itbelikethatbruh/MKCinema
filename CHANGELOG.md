@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.53.0 (your stats)
+
+- **Your stats.** Library › Your stats (also Settings › Playback and the command palette) shows your top films and shows, how much you've watched, the genres you lean on, when in the day and week you watch, your longest streak, your busiest day, your longest sitting and who you watch with most, for this month, this year or all time. Save it as a picture to share.
+- Each seat has its own stats, worked out and kept on the device only. Time counts what plays in MKCinema's player from this version on; finished films and episodes count from the start of the seat's history.
+
 ## Web app 2.52.0 (together, and knowing your film)
 
 - **Catch up to the room.** Joining a watch party late, you can catch up from the start or ten minutes back at 1.5× with subtitles on. You rejoin the room's playback by yourself when you reach them, or tap Jump in.
