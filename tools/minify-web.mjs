@@ -45,6 +45,15 @@ const esbuild = loadEsbuild();
 const LEGAL = /(^|\n)([ \t]*)\/\*(?![!*])((?:(?!\*\/)[\s\S])*?(?:licen[cs]e|copyright|@preserve|\((?:MIT|ISC|BSD|Apache|OFL)[^)]*\))(?:(?!\*\/)[\s\S])*?)\*\//gi;
 const keepLegal = (code) => code.replace(LEGAL, (m, nl, ind, body) => `${nl}${ind}/*!${body}*/`);
 const isJs = (attrs) => { const t = /\btype\s*=\s*["']?([^"'\s>]+)/i.exec(attrs); return !t || /^(text|application)\/(javascript|ecmascript)$|^module$/i.test(t[1]); };
+/* esbuild drops every call to a function declared with an empty body ("function openSettings(section) {}" makes
+   "() => openSettings()" become "() => void 0"). The app declares several such placeholders and fills them in from a
+   LATER <script>, which esbuild cannot see, so the calls must stay. A dead "if (0) { f = f }" marks each empty
+   declaration as reassigned: esbuild then keeps the calls, and removes the dead code itself. */
+const EMPTY_FN = /^[ \t]*(?:async[ \t]+)?function[ \t]*\*?[ \t]*([A-Za-z_$][\w$]*)[ \t]*\([^)]*\)[ \t]*\{[ \t]*\}/gm;
+const keepStubs = (code) => {
+  const names = [...new Set([...code.matchAll(EMPTY_FN)].map((m) => m[1]))];
+  return names.length ? `${code}\n;if (0) { ${names.map((n) => `${n} = ${n};`).join(' ')} }\n` : code;
+};
 const looksMinified = (code) => { const lines = code.split('\n'); return code.length > 2000 && lines.length < code.length / 2000; };
 
 function minifyHtml(name, html) {
@@ -62,7 +71,7 @@ function minifyHtml(name, html) {
       if (looksMinified(body)) skipped++;
       else {
         try {
-          const r = esbuild.transformSync(keepLegal(body), { loader: tag === 'script' ? 'js' : 'css', minify: true, legalComments: 'inline', charset: 'utf8', logLevel: 'silent', ...(tag === 'script' && /type\s*=\s*["']?module/i.test(m[2]) ? { format: 'esm' } : {}) });
+          const r = esbuild.transformSync(tag === 'script' ? keepStubs(keepLegal(body)) : keepLegal(body), { loader: tag === 'script' ? 'js' : 'css', minify: true, legalComments: 'inline', charset: 'utf8', logLevel: 'silent', ...(tag === 'script' && /type\s*=\s*["']?module/i.test(m[2]) ? { format: 'esm' } : {}) });
           res = r.code.replace(/\n$/, '');
         } catch (e) {
           const msg = (e.errors && e.errors[0]) ? `${e.errors[0].text} (block line ${e.errors[0].location && e.errors[0].location.line})` : e.message;
