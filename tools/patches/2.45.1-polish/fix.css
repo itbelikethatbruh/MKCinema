@@ -1,0 +1,32 @@
+/* 2.45.1: '.t4-f span{display:block}' outranked '.t4-ic{display:grid}', so the icon sat top-left in its circle */
+#tour .t4-f .t4-ic,.t4-f .t4-ic,.t4-go .t4-ic{display:grid;place-items:center;flex:none;line-height:0;padding:0}
+.t4-f .t4-ic svg,.t4-go .t4-ic svg{display:block;margin:0}
+#tour #tourPick .qp-grid{justify-content:center}
+/* 2.45.1 side menu (mini rail): open and close as one smooth slide. The icons never move, the dock widens
+   and the names fade in, instead of the layout snapping between two states. TV keeps its own instant focus. */
+@media (min-width:761px){
+  :root.nav-side.side-mini:not(.tv) .dock{transition:width .46s cubic-bezier(.22,1,.36,1),padding .46s cubic-bezier(.22,1,.36,1),background-color .3s}
+  :root.nav-side.side-mini:not(.tv) .dock-wrap .dock,:root.nav-side.side-mini:not(.tv) .dock-wrap:is(:hover,:focus-within) .dock{padding-inline:8px}
+  :root.nav-side.side-mini:not(.tv) .dock-wrap :is(#tabs .tab,.dock-tools>.ibtn){justify-content:flex-start;padding:0 0 0 calc((var(--side-w) - 16px - 17px) / 2);gap:16px;overflow:hidden;white-space:nowrap}
+  :root.nav-side.side-mini:not(.tv) .dock-wrap .dock .brand{justify-content:flex-start;padding-left:calc((var(--side-w) - 16px - 30px) / 2);padding-right:0;overflow:hidden;white-space:nowrap}
+  :root.nav-side.side-mini:not(.tv) .dock-wrap #tabs .tab .lbl,
+  :root.nav-side.side-mini:not(.tv) .dock-wrap:not(:hover):not(:focus-within) #tabs .tab .lbl{display:inline!important;opacity:0;animation:none;transition:opacity .14s ease}
+  :root.nav-side.side-mini:not(.tv) .dock-wrap .dock-tools>.ibtn::after{display:inline;opacity:0;animation:none;transition:opacity .14s ease}
+  :root.nav-side.side-mini:not(.tv) .dock-wrap .dock .brand .word,
+  :root.nav-side.side-mini:not(.tv) .dock-wrap:not(:hover):not(:focus-within) .dock .brand .word{display:inline-flex!important;opacity:0;animation:none;transition:opacity .14s ease}
+  :root.nav-side.side-mini:not(.tv) .dock-wrap:is(:hover,:focus-within) :is(#tabs .tab .lbl,.dock .brand .word),
+  :root.nav-side.side-mini:not(.tv) .dock-wrap:is(:hover,:focus-within) .dock-tools>.ibtn::after{opacity:1;transition:opacity .32s ease .12s}
+  :root.nav-side.side-mini:not(.tv) .dock-wrap::after{transition:opacity .42s ease}
+  :root.nav-side.side-mini:not(.tv) .dock-tools>.searchbtn{transition:background-color .3s,border-color .3s}
+  html.nav-side .dock{scroll-behavior:smooth}
+}
+@media (prefers-reduced-motion:reduce){
+  :root.nav-side.side-mini .dock,:root.nav-side.side-mini .dock *{transition:none!important}
+  html.nav-side .dock{scroll-behavior:auto}
+}
+/* 2.45.1: the side menu's edge highlight scrolled with the items and showed as a stray line once the menu was scrolled.
+   The same soft edge now sits on the panel itself, so it stays put. */
+@media (min-width:761px){
+  html.nav-side:not(.tv):not([data-look="anime"]) .dock::before{display:none}
+  html.nav-side:not(.tv):not([data-look="anime"]) .dock{border:1px solid rgba(255,255,255,.07);border-top-color:rgba(255,255,255,.16)}
+}

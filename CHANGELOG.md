@@ -4,7 +4,7 @@ All notable changes to MKCinema. The web app version and the native app versions
 
 ## Web app 2.45.0 (2026-11-07)
 
-- **Ratings where you look.** Ratings addons that used to add a row to the source list (IMDb Ratings, Ratings Aggregator and similar) now show their scores as badges and a Ratings panel on the film page, and a rating next to each episode. The rows leave the source list. Nothing changes for the addon.
+- **Ratings where you look.** Ratings addons that used to add a row to the source list (IMDb Ratings, Ratings Aggregator and similar) now show their scores on the title line with the real IMDb, TMDB and Rotten Tomatoes icons, and an IMDb rating next to each episode. The rows leave the source list. Nothing changes for the addon.
 - **Clearer source problems.** When a debrid addon plays a short notice clip instead of the film (not downloaded yet, a limit, a link that failed), MKCinema says what happened in plain words and moves on to the next source. The clip is still one tap away.
 - **Addon settings, TV included.** Addons built with Stremio's addon SDK that describe their settings can be set up right on the Addons screen, with a remote too. Saving keeps the addon where it was in your list.
 - Both of the first two can be turned off in Settings › Playback › Addons as they are.
