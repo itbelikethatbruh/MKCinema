@@ -87,27 +87,26 @@ create policy "mkcinema_log_rate no access" on public.mkcinema_log_rate as restr
 -- Every API insert passes this guard: per IP at most 5 logs per 10 minutes and 20 a day, at most 30 an hour and
 -- 150 a day overall, and nothing once the table passes 150 MB (HTTP 429). Logs older than 30 days are removed.
 create or replace function public.mkcinema_logs_guard()
-returns trigger
-language plpgsql
-security definer
-set search_path = ''
+ returns trigger
+ language plpgsql
+ security definer
+ set search_path to ''
 as $function$
 declare
-  hdr   jsonb;
+  hdr    jsonb;
   claims jsonb;
-  ip    text;
-  t     timestamptz := pg_catalog.now();
-  e     double precision := extract(epoch from pg_catalog.now());
-  got   integer;
+  ip     text;
+  who    text;
+  t      timestamptz := pg_catalog.now();
+  e      double precision := extract(epoch from pg_catalog.now());
+  got    integer;
   hour_n integer;
-  lim   record;
+  lim    record;
 begin
-  -- the server decides when a log was made, so a client cannot keep one forever or hide it from cleanup
   new.created_at := t;
 
   hdr    := nullif(pg_catalog.current_setting('request.headers', true), '')::jsonb;
   claims := nullif(pg_catalog.current_setting('request.jwt.claims', true), '')::jsonb;
-  -- only API (PostgREST) inserts are limited; SQL editor, migrations and service_role are not
   if hdr is null or coalesce(claims ->> 'role', '') = 'service_role' then return new; end if;
 
   if pg_catalog.pg_total_relation_size('public.mkcinema_logs'::regclass) > 150 * 1024 * 1024 then
@@ -117,14 +116,19 @@ begin
   ip := coalesce(nullif(hdr ->> 'cf-connecting-ip', ''), nullif(hdr ->> 'x-real-ip', ''),
                  nullif(pg_catalog.btrim(pg_catalog.split_part(coalesce(hdr ->> 'x-forwarded-for', ''), ',', 1)), ''), 'unknown');
   ip := pg_catalog.md5('mkc-log:' || ip);
+  who := nullif(claims ->> 'sub', '');
+  if who is not null then who := pg_catalog.md5('mkc-log-u:' || who); end if;
 
   for lim in
     select * from (values
-      ('ip10m:' || ip || ':' || pg_catalog.floor(e / 600)::bigint,   5, 600),
-      ('ipday:' || ip || ':' || pg_catalog.floor(e / 86400)::bigint, 20, 86400),
-      ('all1h:' ||              pg_catalog.floor(e / 3600)::bigint,  30, 3600),
-      ('allday:' ||             pg_catalog.floor(e / 86400)::bigint, 150, 86400)
+      ('ip10m:'  || ip  || ':' || pg_catalog.floor(e / 600)::bigint,     5,  600),
+      ('ipday:'  || ip  || ':' || pg_catalog.floor(e / 86400)::bigint,  20, 86400),
+      ('usr1h:'  || who || ':' || pg_catalog.floor(e / 3600)::bigint,   10, 3600),
+      ('usrday:' || who || ':' || pg_catalog.floor(e / 86400)::bigint,  30, 86400),
+      ('all1h:'  ||               pg_catalog.floor(e / 3600)::bigint,  300, 3600),
+      ('allday:' ||               pg_catalog.floor(e / 86400)::bigint, 1500, 86400)
     ) as v(bucket, max_n, secs)
+    where v.bucket is not null   -- the usr* rows vanish (null) when nobody is signed in
   loop
     insert into public.mkcinema_log_rate as r (bucket, n, expires_at)
     values (lim.bucket, 1, t + pg_catalog.make_interval(secs => lim.secs))
@@ -136,7 +140,6 @@ begin
     if lim.bucket like 'all1h:%' then hour_n := got; end if;
   end loop;
 
-  -- housekeeping, at most once an hour (first accepted log of the hour)
   if hour_n = 1 then
     delete from public.mkcinema_log_rate where expires_at < t;
     delete from public.mkcinema_logs where created_at < t - interval '30 days';

@@ -5,13 +5,14 @@
 // in its query string (apikey=, token=) arrive in x-debrid-query and are added here, so they never appear in the request URL
 // that the Supabase gateway records. Nothing is stored and nothing is logged: this file has no console calls on purpose.
 //
-// v1 clients (web 2.36.2 and older) still work: they send the whole target in ?url= and no apikey header.
-// v2 clients send the project's publishable key in `apikey`; when that header is present it must be one of KEYS.
-// Set the secret MKC_RELAY_REQUIRE_KEY=1 once old clients are gone to refuse calls without it (no redeploy needed).
+// Every call must carry the project's publishable key in `apikey` (all apps since web 2.37 send it). The secret
+// MKC_RELAY_REQUIRE_KEY=0 turns that off again without a redeploy, if an old client ever needs it.
+// Calls must also come from the live sites (app, tv and the main pages.dev address); preview builds and localhost
+// use their own server's /debrid instead.
 // A self-hosted project whose key is not in KEYS sets the secret MKC_RELAY_KEYS (comma separated).
 const VERSION = 2;
 const HOSTS = ['api.real-debrid.com', 'api.torbox.app', 'api.alldebrid.com', 'www.premiumize.me'];
-const ORIGINS = [/^https:\/\/([a-z0-9-]+\.)?mkcinema\.pages\.dev$/, /^https:\/\/([a-z0-9-]+\.)?mkcinema\.app$/, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/];
+const ORIGINS = [/^https:\/\/(mkcinema|mkctv)\.pages\.dev$/, /^https:\/\/((app|tv)\.)?mkcinema\.app$/];
 const METHODS = ['GET', 'POST', 'HEAD'];
 const SECRET_PARAMS = ['apikey', 'token', 'presigned_token'];
 const RATE = { limit: 120, windowMs: 60_000 }; // per client IP, per isolate (best effort)
@@ -20,7 +21,7 @@ const env = (k: string) => { try { return Deno.env.get(k) || ''; } catch { retur
 const KEYS = new Set<string>(['sb_publishable_ZpiFwB_oM579GwCunYpHWg_jelRazT-']);
 for (const k of [env('SUPABASE_ANON_KEY'), ...env('MKC_RELAY_KEYS').split(',')]) if (k.trim()) KEYS.add(k.trim());
 try { const p = JSON.parse(env('SUPABASE_PUBLISHABLE_KEYS') || '{}'); for (const v of Object.values(p)) if (typeof v === 'string' && v) KEYS.add(v); } catch { /* not set */ }
-const REQUIRE_KEY = env('MKC_RELAY_REQUIRE_KEY') === '1';
+const REQUIRE_KEY = env('MKC_RELAY_REQUIRE_KEY') !== '0';
 
 const hits = new Map<string, { n: number; t: number }>();
 function limited(ip: string): number {
@@ -66,6 +67,8 @@ export async function handle(req: Request): Promise<Response> {
   const key = req.headers.get('apikey');
   if (key ? !KEYS.has(key) : REQUIRE_KEY) return json(401, { error: 'relay key missing or wrong' });
   if (!okOrigin) return json(403, { error: 'relay is for MKCinema only' });
+  // every real call carries the user's own debrid key; a call without one can only be someone using the relay for free
+  if (!req.headers.get('x-debrid-auth') && !req.headers.get('x-debrid-query')) return json(401, { error: 'debrid key missing' });
   let u: URL; try { u = new URL(self.searchParams.get('url') || ''); } catch { return json(400, { error: 'bad url' }); }
   if (u.protocol !== 'https:' || !HOSTS.includes(u.hostname) || u.username || u.password || u.port) return json(403, { error: 'only debrid API hosts are relayed' });
   const extra = secretQuery(req.headers.get('x-debrid-query'));
