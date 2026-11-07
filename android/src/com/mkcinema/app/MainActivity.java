@@ -70,7 +70,7 @@ public class MainActivity extends Activity {
     static final String[] APP_HOSTS = { HOST, "app.mkcinema.app" };
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6;
-    static final String VER = "1.8.1";
+    static final String VER = "1.9.0";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -498,7 +498,11 @@ public class MainActivity extends Activity {
                     .putExtra("startMs", o.optInt("startMs", 0)).putExtra("subUrl", subUrl).putExtra("matchRate", o.optBoolean("matchRate", true)).putExtra("audioLang", o.optString("audioLang", ""))
                     .putExtra("headers", o.has("headers") ? o.getJSONObject("headers").toString() : "")
                     .putExtra("engine", o.optString("engine", getSharedPreferences("mk", MODE_PRIVATE).getString("engine", "exo")))
-                    .putExtra("slow", getSharedPreferences("mk", MODE_PRIVATE).getBoolean("slow", false));
+                    .putExtra("slow", getSharedPreferences("mk", MODE_PRIVATE).getBoolean("slow", false))
+                    // 1.9.0: skip times (seconds), whether a next episode exists, auto-skip, and libass styling (on unless turned off)
+                    .putExtra("skips", o.has("skips") && o.optJSONObject("skips") != null && o.getJSONObject("skips").toString().length() < 4000 ? o.getJSONObject("skips").toString() : "")
+                    .putExtra("hasNext", o.optBoolean("hasNext", false)).putExtra("autoSkip", o.optBoolean("autoSkip", false))
+                    .putExtra("ass", o.optBoolean("ass", true));
                 runOnUiThread(() -> { try { startActivityForResult(i, REQ_PLAY); } catch (Exception ignored) { } });
                 return true;
             } catch (Exception e) { return false; }

@@ -9,6 +9,8 @@ node_modules/
 
 # 1.7.0: ExoPlayer/Guava jars, downloaded by android/libs/fetch.sh
 android/libs/*.jar
+# 1.9.0: libass native libraries, also from fetch.sh
+android/libs/ass-jni/
 **/password.txt
 **/keystore/
 *.p12

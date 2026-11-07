@@ -29,6 +29,21 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.9.0 (versionCode 21): styled subtitles, Dolby Vision profile 7, Skip intro in the TV player
+
+- **ASS/SSA styling** (`Ass.java`): libass through ass-media 0.4.0 (MIT, built for Media3 1.8.0) in `OVERLAY_CANVAS` mode.
+  `AssSubtitleView` sits over the video surface with the same size and place. MKV-embedded and downloaded `.ass` files
+  both use it. `libs/fetch.sh` downloads the classes.jar files, the Kotlin stdlib and the arm64-v8a/armeabi-v7a native
+  libraries (`libs/ass-jni/`, not committed), and build.sh adds them to the APK. If libass can't load, the player keeps
+  Media3's plain subtitles. If the app dies while the libass layer is on screen (pref `assLive`), styled subtitles turn
+  off for that app version (pref `assOff`). The page can turn it off with `ass: false` (setting "Styled anime subtitles
+  in the TV player").
+- **Dolby Vision profile 7** (`DvFallback.java`): Media3 refuses to give profile 7 to an HEVC decoder. This video
+  renderer relabels the track as HEVC when no Dolby Vision decoder takes profile 7 or the screen has no Dolby Vision,
+  so the HDR10 base layer plays. TVs with real profile 7 support keep Dolby Vision.
+- **Skip intro / recap / ending, Next episode**: the page sends `skips` ({recap, intro, ed: [s, e], credits: s} in
+  seconds), `hasNext` and `autoSkip` in `MKAndroid.play`. OK presses the button while it shows. Needs web 2.54.0.
+
 ## 1.7.0 (versionCode 18): ExoPlayer engine for the TV player
 
 `PlayerActivity` talks to an `Engine`: `ExoEngine` (Media3 ExoPlayer 1.8.0, the default) or `MpEngine` (the system MediaPlayer
