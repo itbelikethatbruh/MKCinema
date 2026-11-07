@@ -4,10 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="canonical" href="https://mkcinema.app/">
+<script>document.documentElement.classList.add('js')</script>
 <script id="mkc-home">/* the site lives at mkcinema.app; the old address and www send browsers there, keeping the #section */
 (function () { var h = location.hostname; if (h === 'mkcinema-site.pages.dev' || h === 'www.mkcinema.app') location.replace('https://mkcinema.app' + location.pathname + location.search + location.hash); })();</script>
 <title>MKCinema · Your addons, in a private cinema</title>
-<meta name="description" content="MKCinema is a free, open-source premium player for the Stremio addons you choose. A real player, built-in debrid, watch parties, an Anime mode and picks that stay on your device. Apps for Android, Android TV, Fire TV, Windows, Mac and Linux, or any browser.">
+<meta name="description" content="A free, open-source cinema for the Stremio addons you choose, with a real player, watch parties and apps for Android, TV, Windows, Mac and Linux.">
 <meta name="theme-color" content="#050505">
 <meta name="color-scheme" content="dark">
 <meta property="og:type" content="website">
@@ -16,23 +17,34 @@
 <meta property="og:image" content="https://mkcinema.app/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="MKCinema: Your addons. A private cinema. The MKCinema player showing the open movie Elephants Dream.">
+<meta property="og:site_name" content="MKCinema">
 <meta property="og:url" content="https://mkcinema.app/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="MKCinema · Your addons, in a private cinema">
 <meta name="twitter:description" content="A free, open-source cinema for the Stremio addons you choose. Phones, TVs, desktops and the web.">
 <meta name="twitter:image" content="https://mkcinema.app/og.jpg">
+<meta name="twitter:image:alt" content="MKCinema: Your addons. A private cinema. The MKCinema player showing the open movie Elephants Dream.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"MKCinema","url":"https://mkcinema.app/","description":"A free, open-source cinema for the Stremio addons you choose, with a real player, watch parties and apps for every screen.","applicationCategory":"MultimediaApplication","operatingSystem":"Android, Android TV, Fire TV, Windows, macOS, Linux, Web","image":"https://mkcinema.app/og.jpg","screenshot":"https://mkcinema.app/shots/player.webp","downloadUrl":"https://mkcinema.app/#download","license":"https://www.gnu.org/licenses/gpl-3.0.html","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Dee Lavish"},"sameAs":["https://github.com/itbelikethatbruh/MKCinema"]}</script>
+<link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preload" as="image" href="shots/home.webp" imagesrcset="shots/home-960.webp 960w, shots/home.webp 1600w" imagesizes="(max-width: 1100px) 92vw, 1100px" fetchpriority="high">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..600&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preload" href="/fonts/fraunces-v1.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/onest-v1.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/fraunces-italic-v1.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+@font-face{font-family:"Fraunces";font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/fraunces-v1.woff2) format("woff2")}
+@font-face{font-family:"Fraunces";font-style:italic;font-weight:400 600;font-display:swap;src:url(/fonts/fraunces-italic-v1.woff2) format("woff2")}
+@font-face{font-family:"Onest";font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/onest-v1.woff2) format("woff2")}
+/* metric-matched stand-ins while the fonts load, so text doesn't jump when they arrive */
+@font-face{font-family:"Fraunces fb";src:local("Times New Roman"),local("Liberation Serif"),local("Georgia"),local("Noto Serif"),local("DejaVu Serif");size-adjust:93.5%;ascent-override:104.6%;descent-override:27.3%;line-gap-override:0%}
+@font-face{font-family:"Onest fb";src:local("Arial"),local("Helvetica Neue"),local("Helvetica"),local("Liberation Sans"),local("Roboto");size-adjust:105.4%;ascent-override:92%;descent-override:28.9%;line-gap-override:0%}
 :root{
   --bg:#050505;--bg2:#0b0b0b;--card:#0f0f0f;--ink:#f3f0e9;--ink2:#c9c5bc;--mute:#8f8b84;
   --line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);--gold:#d8c29a;--gold2:#a8946e;
   --r:18px;--wrap:1180px;--g:clamp(16px,4vw,32px);
-  --serif:"Fraunces",Georgia,"Times New Roman",serif;--sans:"Onest",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --serif:"Fraunces","Fraunces fb",Georgia,serif;--sans:"Onest","Onest fb",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --ease:cubic-bezier(.2,.7,.2,1);
 }
 *,*::before,*::after{box-sizing:border-box}
@@ -43,6 +55,8 @@ a{color:inherit}
 svg{width:1em;height:1em;fill:none;stroke:currentColor;flex:none}
 .sprite{position:absolute;width:0;height:0;overflow:hidden}
 .wrap{max-width:var(--wrap);margin:0 auto;padding:0 var(--g)}
+.skip{position:fixed;left:12px;top:-60px;z-index:100;padding:10px 16px;border-radius:10px;background:var(--ink);color:#0a0a0a;font:600 14px/1 var(--sans);text-decoration:none;transition:top .2s}
+.skip:focus{top:12px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 :focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:6px}
 
@@ -80,7 +94,13 @@ p{margin:0}
 .links a:hover{color:var(--ink)}
 .nav .gh{display:inline-flex;color:var(--ink2)}
 .nav .gh svg{width:20px;height:20px;fill:currentColor;stroke:none}
-@media (max-width:860px){.links,.nav .gh{display:none}.nav .btn{margin-left:auto}}
+.menu{display:none;align-items:center;justify-content:center;width:44px;height:44px;margin-left:-8px;border:0;border-radius:12px;background:none;color:var(--ink);cursor:pointer}
+.menu svg{width:22px;height:22px;stroke-width:1.8}
+@media (max-width:860px){.links,.nav .gh{display:none}.nav .btn{margin-left:auto}.js .menu{display:inline-flex}
+  .nav.open{background:rgba(5,5,5,.98);border-color:var(--line)}
+  .nav.open .links{display:flex;flex-direction:column;gap:0;position:absolute;left:0;right:0;top:68px;margin:0;padding:6px var(--g) 18px;background:rgba(5,5,5,.98);border-bottom:1px solid var(--line)}
+  .nav.open .links a{padding:14px 0;font-size:17px;color:var(--ink);border-bottom:1px solid var(--line)}
+  .nav.open .links a:last-child{border-bottom:0}}
 
 /* hero */
 .hero{position:relative;padding:clamp(96px,12vh,140px) 0 0;text-align:center;overflow:hidden;isolation:isolate}
@@ -136,8 +156,8 @@ section{position:relative}
 .head .lead{margin-top:20px}
 .center{text-align:center;margin-left:auto;margin-right:auto}
 .center .eyebrow{justify-content:center}
-.rv{opacity:0;transform:translateY(26px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
-.rv.in{opacity:1;transform:none}
+.js .rv{opacity:0;transform:translateY(26px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.js .rv.in{opacity:1;transform:none}
 .hr{height:1px;background:linear-gradient(90deg,transparent,var(--line2),transparent);border:0;margin:0}
 
 /* chapters: sticky 3D deck on wide screens, stacked on phones */
@@ -176,8 +196,8 @@ section{position:relative}
 .tk{--rx:0deg;--ry:0deg;position:relative;display:flex;flex-direction:column;padding:26px 26px 0;border-radius:16px;border:1px solid rgba(216,194,154,.32);
   background:linear-gradient(155deg,rgba(216,194,154,.16),#0e0d0b 48%,#0a0a09);
   transform:perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));transition:transform .5s var(--ease),border-color .4s,box-shadow .4s,opacity .9s var(--ease)}
-.tk.rv{transform:perspective(900px) translateY(26px)}
-.tk.rv.in{transform:perspective(900px) rotateX(var(--rx)) rotateY(var(--ry))}
+.js .tk.rv{transform:perspective(900px) translateY(26px)}
+.js .tk.rv.in{transform:perspective(900px) rotateX(var(--rx)) rotateY(var(--ry))}
 .tk:hover{border-color:rgba(216,194,154,.6);box-shadow:0 30px 60px -30px rgba(216,194,154,.35)}
 .tk::before,.tk::after{content:"";position:absolute;bottom:31px;width:20px;height:20px;border-radius:50%;background:var(--bg);border:1px solid rgba(216,194,154,.32)}
 .tk::before{left:-11px;clip-path:inset(0 0 0 50%)}
@@ -211,7 +231,7 @@ section{position:relative}
 .cat-h{display:flex;align-items:center;gap:12px}
 .cat-h .ic{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:rgba(216,194,154,.1);color:var(--gold)}
 .cat-h .ic svg{width:19px;height:19px;stroke-width:1.6}
-.cat-h h4{margin:0;font:600 16.5px/1.2 var(--sans)}
+.cat-h h3{margin:0;letter-spacing:0;font:600 16.5px/1.2 var(--sans)}
 .cat-h .cnt{margin-left:auto;font:600 12px/1 var(--sans);color:var(--mute)}
 .cat ul{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:7px}
 .cat li{position:relative;padding-left:16px;font-size:14.5px;color:var(--ink2);line-height:1.45}
@@ -287,12 +307,13 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
   html{scroll-behavior:auto}
-  .rv{opacity:1;transform:none}
+  .js .rv{opacity:1;transform:none}
   .room{--p:1!important}
 }
 </style>
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 <svg class="sprite" aria-hidden="true" focusable="false">
   <defs>
     <path id="mkLetters" d="M-36.5 -28L-34.1 -28L-34.1 28L-36.5 28ZM-36.5 -28L-28 -28L-12.2 28L-15.2 28ZM-0.8 -28L1.5 -28L-12.2 28L-15.2 28ZM-0.5 -28L8.1 -28L8.1 28L-0.5 28ZM30.8 -28L33.5 -28L8.1 5.2L8.1 1.5ZM11.7 -2.4L18.3 -6.8L39.1 28L29.9 28ZM-41.9 -28L-28 -28L-28 -26.9L-41.9 -26.9ZM-41.9 26.9L-28.7 26.9L-28.7 28L-41.9 28ZM-5.3 -28L13.1 -28L13.1 -26.9L-5.3 -26.9ZM-5.3 26.9L13.1 26.9L13.1 28L-5.3 28ZM25.7 -28L38.3 -28L38.3 -26.9L25.7 -26.9ZM26.1 26.9L42.7 26.9L42.7 28L26.1 28Z"/>
@@ -306,6 +327,8 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 <symbol id="i-vol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></symbol>
 <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
 <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></symbol>
     <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
     <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></symbol>
     <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
@@ -338,7 +361,8 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 <header class="nav" id="nav">
   <div class="wrap nav-in">
     <a class="brand" href="#top" aria-label="MKCinema home"><svg aria-hidden="true"><use href="#logo"/></svg><span><b>MK</b><i>Cinema</i></span></a>
-    <nav class="links" aria-label="Sections">
+    <button class="menu" type="button" aria-label="Sections" aria-expanded="false" aria-controls="links"><svg aria-hidden="true"><use href="#i-menu"/></svg></button>
+    <nav class="links" id="links" aria-label="Sections">
       <a href="#different">What's different</a>
       <a href="#tour">Tour</a>
       <a href="#everything">All features</a>
@@ -351,7 +375,8 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
   </div>
 </header>
 
-<main id="top">
+<main id="main" tabindex="-1">
+<span id="top"></span>
 <section class="hero">
   <div class="beam" aria-hidden="true"></div>
   <div class="wrap">
@@ -374,7 +399,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
   <div class="room" id="room" aria-hidden="true">
     <div class="glow"></div>
     <div class="screen"><img src="shots/home.webp" srcset="shots/home-960.webp 960w, shots/home.webp 1600w" sizes="(max-width: 1100px) 92vw, 1100px" width="1600" height="1000" alt="" fetchpriority="high"></div>
-    <div class="phone"><img src="shots/phone-home.webp" width="600" height="1301" alt="" loading="lazy" decoding="async"></div>
+    <div class="phone"><img src="shots/phone-home.webp" srcset="shots/phone-home-320.webp 320w, shots/phone-home-480.webp 480w, shots/phone-home.webp 600w" sizes="(max-width: 760px) 30vw, 230px" width="600" height="1301" alt="" decoding="async"></div>
     <div class="tag tag1"><span class="ic"><svg><use href="#i-bolt"/></svg></span><span><b>Smart Play</b><small>Best stream, picked for you</small></span></div>
     <div class="tag tag2"><span class="ic"><svg><use href="#i-head"/></svg></span><span><b>Listen on phone</b><small>TV sound in your headphones</small></span></div>
     <div class="tag tag3"><span class="ic"><svg><use href="#i-users"/></svg></span><span><b>Watch party</b><small>Six letters, same scene</small></span></div>
@@ -550,21 +575,21 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
       <p class="lead">The whole list, in one place. Nothing here is locked, and nothing ever will be.</p>
     </div>
     <div class="cats">
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-puzzle"/></svg></span><h4>Addons</h4><span class="cnt">7</span></div><ul><li>Any Stremio addon by link</li><li>Ratings, notices and settings, made better</li><li>Find addons in the app</li><li>Addon Studio</li><li>Manage addons from your phone</li><li>Import from Stremio</li><li>Plex, Jellyfin and Emby as sources</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-bolt"/></svg></span><h4>Sources</h4><span class="cnt">8</span></div><ul><li>Debrid built in, your own key</li><li>Smart Play</li><li>Automatic failover</li><li>Source Check and source rules</li><li>Duplicate sources folded</li><li>Browser only mode</li><li>One tap to VLC, mpv, Infuse and more</li><li>Slow internet mode</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-play"/></svg></span><h4>Player</h4><span class="cnt">10</span></div><ul><li>Edge-to-edge player with tabs</li><li>Volume to 200 %</li><li>Clear voices and Night sound modes</li><li>Audio delay and language pick</li><li>Picture adjustments</li><li>Sharp upscaling on the GPU</li><li>Gestures, sleep timer, A-B repeat</li><li>Stats, still frames, bookmarks</li><li>Send to TV (Chromecast)</li><li>Spoiler Guard</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-cc"/></svg></span><h4>Subtitles</h4><span class="cnt">6</span></div><ul><li>Styled anime subtitles</li><li>Subtitles inside MKV files</li><li>Subtitles that line up by themselves</li><li>Translated when none exist</li><li>Signs & Songs with dubs</li><li>Second subtitles, fonts and size</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-wave"/></svg></span><h4>Dialogue-aware</h4><span class="cnt">8</span></div><ul><li>Watch party on any version</li><li>Find a line</li><li>Subtitles on your phone</li><li>Same line on any source</li><li>Share this moment</li><li>Couch match</li><li>Last time…</li><li>Never miss a line</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-users"/></svg></span><h4>Together</h4><span class="cnt">4</span></div><ul><li>Watch party with voice and chat</li><li>Listen on phone</li><li>Phone remote with keyboard and voice</li><li>Party voice on your phone</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-film"/></svg></span><h4>Discover</h4><span class="cnt">8</span></div><ul><li>Arrange Home</li><li>Top 10, Networks and 142 Universes</li><li>More like this</li><li>Scores and Where to watch</li><li>Your Picks, on your device</li><li>Peak Cinema</li><li>MDBList rows</li><li>Endless rows</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-list"/></svg></span><h4>Library</h4><span class="cnt">7</span></div><ul><li>Watchlist, lists and progress</li><li>Airing calendar</li><li>New-episode alerts</li><li>Trakt, Simkl, AniList, MyAnimeList</li><li>Downloads, TVs included</li><li>Sync across devices</li><li>Backup code</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-tv"/></svg></span><h4>Live</h4><span class="cnt">4</span></div><ul><li>Split Screen, up to four</li><li>Live TV with an XMLTV guide</li><li>M3U and Xtream</li><li>Sports</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-palette"/></svg></span><h4>Looks</h4><span class="cnt">8</span></div><ul><li>Noir, Midnight, Velvet, Sepia, Anime</li><li>Colour wheel</li><li>Nine fonts and text size</li><li>Top or side menu</li><li>Custom poster URL</li><li>Plugins & themes</li><li>Ambient Mode</li><li>Seven languages</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-shield"/></svg></span><h4>Household</h4><span class="cnt">3</span></div><ul><li>Seats with pictures and PINs</li><li>Kids seats by age rating</li><li>Shows per day for kids</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-monitor"/></svg></span><h4>Everywhere</h4><span class="cnt">6</span></div><ul><li>Web app, nothing to install</li><li>Android with its own player</li><li>Android TV and Fire TV</li><li>LG and Samsung (beta)</li><li>Windows, Mac and Linux</li><li>Discord status on Windows</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-puzzle"/></svg></span><h3>Addons</h3><span class="cnt">7</span></div><ul><li>Any Stremio addon by link</li><li>Ratings, notices and settings, made better</li><li>Find addons in the app</li><li>Addon Studio</li><li>Manage addons from your phone</li><li>Import from Stremio</li><li>Plex, Jellyfin and Emby as sources</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-bolt"/></svg></span><h3>Sources</h3><span class="cnt">8</span></div><ul><li>Debrid built in, your own key</li><li>Smart Play</li><li>Automatic failover</li><li>Source Check and source rules</li><li>Duplicate sources folded</li><li>Browser only mode</li><li>One tap to VLC, mpv, Infuse and more</li><li>Slow internet mode</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-play"/></svg></span><h3>Player</h3><span class="cnt">10</span></div><ul><li>Edge-to-edge player with tabs</li><li>Volume to 200 %</li><li>Clear voices and Night sound modes</li><li>Audio delay and language pick</li><li>Picture adjustments</li><li>Sharp upscaling on the GPU</li><li>Gestures, sleep timer, A-B repeat</li><li>Stats, still frames, bookmarks</li><li>Send to TV (Chromecast)</li><li>Spoiler Guard</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-cc"/></svg></span><h3>Subtitles</h3><span class="cnt">6</span></div><ul><li>Styled anime subtitles</li><li>Subtitles inside MKV files</li><li>Subtitles that line up by themselves</li><li>Translated when none exist</li><li>Signs & Songs with dubs</li><li>Second subtitles, fonts and size</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-wave"/></svg></span><h3>Dialogue-aware</h3><span class="cnt">8</span></div><ul><li>Watch party on any version</li><li>Find a line</li><li>Subtitles on your phone</li><li>Same line on any source</li><li>Share this moment</li><li>Couch match</li><li>Last time…</li><li>Never miss a line</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-users"/></svg></span><h3>Together</h3><span class="cnt">4</span></div><ul><li>Watch party with voice and chat</li><li>Listen on phone</li><li>Phone remote with keyboard and voice</li><li>Party voice on your phone</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-film"/></svg></span><h3>Discover</h3><span class="cnt">8</span></div><ul><li>Arrange Home</li><li>Top 10, Networks and 142 Universes</li><li>More like this</li><li>Scores and Where to watch</li><li>Your Picks, on your device</li><li>Peak Cinema</li><li>MDBList rows</li><li>Endless rows</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-list"/></svg></span><h3>Library</h3><span class="cnt">7</span></div><ul><li>Watchlist, lists and progress</li><li>Airing calendar</li><li>New-episode alerts</li><li>Trakt, Simkl, AniList, MyAnimeList</li><li>Downloads, TVs included</li><li>Sync across devices</li><li>Backup code</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-tv"/></svg></span><h3>Live</h3><span class="cnt">4</span></div><ul><li>Split Screen, up to four</li><li>Live TV with an XMLTV guide</li><li>M3U and Xtream</li><li>Sports</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-palette"/></svg></span><h3>Looks</h3><span class="cnt">8</span></div><ul><li>Noir, Midnight, Velvet, Sepia, Anime</li><li>Colour wheel</li><li>Nine fonts and text size</li><li>Top or side menu</li><li>Custom poster URL</li><li>Plugins & themes</li><li>Ambient Mode</li><li>Seven languages</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-shield"/></svg></span><h3>Household</h3><span class="cnt">3</span></div><ul><li>Seats with pictures and PINs</li><li>Kids seats by age rating</li><li>Shows per day for kids</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-monitor"/></svg></span><h3>Everywhere</h3><span class="cnt">6</span></div><ul><li>Web app, nothing to install</li><li>Android with its own player</li><li>Android TV and Fire TV</li><li>LG and Samsung (beta)</li><li>Windows, Mac and Linux</li><li>Discord status on Windows</li></ul></div>
     </div>
     <div class="works rv" aria-label="Works with">
-      <span>Stremio addons</span><span>Any debrid service</span><span>VLC</span><span>mpv</span><span>Trakt</span><span>Simkl</span><span>AniList</span><span>MyAnimeList</span><span>Plex</span><span>Jellyfin</span><span>Emby</span>
+      <span>Stremio addons</span><span>Major debrid services</span><span>VLC</span><span>mpv</span><span>Trakt</span><span>Simkl</span><span>AniList</span><span>MyAnimeList</span><span>Plex</span><span>Jellyfin</span><span>Emby</span>
     </div>
   </div>
 </section>
@@ -747,7 +772,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
       <details><summary>Why do you recommend VLC?</summary><div class="det">Browsers can't decode some common formats, such as HEVC video or Dolby and DTS sound. VLC plays nearly everything, and MKCinema hands a stream to it in one tap. If you can't install a player, turn on Browser only mode.</div></details>
       <details><summary>Where are my keys stored?</summary><div class="det">In your browser, and, if you sign in, in your own account row, which row-level security keeps readable only by you. Turn off Sync keys with my account in Settings › Debrid to keep them on one device. Keys are only ever sent to the service they belong to. When a browser isn't allowed to call that service directly, the call passes through MKCinema's small relay, which forwards it and doesn't store or log your key.</div></details>
       <details><summary>Can I move over from Stremio?</summary><div class="det">Yes. Settings › Account › Import from Stremio copies your library, progress and addons. Your Stremio password is used once and never stored.</div></details>
-      <details><summary>Are the downloads safe?</summary><div class="det">Every app is MKCinema itself, and its full source is on GitHub. The APK is signed with MKCinema's own key and only asks for internet access and, for push-to-talk in watch parties, your microphone. The Windows and Mac apps aren't code-signed by Microsoft or Apple yet, so each asks you to confirm the first time. Download them only from this site or the GitHub repository.</div></details>
+      <details><summary>Are the downloads safe?</summary><div class="det">Every app is MKCinema itself, and its full source is on GitHub. The APK is signed with MKCinema's own key. It asks for: internet and network state (to stream and sync); microphone and audio settings (push-to-talk in watch parties and voice search); keep awake and a foreground service (so downloads finish with the screen off); install apps (only to install MKCinema's own updates, after you tap Update); notifications and start at boot (new-episode alerts, checked twice a day); and, on Android TV, the TV home screen (to show your Continue watching row). Android asks you first before the microphone is used, and on Android 13 or later before notifications are shown. The Windows and Mac apps aren't code-signed by Microsoft or Apple yet, so each asks you to confirm the first time. Download them only from this site or the GitHub repository.</div></details>
     </div>
   </div>
 </section>
@@ -788,6 +813,14 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
   // Nav turns solid once you leave the top
   const nav = $('#nav');
   let solid = null;
+
+  // Phone menu: the section links drop down under the bar
+  const menu = $('.menu'), links = $('#links');
+  const setMenu = open => { nav.classList.toggle('open', open); menu.setAttribute('aria-expanded', open); menu.setAttribute('aria-label', open ? 'Close sections' : 'Sections'); menu.querySelector('use').setAttribute('href', open ? '#i-close' : '#i-menu'); };
+  menu.addEventListener('click', () => setMenu(!nav.classList.contains('open')));
+  links.addEventListener('click', e => { if (e.target.closest('a')) setMenu(false); });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && nav.classList.contains('open')) { setMenu(false); menu.focus(); } });
+  matchMedia('(min-width: 861px)').addEventListener('change', e => { if (e.matches) setMenu(false); });
 
   // Reveal on scroll
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
@@ -857,6 +890,5 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
   }
 })();
 </script>
-<script>if (/^(mkcinema\.app|mkcinema-site\.pages\.dev)$/.test(location.hostname)) { var s = document.createElement('script'); s.defer = true; s.src = 'https://static.cloudflareinsights.com/beacon.min.js'; s.setAttribute('data-cf-beacon', '{"token": "67f9c5350d5e4e90bb7ee4d251ed8df0"}'); document.head.appendChild(s); }</script>
 </body>
 </html>
