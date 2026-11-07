@@ -2,6 +2,14 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.52.0 (together, and knowing your film)
+
+- **Catch up to the room.** Joining a watch party late, you can catch up from the start or ten minutes back at 1.5× with subtitles on. You rejoin the room's playback by yourself when you reach them, or tap Jump in.
+- **Which cut is this?** Player › Options says which cut you're probably watching, from edition words in the release name and the copy's length against the listed runtime, and how sure that is.
+- **Shape of the film.** A curve of how much is said, and how heated it gets, across the film, drawn from the subtitles. Tap it to jump. It shows no plot.
+- **Ticket stubs.** Every film you finish keeps a stub with the date, the seat and who you watched with. Save one as a picture (Settings › Playback).
+- **Film night.** Seats take turns picking. The picker's shortlist from their watchlist goes to a vote on your phones (Couch match), or straight to a watch party.
+
 ## Web app 2.51.0 (works whatever your sources do)
 
 - **Your apps.** Pick the streaming services you pay for in Settings › Home. A title on one of them gets a "Watch on" button that opens that app on Android, Android TV and Fire TV, and the service's own search in a browser elsewhere.
