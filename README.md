@@ -54,23 +54,9 @@
 
 <p align="center"><sub>Player shots show <a href="https://studio.blender.org/films/">Blender open movies</a> (CC BY). Poster and backdrop art comes from the catalogs and belongs to its owners.</sub></p>
 
-## About
+## What makes MKCinema different
 
-MKCinema is an independent project, designed, built and maintained by one developer, Dee Lavish. There is no company or team behind it. Everything in this repository was built for MKCinema:
-
-- **The player.** A full video player with HLS and direct playback, styled anime subtitles, an audio engine with sound modes and volume boost, skip markers, X-Ray, touch gestures and automatic source failover.
-- **The addon engine.** It speaks the Stremio addon protocol, queries every addon in parallel, ranks and checks sources, and handles debrid accounts.
-- **The apps.** One web app plus native apps for Android, Android TV and Fire TV, Windows, macOS, Linux, LG webOS and Samsung TVs, all sharing one codebase.
-- **The services around it.** Account sync, a phone remote, watch parties with voice, a subtitle translation service, and the website.
-- **Tools for addon developers.** A visual addon builder, an addon finder, and an optional manifest field that lets addons shape how they look.
-
-It is free forever. MKCinema will never charge for anything: no paid tier, no ads and no feature behind a paywall. If you'd like to support the work, you can [donate on Ko-fi](https://ko-fi.com/mkcinema). Donations are optional and unlock nothing.
-
-MKCinema ships no titles or streams. Catalogs come from Cinemeta, subtitles from OpenSubtitles, and the only built-in source is official trailers. Everything else comes from addons and debrid accounts you add yourself.
-
-## Built for addons
-
-These features exist so the addons you already use look and work better. All of them are live, and we haven't seen them in any other player yet.
+MKCinema is built around the addons you already use, and goes further than playing them: it makes them look and work better. All of them are live, and we haven't seen them in any other player yet.
 
 **For everyone, with no changes from the addon developer:**
 
@@ -90,6 +76,20 @@ These features exist so the addons you already use look and work better. All of 
 | **Playback events and skips** | Receive start, pause and finish events, add intro, recap and credit times, and read the device's supported codecs. |
 
 Everything is validated data that MKCinema draws with its own components. Addon code, HTML and CSS never run, viewers choose whether an addon gets their watchlist or playback events, and other apps simply ignore the field. Specs: [docs/addon-looks.md](docs/addon-looks.md) and [docs/addon-extras.md](docs/addon-extras.md).
+
+## About
+
+MKCinema is an independent project, designed, built and maintained by one developer, Dee Lavish. There is no company or team behind it. Everything in this repository was built for MKCinema:
+
+- **The player.** A full video player with HLS and direct playback, styled anime subtitles, an audio engine with sound modes and volume boost, skip markers, X-Ray, touch gestures and automatic source failover.
+- **The addon engine.** It speaks the Stremio addon protocol, queries every addon in parallel, ranks and checks sources, and handles debrid accounts.
+- **The apps.** One web app plus native apps for Android, Android TV and Fire TV, Windows, macOS, Linux, LG webOS and Samsung TVs, all sharing one codebase.
+- **The services around it.** Account sync, a phone remote, watch parties with voice, a subtitle translation service, and the website.
+- **Tools for addon developers.** A visual addon builder, an addon finder, and an optional manifest field that lets addons shape how they look.
+
+It is free forever. MKCinema will never charge for anything: no paid tier, no ads and no feature behind a paywall. If you'd like to support the work, you can [donate on Ko-fi](https://ko-fi.com/mkcinema). Donations are optional and unlock nothing.
+
+MKCinema ships no titles or streams. Catalogs come from Cinemeta, subtitles from OpenSubtitles, and the only built-in source is official trailers. Everything else comes from addons and debrid accounts you add yourself.
 
 ## What's built
 
