@@ -100,6 +100,10 @@ flags. No more ratings disguised as fake entries in the stream list.
 }
 ```
 
+Already ship ratings as a row in the stream list? Since 2.45, MKCinema reads that row (a stream with only an
+`externalUrl` and lines like `IMDb: 8.6/10`) and shows it as a badge, a Ratings panel and a rating next to each
+episode, with no change on your side. Adding `enrich` on top gets you poster badges and full control of the text.
+
 Your manifest still needs at least one normal resource (for example `"resources": ["stream"]` that answers
 `{ "streams": [] }`) so other apps accept it.
 
