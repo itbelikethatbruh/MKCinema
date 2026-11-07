@@ -42,16 +42,32 @@
 
 <table>
 <tr>
-<td width="50%" align="center"><img src="docs/screenshots/app-detail.webp" alt="A film page with Smart Play and its sources"><br><sub>Film page: Smart Play explains every pick</sub></td>
-<td width="50%" align="center"><img src="docs/screenshots/app-player.webp" alt="The player's Audio tab"><br><sub>The player: audio languages, 200% volume, Listen on phone</sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/app-film.webp" alt="A film page"><br><sub>Film page: Smart Play, Find a line, sources from every addon</sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/app-more-like.webp" alt="More like this"><br><sub>More like this on every film page</sub></td>
 </tr>
 <tr>
-<td align="center"><img src="docs/screenshots/app-tv.webp" alt="MKCinema on a TV"><br><sub>On a TV: built for the remote</sub></td>
-<td align="center"><img src="docs/screenshots/app-anime-home.webp" alt="Home in the Anime look"><br><sub>The Anime look, one of five</sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/app-player.webp" alt="The player Audio tab"><br><sub>The player: audio languages, 200% volume, Listen on phone</sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/app-tv.webp" alt="MKCinema on a TV"><br><sub>On a TV: built for the remote</sub></td>
 </tr>
 <tr>
-<td align="center"><img src="docs/screenshots/app-party.webp" alt="Watch party"><br><sub>Watch parties with synced playback and voice</sub></td>
-<td align="center"><img src="docs/screenshots/app-addon-studio.jpg" alt="Addon Studio"><br><sub>Addon Studio: build a Stremio addon visually</sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/app-seats.webp" alt="Seats"><br><sub>Seats for everyone in the house, with PINs and kids seats</sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/app-appearance.webp" alt="Appearance settings"><br><sub>Five looks, a colour wheel, top or side menu</sub></td>
+</tr>
+<tr>
+<td width="50%" align="center"><img src="docs/screenshots/app-plugins.webp" alt="Plugins and themes"><br><sub>Plugins and themes from a reviewed gallery</sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/app-studio.webp" alt="Addon Studio"><br><sub>Addon Studio: build a Stremio addon visually</sub></td>
+</tr>
+<tr>
+<td width="50%" align="center"><img src="docs/screenshots/app-anime-home.webp" alt="Home in the Anime look"><br><sub>The Anime look</sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/app-party.webp" alt="Watch party"><br><sub>Watch parties with synced playback and voice</sub></td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td width="33%" align="center"><img src="docs/screenshots/app-remote.webp" alt="Phone remote pairing"><br><sub>Your phone as a remote, no app needed</sub></td>
+<td width="33%" align="center"><img src="docs/screenshots/app-listen.webp" alt="Listen on this phone"><br><sub>Listen on phone</sub></td>
+<td width="33%" align="center"><img src="docs/screenshots/app-phone-anime.webp" alt="The Anime tab on a phone"><br><sub>Phones are first-class</sub></td>
 </tr>
 </table>
 
