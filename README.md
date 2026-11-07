@@ -11,7 +11,7 @@
 </p>
 
 > [!IMPORTANT]
-> **Web 2.46 is live.** Sources are checked in the background so a failed one switches straight to one that works, Universes show each franchise's own logo, the player is simpler on phones, and the app starts faster. [See what's new](CHANGELOG.md).
+> **Web 2.47 is live.** Five more languages (Tamil, Telugu, Bengali, Malayalam and Samoan), a lighter Home that opens faster, and a smoother player that rides out short network drops. [See what's new](CHANGELOG.md).
 
 <p align="center">
   <img alt="Platforms" src="https://img.shields.io/badge/platforms-Web%20%7C%20Android%20%7C%20TV%20%7C%20Windows%20%7C%20macOS%20%7C%20Linux-2ea44f?style=flat-square">

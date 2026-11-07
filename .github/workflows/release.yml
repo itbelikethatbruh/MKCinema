@@ -3,9 +3,11 @@ name: Release
 # Publishes a GitHub release with the app files the website serves today and the notes in
 # .github/release/<tag>.md. Run it from Actions › Release › Run workflow, or push a tag like v1.0.
 #
-# The files are not kept in git. They are downloaded from https://mkcinema.app/download/, so a
-# release always carries exactly what the website hands out. FILES is the full list: update the
-# versioned names (Mac, Linux, webOS) when a new build goes up. The TV app is the phone APK.
+# The files are not kept in git. They are downloaded from https://mkcinema.app/download/ and each one must match
+# site/download/SHA256SUMS (the list the website publishes), so a release always carries exactly what the website
+# hands out. FILES is the list a release carries: update the versioned names (Mac, Linux, webOS) when a new build
+# goes up. The TV app is the phone APK. A change to site/download/SHA256SUMS on main also publishes a release
+# (tag files-<date>-<commit>), so the checksums on GitHub always cover the files the website serves.
 #
 # every release also gets
 # - SHA256SUMS, a list of the SHA-256 of every file, attached to the release and printed in the notes
@@ -20,6 +22,8 @@ on:
         required: true
   push:
     tags: ["v*"]
+    branches: [main]
+    paths: ["site/download/SHA256SUMS"]
 
 permissions: {}
 
@@ -55,13 +59,21 @@ jobs:
               echo "::error::$f is missing on the website ($type, $size bytes)"; exit 1
             fi
             echo "$f  $size bytes  $type"
+            # the file must be the one the website's SHA256SUMS lists
+            want=$(awk -v f="$f" '$2 == f {print $1}' site/download/SHA256SUMS)
+            got=$(sha256sum "$RUNNER_TEMP/dist/$f" | cut -d' ' -f1)
+            if [ -z "$want" ] || [ "$want" != "$got" ]; then
+              echo "::error::$f does not match site/download/SHA256SUMS (listed ${want:-nothing}, got $got)"; exit 1
+            fi
           done
           cp "$RUNNER_TEMP/dist/MKCinema.apk" "$RUNNER_TEMP/dist/MKCinema-TV.apk"
       - name: Checksums and notes
         env:
-          TAG: ${{ inputs.tag || github.ref_name }}
+          TAG: ${{ inputs.tag || (github.ref_type == 'tag' && github.ref_name) || '' }}
         run: |
-          [[ "$TAG" =~ ^v[0-9A-Za-z._-]+$ ]] || { echo "::error::Unexpected tag: $TAG"; exit 1; }
+          [ -n "$TAG" ] || TAG="files-$(date -u +%Y.%m.%d)-${GITHUB_SHA::7}"
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+          [[ "$TAG" =~ ^(v|files-)[0-9A-Za-z._-]+$ ]] || { echo "::error::Unexpected tag: $TAG"; exit 1; }
           (cd "$RUNNER_TEMP/dist" && find . -maxdepth 1 -type f -printf '%f\n' | LC_ALL=C sort | xargs -d '\n' sha256sum) > "$RUNNER_TEMP/SHA256SUMS"
           cat "$RUNNER_TEMP/SHA256SUMS"
           notes=".github/release/${TAG}.md"
@@ -87,7 +99,6 @@ jobs:
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "MKCinema ${TAG#v}" \
             --notes-file "$RUNNER_TEMP/notes.md" "$RUNNER_TEMP"/dist/* "$RUNNER_TEMP/SHA256SUMS"

@@ -2,6 +2,19 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.47.0 (2026-11-07)
+
+- **Five more languages.** MKCinema now speaks Tamil, Telugu, Bengali, Malayalam and Samoan. Pick one in Settings › Appearance › Language.
+- **Plugins checked at launch.** Gallery plugins are checked against the gallery each time MKCinema opens, and account sync and the companion server are tidier.
+- **Lighter Home.** Home builds rows as you reach them and loads pictures at the size they are shown, so it opens faster and uses less data.
+- **Smoother, sturdier player.** A keyboard-friendly seek bar (0-9, Home and End jump), streams that ride out short network drops, faster starts, real full screen on iPhone and seek previews for more streams.
+
+## Web app 2.46.5 (2026-11-07)
+
+- **Sepia look.** Sepia now has its own warm umber blacks and cream type.
+- **Your own theme colours.** Colours picked in Make your own theme apply across the whole app again.
+- **Calmer player.** The pointer hides with the controls, and Home rests behind the player.
+
 ## Web app 2.46.4 (2026-11-07)
 
 - **Faster start on phones.** The featured banner shows up sooner and the first screen downloads less.

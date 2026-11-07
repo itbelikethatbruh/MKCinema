@@ -1,0 +1,35 @@
+name: Download checksums
+
+# site/download/SHA256SUMS is what mkcinema.app links for checking a download. The app files themselves are not in
+# git, so this downloads every file the list names from https://mkcinema.app/download/ and fails if any checksum
+# differs. It runs when the list changes and once a day, so a new upload without a new list is caught.
+# Regenerate the list with tools/download-checksums.sh <folder with the files the site serves>.
+on:
+  pull_request:
+    paths: ["site/download/**"]
+  push:
+    branches: [main]
+    paths: ["site/download/**"]
+  schedule:
+    - cron: "41 6 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Compare with the live files
+        run: |
+          mkdir -p "$RUNNER_TEMP/live" && cp site/download/SHA256SUMS "$RUNNER_TEMP/live/"
+          cd "$RUNNER_TEMP/live"
+          awk '{print $2}' SHA256SUMS | while read -r f; do
+            curl -fsSL --retry 3 -o "$f" "https://mkcinema.app/download/$f"
+          done
+          sha256sum -c SHA256SUMS || { echo "::error::site/download/SHA256SUMS does not match what mkcinema.app serves. Run tools/download-checksums.sh"; exit 1; }

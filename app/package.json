@@ -1,6 +1,6 @@
 {
   "name": "mkcinema-server",
-  "version": "2.46.4",
+  "version": "2.47.0",
   "description": "MKCinema companion server: a stremio-addon-sdk addon plus a Range-aware HLS/MP4 proxy, audio rescue with ffmpeg, a debrid API relay, and it serves the MKCinema web app.",
   "main": "mkcinema-server.js",
   "scripts": {
@@ -16,5 +16,9 @@
     "express": "^4.21.2",
     "node-fetch": "^2.7.0",
     "stremio-addon-sdk": "^1.6.10"
+  },
+  "overrides": {
+    "path-to-regexp": "0.1.13",
+    "tmp": "^0.2.7"
   }
 }

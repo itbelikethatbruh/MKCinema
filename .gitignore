@@ -15,8 +15,9 @@ android/libs/*.jar
 *.key
 
 # App downloads are published to GitHub Releases and the website, not committed.
-# site/download keeps only the small webOS listing files.
+# site/download keeps only the small webOS listing files and SHA256SUMS, the checksum list the site publishes.
 site/download/*
 !site/download/com.mkcinema.app.manifest.json
 !site/download/mkcinema-webos-icon.png
+!site/download/SHA256SUMS
 .lighthouseci/
