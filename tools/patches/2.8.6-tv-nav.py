@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""2.8.6 TV navigation (Drake, 2026-11-05): drop-downs no longer trap the remote, Up always has a way out, rows glide
+"""2.8.6 TV navigation (Dee, 2026-11-05): drop-downs no longer trap the remote, Up always has a way out, rows glide
 without page jitter, networks are box-free raised logos.
 Rebuilds the 2.8 feature block from 2.8.0-features. Usage: python3 -I this.py index.html sw.js   (on 2.8.5; idempotent)"""
 import os, re, sys

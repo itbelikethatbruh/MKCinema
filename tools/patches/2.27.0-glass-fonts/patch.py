@@ -1,6 +1,6 @@
 """MKCinema 2.27.0 (part): glass side menu, a new side-menu logo lockup, and a choice of app fonts.
 
-Drake (2026-11-06): "The left side menu should have some barely barely translucent liquid glass but clean and
+Dee (2026-11-06): "The left side menu should have some barely barely translucent liquid glass but clean and
 not visually upsetting, and the logo looks basic on the left side menu, also can we add different built in font
 types across the whole app besides the logo?"
 

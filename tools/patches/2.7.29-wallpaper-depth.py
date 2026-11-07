@@ -1,4 +1,4 @@
-# MKCinema: wallpaper depth (Drake, 2026-11-04: "like Netflix's, with parallax or 3D effects").
+# MKCinema: wallpaper depth (Dee, 2026-11-04: "like Netflix's, with parallax or 3D effects").
 # The banner and the screensaver become layered scenes that move at different speeds, so depth reads from across a room:
 #   far    the key art, with a Ken Burns push (zooms in about 18% while panning), biased toward faces
 #   middle two drifting layers of light (fine dust and soft bokeh), moving faster than the art

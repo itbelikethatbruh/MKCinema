@@ -42,7 +42,7 @@ Sources:
 
 ## Hindi
 
-- Added 2026-11-05 at Drake's request (many Indian users from Reddit). Machine-drafted, so a native speaker should review it.
+- Added 2026-11-05 at Dee's request (many Indian users from Reddit). Machine-drafted, so a native speaker should review it.
 - The app's fonts have no Devanagari letters. In Hindi, `I18N.deva()` adds Noto Sans Devanagari (Google Fonts) to every web
   font the app loads, for the Devanagari range only, with local Noto / Nirmala UI / Kohinoor fallbacks. Latin text keeps its font.
 - Translated Hindi text gets `letter-spacing:0` (`[data-deva]`), because tracking pulls Devanagari letters apart.

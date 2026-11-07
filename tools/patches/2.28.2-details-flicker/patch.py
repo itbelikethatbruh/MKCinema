@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """MKCinema 2.28.2: opening a title's page no longer flickers.
 
-Drake (2026-11-06, phone browser): "When selecting movie/show it suddenly flicker and then open".
+Dee (2026-11-06, phone browser): "When selecting movie/show it suddenly flicker and then open".
 
 Cause (measured frame by frame in phone emulation): the details page draws at once, but the title logo has no size
 until its image arrives, so the logo slot starts 18 px tall and jumps to its full height (138 px) mid fade-in. Every

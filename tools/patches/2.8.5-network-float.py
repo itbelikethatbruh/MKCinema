@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""2.8.5 Floating network logos (Drake, 2026-11-05): logos float gently, drift against the row as it scrolls and lean toward the pointer.
+"""2.8.5 Floating network logos (Dee, 2026-11-05): logos float gently, drift against the row as it scrolls and lean toward the pointer.
 Rebuilds the 2.8 feature block from 2.8.0-features. Usage: python3 -I this.py index.html sw.js   (on 2.8.4; idempotent)"""
 import os, re, sys
 here = os.path.join(os.path.dirname(os.path.abspath(__file__)), '2.8.0-features')

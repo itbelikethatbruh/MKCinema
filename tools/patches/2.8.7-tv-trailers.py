@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""2.8.7 TV trailers (Drake, 2026-11-05): on TVs, trailers open in the YouTube app, which plays them with the TV's own
+"""2.8.7 TV trailers (Dee, 2026-11-05): on TVs, trailers open in the YouTube app, which plays them with the TV's own
 video hardware instead of an embedded web player. Needs Android app 1.2.4 (MKAndroid.youtube); older apps, browsers and
 phones keep the embedded player. Settings > Trailers gains "Best for this device" (the new default).
 Usage: python3 -I this.py index.html sw.js   (on 2.8.6; idempotent)"""

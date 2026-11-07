@@ -1,4 +1,4 @@
-"""Where to watch: one tidy dropdown instead of a wall of pills (Drake, 2026-11-06). Usage: python3 patch.py index.html"""
+"""Where to watch: one tidy dropdown instead of a wall of pills (Dee, 2026-11-06). Usage: python3 patch.py index.html"""
 import sys
 p = sys.argv[1]; s = open(p, encoding='utf-8').read()
 if 'wtw-sum' in s: print('already patched'); sys.exit(0)

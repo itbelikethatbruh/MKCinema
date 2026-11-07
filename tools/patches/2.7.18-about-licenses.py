@@ -1,4 +1,4 @@
-# MKCinema 2.7.18 (Drake, 2026-11-01): Settings > More > "About & licenses".
+# MKCinema 2.7.18 (Dee, 2026-11-01): Settings > More > "About & licenses".
 # Shows the app version, Stremio's original MIT copyright notice (verbatim from stremio-addon-sdk@1.6.10 LICENSE.md,
 # identical to Stremio/stremio-core LICENSE.md), and every other third-party notice MKCinema ships or loads:
 # hls.js (Apache-2.0), Lucide (ISC), supabase-js (MIT), GSAP (GreenSock Standard license), the four Google fonts (OFL 1.1),
@@ -52,7 +52,7 @@ const LIC_GROUPS = [
 const licItem = (x) => `<details class="lic"><summary data-nav><span class="lic-n"><b>${esc(x.name)}</b><small>${x.ver ? `${esc(x.ver)} · ` : ''}${esc(x.use)}</small></span><span class="lic-tag">${esc(x.lic)}</span><i data-lucide="chevron-down" class="lic-chev"></i></summary>
   <div class="lic-body"><pre class="lic-pre">${esc(x.text)}${x.extra ? `\n\n${esc(x.extra)}` : ''}</pre>${x.url ? `<a class="lic-link" href="${esc(x.url)}" target="_blank" rel="noopener" data-nav><i data-lucide="external-link"></i>${x.lic.startsWith('CC') ? 'License details' : 'Project page'}</a>` : ''}</div></details>`;
 SECTIONS.push({ id: 'about', icon: 'scale', label: 'About & licenses', intro: 'Version, MKCinema\'s own license, and the third-party software, fonts and services it uses.', rows: () => [
-  { html: () => `<div class="ab-hero"><div class="ab-mark">MKCinema</div><small>Version ${APP_VERSION} · © 2026 Drake Christopher</small>
+  { html: () => `<div class="ab-hero"><div class="ab-mark">MKCinema</div><small>Version ${APP_VERSION} · © 2026 Dee Lavish</small>
     <p class="ab-gpl">MKCinema is free software under the GNU General Public License, version 3. It comes with ABSOLUTELY NO WARRANTY. You are welcome to share and change it under the terms of that license.</p>
     <div class="ab-links"><a class="btn btn-ghost btn-sm" href="https://github.com/itbelikethatbruh/MKCinema" target="_blank" rel="noopener" data-nav><i data-lucide="code"></i>Source code</a><a class="btn btn-ghost btn-sm" href="https://github.com/itbelikethatbruh/MKCinema/blob/main/LICENSE" target="_blank" rel="noopener" data-nav><i data-lucide="scale"></i>GPL-3.0 license</a></div></div>` },
   { group: 'Stremio' },

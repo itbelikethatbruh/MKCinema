@@ -1,4 +1,4 @@
-# MKCinema 2.7.25 (Drake, 2026-11-04): wallpapers with 3D titles.
+# MKCinema 2.7.25 (Dee, 2026-11-04): wallpapers with 3D titles.
 # 1. Home's featured banner becomes a full-bleed wallpaper on TVs and desktops: the film's key art runs edge to edge under
 #    the dock, drifts slowly (a compositor-only transform), and the title logo sits on it with a 3D edge (rim light, a few
 #    hard layers of thickness, a soft cast shadow) and pops forward each time the film changes. Desktops add a gentle

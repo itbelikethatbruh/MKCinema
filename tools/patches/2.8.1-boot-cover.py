@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""2.8.1 loading cover polish (Drake, 2026-11-05, photo of the Fire TV):
+"""2.8.1 loading cover polish (Dee, 2026-11-05, photo of the Fire TV):
 - a white bar ran down the right edge while loading: the page was still growing, so the TV's own scrollbar showed.
   The page cannot scroll while the cover is up now, and scrollbars are hidden from the first paint.
 - the cover said only "MK": it now uses the real platinum monogram from the intro, with MKCINEMA under it.

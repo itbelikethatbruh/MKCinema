@@ -140,7 +140,7 @@ One code or file carries your addons, settings, library, progress, home layout a
 - The GPU governor drops to Low graphics on low battery or when scrolling stutters.
 
 ### Support
-Settings › Support has a Ko-fi button and QR code (ko-fi.com/mkcinema) for donations to Drake Christopher, by card or PayPal. After a few visits MKCinema asks once every three weeks, never during playback, with a "Don't ask again" button.
+Settings › Support has a Ko-fi button and QR code (ko-fi.com/mkcinema) for donations to Dee Lavish, by card or PayPal. After a few visits MKCinema asks once every three weeks, never during playback, with a "Don't ask again" button.
 
 ## Premium pass (2.4)
 - **New brand**: a Didone MK monogram whose letters share one stem, in a platinum double ring, with the MKCINEMA wordmark in Bodoni Moda. The splash draws the rings, turns the emblem in from the dark and sweeps light across it.

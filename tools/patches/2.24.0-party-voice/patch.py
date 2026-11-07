@@ -1,6 +1,6 @@
 """2.24.0 Watch party voice: its own channel and volume, and voices on your phone.
 
-A redditor's suggestion (Drake, 2026-11-06): voice chat on a separate channel from the film, and an option to have
+A redditor's suggestion (Dee, 2026-11-06): voice chat on a separate channel from the film, and an option to have
 voices only on the phone. Usage: python3 patch.py <folder with index.html and remote.html>
 Version-agnostic: sets 2.24.0 only when the folder is older.
 """

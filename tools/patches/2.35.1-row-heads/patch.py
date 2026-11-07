@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Web 2.35.1 row header fix (Drake, 2026-11-06: "Every film in order is being cut off in a mobile browser").
+"""Web 2.35.1 row header fix (Dee, 2026-11-06: "Every film in order is being cut off in a mobile browser").
 .rail has padding-top 18px + margin-top -18px. .uni-rail (2.34.0) and .net-rail cut the padding to 4/6px but kept
 the -18px margin, so the Universes cards rose 14px over the header and covered "See all" (Networks logos 12px).
 Fix: match the margin to the padding outside TV (TV rails use their own 24px pair). Idempotent.

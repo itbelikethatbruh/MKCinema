@@ -10,7 +10,7 @@
     "node": ">=18"
   },
   "license": "GPL-3.0-only",
-  "author": "Drake Christopher",
+  "author": "Dee Lavish",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.21.2",

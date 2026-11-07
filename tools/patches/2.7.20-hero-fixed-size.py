@@ -1,4 +1,4 @@
-# MKCinema 2.7.20 (Drake, 2026-11-02)
+# MKCinema 2.7.20 (Dee, 2026-11-02)
 # The featured banner kept changing shape between films. 2.7.15 only held the banner's OUTER height (a min-height
 # ratchet measured right after each swap), but it measured before the logo image had loaded, so every logo still
 # popped in from 0px and pushed the eyebrow and title up; descriptions of 1-3 lines and wrapping meta lines moved the

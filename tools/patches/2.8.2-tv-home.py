@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""2.8.2 TV Home (Drake, 2026-11-05): banner arrows for the remote, rows that stop at their ends instead of jumping away,
+"""2.8.2 TV Home (Dee, 2026-11-05): banner arrows for the remote, rows that stop at their ends instead of jumping away,
 Networks (Netflix, Disney+, HBO Max and more), and Where to watch showing each service once (rent and buy share a row).
 The 2.8 feature block is rebuilt from tools/patches/2.8.0-features (which now holds js/90-tvhome.js and the fixes).
 Usage: python3 -I this.py index.html sw.js   (on 2.8.1; idempotent)"""

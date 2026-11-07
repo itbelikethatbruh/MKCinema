@@ -1,5 +1,5 @@
 /* =====================================================================
-   MKCinema 2.22.0 · Anime look, comic edition (Drake, 2026-11-05)
+   MKCinema 2.22.0 · Anime look, comic edition (Dee, 2026-11-05)
    The Anime look turns into a manga: a new MKCinema anime logo, Dela Gothic One titles with ink and crimson
    shadows, an anime icon set, comic-panel posters and caption-box row titles, slash wipes between sections,
    impact bursts on presses, a redrawn Miko and a layered night city with parallax.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Web 2.32.1 phone polish (Drake, 2026-11-06: Smart Play and the other hero buttons were unbalanced on a phone in
+"""Web 2.32.1 phone polish (Dee, 2026-11-06: Smart Play and the other hero buttons were unbalanced on a phone in
 portrait, with Watchlist left alone on its own row; plus "go through the whole app and optimize everything").
 - Home featured banner, phone portrait (<=560px): Smart Play full width, then Trailer / Details / Watchlist as three
   equal icon-over-label buttons on one row. Fixed heights, no JS measuring.

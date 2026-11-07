@@ -1,4 +1,4 @@
-# MKCinema: Ambient Mode fixes from Drake's Fire TV photos (2026-11-04).
+# MKCinema: Ambient Mode fixes from Dee's Fire TV photos (2026-11-04).
 #  - The title showed twice: TMDB backdrops tagged with a language have the title printed on them. Textless backdrops
 #    (or fanart.tv backgrounds) are preferred now, and over titled art our own logo stays off.
 #  - It crashed after 2-3 films on a Fire TV stick: memory. Big art is shrunk once and released, every scene frees

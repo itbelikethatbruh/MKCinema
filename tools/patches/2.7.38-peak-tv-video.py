@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""2.7.38 Peak Cinema on TVs: the picture sat far up the screen, with a purple area over the rest (Drake, 2026-11-04).
+"""2.7.38 Peak Cinema on TVs: the picture sat far up the screen, with a purple area over the rest (Dee, 2026-11-04).
 
 Android TV web views draw video on a hardware layer placed from the page's coordinates. Peak Cinema is a fixed layer
 over Home; when Home was scrolled down, the layer was placed against the scrolled page, so the picture sat up and off the
