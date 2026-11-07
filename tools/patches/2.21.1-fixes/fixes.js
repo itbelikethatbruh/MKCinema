@@ -1,4 +1,4 @@
-/* ---------------- 2.21.1 Small fixes from Drake ----------------
+/* ---------------- 2.21.1 Small fixes from Dee ----------------
    1. Phones: picking Side menu inside Settings changed nothing you could see (Settings covers the screen and the
       side menu on a phone is only a menu button). Now Settings closes, the menu slides in once, and a toast says
       where it lives. The "Top menu" card says "Bottom bar" on phones, which is where that bar is.

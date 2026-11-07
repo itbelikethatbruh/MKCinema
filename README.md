@@ -23,11 +23,11 @@
   <a href="https://ko-fi.com/mkcinema">Ko-fi</a>
 </p>
 
-<p align="center"><img src="docs/screenshots/app-home.webp" width="100%" alt="MKCinema Home screen"></p>
+<p align="center"><img src="docs/screenshots/app-side-menu.webp" width="100%" alt="MKCinema Home with the side menu, the featured banner and Top 10 films today"></p>
 
 ## About
 
-MKCinema is an independent project, designed, built and maintained by one developer, Drake Christopher. There is no company or team behind it. Everything in this repository was built for MKCinema:
+MKCinema is an independent project, designed, built and maintained by one developer, Dee Lavish. There is no company or team behind it. Everything in this repository was built for MKCinema:
 
 - **The player.** A full video player with HLS and direct playback, styled anime subtitles, an audio engine with sound modes and volume boost, skip markers, X-Ray, touch gestures and automatic source failover.
 - **The addon engine.** It speaks the Stremio addon protocol, queries every addon in parallel, ranks and checks sources, and handles debrid accounts.
@@ -41,7 +41,7 @@ MKCinema ships no titles or streams. Catalogs come from Cinemeta, subtitles from
 
 ## Built for addons
 
-These features exist so the addons you already use look and work better. All of them are live.
+These features exist so the addons you already use look and work better. All of them are live, and we haven't seen them in any other player yet.
 
 **For everyone, with no changes from the addon developer:**
 
@@ -181,6 +181,6 @@ Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) fi
 
 ## License
 
-[GPL-3.0](LICENSE), with additional terms under section 7 in [NOTICE](NOTICE): forks must credit MKCinema and its author, mark themselves as modified, and use their own name and icon. Created by Drake Christopher.
+[GPL-3.0](LICENSE), with additional terms under section 7 in [NOTICE](NOTICE): forks must credit MKCinema and its author, mark themselves as modified, and use their own name and icon. Created by Dee Lavish.
 
 MKCinema is an independent project and is not affiliated with or endorsed by Stremio. Third-party names are used only to describe compatibility.

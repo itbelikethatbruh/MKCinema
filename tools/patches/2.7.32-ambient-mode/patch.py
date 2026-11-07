@@ -1,4 +1,4 @@
-# MKCinema: Ambient Mode, a 2.5D multi-plane parallax screensaver (Drake, 2026-11-04). Replaces the 2.7.25/2.7.29
+# MKCinema: Ambient Mode, a 2.5D multi-plane parallax screensaver (Dee, 2026-11-04). Replaces the 2.7.25/2.7.29
 # screensaver code and styles. See the header comment of the Ambient Mode script for the design.
 # Usage: python3 this.py index.html sw.js [ambient.js ambient.css]   (idempotent; bumps the patch version when it applies)
 import os, re, sys

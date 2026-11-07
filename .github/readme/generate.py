@@ -412,9 +412,9 @@ def how_diagram():
 def footer():
     W, H = 960, 300
     line = SANS_MD.path("FREE  ·  OPEN SOURCE  ·  NO ADS  ·  NO TRACKING", 15, W / 2, 266, track=0.3, anchor="middle")
-    sig = SERIF_LT_IT.path("Made for the love of film by Drake Christopher", 32, W / 2, 224, anchor="middle")
+    sig = SERIF_LT_IT.path("Made for the love of film by Dee Lavish", 32, W / 2, 224, anchor="middle")
     svg = f'''
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-label="Made for the love of film by Drake Christopher">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-label="Made for the love of film by Dee Lavish">
 <title>MKCinema</title>
 <style>.o{{transform-box:view-box;transform-origin:480px 96px;animation:o 14s linear infinite}}@keyframes o{{to{{transform:rotate(360deg)}}}}{REDUCED}</style>
 <defs><linearGradient id="p" x1="0" y1="0" x2="1" y2="1">{PLAT}</linearGradient>

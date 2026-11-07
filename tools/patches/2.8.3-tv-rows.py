@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""2.8.3 TV rows (Drake, 2026-11-05): on TV the focused poster stays at the row's left edge and the row slides under it,
+"""2.8.3 TV rows (Dee, 2026-11-05): on TV the focused poster stays at the row's left edge and the row slides under it,
 quick or held presses move instantly, Right on the last poster goes round to the first, and the page never shows a scrollbar on TV.
 Rebuilds the 2.8 feature block from 2.8.0-features. Usage: python3 -I this.py index.html sw.js   (on 2.8.2; idempotent)"""
 import os, re, sys

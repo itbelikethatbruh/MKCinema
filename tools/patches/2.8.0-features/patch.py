@@ -32,7 +32,7 @@ rep("const Store = {\n  get(k, d) { try { const v = localStorage.getItem('mkc:' 
 rep("document.documentElement.setAttribute('data-look',_lk);}catch(e){}</script>",
     "document.documentElement.setAttribute('data-look',_lk);if(_lk==='atelier'){var _ac=JSON.parse(localStorage.getItem('mkc:atelierCss')||'null');if(typeof _ac==='string'){var _st=document.createElement('style');_st.id='atelier';_st.textContent=_ac;document.head.appendChild(_st);}}}catch(e){}</script>")
 
-# Boot cover (Drake, 2026-11-05): Home used to paint in stages on a fresh start (unstyled cards, an empty banner, text
+# Boot cover (Dee, 2026-11-05): Home used to paint in stages on a fresh start (unstyled cards, an empty banner, text
 # fading in). A plain cover with an honest progress bar now holds until the styles, the first row and the banner art
 # are in, then fades once. Capped so a slow network never holds the app hostage. Static on TVs apart from the bar.
 rep("</head>",
@@ -57,7 +57,7 @@ rep('<body class="locked">',
     "if(document.fonts&&document.fonts.status!=='loaded')return;clearInterval(iv);requestAnimationFrame(function(){requestAnimationFrame(gone);});setTimeout(gone,400);}"
     "var iv=setInterval(step,100);window.addEventListener('error',function(){setTimeout(gone,800);});})();</script>")
 
-# Trailers (Drake, 2026-11-05: YouTube trailers stutter and buffer, nothing else does). The pop-up was see-through, so the
+# Trailers (Dee, 2026-11-05: YouTube trailers stutter and buffer, nothing else does). The pop-up was see-through, so the
 # whole app (and any open details page) kept being composited under every video frame, and the rounded clip on the
 # frame keeps the video off the hardware overlay path on TVs and phones. While a trailer plays, everything under it
 # stops painting once the pop-up has faded in, the backdrop goes solid, and TVs/phones drop the clip.

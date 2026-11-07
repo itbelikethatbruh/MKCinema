@@ -1,6 +1,6 @@
 # MKCinema 2.19.0 + Android 1.5.0: new-episode notifications (on the device, no server)
 
-This is the option recommended to Drake on a decision card on 2026-11-05, and it is still waiting on his choice. If he picks
+This is the option recommended to Dee on a decision card on 2026-11-05, and it is still waiting on his choice. If he picks
 Supabase web push instead, drop this patch and revert the Android 1.5.0 changes listed below.
 
 ## Web (2.19.0): `patch.py`, `epalerts.js`, `test.js`

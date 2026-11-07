@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Web 2.35.0 Script clock (Drake, 2026-11-06: "Build all 10 now").
+"""Web 2.35.0 Script clock (Dee, 2026-11-06: "Build all 10 now").
 Ten features built on dialogue timing (see app.js header): any-release watch party, land on the same line,
 Find a line, phone subtitles, Last time, Margins notes, Couch match, kids shows-per-day, scene links,
 Never miss a line. Adds app.css + app.js to index.html, the phone side to remote.html, a What's new entry,

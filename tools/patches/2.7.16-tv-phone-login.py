@@ -1,4 +1,4 @@
-# MKCinema 2.7.16 (Drake, 2026-10-31): sign in a TV from a phone with a QR code.
+# MKCinema 2.7.16 (Dee, 2026-10-31): sign in a TV from a phone with a QR code.
 # The TV (Settings > Account, signed out) shows a QR code holding a room code and a one-time key. The phone signs in
 # a fresh session of its own (password typed or autofilled on the phone), encrypts the tokens with that key
 # (AES-GCM) and broadcasts them on the room; the TV decrypts and adopts the session. The key only travels in the QR

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""2.8.8 Calm ratings and roomier Seats (Drake, 2026-11-05): rating badges become one quiet smoked pill with a champagne
+"""2.8.8 Calm ratings and roomier Seats (Dee, 2026-11-05): rating badges become one quiet smoked pill with a champagne
 star instead of green/yellow/red; Seats rows get room, one-line names and a "Watching now" status line.
 Rebuilds the 2.8 feature block from 2.8.0-features. Usage: python3 -I this.py index.html sw.js   (on 2.8.7; idempotent)"""
 import os, re, sys

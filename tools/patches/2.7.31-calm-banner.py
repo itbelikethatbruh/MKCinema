@@ -1,4 +1,4 @@
-# MKCinema: the featured banner goes back to its pre-2.7.25 look (Drake, 2026-11-04: the effects were only wanted on
+# MKCinema: the featured banner goes back to its pre-2.7.25 look (Dee, 2026-11-04: the effects were only wanted on
 # the screensaver). Removes from Home's banner: the edge-to-edge layout, the drifting/pushing art, the dust and bokeh
 # layers, the mouse parallax, the 3D edge, pop and turning title. The screensaver keeps all of it. The banner keeps the
 # top-biased crop (faces) from 2.7.29, which is static.

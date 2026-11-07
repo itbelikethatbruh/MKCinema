@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Web 2.36.0 Sharp upscaling (Drake, 2026-11-06).
+"""Web 2.36.0 Sharp upscaling (Dee, 2026-11-06).
 A WebGL pass that
 sharpens (CAS) at the video's size and upscales with clamped Catmull-Rom to the screen's real pixels, only when the
 screen is clearly bigger than the video. Off by default, never on TVs, auto-off when frames drop. See app.js header.

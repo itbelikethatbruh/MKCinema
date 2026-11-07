@@ -38,7 +38,7 @@ python3 -I patches/2.17.0-anime-sync/patch.py <copy of mkcinema>
 ## MyAnimeList
 
 MAL's API and token endpoint send no CORS headers, so every MAL call goes through the Supabase Edge Function `mal-relay`
-(Drake chose "Small relay on Supabase", 2026-11-05). It is **already deployed** on project wogffhgdixgrayowewnf (verify_jwt off);
+(Dee chose "Small relay on Supabase", 2026-11-05). It is **already deployed** on project wogffhgdixgrayowewnf (verify_jwt off);
 source in `mkcinema/supabase/functions/mal-relay/index.ts`. It only answers MKCinema origins (mkcinema.pages.dev and its
 subdomains, localhost), only forwards api.myanimelist.net/v2/* and myanimelist.net/v1/oauth2/token, and stores and logs nothing.
 

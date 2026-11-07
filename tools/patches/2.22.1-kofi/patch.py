@@ -39,8 +39,8 @@ def main(root):
     s = open(p, encoding='utf-8').read()
     assert 'ko-fi.com/mkcinema' not in s, 'already applied'
     cur = re.search(r"const APP_VERSION = '([\d.]+)';", s).group(1)
-    s = rep(s, "const DONATE = { name: 'Drake Christopher', paypal: 'https://www.paypal.com/qrcodes/p2pqrc/W7NTDVZTZVQMU' };",
-            f"const DONATE = {{ name: 'Drake Christopher', paypal: 'https://www.paypal.com/qrcodes/p2pqrc/W7NTDVZTZVQMU', kofi: '{KOFI}' }};\n"
+    s = rep(s, "const DONATE = { name: 'Dee Lavish', paypal: 'https://www.paypal.com/qrcodes/p2pqrc/W7NTDVZTZVQMU' };",
+            f"const DONATE = {{ name: 'Dee Lavish', paypal: 'https://www.paypal.com/qrcodes/p2pqrc/W7NTDVZTZVQMU', kofi: '{KOFI}' }};\n"
             "// Ko-fi sits beside PayPal (cards, Apple Pay, Google Pay, PayPal; one-off or monthly)\n"
             f"const kfBadge = (small) => `<a class=\"kf-badge${{small ? ' sm' : ''}}\" href=\"${{esc(DONATE.kofi)}}\" target=\"_blank\" rel=\"noopener noreferrer\" aria-label=\"Support on Ko-fi\">{CUP}<span>Support on Ko-fi</span></a>`;")
     # both buttons wherever the PayPal one appears

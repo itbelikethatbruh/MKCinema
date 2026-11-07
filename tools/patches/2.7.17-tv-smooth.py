@@ -1,4 +1,4 @@
-# MKCinema 2.7.17 (Drake, 2026-10-31): the Smart TV app should be easy to follow with a remote, run smoothly at High
+# MKCinema 2.7.17 (Dee, 2026-10-31): the Smart TV app should be easy to follow with a remote, run smoothly at High
 # without dropping to Low, and voice search should work.
 # - TV mode (html.tv) is decided by the page itself (UA MKCinemaTV / Android TV / Fire TV / webOS ...), not only by the
 #   Android wrapper's late injection, so the first paint is already the TV layout.

@@ -1,4 +1,4 @@
-/* ---------------- 2.8.2 TV Home (Drake, 2026-11-05) ----------------
+/* ---------------- 2.8.2 TV Home (Dee, 2026-11-05) ----------------
    - the featured banner gets arrows the remote can reach and press (Left from Smart Play, Right from Watchlist)
    - Left/Right at either end of a row stays put instead of jumping to a far-off button in another row
    - Networks: browse what is on Netflix, Disney+, HBO Max and others. The lists come from the public
@@ -28,7 +28,7 @@ const Networks = {
     this.parallax(sec);
     return sec;
   },
-  // 2.8.5 parallax (Drake): as the row moves, each logo drifts against its tile and its glow drifts the other way;
+  // 2.8.5 parallax (Dee): as the row moves, each logo drifts against its tile and its glow drifts the other way;
   // on a computer the logo also leans toward the pointer. Only CSS variables change, once per frame. TVs keep the float.
   parallax(sec) {
     if (IS_TV) return;
@@ -129,7 +129,7 @@ const TvHome = {
       }
       return move(dir, fast);
     };
-    // 2.8.3/2.8.6 (Drake: rows lagged, then "cycling is jittery"). On TV the focused poster is pinned to the row's left
+    // 2.8.3/2.8.6 (Dee: rows lagged, then "cycling is jittery"). On TV the focused poster is pinned to the row's left
     // edge and the row glides under it, as on Netflix. One animation per row that retargets from where it is, so presses
     // never queue or jump; a held button glides faster. Moving along a row never scrolls the page up or down (that
     // re-centring on every press was the jitter); the page only moves when the focus changes row.
@@ -173,7 +173,7 @@ const TvHome = {
         return r;
       };
 
-      // 2.8.6 (Drake: "it sometimes just freezes and you can't scroll back up ... you have to exit out").
+      // 2.8.6 (Dee: "it sometimes just freezes and you can't scroll back up ... you have to exit out").
       // A drop-down (the Catalog picker on Movies and Series) kept every arrow press for itself on a remote, so the
       // focus was trapped there. Arrows now leave drop-downs and multi-line boxes; OK still opens them.
       document.addEventListener('keydown', (e) => {

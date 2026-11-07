@@ -160,7 +160,7 @@ const WhereToWatch = {
     const box = $('#dWtw'); if (!box || !this.key() || !/^(movie|series)$/.test(m.type)) return;
     const r = await this.get(m); if (!$('#dWtw') || D.meta !== m) return;
     if (!r) { box.remove(); return; }
-    // each service shows once: streaming first, and rent and buy share one row (Drake: no duplicate rent/buy buttons)
+    // each service shows once: streaming first, and rent and buy share one row (Dee: no duplicate rent/buy buttons)
     const seen = new Set(), pick = (keys) => keys.flatMap((k) => r[k] || []).filter((x) => !seen.has(x.provider_id) && seen.add(x.provider_id)).slice(0, 6);
     const grp = [['Stream', ['flatrate']], ['Free', ['free']], ['With ads', ['ads']], ['Rent or buy', ['rent', 'buy']]].map(([l, k]) => [l, pick(k)]).filter(([, x]) => x.length);
     if (!grp.length) { box.remove(); return; }

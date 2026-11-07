@@ -1,6 +1,6 @@
 # MKCinema: the app no longer recommends one debrid service. Get started lets people pick whichever service they use
 # (listed alphabetically) and saves and tests that key; the welcome tour and settings labels stop naming TorBox first.
-# Drake asked for this on 2026-10-26: he uses TorBox himself but doesn't want MKCinema to read like a TorBox promotion.
+# Dee asked for this on 2026-10-26: he uses TorBox himself but doesn't want MKCinema to read like a TorBox promotion.
 # Usage: python3 neutral-debrid-guide.py index.html
 import sys
 p = sys.argv[1]; s = open(p).read()

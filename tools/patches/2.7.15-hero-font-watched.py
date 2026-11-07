@@ -1,4 +1,4 @@
-# MKCinema 2.7.15 (Drake, 2026-10-31)
+# MKCinema 2.7.15 (Dee, 2026-10-31)
 # - The featured banner no longer changes height from one film to the next: it keeps the tallest height it has
 #   needed at the current width, and phones reserve room for a two-line title, meta and description up front.
 # - Display serif: Bodoni Moda -> Fraunces at opsz 72 (the website's heading face; Bodoni's hairlines read badly

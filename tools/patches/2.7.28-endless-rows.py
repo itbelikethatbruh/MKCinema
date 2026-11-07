@@ -7,7 +7,7 @@
 2. Detail-page art crops from the bottom (under the fade) instead of the middle, so heads and faces stay in view,
    and the detail banner is a little taller on wide screens.
 3. TV: no dark text on light fills. Smart Play, selected chips, the IMDb badge, stream tags and the exit prompt's
-   Stay button become light text on dark with a platinum edge (on Drake's TV, dark text on white showed as white).
+   Stay button become light text on dark with a platinum edge (on Dee's TV, dark text on white showed as white).
 Adds one <script> and one <style> before </body>, patches Nav, and bumps the version by one.
 Idempotent. Usage: python3 this.py index.html [sw.js]"""
 import re, sys

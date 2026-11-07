@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""2.8.9 Faster Smart Play, new-episode alerts, kids-seat lock, neutral debrid order (Drake, 2026-11-05).
+"""2.8.9 Faster Smart Play, new-episode alerts, kids-seat lock, neutral debrid order (Dee, 2026-11-05).
 Smart Play starts on the first confirmed-cached source; the remote's Play button plays the selected poster; a New episodes
 row and notice; a kids seat needs a grown-up PIN, with a lockout after 5 wrong tries and a 10-minute unlock; with several
 debrid keys the first one you added is used (no built-in service order).

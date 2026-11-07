@@ -1,4 +1,4 @@
-/* ---------------- 2.8.4 Simple Home (Drake, 2026-11-05: "the ease of use and simple functionality of how Netflix sorts
+/* ---------------- 2.8.4 Simple Home (Dee, 2026-11-05: "the ease of use and simple functionality of how Netflix sorts
    their movies ... everything seamless and make sense") ----------------
    - one clear order: Continue watching, My watchlist, Top 10, Networks, Popular, your picks, the themed rows,
      critically acclaimed, then the extras (Shortlist, Peak Cinema) and an unfilled "For you" invitation last

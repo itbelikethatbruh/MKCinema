@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""2.8.4 Simple Home (Drake, 2026-11-05: Netflix-simple sorting): one clear row order, plain row names, a film shows once on Home,
+"""2.8.4 Simple Home (Dee, 2026-11-05: Netflix-simple sorting): one clear row order, plain row names, a film shows once on Home,
 the banner says just Featured.
 Rebuilds the 2.8 feature block from 2.8.0-features. Usage: python3 -I this.py index.html sw.js   (on 2.8.3; idempotent)"""
 import os, re, sys

@@ -1,4 +1,4 @@
-# MKCinema 2.7.23 (Drake, 2026-11-04)
+# MKCinema 2.7.23 (Dee, 2026-11-04)
 # Leaving VLC (or any outside player) dropped people back onto an empty in-app player with an "Opening in VLC" panel,
 # whose buttons collided with the player's own play/rewind/forward controls. Now a hand-off to an outside player never
 # opens the in-app player at all: MKCinema stays on (or opens) the film's page with its source list, launches the app,

@@ -1,4 +1,4 @@
-"""Ko-fi only (Drake, 2026-11-05: Ko-fi already takes PayPal and cards). Run after patch.py / site.py.
+"""Ko-fi only (Dee, 2026-11-05: Ko-fi already takes PayPal and cards). Run after patch.py / site.py.
 
 python3 -I nopaypal.py app /path/to/mkcinema
 python3 -I nopaypal.py site /path/to/site/index.html
@@ -43,8 +43,8 @@ elif kind == 'repo':
         (f' <a href="{PP}"><img alt="Donate with PayPal" src="https://img.shields.io/badge/Donate%20with%20PayPal-0a0a0b?style=for-the-badge&logo=paypal&logoColor=white"></a>', ''),
     ])
     edit(os.path.join(target, 'app/README.md'), [
-        ('Settings › Support has a Ko-fi button and QR code (ko-fi.com/mkcinema) plus a PayPal button for donations to Drake Christopher.',
-         'Settings › Support has a Ko-fi button and QR code (ko-fi.com/mkcinema) for donations to Drake Christopher, by card or PayPal.'),
+        ('Settings › Support has a Ko-fi button and QR code (ko-fi.com/mkcinema) plus a PayPal button for donations to Dee Lavish.',
+         'Settings › Support has a Ko-fi button and QR code (ko-fi.com/mkcinema) for donations to Dee Lavish, by card or PayPal.'),
         ('- **Support**: a "Support on Ko-fi" button in Ko-fi blue beside the "Donate with PayPal" button in PayPal\'s colours.',
          '- **Support**: a "Support on Ko-fi" button in Ko-fi blue.'),
     ])

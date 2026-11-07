@@ -24,7 +24,7 @@ else:
     open(p, 'w', encoding='utf-8').write(s); print('applied scroll fix')
 
 
-# --- part 2: bigger TV top bar (Drake: Home/Movies/Series buttons too small on the TV) ---
+# --- part 2: bigger TV top bar (Dee: Home/Movies/Series buttons too small on the TV) ---
 s = open(p, encoding='utf-8').read()
 MARK2 = '/* 2.7.24 tv-dock */'
 if MARK2 not in s:

@@ -35,8 +35,8 @@ EDITS = [
      '<div class="a">Yes to both, and it stays free forever: MKCinema will never charge for anything. Every feature is included, with no ads and no paid tier, and the code'),
     ('with an optional donation (card or PayPal).</div>', 'with an optional donation (card or PayPal). Donations never unlock anything.</div>'),
     ('<section id="support" style="padding-top:0">', SECTION + '\n<section id="support" style="padding-top:0">'),
-    ('<h3 style="margin-top:14px">Keep MKCinema free</h3><p>MKCinema is made by Drake Christopher, with no ads and no paid tier.',
-     '<h3 style="margin-top:14px">Keep MKCinema free</h3><p>MKCinema is made by Drake Christopher, with no ads and no paid tier, and it stays free forever. Donations are optional and never unlock anything.'),
+    ('<h3 style="margin-top:14px">Keep MKCinema free</h3><p>MKCinema is made by Dee Lavish, with no ads and no paid tier.',
+     '<h3 style="margin-top:14px">Keep MKCinema free</h3><p>MKCinema is made by Dee Lavish, with no ads and no paid tier, and it stays free forever. Donations are optional and never unlock anything.'),
     ('<p class="legal">© <span id="yr">2026</span> MKCinema · Open source', '<p class="legal">© <span id="yr">2026</span> MKCinema · Free forever · Open source'),
     ('.band h2{', CSS + '.band h2{'),
 ]
