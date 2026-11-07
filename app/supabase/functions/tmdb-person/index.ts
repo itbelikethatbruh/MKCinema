@@ -5,10 +5,11 @@
 //
 // Only fixed lookups are offered, never a free path: ping, search (a person by name), cast (a title's people,
 // by IMDb or TMDB id), person (bio and combined credits), ids (a film's or show's IMDb id) and art (the best backdrop
-// without the title printed on it, plus a logo, for the Home banner and title pages). Answers are trimmed to
+// without the title printed on it, plus a logo, for the Home banner and title pages), watch (where a title streams in a
+// region, for Where to watch) and providers (the region's streaming services, for the Your apps picker). Answers are trimmed to
 // the fields the person page draws. Calls must carry the project's publishable key in `apikey` and come from the live
 // sites (the same rule as debrid-relay). Nothing is stored and nothing is logged: this file has no console calls on purpose.
-const VERSION = 2;
+const VERSION = 3;
 const ORIGINS = [/^https:\/\/(mkcinema|mkctv)\.pages\.dev$/, /^https:\/\/((app|tv)\.)?mkcinema\.app$/];
 const RATE = { limit: 90, windowMs: 60_000 }; // per client IP, per isolate (best effort)
 const API = 'https://api.themoviedb.org/3';
@@ -135,6 +136,29 @@ async function answer(a: string, p: URLSearchParams): Promise<[number, unknown, 
     if (!hit) return [200, { tmdb: null, bg: '', titled: '', logo: '' }, 86400];
     const im = await tmdb(`${hit.k}/${num(hit.x.id)}/images`, { include_image_language: 'en,null' });
     return [200, { tmdb: { kind: hit.k, id: num(hit.x.id) }, ...pickArt(hit.x, im) }, 7 * 86400];
+  }
+  if (a === 'watch' || a === 'providers') {
+    const region = (p.get('region') || '').toUpperCase();
+    if (!/^[A-Z]{2}$/.test(region)) return [400, { error: 'bad region' }, 0];
+    const prov = (x: any) => ({ provider_id: num(x.provider_id), provider_name: str(x.provider_name, 80), logo_path: str(x.logo_path, 80), display_priority: num(x.display_priority) });
+    if (a === 'providers') {
+      const [mv, tv] = await Promise.all([tmdb('watch/providers/movie', { watch_region: region }), tmdb('watch/providers/tv', { watch_region: region })]);
+      const seen = new Map<number, any>();
+      for (const x of [...((mv && mv.results) || []), ...((tv && tv.results) || [])]) if (x && !seen.has(x.provider_id)) seen.set(x.provider_id, x);
+      const pr = (x: any) => num((x.display_priorities || {})[region]) || num(x.display_priority) || 99;
+      return [200, { results: [...seen.values()].sort((x, y) => pr(x) - pr(y)).slice(0, 80).map(prov) }, 7 * 86400];
+    }
+    const tt = p.get('tt') || '';
+    if (!/^tt\d{5,10}$/.test(tt)) return [400, { error: 'bad title id' }, 0];
+    const f = await tmdb(`find/${tt}`, { external_source: 'imdb_id' });
+    const hit = f && ((f.movie_results || [])[0] ? { k: 'movie', x: f.movie_results[0] } : (f.tv_results || [])[0] ? { k: 'tv', x: f.tv_results[0] } : null);
+    if (!hit) return [200, { result: null }, 86400];
+    const w = await tmdb(`${hit.k}/${num(hit.x.id)}/watch/providers`);
+    const r = w && w.results && w.results[region];
+    if (!r) return [200, { result: null }, 86400];
+    const out: Record<string, unknown> = { link: str(r.link, 300) };
+    for (const k of ['flatrate', 'free', 'ads', 'rent', 'buy']) if (Array.isArray(r[k])) out[k] = r[k].slice(0, 20).map(prov);
+    return [200, { result: out }, 86400];
   }
   return [400, { error: 'unknown lookup' }, 0];
 }

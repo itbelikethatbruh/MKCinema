@@ -296,6 +296,19 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .login.ask{border-color:rgba(242,196,109,.45)}
 .login.ask b{color:#f2c46d}
 </style>
+<style id="rm-251css">
+/* 2.51 Your language on this phone */
+.sheet.lng{max-height:calc(100dvh - 36px);overflow-y:auto;overscroll-behavior:contain}
+#lngList{display:flex;flex-direction:column;gap:8px;margin:10px 0 6px}
+.lng-row{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:#fff;font:inherit;text-align:left}
+.lng-row b{font:600 15px/1.2 var(--f-body)}
+.lng-row small{color:var(--dim);font-size:12.5px}
+.lng-row.on{border-color:rgba(217,212,199,.55);background:rgba(217,212,199,.12)}
+.lng-row.on b{color:var(--champ)}
+.lng-nudge{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.lng-nudge button,.lng-off{min-height:44px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:#fff;font:600 13px/1 var(--f-body)}
+.lng-off{margin-top:8px}
+</style>
 </head>
 <body>
 <div class="amb"></div>
@@ -335,6 +348,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
       <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
       <symbol id="i-life" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></symbol>
     <symbol id="i-phone" viewBox="0 0 24 24"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></symbol>
+      <symbol id="i-lang" viewBox="0 0 24 24"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></symbol>
   </defs>
 </svg>
 
@@ -379,6 +393,8 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
   <div class="pw" id="pw" hidden role="status"><b id="pwT">Allow this phone on your TV</b><span id="pwS"></span><span class="pw-n tnum" id="pwN" hidden></span><button type="button" id="pwGo" hidden>Ask again</button></div>
   <button class="login" type="button" id="loginBtn" hidden><svg class="i"><use href="#i-login"/></svg><span class="grow"><b>Sign in your TV from here</b><small>Faster than typing on the TV</small></span><svg class="i"><use href="#i-right"/></svg></button>
   <button class="login lsn" type="button" id="lsnBtn" hidden><svg class="i"><use href="#i-head"/></svg><span class="grow"><b id="lsnT">Listen on this phone</b><small id="lsnS">Plug in headphones to watch without waking anyone</small></span></button>
+  <!-- 2.51 --><button class="login lsn" type="button" id="lngBtn" hidden><svg class="i"><use href="#i-lang"/></svg><span class="grow"><b id="lngT">Hear it in your language</b><small id="lngS">Another source’s sound on this phone, in step with the TV</small></span><svg class="i"><use href="#i-right"/></svg></button><!-- /2.51 -->
+
   <!-- 2.35.0 --><button class="login" type="button" id="psBtn" hidden><svg class="i"><use href="#i-cc"/></svg><span class="grow"><b>Subtitles on this phone</b><small>Read your own language, in step with the TV</small></span><svg class="i"><use href="#i-right"/></svg></button><!-- /2.35.0 -->
 <!-- 2.50 --><button class="login" type="button" id="tkBtn" hidden><svg class="i"><use href="#i-phone"/></svg><span class="grow"><b>Take it with you</b><small>The film carries on on this phone, at the same line</small></span><svg class="i"><use href="#i-right"/></svg></button><button class="login ask" type="button" id="fhAskBtn" hidden><svg class="i"><use href="#i-life"/></svg><span class="grow"><b>Your TV asked for help</b><small>See what’s on its screen and fix it from here</small></span><svg class="i"><use href="#i-right"/></svg></button><button class="login" type="button" id="fhBtn" hidden><svg class="i"><use href="#i-life"/></svg><span class="grow"><b>Help on this screen</b><small>See what’s on it and fix things, from anywhere</small></span><svg class="i"><use href="#i-right"/></svg></button><!-- /2.50 -->
 <button class="login" type="button" id="adBtn" hidden><svg class="i"><use href="#i-plug"/></svg><span class="grow"><b>Manage add-ons from this phone</b><small>Paste links with your phone’s keyboard</small></span><svg class="i"><use href="#i-right"/></svg></button>
@@ -496,6 +512,12 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
   <div class="fh-h">Message on the TV</div>
   <div class="field"><input id="fhMsg" type="text" maxlength="280" autocomplete="off" enterkeyhint="send" placeholder="Press OK on the big Play button"><button class="iconbtn" type="button" id="fhSend" aria-label="Send"><svg class="i"><use href="#i-enter"/></svg></button></div>
 </div><!-- /2.50 -->
+<!-- 2.51 --><div class="sheet lng" id="lng" role="dialog" aria-label="Hear it in your language">
+  <div class="grab"></div>
+  <h3>Hear it in your language</h3>
+  <p class="kbnote">Plays another source’s sound on this phone, in step with the TV. The TV keeps its sound for everyone else. Use headphones.</p>
+  <div id="lngList"></div>
+</div><!-- /2.51 -->
 <div class="toast" id="toast" role="status"></div>
 
 <script>
@@ -1632,6 +1654,89 @@ $('#fhFix').addEventListener('click', (e) => { const b = e.target.closest('[data
   const lv = R.leave;
   R.leave = function () { FH.close(); if (sheet === 'fh') closeSheet(true); return lv.apply(this, arguments); };
   addEventListener('pagehide', () => FH.close());
+}
+
+/* ---------- 2.51 Your language on this phone ----------
+   The TV lists the other-language sources a phone can play (st.lsn.langs). Picking one sends {t:'lsn', on, alt}; the TV
+   answers like Listen's direct mode, plus alt, altL and dur. The phone plays that source's sound in step with the TV,
+   corrected for a different frame rate, and the TV keeps its own sound for the room. */
+const LNG = {
+  alt: '', altL: '', k: 1, nudge: 0, dur: 0,
+  FPS: [1, 23.976 / 25, 25 / 23.976, 24 / 25, 25 / 24, 23.976 / 24, 24 / 23.976],
+  fps(dFrom, dTo) { if (!(dFrom > 120 && dTo > 120)) return 1; const r = dTo / dFrom; for (const k of this.FPS) if (k !== 1 && Math.abs(r / k - 1) < 0.0025) return k; return 1; },
+  langs() { const l = R.st && R.st.lsn && R.st.lsn.langs; return Array.isArray(l) ? l.slice(0, 8) : []; },
+  key() { return `mkc:lngNudge:${(R.st && R.st.title) || ''}|${this.alt}`; },
+  paint() {
+    const b = $('#lngBtn'); if (!b) return;
+    const ok = Caps.has('lng') && Array.isArray(R.st && R.st.caps) && R.st.v === 'player' && (this.langs().length || this.alt);
+    b.hidden = !ok;
+    $('#lngT').textContent = this.alt && Listen.on ? `Listening in ${this.altL}` : 'Hear it in your language';
+    $('#lngS').textContent = this.alt && Listen.on ? 'Only on this phone. The TV keeps its sound · Tap for options' : `Another source’s sound on this phone, in step with the TV${this.langs().length ? `: ${this.langs().map((x) => x.l).join(', ')}` : ''}`;
+    if (sheet === 'lng') this.sheet();
+  },
+  sheet() {
+    const box = $('#lngList'); if (!box) return;
+    const l = this.langs(), on = this.alt && Listen.on;
+    box.innerHTML = `${l.length ? l.map((x) => `<button type="button" class="lng-row${on && this.alt === x.k ? ' on' : ''}" data-lng="${x.k}"><b>${x.l}</b><small>${on && this.alt === x.k ? 'Playing on this phone' : 'Play this sound here'}</small></button>`).join('') : '<div class="ad-empty">No other language among this film’s sources right now.</div>'}
+      ${on ? `<div class="fh-h">Voices early or late?</div><div class="lng-nudge">${[[-1, '−1 s'], [-0.25, '−¼'], [0.25, '+¼'], [1, '+1 s']].map(([v, t]) => `<button type="button" data-lngn="${v}">${t}</button>`).join('')}</div><button type="button" class="lng-off" data-lng="off">Stop listening here</button>` : ''}`;
+  },
+  open() { openSheet('lng'); this.sheet(); },
+  pick(k) {
+    if (k === 'off') { Listen.stop(true); closeSheet(true); return; }
+    const x = this.langs().find((y) => y.k === k); if (!x) return;
+    if (Listen.on) Listen.stop(true);
+    this.alt = k; this.altL = x.l;
+    Listen.on = true; Listen.mode = ''; buzz(10);
+    const a = Listen.audio(); a.muted = false; try { a.play().catch(() => {}); } catch (e) { /* nothing yet */ }
+    Listen.ping(); R.send({ t: 'lsn', on: true, alt: k });
+    clearTimeout(Listen.startT); Listen.startT = setTimeout(() => { if (Listen.on && !Listen.mode) { toast('The TV did not answer. Is MKCinema playing there?', 4200); Listen.stop(true); } }, 25000);
+    Listen.session(); Listen.paint(); this.paint(); closeSheet(true);
+    toast(`Getting the ${x.l} sound…`, 2400);
+  },
+  setNudge(v) { this.nudge = Math.round(v * 100) / 100; try { localStorage.setItem(this.key(), String(this.nudge)); } catch (e) { /* private */ } Listen.follow(true); toast(`Sound ${this.nudge > 0 ? '+' : ''}${this.nudge.toFixed(2)} s`, 1200); },
+};
+{
+  const tgt = Listen.target.bind(Listen);
+  Listen.target = function () { const t = tgt(); return t == null || !LNG.alt ? t : t * LNG.k + LNG.nudge; };
+  const fol = Listen.follow.bind(Listen);
+  Listen.follow = function (hard) {
+    if (!LNG.alt) return fol(hard);
+    const a = this.el, t = this.target(); if (!a || t == null || this.mode !== 'direct') return;
+    const rate = (this.base.rate || 1) * LNG.k;
+    if (this.base.paused) { if (!a.paused) a.pause(); if (Math.abs(a.currentTime - t) > 0.3 && a.readyState >= 1) a.currentTime = t; return; }
+    if (a.readyState < 1) { if (hard) a.addEventListener('loadedmetadata', () => this.follow(true), { once: true }); return; }
+    const diff = t - a.currentTime;
+    if (hard || Math.abs(diff) > 1.5) { a.currentTime = Math.max(0, t + 0.15); a.playbackRate = rate; }
+    else if (Math.abs(diff) > 0.04) a.playbackRate = rate * (1 + clamp(diff * 0.5, -0.06, 0.06));
+    else a.playbackRate = rate;
+    if (a.paused) a.play().catch(() => {});
+  };
+  const dir = Listen.direct.bind(Listen);
+  Listen.direct = async function (m) {
+    if (m.alt && LNG.alt) {
+      LNG.altL = m.altL || LNG.altL; LNG.dur = Number(m.dur) || 0; LNG.k = 1;
+      LNG.nudge = Number((() => { try { return localStorage.getItem(LNG.key()); } catch (e) { return 0; } })()) || 0;
+    } else { LNG.alt = ''; }
+    await dir(m);
+    if (!LNG.alt) return;
+    const a = this.el, fit = () => { LNG.k = LNG.fps(LNG.dur, a.duration); this.follow(true); };
+    if (a.readyState >= 1 && isFinite(a.duration)) fit(); else a.addEventListener('loadedmetadata', fit, { once: true });
+    toast(`${LNG.altL} sound on this phone. The TV keeps its own.`, 3200);
+  };
+  const stp = Listen.stop.bind(Listen);
+  Listen.stop = function () { const r = stp.apply(this, arguments); LNG.alt = ''; LNG.k = 1; LNG.paint(); return r; };
+  const pt = Listen.paint.bind(Listen);
+  Listen.paint = function () {
+    pt();
+    if (LNG.alt && this.on && this.mode) { $('#lsnT').textContent = `Listening in ${LNG.altL}`; $('#lsnS').textContent = 'Only on this phone. The TV keeps its sound · Tap to stop'; }
+  };
+  const on = R.onMsg;
+  R.onMsg = (m) => { on(m); if (m.t === 'st' || m.t === 'lsn-st') LNG.paint(); };
+  $('#lngBtn').onclick = () => LNG.open();
+  $('#lngList').addEventListener('click', (e) => {
+    const n = e.target.closest('[data-lngn]'); if (n) { LNG.setNudge(LNG.nudge + Number(n.dataset.lngn)); return; }
+    const b = e.target.closest('[data-lng]'); if (b) LNG.pick(b.dataset.lng);
+  });
 }
 
 /* ---------- Start ---------- */
