@@ -1,0 +1,238 @@
+<style id="mk-steady">
+/* Steady web: pages never flash empty, chip rows and settings keep their place, Universes swap in place.
+   Motion is opacity and transform only. */
+/* a page that is still loading keeps the screen filled, so the footer never flashes up to the top */
+#app .view.on{min-height:calc(100vh - 140px)}
+@supports (height:100svh){#app .view.on{min-height:calc(100svh - 140px)}}
+/* tapping the page you are already on does not replay the page fade */
+body.mk-same .view.on{animation:none!important}
+/* Universes: the loading placeholder holds the page's size */
+#uniBody .uni-sk-hero{height:clamp(150px,22vw,260px);border-radius:var(--r-l,20px);margin-bottom:18px}
+#uniBody .uni-sk-chips{height:38px;border-radius:19px;margin-bottom:16px;max-width:560px}
+#uniBody .uni-sk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+#uniBody .uni-sk-grid .skeleton{aspect-ratio:2/3;height:auto}
+@media (max-width:600px){#uniBody .uni-sk-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}}
+/* Universes: the new banner art fades in over the old one instead of flashing dark */
+#uniBody .uni-hero{background-size:cover;background-position:center}
+#uniBody .uni-hero img.mk-hf{opacity:0;transition:opacity .45s ease}
+#uniBody .uni-hero img.mk-hf.in{opacity:.75}
+#uniBody .uni-swap{animation:mkStFade .35s ease-out}
+@keyframes mkStFade{from{opacity:0}}
+body.reduce-motion #uniBody .uni-swap{animation:none}
+@media (prefers-reduced-motion:reduce){#uniBody .uni-swap{animation:none}#uniBody .uni-hero img.mk-hf{transition:none}}
+/* Featured banner swipe: the slide-in is the motion, so the text's own entrance does not run on top of it */
+.hero.mk-flung .hero-body.swap>*{animation:none!important}
+#heroBg,#hero .hero-body{will-change:auto}
+.hero.dragging #heroBg,.hero.dragging .hero-body,.hero.mk-flung #heroBg,.hero.mk-flung .hero-body{will-change:transform,opacity}
+/* settings: re-drawing a section never nudges the scroll position */
+#setBody{overflow-anchor:none}
+#setBody.mk-redraw .set-sec{animation:none!important}
+/* the colour wheel sits in the middle of its card on phones */
+@media (max-width:640px){
+  #settings .cw-wrap{flex-direction:column;justify-content:center;text-align:center}
+  #settings .cw-side{align-items:center;max-width:none}
+}
+</style>
+<script id="mk-steady-js">
+/* Steady web (see the style above) */
+(function () {
+  if (typeof go !== 'function') return;
+  const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.classList.contains('reduce-motion');
+
+  /* 1. Tapping the page you are on: no replayed fade */
+  const g0 = go;
+  go = function (view) {
+    const disc = (v) => v === 'movie' || v === 'series';
+    if (S.view === view || (disc(view) && disc(S.view))) {
+      document.body.classList.add('mk-same');
+      requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('mk-same')));
+    }
+    return g0.apply(this, arguments);
+  };
+
+  /* 2. Sideways chip rows keep their scroll when the page re-draws them, and the picked chip slides into view */
+  const ROW = '.net-switch, .chips, #discGenres';
+  let keep = null, raf = 0;
+  const watch = () => {
+    cancelAnimationFrame(raf);
+    const tick = () => {
+      const k = keep; if (!k || performance.now() > k.until || !k.host.isConnected) { keep = null; return; }
+      const nr = $$(ROW, k.host)[k.idx];
+      if (nr && nr !== k.row) {
+        keep = null;
+        const pick = $$('button, [data-nav]', nr).find((b) => b.textContent.trim() === k.text) || nr.querySelector('.on');
+        nr.scrollLeft = k.left;
+        if (pick) {
+          nr.scrollLeft += pick.getBoundingClientRect().left - k.x;
+          const r = pick.getBoundingClientRect(), b = nr.getBoundingClientRect();
+          if (r.left < b.left + 8 || r.right > b.right - 8) {
+            const to = nr.scrollLeft + (r.left - b.left) - (b.width - r.width) / 2;
+            try { nr.scrollTo({ left: to, behavior: reduce() ? 'auto' : 'smooth' }); } catch (e) { nr.scrollLeft = to; }
+          }
+        }
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+  };
+  document.addEventListener('click', (e) => {
+    const chip = e.target.closest && e.target.closest('button, [data-nav]'); if (!chip) return;
+    const row = chip.closest(ROW); if (!row || row.scrollWidth <= row.clientWidth + 2) return;
+    const host = row.parentElement && row.parentElement.closest('[id]'); if (!host) return;
+    keep = { host, idx: $$(ROW, host).indexOf(row), row, left: row.scrollLeft, x: chip.getBoundingClientRect().left, text: chip.textContent.trim(), until: performance.now() + 2500 };
+    watch();
+  }, true);
+
+  /* 3. Universes: the full list is fetched ahead of time, a sized placeholder shows while it loads, swaps happen in place */
+  if (typeof Universes !== 'undefined') {
+    const U = Universes;
+    const warm = () => { if (!U.data && !U.loading) U.load(); };
+    const pl = U.place.bind(U);
+    U.place = function () {
+      const r = pl.apply(this, arguments);
+      if (window.requestIdleCallback) requestIdleCallback(warm, { timeout: 4000 }); else setTimeout(warm, 2500);
+      return r;
+    };
+    const r0 = U.render.bind(U);
+    U.render = function () {
+      const box = $('#uniBody'); if (!box) return r0();
+      if (!U.data || !U.data.length) box.innerHTML = `<div class="skeleton uni-sk-hero"></div><div class="skeleton uni-sk-chips"></div><div class="uni-sk-grid">${skeletons(9)}</div>`;
+      const oldImg = $('.uni-hero img', box), old = oldImg && oldImg.complete && oldImg.naturalWidth ? oldImg.currentSrc || oldImg.src : '';
+      const wasKey = box.dataset.mkKey || '';
+      return Promise.resolve(r0()).then((r) => {
+        const key = U.cur ? 'u' : `all:${U.cat || ''}`;
+        box.dataset.mkKey = key;
+        const hero = $('.uni-hero', box), img = hero && $('img', hero);
+        if (img) {
+          if (old) hero.style.backgroundImage = `url("${old.replace(/"/g, '%22')}")`;
+          if (!(img.complete && img.naturalWidth)) {
+            img.classList.add('mk-hf');
+            const done = () => img.classList.add('in');
+            img.addEventListener('load', done, { once: true }); img.addEventListener('error', done, { once: true });
+          }
+        }
+        if (wasKey && wasKey !== 'u' && key !== 'u' && wasKey !== key && !IS_TV) $$('.uni-sec', box).forEach((s) => s.classList.add('uni-swap'));
+        return r;
+      });
+    };
+    // switching universe, or back to all of them: no jump to the top unless the chips are off screen
+    document.addEventListener('click', (e) => {
+      const b = e.target.closest && e.target.closest('#uniBody [data-usw], #uniBody [data-uback]'); if (!b) return;
+      e.stopImmediatePropagation(); e.preventDefault();
+      const row = b.closest('.net-switch'), y = row ? row.getBoundingClientRect().top : 0;
+      U.cur = b.hasAttribute('data-uback') ? null : b.dataset.usw;
+      U.render();
+      if (y < 0) { const top = Math.max(0, scrollY + y - 90); try { scrollTo({ top, behavior: reduce() ? 'auto' : 'smooth' }); } catch (er) { scrollTo(0, top); } }
+    }, true);
+  }
+
+  /* 4. Settings: re-drawing the same section keeps its scroll; short help text shows in full, with no More */
+  if (typeof renderSettingsBody === 'function') {
+    const rb = renderSettingsBody; let lastSec = null;
+    renderSettingsBody = function () {
+      const body = $('#setBody'), same = !!body && lastSec === setSection, top = body ? body.scrollTop : 0;
+      if (same) { body.classList.add('mk-redraw'); requestAnimationFrame(() => requestAnimationFrame(() => body.classList.remove('mk-redraw'))); }
+      const r = rb.apply(this, arguments);
+      lastSec = setSection;
+      if (body && !IS_TV) {
+        $$('.sr-clip', body).forEach((row) => {
+          const s = $(':scope > div:first-child > small', row); if (!s) return;
+          const lh = parseFloat(getComputedStyle(s).lineHeight) || 20;
+          if (s.scrollHeight <= lh * 3.4) { row.classList.remove('sr-clip', 'sr-h', 'open'); const m = $('.sr-more', row); if (m) m.remove(); }
+        });
+      }
+      if (same) body.scrollTop = top;
+      return r;
+    };
+  }
+
+  /* 5. Featured banner: the art and text follow the finger 1:1, fly off with the swipe's speed, and the next title
+     slides in from the other side. A short or slow swipe springs back. Transform and opacity only. */
+  (function () {
+    const el = $('#hero'), bg = $('#heroBg'), body = el && el.querySelector('.hero-body');
+    if (!el || !bg || !body || IS_TV) return;
+    const layers = [bg, body];
+    let st = null, dragged = false, busy = false;
+    const set = (x, o, t) => layers.forEach((l) => { l.style.transition = t || 'none'; l.style.transform = x ? `translate3d(${x.toFixed(1)}px,0,0)` : ''; if (o != null) l.style.opacity = String(o); });
+    const clear = () => layers.forEach((l) => { l.style.transition = ''; l.style.transform = ''; l.style.opacity = ''; });
+    const resume = () => { clearTimeout(S.heroTimer); S.heroTimer = setTimeout(nextHero, 9000); };
+    const fling = (dir, from = 0, v = 0) => {
+      if (busy || S.hero.length < 2) return;
+      if (reduce()) { showHero(S.heroIdx + dir, dir); return; }
+      busy = true; clearTimeout(S.heroTimer);
+      const w = el.clientWidth, left = Math.max(40, w - Math.abs(from));
+      const d = Math.round(Math.min(320, Math.max(170, left / Math.max(Math.abs(v), 1.8))));
+      set(-dir * (w + 24), .55, `transform ${d}ms cubic-bezier(.33,.6,.45,1),opacity ${d}ms linear`);
+      setTimeout(() => {
+        el.classList.add('mk-flung');
+        set(dir * w * .3, .45);
+        showHero(S.heroIdx + dir, dir);
+        // the old art goes at once, so it never shows through while the new one slides in
+        const imgs = $$('img', bg); imgs.slice(0, -1).forEach((o) => o.remove());
+        const ni = imgs[imgs.length - 1]; if (ni) { ni.style.transition = 'none'; ni.style.opacity = '1'; }
+        void el.offsetWidth;
+        requestAnimationFrame(() => {
+          set(0, 1, 'transform .52s cubic-bezier(.16,1,.3,1),opacity .3s ease-out');
+          setTimeout(() => { clear(); el.classList.remove('mk-flung'); if (ni) ni.style.transition = ''; busy = false; }, 540);
+        });
+      }, Math.round(d * .6));
+    };
+    el.addEventListener('pointerdown', (e) => {
+      if (S.hero.length < 2 || (e.pointerType === 'mouse' && e.button)) return;
+      e.stopImmediatePropagation();
+      if (busy) { st = null; return; }
+      const t = performance.now();
+      st = { x: e.clientX, y: e.clientY, id: e.pointerId, lock: null, dx: 0, v: 0, lx: e.clientX, lt: t };
+      dragged = false;
+    }, true);
+    el.addEventListener('pointermove', (e) => {
+      if (!st || e.pointerId !== st.id) return;
+      e.stopImmediatePropagation();
+      const dx = e.clientX - st.x, dy = e.clientY - st.y;
+      if (!st.lock && Math.hypot(dx, dy) > 8) {
+        st.lock = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'x' : 'y';
+        if (st.lock === 'x') { clearTimeout(S.heroTimer); el.classList.add('dragging'); st.x = e.clientX - Math.sign(dx) * 2; try { el.setPointerCapture(e.pointerId); } catch (er) { /* fine */ } }
+      }
+      if (st.lock !== 'x') return;
+      dragged = true;
+      const now = performance.now(), dt = now - st.lt;
+      if (dt > 0) { st.v = .75 * ((e.clientX - st.lx) / dt) + .25 * st.v; st.lx = e.clientX; st.lt = now; }
+      st.dx = e.clientX - st.x;
+      set(st.dx, 1 - Math.min(.3, Math.abs(st.dx) / (el.clientWidth * 2.2)));
+    }, true);
+    const end = (e) => {
+      if (!st || e.pointerId !== st.id) return;
+      e.stopImmediatePropagation();
+      const { dx, lock } = st; let v = st.v; if (performance.now() - st.lt > 90) v = 0;
+      st = null; el.classList.remove('dragging');
+      if (lock !== 'x') return;
+      const w = el.clientWidth, dir = dx < 0 ? 1 : -1;
+      const commit = e.type !== 'pointercancel' && (Math.abs(dx) > w * .25 || (Math.abs(v) > .4 && Math.sign(v) === Math.sign(dx) && Math.abs(dx) > 24));
+      if (commit) { fling(dir, dx, v); return; }
+      set(0, 1, 'transform .45s cubic-bezier(.2,.9,.3,1.12),opacity .3s ease-out');
+      setTimeout(() => { if (!st && !busy) clear(); }, 470);
+      resume();
+    };
+    el.addEventListener('pointerup', end, true); el.addEventListener('pointercancel', end, true);
+    // a swipe that started on a button is not a tap on it
+    el.addEventListener('click', (e) => { if (dragged) { e.stopImmediatePropagation(); e.preventDefault(); dragged = false; } }, true);
+    // the titles either side are fetched ahead, so a swipe never lands on empty art
+    const hold = document.createElement('div');
+    hold.setAttribute('aria-hidden', 'true');
+    hold.style.cssText = 'position:absolute;left:-9999px;top:0;width:8px;height:8px;overflow:hidden;opacity:0;pointer-events:none';
+    document.body.appendChild(hold);
+    const warmSides = () => {
+      const n = S.hero.length; if (n < 2) return;
+      const ms = [S.hero[(S.heroIdx + 1) % n], S.hero[(S.heroIdx - 1 + n) % n]];
+      hold.innerHTML = ms.map((m) => { const lg = metaLogo(m); return imgTag(metaBg(m), m.name, m.id, { wide: true, lazy: false }) + (lg ? imgTag(lg, m.name, m.id, { nofb: true, lazy: false }) : ''); }).join('');
+    };
+    const sh = showHero;
+    showHero = function () { const r = sh.apply(this, arguments); setTimeout(warmSides, 600); return r; };
+    if (S.hero.length > 1) setTimeout(warmSides, 1500);
+    // the arrows move the same way
+    const pv = $('#heroPrev'), nx = $('#heroNext');
+    if (pv) pv.onclick = () => fling(-1); if (nx) nx.onclick = () => fling(1);
+  })();
+})();
+</script>
