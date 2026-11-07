@@ -56,7 +56,7 @@
 
 ## What makes MKCinema different
 
-MKCinema is built around the addons you already use, and goes further than playing them: it makes them look and work better. All of them are live, and we haven't seen them in any other player yet.
+MKCinema is built around the addons you already use, and goes further than playing them: it makes them look and work better. Every feature below is live, and we haven't seen them in any other player yet.
 
 **For everyone, with no changes from the addon developer:**
 
