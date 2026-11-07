@@ -26,7 +26,7 @@
   <a href="https://app.mkcinema.app"><b>Open the web app</b></a> ·
   <a href="docs/install.md"><b>Download</b></a> ·
   <a href="https://mkcinema.app">Website</a> ·
-  <a href="#premieres"><b>Premieres</b></a> ·
+  <a href="#what-makes-mkcinema-different"><b>What makes it different</b></a> ·
   <a href="docs/features.md">Features</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
   <a href="https://ko-fi.com/mkcinema">Ko-fi</a>
@@ -55,7 +55,7 @@
 
 <p align="center"><sub>Player shots show <a href="https://studio.blender.org/films/">Blender open movies</a> (CC BY). Poster and backdrop art comes from the catalogs and belongs to its owners.</sub></p>
 
-## Premieres
+## What makes MKCinema different
 
 **Things we haven't seen in any other player.** Every one of these is live in MKCinema today.
 
