@@ -4184,7 +4184,7 @@ const STORE_ART = {
   ios: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M12.15 6.9c-.95 0-2.42-1.08-3.96-1.04-2.04.03-3.91 1.18-4.96 3.01-2.12 3.68-.55 9.1 1.52 12.09 1.01 1.45 2.21 3.09 3.79 3.04 1.52-.07 2.09-.99 3.94-.99 1.83 0 2.35.99 3.96.95 1.64-.03 2.68-1.48 3.68-2.95 1.16-1.69 1.64-3.33 1.66-3.42-.04-.01-3.18-1.22-3.22-4.86-.03-3.04 2.48-4.49 2.6-4.56-1.43-2.09-3.62-2.32-4.39-2.38-2-.16-3.68 1.09-4.62 1.09zm3.38-3.07c.84-1.01 1.4-2.43 1.25-3.83-1.21.05-2.66.81-3.53 1.82-.78.9-1.45 2.34-1.27 3.71 1.34.1 2.71-.69 3.55-1.7z"/></svg>',
   desktop: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#ff8800" d="M9.6 2.2h4.8l1.3 5.2H8.3zM7.7 9.8h8.6l1.4 5.5H6.3z"/><path fill="#fff" d="M8.3 7.4h7.4l.6 2.4H7.7zM6.3 15.3h11.4l.6 2.4H5.7z"/><path fill="#ff8800" d="M5.7 17.7h12.6l.5 2H5.2zM3 19.7h18c.6 0 1 .4 1 1v.8c0 .3-.2.5-.5.5h-19a.5.5 0 0 1-.5-.5v-.8c0-.6.4-1 1-1z"/></svg>',
 };
-const STORE_TEXT = { android: ['GET IT ON', 'Google Play'], ios: ['Download on the', 'App Store'], desktop: ['Download VLC for', 'Windows · Mac · Linux'] };
+const STORE_TEXT = { android: ['GET VLC ON', 'Google Play'], ios: ['Get VLC on the', 'App Store'], desktop: ['Download VLC for', 'Windows · Mac · Linux'] };
 function storeBadge(x, { small = false } = {}) {
   const [top, big] = STORE_TEXT[x.os];
   return `<a class="store-badge sb-${x.os}${small ? ' sm' : ''}" href="${x.href}" target="_blank" rel="noopener" aria-label="${esc(`${top} ${big}`)}">${STORE_ART[x.os]}<span><small>${esc(top)}</small><b>${esc(big)}</b></span></a>`;
@@ -9588,7 +9588,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.50.0';
+const APP_VERSION = '2.51.0';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -21147,6 +21147,33 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
+  { v: '2.51.0', date: '2026-11-07', items: [
+    ['new', 'Your apps', 'Pick the streaming services you pay for in Settings › Home. A film on one of them gets a Watch on button that opens the app on Android, Android TV and Fire TV.'],
+    ['new', 'Where to watch for everyone', 'Where to watch on title pages no longer needs your own TMDB key.'],
+    ['new', 'Other ways to watch', 'When your addons find nothing, the title page offers your apps, the trailer, your media server and Live TV instead of an empty list.'],
+    ['new', 'On your server', 'A Home row with the newest films and shows on your Plex, Jellyfin or Emby server. With no source addon installed, Home shows the ways to watch that need none.'],
+    ['new', 'Every seat its own language', 'Each seat can keep its own subtitle and sound language. Settings › Subtitles, while that seat is in use.'],
+    ['new', 'Your language on your phone', 'On the phone remote, Hear it in your language plays a dub from another source on your phone, in step with the TV, while the TV keeps its sound for the room.'],
+    ['new', 'Watch-along', 'Record your own commentary over a film and share the file. It lines itself up with anyone’s copy using the dialogue. Player › Options.'],
+    ['better', 'Clearer messages when a file is removed', 'When a service removes a file, MKCinema says so plainly and points to other ways to watch.'],
+  ] },
+  { v: '2.50.0', date: '2026-11-07', items: [
+    ['better', 'Movies and Series, worth a tap', 'The Movies and Series tabs now open on rows to browse, from your other catalogs and genre by genre, with every title underneath. Pick a genre to jump straight to it.'],
+    ['better', 'A rounder search', 'The search field is one rounded bar with the mic and Clear inside it.'],
+    ['fixed', 'Settings and Account open again', 'The Settings and Account buttons in the top bar respond on every device.'],
+    ['fixed', 'Whole lines in the banner', 'The featured description no longer cuts a line in half when your phone uses larger text.'],
+    ['new', 'Family Helper', 'The person who set MKCinema up for you can now help from their phone, from anywhere: see what’s on the screen, turn subtitles on, fix the sound and send a message. You always see when they’re connected. Settings › Devices.'],
+    ['new', 'Take it with you', 'Leaving the room? Tap Take it with you on the phone remote and the film carries on on your phone at the same line. Send it back to the TV the same way.'],
+    ['new', 'MK Channel', 'Switch on and something is already playing. Channels made from your progress, your watchlist and your Home, plus Scenes. Settings › Playback.'],
+    ['new', 'Learn mode', 'Tap any word in the subtitles to translate it, see the line translated underneath, pause after each line and keep a list of your words. Player › Options.'],
+    ['new', 'Sound from another source', 'Keep the picture you like and play the sound of another release, such as a dub in your language. MKCinema keeps them in step. Phones and computers.'],
+    ['better', 'Sleep timer stops at a good moment', 'It now waits for a pause in the dialogue, so it never cuts someone off mid-sentence.'],
+    ['better', 'Subtitles when you go back', 'Going back a few seconds turns subtitles on for just the part you missed.'],
+    ['new', 'Welcome tour sounds', 'Soft chimes as you move through the welcome tour, rising with each step. Turn them off with Interface sounds in Settings.'],
+  ] },
+  { v: '2.49.1', date: '2026-11-07', items: [
+    ['fixed', 'Clearer VLC button', 'The store button on the “couldn’t play” card now says it gets VLC.'],
+  ] },
   { v: '2.49.0', date: '2026-11-07', items: [
     ['better', 'Sources, side by side', 'Addons can now describe each source as data, so quality, HDR, sound, size and cache state look the same for every addon. Filter by HDR or Atmos, and sort by size.'],
     ['new', 'Scene times from addons', 'Addons can mark intros, recaps, credits and highlights right on a title or a file. The Skip buttons use them, and Peak Cinema starts on the highlights they mark.'],
@@ -28919,311 +28946,16 @@ const AddonScenes = {
 
 try { StreamInfo.init(); AddonScenes.init(); } catch (e) { try { MKLog.add('error', `2.49 stream info / scenes: ${e.message}`); } catch (_) { /* no log */ } console.warn('2.49 module skipped', e); }
 </script>
-<!-- mk-ds:start -->
-<style id="mkc-ds-css">
-/* ===== Design system: one set of tokens for type, weight, corners, surfaces, layers, icons and focus =====
-   Type: 12 sizes. Every calc(Npx * var(--ts,1)) in the app is snapped to one of them, so new code should use
-   calc(var(--fs-…) * var(--ts,1)). Weights: the four that are loaded (400, 500, 600, 700).
-   Corners: every fixed radius is a multiple of --r-s / --r-m / --r-l, so the Corners setting reaches all of them.
-   Roles: name colours by what they do (surface, text, accent, border), not by their value. */
-:root{
-  --fs-micro:10px;--fs-caption:11px;--fs-label:12px;--fs-small:13px;--fs-body:14px;--fs-ui:15px;--fs-lead:16px;
-  --fs-sub:18px;--fs-title:20px;--fs-h3:24px;--fs-h2:28px;--fs-h1:32px;
-  --fw-regular:400;--fw-medium:500;--fw-semibold:600;--fw-bold:700;
-  --r-xs:calc(var(--r-s) * .5);--r-pill:999px;
-  --surface-0:var(--void);--surface-1:var(--s1);--surface-2:var(--s2);--surface-3:var(--s3);
-  --text:var(--ink);--text-muted:var(--mute);--accent:var(--champ);--accent-soft:rgba(var(--nd9d4c7-c,217,212,199),.32);
-  --border:var(--line);--border-soft:var(--line-soft);--border-strong:var(--line-hi);
-  --z-raised:10;--z-sticky:100;--z-dock:1000;--z-overlay:5000;--z-modal:9000;--z-toast:10000;
-  --icon-stroke:2;
-  --focus-ring:var(--nf2f2f3,#f2f2f3);--focus-halo:rgba(0,0,0,.72);
-}
-
-/* Focus: a 2 px ring with a 2 px gap and a dark halo, so it shows on bright and dark artwork alike. TV keeps its 3 px ring. */
-html:not(.tv) :focus-visible,html:not(.tv) .neon-focus:focus-visible,html:not(.tv) .nav-focus{outline:2px solid var(--focus-ring);outline-offset:2px;box-shadow:0 0 0 6px var(--focus-halo)}
-html:not(.tv) .card:focus-visible,html:not(.tv) .card.nav-focus{outline:none;box-shadow:none}
-html:not(.tv) .card.nav-focus .card-inner,html:not(.tv) .card:focus-visible .card-inner{box-shadow:0 0 0 2px var(--focus-ring),0 0 0 6px var(--focus-halo),0 22px 44px -22px var(--n000000,#000)}
-
-/* Numbers that change (runtimes, ratings, episodes, ranks) keep the same width */
-.metaline,.metaline>*,.imdb,.badge-r,.rt,.card-sub,.ep .num,.crit,.t10c,.sl-n,.tx-t,.prog-l{font-variant-numeric:tabular-nums}
-
-/* Icons: one stroke width everywhere */
-svg.lucide,.qp-ck .lucide,.btn-bolt>svg.lucide,.gs-n svg.lucide,.dock .ibtn .lucide,.dock .searchbtn .lucide,#tabs .tab .lucide,#mtabs button .lucide,.stream .s-best .lucide,.t4-ic svg,.g4-pro .t4-ic svg{stroke-width:var(--icon-stroke)}
-.st-ic{width:.85em;height:.85em;vertical-align:-.08em;display:inline-block;flex:none}
-.badge-r>i{display:inline-flex;align-items:center}
-.crit-ic{width:14px;height:14px;vertical-align:-2px;margin-right:4px}
-.tx-sync .ds-ic{width:13px;height:13px;vertical-align:-2px;margin-right:4px;flex:none}
-.pm-row.talk b::after{content:"";display:inline-block;width:.8em;height:.8em;margin-left:.4em;vertical-align:-.05em;background:currentColor;
-  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z'/%3E%3Cpath d='M19 10v2a7 7 0 0 1-14 0v-2'/%3E%3Cpath d='M12 19v3'/%3E%3C/svg%3E") center/contain no-repeat;
-  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z'/%3E%3Cpath d='M19 10v2a7 7 0 0 1-14 0v-2'/%3E%3Cpath d='M12 19v3'/%3E%3C/svg%3E") center/contain no-repeat}
-
-/* Layout transitions: nothing animates width, height or padding any more */
-.tour-dots i{transition:background-color .3s}
-.hero-dots button{transition:background-color .35s}
-.seek .knob,.tr-seek b{transition:none}
-.seek .trk,.tr-trk{transition:none}
-/* Side rail: the rail is always full width and a clip opens it, so the page never re-lays out while it slides */
-@media (min-width:761px){
-  :root.nav-side.side-mini:not(.tv):not([data-look="anime"]) .dock-wrap .dock{width:276px;clip-path:inset(0 calc(276px - var(--side-w,96px)) 0 0 round 22px);transition:clip-path .46s cubic-bezier(.22,1,.36,1),background-color .3s}
-  :root.nav-side.side-mini:not(.tv):not([data-look="anime"]) .dock-wrap:is(:hover,:focus-within) .dock{clip-path:inset(0 0 0 0 round 22px)}
-}
-@media (prefers-reduced-motion:reduce){:root.nav-side.side-mini .dock-wrap .dock{transition:none!important}}
-
-/* Phone banner: one genre, no type tag, so the line never cuts a word */
-@media (max-width:600px){.hero .metaline .tag-s,.hero .metaline .hm-g1,.hero .metaline .hm-g2{display:none}}
-/* Phone tab bar: five places at most, the rest sit behind More */
-#mtabs button.ds-hide{display:none!important}
-#mtabs .ds-ic{width:20px;height:20px}
-/* Big screens: use the room instead of a 1480 px column */
-@media (min-width:1800px){
-  html:not(.tv):not(.nav-side) .dock,html:not(.tv) .wrap{max-width:min(2240px,92vw)}
-}
-/* Tall screens: the tour stays one compact card, so Next sits under the content */
-@media (min-width:900px) and (min-height:1100px){
-  #tour .tour-modal{height:min(calc(100vh - 40px),1040px);max-height:min(calc(100vh - 40px),1040px)}
-}
-/* Top menu: the wordmark comes back whenever it fits (DockFit decides) */
-body.ds-w:not(.dk2) .dock .brand .word{display:inline!important}
-
-/* Early access: quiet, follows the look, no glow or motion */
-.ea-badge{display:inline-flex;align-items:center;margin-left:10px;padding:3px 7px 2px;border-radius:var(--r-pill);border:1px solid var(--accent-soft);background:rgba(var(--nd9d4c7-c,217,212,199),.06);color:var(--gold);
-  font:600 calc(var(--fs-micro) * var(--ts,1))/1.1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;font-style:normal;white-space:nowrap;vertical-align:middle;text-shadow:none}
-body.ds-nob:not(.dk2) .dock .ea-badge{display:none}
-html.nav-side:not(.tv) .dock .brand{padding-bottom:10px}
-html.nav-side .dock .brand .word .ea-badge{margin:7px 0 0;align-self:flex-start;letter-spacing:.12em;font-size:calc(var(--fs-micro) * var(--ts,1));line-height:1.1;padding:2px 6px 1px}
-.sd-word .ea-badge{margin:6px 0 0;align-self:flex-start;letter-spacing:.12em;padding:2px 6px 1px}
-.ea-dot{display:none}
-@media (min-width:761px){
-  html.side-mini:not(.tv) .dock .brand{position:relative}
-  html.side-mini:not(.tv) .dock .brand .ea-dot{display:block;position:absolute;width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 2px var(--n000000,#000);top:var(--ea-dot-y,2px);left:var(--ea-dot-x,58px);transition:opacity .2s}
-  html.side-mini:not(.tv) .dock-wrap:is(:hover,:focus-within) .dock .brand .ea-dot{opacity:0}
-}
-html.tv .ea-badge,html.tv .ea-dot{display:none!important}
-
-/* Tour: the home-layout question lives on the favourites step */
-.ds-focus{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin:10px 0 2px}
-.ds-focus>span{color:var(--mute);font-size:calc(var(--fs-small) * var(--ts,1))}
-.ds-focus .chip.on{color:var(--n0b0b0c,#0b0b0c);background:var(--ink);border-color:var(--ink)}
-
-/* Browser offline notice */
-.ds-off{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:var(--z-toast);transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:min(560px,calc(100vw - 32px));padding:11px 16px;border-radius:var(--r-l);
-  background:var(--glass-solid);border:1px solid var(--line);color:var(--ink);font-size:calc(var(--fs-small) * var(--ts,1));line-height:1.4;box-shadow:0 18px 40px -18px var(--n000000,#000);transition:opacity .25s}
-.ds-off[hidden]{display:none}
-.ds-off svg{width:18px;height:18px;flex:none;color:var(--gold)}
-.ds-off span{color:var(--mute)}
-.ds-off b{color:var(--ink);font-weight:600}
-@media (max-width:760px){.ds-off{bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
-</style>
-<script id="mkc-ds">
-/* Design system runtime: one first-run card per session, the taste question inside the tour, keyboard-ready cards,
-   look-matched glow, the phone More tab, the top-menu wordmark, the Early access badge and the browser offline notice */
-(function () {
-  'use strict';
-  const q = (s, r) => (r || document).querySelector(s), qa = (s, r) => Array.from((r || document).querySelectorAll(s));
-  const safe = (n, f) => { try { f(); } catch (e) { try { MKLog.add('error', `ds ${n}: ${e.message}`); } catch (_) { /* no log */ } console.warn('ds', n, e); } };
-
-  /* ---- one first-run card per session ---- */
-  const Gate = window.MKPrompt = {
-    K: 'mkc:prompt1', mem: '',
-    cur() { try { return sessionStorage.getItem(this.K) || this.mem; } catch (e) { return this.mem; } },
-    free(n) { const c = this.cur(); return !c || c === n; },
-    take(n) { if (!this.free(n)) return false; this.mem = n; try { sessionStorage.setItem(this.K, n); } catch (e) { /* memory only */ } return true; },
-  };
-  const FOCUS = [['movies-first', 'Movies'], ['series-first', 'Series'], ['both', 'Both']];
-  const tasteStep = () => {
-    const st = (typeof TOUR !== 'undefined' ? TOUR : []).find((s) => s && s.id === 'taste');
-    if (!st || st._ds) return; st._ds = true;
-    const h = st.html, a = st.after;
-    st.html = function () {
-      const out = h.apply(this, arguments);
-      if (Store.get('askedFocus', false) && !st._dsKeep) return out;
-      st._dsKeep = true;
-      const cur = (Store.get('homeLayout', null) || {}).focus;
-      const row = `<div class="ds-focus" role="group" aria-label="What do you watch most?"><span>I mostly watch</span>${FOCUS.map(([v, l]) => `<button type="button" class="chip${cur === v ? ' on' : ''}" data-nav data-dsf="${v}" aria-pressed="${cur === v}">${l}</button>`).join('')}</div>`;
-      return out.includes('<div id="tourPick">') ? out.replace('<div id="tourPick">', `${row}<div id="tourPick">`) : out + row;
-    };
-    st.after = function () {
-      const r = a ? a.apply(this, arguments) : undefined;
-      qa('#tour [data-dsf]').forEach((b) => b.addEventListener('click', () => {
-        try { Layout.set({ focus: b.dataset.dsf }); } catch (e) { /* layout unchanged */ }
-        Store.set('askedFocus', true);
-        qa('#tour [data-dsf]').forEach((x) => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', String(x === b)); });
-      }));
-      return r;
-    };
-  };
-  safe('tour', () => {
-    tasteStep();
-    const ot = window.openTour;
-    if (typeof ot === 'function' && !ot._ds) {
-      window.openTour = function () { tasteStep(); if (!Store.get('toured', false)) Gate.take('tour'); return ot.apply(this, arguments); };
-      window.openTour._ds = true;
-    }
-  });
-  safe('nav', () => {
-    if (typeof SideNav === 'undefined' || SideNav.chooser._ds) return;
-    const ch = SideNav.chooser;
-    SideNav.chooser = function () {
-      if (!Gate.take('nav')) { if (this.fresh) try { localStorage.setItem('mkc:dsNavFresh', '1'); } catch (e) { /* asks as new */ } return; }
-      try { if (localStorage.getItem('mkc:dsNavFresh')) { this.fresh = true; localStorage.removeItem('mkc:dsNavFresh'); } } catch (e) { /* fine */ }
-      return ch.apply(this, arguments);
-    };
-    SideNav.chooser._ds = true;
-  });
-  safe('player', () => {
-    if (typeof PlayerAsk === 'undefined' || PlayerAsk.openSolo._ds) return;
-    const os = PlayerAsk.openSolo;
-    PlayerAsk.openSolo = function () { if (!Gate.take('player')) return; return os.apply(this, arguments); };
-    PlayerAsk.openSolo._ds = true;
-  });
-  safe('whatsnew', () => {
-    if (typeof WhatsNew === 'undefined' || WhatsNew.open._ds) return;
-    const op = WhatsNew.open;
-    WhatsNew.open = function (prev) {
-      // another card already showed this session: keep the update for the next launch
-      if (!Gate.take('whatsnew')) { try { Store.raw.set(this.KEY, prev || ''); } catch (e) { /* shown next update */ } return; }
-      return op.apply(this, arguments);
-    };
-    WhatsNew.open._ds = true;
-  });
-  safe('focus', () => {
-    if (typeof Layout === 'undefined' || Layout.ask._ds) return;
-    const la = Layout.ask;
-    Layout.ask = function () { if (Store.get('askedFocus', false) || Store.get('homeLayout', null) || !Gate.free('focus')) return; return la.apply(this, arguments); };
-    Layout.ask._ds = true;
-  });
-  safe('support', () => {
-    if (typeof Support === 'undefined' || Support.maybe._ds) return;
-    const sm = Support.maybe;
-    Support.maybe = function () { if (!Gate.free('support')) return; return sm.apply(this, arguments); };
-    Support.maybe._ds = true;
-  });
-  // the two small cards are added straight to the page: claim the session's slot, or wait for the next launch
-  safe('cards', () => new MutationObserver((ms) => ms.forEach((m) => m.addedNodes.forEach((n) => {
-    if (n.nodeType !== 1 || !n.classList) return;
-    const k = n.classList.contains('sup-ask') ? 'support' : n.classList.contains('focus-ask') ? 'focus' : '';
-    if (!k || Gate.take(k)) return;
-    n.remove();
-    if (k === 'focus') Store.set('askedFocus', false);
-    else { const st = Store.get('support', null); if (st) { st.at = 0; Store.set('support', st); } }
-    if (typeof IS_TV !== 'undefined' && IS_TV) { try { tvBackHook(); Nav.settle(); } catch (e) { /* focus stays */ } }
-  }))).observe(document.body, { childList: true }));
-
-  /* ---- cards and Reveal work from the keyboard (Space as well as Enter) ---- */
-  document.addEventListener('keydown', (e) => {
-    const t = e.target; if (!t || !t.matches) return;
-    if (e.key === 'Enter' && t.matches('[data-reveal]')) { e.preventDefault(); e.stopPropagation(); t.click(); return; }
-    if (e.key !== ' ' && e.key !== 'Spacebar') return;
-    if (!t.matches('[data-card],[data-bm],[data-reveal]')) return;
-    e.preventDefault(); e.stopPropagation(); t.click();
-  }, true);
-
-  /* ---- trailer glow takes its colours from the look ---- */
-  safe('mood', () => {
-    if (typeof moodFor !== 'function') return;
-    window.moodFor = function () {
-      const cs = getComputedStyle(document.documentElement);
-      const a = (cs.getPropertyValue('--champ') || cs.getPropertyValue('--gold') || '').trim() || '#d9d4c7';
-      const b = (cs.getPropertyValue('--s3') || '').trim() || '#19191c';
-      return [a, b];
-    };
-  });
-
-  /* ---- phone tab bar: at most five, the rest behind More ---- */
-  const MORE_SVG = '<svg class="ds-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>';
-  const KEEP = ['home', 'movie', 'series', 'anime', 'library'];
-  const Tabs = {
-    fit() {
-      const bar = q('#mtabs'); if (!bar) return;
-      const all = qa('[data-view]', bar);
-      let more = q('[data-dsmore]', bar);
-      if (all.length <= 5) { all.forEach((b) => b.classList.remove('ds-hide')); if (more) more.hidden = true; return; }
-      const keep = KEEP.filter((v) => all.some((b) => b.dataset.view === v)).slice(0, 4);
-      all.forEach((b) => b.classList.toggle('ds-hide', !keep.includes(b.dataset.view)));
-      if (!more) {
-        bar.insertAdjacentHTML('beforeend', `<button type="button" data-nav data-dsmore aria-label="More sections">${MORE_SVG}<span>More</span></button>`);
-        more = q('[data-dsmore]', bar);
-        more.addEventListener('click', () => { try { SideNav.open(); } catch (e) { /* drawer missing */ } });
-      }
-      more.hidden = false;
-      const on = all.some((b) => b.classList.contains('ds-hide') && b.classList.contains('on'));
-      if (more.classList.contains('on') !== on) more.classList.toggle('on', on);
-    },
-    init() {
-      const bar = q('#mtabs'); if (!bar) return;
-      let t = 0; const later = () => { clearTimeout(t); t = setTimeout(() => safe('tabs', () => this.fit()), 30); };
-      new MutationObserver((ms) => { if (ms.some((m) => m.type === 'childList' || (m.target.dataset && m.target.dataset.view))) later(); })
-        .observe(bar, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
-      this.fit();
-    },
-  };
-  safe('tabs', () => Tabs.init());
-
-  /* ---- top menu: show the wordmark (and the badge) whenever they fit ---- */
-  safe('dock', () => {
-    if (typeof DockFit === 'undefined' || DockFit.run._ds) return;
-    const dr = DockFit.run;
-    DockFit.run = function () {
-      const b = document.body; b.classList.remove('ds-w', 'ds-nob');
-      const r = dr.apply(this, arguments);
-      safe('dockfit', () => {
-        const de = document.documentElement; if (innerWidth <= 860 || de.classList.contains('nav-side') || de.classList.contains('tv') || de.dataset.look === 'anime') return;
-        if (b.classList.contains('dk2')) { if (this.over()) b.classList.add('ds-nob'); return; }
-        if (b.classList.contains('dkw')) return;
-        const word = q('.dock .brand .word'); if (!word) return;
-        if (getComputedStyle(word).display !== 'none') { if (this.over()) b.classList.add('ds-nob'); return; }
-        b.classList.add('ds-w'); if (!this.over()) return;
-        b.classList.add('ds-nob'); if (this.over()) b.classList.remove('ds-w', 'ds-nob');
-      });
-      return r;
-    };
-    DockFit.run._ds = true;
-    DockFit.run();
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => DockFit.run());
-  });
-
-  /* ---- Early access in the phone menu drawer ---- */
-  const BADGE = '<span class="ea-badge" aria-hidden="true">Early access</span>';
-  safe('drawer', () => {
-    if (typeof SideNav === 'undefined' || SideNav.open._dsb) return;
-    const so = SideNav.open;
-    SideNav.open = function () {
-      const r = so.apply(this, arguments);
-      safe('drawer badge', () => { const w = q('#sideDrawer .sd-word'); if (w && !q('.ea-badge', w)) { w.insertAdjacentHTML('beforeend', BADGE); w.parentNode.setAttribute('aria-label', 'MKCinema, early access'); } });
-      return r;
-    };
-    SideNav.open._dsb = true;
-  });
-  // the collapsed rail's dot sits on the logo's top-right edge
-  safe('dot', () => {
-    const place = () => { const br = q('.dock .brand'), mk = br && q('svg.mk', br); if (!mk) return; const a = br.getBoundingClientRect(), m = mk.getBoundingClientRect(); if (!m.width) return; br.style.setProperty('--ea-dot-x', `${Math.round(m.right - a.left - 6)}px`); br.style.setProperty('--ea-dot-y', `${Math.round(m.top - a.top - 1)}px`); };
-    if (document.documentElement.classList.contains('side-mini')) { setTimeout(place, 600); addEventListener('resize', () => setTimeout(place, 100)); }
-  });
-
-  /* ---- offline notice for every browser (apps with downloads already have their own) ---- */
-  safe('offline', () => {
-    if (typeof Offline !== 'undefined' && Offline.api) return;
-    const bar = document.createElement('div'); bar.id = 'dsOffline'; bar.className = 'ds-off'; bar.setAttribute('role', 'status'); bar.hidden = true;
-    bar.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h.01"/><path d="M8.5 16.4a5 5 0 0 1 7 0"/><path d="M5 12.9a10 10 0 0 1 5.2-2.8"/><path d="M19 12.9a10 10 0 0 0-2.3-1.7"/><path d="M2 8.8a15 15 0 0 1 4.2-2.6"/><path d="M22 8.8a15 15 0 0 0-11.3-3.8"/><path d="m2 2 20 20"/></svg><div><b>You’re offline.</b> <span>Films and shows need a connection. Your lists and settings still open.</span></div>';
-    document.body.appendChild(bar);
-    const set = (off) => { bar.hidden = !off; };
-    addEventListener('offline', () => set(true));
-    addEventListener('online', () => { if (!bar.hidden) { set(false); try { toast('Back online', 'ok', 2500, 'offline'); } catch (e) { /* quiet */ } } });
-    if (navigator.onLine === false) set(true);
-  });
-})();
-</script>
-<!-- mk-ds:end -->
 <style id="mkc-250css">
 /* 2.50 Household and phone */
 .learn-line{position:absolute;left:50%;bottom:calc(var(--sub-bottom, 9%) + 10px);transform:translateX(-50%);z-index:6;max-width:min(92%,1100px);text-align:center;pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:6px}
 .learn-line:empty{display:none}
-.learn-line .ll-o{font:600 calc(clamp(18px,2.4vw,34px) * var(--sub-k, 1)) /1.3 var(--f-body, system-ui);color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.85),0 0 2px #000;background:rgba(0,0,0,.42);padding:.18em .5em;border-radius:8px}
+.learn-line .ll-o{font:600 calc(clamp(18px,2.4vw,34px) * var(--sub-k, 1)) /1.3 var(--f-body, system-ui);color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.85),0 0 2px #000;background:rgba(0,0,0,.42);padding:.18em .5em;border-radius:var(--r-s)}
 .learn-line .ll-t{font:500 clamp(14px,1.6vw,22px)/1.3 var(--f-body, system-ui);color:rgba(255,255,255,.78);text-shadow:0 1px 4px rgba(0,0,0,.9)}
 .learn-line .ll-t:empty{display:none}
-.learn-line .lw{cursor:pointer;border-radius:4px;padding:0 .05em}
+.learn-line .lw{cursor:pointer;border-radius:calc(var(--r-s) * 0.5);padding:0 .05em}
 .learn-line .lw:hover,.learn-line .lw:focus-visible{background:rgba(255,255,255,.18);outline:none}
-.learn-pop{position:absolute;z-index:8;transform:translate(-50%,-100%);min-width:min(320px,86vw);max-width:min(420px,90vw);background:#151517;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px 16px;box-shadow:0 18px 40px rgba(0,0,0,.55);display:flex;flex-direction:column;gap:6px;color:#fff}
+.learn-pop{position:absolute;z-index:8;transform:translate(-50%,-100%);min-width:min(320px,86vw);max-width:min(420px,90vw);background:#151517;border:1px solid rgba(255,255,255,.12);border-radius:calc(var(--r-l) * 0.7778);padding:14px 16px;box-shadow:0 18px 40px rgba(0,0,0,.55);display:flex;flex-direction:column;gap:6px;color:#fff}
 .learn-pop[hidden]{display:none}
 .learn-pop .lp-w{font:600 20px/1.2 var(--f-display, system-ui)}
 .learn-pop .lp-t{color:rgba(255,255,255,.82);font-size:15px}
@@ -29236,21 +28968,21 @@ body.learn-on video::cue{color:transparent;background:transparent;text-shadow:no
 .lw-row .lw-src{opacity:.7}
 .lw-acts{display:flex;gap:6px;flex-shrink:0}
 .dub-list{display:flex;flex-direction:column;gap:6px;max-height:min(52vh,460px);overflow-y:auto;margin-top:12px}
-.dub-row{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#fff;font:inherit;cursor:pointer}
+.dub-row{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:10px 12px;border-radius:calc(var(--r-m) * 1.2);border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#fff;font:inherit;cursor:pointer}
 .dub-row:hover,.dub-row:focus-visible{border-color:rgba(255,255,255,.3);outline:none}
 .dub-row small{color:var(--dim, rgba(255,255,255,.6));font-size:12px;word-break:break-word}
 .dub-l{display:flex;flex-wrap:wrap;gap:4px}
 .dub-l em{font-style:normal;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.1);color:#fff}
 .dub-l em.dim{background:transparent;color:var(--dim, rgba(255,255,255,.55));padding-left:0}
-.dub-now{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:12px;background:rgba(255,255,255,.05);margin-top:10px}
-.mkc-hud{position:fixed;left:clamp(16px,3vw,48px);top:clamp(16px,3vw,44px);z-index:2147483000;display:flex;flex-direction:column;gap:2px;padding:12px 16px;border-radius:14px;background:rgba(10,10,12,.86);border:1px solid rgba(255,255,255,.1);color:#fff;opacity:0;transform:translate3d(0,-8px,0);transition:opacity .3s ease,transform .3s ease;pointer-events:none;max-width:min(420px,80vw)}
+.dub-now{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:calc(var(--r-m) * 1.2);background:rgba(255,255,255,.05);margin-top:10px}
+.mkc-hud{position:fixed;left:clamp(16px,3vw,48px);top:clamp(16px,3vw,44px);z-index:2147483000;display:flex;flex-direction:column;gap:2px;padding:12px 16px;border-radius:calc(var(--r-l) * 0.7778);background:rgba(10,10,12,.86);border:1px solid rgba(255,255,255,.1);color:#fff;opacity:0;transform:translate3d(0,-8px,0);transition:opacity .3s ease,transform .3s ease;pointer-events:none;max-width:min(420px,80vw)}
 .mkc-hud.on{opacity:1;transform:none}
 .mkc-hud small{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.6)}
 .mkc-hud b{font:600 19px/1.2 var(--f-display, system-ui)}
 .mkc-hud span{font-size:14px;color:rgba(255,255,255,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mkc-hud em{font-style:normal;font-size:11.5px;color:rgba(255,255,255,.5);margin-top:4px}
 .mkc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;margin-top:14px}
-.mkc-ch{display:flex;align-items:flex-start;gap:12px;text-align:left;padding:14px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#fff;font:inherit;cursor:pointer}
+.mkc-ch{display:flex;align-items:flex-start;gap:12px;text-align:left;padding:14px;border-radius:calc(var(--r-l) * 0.7778);border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#fff;font:inherit;cursor:pointer}
 .mkc-ch:hover,.mkc-ch:focus-visible{border-color:rgba(255,255,255,.32);outline:none}
 .mkc-n{font:600 22px/1 var(--f-display, system-ui);color:rgba(255,255,255,.45);min-width:22px}
 .mkc-t{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -29903,5 +29635,1135 @@ const FamilyHelp = {
   );
 }
 </script>
+<script id="mkc-toursnd">
+/* Welcome tour sounds: a soft bell on Next that climbs one note per step, a lower one on Back,
+   a glassy tick on choices, and a short chime when the tour ends. Built on the intro's Sfx engine
+   (same volume, mute and reverb), and only when Interface sounds is on. Nothing plays outside the tour. */
+const TourSound = {
+  quietUntil: 0,
+  // D major pentatonic, matching the intro chime (D5 E5 F#5 A5 B5 D6 E6)
+  SCALE: [587.33, 659.25, 739.99, 880, 987.77, 1174.66, 1318.51],
+  on() { return typeof UiSound === 'undefined' ? !sfx.muted : UiSound.ok(); },
+  run(fn) {
+    if (!this.on()) return;
+    const c = sfx.ensure(); if (!c) return;
+    this.quietUntil = performance.now() + 450; // the app's own open/close ticks stay quiet under ours
+    if (c.state === 'running') return fn(c);
+    // no tap yet to unlock audio: play only if it unlocks right away, never late
+    const t0 = performance.now(); c.resume().then(() => { if (performance.now() - t0 < 250) fn(c); }).catch(() => {});
+  },
+  // one bell: a sine with two quiet partials, a fast attack and a short tail, a little of it to the reverb
+  bell(c, f, at, vol, len, pan, wet) {
+    const t = c.currentTime + at, p = c.createStereoPanner ? c.createStereoPanner() : null;
+    const dry = c.createGain(); dry.gain.value = 1; const send = c.createGain(); send.gain.value = wet;
+    const node = p || c.createGain(); if (p) p.pan.value = pan;
+    node.connect(dry).connect(sfx.master); node.connect(send).connect(sfx.verb);
+    [[1, 1], [2, 0.18], [3.01, 0.05]].forEach(([r, w]) => {
+      const o = c.createOscillator(), g = c.createGain(), l = len / Math.sqrt(r);
+      o.type = 'sine'; o.frequency.value = f * r;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol * w, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + l);
+      o.connect(g).connect(node); o.start(t); o.stop(t + l + 0.03);
+    });
+  },
+  step(i) { return this.SCALE[Math.max(0, Math.min(this.SCALE.length - 1, i))]; },
+  next(i) { this.run((c) => { const f = this.step(i); this.bell(c, f * 0.75, 0, 0.05, 0.5, -0.15, 0.25); this.bell(c, f, 0.06, 0.09, 0.9, 0.15, 0.35); }); },
+  back(i) { this.run((c) => this.bell(c, this.step(i) * 0.75, 0, 0.065, 0.6, -0.1, 0.25)); },
+  pick() { this.run((c) => this.bell(c, 1760, 0, 0.03, 0.18, 0, 0.12)); },
+  skip() { this.run((c) => this.bell(c, 440, 0, 0.055, 0.55, 0, 0.3)); },
+  done() { this.run((c) => { [[587.33, 0, -0.25], [880, 0.09, 0.25], [1174.66, 0.18, 0], [1479.98, 0.3, 0.1]].forEach(([f, at, pan], k) => this.bell(c, f, at, 0.085 - k * 0.012, 1.4, pan, 0.45)); }); },
+  init() {
+    const tour = $('#tour'); if (!tour) return;
+    const solo = () => typeof PlayerAsk !== 'undefined' && PlayerAsk.solo;
+    // Next, Back and the favorites step moving on by itself all go through tourGo
+    const tg = window.tourGo;
+    window.tourGo = function (d) {
+      if (!tour.hidden) { if (solo()) TourSound.done(); else { const to = Math.max(0, Math.min(TOUR.length - 1, tourIdx + d)); if (to > tourIdx) TourSound.next(to); else if (to < tourIdx) TourSound.back(to); } }
+      return tg.apply(this, arguments);
+    };
+    // window capture runs before the app's document-level click ticks, so those stay quiet under ours
+    addEventListener('click', (e) => {
+      if (tour.hidden) return;
+      const t = e.target && e.target.closest ? e.target : null; if (!t || !tour.contains(t)) return;
+      const btn = t.closest('button, [role="button"], a, label, input, .qp-g, .qp-t, .chip'); if (!btn || btn.disabled) return;
+      if (btn.id === 'tourSkip') return this.skip();
+      if (btn.matches('[data-tour-end], [data-tour-guide], [data-tour-addons]')) return this.done();
+      if (t.closest('#tourBody')) this.pick();
+    }, true);
+    if (typeof UiSound !== 'undefined' && !UiSound._tour) {
+      UiSound._tour = true; const p = UiSound.play.bind(UiSound);
+      UiSound.play = (k) => (performance.now() < TourSound.quietUntil ? undefined : p(k));
+    }
+    // the tour opening gets a soft welcome bell in place of the generic open tick
+    const ol = openLayer; openLayer = function (id) { if (id === 'tour' && $('#tour').hidden) TourSound.next(0); return ol.apply(this, arguments); };
+  },
+};
+try { TourSound.init(); } catch (e) { console.warn('Tour sounds:', e); }
+</script>
+<!-- mk-phonefix:start -->
+<style id="mk-phonefix-css">
+/* 2.49.2 phone fixes: rounded search field, featured text that never cuts a line in half, the Movies and Series hubs */
+
+/* ---- search: one rounded field holding the icon, the text, Clear and the mic ---- */
+html:not(.tv) .pal-in{gap:10px}
+html:not(.tv) .pal-field{flex:1;min-width:0;display:flex;align-items:center;gap:2px;height:48px;padding:0 5px 0 16px;border-radius:999px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);transition:border-color .2s ease,background-color .2s ease,box-shadow .2s ease}
+html:not(.tv) .pal-field>svg{flex:none;width:18px;height:18px;color:var(--mute);margin-right:8px}
+html:not(.tv) .pal-field input{flex:1;min-width:0;height:100%;padding:0;background:none;border:0;border-radius:0;font-size:calc(16px * var(--ts,1))}
+html:not(.tv) .pal-field input:focus,html:not(.tv) .pal-field input:focus-visible{outline:none;box-shadow:none}
+html:not(.tv) .pal-field:focus-within{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.26);box-shadow:0 0 0 4px rgba(255,255,255,.05)}
+html:not(.tv) .pal-field .pal-x,html:not(.tv) .pal-field .pal-mic{width:38px;height:38px;border-radius:999px}
+html:not(.tv) .pal-field .pal-x:focus-visible,html:not(.tv) .pal-field .pal-mic:focus-visible{outline-offset:0;box-shadow:none}
+
+/* ---- featured text: up to three whole lines, and the slot is always three lines tall ----
+   An invisible three-line ghost shares the grid cell with the text, so the slot follows the real line height even
+   when Android's font size setting makes the letters bigger than the page asked for (that cut the third line). */
+.hero .hero-desc-slot{display:grid;margin:0 0 22px;max-width:58ch}
+.hero .hero-desc-slot::before{content:"\00a0\A\00a0\A\00a0";white-space:pre;visibility:hidden;grid-area:1/1;line-height:1.5}
+.hero .hero-desc-slot>.hero-desc{grid-area:1/1;height:auto;margin:0;max-width:none;line-height:1.5;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+@media (orientation:landscape) and (max-height:540px){
+  .hero .hero-desc-slot{margin-bottom:12px}
+  .hero .hero-desc-slot::before{content:"\00a0\A\00a0"}
+  .hero .hero-desc-slot>.hero-desc{-webkit-line-clamp:2}
+}
+
+/* ---- Movies and Series hubs: rows to browse first, then every title ---- */
+#mvhRows{margin:4px 0 8px}
+#mvhRows[hidden]{display:none}
+#mvhRows .row:last-child{margin-bottom:24px}
+.mvh-all{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:6px 0 14px}
+.mvh-all[hidden]{display:none}
+.mvh-all h2{margin:0;font-size:calc(20px * var(--ts,1));font-weight:600;letter-spacing:-.01em}
+.mvh-all small{color:var(--mute);font-size:calc(13px * var(--ts,1))}
+</style>
+<script id="mk-phonefix-js">
+/* 2.49.2 phone fixes (see the style above). Also: no "What do you watch most?" question any more. Home's order
+   (Settings › Home › Movies or series) stays where it was, but nobody is asked it on the way in. */
+(function () {
+  'use strict';
+  const safe = (n, f) => { try { f(); } catch (e) { try { MKLog.add('error', `phonefix ${n}: ${e.message}`); } catch (_) { /* no log */ } console.warn('phonefix', n, e); } };
+
+  /* ---- no first-run "What do you watch most?" (the card on Home and the row in the walkthrough) ---- */
+  safe('focus', () => {
+    if (!Store.get('askedFocus', false)) Store.set('askedFocus', true);
+    if (typeof Layout !== 'undefined') Layout.ask = function () { /* not asked any more */ };
+    const t = document.querySelector('.focus-ask'); if (t) t.remove();
+  });
+
+  /* ---- the search field: the icon, the text, Clear and the mic in one rounded field ---- */
+  safe('search', () => {
+    if (typeof IS_TV !== 'undefined' && IS_TV) return;
+    const row = document.querySelector('#palette .pal-in'), inp = document.getElementById('palInput');
+    if (!row || !inp || row.querySelector('.pal-field')) return;
+    const f = document.createElement('label'); f.className = 'pal-field';
+    const ic = row.querySelector(':scope > [data-lucide="search"], :scope > svg.lucide-search');
+    row.insertBefore(f, ic || inp);
+    [ic, inp, document.getElementById('palClear'), document.getElementById('palMic')].forEach((el) => { if (el && el.parentNode === row) f.appendChild(el); });
+  });
+
+  /* ---- the featured text slot ---- */
+  safe('hero', () => {
+    const p = document.getElementById('heroDesc');
+    if (!p || p.parentElement.classList.contains('hero-desc-slot')) return;
+    const s = document.createElement('div'); s.className = 'hero-desc-slot';
+    p.parentNode.insertBefore(s, p); s.appendChild(p);
+  });
+
+  /* ---- Movies and Series hubs ----
+     Before: the Movies tab opened one plain grid of the same popular titles Home leads with, so it looked like Home
+     had just reloaded. Now it opens rows to browse (the other movie catalogs, then the main catalog by genre), with
+     the full grid underneath. Picking a genre chip shows that genre's grid straight away. */
+  const Hub = {
+    key: '', io: null,
+    GENRES: {
+      movie: ['Action', 'Comedy', 'Thriller', 'Drama', 'Horror', 'Sci-Fi', 'Animation', 'Romance', 'Crime', 'Adventure', 'Family', 'Fantasy', 'Mystery', 'Documentary'],
+      series: ['Drama', 'Comedy', 'Crime', 'Sci-Fi', 'Animation', 'Thriller', 'Mystery', 'Fantasy', 'Action', 'Reality-TV', 'Documentary', 'Family'],
+    },
+    MAX_GENRES: 8, MAX_CATS: 3,
+    dom() {
+      const view = document.getElementById('view-discover'), bar = view && view.querySelector('.toolbar'), grid = document.getElementById('discGrid');
+      if (!view || !bar || !grid) return null;
+      let rows = document.getElementById('mvhRows'), all = view.querySelector('.mvh-all');
+      if (!rows) { rows = document.createElement('div'); rows.id = 'mvhRows'; bar.after(rows); }
+      if (!all) { all = document.createElement('div'); all.className = 'mvh-all'; grid.before(all); }
+      return { view, bar, grid, rows, all };
+    },
+    pickGenres(cat, type) {
+      const have = (cat.genres || []).filter(Boolean), lower = new Map(have.map((g) => [g.toLowerCase(), g]));
+      const fav = (this.GENRES[type] || []).map((g) => lower.get(g.toLowerCase())).filter(Boolean);
+      const rest = have.filter((g) => !fav.includes(g));
+      return fav.concat(rest).slice(0, this.MAX_GENRES);
+    },
+    fill(sec, metas) {
+      if (!metas.length) { sec.remove(); return; }
+      const ax = typeof AddonUI === 'undefined' ? 'poster' : AddonUI.layout(sec._cat, metas);
+      if (ax !== 'poster') sec.classList.add(`ax-${ax}`);
+      fillRail(sec, metas.slice(0, 30).map((m, k) => (ax === 'poster' ? cardHTML(m) : AddonUI.card(m, ax, k))).join(''));
+    },
+    load(sec) {
+      if (sec._busy || sec._done) return; sec._busy = true;
+      const key = this.key;
+      engine.fetchCatalog(sec._cat, sec._genre ? { genre: sec._genre } : {})
+        .then((metas) => { if (key === this.key) this.fill(sec, metas || []); })
+        .catch(() => { if (key === this.key) sec.remove(); })
+        .finally(() => { sec._busy = false; sec._done = true; });
+    },
+    watch(sec, now) {
+      if (now || !('IntersectionObserver' in window)) { this.load(sec); return; }
+      if (!this.io) this.io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { this.io.unobserve(e.target); this.load(e.target); } }), { rootMargin: '600px 0px' });
+      this.io.observe(sec);
+    },
+    toGrid() {
+      const d = this.dom(); if (!d) return;
+      const y = d.bar.getBoundingClientRect().top + scrollY - 90;
+      if (scrollY > y + 4) scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    },
+    sync(type) {
+      const d = this.dom(); if (!d) return;
+      const D = S.disc, cats = discoverCatalogs(type), cat = cats[D.cat];
+      const word = type === 'series' ? 'series' : 'movies';
+      const browsing = !!cat && !D.genre;
+      d.rows.hidden = !browsing;
+      d.all.hidden = !cat;
+      const sub = document.getElementById('discSub');
+      if (sub && cat) sub.textContent = `${cats.length} catalog${cats.length === 1 ? '' : 's'} from your addons. Browse the rows, or pick a genre to see all of it.`;
+      if (cat) d.all.innerHTML = D.genre ? `<h2>${esc(D.genre)}</h2><small>${esc(cat.name)}</small>` : `<h2>All ${word}</h2><small>${esc(cat.name)} · ${esc(cat.addon.manifest.name)}</small>`;
+      if (!browsing) return;
+      const key = `${type}|${D.cat}|${cat.addon.manifest.id}/${cat.id}|${cats.length}`;
+      if (key === this.key && d.rows.childElementCount) return;
+      this.key = key; if (this.io) this.io.disconnect(); d.rows.innerHTML = '';
+      const secs = [];
+      // the other catalogs of this type first (Top rated, New, a list from another addon)
+      cats.filter((c) => c !== cat && !c.genreRequired).slice(0, this.MAX_CATS).forEach((c) => {
+        const sec = rowShell(c.name, c.addon.manifest.name, { more: () => openCatalog(c) });
+        sec._cat = c; sec._genre = ''; secs.push(sec);
+      });
+      // then the main catalog, genre by genre, when it can filter by genre
+      if (!cat.genreRequired) this.pickGenres(cat, type).forEach((g) => {
+        const sec = rowShell(g, '', { more: () => { D.genre = g; renderDiscover(type); this.toGrid(); } });
+        sec._cat = cat; sec._genre = g; secs.push(sec);
+      });
+      secs.forEach((sec, i) => { sec.classList.add('mvh-row'); d.rows.appendChild(sec); this.watch(sec, i < 3); });
+      icons();
+    },
+  };
+  window.MKHub = Hub;
+  safe('hub', () => {
+    if (typeof renderDiscover !== 'function') return;
+    const rd = renderDiscover;
+    renderDiscover = function (type) {
+      const r = rd.apply(this, arguments);
+      safe('hub-sync', () => Hub.sync(type));
+      return r;
+    };
+  });
+})();
+</script>
+<!-- mk-phonefix:end -->
+<style id="mkc-251css">
+/* 2.51 Future-proof */
+.ya-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:14px;max-height:min(58vh,520px);overflow-y:auto}
+.ya-svc{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:calc(var(--r-m) * 1.2);border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#fff;font:inherit;font-size:13.5px;text-align:left;cursor:pointer;transition:border-color .2s ease,background-color .2s ease}
+.ya-svc img,.ya-mono,.ya-mine img,.ya-chip img{width:30px;height:30px;border-radius:var(--r-s);flex-shrink:0;object-fit:cover}
+.ya-mono{display:inline-grid;place-items:center;background:rgba(255,255,255,.1);font-weight:700}
+.ya-svc span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ya-svc.on{border-color:rgba(217,212,199,.7);background:rgba(217,212,199,.12)}
+.ya-svc:hover,.ya-svc:focus-visible{border-color:rgba(255,255,255,.32);outline:none}
+.ya-mine{display:flex;align-items:center;gap:12px;margin:12px 0 4px;padding:10px 16px 10px 10px;text-align:left;height:auto}
+.ya-mine span{display:flex;flex-direction:column;gap:2px}
+.ya-mine small{font-size:12px;color:var(--dim, rgba(255,255,255,.6));font-weight:500}
+.ya-chip{display:inline-flex;align-items:center;gap:8px}
+.ya-chip img{width:20px;height:20px;border-radius:calc(var(--r-s) * 0.625)}
+.ow-box{display:flex;flex-direction:column;gap:4px;margin-top:12px;padding:14px 16px;border-radius:calc(var(--r-l) * 0.7778);border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.035);color:#fff}
+.ow-box small,.ow-card small{color:var(--dim, rgba(255,255,255,.62));font-size:13px}
+.ow-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ow-home{padding:0 var(--pad, 4vw)}
+.ow-card{position:relative;display:flex;flex-direction:column;gap:4px;padding:18px 48px 18px 20px;border-radius:calc(var(--r-l) * 0.8889);border:1px solid rgba(255,255,255,.1);background:#141416;color:#fff}
+.ow-card b{font:600 18px/1.25 var(--f-display, system-ui)}
+.ow-x{position:absolute;top:10px;right:10px}
+.wa-rec{position:fixed;left:50%;top:clamp(12px,2.4vw,32px);transform:translateX(-50%);z-index:2147483002;display:flex;align-items:center;gap:10px;padding:8px 10px 8px 14px;border-radius:999px;background:#151517;border:1px solid rgba(229,115,115,.45);color:#fff;font-size:13.5px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.wa-rec span:not(.wa-dot){font-variant-numeric:tabular-nums;color:rgba(255,255,255,.8)}
+.wa-dot{width:9px;height:9px;border-radius:50%;background:#e57373;animation:waPulse 1.4s ease-in-out infinite}
+.wa-rec.paused .wa-dot{animation:none;opacity:.4}
+@keyframes waPulse{50%{opacity:.35;transform:scale(.8)}}
+.wa-rec button{border:1px solid rgba(255,255,255,.22);background:transparent;color:#fff;border-radius:999px;padding:5px 12px;font:600 12.5px/1 var(--f-body, system-ui);cursor:pointer}
+.wa-acts{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.wa-url{display:flex;gap:8px}
+.wa-url input{flex:1;min-width:0}
+@media (prefers-reduced-motion:reduce){.wa-dot{animation:none}}
+</style>
+<script id="mkc-251">
+/* =====================================================================
+   2.51 Future-proof: MKCinema still works when sources change
+   1  Your apps: films on a streaming service you pay for open in that service's app (Android, Android TV, Fire TV),
+      and Where to watch works for everyone, with or without a TMDB key (MKCinema's tmdb-person function answers).
+   2  Other ways to watch: when your addons find nothing, the film page offers your apps, your media server, the trailer
+      and Live TV instead of an empty list. Home gets "On your server" when a Plex, Jellyfin or Emby server is connected,
+      and a "Watch without addons" card when no source addon is installed.
+   3  Every seat its own language: each seat keeps its own subtitle and audio language.
+   4  Your language on your phone: Listen on this phone can play a dub from another source in step with the TV, while
+      the TV keeps the original sound for the room.
+   5  Watch-along tracks: record your own commentary over a film, share the file, and anyone plays it over their own
+      release. The dialogue lines it carries line it up, whatever the release.
+   6  Source changes: a source that a service took down explains itself plainly and points to the other ways to watch.
+   Everything runs on this device, except the Where to watch lookup without a key, which asks MKCinema's function for a
+   title's providers and keeps nothing.
+   ===================================================================== */
+const F51 = {
+  android: () => !!window.MKAndroid || /Android/i.test(navigator.userAgent),
+  norm: (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(),
+  imdb(m) { const id = String((m && (m.imdb_id || m.id)) || ''); const x = id.match(/^tt\d{5,10}/); return x ? x[0] : ''; },
+  played: () => !$('#player').hidden && !!P.ctx && !!P.stream,
+  sourceAddons() { try { return engine.addons.filter((a) => a.manifest && a.manifest.id !== 'org.mkcinema.trailers' && ((a.manifest && a.manifest.resources) || []).some((r) => (typeof r === 'string' ? r : r && r.name) === 'stream')); } catch (e) { return []; } },
+};
+
+/* ---------------- 1 Your apps ---------------- */
+const YourApps = {
+  /* streaming services: how to search them on the web, and their Android apps (phone, TV). An app that doesn't take
+     the link falls back to the web search, so a wrong guess never strands anyone */
+  TABLE: [
+    [/^netflix/i, 'https://www.netflix.com/search?q=%s', 'com.netflix.mediaclient', 'com.netflix.ninja'],
+    [/prime video|^amazon video/i, 'https://www.primevideo.com/search?phrase=%s', 'com.amazon.avod.thirdpartyclient', 'com.amazon.amazonvideo.livingroom'],
+    [/^disney/i, 'https://www.disneyplus.com/search?q=%s', 'com.disney.disneyplus', 'com.disney.disneyplus'],
+    [/^(hbo )?max\b/i, 'https://play.max.com/search?q=%s', 'com.wbd.stream', 'com.wbd.stream'],
+    [/^hulu/i, 'https://www.hulu.com/search?q=%s', 'com.hulu.plus', 'com.hulu.livingroomplus'],
+    [/^apple tv/i, 'https://tv.apple.com/search?term=%s', '', ''],
+    [/^paramount/i, 'https://www.paramountplus.com/search/?q=%s', 'com.cbs.app', 'com.cbs.ott'],
+    [/^peacock/i, 'https://www.peacocktv.com/search?q=%s', 'com.peacocktv.peacockandroid', 'com.peacocktv.peacockandroid'],
+    [/^crunchyroll/i, 'https://www.crunchyroll.com/search?q=%s', 'com.crunchyroll.crunchyroid', 'com.crunchyroll.crunchyroid'],
+    [/^tubi/i, 'https://tubitv.com/search/%s', 'com.tubitv', 'com.tubitv'],
+    [/^pluto/i, 'https://pluto.tv/search/details?query=%s', 'tv.pluto.android', 'tv.pluto.android'],
+    [/^youtube/i, 'https://www.youtube.com/results?search_query=%s', 'com.google.android.youtube', 'com.google.android.youtube.tv'],
+    [/^google play/i, 'https://play.google.com/store/search?q=%s&c=movies', '', ''],
+    [/^plex/i, 'https://watch.plex.tv/search?q=%s', 'com.plexapp.android', 'com.plexapp.android'],
+    [/^mubi/i, 'https://mubi.com/search/films?query=%s', 'com.mubi', 'com.mubi'],
+    [/^(the )?criterion/i, 'https://www.criterionchannel.com/search?q=%s', '', ''],
+    [/^kanopy/i, 'https://www.kanopy.com/search?query=%s', 'com.kanopy', 'com.kanopy'],
+    [/^starz/i, 'https://www.starz.com/search?q=%s', 'com.bydeluxe.d3.android.program.starz', ''],
+    [/^now( tv)?\b/i, 'https://www.nowtv.com/search?q=%s', '', ''],
+    [/^bbc iplayer/i, 'https://www.bbc.co.uk/iplayer/search?q=%s', 'bbc.iplayer.android', 'uk.co.bbc.iplayer'],
+    [/^(itvx|itv)/i, 'https://www.itv.com/watch/search?q=%s', '', ''],
+    [/^(channel 4|4od)/i, 'https://www.channel4.com/search?q=%s', '', ''],
+  ],
+  mine() { const l = Store.get('myApps', []); return Array.isArray(l) ? l : []; },
+  setMine(l) { Store.set('myApps', l.slice(0, 40)); },
+  has(p) { return this.mine().some((x) => x.id === p.provider_id || F51.norm(x.name) === F51.norm(p.provider_name)); },
+  row(name) { return this.TABLE.find(([re]) => re.test(String(name || '').trim())) || null; },
+  /* where a tap goes: the app on Android, else the service's own search on the web */
+  link(p, m) {
+    const r = this.row(p.provider_name), q = encodeURIComponent(String((m && m.name) || '').slice(0, 120));
+    const web = r ? r[1].replace('%s', q) : '';
+    if (!web) return { href: '', web: '' };
+    const pkg = r && (IS_TV ? r[3] : r[2]);
+    if (F51.android() && pkg) {
+      const u = new URL(web);
+      return { href: `intent://${u.host}${u.pathname}${u.search}#Intent;scheme=https;action=android.intent.action.VIEW;package=${pkg};S.browser_fallback_url=${encodeURIComponent(web)};end`, web };
+    }
+    return { href: web, web };
+  },
+  open(p, m) {
+    const l = this.link(p, m);
+    if (!l.href) { toast(`Open ${p.provider_name} and search for ${m.name}`, 'info', 4200); return; }
+    // a TV without Android has nowhere to send a link: say what to do instead
+    if (IS_TV && !window.MKAndroid) { toast(`Open ${p.provider_name} on this TV and search for ${m.name}`, 'info', 5200); return; }
+    MKLog.add('info', `Your apps: ${p.provider_name}`);
+    if (/^intent:/.test(l.href)) location.href = l.href; else window.open(l.href, '_blank', 'noopener');
+  },
+  /* the region's services, for the picker: your own TMDB key first, then MKCinema's function */
+  async catalog() {
+    const reg = WhereToWatch.region(), ck = `ya:${reg}`;
+    if (this.cat && this.cat.k === ck) return this.cat.v;
+    let list = [];
+    try {
+      if (TMDB.key()) {
+        const [a, b] = await Promise.all([TMDB.get('watch/providers/movie', { watch_region: reg }), TMDB.get('watch/providers/tv', { watch_region: reg })]);
+        const seen = new Map(); [...((a && a.results) || []), ...((b && b.results) || [])].forEach((p) => { if (!seen.has(p.provider_id)) seen.set(p.provider_id, p); });
+        list = [...seen.values()].sort((x, y) => ((x.display_priorities || {})[reg] ?? x.display_priority ?? 99) - ((y.display_priorities || {})[reg] ?? y.display_priority ?? 99));
+      } else { const j = await People.relay('providers', { region: reg }); list = (j && j.results) || []; }
+    } catch (e) { list = []; }
+    list = list.slice(0, 80).map((p) => ({ provider_id: p.provider_id, provider_name: p.provider_name, logo_path: p.logo_path }));
+    this.cat = { k: ck, v: list }; return list;
+  },
+  logo: (p, w = 'w92') => (p.logo_path ? `<img src="https://image.tmdb.org/t/p/${w}${esc(p.logo_path)}" alt="" loading="lazy">` : `<span class="ya-mono">${esc(String(p.provider_name || '?').slice(0, 1))}</span>`),
+  async pick() {
+    X8.layer('yaPick', { label: 'Your streaming apps', icon: 'tv', eyebrow: 'Your apps', wide: true });
+    const body = X8.body('yaPick');
+    body.innerHTML = '<h2 class="x8-h">Which services do you pay for?</h2><p class="sc-p">Getting the list for your region…</p>';
+    X8.open('yaPick'); icons();
+    const list = await this.catalog(); if (!$('#yaPick') || $('#yaPick').hidden) return;
+    const mine = new Set(this.mine().map((x) => x.id));
+    body.innerHTML = `<h2 class="x8-h">Which services do you pay for?</h2>
+      <p class="sc-p">A film on one of these opens straight in its app on Android, Android TV and Fire TV, and in your browser elsewhere. Your list stays on this device and in your own account. Region: ${esc(WhereToWatch.region())} (Settings › Home).</p>
+      ${list.length ? `<div class="ya-grid">${list.map((p) => `<button type="button" class="ya-svc${mine.has(p.provider_id) ? ' on' : ''}" data-nav data-ya="${p.provider_id}" aria-pressed="${mine.has(p.provider_id)}">${this.logo(p)}<span>${esc(p.provider_name)}</span></button>`).join('')}</div>`
+    : '<p class="sc-p">The list could not load. Check your connection and try again.</p>'}`;
+    body.onclick = (e) => {
+      const b = e.target.closest('[data-ya]'); if (!b) return;
+      const id = Number(b.dataset.ya), p = list.find((x) => x.provider_id === id); if (!p) return;
+      const cur = this.mine(), on = !cur.some((x) => x.id === id);
+      this.setMine(on ? [...cur, { id, name: p.provider_name, logo: p.logo_path || '' }] : cur.filter((x) => x.id !== id));
+      b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on));
+      if (D.meta && !$('#detail').hidden) WhereToWatch.fill(D.meta);
+    };
+    icons();
+  },
+  /* the title's providers for the film page; the same shape as TMDB's answer, from your key or MKCinema's function */
+  init() {
+    const get = WhereToWatch.get.bind(WhereToWatch);
+    WhereToWatch.key = () => TMDB.key() || 'mkc';
+    WhereToWatch.get = function (m) {
+      if (TMDB.key()) return get(m);
+      const tt = F51.imdb(m); if (!tt) return Promise.resolve(null);
+      const ck = `${tt}|${this.region()}|mkc`; if (this.cache.has(ck)) return this.cache.get(ck);
+      const p = People.relay('watch', { tt, region: this.region() }).then((j) => (j && j.result) || null).catch(() => { this.cache.delete(ck); return null; });
+      this.cache.set(ck, p); return p;
+    };
+    const fill = WhereToWatch.fill.bind(WhereToWatch);
+    WhereToWatch.fill = async function (m) {
+      await fill(m);
+      const box = $('#dWtw'); if (!box || D.meta !== m) return;
+      const r = await this.get(m).catch(() => null); if (!r || !$('#dWtw') || D.meta !== m) return;
+      const all = ['flatrate', 'free', 'ads', 'rent', 'buy'].flatMap((k) => (r[k] || []).map((p) => ({ ...p, _k: k })));
+      // each service in the list opens its own app or search, not the general page
+      $$('.wtw-p', box).forEach((a) => {
+        const name = a.querySelector('span') ? a.querySelector('span').textContent : ''; const p = all.find((x) => x.provider_name === name); if (!p) return;
+        const l = YourApps.link(p, m); if (!l.href) return;
+        a.href = l.web || a.href; a.onclick = (e) => { e.preventDefault(); YourApps.open(p, m); };
+      });
+      // a service you pay for goes first, as its own button
+      const yours = all.filter((p) => (p._k === 'flatrate' || p._k === 'free' || p._k === 'ads') && YourApps.has(p));
+      $$('.ya-mine', box.parentNode).forEach((x) => x.remove());
+      if (yours.length) {
+        const p = yours[0];
+        box.insertAdjacentHTML('beforebegin', `<button type="button" class="btn btn-ghost ya-mine" data-nav id="yaMine">${YourApps.logo(p)}<span>Watch on ${esc(p.provider_name)}<small>You have this · opens ${F51.android() && YourApps.row(p.provider_name) && YourApps.row(p.provider_name)[IS_TV ? 3 : 2] ? 'the app' : 'in your browser'}</small></span></button>`);
+        $('#yaMine').onclick = () => YourApps.open(p, m);
+      }
+      YourApps.last = { m, yours, all };
+      if (typeof OtherWays !== 'undefined') OtherWays.paint();
+    };
+  },
+};
+
+/* ---------------- 2 Other ways to watch, On your server, Watch without addons ---------------- */
+const OtherWays = {
+  /* the film page when no addon found anything: what else this title can be watched with */
+  paint() {
+    const box = $('#dStreams'); if (!box || $('#detail').hidden || !D.meta) return;
+    const st = D.status || {}; const old = $('#owBox');
+    const empty = !st.pending && !(D.streams || []).length && typeof detailStreamTarget === 'function' && detailStreamTarget();
+    if (!empty) { if (old) old.remove(); return; }
+    const m = D.meta, ya = YourApps.last && YourApps.last.m === m ? YourApps.last : null;
+    const apps = ya ? (ya.yours.length ? ya.yours : ya.all.filter((p) => p._k === 'flatrate' || p._k === 'free' || p._k === 'ads')).slice(0, 4) : [];
+    const srv = Servers.list().length, src = F51.sourceAddons().length;
+    const btn = (k, icon, label) => `<button type="button" class="btn btn-ghost btn-sm" data-nav data-ow="${k}"><i data-lucide="${icon}"></i>${esc(label)}</button>`;
+    const html = `<div class="ow-box" id="owBox"><b>${src ? 'Your addons found nothing for this one' : 'No source addon is installed'}</b>
+      <small>${src ? 'Sources change. These still work:' : 'MKCinema still plays a lot without one:'}</small>
+      <div class="ow-acts">${apps.map((p, i) => `<button type="button" class="btn btn-ghost btn-sm ya-chip" data-nav data-owapp="${i}">${YourApps.logo(p)}${esc(p.provider_name)}${YourApps.has(p) ? ' · yours' : ''}</button>`).join('')}
+      ${btn('trailer', 'clapperboard', 'Trailer')}${srv ? '' : btn('servers', 'server', 'Connect Plex or Jellyfin')}${btn('tv', 'radio-tower', 'Live TV')}${apps.length || !YourApps.mine().length ? '' : btn('apps', 'tv', 'Your apps')}${btn('addons', 'blocks', 'Find addons')}</div></div>`;
+    if (old) old.outerHTML = html; else box.insertAdjacentHTML('beforeend', html);
+    const ow = $('#owBox');
+    ow.onclick = (e) => {
+      const a = e.target.closest('[data-owapp]'); if (a) { YourApps.open(apps[Number(a.dataset.owapp)], m); return; }
+      const b = e.target.closest('[data-ow]'); if (!b) return;
+      const k = b.dataset.ow;
+      if (k === 'trailer') playTrailer(m);
+      if (k === 'servers') openSettings('servers');
+      if (k === 'tv') go('tv');
+      if (k === 'apps') YourApps.pick();
+      if (k === 'addons') { const c = COMMANDS.find((x) => /addon finder|find addons/i.test(x.label)); if (c) c.run(); else openSettings('streams'); }
+    };
+    icons();
+  },
+  /* newest films and shows on your own server, matched to their IMDb ids so they open the normal title page */
+  async serverItems(s) {
+    const out = [];
+    try {
+      if (s.kind === 'plex') {
+        const secs = ((await Servers.plexGet(s, '/library/sections', 6000)).MediaContainer || {}).Directory || [];
+        for (const d of secs.filter((x) => x.type === 'movie' || x.type === 'show').slice(0, 4)) {
+          const r = ((await Servers.plexGet(s, `/library/sections/${d.key}/all?sort=addedAt:desc&includeGuids=1&X-Plex-Container-Start=0&X-Plex-Container-Size=24`, 8000)).MediaContainer || {}).Metadata || [];
+          r.forEach((x) => {
+            const g = (x.Guid || []).map((y) => y.id).find((y) => /^imdb:\/\/tt\d+/.test(y)); if (!g) return;
+            const tok = `X-Plex-Token=${encodeURIComponent(s.token)}`;
+            const poster = x.thumb ? Servers.reach(`${s.url}/photo/:/transcode?width=300&height=450&minSize=1&url=${encodeURIComponent(x.thumb)}&${tok}`) : '';
+            out.push({ at: Number(x.addedAt) || 0, m: { id: g.slice(7), type: d.type === 'show' ? 'series' : 'movie', name: x.title, poster: poster || undefined, releaseInfo: x.year ? String(x.year) : '', _srvName: s.name } });
+          });
+        }
+      } else {
+        const q = `IncludeItemTypes=Movie,Series&Recursive=true&SortBy=DateCreated&SortOrder=Descending&Limit=40&Fields=ProviderIds,ProductionYear,DateCreated${s.user ? `&userId=${s.user}` : ''}`;
+        const r = await Servers.json(`${s.url}/Items?${Servers.jfQ(s, q)}`, {}, 8000);
+        (r.Items || []).forEach((x) => {
+          const tt = String((x.ProviderIds || {}).Imdb || (x.ProviderIds || {}).IMDB || ''); if (!/^tt\d+/.test(tt)) return;
+          const poster = Servers.reach(`${s.url}/Items/${x.Id}/Images/Primary?maxHeight=450&quality=85&${Servers.jfQ(s)}`);
+          out.push({ at: Date.parse(x.DateCreated || '') || 0, m: { id: tt, type: x.Type === 'Series' ? 'series' : 'movie', name: x.Name, poster: poster || undefined, releaseInfo: x.ProductionYear ? String(x.ProductionYear) : '', _srvName: s.name } });
+        });
+      }
+    } catch (e) { MKLog.add('info', `On your server: ${s.name} ${e.message}`); }
+    return out;
+  },
+  async serverRow(rows) {
+    const list = Servers.list(); if (!list.length || CFG.homeServers === false) return;
+    if (typeof Seats !== 'undefined' && Seats.kids()) return;
+    const sec = rowShell('On your server', list.map((s) => s.name).join(' · ').slice(0, 60), { id: 'srvRow' }); sec.dataset.rk = 'servers';
+    const after = $('#cwRow', rows); if (after) after.after(sec); else rows.prepend(sec);
+    const got = (await Promise.all(list.slice(0, 3).map((s) => this.serverItems(s)))).flat().sort((a, b) => b.at - a.at);
+    const seen = new Set(), metas = got.map((x) => x.m).filter((m) => !seen.has(m.id) && seen.add(m.id)).slice(0, 30);
+    if (!metas.length) { sec.remove(); return; }
+    fillRail(sec, metas.map((m) => cardHTML(m)).join(''));
+  },
+  /* Home with no source addon: one card with the ways in that need none */
+  noAddonCard(rows) {
+    if (F51.sourceAddons().length || CFG.noAddonCard === false || (typeof Seats !== 'undefined' && Seats.kids())) return;
+    const el = document.createElement('section'); el.className = 'row ow-home'; el.id = 'owHome';
+    el.innerHTML = `<div class="ow-card"><div><b>Watch without addons</b><small>MKCinema plays what you already have. Source addons are optional.</small></div>
+      <div class="ow-acts">${[['servers', 'server', 'Plex, Jellyfin or Emby'], ['tv', 'radio-tower', 'Live TV playlists'], ['file', 'folder-open', 'A file on this device'], ['apps', 'tv', 'Your streaming apps'], ['peak', 'film', 'Peak Cinema trailers']]
+    .filter(([k]) => !(k === 'file' && IS_TV)).map(([k, i, l]) => `<button type="button" class="btn btn-ghost btn-sm" data-nav data-owh="${k}"><i data-lucide="${i}"></i>${esc(l)}</button>`).join('')}</div>
+      <button type="button" class="ibtn ow-x" data-nav data-owh="hide" aria-label="Hide this card"><i data-lucide="x"></i></button></div>`;
+    rows.prepend(el);
+    el.onclick = (e) => {
+      const b = e.target.closest('[data-owh]'); if (!b) return; const k = b.dataset.owh;
+      if (k === 'hide') { setCfg('noAddonCard', false); el.remove(); toast('Hidden. Settings › Home brings it back.', 'info', 2600); return; }
+      if (k === 'servers') openSettings('servers');
+      if (k === 'tv') go('tv');
+      if (k === 'file') { const f = $('#fileVideo'); if (f) f.click(); }
+      if (k === 'apps') YourApps.pick();
+      if (k === 'peak') { if (typeof Peak !== 'undefined') Peak.open(); }
+    };
+    icons();
+  },
+  init() {
+    const rs = renderStreamsPanel;
+    renderStreamsPanel = function () { const r = rs.apply(this, arguments); try { OtherWays.paint(); } catch (e) { /* the list still shows */ } return r; };
+    const rh = renderHome;
+    renderHome = async function () {
+      const p = rh.apply(this, arguments);
+      const rows = $('#homeRows');
+      try { OtherWays.noAddonCard(rows); OtherWays.serverRow(rows); } catch (e) { console.warn('2.51 home', e); }
+      return p;
+    };
+  },
+};
+
+/* ---------------- 3 Every seat its own language ----------------
+   A seat's own subtitle and audio language stand in for the shared ones while that seat is in use. The shared
+   settings file, the account copy and other devices keep the house's choice: only reads see the seat's. */
+const SeatLang = {
+  KEYS: { subLang: 'sub', srAudio: 'audio' },
+  base: {},
+  seat() { if (!SEAT) return null; return Seats.list().find((s) => s.id === SEAT) || null; },
+  pref(k) { const s = this.seat(); const v = s && s.lang && s.lang[this.KEYS[k]]; return v || ''; },
+  setPref(k, v) {
+    const l = Seats.list(), i = l.findIndex((s) => s.id === SEAT); if (i < 0) return;
+    const lang = { ...(l[i].lang || {}) }; if (v) lang[this.KEYS[k]] = v; else delete lang[this.KEYS[k]];
+    l[i] = { ...l[i], lang }; Seats.saveList(l);
+  },
+  init() {
+    Object.keys(this.KEYS).forEach((k) => {
+      this.base[k] = CFG[k];
+      Object.defineProperty(CFG, k, {
+        enumerable: true, configurable: true,
+        get: () => this.pref(k) || this.base[k],
+        // a change made in Settings while a seat with its own language is in use changes that seat's language
+        set: (v) => { if (this.pref(k) && !(typeof Account !== 'undefined' && Account.applying) && !this.writingBase) this.setPref(k, v); else this.base[k] = v; },
+      });
+    });
+    // what gets saved and synced is always the house's value
+    const self = this;
+    Object.defineProperty(CFG, 'toJSON', { enumerable: false, configurable: true, value() { const o = {}; Object.keys(this).forEach((k) => { o[k] = k in self.KEYS ? self.base[k] : this[k]; }); return o; } });
+    if (typeof Account !== 'undefined' && Account.compose) {
+      const c = Account.compose.bind(Account);
+      Account.compose = function () { const out = c.apply(this, arguments); if (out && out.cfg) Object.keys(self.KEYS).forEach((k) => { if (self.base[k] === undefined) delete out.cfg[k]; else out.cfg[k] = self.base[k]; }); return out; };
+    }
+    scAddRows('subtitles', null, () => (!SEAT || !this.seat() ? [] : [
+      { group: `${this.seat().name}’s languages` },
+      { key: 'seatSub', label: 'Subtitles for this seat', help: 'Everyone else keeps the house’s choice. Changing the subtitle language above while this is set changes this seat’s.', type: 'select', options: [['', 'Same as the house'], ...LANG_CHOICES], get: () => this.pref('subLang'), set: (v) => { this.setPref('subLang', v); toast(v ? `${this.seat().name} gets ${langName(v)} subtitles` : 'Back to the house’s subtitles', 'ok', 2200); } },
+      { key: 'seatAudio', label: 'Sound language for this seat', help: 'Sources in this language move to the top for this seat, so Smart Play picks them first.', type: 'select', options: [['', 'Same as the house'], ...['eng', 'spa', 'fre', 'ger', 'ita', 'por', 'hin', 'tam', 'tel', 'jpn', 'kor', 'rus', 'pol', 'tur', 'ara', 'chi', 'dut'].map((c) => [c, langName(c)])], get: () => this.pref('srAudio'), set: (v) => { this.setPref('srAudio', v); toast(v ? `${this.seat().name} hears ${langName(v)} first` : 'Back to the house’s sound language', 'ok', 2200); } },
+    ]));
+  },
+};
+
+/* ---------------- 4 Your language on your phone ----------------
+   Listen on this phone already plays the film's sound on a phone. Here the phone can ask for another source's sound
+   (a dub), plays it in step with the TV, and the TV keeps its own sound for everyone else in the room. */
+const PhoneLang = {
+  peers: new Map(), // phone id -> { s, at }
+  syncT: 0,
+  langOf(s) { let set = null; try { const r = AudioPref.langs(s); set = r && r.langs ? r.langs : r; } catch (e) { set = null; } return [...(set || [])]; },
+  /* the other-language sources a phone can play: a plain https link, no special headers, a language we can name */
+  choices() {
+    if (!F51.played() || P.stream._local) return [];
+    const cur = new Set(this.langOf(P.stream)), out = [], seen = new Set();
+    for (const s of (P.ctx.streams || [])) {
+      if (!s || s === P.stream || s.ytId || !(location.protocol === 'http:' ? /^https?:\/\//i : /^https:\/\//i).test(s.url || '') || (s.behaviorHints && s.behaviorHints.proxyHeaders)) continue;
+      const langs = this.langOf(s).filter((l) => !cur.has(l)); if (!langs.length) continue;
+      const k = langs[0]; if (seen.has(k)) continue; seen.add(k);
+      out.push({ k, l: langName(k), s }); if (out.length >= 8) break;
+    }
+    return out;
+  },
+  start(id, k) {
+    const c = this.choices().find((x) => x.k === k);
+    if (!c) { PxListen.send(id, { t: 'lsn-st', ok: false, code: 'lang', why: 'That language isn’t among this film’s sources any more. Pick another one.' }); return; }
+    this.peers.set(id, { s: c.s, k, at: Date.now() });
+    PxListen.send(id, { t: 'lsn-st', ok: true, mode: 'direct', alt: k, altL: c.l, dur: Math.round(pDur() * 1000) / 1000, url: c.s.url, title: P.ctx.meta.name || '', ...PxListen.pos() });
+    toast(`${c.l} sound is playing on a phone. This screen keeps its sound.`, 'ok', 3200);
+    clearInterval(this.syncT); this.syncT = setInterval(() => this.sync(), 1000);
+    Remote.soon && Remote.soon();
+  },
+  stop(id) { if (!this.peers.delete(id)) return false; if (!this.peers.size) clearInterval(this.syncT); return true; },
+  sync() { if (!this.peers.size || !Remote.bus) { clearInterval(this.syncT); return; } this.peers.forEach((p, id) => PxListen.send(id, { t: 'lsync', ...PxListen.pos() })); },
+  init() {
+    const on = Remote.onMsg.bind(Remote);
+    Remote.onMsg = function (m) {
+      if (m && m._from && m.t === 'lsn') {
+        if (m.on && typeof m.alt === 'string' && m.alt) { PxListen.stop(m._from, true); PhoneLang.start(m._from, m.alt.slice(0, 8)); const k = Remote.peers.get(m._from); if (k) k.at = Date.now(); return; }
+        if (!m.on && PhoneLang.stop(m._from)) return;
+      }
+      if (m && m._from && m.t === 'bye') PhoneLang.stop(m._from);
+      return on(m);
+    };
+    const st = Remote.state.bind(Remote);
+    Remote.state = function () {
+      const s = st();
+      if (s.lsn && s.lsn.ok) { const c = PhoneLang.choices(); if (c.length) s.lsn.langs = c.map((x) => ({ k: x.k, l: x.l })); }
+      if (Array.isArray(s.caps) && !s.caps.includes('lng')) s.caps.push('lng');
+      return s;
+    };
+    ['play', 'pause', 'seeked', 'ratechange'].forEach((ev) => video.addEventListener(ev, () => { if (this.peers.size) this.sync(); }));
+    // a phone listening in its own language stays connected while its screen is off
+    const beat = Remote.beat.bind(Remote);
+    Remote.beat = function () { PhoneLang.peers.forEach((p, id) => { const k = Remote.peers.get(id); if (k) k.at = Date.now(); }); return beat(); };
+    const close = closePlayer;
+    closePlayer = async function () { PhoneLang.peers.forEach((p, id) => PxListen.send(id, { t: 'lsn-st', ok: false, code: 'stopped' })); PhoneLang.peers.clear(); clearInterval(PhoneLang.syncT); return close.apply(this, arguments); };
+  },
+};
+
+/* ---------------- 5 Watch-along tracks ----------------
+   Record: the microphone records while the film plays; pausing pauses it and every jump starts a new piece, so the file
+   knows which moment of the film each second of talk belongs to. It also keeps the film's dialogue lines with their times.
+   Play: the lines in the file are matched to the lines of the viewer's own subtitles, which gives the shift and the
+   speed between the two releases, so the talk lands at the same moment on any release. A file is one .mkwa (JSON with
+   the sound inside). Nothing is uploaded: people share the file however they like. */
+const WatchAlong = {
+  rec: null, t: null, a: null, map: null, loop: 0, nudge: 0, vol0: null,
+  /* ---- recording ---- */
+  canRecord: () => !IS_TV && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder),
+  mime() { return ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4', 'audio/webm'].find((x) => { try { return MediaRecorder.isTypeSupported(x); } catch (e) { return false; } }) || ''; },
+  async record() {
+    if (!F51.played()) { toast('Start the film first', 'info', 2200); return; }
+    if (!this.canRecord()) { toast('Recording needs a computer or phone with a microphone', 'info', 3600); return; }
+    if (this.rec) { this.finish(); return; }
+    let stream; try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); }
+    catch (e) { toast('MKCinema needs the microphone to record a watch-along', 'err', 4200); return; }
+    const mime = this.mime(), mr = new MediaRecorder(stream, { ...(mime ? { mimeType: mime } : {}), audioBitsPerSecond: 32000 });
+    const r = this.rec = { mr, stream, chunks: [], segs: [], acc: 0, since: 0, meta: P.ctx.meta, video: P.ctx.video, stream0: P.stream, mime: mr.mimeType || mime || 'audio/webm' };
+    mr.ondataavailable = (e) => { if (e.data && e.data.size) r.chunks.push(e.data); };
+    const now = () => r.acc + (r.since ? (performance.now() - r.since) / 1000 : 0);
+    r.now = now;
+    r.mark = () => { const a = Math.round(now() * 1000) / 1000, v = Math.round(pNow() * 1000) / 1000, k = video.playbackRate || 1; const last = r.segs[r.segs.length - 1]; if (last && Math.abs(last[0] - a) < 0.05) r.segs.pop(); r.segs.push([a, v, k]); };
+    r.on = { play: () => { if (mr.state === 'paused') mr.resume(); r.since = performance.now(); r.mark(); }, pause: () => { if (mr.state === 'recording') mr.pause(); if (r.since) { r.acc += (performance.now() - r.since) / 1000; r.since = 0; } }, seeked: () => r.mark(), ratechange: () => r.mark() };
+    Object.entries(r.on).forEach(([ev, fn]) => video.addEventListener(ev, fn));
+    mr.start(4000);
+    if (video.paused) { mr.pause(); } else { r.since = performance.now(); }
+    r.mark();
+    this.recPill(true);
+    toast('Recording your watch-along. Talk over the film; pausing pauses the recording.', 'ok', 4200);
+  },
+  recPill(on) {
+    let el = $('#waRec');
+    if (!on) { if (el) el.remove(); clearInterval(this.pillT); return; }
+    if (!el) { document.body.insertAdjacentHTML('beforeend', '<div class="wa-rec" id="waRec" role="status"><span class="wa-dot"></span><b>Recording</b><span id="waRecT">0:00</span><button type="button" data-nav id="waRecStop">Finish</button></div>'); el = $('#waRec'); $('#waRecStop').onclick = () => this.finish(); }
+    clearInterval(this.pillT); this.pillT = setInterval(() => { const r = this.rec, t = $('#waRecT'); if (!r || !t) return; const s = Math.floor(r.now()); t.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; $('#waRec').classList.toggle('paused', !r.since); }, 500);
+  },
+  async anchors() {
+    try {
+      const sub = ScriptClock.pick(); if (!sub) return { lang: '', lines: [] };
+      const cues = ((await ScriptClock.cues(sub)) || {}).list || [];
+      return { lang: String(sub.lang || ''), lines: cues.filter((c) => c.t && c.t.length >= 6).slice(0, 2500).map((c) => [Math.round(c.s * 100) / 100, String(c.t).slice(0, 90)]) };
+    } catch (e) { return { lang: '', lines: [] }; }
+  },
+  async finish(cancel) {
+    const r = this.rec; if (!r) return; this.rec = null; this.recPill(false);
+    Object.entries(r.on).forEach(([ev, fn]) => video.removeEventListener(ev, fn));
+    const total = r.now();
+    const done = new Promise((res) => { r.mr.onstop = res; });
+    try { if (r.mr.state !== 'inactive') r.mr.stop(); } catch (e) { /* stopped */ }
+    await Promise.race([done, new Promise((res) => setTimeout(res, 3000))]);
+    r.stream.getTracks().forEach((t) => t.stop());
+    if (cancel || total < 3) { toast(cancel ? 'Recording thrown away' : 'Too short to keep', 'info', 2200); return; }
+    toast('Saving your watch-along…', 'info', 2000);
+    const blob = new Blob(r.chunks, { type: r.mime });
+    const b64 = await new Promise((res) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1] || ''); fr.readAsDataURL(blob); });
+    const anc = await this.anchors();
+    const m = r.meta, v = r.video;
+    const file = { mkwa: 1, app: `MKCinema ${APP_VERSION}`, at: new Date().toISOString(), by: (Seats.cur() || {}).name || '', title: m.name || '', id: m.id || '', imdb: F51.imdb(m), type: m.type || '', video: v ? v.id : '', ep: v ? `S${v.season}E${v.episode}` : '',
+      dur: Math.round(pDur() * 100) / 100, len: Math.round(total * 100) / 100, segs: r.segs, lang: anc.lang, lines: anc.lines, mime: r.mime, audio: b64 };
+    const name = `${String(m.name || 'film').replace(/[\\/:*?"<>|]+/g, ' ').trim()}${v ? ` S${v.season}E${v.episode}` : ''} watch-along.mkwa`;
+    const url = URL.createObjectURL(new Blob([JSON.stringify(file)], { type: 'application/json' }));
+    const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    toast(`Saved “${name}”. Send it to anyone: it plays over their own copy of the film.`, 'ok', 6000);
+    MKLog.add('info', `Watch-along recorded: ${Math.round(total)} s, ${r.segs.length} pieces, ${anc.lines.length} lines`);
+  },
+  /* ---- playing ---- */
+  open() {
+    if (!F51.played()) { toast('Start the film first', 'info', 2200); return; }
+    X8.layer('waPick', { label: 'Watch-along', icon: 'mic', eyebrow: 'Watch-along', wide: true });
+    const body = X8.body('waPick'), t = this.t;
+    body.innerHTML = `<h2 class="x8-h">Watch-along</h2>
+      <p class="sc-p">Play someone’s commentary over this film, or record your own. A watch-along lines itself up with your release using the dialogue, so it works on any copy. Subtitles help it line up exactly.</p>
+      ${t ? `<div class="dub-now"><span>Now: <b>${esc(t.by ? `${t.by}’s watch-along` : 'Watch-along')}</b> · ${esc(this.howText())}</span>${this.nudgeHTML()}<button class="btn btn-ghost btn-sm" type="button" data-nav data-wa="off"><i data-lucide="x"></i>Stop it</button></div>` : ''}
+      <div class="wa-acts"><button class="btn btn-ghost" type="button" data-nav data-wa="file"><i data-lucide="folder-open"></i>Open a watch-along file</button>
+      <div class="field wa-url"><input class="inp" id="waUrl" type="url" placeholder="Or paste a link to a .mkwa file" autocomplete="off"><button class="btn btn-ghost btn-sm" type="button" data-nav data-wa="url">Load</button></div>
+      ${this.canRecord() ? `<button class="btn btn-ghost" type="button" data-nav data-wa="rec"><i data-lucide="mic"></i>${this.rec ? 'Finish recording' : 'Record your own'}</button>` : ''}</div>
+      <input type="file" id="waFile" accept=".mkwa,application/json" hidden>`;
+    body.onclick = (e) => {
+      const n = e.target.closest('[data-wan]'); if (n) { this.setNudge(this.nudge + Number(n.dataset.wan)); this.open(); return; }
+      const b = e.target.closest('[data-wa]'); if (!b) return; const k = b.dataset.wa;
+      if (k === 'off') { this.stop(); X8.close('waPick'); toast('Watch-along stopped', 'info', 1600); }
+      if (k === 'file') $('#waFile').click();
+      if (k === 'url') this.fromUrl($('#waUrl').value);
+      if (k === 'rec') { X8.close('waPick'); this.record(); }
+    };
+    $('#waFile').onchange = (e) => { const f = e.target.files && e.target.files[0]; if (f) f.text().then((x) => this.load(x)).catch(() => toast('That file could not be read', 'err', 3000)); };
+    icons(); X8.open('waPick');
+  },
+  async fromUrl(u) {
+    u = String(u || '').trim(); if (!/^https:\/\//i.test(u)) { toast('Paste an https link to a .mkwa file', 'info', 3000); return; }
+    toast('Getting the watch-along…', 'info', 2000);
+    try { const r = await fetch(u); if (!r.ok) throw new Error(`HTTP ${r.status}`); this.load(await r.text()); }
+    catch (e) { toast('That link didn’t give a watch-along file. The host has to allow downloads from other sites.', 'err', 5200); }
+  },
+  load(text) {
+    let t; try { t = JSON.parse(text); } catch (e) { t = null; }
+    if (!t || t.mkwa !== 1 || !t.audio || !Array.isArray(t.segs) || !t.segs.length) { toast('That isn’t a watch-along file', 'err', 3000); return; }
+    const m = P.ctx.meta, mine = F51.imdb(m);
+    if (t.imdb && mine && t.imdb !== mine) { toast(`That watch-along is for ${t.title || 'another title'}`, 'err', 4200); return; }
+    const v = P.ctx.video; if (t.ep && v && t.ep !== `S${v.season}E${v.episode}`) { toast(`That watch-along is for ${t.ep}`, 'err', 4200); return; }
+    X8.close('waPick'); this.start(t);
+  },
+  /* the viewer's time to the recorder's: T = (v - off) / k */
+  async align(t) {
+    const pairs = [];
+    try {
+      const want = t.lang ? langName(t.lang) : '';
+      const subs = (P.subs || []).filter((s) => (s.kind === 'url' && /^https?:/i.test(s.url || '')) || (s.kind === 'file' && s.text));
+      const sub = (want && subs.find((s) => langName(s.lang) === want)) || ScriptClock.pick();
+      const cues = sub && (t.lines || []).length >= 8 ? (((await ScriptClock.cues(sub)) || {}).list || []) : [];
+      if (cues && cues.length) {
+        const key = (x) => F51.norm(x).slice(0, 60), mine = new Map(), theirs = new Map();
+        cues.forEach((c) => { const k = key(c.t); if (k.length >= 8) mine.set(k, mine.has(k) ? null : c.s); });
+        t.lines.forEach(([s, x]) => { const k = key(x); if (k.length >= 8) theirs.set(k, theirs.has(k) ? null : s); });
+        theirs.forEach((s, k) => { const v = mine.get(k); if (s != null && v != null) pairs.push([s, v]); });
+      }
+    } catch (e) { /* no lines to use */ }
+    if (pairs.length >= 8) {
+      let best = null;
+      for (const k of SC_FPS) {
+        const offs = pairs.map(([a, v]) => v - a * k).sort((x, y) => x - y), off = offs[offs.length >> 1];
+        const hit = pairs.filter(([a, v]) => Math.abs(v - (a * k + off)) < 0.7).length;
+        if (!best || hit > best.hit) best = { k, off, hit };
+      }
+      if (best && best.hit >= Math.max(6, pairs.length * 0.3)) {
+        const good = pairs.filter(([a, v]) => Math.abs(v - (a * best.k + best.off)) < 0.7), offs = good.map(([a, v]) => v - a * best.k).sort((x, y) => x - y);
+        return { k: best.k, off: offs[offs.length >> 1], how: 'lines', n: good.length };
+      }
+    }
+    const d = pDur(); const k = isFinite(d) && t.dur ? ScriptClock.fps(t.dur, d) : 1;
+    return { k, off: 0, how: 'length', n: 0 };
+  },
+  howText() { const m = this.map; if (!m) return 'getting ready'; return m.how === 'lines' ? `lined up by ${m.n} lines of dialogue` : 'lined up by length: nudge it if voices come early or late'; },
+  nudgeHTML() { return `<div class="pl-nudge" role="group" aria-label="Nudge the watch-along">${[[-1, '−1 s'], [-0.25, '−¼'], [0.25, '+¼'], [1, '+1 s']].map(([v, l]) => `<button type="button" class="chip" data-nav data-wan="${v}">${l}</button>`).join('')}</div>`; },
+  setNudge(v) { this.nudge = Math.round(v * 100) / 100; this.sync(true); toast(`Watch-along ${this.nudge > 0 ? '+' : ''}${this.nudge.toFixed(2)} s`, 'info', 1200, 'wa'); },
+  async start(t) {
+    this.stop();
+    const bin = atob(t.audio), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    const a = this.a = new Audio(); a.preload = 'auto'; a.src = this.blobUrl = URL.createObjectURL(new Blob([u8], { type: t.mime || 'audio/webm' }));
+    this.t = t; this.nudge = 0; this.map = null;
+    toast('Lining up the watch-along…', 'info', 2400, 'wa');
+    this.map = await this.align(t); if (this.a !== a) return;
+    // pieces in the recorder's film time: [audio start, film start, speed, length]
+    const s = t.segs; this.pieces = s.map((x, i) => ({ a: x[0], v: x[1], k: x[2] || 1, len: (i + 1 < s.length ? s[i + 1][0] : t.len) - x[0] })).filter((p) => p.len > 0.05);
+    this.vol0 = video.volume; if (CFG.waDuck !== false) video.volume = Math.max(0.05, video.volume * 0.45);
+    a.volume = 1;
+    clearInterval(this.loop); this.loop = setInterval(() => this.sync(false), 400); this.sync(true);
+    MKLog.add('info', `Watch-along: ${this.map.how}, rate ${this.map.k.toFixed(4)}, shift ${this.map.off.toFixed(2)}`);
+    toast(`${t.by ? `${t.by}’s watch-along` : 'Watch-along'} on · ${this.howText()}`, 'ok', 4200, 'wa');
+    if (typeof renderOptMenu === 'function' && !$('#optMenu').hidden) renderOptMenu();
+  },
+  /* where in the talk we should be right now, or null for silence */
+  want() {
+    const m = this.map; if (!m) return null;
+    const T = (pNow() - m.off - this.nudge) / m.k; let hit = null;
+    for (const p of this.pieces) { const end = p.v + p.len * p.k; if (T >= p.v && T < end) hit = p; } // a later piece wins: the recorder went back
+    return hit ? hit.a + (T - hit.v) / hit.k : null;
+  },
+  sync(hard) {
+    const a = this.a; if (!a) return;
+    if (!F51.played()) { this.stop(); return; }
+    const w = this.want(), rate = (video.playbackRate || 1) / ((this.map && this.map.k) || 1);
+    if (w == null || video.paused || video.readyState < 3) { if (!a.paused) a.pause(); return; }
+    if (a.readyState >= 1 && (hard || Math.abs(a.currentTime - w) > 0.3)) { try { a.currentTime = w; } catch (e) { /* not ready */ } }
+    a.playbackRate = rate;
+    if (a.paused) a.play().catch(() => {});
+  },
+  stop() {
+    clearInterval(this.loop);
+    if (this.a) { try { this.a.pause(); } catch (e) { /* gone */ } this.a.removeAttribute('src'); this.a = null; }
+    if (this.blobUrl) { URL.revokeObjectURL(this.blobUrl); this.blobUrl = ''; }
+    if (this.vol0 != null) { video.volume = this.vol0; this.vol0 = null; }
+    this.t = null; this.map = null;
+  },
+  init() {
+    const close = closePlayer;
+    closePlayer = async function () { if (WatchAlong.rec) await WatchAlong.finish(); WatchAlong.stop(); return close.apply(this, arguments); };
+    video.addEventListener('seeked', () => { if (this.a) this.sync(true); });
+  },
+};
+
+/* ---------------- 6 When a service takes a file down ----------------
+   Debrid services and hosts now remove files by name. Their messages are short codes; this says it plainly once and
+   points at the other ways to watch, instead of a generic error. */
+const SourceShock = {
+  RE: /\b(451|infringing|copyright|dmca|removed (for|due to)|unavailable for legal|takedown|blocked by (the )?(host|provider))\b/i,
+  seen: new Set(),
+  note(text) {
+    if (!this.RE.test(String(text || ''))) return false;
+    const m = (P.ctx && P.ctx.meta) || D.meta; const key = m ? m.id : '';
+    if (this.seen.has(key)) return true; this.seen.add(key);
+    toast('Your service removed this file. That happens to every app that uses it, not just MKCinema. Try another source, or the other ways to watch on the film’s page.', 'err', 7000, 'shock');
+    MKLog.add('warn', 'A source was taken down by its service');
+    return true;
+  },
+  init() {
+    // stream lists and playback errors both pass through the log
+    const add = MKLog.add.bind(MKLog);
+    MKLog.add = function (lvl, msg) { const r = add.apply(this, arguments); try { if (lvl !== 'info' && msg && !/taken down by its service/.test(msg)) SourceShock.note(msg); } catch (e) { /* never break logging */ } return r; };
+  },
+};
+
+/* ---------------- Wiring ---------------- */
+{
+  if (CFG.waDuck === undefined) CFG.waDuck = true;
+  if (CFG.homeServers === undefined) CFG.homeServers = true;
+  if (CFG.noAddonCard === undefined) CFG.noAddonCard = true;
+  YourApps.init(); OtherWays.init(); SeatLang.init(); PhoneLang.init(); WatchAlong.init(); SourceShock.init();
+  const base = renderOptMenu;
+  renderOptMenu = function () {
+    base(); const m = $('#optMenu'); if (!m || !P.ctx || !P.stream) return;
+    const h = $$('h5', m).find((x) => x.textContent === 'Watch your way');
+    const html = `<button type="button" data-f51="wa"><i data-lucide="mic"></i>Watch-along · ${WatchAlong.t ? 'on' : WatchAlong.rec ? 'recording' : 'off'}</button>`;
+    if (h) { const last = [...m.querySelectorAll('[data-f50]')].pop(); (last || h).insertAdjacentHTML('afterend', html); }
+    else { const tools = $('h5', m); const block = `<h5>Watch your way</h5>${html}`; if (tools) tools.insertAdjacentHTML('beforebegin', block); else m.insertAdjacentHTML('afterbegin', block); }
+    $$('[data-f51]', m).forEach((b) => b.addEventListener('click', () => { m.hidden = true; if (b.dataset.f51 === 'wa') WatchAlong.open(); }));
+    icons();
+  };
+  scAddRows('home', null, [
+    { group: 'Your apps and your server' },
+    { key: 'yaPickBtn', label: 'Your streaming apps', help: 'Pick the services you pay for. A film on one of them gets a Watch on button that opens the app on Android, Android TV and Fire TV.', type: 'button', text: 'Choose', icon: 'tv', run: () => { closeLayer('settings'); YourApps.pick(); } },
+    { key: 'homeServers', label: 'On your server', help: 'A row on Home with the newest films and shows on your Plex, Jellyfin or Emby server.', type: 'toggle' },
+    { key: 'noAddonCard', label: 'Watch without addons card', help: 'When no source addon is installed, Home shows the ways to watch that need none.', type: 'toggle' },
+  ]);
+  scAddRows('playback', null, [
+    { group: 'Watch-along' },
+    { key: 'waDuck', label: 'Lower the film under a watch-along', help: 'The film plays quieter while someone’s commentary plays over it.', type: 'toggle' },
+  ]);
+  COMMANDS.push({ label: 'Your streaming apps', icon: 'tv', run: () => YourApps.pick() });
+  COMMANDS.push({ label: 'Watch-along: play or record commentary', icon: 'mic', run: () => WatchAlong.open() });
+}
+</script>
+<!-- mk-ds:start -->
+<style id="mkc-ds-css">
+/* ===== Design system: one set of tokens for type, weight, corners, surfaces, layers, icons and focus =====
+   Type: 12 sizes. Every calc(Npx * var(--ts,1)) in the app is snapped to one of them, so new code should use
+   calc(var(--fs-…) * var(--ts,1)). Weights: the four that are loaded (400, 500, 600, 700).
+   Corners: every fixed radius is a multiple of --r-s / --r-m / --r-l, so the Corners setting reaches all of them.
+   Roles: name colours by what they do (surface, text, accent, border), not by their value. */
+:root{
+  --fs-micro:10px;--fs-caption:11px;--fs-label:12px;--fs-small:13px;--fs-body:14px;--fs-ui:15px;--fs-lead:16px;
+  --fs-sub:18px;--fs-title:20px;--fs-h3:24px;--fs-h2:28px;--fs-h1:32px;
+  --fw-regular:400;--fw-medium:500;--fw-semibold:600;--fw-bold:700;
+  --r-xs:calc(var(--r-s) * .5);--r-pill:999px;
+  --surface-0:var(--void);--surface-1:var(--s1);--surface-2:var(--s2);--surface-3:var(--s3);
+  --text:var(--ink);--text-muted:var(--mute);--accent:var(--champ);--accent-soft:rgba(var(--nd9d4c7-c,217,212,199),.32);
+  --border:var(--line);--border-soft:var(--line-soft);--border-strong:var(--line-hi);
+  --z-raised:10;--z-sticky:100;--z-dock:1000;--z-overlay:5000;--z-modal:9000;--z-toast:10000;
+  --icon-stroke:2;
+  --focus-ring:var(--nf2f2f3,#f2f2f3);--focus-halo:rgba(0,0,0,.72);
+}
+
+/* Focus: a 2 px ring with a 2 px gap and a dark halo, so it shows on bright and dark artwork alike. TV keeps its 3 px ring. */
+html:not(.tv) :focus-visible,html:not(.tv) .neon-focus:focus-visible,html:not(.tv) .nav-focus{outline:2px solid var(--focus-ring);outline-offset:2px;box-shadow:0 0 0 6px var(--focus-halo)}
+html:not(.tv) .card:focus-visible,html:not(.tv) .card.nav-focus{outline:none;box-shadow:none}
+html:not(.tv) .card.nav-focus .card-inner,html:not(.tv) .card:focus-visible .card-inner{box-shadow:0 0 0 2px var(--focus-ring),0 0 0 6px var(--focus-halo),0 22px 44px -22px var(--n000000,#000)}
+
+/* Numbers that change (runtimes, ratings, episodes, ranks) keep the same width */
+.metaline,.metaline>*,.imdb,.badge-r,.rt,.card-sub,.ep .num,.crit,.t10c,.sl-n,.tx-t,.prog-l{font-variant-numeric:tabular-nums}
+
+/* Icons: one stroke width everywhere */
+svg.lucide,.qp-ck .lucide,.btn-bolt>svg.lucide,.gs-n svg.lucide,.dock .ibtn .lucide,.dock .searchbtn .lucide,#tabs .tab .lucide,#mtabs button .lucide,.stream .s-best .lucide,.t4-ic svg,.g4-pro .t4-ic svg{stroke-width:var(--icon-stroke)}
+.st-ic{width:.85em;height:.85em;vertical-align:-.08em;display:inline-block;flex:none}
+.badge-r>i{display:inline-flex;align-items:center}
+.crit-ic{width:14px;height:14px;vertical-align:-2px;margin-right:4px}
+.tx-sync .ds-ic{width:13px;height:13px;vertical-align:-2px;margin-right:4px;flex:none}
+.pm-row.talk b::after{content:"";display:inline-block;width:.8em;height:.8em;margin-left:.4em;vertical-align:-.05em;background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z'/%3E%3Cpath d='M19 10v2a7 7 0 0 1-14 0v-2'/%3E%3Cpath d='M12 19v3'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z'/%3E%3Cpath d='M19 10v2a7 7 0 0 1-14 0v-2'/%3E%3Cpath d='M12 19v3'/%3E%3C/svg%3E") center/contain no-repeat}
+
+/* Layout transitions: nothing animates width, height or padding any more */
+.tour-dots i{transition:background-color .3s}
+.hero-dots button{transition:background-color .35s}
+.seek .knob,.tr-seek b{transition:none}
+.seek .trk,.tr-trk{transition:none}
+/* Side rail: the rail is always full width and a clip opens it, so the page never re-lays out while it slides */
+@media (min-width:761px){
+  :root.nav-side.side-mini:not(.tv):not([data-look="anime"]) .dock-wrap .dock{width:276px;clip-path:inset(0 calc(276px - var(--side-w,96px)) 0 0 round 22px);transition:clip-path .46s cubic-bezier(.22,1,.36,1),background-color .3s}
+  :root.nav-side.side-mini:not(.tv):not([data-look="anime"]) .dock-wrap:is(:hover,:focus-within) .dock{clip-path:inset(0 0 0 0 round 22px)}
+}
+@media (prefers-reduced-motion:reduce){:root.nav-side.side-mini .dock-wrap .dock{transition:none!important}}
+
+/* Phone banner: one genre, no type tag, so the line never cuts a word */
+@media (max-width:600px){.hero .metaline .tag-s,.hero .metaline .hm-g1,.hero .metaline .hm-g2{display:none}}
+/* Phone tab bar: five places at most, the rest sit behind More */
+#mtabs button.ds-hide{display:none!important}
+#mtabs .ds-ic{width:20px;height:20px}
+/* Big screens: use the room instead of a 1480 px column */
+@media (min-width:1800px){
+  html:not(.tv):not(.nav-side) .dock,html:not(.tv) .wrap{max-width:min(2240px,92vw)}
+}
+/* Tall screens: the tour stays one compact card, so Next sits under the content */
+@media (min-width:900px) and (min-height:1100px){
+  #tour .tour-modal{height:min(calc(100vh - 40px),1040px);max-height:min(calc(100vh - 40px),1040px)}
+}
+/* Top menu: the wordmark comes back whenever it fits (DockFit decides) */
+body.ds-w:not(.dk2) .dock .brand .word{display:inline!important}
+
+/* Early access: quiet, follows the look, no glow or motion */
+.ea-badge{display:inline-flex;align-items:center;margin-left:10px;padding:3px 7px 2px;border-radius:var(--r-pill);border:1px solid var(--accent-soft);background:rgba(var(--nd9d4c7-c,217,212,199),.06);color:var(--gold);
+  font:600 calc(var(--fs-micro) * var(--ts,1))/1.1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;font-style:normal;white-space:nowrap;vertical-align:middle;text-shadow:none}
+body.ds-nob:not(.dk2) .dock .ea-badge{display:none}
+html.nav-side:not(.tv) .dock .brand{padding-bottom:10px}
+html.nav-side .dock .brand .word .ea-badge{margin:7px 0 0;align-self:flex-start;letter-spacing:.12em;font-size:calc(var(--fs-micro) * var(--ts,1));line-height:1.1;padding:2px 6px 1px}
+.sd-word .ea-badge{margin:6px 0 0;align-self:flex-start;letter-spacing:.12em;padding:2px 6px 1px}
+.ea-dot{display:none}
+@media (min-width:761px){
+  html.side-mini:not(.tv) .dock .brand{position:relative}
+  html.side-mini:not(.tv) .dock .brand .ea-dot{display:block;position:absolute;width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 2px var(--n000000,#000);top:var(--ea-dot-y,2px);left:var(--ea-dot-x,58px);transition:opacity .2s}
+  html.side-mini:not(.tv) .dock-wrap:is(:hover,:focus-within) .dock .brand .ea-dot{opacity:0}
+}
+html.tv .ea-badge,html.tv .ea-dot{display:none!important}
+
+/* Tour: the home-layout question lives on the favourites step */
+.ds-focus{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin:10px 0 2px}
+.ds-focus>span{color:var(--mute);font-size:calc(var(--fs-small) * var(--ts,1))}
+.ds-focus .chip.on{color:var(--n0b0b0c,#0b0b0c);background:var(--ink);border-color:var(--ink)}
+
+/* Browser offline notice */
+.ds-off{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:var(--z-toast);transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:min(560px,calc(100vw - 32px));padding:11px 16px;border-radius:var(--r-l);
+  background:var(--glass-solid);border:1px solid var(--line);color:var(--ink);font-size:calc(var(--fs-small) * var(--ts,1));line-height:1.4;box-shadow:0 18px 40px -18px var(--n000000,#000);transition:opacity .25s}
+.ds-off[hidden]{display:none}
+.ds-off svg{width:18px;height:18px;flex:none;color:var(--gold)}
+.ds-off span{color:var(--mute)}
+.ds-off b{color:var(--ink);font-weight:600}
+@media (max-width:760px){.ds-off{bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
+</style>
+<script id="mkc-ds">
+/* Design system runtime: one first-run card per session, the taste question inside the tour, keyboard-ready cards,
+   look-matched glow, the phone More tab, the top-menu wordmark, the Early access badge and the browser offline notice */
+(function () {
+  'use strict';
+  const q = (s, r) => (r || document).querySelector(s), qa = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const safe = (n, f) => { try { f(); } catch (e) { try { MKLog.add('error', `ds ${n}: ${e.message}`); } catch (_) { /* no log */ } console.warn('ds', n, e); } };
+
+  /* ---- one first-run card per session ---- */
+  const Gate = window.MKPrompt = {
+    K: 'mkc:prompt1', mem: '',
+    cur() { try { return sessionStorage.getItem(this.K) || this.mem; } catch (e) { return this.mem; } },
+    free(n) { const c = this.cur(); return !c || c === n; },
+    take(n) { if (!this.free(n)) return false; this.mem = n; try { sessionStorage.setItem(this.K, n); } catch (e) { /* memory only */ } return true; },
+  };
+  const FOCUS = [['movies-first', 'Movies'], ['series-first', 'Series'], ['both', 'Both']];
+  const tasteStep = () => {
+    const st = (typeof TOUR !== 'undefined' ? TOUR : []).find((s) => s && s.id === 'taste');
+    if (!st || st._ds) return; st._ds = true;
+    const h = st.html, a = st.after;
+    st.html = function () {
+      const out = h.apply(this, arguments);
+      if (Store.get('askedFocus', false) && !st._dsKeep) return out;
+      st._dsKeep = true;
+      const cur = (Store.get('homeLayout', null) || {}).focus;
+      const row = `<div class="ds-focus" role="group" aria-label="What do you watch most?"><span>I mostly watch</span>${FOCUS.map(([v, l]) => `<button type="button" class="chip${cur === v ? ' on' : ''}" data-nav data-dsf="${v}" aria-pressed="${cur === v}">${l}</button>`).join('')}</div>`;
+      return out.includes('<div id="tourPick">') ? out.replace('<div id="tourPick">', `${row}<div id="tourPick">`) : out + row;
+    };
+    st.after = function () {
+      const r = a ? a.apply(this, arguments) : undefined;
+      qa('#tour [data-dsf]').forEach((b) => b.addEventListener('click', () => {
+        try { Layout.set({ focus: b.dataset.dsf }); } catch (e) { /* layout unchanged */ }
+        Store.set('askedFocus', true);
+        qa('#tour [data-dsf]').forEach((x) => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', String(x === b)); });
+      }));
+      return r;
+    };
+  };
+  safe('tour', () => {
+    tasteStep();
+    const ot = window.openTour;
+    if (typeof ot === 'function' && !ot._ds) {
+      window.openTour = function () { tasteStep(); if (!Store.get('toured', false)) Gate.take('tour'); return ot.apply(this, arguments); };
+      window.openTour._ds = true;
+    }
+  });
+  safe('nav', () => {
+    if (typeof SideNav === 'undefined' || SideNav.chooser._ds) return;
+    const ch = SideNav.chooser;
+    SideNav.chooser = function () {
+      if (!Gate.take('nav')) { if (this.fresh) try { localStorage.setItem('mkc:dsNavFresh', '1'); } catch (e) { /* asks as new */ } return; }
+      try { if (localStorage.getItem('mkc:dsNavFresh')) { this.fresh = true; localStorage.removeItem('mkc:dsNavFresh'); } } catch (e) { /* fine */ }
+      return ch.apply(this, arguments);
+    };
+    SideNav.chooser._ds = true;
+  });
+  safe('player', () => {
+    if (typeof PlayerAsk === 'undefined' || PlayerAsk.openSolo._ds) return;
+    const os = PlayerAsk.openSolo;
+    PlayerAsk.openSolo = function () { if (!Gate.take('player')) return; return os.apply(this, arguments); };
+    PlayerAsk.openSolo._ds = true;
+  });
+  safe('whatsnew', () => {
+    if (typeof WhatsNew === 'undefined' || WhatsNew.open._ds) return;
+    const op = WhatsNew.open;
+    WhatsNew.open = function (prev) {
+      // another card already showed this session: keep the update for the next launch
+      if (!Gate.take('whatsnew')) { try { Store.raw.set(this.KEY, prev || ''); } catch (e) { /* shown next update */ } return; }
+      return op.apply(this, arguments);
+    };
+    WhatsNew.open._ds = true;
+  });
+  safe('focus', () => {
+    if (typeof Layout === 'undefined' || Layout.ask._ds) return;
+    const la = Layout.ask;
+    Layout.ask = function () { if (Store.get('askedFocus', false) || Store.get('homeLayout', null) || !Gate.free('focus')) return; return la.apply(this, arguments); };
+    Layout.ask._ds = true;
+  });
+  safe('support', () => {
+    if (typeof Support === 'undefined' || Support.maybe._ds) return;
+    const sm = Support.maybe;
+    Support.maybe = function () { if (!Gate.free('support')) return; return sm.apply(this, arguments); };
+    Support.maybe._ds = true;
+  });
+  // the two small cards are added straight to the page: claim the session's slot, or wait for the next launch
+  safe('cards', () => new MutationObserver((ms) => ms.forEach((m) => m.addedNodes.forEach((n) => {
+    if (n.nodeType !== 1 || !n.classList) return;
+    const k = n.classList.contains('sup-ask') ? 'support' : n.classList.contains('focus-ask') ? 'focus' : '';
+    if (!k || Gate.take(k)) return;
+    n.remove();
+    if (k === 'focus') Store.set('askedFocus', false);
+    else { const st = Store.get('support', null); if (st) { st.at = 0; Store.set('support', st); } }
+    if (typeof IS_TV !== 'undefined' && IS_TV) { try { tvBackHook(); Nav.settle(); } catch (e) { /* focus stays */ } }
+  }))).observe(document.body, { childList: true }));
+
+  /* ---- cards and Reveal work from the keyboard (Space as well as Enter) ---- */
+  document.addEventListener('keydown', (e) => {
+    const t = e.target; if (!t || !t.matches) return;
+    if (e.key === 'Enter' && t.matches('[data-reveal]')) { e.preventDefault(); e.stopPropagation(); t.click(); return; }
+    if (e.key !== ' ' && e.key !== 'Spacebar') return;
+    if (!t.matches('[data-card],[data-bm],[data-reveal]')) return;
+    e.preventDefault(); e.stopPropagation(); t.click();
+  }, true);
+
+  /* ---- trailer glow takes its colours from the look ---- */
+  safe('mood', () => {
+    if (typeof moodFor !== 'function') return;
+    window.moodFor = function () {
+      const cs = getComputedStyle(document.documentElement);
+      const a = (cs.getPropertyValue('--champ') || cs.getPropertyValue('--gold') || '').trim() || '#d9d4c7';
+      const b = (cs.getPropertyValue('--s3') || '').trim() || '#19191c';
+      return [a, b];
+    };
+  });
+
+  /* ---- phone tab bar: at most five, the rest behind More ---- */
+  const MORE_SVG = '<svg class="ds-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>';
+  const KEEP = ['home', 'movie', 'series', 'anime', 'library'];
+  const Tabs = {
+    fit() {
+      const bar = q('#mtabs'); if (!bar) return;
+      const all = qa('[data-view]', bar);
+      let more = q('[data-dsmore]', bar);
+      if (all.length <= 5) { all.forEach((b) => b.classList.remove('ds-hide')); if (more) more.hidden = true; return; }
+      const keep = KEEP.filter((v) => all.some((b) => b.dataset.view === v)).slice(0, 4);
+      all.forEach((b) => b.classList.toggle('ds-hide', !keep.includes(b.dataset.view)));
+      if (!more) {
+        bar.insertAdjacentHTML('beforeend', `<button type="button" data-nav data-dsmore aria-label="More sections">${MORE_SVG}<span>More</span></button>`);
+        more = q('[data-dsmore]', bar);
+        more.addEventListener('click', () => { try { SideNav.open(); } catch (e) { /* drawer missing */ } });
+      }
+      more.hidden = false;
+      const on = all.some((b) => b.classList.contains('ds-hide') && b.classList.contains('on'));
+      if (more.classList.contains('on') !== on) more.classList.toggle('on', on);
+    },
+    init() {
+      const bar = q('#mtabs'); if (!bar) return;
+      let t = 0; const later = () => { clearTimeout(t); t = setTimeout(() => safe('tabs', () => this.fit()), 30); };
+      new MutationObserver((ms) => { if (ms.some((m) => m.type === 'childList' || (m.target.dataset && m.target.dataset.view))) later(); })
+        .observe(bar, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+      this.fit();
+    },
+  };
+  safe('tabs', () => Tabs.init());
+
+  /* ---- top menu: show the wordmark (and the badge) whenever they fit ---- */
+  safe('dock', () => {
+    if (typeof DockFit === 'undefined' || DockFit.run._ds) return;
+    const dr = DockFit.run;
+    DockFit.run = function () {
+      const b = document.body; b.classList.remove('ds-w', 'ds-nob');
+      const r = dr.apply(this, arguments);
+      safe('dockfit', () => {
+        const de = document.documentElement; if (innerWidth <= 860 || de.classList.contains('nav-side') || de.classList.contains('tv') || de.dataset.look === 'anime') return;
+        if (b.classList.contains('dk2')) { if (this.over()) b.classList.add('ds-nob'); return; }
+        if (b.classList.contains('dkw')) return;
+        const word = q('.dock .brand .word'); if (!word) return;
+        if (getComputedStyle(word).display !== 'none') { if (this.over()) b.classList.add('ds-nob'); return; }
+        b.classList.add('ds-w'); if (!this.over()) return;
+        b.classList.add('ds-nob'); if (this.over()) b.classList.remove('ds-w', 'ds-nob');
+      });
+      return r;
+    };
+    DockFit.run._ds = true;
+    DockFit.run();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => DockFit.run());
+  });
+
+  /* ---- Early access in the phone menu drawer ---- */
+  const BADGE = '<span class="ea-badge" aria-hidden="true">Early access</span>';
+  safe('drawer', () => {
+    if (typeof SideNav === 'undefined' || SideNav.open._dsb) return;
+    const so = SideNav.open;
+    SideNav.open = function () {
+      const r = so.apply(this, arguments);
+      safe('drawer badge', () => { const w = q('#sideDrawer .sd-word'); if (w && !q('.ea-badge', w)) { w.insertAdjacentHTML('beforeend', BADGE); w.parentNode.setAttribute('aria-label', 'MKCinema, early access'); } });
+      return r;
+    };
+    SideNav.open._dsb = true;
+  });
+  // the collapsed rail's dot sits on the logo's top-right edge
+  safe('dot', () => {
+    const place = () => { const br = q('.dock .brand'), mk = br && q('svg.mk', br); if (!mk) return; const a = br.getBoundingClientRect(), m = mk.getBoundingClientRect(); if (!m.width) return; br.style.setProperty('--ea-dot-x', `${Math.round(m.right - a.left - 6)}px`); br.style.setProperty('--ea-dot-y', `${Math.round(m.top - a.top - 1)}px`); };
+    if (document.documentElement.classList.contains('side-mini')) { setTimeout(place, 600); addEventListener('resize', () => setTimeout(place, 100)); }
+  });
+
+  /* ---- offline notice for every browser (apps with downloads already have their own) ---- */
+  safe('offline', () => {
+    if (typeof Offline !== 'undefined' && Offline.api) return;
+    const bar = document.createElement('div'); bar.id = 'dsOffline'; bar.className = 'ds-off'; bar.setAttribute('role', 'status'); bar.hidden = true;
+    bar.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h.01"/><path d="M8.5 16.4a5 5 0 0 1 7 0"/><path d="M5 12.9a10 10 0 0 1 5.2-2.8"/><path d="M19 12.9a10 10 0 0 0-2.3-1.7"/><path d="M2 8.8a15 15 0 0 1 4.2-2.6"/><path d="M22 8.8a15 15 0 0 0-11.3-3.8"/><path d="m2 2 20 20"/></svg><div><b>You’re offline.</b> <span>Films and shows need a connection. Your lists and settings still open.</span></div>';
+    document.body.appendChild(bar);
+    const set = (off) => { bar.hidden = !off; };
+    addEventListener('offline', () => set(true));
+    addEventListener('online', () => { if (!bar.hidden) { set(false); try { toast('Back online', 'ok', 2500, 'offline'); } catch (e) { /* quiet */ } } });
+    if (navigator.onLine === false) set(true);
+  });
+})();
+</script>
+<!-- mk-ds:end -->
 </body>
 </html>
