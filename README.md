@@ -25,7 +25,7 @@
 
 ## About
 
-MKCinema is an independent project, designed, built and maintained by Drake Christopher. It started as a better-looking way to watch from Stremio addons and grew into a full media app: one codebase that runs in the browser and on eight platforms, with a player, a library, account sync, TV support, watch parties and tools for addon developers.
+MKCinema is an independent project, designed, built and maintained by Drake Christopher. It started as a better-looking way to watch from Stremio addons and grew into a full media app: one codebase that runs on eight platforms, the browser included, with a player, a library, account sync, TV support, watch parties and tools for addon developers.
 
 A few principles shape everything in it:
 
