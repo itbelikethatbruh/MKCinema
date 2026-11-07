@@ -13,3 +13,9 @@ android/libs/*.jar
 **/keystore/
 *.p12
 *.key
+
+# App downloads are published to GitHub Releases and the website, not committed.
+# site/download keeps only the small webOS listing files.
+site/download/*
+!site/download/com.mkcinema.app.manifest.json
+!site/download/mkcinema-webos-icon.png
