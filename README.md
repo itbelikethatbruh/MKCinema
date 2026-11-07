@@ -159,6 +159,7 @@ Everything below is live today. ★ marks the features we haven't seen in any ot
 - **Rebuilt player.** Edge to edge, with options in Playback, Picture, Audio and More tabs.
 - **Volume to 200 %** through the audio engine.
 - **Sound modes.** Clear voices and Night, with Original one tap away.
+- **Sensory-friendly mode.** Like a sensory-friendly cinema showing: sudden loud bangs are softened to the level of talk, and flashing light is dimmed as it happens. Player › Picture, or Settings › Playback.
 - **Audio delay** control, and an instant audio-language pick.
 - **Picture adjustments.** Brightness, contrast and colour, with Vivid, Lift dark scenes and Soft presets.
 - **★ Sharp upscaling.** Low-resolution video is redrawn on the device's GPU instead of stretched. Off by default, phone and PC only.
@@ -200,6 +201,8 @@ Everything below is live today. ★ marks the features we haven't seen in any ot
 - **★ Listen on phone.** The film plays on the TV and the sound plays on your phone and headphones. No app to install.
 - **Phone remote.** Scan the TV's code for a touchpad or D-pad, keyboard and voice search. The TV asks before a new phone can take control.
 - **Party voice on your phone.**
+- **Party cameras.** See each other while you watch. On a TV, your phone is the camera (phone remote › Party camera), with a face light for dark rooms and every TV control underneath. Faces sit in a slim column during the film, get big in the lobby and at the credits, and the person talking gets a ring. Phones, laptops and TVs can all be in the same party.
+- **Ask to pause.** A guest who pauses asks the host, who can pause for everyone with one tap.
 
 ### Discover and Home
 

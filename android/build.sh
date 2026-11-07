@@ -14,6 +14,7 @@ javac -source 11 -target 11 -nowarn -cp $JAR:$LIBS -d $OUT/classes $(find src -n
 $BT/d8 --release --min-api 24 --lib $JAR --output $OUT/dex $(find $OUT/classes -name '*.class') libs/*.jar
 cp $OUT/base.apk $OUT/unsigned.apk; (cd $OUT/dex && zip -q ../unsigned.apk classes*.dex)
 # 1.3.0: torrent engine binaries (built from windows/cmd/mkp2p, see jniLibs/README.md), stored as lib/<abi>/libmkp2p.so
+# 1.9.1: camera permission for party cameras (no new libraries)
 # 1.9.0: libass (libs/ass-jni, from libs/fetch.sh) for styled ASS/SSA subtitles in the TV player
 mkdir -p $OUT/lib
 if [ -d jniLibs ]; then cp -r jniLibs/* $OUT/lib/ && rm -f $OUT/lib/README.md; fi
