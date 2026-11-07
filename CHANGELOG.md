@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.49.0 (stream info and scene times)
+
+- **Sources, side by side.** Addons can describe each source as data, so quality, HDR, sound, size and cache state look the same for every addon. Filter by HDR or Atmos, and sort by size.
+- **Scene times from addons.** Addons can mark intros, recaps, credits and highlights right on a title, an episode or a file. The Skip buttons use them, and Peak Cinema starts on the highlights they mark. Spec: [docs/addon-extras.md](docs/addon-extras.md), sections 13 and 14.
+
 ## Web app 2.48.0 (addon extras)
 
 - **Addons can say more.** An addon can show a short notice on its card, a link to support its developer, and what changed in a new version. Results it can't play show as a plain message instead of a video clip.

@@ -23,6 +23,13 @@ MKCinema 2.48 adds more, in sections 4 to 12:
 | Shared embedded subtitles | `"subtitlesIn": true` | Yes |
 | Result styler | `"style": true` | Yes |
 
+MKCinema 2.49 adds two more:
+
+| What | How you turn it on | Viewer asked first? |
+|---|---|---|
+| Stream info as data | `"mkcinema": { "info": … }` on each stream | No |
+| Scene times on `/meta` and `/stream` | `"mkcinema": { "segments": [...] }` on a meta, an episode or a stream | No |
+
 Two things need no change at all: pasting your addon again with new settings updates it in place, and
 Addons › Addon Lab shows every request MKCinema makes to your addon (section 12).
 
@@ -271,6 +278,69 @@ leaves the list as it was.
 - **Addon Lab** (Addons screen) lists the last 80 addon requests on that device: which addon, the path (long settings
   segments hidden), the time taken, and a warning for slow answers (over 3 s) or blocked ones (usually a missing
   `Access-Control-Allow-Origin: *`). Tap one to send it again and see the JSON. Nothing in the Lab leaves the device.
+
+## 13. Stream info as data
+
+Today MKCinema reads quality, HDR, sound and size from a stream's text, which works for most addons but guesses.
+Send the same facts as data and every addon's results get the same pills, filters and sorting:
+
+```json
+{ "name": "My Addon\n4K", "title": "…", "url": "https://…",
+  "mkcinema": { "info": {
+    "resolution": "2160p", "hdr": "DV", "codec": "hevc",
+    "audio": ["Atmos", "TrueHD"], "channels": "7.1",
+    "size": 58000000000, "cached": true, "provider": "Real-Debrid",
+    "release": "remux", "languages": ["en", "es"] } } }
+```
+
+| Field | Values |
+| --- | --- |
+| `resolution` | `2160p` (or `4k`, `uhd`), `1440p`, `1080p`, `720p`, `576p`, `480p`, `sd` |
+| `hdr` | `DV` (or `dolby vision`), `HDR10+`, `HDR10`, `HDR`, `HLG`, `SDR` |
+| `codec` | `hevc` (`h265`, `x265`), `av1`, `h264` (`avc`, `x264`), `vp9` |
+| `audio` | a string or a list of up to 6: `atmos`, `truehd`, `dts-hd`, `dts:x`, `dts`, `dd+` (`eac3`), `dd` (`ac3`), `aac`, `opus`, `flac` |
+| `channels` | `1.0`, `2.0`, `5.1`, `6.1`, `7.1` |
+| `size` | bytes, as a number |
+| `cached` | `true` or `false`: whether your debrid service already has the file |
+| `provider` | up to 24 characters, shown as a pill (for example the debrid service) |
+| `release` | `remux`, `bluray`, `web-dl`, `webrip`, `hdtv`, `dvd` |
+| `languages` | up to 6 ISO 639 codes for the audio, shown as a pill |
+
+Every field is optional. A value MKCinema doesn't know is ignored, and that fact is read from your text as before.
+The facts you send replace the guessed ones and move the result's rank the same way. The source list gains HDR and
+Atmos filters and a Largest / Smallest sort when results carry them. `behaviorHints.videoSize` (bytes) still works
+too.
+
+## 14. Scene times on `/meta` and `/stream`
+
+The `skips` resource (section 2) asks for scene times separately. You can also send them with what you already
+serve:
+
+- on a **meta**, for a film: `meta.mkcinema.segments`
+- on an **episode**, for that episode only: `meta.videos[i].mkcinema.segments`
+- on a **stream**, for that exact file: `stream.mkcinema.segments`, the most precise, because different releases
+  have different timings
+
+```json
+"mkcinema": { "segments": [
+  { "type": "intro", "startMs": 30000, "endMs": 95000, "label": "Opening titles" },
+  { "type": "recap", "startMs": 0, "endMs": 25000 },
+  { "type": "peak", "startMs": 700000, "endMs": 760000, "label": "The chase" }
+] }
+```
+
+`type` is `intro` (or `opening`), `outro` (`credits`, `ending`), `recap`, `ad`, the content types from section 2
+(`nudity`, `sex`, `violence`, `language`, `drugs`, `fear`, with optional `severity` and `action`), or `peak`
+(`highlight`) for a film's best moments. Up to 100 per object. `label` is up to 60 characters.
+
+- Intro, outro and recap feed MKCinema's Skip buttons, and content types follow the viewer's own scene-skip
+  settings. MKCinema's own times (chapters, anime databases) win when both exist.
+- **Highlights** give Peak Cinema (MKCinema's scene surfer) a real starting point instead of a guess. The scene runs
+  from `startMs` to `endMs`, clamped to 30 seconds to 3 minutes, and the screen says which addon marked it. A
+  `skips` answer with `"category": "peak"` counts too.
+- If your addon serves `meta` but isn't the one MKCinema uses for a title's details, add `"mkcinema": { "segments":
+  true }` to your manifest. MKCinema then also asks your `/meta` for scene times when a title plays or comes up in
+  Peak Cinema. It's an ordinary meta request, cached for 30 minutes.
 
 ## Rules
 
