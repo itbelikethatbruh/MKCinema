@@ -1,29 +1,58 @@
+<p align="center">
+  <a href="https://mkcinema.app"><img src="docs/readme/logo.png" width="140" alt="MKCinema logo"></a>
+</p>
+
 <h1 align="center">MKCinema</h1>
 
 <p align="center">
   <b>Your addons look better here.</b><br>
-  A free, open-source player for Stremio addons, with debrid support, account sync<br>
-  and apps for Android, Android TV, Windows, macOS, Linux and smart TVs.
+  A free, open-source player for Stremio addons, built for phones, computers and TVs.<br>
+  <i>No ads. No paywalls. No tracking. Just your addons, at their best.</i>
 </p>
 
+> [!IMPORTANT]
+> **Web 2.45 is live.** Ratings addons now show real IMDb, TMDB and Rotten Tomatoes scores, debrid notice clips are caught, and SDK addons get a settings screen, all with no changes from the addon's developer. [See what's new](CHANGELOG.md).
+
 <p align="center">
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/itbelikethatbruh/MKCinema?style=flat-square&label=release"></a>
+  <img alt="Platforms" src="https://img.shields.io/badge/platforms-Web%20%7C%20Android%20%7C%20TV%20%7C%20Windows%20%7C%20macOS%20%7C%20Linux-2ea44f?style=flat-square">
   <a href="LICENSE"><img alt="License: GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/itbelikethatbruh/MKCinema?style=flat-square&label=release"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/itbelikethatbruh/MKCinema/total?style=flat-square&label=downloads&color=2ea44f"></a>
   <a href="https://github.com/itbelikethatbruh/MKCinema/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/itbelikethatbruh/MKCinema?style=flat-square"></a>
-  <a href="https://app.mkcinema.app"><img alt="Web app" src="https://img.shields.io/badge/web%20app-live-brightgreen?style=flat-square"></a>
   <a href="https://ko-fi.com/mkcinema"><img alt="Support on Ko-fi" src="https://img.shields.io/badge/Ko--fi-support-72a4f2?style=flat-square&logo=kofi&logoColor=white"></a>
 </p>
 
 <p align="center">
-  <a href="https://app.mkcinema.app">Web app</a> ·
+  <a href="https://app.mkcinema.app"><b>Open the web app</b></a> ·
+  <a href="docs/install.md"><b>Download</b></a> ·
   <a href="https://mkcinema.app">Website</a> ·
-  <a href="docs/install.md">Install</a> ·
   <a href="docs/features.md">Features</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
   <a href="https://ko-fi.com/mkcinema">Ko-fi</a>
 </p>
 
-<p align="center"><img src="docs/screenshots/app-side-menu.webp" width="100%" alt="MKCinema Home with the side menu, the featured banner and Top 10 films today"></p>
+---
+
+## Showcase
+
+<p align="center"><img src="docs/screenshots/app-side-menu.webp" width="100%" alt="Home with the side menu, the featured banner and Top 10 films today"></p>
+
+<table>
+<tr>
+<td width="50%" align="center"><img src="docs/screenshots/app-detail.webp" alt="A film page with Smart Play and its sources"><br><sub>Film page: Smart Play explains every pick</sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/app-player.webp" alt="The player's Audio tab"><br><sub>The player: audio languages, 200% volume, Listen on phone</sub></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/screenshots/app-tv.webp" alt="MKCinema on a TV"><br><sub>On a TV: built for the remote</sub></td>
+<td align="center"><img src="docs/screenshots/app-anime-home.webp" alt="Home in the Anime look"><br><sub>The Anime look, one of five</sub></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/screenshots/app-party.webp" alt="Watch party"><br><sub>Watch parties with synced playback and voice</sub></td>
+<td align="center"><img src="docs/screenshots/app-addon-studio.jpg" alt="Addon Studio"><br><sub>Addon Studio: build a Stremio addon visually</sub></td>
+</tr>
+</table>
+
+<p align="center"><sub>Player shots show <a href="https://studio.blender.org/films/">Blender open movies</a> (CC BY). Poster and backdrop art comes from the catalogs and belongs to its owners.</sub></p>
 
 ## About
 
