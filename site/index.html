@@ -167,7 +167,7 @@ section{position:relative}
   .card img{width:100%;aspect-ratio:16/10;object-fit:contain}
 }
 
-/* golden tickets */
+/* what makes MKCinema different: ticket cards */
 .tickets{background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(216,194,154,.08),transparent 70%)}
 .tk-group{margin-top:64px}
 .tk-group>h3{font-size:clamp(24px,2.6vw,32px)}
@@ -316,7 +316,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
   <div class="wrap nav-in">
     <a class="brand" href="#top" aria-label="MKCinema home"><svg aria-hidden="true"><use href="#logo"/></svg><span><b>MK</b><i>Cinema</i></span></a>
     <nav class="links" aria-label="Sections">
-      <a href="#tickets">Golden tickets</a>
+      <a href="#different">What's different</a>
       <a href="#tour">Features</a>
       <a href="#download">Download</a>
       <a href="#promise">Free forever</a>
@@ -360,10 +360,10 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 
 <hr class="hr">
 
-<section class="sec tickets" id="tickets" aria-labelledby="tk-h">
+<section class="sec tickets" id="different" aria-labelledby="tk-h">
   <div class="wrap">
     <div class="head rv">
-      <span class="eyebrow">Golden tickets</span>
+      <span class="eyebrow">What makes MKCinema different</span>
       <h2 id="tk-h">Things we haven't seen <em>in any other player.</em></h2>
       <p class="lead">Every one of these is live in MKCinema today.</p>
     </div>
@@ -694,7 +694,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
     <div class="foot">
       <a class="brand" href="#top"><svg aria-hidden="true"><use href="#logo"/></svg><span><b>MK</b><i>Cinema</i></span></a>
       <nav aria-label="Footer">
-        <a href="#tickets">Golden tickets</a><a href="#tour">Features</a><a href="#download">Download</a><a href="#faq">FAQ</a><a href="https://ko-fi.com/mkcinema">Ko-fi</a><a href="https://github.com/itbelikethatbruh/MKCinema">GitHub</a><a href="https://app.mkcinema.app/">Open app</a>
+        <a href="#different">What's different</a><a href="#tour">Features</a><a href="#download">Download</a><a href="#faq">FAQ</a><a href="https://ko-fi.com/mkcinema">Ko-fi</a><a href="https://github.com/itbelikethatbruh/MKCinema">GitHub</a><a href="https://app.mkcinema.app/">Open app</a>
       </nav>
     </div>
     <p class="legal">MKCinema does not host, provide or link to any copyrighted content. It plays sources from third-party addons that users install themselves. Stremio is a trademark of its owner; MKCinema is an independent project, not affiliated with or endorsed by Stremio. VLC, debrid services and other names belong to their owners.</p>
@@ -746,7 +746,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
   }, { passive: true });
   if (reduce) room.style.setProperty('--p', 1);
 
-  // Golden tickets tilt toward the pointer
+  // Ticket cards tilt toward the pointer
   if (fine && !reduce) $$('.tk').forEach(t => {
     t.addEventListener('pointermove', e => { const r = t.getBoundingClientRect(); t.style.setProperty('--ry', ((e.clientX - r.left) / r.width - .5) * 10 + 'deg'); t.style.setProperty('--rx', ((e.clientY - r.top) / r.height - .5) * -8 + 'deg'); }, { passive: true });
     t.addEventListener('pointerleave', () => { t.style.setProperty('--rx', '0deg'); t.style.setProperty('--ry', '0deg'); });
