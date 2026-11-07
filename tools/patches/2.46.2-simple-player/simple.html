@@ -47,7 +47,7 @@ body.mk-player-on .toast{padding:9px 14px;font-size:calc(13px * var(--ts,1))}
    · Volume above 100 % and Sound modes need a source the browser can read the sound of. Sources that don't allow it
      no longer show them (a quiet check runs once per host; until it answers, they stay hidden, no spinner).
    · Audio language is hidden when the file has one track.
-   · On phones: Listen on phone, the phone-handoff icon, A-B repeat, Split Screen, Theatre view and the rarest speeds go.
+   · On phones: Listen on phone, the phone-handoff icon, A-B repeat, Theatre view and the rarest speeds go; Split Screen moves to More.
    · Pop-ups opened from a full-screen player (Your phone, Send to TV…) now show over it instead of behind it.
    · "Synced your library and settings" no longer pops up over the player. */
 (function () {
@@ -131,7 +131,7 @@ body.mk-player-on .toast{padding:9px 14px;font-size:calc(13px * var(--ts,1))}
       const rate = video.playbackRate;
       ['0.25', '1.75', '2.5', '3'].forEach((v) => { const b = $(`[data-speed="${v}"]`, p); if (b && Number(v) !== rate) b.remove(); });
     }
-    if (p && phone) $$('[data-tl="ab"], [data-tl="split"]', p).forEach((b) => b.remove());
+    if (p && phone) $$('[data-tl="ab"]', p).forEach((b) => b.remove());
 
     // Picture
     const pic = pane('pic');
@@ -141,7 +141,12 @@ body.mk-player-on .toast{padding:9px 14px;font-size:calc(13px * var(--ts,1))}
     const more = pane('more');
     if (more && phone) {
       $$('[data-pp="cast"]', more).forEach((b) => b.remove());
-      // the party panel opens over the player now, so it can stay
+    }
+    // Split Screen stays on phones, one tap away under More (its click handler moves with it)
+    const split = p && $('[data-tl="split"]', p);
+    if (split && phone && more) {
+      const h = $$('h5', more).find((x) => /^more$/i.test(x.textContent.trim()));
+      if (h) { let n = h; while (n.nextElementSibling && n.nextElementSibling.tagName !== 'H5') n = n.nextElementSibling; n.after(split); } else more.appendChild(split);
     }
 
     // empty headings and tabs go
