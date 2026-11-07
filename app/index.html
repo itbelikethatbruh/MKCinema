@@ -21150,6 +21150,13 @@ const RELEASES = [
   { v: '2.53.0', date: '2026-11-07', items: [
     ['new', 'Your stats', 'Your top films and shows, how much you’ve watched, when you watch, your genres and your longest streak, for this month, this year or all time. Save it as a picture to share. Library › Your stats.'],
   ] },
+  { v: '2.52.0', date: '2026-11-07', items: [
+    ['new', 'Catch up to the room', 'Joining a watch party late? Catch up from the start or ten minutes back at 1.5× with subtitles, and you rejoin the room by yourself when you reach them.'],
+    ['new', 'Which cut is this?', 'The player tells you which cut of a film you’re watching, from its length and its release name. Player › Options.'],
+    ['new', 'Shape of the film', 'A curve of how much is said, and how heated it gets, across the film. Tap it to jump. Player › Options.'],
+    ['new', 'Ticket stubs', 'Every film you finish keeps a stub with the date, the seat and who you watched with. Save one as a picture. Settings › Playback.'],
+    ['new', 'Film night', 'Seats take turns picking. The picker’s shortlist goes to a vote on your phones, or straight to a watch party.'],
+  ] },
   { v: '2.51.0', date: '2026-11-07', items: [
     ['new', 'Your apps', 'Pick the streaming services you pay for in Settings › Home. A film on one of them gets a Watch on button that opens the app on Android, Android TV and Fire TV.'],
     ['new', 'Where to watch for everyone', 'Where to watch on title pages no longer needs your own TMDB key.'],
@@ -30473,6 +30480,620 @@ const SourceShock = {
   COMMANDS.push({ label: 'Watch-along: play or record commentary', icon: 'mic', run: () => WatchAlong.open() });
 }
 </script>
+<style id="mkc-252css">
+/* 2.52 The rest of the research */
+.cu-acts,.fn-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.cu-note,.wc-note{margin-top:12px;font-size:13px}
+.cu-pill{position:fixed;left:50%;top:clamp(12px,2.4vw,32px);transform:translateX(-50%);z-index:2147483002;display:flex;align-items:center;gap:10px;padding:8px 10px 8px 14px;border-radius:999px;background:#151517;border:1px solid rgba(217,212,199,.4);color:#fff;font-size:13.5px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.cu-pill span{font-variant-numeric:tabular-nums;color:rgba(255,255,255,.78)}
+.cu-pill button{border:1px solid rgba(255,255,255,.22);background:transparent;color:#fff;border-radius:999px;padding:5px 12px;font:600 12.5px/1 var(--f-body, system-ui);cursor:pointer}
+.wc-r{display:flex;justify-content:space-between;gap:14px;padding:10px 2px;border-bottom:1px solid rgba(255,255,255,.08)}
+.wc-r span{color:var(--dim, rgba(255,255,255,.6));font-size:13.5px}
+.wc-r b{color:#fff;font-variant-numeric:tabular-nums}
+.fs-svg{display:block;width:100%;height:clamp(110px,18vw,170px);margin-top:14px;cursor:pointer;border-radius:calc(var(--r-m) * 1.2);background:rgba(255,255,255,.03)}
+.fs-talk{fill:rgba(217,212,199,.22);stroke:rgba(217,212,199,.7);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.fs-heat{fill:none;stroke:#e58f6f;stroke-width:2;vector-effect:non-scaling-stroke}
+.fs-now{stroke:#fff;stroke-width:2;stroke-dasharray:4 4;vector-effect:non-scaling-stroke}
+.fs-legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:10px;font-size:12.5px;color:var(--dim, rgba(255,255,255,.65))}
+.fs-legend span{display:inline-flex;align-items:center;gap:6px}
+.fs-t{margin-left:auto;font-variant-numeric:tabular-nums}
+.fs-k{display:inline-block;width:14px;height:3px;border-radius:calc(var(--r-s) * 0.25)}
+.fs-k.talk{background:rgba(217,212,199,.8)}
+.fs-k.heat{background:#e58f6f}
+.st-list{display:flex;flex-direction:column;gap:2px;max-height:min(60vh,520px);overflow-y:auto;margin-top:12px}
+.st-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 4px;border-bottom:1px solid rgba(255,255,255,.07)}
+.st-row b{color:#fff}
+.st-row small{display:block;color:var(--dim, rgba(255,255,255,.6));font-size:12.5px;margin-top:3px}
+.fn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:14px;max-height:min(52vh,480px);overflow-y:auto;padding:2px}
+.fn-t{display:flex;flex-direction:column;gap:6px;padding:6px;border-radius:calc(var(--r-m) * 1.2);border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#fff;font:inherit;font-size:12.5px;text-align:left;cursor:pointer}
+.fn-t img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:var(--r-s);background:#222}
+.fn-t span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fn-t.on{border-color:rgba(217,212,199,.75);background:rgba(217,212,199,.12)}
+.fn-t:hover,.fn-t:focus-visible{border-color:rgba(255,255,255,.32);outline:none}
+</style>
+<script id="mkc-252">
+/* =====================================================================
+   2.52 The rest of the research
+   1  Catch up to the room: joining a watch party late, you can start from the beginning (or ten minutes back) at
+      1.5x speed with subtitles, and you rejoin the room's playback when you reach it.
+   2  Which cut is this?: the player compares this copy's length with the film's listed runtime and reads edition
+      words in the release name, and says which cut it probably is, and how sure that is.
+   3  Shape of the film: a curve of how much is said, and how intensely, across the film, drawn from the subtitles.
+      Tap it to jump. It shows no plot.
+   4  Ticket stubs: each film you finish keeps a stub with the date, the seat and who you watched with. Save one as
+      a picture to share.
+   5  Film night: seats take turns picking. Tonight's picker's watchlist goes to a phone vote (Couch match), or
+      straight to a watch party.
+   Everything runs on this device.
+   ===================================================================== */
+const F52 = {
+  played: () => !$('#player').hidden && !!P.ctx && !!P.stream,
+  fmt(s) { s = Math.max(0, Math.round(s || 0)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return h ? `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}` : `${m}:${String(x).padStart(2, '0')}`; },
+  mins(s) { const m = Math.round(Math.abs(s) / 60); return `${m} min`; },
+};
+
+/* ---------------- 1 Catch up to the room ---------------- */
+const CatchUp = {
+  on: false, st: null, asked: new Set(), rate: 1.5, pillT: 0,
+  target(st) {
+    if (!st) return null;
+    const off = Party.offsets.get(st._from) || 0;
+    const elapsed = st.paused ? 0 : Math.max(0, (Date.now() + off - st.at) / 1000) * (st.rate || 1);
+    const base = st.media && st.media.url && P.stream && st.media.url === P.stream.url ? st.pos + PartyLine.manual : PartyLine.local(st);
+    return base + elapsed;
+  },
+  offer(at) {
+    X8.layer('catchUp', { label: 'Catch up', icon: 'fast-forward', eyebrow: 'Watch party' });
+    const body = X8.body('catchUp'), back = Math.max(0, at - 600);
+    body.innerHTML = `<h2 class="x8-h">They’re ${F52.fmt(at)} in</h2>
+      <p class="sc-p">Jump in where they are, or catch up at 1.5× with subtitles on. You rejoin their playback by yourself when you reach them.</p>
+      <div class="cu-acts"><button class="btn btn-prime" type="button" data-nav data-cu="now"><i data-lucide="users"></i>Jump in now</button>
+      ${at > 900 ? `<button class="btn btn-ghost" type="button" data-nav data-cu="${back}"><i data-lucide="rewind"></i>Catch up from ten minutes back</button>` : ''}
+      <button class="btn btn-ghost" type="button" data-nav data-cu="0"><i data-lucide="fast-forward"></i>Catch up from the start</button></div>
+      <p class="sc-p cu-note">At 1.5× you gain half a minute every minute, so ${F52.mins(at > 900 ? 600 : at)} behind takes about ${F52.mins((at > 900 ? 600 : at) * 2)}.</p>`;
+    body.onclick = (e) => { const b = e.target.closest('[data-cu]'); if (!b) return; X8.close('catchUp'); if (b.dataset.cu !== 'now') this.start(Number(b.dataset.cu)); };
+    icons(); X8.open('catchUp');
+  },
+  async start(from) {
+    this.on = true; pSeek(from, { user: false });
+    video.playbackRate = this.rate;
+    if (P.curSub < 0 && (P.subs || []).length && typeof F50 !== 'undefined') { try { await selectSub(F50.subIdx(), { auto: true }); this.subsByUs = true; } catch (e) { /* no subtitles */ } }
+    if (video.paused) video.play().catch(() => {});
+    this.pill(true); Party.sysLine && Party.sysLine('You’re catching up at 1.5×');
+  },
+  stop(joined) {
+    if (!this.on) return; this.on = false; video.playbackRate = CFG.speed || 1; this.pill(false);
+    if (this.subsByUs && P.curSub >= 0) { selectSub(-1); } this.subsByUs = false;
+    if (joined) { toast('You’re caught up and back with the room', 'ok', 3200); if (this.st) Party.applyState(this.st); }
+  },
+  pill(on) {
+    let el = $('#cuPill');
+    if (!on) { if (el) el.remove(); clearInterval(this.pillT); return; }
+    if (!el) { document.body.insertAdjacentHTML('beforeend', '<div class="cu-pill" id="cuPill" role="status"><b>Catching up</b><span id="cuLeft"></span><button type="button" data-nav id="cuJump">Jump in</button></div>'); el = $('#cuPill'); $('#cuJump').onclick = () => { this.stop(false); if (this.st) Party.applyState(this.st); }; }
+    clearInterval(this.pillT);
+    this.pillT = setInterval(() => {
+      if (!this.on) return; const t = this.target(this.st); const l = $('#cuLeft'); if (l && t != null) l.textContent = `${F52.fmt(Math.max(0, t - pNow()))} behind`;
+      if (t != null && pNow() >= t - 1) this.stop(true);
+      if (video.playbackRate !== this.rate && !video.paused) video.playbackRate = this.rate;
+    }, 1000);
+  },
+  init() {
+    const ap = Party.applyState;
+    Party.applyState = async function (st) {
+      if (st && st.media) CatchUp.st = st;
+      if (CatchUp.on && st && st.media) {
+        const mine = this.mediaInfo();
+        if (mine && mine.metaId === st.media.metaId && mine.videoId === st.media.videoId) { const t = CatchUp.target(st); if (t == null || pNow() < t - 1) return; CatchUp.stop(true); return; }
+        CatchUp.stop(false);
+      }
+      return ap.apply(this, arguments);
+    };
+    const lm = Party.loadMedia;
+    Party.loadMedia = async function (media, at) {
+      const r = await lm.apply(this, arguments);
+      const key = `${this.code}|${media && media.metaId}|${media && media.videoId}`;
+      if (!this.isHost() && at > 180 && !CatchUp.asked.has(key) && CFG.catchUpAsk !== false) { CatchUp.asked.add(key); setTimeout(() => { if (F52.played()) CatchUp.offer(at); }, 1200); }
+      return r;
+    };
+    const lv = Party.leave;
+    Party.leave = function () { CatchUp.stop(false); return lv.apply(this, arguments); };
+    const close = closePlayer;
+    closePlayer = async function () { CatchUp.stop(false); return close.apply(this, arguments); };
+  },
+};
+
+/* ---------------- 2 Which cut is this? ---------------- */
+const WhichCut = {
+  TAGS: [[/director'?s[ ._-]?cut|\bdc\b/i, 'Director’s cut'], [/extended/i, 'Extended cut'], [/\bunrated\b/i, 'Unrated cut'], [/\buncut\b/i, 'Uncut'], [/theatrical/i, 'Theatrical cut'], [/ultimate/i, 'Ultimate cut'], [/final[ ._-]?cut/i, 'Final cut'], [/\bredux\b/i, 'Redux'], [/special[ ._-]?edition/i, 'Special edition'], [/\bimax\b/i, 'IMAX version'], [/remastered/i, 'Remastered']],
+  guess() {
+    if (!F52.played() || P.ctx.video) return null;
+    const s = P.stream, bh = s.behaviorHints || {}, name = [s.name, s.title, s.description, bh.filename].filter(Boolean).join(' ');
+    const tags = this.TAGS.filter(([re]) => re.test(name)).map(([, l]) => l);
+    const listed = X8.runtimeMin(P.ctx.meta) * 60, d = pDur();
+    const diff = listed && isFinite(d) && d > 600 ? d - listed : null;
+    let verdict = '', sure = '';
+    if (tags.length) { verdict = tags[0]; sure = 'the release name says so'; }
+    else if (diff != null && diff > 8 * 60) { verdict = 'A longer cut'; sure = `${F52.mins(diff)} longer than the listed runtime, more than credits explain`; }
+    else if (diff != null && diff < -6 * 60) { verdict = 'A shorter version'; sure = `${F52.mins(diff)} shorter than the listed runtime, maybe cut for TV or a different region`; }
+    else if (diff != null) { verdict = 'Probably the usual cut'; sure = `within a few minutes of the listed runtime`; }
+    else { verdict = 'Not sure'; sure = 'the film has no listed runtime to compare with'; }
+    return { verdict, sure, tags, listed, d, diff };
+  },
+  open() {
+    const g = this.guess(); if (!g) { toast('Which cut works on films', 'info', 2400); return; }
+    X8.layer('whichCut', { label: 'Which cut is this?', icon: 'scissors', eyebrow: 'Which cut is this?' });
+    const body = X8.body('whichCut');
+    const row = (k, v) => `<div class="wc-r"><span>${esc(k)}</span><b>${esc(v)}</b></div>`;
+    body.innerHTML = `<h2 class="x8-h">${esc(g.verdict)}</h2><p class="sc-p">Because ${esc(g.sure)}.</p>
+      ${row('This copy', F52.fmt(g.d))}${g.listed ? row('Listed runtime', F52.fmt(g.listed)) : ''}${g.diff != null ? row('Difference', `${g.diff >= 0 ? '+' : '−'}${F52.fmt(Math.abs(g.diff))}`) : ''}${g.tags.length > 1 ? row('Also in the name', g.tags.slice(1).join(', ')) : ''}
+      <p class="sc-p wc-note">Listed runtimes usually include the credits, so a few minutes either way is normal. Subtitles made for another cut drift apart in the middle; the subtitle sync in the player fixes the start and the speed, not missing scenes.</p>`;
+    icons(); X8.open('whichCut');
+  },
+};
+
+/* ---------------- 3 Shape of the film ---------------- */
+const FilmShape = {
+  N: 60,
+  async data() {
+    const sub = ScriptClock.pick(); if (!sub) return null;
+    const r = await ScriptClock.cues(sub); const cues = (r && r.list) || []; if (cues.length < 40) return null;
+    const d = pDur(); const end = isFinite(d) && d > 0 ? d : cues[cues.length - 1].e;
+    const words = new Array(this.N).fill(0), heat = new Array(this.N).fill(0);
+    cues.forEach((c) => {
+      const i = Math.min(this.N - 1, Math.max(0, Math.floor(c.s / end * this.N))); const t = String(c.t);
+      const w = t.split(/\s+/).filter(Boolean).length; words[i] += w;
+      heat[i] += (t.match(/!/g) || []).length * 2 + (t.match(/\?/g) || []).length + (t.match(/\b[A-Z]{3,}\b/g) || []).length * 2 + (/^[-–]/.test(t) ? 1 : 0);
+    });
+    const norm = (a) => { const m = Math.max(1, ...a); return a.map((x) => x / m); };
+    const smooth = (a) => a.map((x, i) => (a[i - 1] ?? x) * 0.25 + x * 0.5 + (a[i + 1] ?? x) * 0.25);
+    return { end, words: norm(smooth(words)), heat: norm(smooth(heat)), lang: sub.lang || '' };
+  },
+  path(a, w, h) { return a.map((v, i) => `${i ? 'L' : 'M'}${(i / (a.length - 1) * w).toFixed(1)},${(h - v * (h - 6) - 3).toFixed(1)}`).join(' '); },
+  async open() {
+    if (!F52.played()) { toast('Start the film first', 'info', 2200); return; }
+    X8.layer('filmShape', { label: 'Shape of the film', icon: 'activity', eyebrow: 'Shape of the film', wide: true });
+    const body = X8.body('filmShape'); body.innerHTML = '<h2 class="x8-h">Shape of the film</h2><p class="sc-p">Reading the subtitles…</p>'; icons(); X8.open('filmShape');
+    const s = await this.data();
+    if (!s) { body.innerHTML = '<h2 class="x8-h">Shape of the film</h2><p class="sc-p">This needs subtitles for the film. Turn some on (any language), then open this again.</p>'; return; }
+    const W = 600, H = 120, at = Math.min(1, pNow() / s.end);
+    body.innerHTML = `<h2 class="x8-h">Shape of the film</h2>
+      <p class="sc-p">How much is said, and how heated it gets, from start to end. Quiet stretches are usually action, music or silence. Tap anywhere to jump there. No plot is shown.</p>
+      <svg class="fs-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Talk and intensity across the film">
+        <path class="fs-talk" d="${this.path(s.words, W, H)} L${W},${H} L0,${H} Z"/><path class="fs-heat" d="${this.path(s.heat, W, H)}"/>
+        <line class="fs-now" x1="${(at * W).toFixed(1)}" x2="${(at * W).toFixed(1)}" y1="0" y2="${H}"/></svg>
+      <div class="fs-legend"><span><i class="fs-k talk"></i>How much is said</span><span><i class="fs-k heat"></i>How heated</span><span class="fs-t">${F52.fmt(s.end)}</span></div>`;
+    icons();
+    $('.fs-svg', body).onclick = (e) => { const r = e.currentTarget.getBoundingClientRect(); const f = (e.clientX - r.left) / r.width; pSeek(Math.max(0, f * s.end)); X8.close('filmShape'); };
+  },
+};
+
+/* ---------------- 4 Ticket stubs ---------------- */
+const Stubs = {
+  list() { const l = Store.get('stubs', []); return Array.isArray(l) ? l : []; },
+  keep(ctx) {
+    const m = ctx && ctx.meta; if (!m || ctx.video || !m.id || String(m.id).startsWith('local:')) return;
+    const l = this.list(); if (l.some((x) => x.id === m.id && Date.now() - x.at < 6 * 3600e3)) return;
+    const seat = (Seats.cur() || {}).name || '';
+    const withWho = Party.code ? [...Party.peers.values()].map((p) => p.name).filter(Boolean).slice(0, 4) : [];
+    l.unshift({ id: m.id, name: m.name || '', year: yearOf(m) || '', poster: metaPoster(m) || '', at: Date.now(), seat, with: withWho, n: l.length + 1 });
+    Store.set('stubs', l.slice(0, 500));
+    toast(`Ticket stub kept for ${m.name}`, 'ok', 2400, 'stub');
+  },
+  /* the stub as a picture: drawn on a canvas, no network, poster left out so nothing cross-site is needed */
+  draw(x) {
+    const c = document.createElement('canvas'), W = 1080, H = 540; c.width = W; c.height = H; const g = c.getContext('2d');
+    g.fillStyle = '#111113'; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#1b1b1f'; g.beginPath(); g.roundRect(40, 40, W - 80, H - 80, 28); g.fill();
+    g.strokeStyle = 'rgba(217,212,199,.35)'; g.setLineDash([10, 10]); g.beginPath(); g.moveTo(W - 300, 70); g.lineTo(W - 300, H - 70); g.stroke(); g.setLineDash([]);
+    g.fillStyle = '#111113'; [[W - 300, 40], [W - 300, H - 40]].forEach(([cx, cy]) => { g.beginPath(); g.arc(cx, cy, 22, 0, Math.PI * 2); g.fill(); });
+    g.fillStyle = 'rgba(217,212,199,.8)'; g.font = '600 22px system-ui, sans-serif'; g.fillText('MKCINEMA · ADMIT ONE', 90, 110);
+    g.fillStyle = '#fff'; g.font = '700 56px system-ui, sans-serif';
+    const words = String(x.name).split(' '); let line = '', y = 200; const lines = [];
+    words.forEach((w) => { const t = line ? `${line} ${w}` : w; if (g.measureText(t).width > W - 440 && line) { lines.push(line); line = w; } else line = t; }); lines.push(line);
+    lines.slice(0, 3).forEach((l) => { g.fillText(l, 90, y); y += 64; });
+    g.fillStyle = 'rgba(255,255,255,.7)'; g.font = '500 26px system-ui, sans-serif';
+    const d = new Date(x.at); g.fillText([x.year, d.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })].filter(Boolean).join(' · '), 90, y + 10);
+    if (x.with && x.with.length) g.fillText(`With ${x.with.join(', ')}`, 90, y + 50);
+    g.fillStyle = 'rgba(217,212,199,.85)'; g.font = '600 22px system-ui, sans-serif'; g.fillText('SEAT', W - 250, 150); g.fillText('No.', W - 250, 300);
+    g.fillStyle = '#fff'; g.font = '700 40px system-ui, sans-serif'; g.fillText(String(x.seat || 'Main').slice(0, 10), W - 250, 200); g.fillText(String(x.n || 1).padStart(4, '0'), W - 250, 350);
+    return c;
+  },
+  save(x) { const c = this.draw(x); c.toBlob((b) => { if (!b) return; const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `${String(x.name).replace(/[\\/:*?"<>|]+/g, ' ').trim()} ticket stub.png`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 30000); }, 'image/png'); },
+  open() {
+    X8.layer('stubs', { label: 'Ticket stubs', icon: 'ticket', eyebrow: 'Ticket stubs', wide: true });
+    const body = X8.body('stubs'), l = this.list();
+    body.innerHTML = `<h2 class="x8-h">Your ticket stubs</h2><p class="sc-p">One for every film you finish, with the date, the seat and who you watched with. Save one as a picture to share.</p>
+      ${l.length ? `<div class="st-list">${l.slice(0, 120).map((x, i) => `<div class="st-row"><div><b>${esc(x.name)}</b><small>${esc([x.year, new Date(x.at).toLocaleDateString(), x.seat, x.with && x.with.length ? `with ${x.with.join(', ')}` : ''].filter(Boolean).join(' · '))}</small></div><button class="btn btn-ghost btn-sm" type="button" data-nav data-stub="${i}"><i data-lucide="download"></i>Save</button></div>`).join('')}</div>`
+    : '<p class="sc-p">No stubs yet. Finish a film and its stub appears here.</p>'}`;
+    body.onclick = (e) => { const b = e.target.closest('[data-stub]'); if (b) this.save(l[Number(b.dataset.stub)]); };
+    icons(); X8.open('stubs');
+  },
+  init() {
+    const mw = markWatched;
+    markWatched = function (id) { const had = !!watchedMap()[id]; const r = mw.apply(this, arguments); try { if (!had && P.ctx && P.ctx.meta && P.ctx.meta.id === id && CFG.stubs !== false) Stubs.keep(P.ctx); } catch (e) { /* never block progress */ } return r; };
+  },
+};
+
+/* ---------------- 5 Film night ---------------- */
+const FilmNight = {
+  pool: null,
+  turn() {
+    const seats = Seats.all().filter((s) => !s.kids); if (!seats.length) return null;
+    const st = Store.raw.get('filmNight', { i: 0 }) || { i: 0 };
+    return seats[(Number(st.i) || 0) % seats.length];
+  },
+  advance() { const st = Store.raw.get('filmNight', { i: 0 }) || { i: 0 }; Store.raw.set('filmNight', { i: (Number(st.i) || 0) + 1, at: Date.now() }); },
+  wl(s) { try { return (s.id === SEAT ? S.watchlist : s.id ? Seats.seatData(s.id).watchlist : Store.raw.get('watchlist', [])) || []; } catch (e) { return []; } },
+  open() {
+    const s = this.turn(); if (!s) return;
+    X8.layer('filmNight', { label: 'Film night', icon: 'popcorn', eyebrow: 'Film night', wide: true });
+    const body = X8.body('filmNight'), wl = this.wl(s).filter((m) => m && m.id && m.name).slice(0, 24), pick = new Set();
+    const paint = () => {
+      body.innerHTML = `<h2 class="x8-h">${esc(s.name)} picks tonight</h2>
+        <p class="sc-p">Seats take turns. ${esc(s.name)} chooses up to three from their watchlist, then the room votes on their phones, or it goes straight to a watch party for friends who aren’t here.</p>
+        ${wl.length ? `<div class="fn-grid">${wl.map((m, i) => `<button type="button" class="fn-t${pick.has(i) ? ' on' : ''}" data-nav data-fn="${i}" aria-pressed="${pick.has(i)}">${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy">` : ''}<span>${esc(m.name)}</span></button>`).join('')}</div>`
+    : `<p class="sc-p">${esc(s.name)}’s watchlist is empty. Add a few films to it, or skip to the next seat.</p>`}
+        <div class="fn-acts">${pick.size ? `${pick.size > 1 ? '<button class="btn btn-prime" type="button" data-nav data-fna="vote"><i data-lucide="smartphone"></i>Vote on our phones</button>' : '<button class="btn btn-prime" type="button" data-nav data-fna="play"><i data-lucide="play"></i>Play it</button>'}<button class="btn btn-ghost" type="button" data-nav data-fna="party"><i data-lucide="users"></i>${pick.size > 1 ? 'Party with the first' : 'Make it a watch party'}</button>` : ''}
+        <button class="btn btn-ghost" type="button" data-nav data-fna="skip"><i data-lucide="skip-forward"></i>Next seat’s turn</button></div>`;
+      icons();
+    };
+    body.onclick = async (e) => {
+      const t = e.target.closest('[data-fn]'); if (t) { const i = Number(t.dataset.fn); if (pick.has(i)) pick.delete(i); else if (pick.size < 3) pick.add(i); else toast('Three is the most', 'info', 1600); paint(); return; }
+      const a = e.target.closest('[data-fna]'); if (!a) return; const k = a.dataset.fna, list = [...pick].map((i) => wl[i]);
+      if (k === 'skip') { this.advance(); X8.close('filmNight'); this.open(); return; }
+      X8.close('filmNight'); this.advance();
+      if (k === 'vote') { this.pool = list; Couch.open(); }
+      if (k === 'play') quickPlay(list[0]);
+      if (k === 'party') { await Party.create(); quickPlay(list[0]); }
+    };
+    paint(); X8.open('filmNight');
+  },
+  init() {
+    const b = Couch.build.bind(Couch);
+    Couch.build = async function () {
+      const p = FilmNight.pool; if (!p) return b();
+      FilmNight.pool = null;
+      return p.map((m) => ({ id: m.id, type: m.type, name: m.name, poster: metaPoster(m) || m.poster || '', year: yearOf(m) || '', g: genresOf(m).slice(0, 2).join(' · '), r: m.imdbRating || '' }));
+    };
+  },
+};
+
+/* ---------------- Wiring ---------------- */
+{
+  if (CFG.catchUpAsk === undefined) CFG.catchUpAsk = true;
+  if (CFG.stubs === undefined) CFG.stubs = true;
+  CatchUp.init(); Stubs.init(); FilmNight.init();
+  const base = renderOptMenu;
+  renderOptMenu = function () {
+    base(); const m = $('#optMenu'); if (!m || !P.ctx || !P.stream) return;
+    const html = `${!P.ctx.video ? '<button type="button" data-f52="cut"><i data-lucide="scissors"></i>Which cut is this?</button>' : ''}<button type="button" data-f52="shape"><i data-lucide="activity"></i>Shape of the film</button>`;
+    const anchor = [...m.querySelectorAll('[data-f51],[data-f50]')].pop();
+    if (anchor) anchor.insertAdjacentHTML('afterend', html); else { const tools = $('h5', m); if (tools) tools.insertAdjacentHTML('beforebegin', html); else m.insertAdjacentHTML('afterbegin', html); }
+    $$('[data-f52]', m).forEach((b) => b.addEventListener('click', () => { m.hidden = true; if (b.dataset.f52 === 'cut') WhichCut.open(); else FilmShape.open(); }));
+    icons();
+  };
+  scAddRows('playback', null, [
+    { group: 'Together' },
+    { key: 'catchUpAsk', label: 'Offer to catch up in a watch party', help: 'Joining late, you can catch up at 1.5× with subtitles instead of jumping in.', type: 'toggle' },
+    { key: 'filmNightBtn', label: 'Film night', help: 'Seats take turns picking. The picker’s shortlist goes to a vote on your phones.', type: 'button', text: 'Start', icon: 'popcorn', run: () => { closeLayer('settings'); FilmNight.open(); } },
+    { key: 'stubs', label: 'Keep ticket stubs', help: 'A stub for every film you finish, with the date, the seat and who you watched with.', type: 'toggle' },
+    { key: 'stubsBtn', label: 'Your ticket stubs', help: 'See them all and save one as a picture.', type: 'button', text: 'Open', icon: 'ticket', run: () => { closeLayer('settings'); Stubs.open(); } },
+  ]);
+  COMMANDS.push({ label: 'Film night: whose pick is it?', icon: 'popcorn', run: () => FilmNight.open() });
+  COMMANDS.push({ label: 'Your ticket stubs', icon: 'ticket', run: () => Stubs.open() });
+}
+</script>
+<style id="mkc-253css">
+/* 2.53 Your stats */
+.ws-modal{max-width:920px;width:min(920px,calc(100vw - 32px))}
+.ws-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:2px 44px 18px 0}
+.ws-per button{font-size:calc(13px * var(--ts,1))}
+.ws-hero{position:relative;padding:22px 24px 20px;border-radius:calc(var(--r-m,10px) * 1.6);background:linear-gradient(135deg,rgba(217,212,199,.11),rgba(255,255,255,.02) 60%);border:1px solid rgba(217,212,199,.22);overflow:hidden}
+.ws-hero small{display:block;font-size:calc(12px * var(--ts,1));letter-spacing:.14em;text-transform:uppercase;color:var(--gold,#d9d4c7)}
+.ws-hero>b{display:block;font-family:var(--f-display);font-size:clamp(44px,8vw,76px);font-weight:700;letter-spacing:-.03em;line-height:1.05;margin-top:6px;color:var(--ink,#fff)}
+.ws-hero p{margin:6px 0 0;color:var(--mute);font-size:calc(14px * var(--ts,1))}
+.ws-tag{display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px 8px;margin-top:14px;padding:7px 12px;border-radius:999px;background:rgba(217,212,199,.12);color:var(--ink,#fff);font-weight:600;font-size:calc(13px * var(--ts,1))}
+.ws-tag .lucide{width:15px;height:15px;color:var(--gold,#d9d4c7)}
+.ws-tag em{font-style:normal;font-weight:400;color:var(--mute)}
+.ws-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
+.ws-tile{padding:14px 16px;border-radius:calc(var(--r-m,10px) * 1.3);background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}
+.ws-tile b{display:block;font-family:var(--f-display);font-size:calc(24px * var(--ts,1));font-weight:700;color:var(--ink,#fff);line-height:1.15}
+.ws-tile small{color:var(--mute);font-size:calc(13px * var(--ts,1))}
+.ws-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.ws-card{padding:16px;border-radius:calc(var(--r-m,10px) * 1.3);background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);min-width:0}
+.ws-card h3{margin:0 0 10px;font-size:calc(12px * var(--ts,1));letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--gold,#d9d4c7)}
+.ws-item{display:flex;align-items:center;gap:12px;width:100%;padding:7px 6px;border:0;border-radius:var(--r-m);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.ws-item:hover,.ws-item:focus-visible,html.tv .ws-item.nav-focus{background:rgba(255,255,255,.06);outline:none}
+.ws-rank{flex:none;width:18px;font-family:var(--f-display);font-weight:700;font-size:calc(16px * var(--ts,1));color:var(--mute)}
+.ws-item:first-of-type .ws-rank{color:var(--gold,#d9d4c7)}
+.ws-item img,.ws-ph{flex:none;width:34px;height:51px;border-radius:calc(var(--r-s) * 0.75);object-fit:cover;background:rgba(255,255,255,.06)}
+.ws-it{min-width:0;display:flex;flex-direction:column}
+.ws-it b{color:var(--ink,#fff);font-weight:600;font-size:calc(14px * var(--ts,1));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ws-it small{color:var(--mute);font-size:calc(13px * var(--ts,1))}
+.ws-none{margin:6px 0 0;color:var(--mute);font-size:calc(13px * var(--ts,1))}
+.ws-g{display:grid;grid-template-columns:minmax(80px,1fr) 2fr 40px;align-items:center;gap:10px;padding:6px 0;font-size:calc(14px * var(--ts,1))}
+.ws-g>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink,#fff)}
+.ws-gt{height:6px;border-radius:calc(var(--r-s) * 0.375);background:rgba(255,255,255,.07);overflow:hidden}
+.ws-gt i,.ws-b i{display:block;background:var(--gold,#d9d4c7);transform-origin:left center}
+.ws-gt i{height:100%;transform:scaleX(var(--v))}
+.ws-g em{font-style:normal;text-align:right;color:var(--mute);font-size:calc(13px * var(--ts,1))}
+.ws-bars{display:flex;align-items:flex-end;gap:3px;height:76px}
+.ws-week{height:46px;gap:8px;margin-top:16px;padding-bottom:16px}
+.ws-b{position:relative;flex:1;height:100%;display:flex;align-items:flex-end}
+.ws-b i{width:100%;height:100%;border-radius:calc(var(--r-s) * 0.375) calc(var(--r-s) * 0.375) calc(var(--r-s) * 0.125) calc(var(--r-s) * 0.125);opacity:.85;transform-origin:center bottom;transform:scaleY(var(--v))}
+.ws-b em{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:3px;font-style:normal;font-size:calc(11px * var(--ts,1));color:var(--mute);white-space:nowrap}
+.ws-hours em{display:none}
+.ws-ax{display:flex;justify-content:space-between;margin-top:4px;font-size:calc(11px * var(--ts,1));color:var(--mute)}
+.ws-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:12px}
+.ws-facts small{display:block;font-size:calc(12px * var(--ts,1));letter-spacing:.12em;text-transform:uppercase;color:var(--gold,#d9d4c7)}
+.ws-facts b{display:block;margin-top:3px;color:var(--ink,#fff);font-weight:600;font-size:calc(14px * var(--ts,1))}
+.ws-foot{margin:14px 0 0;color:var(--mute);font-size:calc(12px * var(--ts,1));line-height:1.5}
+.ws-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.ws-empty{margin-top:4px}
+/* arrival: fade and rise, bars grow; transform and opacity only, once per paint */
+@keyframes wsIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes wsX{from{transform:scaleX(0)}}
+@keyframes wsY{from{transform:scaleY(0)}}
+.ws-hero,.ws-tile,.ws-card{animation:wsIn .5s var(--ease,ease) both;animation-delay:calc(var(--i,0) * 60ms)}
+.ws-cols .ws-card{animation-delay:.3s}.ws-facts{animation-delay:.42s}
+.ws-gt i{animation:wsX .8s var(--ease,ease) both;animation-delay:calc(.35s + var(--i,0) * 70ms)}
+.ws-b i{animation:wsY .7s var(--ease,ease) both;animation-delay:.4s}
+html.tv .ws-hero,html.tv .ws-tile,html.tv .ws-card,html.tv .ws-gt i,html.tv .ws-b i{animation:none}
+@media (prefers-reduced-motion:reduce){.ws-hero,.ws-tile,.ws-card,.ws-gt i,.ws-b i{animation:none}}
+@media (max-width:640px){.ws-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.ws-cols{grid-template-columns:1fr}.ws-hero{padding:18px}.ws-head{margin-right:40px}}
+</style>
+<script id="mkc-253">
+/* =====================================================================
+   2.53 Your stats: top films and shows, time watched, when you watch, streaks and who you watch with.
+   Per seat and on this device only. Time counts what plays in MKCinema's own player from the day this
+   arrives; finished films and episodes count from the very start of the seat's history.
+   ===================================================================== */
+if (!SEAT_KEYS.includes('watchLog')) SEAT_KEYS.push('watchLog');
+const WatchStats = {
+  log: null, dirty: false, last: null, sess: null, period: 'year',
+  blank() { return { v: 1, since: Date.now(), d: {}, h: {}, t: {}, long: [] }; },
+  load() {
+    if (this.log) return this.log;
+    let l = Store.get('watchLog', null);
+    if (!l || typeof l !== 'object' || l.v !== 1) l = this.blank();
+    ['d', 'h', 't'].forEach((k) => { if (!l[k] || typeof l[k] !== 'object') l[k] = {}; });
+    if (!Array.isArray(l.long)) l.long = [];
+    return (this.log = l);
+  },
+  flush() {
+    if (!this.dirty || !this.log) return; this.dirty = false;
+    const l = this.log, ids = Object.keys(l.t);
+    if (ids.length > 900) ids.sort((a, b) => (l.t[b].last || 0) - (l.t[a].last || 0)).slice(900).forEach((k) => delete l.t[k]);
+    const days = Object.keys(l.d); if (days.length > 800) days.sort().slice(0, days.length - 800).forEach((k) => delete l.d[k]);
+    const mons = Object.keys(l.h); if (mons.length > 40) mons.sort().slice(0, mons.length - 40).forEach((k) => delete l.h[k]);
+    Store.set('watchLog', l);
+  },
+  day: (ts) => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; },
+  /* one sample every 10 s: only time that really plays (position moving, tab or app showing the player) counts */
+  tick() {
+    const now = Date.now();
+    const on = !!(P.ctx && P.ctx.meta && P.stream && !$('#player').hidden && !video.paused && !video.ended && video.readyState > 2);
+    let pos = 0; try { pos = pNow(); } catch (e) { /* no media */ }
+    const L = this.last;
+    // the stretch since the last sample counts if the film moved on, so a pause keeps its last few seconds too
+    if (L && P.ctx && L.ctx === P.ctx && now - L.at < 30000 && pos > L.pos) this.add(Math.min(30, (now - L.at) / 1000, (pos - L.pos) * 2 + 1), now);
+    this.last = on ? { at: now, pos, ctx: P.ctx } : null;
+    if (!on && L) this.flush();
+  },
+  add(sec, now) {
+    const l = this.load(), m = P.ctx.meta, v = P.ctx.video, id = String(m.id || ''); if (!id) return;
+    const d = new Date(now), mon = this.day(now).slice(0, 7), day = this.day(now);
+    const t = l.t[id] || (l.t[id] = { s: 0, m: {} });
+    t.n = String(m.name || t.n || '').slice(0, 120); t.ty = v || m.type === 'series' ? 'series' : (m.type || 'movie');
+    const p = metaPoster(m); if (p && !String(p).startsWith('data:')) t.p = String(p).slice(0, 400);
+    const g = genresOf(m).slice(0, 3); if (g.length) t.g = g;
+    t.s += sec; t.m[mon] = (t.m[mon] || 0) + sec; t.last = now;
+    l.d[day] = (l.d[day] || 0) + sec;
+    const h = l.h[mon] || (l.h[mon] = new Array(24).fill(0)); h[d.getHours()] += sec;
+    // a sitting ends after 20 minutes without playback
+    const S2 = this.sess;
+    if (!S2 || now - S2.end > 20 * 60e3) this.sess = { at: now, end: now, s: 0, titles: [t.n] };
+    const s = this.sess; s.end = now; s.s += sec; if (t.n && !s.titles.includes(t.n)) s.titles.push(t.n);
+    if (s.s >= 45 * 60) {
+      const i = l.long.findIndex((x) => x.at === s.at);
+      const rec = { at: s.at, s: Math.round(s.s), n: s.titles.slice(0, 3) };
+      if (i >= 0) l.long[i] = rec; else l.long.push(rec);
+      l.long.sort((a, b) => b.s - a.s); l.long = l.long.slice(0, 24);
+    }
+    this.dirty = true;
+    if (!this.flushAt || now - this.flushAt > 60000) { this.flushAt = now; this.flush(); }
+  },
+
+  /* ---- reading ---- */
+  inP(ts, per) {
+    if (per === 'all') return true;
+    const d = new Date(ts), n = new Date();
+    return d.getFullYear() === n.getFullYear() && (per === 'year' || d.getMonth() === n.getMonth());
+  },
+  keyIn(k, per) { const n = this.day(Date.now()); return per === 'all' || (per === 'year' ? k.slice(0, 4) === n.slice(0, 4) : k.slice(0, 7) === n.slice(0, 7)); },
+  /* tt123:1:4 is an episode of tt123; kitsu:9:3 an episode of kitsu:9; tt123 or kitsu:9 alone is a film */
+  showOf(id) {
+    const p = String(id).split(':');
+    if (/^tt\d+$/.test(p[0])) return p.length >= 3 ? p[0] : null;
+    return p.length >= 4 ? p.slice(0, 2).join(':') : p.length === 3 && /^\d+$/.test(p[2]) ? p.slice(0, 2).join(':') : null;
+  },
+  stubs() { const me = (Seats.cur() || {}).name || ''; return (typeof Stubs !== 'undefined' ? Stubs.list() : []).filter((x) => !x.seat || x.seat === me); },
+  info(id) {
+    const l = this.load(), t = l.t[id];
+    if (t && t.n) return { name: t.n, poster: t.p || metaPoster({ id }) || '', genres: t.g || [] };
+    const m = S.metas.get(id) || S.watchlist.find((x) => x.id === id) || Object.values(S.progress).find((p) => p.metaId === id) || this.stubs().find((x) => x.id === id);
+    return m && m.name ? { name: m.name, poster: m.poster || metaPoster({ id }) || '', genres: genresOf(m) } : null;
+  },
+  compute(per) {
+    const l = this.load(), W = watchedMap(), now = Date.now();
+    let secs = 0; Object.entries(l.d).forEach(([k, v]) => { if (this.keyIn(k, per)) secs += v; });
+    const films = [], eps = [], shows = new Map(), finDay = new Map();
+    Object.entries(W).forEach(([id, at]) => {
+      if (!at || !this.inP(at, per)) return;
+      const sh = this.showOf(id), dk = this.day(at);
+      finDay.set(dk, (finDay.get(dk) || 0) + 1);
+      if (sh) { eps.push(id); const x = shows.get(sh) || { id: sh, eps: 0, secs: 0, last: 0 }; x.eps++; x.last = Math.max(x.last, at); shows.set(sh, x); } else films.push({ id, at });
+    });
+    const tSec = (t) => (per === 'all' ? t.s : Object.entries(t.m || {}).reduce((a, [k, v]) => a + (this.keyIn(k, per) ? v : 0), 0));
+    const filmMap = new Map(films.map((f) => [f.id, { id: f.id, secs: 0, done: f.at }]));
+    Object.entries(l.t).forEach(([id, t]) => {
+      const s = tSec(t); if (s < 60) return;
+      if (t.ty === 'series') { const x = shows.get(id) || { id, eps: 0, secs: 0, last: t.last || 0 }; x.secs += s; shows.set(id, x); }
+      else { const x = filmMap.get(id) || { id, secs: 0, done: 0 }; x.secs += s; filmMap.set(id, x); }
+    });
+    const topFilms = [...filmMap.values()].sort((a, b) => b.secs - a.secs || b.done - a.done).slice(0, 5);
+    const topShows = [...shows.values()].sort((a, b) => b.eps - a.eps || b.secs - a.secs).slice(0, 5);
+    // genres: playing time where it is known, plus a fixed weight for each finish
+    const gen = new Map(), addG = (gs, w) => (gs || []).slice(0, 3).forEach((g) => gen.set(g, (gen.get(g) || 0) + w));
+    Object.values(l.t).forEach((t) => { const s = tSec(t); if (s >= 60) addG(t.g, s); });
+    films.forEach((f) => { if (!(l.t[f.id] && tSec(l.t[f.id]) >= 60)) { const i = this.info(f.id); if (i) addG(i.genres, 5400); } });
+    shows.forEach((x) => { if (!(l.t[x.id] && tSec(l.t[x.id]) >= 60)) { const i = this.info(x.id); if (i) addG(i.genres, 1500 * x.eps); } });
+    const gTot = [...gen.values()].reduce((a, b) => a + b, 0) || 1;
+    const genres = [...gen.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([g, v]) => [g, v / gTot]);
+    // when: hours of the day and days of the week, by time played (or by finishes before any time was counted)
+    const hours = new Array(24).fill(0), week = new Array(7).fill(0);
+    Object.entries(l.h).forEach(([k, arr]) => { if (this.keyIn(k, per)) arr.forEach((v, i) => { hours[i] += v || 0; }); });
+    Object.entries(l.d).forEach(([k, v]) => { if (this.keyIn(k, per)) week[new Date(`${k}T12:00:00`).getDay()] += v; });
+    let byTime = hours.some((v) => v > 0);
+    if (!byTime) Object.values(W).forEach((at) => { if (at && this.inP(at, per)) { const d = new Date(at); hours[d.getHours()]++; week[d.getDay()]++; } });
+    // streaks: any day with a finish or ten minutes of playing
+    const days = new Set([...finDay.keys()]); Object.entries(l.d).forEach(([k, v]) => { if (v >= 600 && this.keyIn(k, per)) days.add(k); });
+    const sorted = [...days].sort(); let best = 0, run = 0, prev = null;
+    sorted.forEach((k) => { const t = new Date(`${k}T12:00:00`).getTime(); run = prev && Math.round((t - prev) / 864e5) === 1 ? run + 1 : 1; prev = t; best = Math.max(best, run); });
+    let cur = 0; { let t = new Date(); if (!days.has(this.day(t))) t = new Date(t - 864e5); while (days.has(this.day(t))) { cur++; t = new Date(t - 864e5); } }
+    let busy = null; finDay.forEach((n, k) => { if (!busy || n > busy.n) busy = { k, n }; });
+    const long = l.long.filter((x) => this.inP(x.at, per))[0] || null;
+    const withWho = new Map(); this.stubs().forEach((x) => { if (this.inP(x.at, per)) (x.with || []).forEach((n) => withWho.set(n, (withWho.get(n) || 0) + 1)); });
+    const pals = [...withWho.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
+    return { secs, films: films.length, eps: eps.length, shows: shows.size, topFilms, topShows, genres, hours, week, byTime, best, cur, busy, long, pals, since: l.since, empty: !secs && !films.length && !eps.length && !topFilms.length };
+  },
+  persona(h, w) {
+    const sum = (a, b) => { let s = 0; for (let i = a; i !== b; i = (i + 1) % 24) s += h[i]; return s; };
+    const tot = h.reduce((a, b) => a + b, 0); if (!tot) return null;
+    const P4 = [['Night owl', 'Most of it after 10 pm.', sum(22, 4)], ['Early bird', 'Most of it before noon.', sum(4, 12)], ['Matinee regular', 'Most of it in the afternoon.', sum(12, 18)], ['Prime-timer', 'Most of it between 6 and 10 pm.', sum(18, 22)]];
+    const top = P4.sort((a, b) => b[2] - a[2])[0]; const wt = w.reduce((a, b) => a + b, 0) || 1;
+    const wkend = (w[0] + w[6]) / wt;
+    return { name: top[0], why: top[1] + (wkend > .5 ? ' And mostly at weekends.' : '') };
+  },
+  hm(s) { s = Math.round(s / 60); const h = Math.floor(s / 60), m = s % 60; return h ? `${h.toLocaleString()} h${m ? ` ${m} m` : ''}` : `${m} m`; },
+  /* something to compare the hours with, chosen so the number stays readable */
+  likeness(sec) {
+    const h = sec / 3600; if (h < 2) return '';
+    const L = [[24 * 7, 'whole weeks, day and night'], [24, 'whole days, without a break'], [11, 'long-haul flights'], [8, 'full nights of sleep'], [2, 'feature films back to back']];
+    for (const [v, t] of L) { const n = h / v; if (n >= 2 && n < 100) return `About ${n < 3 ? n.toFixed(1).replace(/\.0$/, '') : Math.round(n)} ${t}.`; }
+    return '';
+  },
+  label(per) { const n = new Date(); return per === 'all' ? 'All time' : per === 'year' ? `${n.getFullYear()} so far` : `${n.toLocaleDateString(undefined, { month: 'long' })} so far`; },
+
+  /* ---- the pop-up ---- */
+  open(per) {
+    this.flush(); if (per) this.period = per;
+    const el = X8.layer('watchStats', { label: 'Your stats', wide: true });
+    el.querySelector('.x8-modal').classList.add('ws-modal');
+    this.paint(); X8.open('watchStats');
+    this.names();
+  },
+  paint() {
+    const body = X8.body('watchStats'); if (!body) return;
+    const per = this.period, c = this.compute(per), seat = (Seats.cur() || {}).name || 'Main', me = Seats.all().length > 1 ? `${seat}’s` : 'Your';
+    const pers = this.persona(c.hours, c.week), like = this.likeness(c.secs);
+    const since = new Date(c.since).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+    const row = (x, i, sub) => { const n = this.info(x.id) || { name: '', poster: '' }; return `<button type="button" class="ws-item" data-nav data-wsopen="${esc(x.id)}" style="--i:${i}"><span class="ws-rank tnum">${i + 1}</span>${n.poster ? `<img src="${esc(n.poster)}" alt="" loading="lazy">` : '<span class="ws-ph"></span>'}<span class="ws-it"><b>${esc(n.name || 'Loading…')}</b><small>${esc(sub)}</small></span></button>`; };
+    const bars = (arr, labels, cls) => { const mx = Math.max(...arr, 1); return `<div class="ws-bars ${cls}">${arr.map((v, i) => `<span class="ws-b" title="${esc(labels[i])}"><i style="--v:${Math.max(.03, v / mx).toFixed(3)}"></i><em>${labels[i].length <= 3 ? esc(labels[i]) : ''}</em></span>`).join('')}</div>`; };
+    const hrs = c.hours.map((_, i) => (i % 6 === 0 ? `${i}` : '')).map((t, i) => t || `${i}:00`);
+    const wkOrder = [1, 2, 3, 4, 5, 6, 0], wkNames = wkOrder.map((d) => new Date(2024, 0, 7 + d).toLocaleDateString(undefined, { weekday: 'short' }));
+    const tiles = [['Films finished', c.films.toLocaleString()], ['Episodes finished', c.eps.toLocaleString()], ['Shows', c.shows.toLocaleString()], ['Longest streak', `${c.best} day${c.best === 1 ? '' : 's'}`]];
+    const facts = [];
+    if (c.busy && c.busy.n > 1) facts.push(['Busiest day', `${c.busy.n} finished on ${new Date(`${c.busy.k}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}`]);
+    if (c.long) facts.push(['Longest sitting', `${this.hm(c.long.s)}${c.long.n.length ? `, ${c.long.n.join(', ')}` : ''}`]);
+    if (per === 'all' && c.cur > 1) facts.push(['Current streak', `${c.cur} days in a row`]);
+    if (c.pals.length) facts.push(['Watched with most', c.pals.map(([n, k]) => `${n} (${k})`).join(', ')]);
+    body.innerHTML = `<div class="ws-head"><h2 class="x8-h">${esc(me)} stats</h2>
+      <div class="segc ws-per" role="radiogroup" aria-label="Period">${[['month', 'This month'], ['year', 'This year'], ['all', 'All time']].map(([v, t]) => `<button type="button" class="${per === v ? 'on' : ''}" role="radio" aria-checked="${per === v}" data-nav data-wsper="${v}">${t}</button>`).join('')}</div></div>
+      ${c.empty ? `<p class="sc-p ws-empty">Nothing to count for ${esc(this.label(per).toLowerCase())} yet. Finish a film or a few episodes and your stats start filling in.</p>` : `
+      <section class="ws-hero" style="--i:0"><small>${esc(this.label(per))} · time watched</small><b class="tnum">${c.secs >= 60 ? esc(this.hm(c.secs)) : '0 m'}</b>
+        <p>${esc(like || (c.secs < 60 ? `Time is counted from ${since}, as you play.` : ''))}</p>${pers ? `<span class="ws-tag"><i data-lucide="sparkles"></i>${esc(pers.name)}<em>${esc(pers.why)}</em></span>` : ''}</section>
+      <div class="ws-tiles">${tiles.map(([k, v], i) => `<div class="ws-tile" style="--i:${i + 1}"><b class="tnum">${esc(v)}</b><small>${esc(k)}</small></div>`).join('')}</div>
+      <div class="ws-cols">
+        <section class="ws-card"><h3>Top films</h3>${c.topFilms.length ? c.topFilms.map((x, i) => row(x, i, x.secs >= 60 ? this.hm(x.secs) : 'Finished')).join('') : '<p class="ws-none">No films yet.</p>'}</section>
+        <section class="ws-card"><h3>Top shows</h3>${c.topShows.length ? c.topShows.map((x, i) => row(x, i, [x.eps ? `${x.eps} episode${x.eps === 1 ? '' : 's'}` : '', x.secs >= 60 ? this.hm(x.secs) : ''].filter(Boolean).join(' · '))).join('') : '<p class="ws-none">No shows yet.</p>'}</section>
+      </div>
+      <div class="ws-cols">
+        <section class="ws-card"><h3>Your genres</h3>${c.genres.length ? c.genres.map(([g, f], i) => `<div class="ws-g" style="--i:${i}"><span>${esc(g)}</span><span class="ws-gt"><i style="--v:${f.toFixed(3)}"></i></span><em class="tnum">${Math.round(f * 100)}%</em></div>`).join('') : '<p class="ws-none">Genres show up as you watch.</p>'}</section>
+        <section class="ws-card"><h3>When you watch</h3>${bars(c.hours, hrs, 'ws-hours')}<div class="ws-ax"><span>Midnight</span><span>Noon</span><span>11 pm</span></div>${bars(wkOrder.map((d) => c.week[d]), wkNames, 'ws-week')}<p class="ws-none">${c.byTime ? 'By time played.' : 'By finishes, until time starts counting.'}</p></section>
+      </div>
+      ${facts.length ? `<section class="ws-card ws-facts">${facts.map(([k, v]) => `<div><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join('')}</section>` : ''}`}
+      <p class="ws-foot">${esc(seat)} seat, kept on this device only. Time counts what plays in MKCinema’s player since ${esc(since)}; finished films and episodes count from the start.</p>
+      <div class="ws-acts">${c.empty ? '' : '<button class="btn btn-prime btn-sm" type="button" data-nav data-wsa="save"><i data-lucide="download"></i>Save as picture</button>'}<button class="btn btn-ghost btn-sm" type="button" data-nav data-wsa="reset"><i data-lucide="eraser"></i>Reset time counts</button></div>`;
+    icons();
+    body.onclick = (e) => {
+      const p = e.target.closest('[data-wsper]'); if (p) { this.period = p.dataset.wsper; this.paint(); this.names(); const n = $(`[data-wsper="${p.dataset.wsper}"]`, body); if (n && IS_TV) Nav.focus(n, true); return; }
+      const o = e.target.closest('[data-wsopen]'); if (o) { const id = o.dataset.wsopen, t = this.load().t[id], sh = c.topShows.some((x) => x.id === id); X8.close('watchStats'); openDetail({ id, type: sh || (t && t.ty === 'series') ? 'series' : 'movie', name: (this.info(id) || {}).name || '' }); return; }
+      const a = e.target.closest('[data-wsa]'); if (!a) return;
+      if (a.dataset.wsa === 'save') this.save(c);
+      if (a.dataset.wsa === 'reset') confirmTwice(a, () => { this.log = this.blank(); this.dirty = true; this.flush(); this.paint(); toast('Time counts reset. Finished titles stay.', 'ok'); });
+    };
+  },
+  /* names for titles only known by id: asked of your addons once, then kept with the stats */
+  async names() {
+    const c = this.compute(this.period), need = [...c.topFilms.map((x) => [x.id, 'movie']), ...c.topShows.map((x) => [x.id, 'series'])].filter(([id]) => !this.info(id)).slice(0, 10);
+    if (!need.length) return;
+    let got = 0;
+    await Promise.all(need.map(async ([id, type]) => {
+      try { const m = await engine.fetchMeta(type, id); if (m && m.name) { remember(m); const l = this.load(); const t = l.t[id] || (l.t[id] = { s: 0, m: {} }); t.n = String(m.name).slice(0, 120); t.ty = type; const p = metaPoster(m); if (p) t.p = String(p).slice(0, 400); const g = genresOf(m).slice(0, 3); if (g.length) t.g = g; got++; } } catch (e) { /* stays unnamed */ }
+    }));
+    if (got) { this.dirty = true; this.flush(); const el = $('#watchStats'); if (el && !el.hidden) this.paint(); }
+  },
+  /* the stats as a picture: drawn on a canvas, text only, so nothing cross-site is needed */
+  save(c) {
+    const W = 1080, H = 1350, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+    const gold = 'rgba(217,212,199,.9)', dim = 'rgba(255,255,255,.62)', F = (w, s) => `${w} ${s}px Sora, system-ui, sans-serif`;
+    g.fillStyle = '#0b0b0c'; g.fillRect(0, 0, W, H);
+    const gr = g.createRadialGradient(W * .8, 120, 20, W * .8, 120, 700); gr.addColorStop(0, 'rgba(217,212,199,.14)'); gr.addColorStop(1, 'rgba(217,212,199,0)'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    g.strokeStyle = 'rgba(255,255,255,.1)'; g.lineWidth = 2; g.strokeRect(36, 36, W - 72, H - 72);
+    const seat = (Seats.cur() || {}).name || 'Main';
+    g.fillStyle = gold; g.font = F(600, 24); g.fillText(`MKCINEMA · ${String(seat).toUpperCase().slice(0, 18)} · ${this.label(this.period).toUpperCase()}`, 90, 130);
+    g.fillStyle = '#fff'; g.font = F(700, 132); g.fillText(c.secs >= 60 ? this.hm(c.secs) : `${c.films + c.eps}`, 84, 290);
+    g.fillStyle = dim; g.font = F(500, 30); g.fillText(c.secs >= 60 ? 'watched' : 'titles finished', 90, 340);
+    const pers = this.persona(c.hours, c.week); if (pers) { g.fillStyle = gold; g.font = F(600, 30); g.fillText(pers.name, 90, 395); }
+    const tiles = [[c.films, 'films'], [c.eps, 'episodes'], [c.shows, 'shows'], [c.best, 'day streak']];
+    tiles.forEach(([v, k], i) => { const x = 90 + i * 232; g.fillStyle = 'rgba(255,255,255,.05)'; g.beginPath(); g.roundRect(x, 440, 210, 140, 20); g.fill(); g.fillStyle = '#fff'; g.font = F(700, 52); g.fillText(String(v), x + 24, 515); g.fillStyle = dim; g.font = F(500, 24); g.fillText(k, x + 24, 556); });
+    const list = (title, items, y) => {
+      g.fillStyle = gold; g.font = F(600, 24); g.fillText(title.toUpperCase(), 90, y);
+      items.slice(0, 3).forEach((x, i) => { const n = (this.info(x.id) || {}).name || ''; g.fillStyle = 'rgba(255,255,255,.4)'; g.font = F(700, 40); g.fillText(String(i + 1), 90, y + 62 + i * 58); g.fillStyle = '#fff'; g.font = F(600, 38); let t = n; while (t.length > 3 && g.measureText(t).width > W - 260) t = t.slice(0, -2); g.fillText(t === n ? t : `${t.trim()}…`, 150, y + 62 + i * 58); });
+      return y + 62 + Math.max(1, Math.min(3, items.length)) * 58 + 22;
+    };
+    let y = 650; if (c.topFilms.length) y = list('Top films', c.topFilms, y); if (c.topShows.length) y = list('Top shows', c.topShows, y);
+    if (c.genres.length && y < H - 140) { g.fillStyle = gold; g.font = F(600, 24); g.fillText('MOSTLY', 90, y); g.fillStyle = '#fff'; g.font = F(600, 36); g.fillText(c.genres.slice(0, 3).map(([n]) => n).join(' · '), 90, y + 52); }
+    g.fillStyle = 'rgba(255,255,255,.35)'; g.font = F(500, 22); g.fillText('mkcinema.app', 90, H - 80);
+    cv.toBlob((b) => { if (!b) return; const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `MKCinema stats ${this.label(this.period)}.png`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 30000); toast('Saved your stats as a picture', 'ok', 2400); }, 'image/png');
+  },
+  init() {
+    this.load();
+    setInterval(() => { try { this.tick(); } catch (e) { /* never block playback */ } }, 10000);
+    const fl = () => { try { this.tick(); this.flush(); } catch (e) { /* storage blocked */ } };
+    addEventListener('pagehide', fl);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) fl(); });
+    video.addEventListener('pause', () => { try { this.tick(); this.flush(); } catch (e) { /* ok */ } });
+    video.addEventListener('playing', () => { try { this.tick(); } catch (e) { /* ok */ } });
+  },
+};
+
+{
+  WatchStats.init();
+  // Library: a Your stats chip beside New list
+  const lr = Library.render.bind(Library);
+  Library.render = function () {
+    const r = lr(); const nb = $('#libNew');
+    if (nb && !$('#libStats')) { nb.insertAdjacentHTML('beforebegin', '<button type="button" class="chip lib-new" data-nav id="libStats"><i data-lucide="bar-chart-3"></i>Your stats</button>'); $('#libStats').onclick = () => WatchStats.open(); icons(); }
+    return r;
+  };
+  scAddRows('playback', 'stubsBtn', [
+    { key: 'watchStatsBtn', label: 'Your stats', help: 'Top films and shows, time watched, when you watch and your streaks. Per seat, on this device only.', type: 'button', text: 'Open', icon: 'bar-chart-3', run: () => { closeLayer('settings'); WatchStats.open(); } },
+  ]);
+  COMMANDS.push({ label: 'Your stats', icon: 'bar-chart-3', run: () => WatchStats.open() });
+}
+</script>
 <!-- mk-ds:start -->
 <style id="mkc-ds-css">
 /* ===== Design system: one set of tokens for type, weight, corners, surfaces, layers, icons and focus =====
@@ -30768,619 +31389,5 @@ html.tv .ea-badge,html.tv .ea-dot{display:none!important}
 })();
 </script>
 <!-- mk-ds:end -->
-<style id="mkc-252css">
-/* 2.52 The rest of the research */
-.cu-acts,.fn-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
-.cu-note,.wc-note{margin-top:12px;font-size:13px}
-.cu-pill{position:fixed;left:50%;top:clamp(12px,2.4vw,32px);transform:translateX(-50%);z-index:2147483002;display:flex;align-items:center;gap:10px;padding:8px 10px 8px 14px;border-radius:999px;background:#151517;border:1px solid rgba(217,212,199,.4);color:#fff;font-size:13.5px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
-.cu-pill span{font-variant-numeric:tabular-nums;color:rgba(255,255,255,.78)}
-.cu-pill button{border:1px solid rgba(255,255,255,.22);background:transparent;color:#fff;border-radius:999px;padding:5px 12px;font:600 12.5px/1 var(--f-body, system-ui);cursor:pointer}
-.wc-r{display:flex;justify-content:space-between;gap:14px;padding:10px 2px;border-bottom:1px solid rgba(255,255,255,.08)}
-.wc-r span{color:var(--dim, rgba(255,255,255,.6));font-size:13.5px}
-.wc-r b{color:#fff;font-variant-numeric:tabular-nums}
-.fs-svg{display:block;width:100%;height:clamp(110px,18vw,170px);margin-top:14px;cursor:pointer;border-radius:12px;background:rgba(255,255,255,.03)}
-.fs-talk{fill:rgba(217,212,199,.22);stroke:rgba(217,212,199,.7);stroke-width:1.5;vector-effect:non-scaling-stroke}
-.fs-heat{fill:none;stroke:#e58f6f;stroke-width:2;vector-effect:non-scaling-stroke}
-.fs-now{stroke:#fff;stroke-width:2;stroke-dasharray:4 4;vector-effect:non-scaling-stroke}
-.fs-legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:10px;font-size:12.5px;color:var(--dim, rgba(255,255,255,.65))}
-.fs-legend span{display:inline-flex;align-items:center;gap:6px}
-.fs-t{margin-left:auto;font-variant-numeric:tabular-nums}
-.fs-k{display:inline-block;width:14px;height:3px;border-radius:2px}
-.fs-k.talk{background:rgba(217,212,199,.8)}
-.fs-k.heat{background:#e58f6f}
-.st-list{display:flex;flex-direction:column;gap:2px;max-height:min(60vh,520px);overflow-y:auto;margin-top:12px}
-.st-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 4px;border-bottom:1px solid rgba(255,255,255,.07)}
-.st-row b{color:#fff}
-.st-row small{display:block;color:var(--dim, rgba(255,255,255,.6));font-size:12.5px;margin-top:3px}
-.fn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:14px;max-height:min(52vh,480px);overflow-y:auto;padding:2px}
-.fn-t{display:flex;flex-direction:column;gap:6px;padding:6px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#fff;font:inherit;font-size:12.5px;text-align:left;cursor:pointer}
-.fn-t img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:8px;background:#222}
-.fn-t span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fn-t.on{border-color:rgba(217,212,199,.75);background:rgba(217,212,199,.12)}
-.fn-t:hover,.fn-t:focus-visible{border-color:rgba(255,255,255,.32);outline:none}
-</style>
-<script id="mkc-252">
-/* =====================================================================
-   2.52 The rest of the research
-   1  Catch up to the room: joining a watch party late, you can start from the beginning (or ten minutes back) at
-      1.5x speed with subtitles, and you rejoin the room's playback when you reach it.
-   2  Which cut is this?: the player compares this copy's length with the film's listed runtime and reads edition
-      words in the release name, and says which cut it probably is, and how sure that is.
-   3  Shape of the film: a curve of how much is said, and how intensely, across the film, drawn from the subtitles.
-      Tap it to jump. It shows no plot.
-   4  Ticket stubs: each film you finish keeps a stub with the date, the seat and who you watched with. Save one as
-      a picture to share.
-   5  Film night: seats take turns picking. Tonight's picker's watchlist goes to a phone vote (Couch match), or
-      straight to a watch party.
-   Everything runs on this device.
-   ===================================================================== */
-const F52 = {
-  played: () => !$('#player').hidden && !!P.ctx && !!P.stream,
-  fmt(s) { s = Math.max(0, Math.round(s || 0)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return h ? `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}` : `${m}:${String(x).padStart(2, '0')}`; },
-  mins(s) { const m = Math.round(Math.abs(s) / 60); return `${m} min`; },
-};
-
-/* ---------------- 1 Catch up to the room ---------------- */
-const CatchUp = {
-  on: false, st: null, asked: new Set(), rate: 1.5, pillT: 0,
-  target(st) {
-    if (!st) return null;
-    const off = Party.offsets.get(st._from) || 0;
-    const elapsed = st.paused ? 0 : Math.max(0, (Date.now() + off - st.at) / 1000) * (st.rate || 1);
-    const base = st.media && st.media.url && P.stream && st.media.url === P.stream.url ? st.pos + PartyLine.manual : PartyLine.local(st);
-    return base + elapsed;
-  },
-  offer(at) {
-    X8.layer('catchUp', { label: 'Catch up', icon: 'fast-forward', eyebrow: 'Watch party' });
-    const body = X8.body('catchUp'), back = Math.max(0, at - 600);
-    body.innerHTML = `<h2 class="x8-h">They’re ${F52.fmt(at)} in</h2>
-      <p class="sc-p">Jump in where they are, or catch up at 1.5× with subtitles on. You rejoin their playback by yourself when you reach them.</p>
-      <div class="cu-acts"><button class="btn btn-prime" type="button" data-nav data-cu="now"><i data-lucide="users"></i>Jump in now</button>
-      ${at > 900 ? `<button class="btn btn-ghost" type="button" data-nav data-cu="${back}"><i data-lucide="rewind"></i>Catch up from ten minutes back</button>` : ''}
-      <button class="btn btn-ghost" type="button" data-nav data-cu="0"><i data-lucide="fast-forward"></i>Catch up from the start</button></div>
-      <p class="sc-p cu-note">At 1.5× you gain half a minute every minute, so ${F52.mins(at > 900 ? 600 : at)} behind takes about ${F52.mins((at > 900 ? 600 : at) * 2)}.</p>`;
-    body.onclick = (e) => { const b = e.target.closest('[data-cu]'); if (!b) return; X8.close('catchUp'); if (b.dataset.cu !== 'now') this.start(Number(b.dataset.cu)); };
-    icons(); X8.open('catchUp');
-  },
-  async start(from) {
-    this.on = true; pSeek(from, { user: false });
-    video.playbackRate = this.rate;
-    if (P.curSub < 0 && (P.subs || []).length && typeof F50 !== 'undefined') { try { await selectSub(F50.subIdx(), { auto: true }); this.subsByUs = true; } catch (e) { /* no subtitles */ } }
-    if (video.paused) video.play().catch(() => {});
-    this.pill(true); Party.sysLine && Party.sysLine('You’re catching up at 1.5×');
-  },
-  stop(joined) {
-    if (!this.on) return; this.on = false; video.playbackRate = CFG.speed || 1; this.pill(false);
-    if (this.subsByUs && P.curSub >= 0) { selectSub(-1); } this.subsByUs = false;
-    if (joined) { toast('You’re caught up and back with the room', 'ok', 3200); if (this.st) Party.applyState(this.st); }
-  },
-  pill(on) {
-    let el = $('#cuPill');
-    if (!on) { if (el) el.remove(); clearInterval(this.pillT); return; }
-    if (!el) { document.body.insertAdjacentHTML('beforeend', '<div class="cu-pill" id="cuPill" role="status"><b>Catching up</b><span id="cuLeft"></span><button type="button" data-nav id="cuJump">Jump in</button></div>'); el = $('#cuPill'); $('#cuJump').onclick = () => { this.stop(false); if (this.st) Party.applyState(this.st); }; }
-    clearInterval(this.pillT);
-    this.pillT = setInterval(() => {
-      if (!this.on) return; const t = this.target(this.st); const l = $('#cuLeft'); if (l && t != null) l.textContent = `${F52.fmt(Math.max(0, t - pNow()))} behind`;
-      if (t != null && pNow() >= t - 1) this.stop(true);
-      if (video.playbackRate !== this.rate && !video.paused) video.playbackRate = this.rate;
-    }, 1000);
-  },
-  init() {
-    const ap = Party.applyState;
-    Party.applyState = async function (st) {
-      if (st && st.media) CatchUp.st = st;
-      if (CatchUp.on && st && st.media) {
-        const mine = this.mediaInfo();
-        if (mine && mine.metaId === st.media.metaId && mine.videoId === st.media.videoId) { const t = CatchUp.target(st); if (t == null || pNow() < t - 1) return; CatchUp.stop(true); return; }
-        CatchUp.stop(false);
-      }
-      return ap.apply(this, arguments);
-    };
-    const lm = Party.loadMedia;
-    Party.loadMedia = async function (media, at) {
-      const r = await lm.apply(this, arguments);
-      const key = `${this.code}|${media && media.metaId}|${media && media.videoId}`;
-      if (!this.isHost() && at > 180 && !CatchUp.asked.has(key) && CFG.catchUpAsk !== false) { CatchUp.asked.add(key); setTimeout(() => { if (F52.played()) CatchUp.offer(at); }, 1200); }
-      return r;
-    };
-    const lv = Party.leave;
-    Party.leave = function () { CatchUp.stop(false); return lv.apply(this, arguments); };
-    const close = closePlayer;
-    closePlayer = async function () { CatchUp.stop(false); return close.apply(this, arguments); };
-  },
-};
-
-/* ---------------- 2 Which cut is this? ---------------- */
-const WhichCut = {
-  TAGS: [[/director'?s[ ._-]?cut|\bdc\b/i, 'Director’s cut'], [/extended/i, 'Extended cut'], [/\bunrated\b/i, 'Unrated cut'], [/\buncut\b/i, 'Uncut'], [/theatrical/i, 'Theatrical cut'], [/ultimate/i, 'Ultimate cut'], [/final[ ._-]?cut/i, 'Final cut'], [/\bredux\b/i, 'Redux'], [/special[ ._-]?edition/i, 'Special edition'], [/\bimax\b/i, 'IMAX version'], [/remastered/i, 'Remastered']],
-  guess() {
-    if (!F52.played() || P.ctx.video) return null;
-    const s = P.stream, bh = s.behaviorHints || {}, name = [s.name, s.title, s.description, bh.filename].filter(Boolean).join(' ');
-    const tags = this.TAGS.filter(([re]) => re.test(name)).map(([, l]) => l);
-    const listed = X8.runtimeMin(P.ctx.meta) * 60, d = pDur();
-    const diff = listed && isFinite(d) && d > 600 ? d - listed : null;
-    let verdict = '', sure = '';
-    if (tags.length) { verdict = tags[0]; sure = 'the release name says so'; }
-    else if (diff != null && diff > 8 * 60) { verdict = 'A longer cut'; sure = `${F52.mins(diff)} longer than the listed runtime, more than credits explain`; }
-    else if (diff != null && diff < -6 * 60) { verdict = 'A shorter version'; sure = `${F52.mins(diff)} shorter than the listed runtime, maybe cut for TV or a different region`; }
-    else if (diff != null) { verdict = 'Probably the usual cut'; sure = `within a few minutes of the listed runtime`; }
-    else { verdict = 'Not sure'; sure = 'the film has no listed runtime to compare with'; }
-    return { verdict, sure, tags, listed, d, diff };
-  },
-  open() {
-    const g = this.guess(); if (!g) { toast('Which cut works on films', 'info', 2400); return; }
-    X8.layer('whichCut', { label: 'Which cut is this?', icon: 'scissors', eyebrow: 'Which cut is this?' });
-    const body = X8.body('whichCut');
-    const row = (k, v) => `<div class="wc-r"><span>${esc(k)}</span><b>${esc(v)}</b></div>`;
-    body.innerHTML = `<h2 class="x8-h">${esc(g.verdict)}</h2><p class="sc-p">Because ${esc(g.sure)}.</p>
-      ${row('This copy', F52.fmt(g.d))}${g.listed ? row('Listed runtime', F52.fmt(g.listed)) : ''}${g.diff != null ? row('Difference', `${g.diff >= 0 ? '+' : '−'}${F52.fmt(Math.abs(g.diff))}`) : ''}${g.tags.length > 1 ? row('Also in the name', g.tags.slice(1).join(', ')) : ''}
-      <p class="sc-p wc-note">Listed runtimes usually include the credits, so a few minutes either way is normal. Subtitles made for another cut drift apart in the middle; the subtitle sync in the player fixes the start and the speed, not missing scenes.</p>`;
-    icons(); X8.open('whichCut');
-  },
-};
-
-/* ---------------- 3 Shape of the film ---------------- */
-const FilmShape = {
-  N: 60,
-  async data() {
-    const sub = ScriptClock.pick(); if (!sub) return null;
-    const r = await ScriptClock.cues(sub); const cues = (r && r.list) || []; if (cues.length < 40) return null;
-    const d = pDur(); const end = isFinite(d) && d > 0 ? d : cues[cues.length - 1].e;
-    const words = new Array(this.N).fill(0), heat = new Array(this.N).fill(0);
-    cues.forEach((c) => {
-      const i = Math.min(this.N - 1, Math.max(0, Math.floor(c.s / end * this.N))); const t = String(c.t);
-      const w = t.split(/\s+/).filter(Boolean).length; words[i] += w;
-      heat[i] += (t.match(/!/g) || []).length * 2 + (t.match(/\?/g) || []).length + (t.match(/\b[A-Z]{3,}\b/g) || []).length * 2 + (/^[-–]/.test(t) ? 1 : 0);
-    });
-    const norm = (a) => { const m = Math.max(1, ...a); return a.map((x) => x / m); };
-    const smooth = (a) => a.map((x, i) => (a[i - 1] ?? x) * 0.25 + x * 0.5 + (a[i + 1] ?? x) * 0.25);
-    return { end, words: norm(smooth(words)), heat: norm(smooth(heat)), lang: sub.lang || '' };
-  },
-  path(a, w, h) { return a.map((v, i) => `${i ? 'L' : 'M'}${(i / (a.length - 1) * w).toFixed(1)},${(h - v * (h - 6) - 3).toFixed(1)}`).join(' '); },
-  async open() {
-    if (!F52.played()) { toast('Start the film first', 'info', 2200); return; }
-    X8.layer('filmShape', { label: 'Shape of the film', icon: 'activity', eyebrow: 'Shape of the film', wide: true });
-    const body = X8.body('filmShape'); body.innerHTML = '<h2 class="x8-h">Shape of the film</h2><p class="sc-p">Reading the subtitles…</p>'; icons(); X8.open('filmShape');
-    const s = await this.data();
-    if (!s) { body.innerHTML = '<h2 class="x8-h">Shape of the film</h2><p class="sc-p">This needs subtitles for the film. Turn some on (any language), then open this again.</p>'; return; }
-    const W = 600, H = 120, at = Math.min(1, pNow() / s.end);
-    body.innerHTML = `<h2 class="x8-h">Shape of the film</h2>
-      <p class="sc-p">How much is said, and how heated it gets, from start to end. Quiet stretches are usually action, music or silence. Tap anywhere to jump there. No plot is shown.</p>
-      <svg class="fs-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Talk and intensity across the film">
-        <path class="fs-talk" d="${this.path(s.words, W, H)} L${W},${H} L0,${H} Z"/><path class="fs-heat" d="${this.path(s.heat, W, H)}"/>
-        <line class="fs-now" x1="${(at * W).toFixed(1)}" x2="${(at * W).toFixed(1)}" y1="0" y2="${H}"/></svg>
-      <div class="fs-legend"><span><i class="fs-k talk"></i>How much is said</span><span><i class="fs-k heat"></i>How heated</span><span class="fs-t">${F52.fmt(s.end)}</span></div>`;
-    icons();
-    $('.fs-svg', body).onclick = (e) => { const r = e.currentTarget.getBoundingClientRect(); const f = (e.clientX - r.left) / r.width; pSeek(Math.max(0, f * s.end)); X8.close('filmShape'); };
-  },
-};
-
-/* ---------------- 4 Ticket stubs ---------------- */
-const Stubs = {
-  list() { const l = Store.get('stubs', []); return Array.isArray(l) ? l : []; },
-  keep(ctx) {
-    const m = ctx && ctx.meta; if (!m || ctx.video || !m.id || String(m.id).startsWith('local:')) return;
-    const l = this.list(); if (l.some((x) => x.id === m.id && Date.now() - x.at < 6 * 3600e3)) return;
-    const seat = (Seats.cur() || {}).name || '';
-    const withWho = Party.code ? [...Party.peers.values()].map((p) => p.name).filter(Boolean).slice(0, 4) : [];
-    l.unshift({ id: m.id, name: m.name || '', year: yearOf(m) || '', poster: metaPoster(m) || '', at: Date.now(), seat, with: withWho, n: l.length + 1 });
-    Store.set('stubs', l.slice(0, 500));
-    toast(`Ticket stub kept for ${m.name}`, 'ok', 2400, 'stub');
-  },
-  /* the stub as a picture: drawn on a canvas, no network, poster left out so nothing cross-site is needed */
-  draw(x) {
-    const c = document.createElement('canvas'), W = 1080, H = 540; c.width = W; c.height = H; const g = c.getContext('2d');
-    g.fillStyle = '#111113'; g.fillRect(0, 0, W, H);
-    g.fillStyle = '#1b1b1f'; g.beginPath(); g.roundRect(40, 40, W - 80, H - 80, 28); g.fill();
-    g.strokeStyle = 'rgba(217,212,199,.35)'; g.setLineDash([10, 10]); g.beginPath(); g.moveTo(W - 300, 70); g.lineTo(W - 300, H - 70); g.stroke(); g.setLineDash([]);
-    g.fillStyle = '#111113'; [[W - 300, 40], [W - 300, H - 40]].forEach(([cx, cy]) => { g.beginPath(); g.arc(cx, cy, 22, 0, Math.PI * 2); g.fill(); });
-    g.fillStyle = 'rgba(217,212,199,.8)'; g.font = '600 22px system-ui, sans-serif'; g.fillText('MKCINEMA · ADMIT ONE', 90, 110);
-    g.fillStyle = '#fff'; g.font = '700 56px system-ui, sans-serif';
-    const words = String(x.name).split(' '); let line = '', y = 200; const lines = [];
-    words.forEach((w) => { const t = line ? `${line} ${w}` : w; if (g.measureText(t).width > W - 440 && line) { lines.push(line); line = w; } else line = t; }); lines.push(line);
-    lines.slice(0, 3).forEach((l) => { g.fillText(l, 90, y); y += 64; });
-    g.fillStyle = 'rgba(255,255,255,.7)'; g.font = '500 26px system-ui, sans-serif';
-    const d = new Date(x.at); g.fillText([x.year, d.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })].filter(Boolean).join(' · '), 90, y + 10);
-    if (x.with && x.with.length) g.fillText(`With ${x.with.join(', ')}`, 90, y + 50);
-    g.fillStyle = 'rgba(217,212,199,.85)'; g.font = '600 22px system-ui, sans-serif'; g.fillText('SEAT', W - 250, 150); g.fillText('No.', W - 250, 300);
-    g.fillStyle = '#fff'; g.font = '700 40px system-ui, sans-serif'; g.fillText(String(x.seat || 'Main').slice(0, 10), W - 250, 200); g.fillText(String(x.n || 1).padStart(4, '0'), W - 250, 350);
-    return c;
-  },
-  save(x) { const c = this.draw(x); c.toBlob((b) => { if (!b) return; const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `${String(x.name).replace(/[\\/:*?"<>|]+/g, ' ').trim()} ticket stub.png`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 30000); }, 'image/png'); },
-  open() {
-    X8.layer('stubs', { label: 'Ticket stubs', icon: 'ticket', eyebrow: 'Ticket stubs', wide: true });
-    const body = X8.body('stubs'), l = this.list();
-    body.innerHTML = `<h2 class="x8-h">Your ticket stubs</h2><p class="sc-p">One for every film you finish, with the date, the seat and who you watched with. Save one as a picture to share.</p>
-      ${l.length ? `<div class="st-list">${l.slice(0, 120).map((x, i) => `<div class="st-row"><div><b>${esc(x.name)}</b><small>${esc([x.year, new Date(x.at).toLocaleDateString(), x.seat, x.with && x.with.length ? `with ${x.with.join(', ')}` : ''].filter(Boolean).join(' · '))}</small></div><button class="btn btn-ghost btn-sm" type="button" data-nav data-stub="${i}"><i data-lucide="download"></i>Save</button></div>`).join('')}</div>`
-    : '<p class="sc-p">No stubs yet. Finish a film and its stub appears here.</p>'}`;
-    body.onclick = (e) => { const b = e.target.closest('[data-stub]'); if (b) this.save(l[Number(b.dataset.stub)]); };
-    icons(); X8.open('stubs');
-  },
-  init() {
-    const mw = markWatched;
-    markWatched = function (id) { const had = !!watchedMap()[id]; const r = mw.apply(this, arguments); try { if (!had && P.ctx && P.ctx.meta && P.ctx.meta.id === id && CFG.stubs !== false) Stubs.keep(P.ctx); } catch (e) { /* never block progress */ } return r; };
-  },
-};
-
-/* ---------------- 5 Film night ---------------- */
-const FilmNight = {
-  pool: null,
-  turn() {
-    const seats = Seats.all().filter((s) => !s.kids); if (!seats.length) return null;
-    const st = Store.raw.get('filmNight', { i: 0 }) || { i: 0 };
-    return seats[(Number(st.i) || 0) % seats.length];
-  },
-  advance() { const st = Store.raw.get('filmNight', { i: 0 }) || { i: 0 }; Store.raw.set('filmNight', { i: (Number(st.i) || 0) + 1, at: Date.now() }); },
-  wl(s) { try { return (s.id === SEAT ? S.watchlist : s.id ? Seats.seatData(s.id).watchlist : Store.raw.get('watchlist', [])) || []; } catch (e) { return []; } },
-  open() {
-    const s = this.turn(); if (!s) return;
-    X8.layer('filmNight', { label: 'Film night', icon: 'popcorn', eyebrow: 'Film night', wide: true });
-    const body = X8.body('filmNight'), wl = this.wl(s).filter((m) => m && m.id && m.name).slice(0, 24), pick = new Set();
-    const paint = () => {
-      body.innerHTML = `<h2 class="x8-h">${esc(s.name)} picks tonight</h2>
-        <p class="sc-p">Seats take turns. ${esc(s.name)} chooses up to three from their watchlist, then the room votes on their phones, or it goes straight to a watch party for friends who aren’t here.</p>
-        ${wl.length ? `<div class="fn-grid">${wl.map((m, i) => `<button type="button" class="fn-t${pick.has(i) ? ' on' : ''}" data-nav data-fn="${i}" aria-pressed="${pick.has(i)}">${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy">` : ''}<span>${esc(m.name)}</span></button>`).join('')}</div>`
-    : `<p class="sc-p">${esc(s.name)}’s watchlist is empty. Add a few films to it, or skip to the next seat.</p>`}
-        <div class="fn-acts">${pick.size ? `${pick.size > 1 ? '<button class="btn btn-prime" type="button" data-nav data-fna="vote"><i data-lucide="smartphone"></i>Vote on our phones</button>' : '<button class="btn btn-prime" type="button" data-nav data-fna="play"><i data-lucide="play"></i>Play it</button>'}<button class="btn btn-ghost" type="button" data-nav data-fna="party"><i data-lucide="users"></i>${pick.size > 1 ? 'Party with the first' : 'Make it a watch party'}</button>` : ''}
-        <button class="btn btn-ghost" type="button" data-nav data-fna="skip"><i data-lucide="skip-forward"></i>Next seat’s turn</button></div>`;
-      icons();
-    };
-    body.onclick = async (e) => {
-      const t = e.target.closest('[data-fn]'); if (t) { const i = Number(t.dataset.fn); if (pick.has(i)) pick.delete(i); else if (pick.size < 3) pick.add(i); else toast('Three is the most', 'info', 1600); paint(); return; }
-      const a = e.target.closest('[data-fna]'); if (!a) return; const k = a.dataset.fna, list = [...pick].map((i) => wl[i]);
-      if (k === 'skip') { this.advance(); X8.close('filmNight'); this.open(); return; }
-      X8.close('filmNight'); this.advance();
-      if (k === 'vote') { this.pool = list; Couch.open(); }
-      if (k === 'play') quickPlay(list[0]);
-      if (k === 'party') { await Party.create(); quickPlay(list[0]); }
-    };
-    paint(); X8.open('filmNight');
-  },
-  init() {
-    const b = Couch.build.bind(Couch);
-    Couch.build = async function () {
-      const p = FilmNight.pool; if (!p) return b();
-      FilmNight.pool = null;
-      return p.map((m) => ({ id: m.id, type: m.type, name: m.name, poster: metaPoster(m) || m.poster || '', year: yearOf(m) || '', g: genresOf(m).slice(0, 2).join(' · '), r: m.imdbRating || '' }));
-    };
-  },
-};
-
-/* ---------------- Wiring ---------------- */
-{
-  if (CFG.catchUpAsk === undefined) CFG.catchUpAsk = true;
-  if (CFG.stubs === undefined) CFG.stubs = true;
-  CatchUp.init(); Stubs.init(); FilmNight.init();
-  const base = renderOptMenu;
-  renderOptMenu = function () {
-    base(); const m = $('#optMenu'); if (!m || !P.ctx || !P.stream) return;
-    const html = `${!P.ctx.video ? '<button type="button" data-f52="cut"><i data-lucide="scissors"></i>Which cut is this?</button>' : ''}<button type="button" data-f52="shape"><i data-lucide="activity"></i>Shape of the film</button>`;
-    const anchor = [...m.querySelectorAll('[data-f51],[data-f50]')].pop();
-    if (anchor) anchor.insertAdjacentHTML('afterend', html); else { const tools = $('h5', m); if (tools) tools.insertAdjacentHTML('beforebegin', html); else m.insertAdjacentHTML('afterbegin', html); }
-    $$('[data-f52]', m).forEach((b) => b.addEventListener('click', () => { m.hidden = true; if (b.dataset.f52 === 'cut') WhichCut.open(); else FilmShape.open(); }));
-    icons();
-  };
-  scAddRows('playback', null, [
-    { group: 'Together' },
-    { key: 'catchUpAsk', label: 'Offer to catch up in a watch party', help: 'Joining late, you can catch up at 1.5× with subtitles instead of jumping in.', type: 'toggle' },
-    { key: 'filmNightBtn', label: 'Film night', help: 'Seats take turns picking. The picker’s shortlist goes to a vote on your phones.', type: 'button', text: 'Start', icon: 'popcorn', run: () => { closeLayer('settings'); FilmNight.open(); } },
-    { key: 'stubs', label: 'Keep ticket stubs', help: 'A stub for every film you finish, with the date, the seat and who you watched with.', type: 'toggle' },
-    { key: 'stubsBtn', label: 'Your ticket stubs', help: 'See them all and save one as a picture.', type: 'button', text: 'Open', icon: 'ticket', run: () => { closeLayer('settings'); Stubs.open(); } },
-  ]);
-  COMMANDS.push({ label: 'Film night: whose pick is it?', icon: 'popcorn', run: () => FilmNight.open() });
-  COMMANDS.push({ label: 'Your ticket stubs', icon: 'ticket', run: () => Stubs.open() });
-}
-</script>
-<style id="mkc-253css">
-/* 2.53 Your stats */
-.ws-modal{max-width:920px;width:min(920px,calc(100vw - 32px))}
-.ws-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:2px 44px 18px 0}
-.ws-per button{font-size:calc(13px * var(--ts,1))}
-.ws-hero{position:relative;padding:22px 24px 20px;border-radius:calc(var(--r-m,10px) * 1.6);background:linear-gradient(135deg,rgba(217,212,199,.11),rgba(255,255,255,.02) 60%);border:1px solid rgba(217,212,199,.22);overflow:hidden}
-.ws-hero small{display:block;font-size:calc(11.5px * var(--ts,1));letter-spacing:.14em;text-transform:uppercase;color:var(--gold,#d9d4c7)}
-.ws-hero>b{display:block;font-family:var(--f-display);font-size:clamp(44px,8vw,76px);font-weight:700;letter-spacing:-.03em;line-height:1.05;margin-top:6px;color:var(--ink,#fff)}
-.ws-hero p{margin:6px 0 0;color:var(--mute);font-size:calc(14px * var(--ts,1))}
-.ws-tag{display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px 8px;margin-top:14px;padding:7px 12px;border-radius:999px;background:rgba(217,212,199,.12);color:var(--ink,#fff);font-weight:600;font-size:calc(13px * var(--ts,1))}
-.ws-tag .lucide{width:15px;height:15px;color:var(--gold,#d9d4c7)}
-.ws-tag em{font-style:normal;font-weight:400;color:var(--mute)}
-.ws-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
-.ws-tile{padding:14px 16px;border-radius:calc(var(--r-m,10px) * 1.3);background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}
-.ws-tile b{display:block;font-family:var(--f-display);font-size:calc(26px * var(--ts,1));font-weight:700;color:var(--ink,#fff);line-height:1.15}
-.ws-tile small{color:var(--mute);font-size:calc(12.5px * var(--ts,1))}
-.ws-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-.ws-card{padding:16px;border-radius:calc(var(--r-m,10px) * 1.3);background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);min-width:0}
-.ws-card h3{margin:0 0 10px;font-size:calc(11.5px * var(--ts,1));letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--gold,#d9d4c7)}
-.ws-item{display:flex;align-items:center;gap:12px;width:100%;padding:7px 6px;border:0;border-radius:10px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
-.ws-item:hover,.ws-item:focus-visible,html.tv .ws-item.nav-focus{background:rgba(255,255,255,.06);outline:none}
-.ws-rank{flex:none;width:18px;font-family:var(--f-display);font-weight:700;font-size:calc(17px * var(--ts,1));color:var(--mute)}
-.ws-item:first-of-type .ws-rank{color:var(--gold,#d9d4c7)}
-.ws-item img,.ws-ph{flex:none;width:34px;height:51px;border-radius:6px;object-fit:cover;background:rgba(255,255,255,.06)}
-.ws-it{min-width:0;display:flex;flex-direction:column}
-.ws-it b{color:var(--ink,#fff);font-weight:600;font-size:calc(14px * var(--ts,1));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ws-it small{color:var(--mute);font-size:calc(12.5px * var(--ts,1))}
-.ws-none{margin:6px 0 0;color:var(--mute);font-size:calc(12.5px * var(--ts,1))}
-.ws-g{display:grid;grid-template-columns:minmax(80px,1fr) 2fr 40px;align-items:center;gap:10px;padding:6px 0;font-size:calc(13.5px * var(--ts,1))}
-.ws-g>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink,#fff)}
-.ws-gt{height:6px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden}
-.ws-gt i,.ws-b i{display:block;background:var(--gold,#d9d4c7);transform-origin:left center}
-.ws-gt i{height:100%;transform:scaleX(var(--v))}
-.ws-g em{font-style:normal;text-align:right;color:var(--mute);font-size:calc(12.5px * var(--ts,1))}
-.ws-bars{display:flex;align-items:flex-end;gap:3px;height:76px}
-.ws-week{height:46px;gap:8px;margin-top:16px;padding-bottom:16px}
-.ws-b{position:relative;flex:1;height:100%;display:flex;align-items:flex-end}
-.ws-b i{width:100%;height:100%;border-radius:3px 3px 1px 1px;opacity:.85;transform-origin:center bottom;transform:scaleY(var(--v))}
-.ws-b em{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:3px;font-style:normal;font-size:calc(10.5px * var(--ts,1));color:var(--mute);white-space:nowrap}
-.ws-hours em{display:none}
-.ws-ax{display:flex;justify-content:space-between;margin-top:4px;font-size:calc(10.5px * var(--ts,1));color:var(--mute)}
-.ws-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:12px}
-.ws-facts small{display:block;font-size:calc(11.5px * var(--ts,1));letter-spacing:.12em;text-transform:uppercase;color:var(--gold,#d9d4c7)}
-.ws-facts b{display:block;margin-top:3px;color:var(--ink,#fff);font-weight:600;font-size:calc(14px * var(--ts,1))}
-.ws-foot{margin:14px 0 0;color:var(--mute);font-size:calc(12px * var(--ts,1));line-height:1.5}
-.ws-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.ws-empty{margin-top:4px}
-/* arrival: fade and rise, bars grow; transform and opacity only, once per paint */
-@keyframes wsIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-@keyframes wsX{from{transform:scaleX(0)}}
-@keyframes wsY{from{transform:scaleY(0)}}
-.ws-hero,.ws-tile,.ws-card{animation:wsIn .5s var(--ease,ease) both;animation-delay:calc(var(--i,0) * 60ms)}
-.ws-cols .ws-card{animation-delay:.3s}.ws-facts{animation-delay:.42s}
-.ws-gt i{animation:wsX .8s var(--ease,ease) both;animation-delay:calc(.35s + var(--i,0) * 70ms)}
-.ws-b i{animation:wsY .7s var(--ease,ease) both;animation-delay:.4s}
-html.tv .ws-hero,html.tv .ws-tile,html.tv .ws-card,html.tv .ws-gt i,html.tv .ws-b i{animation:none}
-@media (prefers-reduced-motion:reduce){.ws-hero,.ws-tile,.ws-card,.ws-gt i,.ws-b i{animation:none}}
-@media (max-width:640px){.ws-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.ws-cols{grid-template-columns:1fr}.ws-hero{padding:18px}.ws-head{margin-right:40px}}
-</style>
-<script id="mkc-253">
-/* =====================================================================
-   2.53 Your stats: top films and shows, time watched, when you watch, streaks and who you watch with.
-   Per seat and on this device only. Time counts what plays in MKCinema's own player from the day this
-   arrives; finished films and episodes count from the very start of the seat's history.
-   ===================================================================== */
-if (!SEAT_KEYS.includes('watchLog')) SEAT_KEYS.push('watchLog');
-const WatchStats = {
-  log: null, dirty: false, last: null, sess: null, period: 'year',
-  blank() { return { v: 1, since: Date.now(), d: {}, h: {}, t: {}, long: [] }; },
-  load() {
-    if (this.log) return this.log;
-    let l = Store.get('watchLog', null);
-    if (!l || typeof l !== 'object' || l.v !== 1) l = this.blank();
-    ['d', 'h', 't'].forEach((k) => { if (!l[k] || typeof l[k] !== 'object') l[k] = {}; });
-    if (!Array.isArray(l.long)) l.long = [];
-    return (this.log = l);
-  },
-  flush() {
-    if (!this.dirty || !this.log) return; this.dirty = false;
-    const l = this.log, ids = Object.keys(l.t);
-    if (ids.length > 900) ids.sort((a, b) => (l.t[b].last || 0) - (l.t[a].last || 0)).slice(900).forEach((k) => delete l.t[k]);
-    const days = Object.keys(l.d); if (days.length > 800) days.sort().slice(0, days.length - 800).forEach((k) => delete l.d[k]);
-    const mons = Object.keys(l.h); if (mons.length > 40) mons.sort().slice(0, mons.length - 40).forEach((k) => delete l.h[k]);
-    Store.set('watchLog', l);
-  },
-  day: (ts) => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; },
-  /* one sample every 10 s: only time that really plays (position moving, tab or app showing the player) counts */
-  tick() {
-    const now = Date.now();
-    const on = !!(P.ctx && P.ctx.meta && P.stream && !$('#player').hidden && !video.paused && !video.ended && video.readyState > 2);
-    let pos = 0; try { pos = pNow(); } catch (e) { /* no media */ }
-    const L = this.last;
-    // the stretch since the last sample counts if the film moved on, so a pause keeps its last few seconds too
-    if (L && P.ctx && L.ctx === P.ctx && now - L.at < 30000 && pos > L.pos) this.add(Math.min(30, (now - L.at) / 1000, (pos - L.pos) * 2 + 1), now);
-    this.last = on ? { at: now, pos, ctx: P.ctx } : null;
-    if (!on && L) this.flush();
-  },
-  add(sec, now) {
-    const l = this.load(), m = P.ctx.meta, v = P.ctx.video, id = String(m.id || ''); if (!id) return;
-    const d = new Date(now), mon = this.day(now).slice(0, 7), day = this.day(now);
-    const t = l.t[id] || (l.t[id] = { s: 0, m: {} });
-    t.n = String(m.name || t.n || '').slice(0, 120); t.ty = v || m.type === 'series' ? 'series' : (m.type || 'movie');
-    const p = metaPoster(m); if (p && !String(p).startsWith('data:')) t.p = String(p).slice(0, 400);
-    const g = genresOf(m).slice(0, 3); if (g.length) t.g = g;
-    t.s += sec; t.m[mon] = (t.m[mon] || 0) + sec; t.last = now;
-    l.d[day] = (l.d[day] || 0) + sec;
-    const h = l.h[mon] || (l.h[mon] = new Array(24).fill(0)); h[d.getHours()] += sec;
-    // a sitting ends after 20 minutes without playback
-    const S2 = this.sess;
-    if (!S2 || now - S2.end > 20 * 60e3) this.sess = { at: now, end: now, s: 0, titles: [t.n] };
-    const s = this.sess; s.end = now; s.s += sec; if (t.n && !s.titles.includes(t.n)) s.titles.push(t.n);
-    if (s.s >= 45 * 60) {
-      const i = l.long.findIndex((x) => x.at === s.at);
-      const rec = { at: s.at, s: Math.round(s.s), n: s.titles.slice(0, 3) };
-      if (i >= 0) l.long[i] = rec; else l.long.push(rec);
-      l.long.sort((a, b) => b.s - a.s); l.long = l.long.slice(0, 24);
-    }
-    this.dirty = true;
-    if (!this.flushAt || now - this.flushAt > 60000) { this.flushAt = now; this.flush(); }
-  },
-
-  /* ---- reading ---- */
-  inP(ts, per) {
-    if (per === 'all') return true;
-    const d = new Date(ts), n = new Date();
-    return d.getFullYear() === n.getFullYear() && (per === 'year' || d.getMonth() === n.getMonth());
-  },
-  keyIn(k, per) { const n = this.day(Date.now()); return per === 'all' || (per === 'year' ? k.slice(0, 4) === n.slice(0, 4) : k.slice(0, 7) === n.slice(0, 7)); },
-  /* tt123:1:4 is an episode of tt123; kitsu:9:3 an episode of kitsu:9; tt123 or kitsu:9 alone is a film */
-  showOf(id) {
-    const p = String(id).split(':');
-    if (/^tt\d+$/.test(p[0])) return p.length >= 3 ? p[0] : null;
-    return p.length >= 4 ? p.slice(0, 2).join(':') : p.length === 3 && /^\d+$/.test(p[2]) ? p.slice(0, 2).join(':') : null;
-  },
-  stubs() { const me = (Seats.cur() || {}).name || ''; return (typeof Stubs !== 'undefined' ? Stubs.list() : []).filter((x) => !x.seat || x.seat === me); },
-  info(id) {
-    const l = this.load(), t = l.t[id];
-    if (t && t.n) return { name: t.n, poster: t.p || metaPoster({ id }) || '', genres: t.g || [] };
-    const m = S.metas.get(id) || S.watchlist.find((x) => x.id === id) || Object.values(S.progress).find((p) => p.metaId === id) || this.stubs().find((x) => x.id === id);
-    return m && m.name ? { name: m.name, poster: m.poster || metaPoster({ id }) || '', genres: genresOf(m) } : null;
-  },
-  compute(per) {
-    const l = this.load(), W = watchedMap(), now = Date.now();
-    let secs = 0; Object.entries(l.d).forEach(([k, v]) => { if (this.keyIn(k, per)) secs += v; });
-    const films = [], eps = [], shows = new Map(), finDay = new Map();
-    Object.entries(W).forEach(([id, at]) => {
-      if (!at || !this.inP(at, per)) return;
-      const sh = this.showOf(id), dk = this.day(at);
-      finDay.set(dk, (finDay.get(dk) || 0) + 1);
-      if (sh) { eps.push(id); const x = shows.get(sh) || { id: sh, eps: 0, secs: 0, last: 0 }; x.eps++; x.last = Math.max(x.last, at); shows.set(sh, x); } else films.push({ id, at });
-    });
-    const tSec = (t) => (per === 'all' ? t.s : Object.entries(t.m || {}).reduce((a, [k, v]) => a + (this.keyIn(k, per) ? v : 0), 0));
-    const filmMap = new Map(films.map((f) => [f.id, { id: f.id, secs: 0, done: f.at }]));
-    Object.entries(l.t).forEach(([id, t]) => {
-      const s = tSec(t); if (s < 60) return;
-      if (t.ty === 'series') { const x = shows.get(id) || { id, eps: 0, secs: 0, last: t.last || 0 }; x.secs += s; shows.set(id, x); }
-      else { const x = filmMap.get(id) || { id, secs: 0, done: 0 }; x.secs += s; filmMap.set(id, x); }
-    });
-    const topFilms = [...filmMap.values()].sort((a, b) => b.secs - a.secs || b.done - a.done).slice(0, 5);
-    const topShows = [...shows.values()].sort((a, b) => b.eps - a.eps || b.secs - a.secs).slice(0, 5);
-    // genres: playing time where it is known, plus a fixed weight for each finish
-    const gen = new Map(), addG = (gs, w) => (gs || []).slice(0, 3).forEach((g) => gen.set(g, (gen.get(g) || 0) + w));
-    Object.values(l.t).forEach((t) => { const s = tSec(t); if (s >= 60) addG(t.g, s); });
-    films.forEach((f) => { if (!(l.t[f.id] && tSec(l.t[f.id]) >= 60)) { const i = this.info(f.id); if (i) addG(i.genres, 5400); } });
-    shows.forEach((x) => { if (!(l.t[x.id] && tSec(l.t[x.id]) >= 60)) { const i = this.info(x.id); if (i) addG(i.genres, 1500 * x.eps); } });
-    const gTot = [...gen.values()].reduce((a, b) => a + b, 0) || 1;
-    const genres = [...gen.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([g, v]) => [g, v / gTot]);
-    // when: hours of the day and days of the week, by time played (or by finishes before any time was counted)
-    const hours = new Array(24).fill(0), week = new Array(7).fill(0);
-    Object.entries(l.h).forEach(([k, arr]) => { if (this.keyIn(k, per)) arr.forEach((v, i) => { hours[i] += v || 0; }); });
-    Object.entries(l.d).forEach(([k, v]) => { if (this.keyIn(k, per)) week[new Date(`${k}T12:00:00`).getDay()] += v; });
-    let byTime = hours.some((v) => v > 0);
-    if (!byTime) Object.values(W).forEach((at) => { if (at && this.inP(at, per)) { const d = new Date(at); hours[d.getHours()]++; week[d.getDay()]++; } });
-    // streaks: any day with a finish or ten minutes of playing
-    const days = new Set([...finDay.keys()]); Object.entries(l.d).forEach(([k, v]) => { if (v >= 600 && this.keyIn(k, per)) days.add(k); });
-    const sorted = [...days].sort(); let best = 0, run = 0, prev = null;
-    sorted.forEach((k) => { const t = new Date(`${k}T12:00:00`).getTime(); run = prev && Math.round((t - prev) / 864e5) === 1 ? run + 1 : 1; prev = t; best = Math.max(best, run); });
-    let cur = 0; { let t = new Date(); if (!days.has(this.day(t))) t = new Date(t - 864e5); while (days.has(this.day(t))) { cur++; t = new Date(t - 864e5); } }
-    let busy = null; finDay.forEach((n, k) => { if (!busy || n > busy.n) busy = { k, n }; });
-    const long = l.long.filter((x) => this.inP(x.at, per))[0] || null;
-    const withWho = new Map(); this.stubs().forEach((x) => { if (this.inP(x.at, per)) (x.with || []).forEach((n) => withWho.set(n, (withWho.get(n) || 0) + 1)); });
-    const pals = [...withWho.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
-    return { secs, films: films.length, eps: eps.length, shows: shows.size, topFilms, topShows, genres, hours, week, byTime, best, cur, busy, long, pals, since: l.since, empty: !secs && !films.length && !eps.length && !topFilms.length };
-  },
-  persona(h, w) {
-    const sum = (a, b) => { let s = 0; for (let i = a; i !== b; i = (i + 1) % 24) s += h[i]; return s; };
-    const tot = h.reduce((a, b) => a + b, 0); if (!tot) return null;
-    const P4 = [['Night owl', 'Most of it after 10 pm.', sum(22, 4)], ['Early bird', 'Most of it before noon.', sum(4, 12)], ['Matinee regular', 'Most of it in the afternoon.', sum(12, 18)], ['Prime-timer', 'Most of it between 6 and 10 pm.', sum(18, 22)]];
-    const top = P4.sort((a, b) => b[2] - a[2])[0]; const wt = w.reduce((a, b) => a + b, 0) || 1;
-    const wkend = (w[0] + w[6]) / wt;
-    return { name: top[0], why: top[1] + (wkend > .5 ? ' And mostly at weekends.' : '') };
-  },
-  hm(s) { s = Math.round(s / 60); const h = Math.floor(s / 60), m = s % 60; return h ? `${h.toLocaleString()} h${m ? ` ${m} m` : ''}` : `${m} m`; },
-  /* something to compare the hours with, chosen so the number stays readable */
-  likeness(sec) {
-    const h = sec / 3600; if (h < 2) return '';
-    const L = [[24 * 7, 'whole weeks, day and night'], [24, 'whole days, without a break'], [11, 'long-haul flights'], [8, 'full nights of sleep'], [2, 'feature films back to back']];
-    for (const [v, t] of L) { const n = h / v; if (n >= 2 && n < 100) return `About ${n < 3 ? n.toFixed(1).replace(/\.0$/, '') : Math.round(n)} ${t}.`; }
-    return '';
-  },
-  label(per) { const n = new Date(); return per === 'all' ? 'All time' : per === 'year' ? `${n.getFullYear()} so far` : `${n.toLocaleDateString(undefined, { month: 'long' })} so far`; },
-
-  /* ---- the pop-up ---- */
-  open(per) {
-    this.flush(); if (per) this.period = per;
-    const el = X8.layer('watchStats', { label: 'Your stats', wide: true });
-    el.querySelector('.x8-modal').classList.add('ws-modal');
-    this.paint(); X8.open('watchStats');
-    this.names();
-  },
-  paint() {
-    const body = X8.body('watchStats'); if (!body) return;
-    const per = this.period, c = this.compute(per), seat = (Seats.cur() || {}).name || 'Main', me = Seats.all().length > 1 ? `${seat}’s` : 'Your';
-    const pers = this.persona(c.hours, c.week), like = this.likeness(c.secs);
-    const since = new Date(c.since).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
-    const row = (x, i, sub) => { const n = this.info(x.id) || { name: '', poster: '' }; return `<button type="button" class="ws-item" data-nav data-wsopen="${esc(x.id)}" style="--i:${i}"><span class="ws-rank tnum">${i + 1}</span>${n.poster ? `<img src="${esc(n.poster)}" alt="" loading="lazy">` : '<span class="ws-ph"></span>'}<span class="ws-it"><b>${esc(n.name || 'Loading…')}</b><small>${esc(sub)}</small></span></button>`; };
-    const bars = (arr, labels, cls) => { const mx = Math.max(...arr, 1); return `<div class="ws-bars ${cls}">${arr.map((v, i) => `<span class="ws-b" title="${esc(labels[i])}"><i style="--v:${Math.max(.03, v / mx).toFixed(3)}"></i><em>${labels[i].length <= 3 ? esc(labels[i]) : ''}</em></span>`).join('')}</div>`; };
-    const hrs = c.hours.map((_, i) => (i % 6 === 0 ? `${i}` : '')).map((t, i) => t || `${i}:00`);
-    const wkOrder = [1, 2, 3, 4, 5, 6, 0], wkNames = wkOrder.map((d) => new Date(2024, 0, 7 + d).toLocaleDateString(undefined, { weekday: 'short' }));
-    const tiles = [['Films finished', c.films.toLocaleString()], ['Episodes finished', c.eps.toLocaleString()], ['Shows', c.shows.toLocaleString()], ['Longest streak', `${c.best} day${c.best === 1 ? '' : 's'}`]];
-    const facts = [];
-    if (c.busy && c.busy.n > 1) facts.push(['Busiest day', `${c.busy.n} finished on ${new Date(`${c.busy.k}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}`]);
-    if (c.long) facts.push(['Longest sitting', `${this.hm(c.long.s)}${c.long.n.length ? `, ${c.long.n.join(', ')}` : ''}`]);
-    if (per === 'all' && c.cur > 1) facts.push(['Current streak', `${c.cur} days in a row`]);
-    if (c.pals.length) facts.push(['Watched with most', c.pals.map(([n, k]) => `${n} (${k})`).join(', ')]);
-    body.innerHTML = `<div class="ws-head"><h2 class="x8-h">${esc(me)} stats</h2>
-      <div class="segc ws-per" role="radiogroup" aria-label="Period">${[['month', 'This month'], ['year', 'This year'], ['all', 'All time']].map(([v, t]) => `<button type="button" class="${per === v ? 'on' : ''}" role="radio" aria-checked="${per === v}" data-nav data-wsper="${v}">${t}</button>`).join('')}</div></div>
-      ${c.empty ? `<p class="sc-p ws-empty">Nothing to count for ${esc(this.label(per).toLowerCase())} yet. Finish a film or a few episodes and your stats start filling in.</p>` : `
-      <section class="ws-hero" style="--i:0"><small>${esc(this.label(per))} · time watched</small><b class="tnum">${c.secs >= 60 ? esc(this.hm(c.secs)) : '0 m'}</b>
-        <p>${esc(like || (c.secs < 60 ? `Time is counted from ${since}, as you play.` : ''))}</p>${pers ? `<span class="ws-tag"><i data-lucide="sparkles"></i>${esc(pers.name)}<em>${esc(pers.why)}</em></span>` : ''}</section>
-      <div class="ws-tiles">${tiles.map(([k, v], i) => `<div class="ws-tile" style="--i:${i + 1}"><b class="tnum">${esc(v)}</b><small>${esc(k)}</small></div>`).join('')}</div>
-      <div class="ws-cols">
-        <section class="ws-card"><h3>Top films</h3>${c.topFilms.length ? c.topFilms.map((x, i) => row(x, i, x.secs >= 60 ? this.hm(x.secs) : 'Finished')).join('') : '<p class="ws-none">No films yet.</p>'}</section>
-        <section class="ws-card"><h3>Top shows</h3>${c.topShows.length ? c.topShows.map((x, i) => row(x, i, [x.eps ? `${x.eps} episode${x.eps === 1 ? '' : 's'}` : '', x.secs >= 60 ? this.hm(x.secs) : ''].filter(Boolean).join(' · '))).join('') : '<p class="ws-none">No shows yet.</p>'}</section>
-      </div>
-      <div class="ws-cols">
-        <section class="ws-card"><h3>Your genres</h3>${c.genres.length ? c.genres.map(([g, f], i) => `<div class="ws-g" style="--i:${i}"><span>${esc(g)}</span><span class="ws-gt"><i style="--v:${f.toFixed(3)}"></i></span><em class="tnum">${Math.round(f * 100)}%</em></div>`).join('') : '<p class="ws-none">Genres show up as you watch.</p>'}</section>
-        <section class="ws-card"><h3>When you watch</h3>${bars(c.hours, hrs, 'ws-hours')}<div class="ws-ax"><span>Midnight</span><span>Noon</span><span>11 pm</span></div>${bars(wkOrder.map((d) => c.week[d]), wkNames, 'ws-week')}<p class="ws-none">${c.byTime ? 'By time played.' : 'By finishes, until time starts counting.'}</p></section>
-      </div>
-      ${facts.length ? `<section class="ws-card ws-facts">${facts.map(([k, v]) => `<div><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join('')}</section>` : ''}`}
-      <p class="ws-foot">${esc(seat)} seat, kept on this device only. Time counts what plays in MKCinema’s player since ${esc(since)}; finished films and episodes count from the start.</p>
-      <div class="ws-acts">${c.empty ? '' : '<button class="btn btn-prime btn-sm" type="button" data-nav data-wsa="save"><i data-lucide="download"></i>Save as picture</button>'}<button class="btn btn-ghost btn-sm" type="button" data-nav data-wsa="reset"><i data-lucide="eraser"></i>Reset time counts</button></div>`;
-    icons();
-    body.onclick = (e) => {
-      const p = e.target.closest('[data-wsper]'); if (p) { this.period = p.dataset.wsper; this.paint(); this.names(); const n = $(`[data-wsper="${p.dataset.wsper}"]`, body); if (n && IS_TV) Nav.focus(n, true); return; }
-      const o = e.target.closest('[data-wsopen]'); if (o) { const id = o.dataset.wsopen, t = this.load().t[id], sh = c.topShows.some((x) => x.id === id); X8.close('watchStats'); openDetail({ id, type: sh || (t && t.ty === 'series') ? 'series' : 'movie', name: (this.info(id) || {}).name || '' }); return; }
-      const a = e.target.closest('[data-wsa]'); if (!a) return;
-      if (a.dataset.wsa === 'save') this.save(c);
-      if (a.dataset.wsa === 'reset') confirmTwice(a, () => { this.log = this.blank(); this.dirty = true; this.flush(); this.paint(); toast('Time counts reset. Finished titles stay.', 'ok'); });
-    };
-  },
-  /* names for titles only known by id: asked of your addons once, then kept with the stats */
-  async names() {
-    const c = this.compute(this.period), need = [...c.topFilms.map((x) => [x.id, 'movie']), ...c.topShows.map((x) => [x.id, 'series'])].filter(([id]) => !this.info(id)).slice(0, 10);
-    if (!need.length) return;
-    let got = 0;
-    await Promise.all(need.map(async ([id, type]) => {
-      try { const m = await engine.fetchMeta(type, id); if (m && m.name) { remember(m); const l = this.load(); const t = l.t[id] || (l.t[id] = { s: 0, m: {} }); t.n = String(m.name).slice(0, 120); t.ty = type; const p = metaPoster(m); if (p) t.p = String(p).slice(0, 400); const g = genresOf(m).slice(0, 3); if (g.length) t.g = g; got++; } } catch (e) { /* stays unnamed */ }
-    }));
-    if (got) { this.dirty = true; this.flush(); const el = $('#watchStats'); if (el && !el.hidden) this.paint(); }
-  },
-  /* the stats as a picture: drawn on a canvas, text only, so nothing cross-site is needed */
-  save(c) {
-    const W = 1080, H = 1350, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
-    const gold = 'rgba(217,212,199,.9)', dim = 'rgba(255,255,255,.62)', F = (w, s) => `${w} ${s}px Sora, system-ui, sans-serif`;
-    g.fillStyle = '#0b0b0c'; g.fillRect(0, 0, W, H);
-    const gr = g.createRadialGradient(W * .8, 120, 20, W * .8, 120, 700); gr.addColorStop(0, 'rgba(217,212,199,.14)'); gr.addColorStop(1, 'rgba(217,212,199,0)'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
-    g.strokeStyle = 'rgba(255,255,255,.1)'; g.lineWidth = 2; g.strokeRect(36, 36, W - 72, H - 72);
-    const seat = (Seats.cur() || {}).name || 'Main';
-    g.fillStyle = gold; g.font = F(600, 24); g.fillText(`MKCINEMA · ${String(seat).toUpperCase().slice(0, 18)} · ${this.label(this.period).toUpperCase()}`, 90, 130);
-    g.fillStyle = '#fff'; g.font = F(700, 132); g.fillText(c.secs >= 60 ? this.hm(c.secs) : `${c.films + c.eps}`, 84, 290);
-    g.fillStyle = dim; g.font = F(500, 30); g.fillText(c.secs >= 60 ? 'watched' : 'titles finished', 90, 340);
-    const pers = this.persona(c.hours, c.week); if (pers) { g.fillStyle = gold; g.font = F(600, 30); g.fillText(pers.name, 90, 395); }
-    const tiles = [[c.films, 'films'], [c.eps, 'episodes'], [c.shows, 'shows'], [c.best, 'day streak']];
-    tiles.forEach(([v, k], i) => { const x = 90 + i * 232; g.fillStyle = 'rgba(255,255,255,.05)'; g.beginPath(); g.roundRect(x, 440, 210, 140, 20); g.fill(); g.fillStyle = '#fff'; g.font = F(700, 52); g.fillText(String(v), x + 24, 515); g.fillStyle = dim; g.font = F(500, 24); g.fillText(k, x + 24, 556); });
-    const list = (title, items, y) => {
-      g.fillStyle = gold; g.font = F(600, 24); g.fillText(title.toUpperCase(), 90, y);
-      items.slice(0, 3).forEach((x, i) => { const n = (this.info(x.id) || {}).name || ''; g.fillStyle = 'rgba(255,255,255,.4)'; g.font = F(700, 40); g.fillText(String(i + 1), 90, y + 62 + i * 58); g.fillStyle = '#fff'; g.font = F(600, 38); let t = n; while (t.length > 3 && g.measureText(t).width > W - 260) t = t.slice(0, -2); g.fillText(t === n ? t : `${t.trim()}…`, 150, y + 62 + i * 58); });
-      return y + 62 + Math.max(1, Math.min(3, items.length)) * 58 + 22;
-    };
-    let y = 650; if (c.topFilms.length) y = list('Top films', c.topFilms, y); if (c.topShows.length) y = list('Top shows', c.topShows, y);
-    if (c.genres.length && y < H - 140) { g.fillStyle = gold; g.font = F(600, 24); g.fillText('MOSTLY', 90, y); g.fillStyle = '#fff'; g.font = F(600, 36); g.fillText(c.genres.slice(0, 3).map(([n]) => n).join(' · '), 90, y + 52); }
-    g.fillStyle = 'rgba(255,255,255,.35)'; g.font = F(500, 22); g.fillText('mkcinema.app', 90, H - 80);
-    cv.toBlob((b) => { if (!b) return; const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `MKCinema stats ${this.label(this.period)}.png`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 30000); toast('Saved your stats as a picture', 'ok', 2400); }, 'image/png');
-  },
-  init() {
-    this.load();
-    setInterval(() => { try { this.tick(); } catch (e) { /* never block playback */ } }, 10000);
-    const fl = () => { try { this.tick(); this.flush(); } catch (e) { /* storage blocked */ } };
-    addEventListener('pagehide', fl);
-    document.addEventListener('visibilitychange', () => { if (document.hidden) fl(); });
-    video.addEventListener('pause', () => { try { this.tick(); this.flush(); } catch (e) { /* ok */ } });
-    video.addEventListener('playing', () => { try { this.tick(); } catch (e) { /* ok */ } });
-  },
-};
-
-{
-  WatchStats.init();
-  // Library: a Your stats chip beside New list
-  const lr = Library.render.bind(Library);
-  Library.render = function () {
-    const r = lr(); const nb = $('#libNew');
-    if (nb && !$('#libStats')) { nb.insertAdjacentHTML('beforebegin', '<button type="button" class="chip lib-new" data-nav id="libStats"><i data-lucide="bar-chart-3"></i>Your stats</button>'); $('#libStats').onclick = () => WatchStats.open(); icons(); }
-    return r;
-  };
-  scAddRows('playback', 'stubsBtn', [
-    { key: 'watchStatsBtn', label: 'Your stats', help: 'Top films and shows, time watched, when you watch and your streaks. Per seat, on this device only.', type: 'button', text: 'Open', icon: 'bar-chart-3', run: () => { closeLayer('settings'); WatchStats.open(); } },
-  ]);
-  COMMANDS.push({ label: 'Your stats', icon: 'bar-chart-3', run: () => WatchStats.open() });
-}
-</script>
 </body>
 </html>
