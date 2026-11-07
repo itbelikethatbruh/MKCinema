@@ -2,6 +2,18 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.51.0 (works whatever your sources do)
+
+- **Your apps.** Pick the streaming services you pay for in Settings › Home. A title on one of them gets a "Watch on" button that opens that app on Android, Android TV and Fire TV, and the service's own search in a browser elsewhere.
+- **Where to watch for everyone.** Title pages show where a film streams in your region without your own TMDB key. MKCinema's tmdb-person function answers two new fixed lookups (`watch`, `providers`) and keeps nothing.
+- **Other ways to watch.** When your addons find nothing, the title page offers your apps, the trailer, your media server and Live TV instead of an empty list.
+- **On your server.** A Home row with the newest films and shows on your Plex, Jellyfin or Emby server, opening the normal title page. With no source addon installed, Home shows a "Watch without addons" card.
+- **Every seat its own language.** Each seat can keep its own subtitle and sound language (Settings › Subtitles, while that seat is in use). The house's settings and other devices keep theirs.
+- **Your language on your phone.** On the phone remote, "Hear it in your language" plays another source's dub on the phone in step with the TV, frame-rate differences included, while the TV keeps its sound for the room.
+- **Watch-along.** Record your own commentary over a film and save it as one `.mkwa` file. Anyone can play it over their own copy: it lines itself up using the dialogue lines it carries, or by length when there are no subtitles. Player › Options.
+- **Clearer messages when a file is removed.** When a service removes a file, MKCinema says so plainly and points to the other ways to watch.
+- **Site:** Android updates through Obtainium, straight from GitHub releases.
+
 ## Web app 2.50.0 (household and phone)
 
 - **Family Helper.** The person who set MKCinema up for you can help from their phone, from anywhere: see what's on the screen, turn subtitles on, fix the sound, start a film and send a message to the screen. The screen shows when they're connected, and Settings › Devices removes them. "Ask for help" leaves a note their phone remote shows the next time it opens.
