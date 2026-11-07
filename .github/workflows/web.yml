@@ -38,6 +38,7 @@ jobs:
         run: |
           cp -r app "$RUNNER_TEMP/web"
           node tools/minify-web.mjs "$RUNNER_TEMP/web"
+          node tools/csp-hash.mjs "$RUNNER_TEMP/web"
       - name: Install Chromium for the smoke test
         run: |
           npm install --prefix "$RUNNER_TEMP/pw" --no-audit --no-fund --silent playwright@1.63.0
