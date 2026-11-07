@@ -1,0 +1,25 @@
+/* 2.43.0 · sound modes: three calm cards, one selected */
+.snd-h{margin:14px 12px 6px;font-size:calc(12px * var(--ts,1));font-weight:600;letter-spacing:.14em;color:rgb(169,169,178);text-transform:uppercase}
+.snd-modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:2px 12px 6px}
+.snd-m{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;padding:10px 11px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--text);text-align:left;cursor:pointer;transition:background .2s,border-color .2s}
+.snd-m svg{width:18px;height:18px;opacity:.75;margin-bottom:2px}
+.snd-m b{font-size:calc(13px * var(--ts,1));font-weight:600;line-height:1.2}
+.snd-m small{font-size:calc(11px * var(--ts,1));line-height:1.35;color:var(--mute)}
+.snd-m:hover,.snd-m:focus-visible{background:rgba(255,255,255,.08)}
+.snd-m.on{background:rgba(255,255,255,.1);border-color:var(--accent,#cdb47e)}
+.snd-m.on svg{opacity:1;color:var(--accent,#cdb47e)}
+.snd-st.blocked{color:var(--dim)}
+@media (max-width:520px){.snd-modes{grid-template-columns:1fr}.snd-m{flex-direction:row;align-items:center;gap:10px}.snd-m small{margin-left:auto;text-align:right}}
+/* More like this on film and series pages */
+#detailPanel .ml-row{margin-top:28px}
+#detailPanel .ml-row .row-head{padding-inline:0}
+/* addon permissions on the Addons screen */
+.mk-perm{display:grid;gap:8px;margin:8px 0 4px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}
+.mk-perm-r{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.mk-perm-r span{display:grid;gap:2px;min-width:0}
+.mk-perm-r b{font-size:calc(13px * var(--ts,1));font-weight:600}
+.mk-perm-r small{font-size:calc(11.5px * var(--ts,1));color:var(--mute);line-height:1.4}
+.mk-perm-r .switch{flex:none}
+.mk-ask{align-items:flex-start;flex-wrap:wrap;max-width:min(440px,calc(100vw - 32px))}
+.mk-ask>span:nth-of-type(1){flex:1 1 220px}
+.mk-ask-b{display:flex;gap:8px;margin-left:auto}

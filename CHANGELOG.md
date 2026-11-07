@@ -2,6 +2,15 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.43.0 (2026-11-07)
+
+- **Sound modes.** Clear voices and Night are in the player's Audio tab, as three simple choices under Volume. Original is always one tap away and never needs a reload.
+- **More like this.** Every film and series page ends with similar titles: the rest of a film's universe first, then picks from TMDB or Trakt if you've added a key, then titles that share its genres and era.
+- **The next episode starts faster.** A few minutes before an episode ends, the next one's best source is already found.
+- **Scene skips from addons.** Addons can add intro, recap and credit times to the Skip button. Settings › Playback can also skip scenes an addon marks (violence, nudity, language and more). Kids seats skip them by default.
+- **Audio delay, clearer.** One control in the Audio tab for sound that runs ahead of the picture.
+- **For addon developers:** optional playback events, a `skips` resource and device info. Spec: docs/addon-extras.md.
+
 ## Web app 2.42.0 (2026-11-06)
 
 - **A new welcome tour.** Redesigned from the first screen to the last, with everything MKCinema does today. It fits your screen, so nothing scrolls, on a phone, a computer or a TV.
