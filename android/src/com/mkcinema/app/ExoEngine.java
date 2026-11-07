@@ -27,6 +27,12 @@ import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
 import androidx.media3.extractor.DefaultExtractorsFactory;
+import androidx.media3.exoplayer.Renderer;
+import androidx.media3.exoplayer.mediacodec.MediaCodecSelector;
+import androidx.media3.exoplayer.video.MediaCodecVideoRenderer;
+import androidx.media3.exoplayer.video.VideoRendererEventListener;
+import androidx.media3.extractor.ExtractorsFactory;
+import android.view.View;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,7 +47,13 @@ class ExoEngine implements Engine {
     final Context ctx; final Listener l; final Handler h = new Handler(Looper.getMainLooper());
     ExoPlayer p; MediaItem item; String url; File subs; boolean everReady, fpsSent, slow; int retries;
 
+    /** 1.9.0: full ASS/SSA styling through libass (see Ass), when PlayerActivity allows it */
+    boolean wantAss; Ass.Hook ass;
+
     ExoEngine(Context ctx, Listener l) { this.ctx = ctx; this.l = l; }
+    /** the libass picture layer, laid over the video by PlayerActivity; null without ASS styling */
+    public View overlay() { return ass == null ? null : ass.view; }
+    public boolean styledSubs() { return ass != null; }
     public String name() { return "exo"; }
 
     /** bytes the buffer may hold: a third of the app's large-heap budget, between 48 and 160 MB */
@@ -55,8 +67,9 @@ class ExoEngine implements Engine {
         MediaItem.Builder b = new MediaItem.Builder().setUri(Uri.parse(url));
         String low = url.toLowerCase(java.util.Locale.ROOT);
         if (low.contains(".m3u8")) b.setMimeType(MimeTypes.APPLICATION_M3U8);
+        // 1.9.0: a downloaded .ass/.ssa file keeps its styling (libass, or Media3's own reader without it)
         if (subs != null) b.setSubtitleConfigurations(Collections.singletonList(new MediaItem.SubtitleConfiguration.Builder(Uri.fromFile(subs))
-            .setMimeType(MimeTypes.APPLICATION_SUBRIP).setSelectionFlags(C.SELECTION_FLAG_DEFAULT).setLabel("MKCinema").build()));
+            .setMimeType(Ass.isAss(subs) ? MimeTypes.TEXT_SSA : MimeTypes.APPLICATION_SUBRIP).setSelectionFlags(C.SELECTION_FLAG_DEFAULT).setLabel("MKCinema").build()));
         return b.build();
     }
 
@@ -70,8 +83,21 @@ class ExoEngine implements Engine {
                 .setUserAgent(ua != null ? ua : "MKCinema/" + MainActivity.VER + " (Linux; Android) ExoPlayer")
                 .setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(15000).setReadTimeoutMs(30000).setDefaultRequestProperties(hdr);
             DefaultExtractorsFactory ex = new DefaultExtractorsFactory().setConstantBitrateSeekingEnabled(true);
-            DefaultMediaSourceFactory msf = new DefaultMediaSourceFactory(new DefaultDataSource.Factory(ctx, http), ex);
-            DefaultRenderersFactory rf = new DefaultRenderersFactory(ctx).setEnableDecoderFallback(true);
+            // 1.9.0: video renderer with the Dolby Vision profile 7 fallback (DvFallback)
+            DefaultRenderersFactory rf = new DefaultRenderersFactory(ctx) {
+                @Override protected void buildVideoRenderers(Context c, int mode, MediaCodecSelector sel, boolean fallback, android.os.Handler eh,
+                        VideoRendererEventListener el, long joinMs, ArrayList<Renderer> out) {
+                    try {
+                        out.add(new DvFallback(c, new MediaCodecVideoRenderer.Builder(c).setCodecAdapterFactory(getCodecAdapterFactory()).setMediaCodecSelector(sel)
+                            .setAllowedJoiningTimeMs(joinMs).setEnableDecoderFallback(fallback).setEventHandler(eh).setEventListener(el)
+                            .setMaxDroppedFramesToNotify(MAX_DROPPED_VIDEO_FRAME_COUNT_TO_NOTIFY)));
+                    } catch (Throwable t) { super.buildVideoRenderers(c, mode, sel, fallback, eh, el, joinMs, out); }
+                }
+            }.setEnableDecoderFallback(true);
+            ExtractorsFactory exf = ex; androidx.media3.exoplayer.RenderersFactory rff = rf;
+            if (wantAss) { ass = Ass.hook(ctx); if (ass != null) { exf = ass.extractors(ex); rff = ass.renderers(rf); } }
+            DefaultMediaSourceFactory msf = new DefaultMediaSourceFactory(new DefaultDataSource.Factory(ctx, http), exf);
+            if (ass != null) ass.sources(msf);
             DefaultTrackSelector ts = new DefaultTrackSelector(ctx);
             DefaultTrackSelector.Parameters.Builder pb = ts.buildUponParameters();
             if (audioLang != null && !audioLang.isEmpty() && !"any".equals(audioLang)) pb.setPreferredAudioLanguage(audioLang);
@@ -79,7 +105,7 @@ class ExoEngine implements Engine {
             // 1.8.0 Slow internet mode: keep 1 to 4 minutes ready, start after 10 s and wait for 20 s after a stall, so it stops less often
             DefaultLoadControl lc = new DefaultLoadControl.Builder().setBufferDurationsMs(slow ? 60000 : 15000, slow ? 240000 : 50000, slow ? 10000 : 2500, slow ? 20000 : 5000)
                 .setTargetBufferBytes((int) bufferBytes()).setPrioritizeTimeOverSizeThresholds(false).build();
-            p = new ExoPlayer.Builder(ctx, rf).setTrackSelector(ts).setLoadControl(lc).setMediaSourceFactory(msf).build();
+            p = new ExoPlayer.Builder(ctx, rff).setTrackSelector(ts).setLoadControl(lc).setMediaSourceFactory(msf).build();
             p.setAudioAttributes(new AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build(), true);
             p.setHandleAudioBecomingNoisy(true);
             p.addListener(new Player.Listener() {
@@ -111,6 +137,7 @@ class ExoEngine implements Engine {
                     }
                 }
             });
+            if (ass != null && !ass.attach(p)) ass = null;
             if (holder != null) p.setVideoSurfaceHolder(holder);
             item = build();
             p.setMediaItem(item, Math.max(0, startMs));
@@ -156,5 +183,5 @@ class ExoEngine implements Engine {
         subs = f; long at = pos(); boolean play = p.getPlayWhenReady();
         item = build(); p.setMediaItem(item, at); p.prepare(); p.setPlayWhenReady(play);
     }
-    public void release() { h.removeCallbacksAndMessages(null); if (p != null) { try { p.release(); } catch (Exception ignored) { } p = null; } }
+    public void release() { h.removeCallbacksAndMessages(null); if (p != null) { try { p.release(); } catch (Exception ignored) { } p = null; } ass = null; }
 }

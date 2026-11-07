@@ -33,7 +33,10 @@ import java.nio.charset.StandardCharsets;
     the TV itself plays them. 1.7.0: the engine is ExoPlayer (Media3), with the system player as the fallback (see Engine). Remote: OK or Play/Pause pauses, Left/Right skip 10 s (30 s while held), Rewind/Fast forward
     skip 30 s, Menu switches the audio track, Up or Down shows the bar, Next plays the next episode, Back returns to
     MKCinema with the position so it is saved. With frame-rate matching on, the TV switches to the film's frame rate
-    (24p films without judder) while the film plays and switches back afterwards. */
+    (24p films without judder) while the film plays and switches back afterwards.
+    1.9.0: full ASS/SSA subtitle styling (Ass, libass), Dolby Vision profile 7 plays its HDR10 picture on TVs without
+    Dolby Vision (DvFallback), and Skip intro / recap / ending plus Next episode from the times MKCinema found
+    (AniSkip, TheIntroDB, chapters, addons, your own earlier skips). */
 public class PlayerActivity extends Activity implements SurfaceHolder.Callback, Engine.Listener {
     Engine eng; boolean fellBack, slow; String engineName; File subFile; boolean subsWaited;
     ImageView subImg; int vw, vh; float par = 1f;
@@ -53,6 +56,11 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     LinearLayout opts; final java.util.List<TextView> optBtns = new java.util.ArrayList<>(); int sel = -1;
     String audioLang, action;
     boolean hinted;
+    /** 1.9.0: libass styling allowed (setting on, and it hasn't crashed on this app version) */
+    boolean assOk, assCrashed; View assView;
+    /** 1.9.0: skip times in ms: recap, intro, ending ({start, end}), and where the credits start (-1 unknown) */
+    final String[] SEG = { "recap", "intro", "ed" }; final long[][] segs = new long[3][]; final boolean[] segUsed = new boolean[3];
+    long creditsMs = -1; boolean hasNext, autoSkip; int segCur = -1; long segShown; TextView skipBtn;
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
@@ -68,6 +76,11 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         startMs = i.getIntExtra("startMs", 0); matchRate = i.getBooleanExtra("matchRate", true);
         engineName = i.getStringExtra("engine"); if (engineName == null || engineName.isEmpty()) engineName = "exo";
         slow = i.getBooleanExtra("slow", false);
+        // 1.9.0: a crash while libass was drawing turns styled subtitles off on this app version (see onDestroy)
+        android.content.SharedPreferences sp = getSharedPreferences("mk", MODE_PRIVATE);
+        if (sp.getBoolean("assLive", false)) { sp.edit().putString("assOff", MainActivity.VER).putBoolean("assLive", false).apply(); assCrashed = true; }
+        assOk = i.getBooleanExtra("ass", true) && !MainActivity.VER.equals(sp.getString("assOff", ""));
+        readSkips(i.getStringExtra("skips")); hasNext = i.getBooleanExtra("hasNext", false); autoSkip = i.getBooleanExtra("autoSkip", false);
         float d = getResources().getDisplayMetrics().density;
 
         root = new FrameLayout(this); root.setBackgroundColor(Color.BLACK);
@@ -112,6 +125,13 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         }
         paintOpts();
         root.addView(bar, new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM));
+        // 1.9.0: Skip intro / recap / ending, and Next episode in the credits
+        skipBtn = text(17, 0xFF0B0B0C, Typeface.BOLD); skipBtn.setVisibility(View.GONE);
+        skipBtn.setPadding((int) (22 * d), (int) (11 * d), (int) (22 * d), (int) (11 * d));
+        GradientDrawable sg = new GradientDrawable(); sg.setCornerRadius(999); sg.setColor(0xFFE9E6DE); skipBtn.setBackground(sg);
+        skipBtn.setOnClickListener(v -> doSkipSeg());
+        FrameLayout.LayoutParams skl = new FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM | Gravity.END); skl.rightMargin = (int) (48 * d); skl.bottomMargin = (int) (150 * d);
+        root.addView(skipBtn, skl);
         setContentView(root);
         touch = !getPackageManager().hasSystemFeature("android.software.leanback") && getResources().getConfiguration().touchscreen != android.content.res.Configuration.TOUCHSCREEN_NOTOUCH;
         if (touch) setupTouch(seekBox, d); else playBtn.setVisibility(View.GONE);
@@ -182,16 +202,75 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
 
     void maybeStart() {
         if (eng != null || !surfaceReady || !subsWaited || isFinishing()) return;
-        try { if ("system".equals(engineName)) eng = new MpEngine(this, this); else { ExoEngine x = new ExoEngine(this, this); x.slow = slow; eng = x; } }
+        try { if ("system".equals(engineName)) eng = new MpEngine(this, this); else { ExoEngine x = new ExoEngine(this, this); x.slow = slow; x.wantAss = assOk; eng = x; } }
         catch (Throwable t) { fellBack = true; eng = new MpEngine(this, this); } // ExoPlayer missing or broken on this device
+        DvFallback.used = false;
         eng.open(url, hdr, subFile, audioLang, startMs, surface.getHolder());
+        addOverlay();
+    }
+
+    /** 1.9.0: the libass layer sits exactly over the picture (same size and place as the video surface), under the bar */
+    void addOverlay() {
+        View v = eng instanceof ExoEngine ? ((ExoEngine) eng).overlay() : null;
+        if (v == assView) return;
+        if (assView != null) { root.removeView(assView); assView = null; }
+        if (v == null) { liveAss(false); return; }
+        assView = v; root.addView(v, 1, new FrameLayout.LayoutParams(surface.getLayoutParams()));
+        liveAss(true);
+    }
+    void liveAss(boolean on) { getSharedPreferences("mk", MODE_PRIVATE).edit().putBoolean("assLive", on).commit(); }
+
+    void readSkips(String json) {
+        if (json == null || json.isEmpty()) return;
+        try {
+            org.json.JSONObject o = new org.json.JSONObject(json);
+            for (int k = 0; k < SEG.length; k++) {
+                org.json.JSONArray a = o.optJSONArray(SEG[k]); if (a == null || a.length() < 2) continue;
+                long s0 = (long) (a.getDouble(0) * 1000), e0 = (long) (a.getDouble(1) * 1000);
+                if (s0 >= 0 && e0 - s0 >= 5000 && e0 - s0 <= 15 * 60000) segs[k] = new long[] { s0, e0 };
+            }
+            double c = o.optDouble("credits", -1); if (c > 0) creditsMs = (long) (c * 1000);
+        } catch (Exception ignored) { }
+    }
+
+    /** every 400 ms while playing: which skip applies right now */
+    final Runnable marks = new Runnable() { @Override public void run() {
+        if (prepared && eng != null && !isFinishing()) {
+            try {
+                long pos = eng.pos(), dur = eng.dur(); int k = -1;
+                for (int j = 0; j < SEG.length; j++) {
+                    long[] g = segs[j]; if (g == null) continue;
+                    if (j == 2 && (dur <= 0 || g[1] > dur - 20000)) continue; // an ending that runs to the end: Next episode covers it
+                    if (pos >= g[0] && pos < g[1] - 1000) { k = j; break; }
+                }
+                boolean credits = k < 0 && hasNext && creditsMs > 0 && pos >= creditsMs && (dur <= 0 || pos < dur - 2000);
+                int now = credits ? 3 : k;
+                if (now != segCur) { segCur = now; segShown = System.currentTimeMillis();
+                    if (k >= 0 && autoSkip && k != 2 && !segUsed[k]) { segUsed[k] = true; doSkipSeg(); }
+                    else if (now >= 0) { skipBtn.setText(new String[] { "Skip recap", "Skip intro", "Skip ending", "Next episode  ▶" }[now]); skipBtn.setVisibility(View.VISIBLE); }
+                    else skipBtn.setVisibility(View.GONE);
+                } else if (now >= 0 && now < 3 && System.currentTimeMillis() - segShown > 8000) skipBtn.setVisibility(View.GONE);
+            } catch (Exception ignored) { }
+        }
+        if (!isFinishing()) h.postDelayed(this, 400);
+    } };
+    boolean skipShown() { return skipBtn != null && skipBtn.getVisibility() == View.VISIBLE; }
+    void doSkipSeg() {
+        int k = segCur; skipBtn.setVisibility(View.GONE); if (k < 0 || eng == null) return;
+        if (k == 3) { wantNext = true; finishWithResult(); return; }
+        segUsed[k] = true; segShown = 0; eng.seek(segs[k][1]);
+        note.setText(new String[] { "Recap skipped", "Intro skipped", "Ending skipped" }[k] + (autoSkip && k != 2 ? " automatically" : "")); show(2000);
+        h.postDelayed(() -> { if (note.getText().toString().endsWith("skipped") || note.getText().toString().endsWith("automatically")) note.setText(""); }, 2000);
     }
 
     // ---- Engine.Listener ----
     @Override public void ready() {
-        prepared = true; fit();
+        prepared = true; fit(); addOverlay();
+        h.removeCallbacks(marks); if (segs[0] != null || segs[1] != null || segs[2] != null || creditsMs > 0) h.post(marks);
         note.setText(touch || hinted ? "" : "Press ▼ for audio, subtitles and sources"); hinted = true; show(touch ? 4000 : 6000);
         if (fellBack) { note.setText("Playing with the basic player"); h.postDelayed(() -> { if (note.getText().toString().startsWith("Playing with")) note.setText(""); }, 4000); }
+        else if (DvFallback.used) { note.setText("HDR10 (this TV can’t show this Dolby Vision)"); h.postDelayed(() -> { if (note.getText().toString().startsWith("HDR10")) note.setText(""); }, 5000); }
+        else if (assCrashed) { note.setText("Styled subtitles were turned off after a problem"); h.postDelayed(() -> { if (note.getText().toString().startsWith("Styled")) note.setText(""); }, 5000); }
     }
     @Override public void size(int w, int hh, float p) { vw = w; vh = hh; par = p > 0 ? p : 1f; fit(); }
     @Override public void ended() { ended = true; finishWithResult(); }
@@ -209,7 +288,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         // 1.7.0: a file ExoPlayer can't open gets one try in the basic player before MKCinema's own player takes over
         if (beforeReady && eng instanceof ExoEngine && !fellBack && !isFinishing()) {
             fellBack = true; eng.release(); eng = null; prepared = false; note.setText("Trying the basic player…");
-            eng = new MpEngine(this, this); eng.open(url, hdr, subFile, audioLang, startMs, surface.getHolder());
+            eng = new MpEngine(this, this); eng.open(url, hdr, subFile, audioLang, startMs, surface.getHolder()); addOverlay();
             return;
         }
         note.setText("This source won’t play here");
@@ -223,6 +302,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         int sw = root.getWidth(), sh = root.getHeight(); if (sw == 0 || sh == 0) { root.post(this::fit); return; }
         float w = vw * par, r = Math.min(sw / w, sh / (float) vh);
         surface.setLayoutParams(new FrameLayout.LayoutParams((int) (w * r), (int) (vh * r), Gravity.CENTER));
+        if (assView != null) assView.setLayoutParams(new FrameLayout.LayoutParams((int) (w * r), (int) (vh * r), Gravity.CENTER));
     }
 
     /** Asks the TV for a display mode at the same resolution whose refresh rate is a whole multiple of it. */
@@ -378,6 +458,8 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
                 case KeyEvent.KEYCODE_DPAD_DOWN: show(8000); return true;
             }
         }
+        // 1.9.0: while Skip intro (or Next episode) shows, OK presses it
+        if ((k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER) && skipShown()) { doSkipSeg(); return true; }
         if (k == KeyEvent.KEYCODE_DPAD_DOWN && prepared) { sel = 0; paintOpts(); show(8000); if (note.getText().toString().startsWith("Press")) note.setText(""); return true; }
         switch (k) {
             case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER: case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE: case KeyEvent.KEYCODE_SPACE:
@@ -404,6 +486,9 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         setResult(RESULT_OK, r); finish();
     }
 
-    @Override protected void onPause() { super.onPause(); if (eng != null && prepared && eng.playing()) eng.pause(); }
-    @Override protected void onDestroy() { super.onDestroy(); h.removeCallbacksAndMessages(null); if (eng != null) { eng.release(); eng = null; } }
+    // the crash flag is only up while the libass layer draws on screen, so Android closing a paused player in the
+    // background never counts as a crash
+    @Override protected void onPause() { super.onPause(); if (eng != null && prepared && eng.playing()) eng.pause(); if (assView != null) liveAss(false); }
+    @Override protected void onResume() { super.onResume(); if (assView != null) liveAss(true); }
+    @Override protected void onDestroy() { super.onDestroy(); h.removeCallbacksAndMessages(null); if (eng != null) { eng.release(); eng = null; } liveAss(false); }
 }
