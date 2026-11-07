@@ -71,7 +71,6 @@ Addon developers can go further with one optional, data-only `mkcinema` field: r
 <tr>
 <td width="33%" valign="top"><img src="readme/icon-import.svg" width="52" alt=""><br><b>Your own media servers</b><br><sub>Connect Plex, Jellyfin or Emby and the films you own sit next to your addon sources. Smart Play picks your own copy first.</sub></td>
 <td width="33%" valign="top"><img src="readme/icon-tv.svg" width="52" alt=""><br><b>The TV's own player</b><br><sub>On Android TV and Fire TV, streams play in the TV's hardware player, so HEVC, HDR and Dolby Vision play natively, with frame-rate matching. MKCinema still picks the source and saves your place.</sub></td>
-<td width="33%" valign="top"><img src="readme/icon-bolt.svg" width="52" alt=""><br><b>Torrents without debrid</b><br><sub>Every app (Windows, Mac, Linux, Android and TV) can play torrent sources themselves. Off until you turn it on, download only, and the cache is deleted when you stop.</sub></td>
 </tr>
 <tr>
 <td width="33%" valign="top"><img src="readme/icon-users.svg" width="52" alt=""><br><b>Watch party</b><br><sub>Share a six-character room. Play, pause and seek stay in sync, with chat, reactions and push-to-talk, peer to peer.</sub></td>
