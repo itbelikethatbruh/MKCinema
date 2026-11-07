@@ -302,7 +302,7 @@ npm install
 node mkcinema-server.js   # app at http://127.0.0.1:7000/
 ```
 
-The web app also runs from any static host. Build steps for Android, Windows, macOS, Linux and webOS are in [docs/install.md](docs/install.md#build-from-source).
+Releases minify a copy of `app/` with `node tools/minify-web.mjs <copy>`; the Web checks workflow runs the same minifier, smoke-tests the source and the minified copy in headless Chromium, checks every relative link and runs Lighthouse on the website. The web app also runs from any static host. Build steps for Android, Windows, macOS, Linux and webOS are in [docs/install.md](docs/install.md#build-from-source).
 
 ## Repository layout
 

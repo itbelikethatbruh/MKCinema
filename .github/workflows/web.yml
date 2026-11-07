@@ -1,0 +1,58 @@
+name: Web checks
+
+# Checks the web app and the website on every pull request and push to main:
+# - JSON files parse, and every relative link in the docs, site and app pages points to a real file
+# - tools/minify-web.mjs minifies a copy of app/ the same way a release does (a parse error fails here)
+# - the source and the minified copy both open in headless Chromium, desktop and phone, with no uncaught errors
+# - a Lighthouse run on the website (accessibility must stay at 90 or above; speed and size are reported)
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths: ["app/**", "site/**", "tv-site/**", "tools/**", "**/*.md", ".github/workflows/web.yml", ".github/lighthouserc.json"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: JSON files parse
+        run: |
+          find app site tv-site plugins -name '*.json' -o -name '*.webmanifest' | while read -r f; do
+            node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' "$f" || { echo "::error file=$f::invalid JSON"; exit 1; }
+          done
+      - name: Relative links
+        run: node tools/check-links.mjs
+      - name: Minify a copy of the web app
+        run: |
+          cp -r app "$RUNNER_TEMP/web"
+          node tools/minify-web.mjs "$RUNNER_TEMP/web"
+      - name: Install Chromium for the smoke test
+        run: |
+          npm install --prefix "$RUNNER_TEMP/pw" --no-audit --no-fund --silent playwright@1.63.0
+          "$RUNNER_TEMP/pw/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Smoke test, source
+        run: NODE_PATH="$RUNNER_TEMP/pw/node_modules" node tools/smoke-web.mjs app
+      - name: Smoke test, minified build
+        run: NODE_PATH="$RUNNER_TEMP/pw/node_modules" node tools/smoke-web.mjs "$RUNNER_TEMP/web"
+
+  site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Lighthouse
+        run: npx --yes @lhci/cli@0.14.0 autorun --config=.github/lighthouserc.json

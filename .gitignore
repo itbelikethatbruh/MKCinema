@@ -19,3 +19,4 @@ android/libs/*.jar
 site/download/*
 !site/download/com.mkcinema.app.manifest.json
 !site/download/mkcinema-webos-icon.png
+.lighthouseci/
