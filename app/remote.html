@@ -309,6 +309,18 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .lng-nudge button,.lng-off{min-height:44px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:#fff;font:600 13px/1 var(--f-body)}
 .lng-off{margin-top:8px}
 </style>
+<style id="rm-255glcss">
+#psGlBtn.on{color:var(--accent,#cdb47e);border-color:var(--accent,#cdb47e)}
+.ps-gl{margin:12px 0 0;padding:14px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.04)}
+.ps-gl[hidden]{display:none}
+.ps-gl p{margin:0 0 10px;color:#fff;font-size:14px;line-height:1.4}
+.ps-gl small{display:block;margin-top:10px;color:var(--dim);font-size:12px;line-height:1.4}
+.ps-gl-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ps-gl-row[hidden]{display:none}
+.ps-gl-row button{min-height:48px;padding:8px 10px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff;font:600 13px/1.25 var(--f-body)}
+#psView.ps-dark #psText,#psView.ps-dark .ps-ctl{opacity:0;transition:opacity .4s ease}
+#psView.ps-dark .ps-top{opacity:.18;transition:opacity .4s ease}
+</style>
 </head>
 <body>
 <div class="amb"></div>
@@ -349,6 +361,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
       <symbol id="i-life" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></symbol>
     <symbol id="i-phone" viewBox="0 0 24 24"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></symbol>
       <symbol id="i-lang" viewBox="0 0 24 24"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></symbol>
+    <symbol id="i-glasses" viewBox="0 0 24 24"><circle cx="6" cy="15" r="4"/><circle cx="18" cy="15" r="4"/><path d="M14 15a2 2 0 0 0-2-2 2 2 0 0 0-2 2"/><path d="M2.5 13 5 7c.7-1.3 1.4-2 3-2"/><path d="M21.5 13 19 7c-.7-1.3-1.5-2-3-2"/></symbol>
   </defs>
 </svg>
 
@@ -498,7 +511,8 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
   <div id="cmBody"></div>
 </div>
 <div id="psView" hidden role="dialog" aria-label="Subtitles">
-  <div class="ps-top"><span class="grow"><b id="psLang">Subtitles</b><small id="psHow"></small></span><button class="iconbtn" type="button" id="psLangBtn" aria-label="Change language"><svg class="i"><use href="#i-cc"/></svg></button><button class="iconbtn" type="button" id="psClose" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="ps-top"><span class="grow"><b id="psLang">Subtitles</b><small id="psHow"></small></span><button class="iconbtn" type="button" id="psGlBtn" aria-label="Subtitles on glasses" aria-pressed="false"><svg class="i"><use href="#i-glasses"/></svg></button><button class="iconbtn" type="button" id="psLangBtn" aria-label="Change language"><svg class="i"><use href="#i-cc"/></svg></button><button class="iconbtn" type="button" id="psClose" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></div>
+<div id="psGl" class="ps-gl" hidden><p id="psGlState"></p><div id="psGlPick" class="ps-gl-row"><button type="button" data-glk="frame">Brilliant Labs Frame</button><button type="button" data-glk="g1">Even Realities G1</button></div><div id="psGlOn" class="ps-gl-row" hidden><button type="button" id="psGlDark">Dark phone</button><button type="button" id="psGlOff">Disconnect</button></div><small>Glasses that plug into the phone as a screen don’t need this: they already show this view.</small></div><!-- /psGl -->
   <div id="psText"></div>
   <div class="ps-ctl"><button type="button" id="psSmall">A−</button><button type="button" id="psBig">A+</button><button type="button" id="psEarly">−0.5 s</button><button type="button" id="psLate">+0.5 s</button></div>
 </div><!-- /2.35.0 -->
@@ -1738,6 +1752,199 @@ const LNG = {
     const b = e.target.closest('[data-lng]'); if (b) LNG.pick(b.dataset.lng);
   });
 }
+
+/* ---------- 2.55 Subtitles on smart glasses ----------
+   Sends the subtitle line that is showing to smart glasses over Bluetooth, straight from this browser (Chrome or Edge on
+   Android, Windows, Mac, Linux and ChromeOS). Nothing goes through a server.
+   Brilliant Labs Frame: Lua over its own Bluetooth service (frame.display.text + show).
+   Even Realities G1: the 0x4E text command from Even Realities' own demo app, left arm first, then right.
+   Glasses that work as a plain screen over USB-C need none of this: they just mirror the phone. */
+const Glasses = {
+  kind: '', dev: [], tx: [], rx: [], busy: false, want: null, shown: null, seq: 0, max: 100, onchange: null, acks: [],
+  FRAME: { svc: '7a230001-5475-a6a4-654c-8431f6ad49c4', tx: '7a230002-5475-a6a4-654c-8431f6ad49c4', rx: '7a230003-5475-a6a4-654c-8431f6ad49c4' },
+  NUS: { svc: '6e400001-b5a3-f393-e0a9-e50e24dcca9e', tx: '6e400002-b5a3-f393-e0a9-e50e24dcca9e', rx: '6e400003-b5a3-f393-e0a9-e50e24dcca9e' },
+  NAMES: { frame: 'Brilliant Labs Frame', g1: 'Even Realities G1' },
+  can() {
+    try { return !!(window.isSecureContext && navigator.bluetooth && typeof navigator.bluetooth.requestDevice === 'function' && !window.MKDesktop); } catch (e) { return false; }
+  },
+  on() { return !!this.kind && this.dev.length > 0 && this.dev.every((d) => d.gatt && d.gatt.connected); },
+  label() { return this.on() ? this.NAMES[this.kind] : ''; },
+  why(e) {
+    const n = e && e.name, m = String((e && e.message) || e || '');
+    if (n === 'NotFoundError' && /cancel/i.test(m)) return '';
+    if (n === 'WrongArm') return `Almost: ${m}.`;
+    if (n === 'NotFoundError') return 'No glasses picked. Turn them on, keep them close and try again.';
+    if (n === 'SecurityError' || n === 'NotAllowedError') return 'Bluetooth is blocked for this page. Allow it in the browser’s site settings.';
+    if (n === 'NotSupportedError') return 'This browser can’t use Bluetooth. Use Chrome or Edge.';
+    return `The glasses didn’t answer (${m || 'Bluetooth error'}). Turn them off and on, then try again.`;
+  },
+  changed() { try { this.onchange && this.onchange(this.on()); } catch (e) { /* ui gone */ } },
+  async connect(kind) {
+    if (!this.can()) throw Object.assign(new Error('no bluetooth'), { name: 'NotSupportedError' });
+    await this.disconnect(true);
+    const bt = navigator.bluetooth;
+    if (kind === 'frame') {
+      const d = await bt.requestDevice({ filters: [{ services: [this.FRAME.svc] }, { namePrefix: 'Frame' }], optionalServices: [this.FRAME.svc] });
+      const { tx, rx } = await this.open(d, this.FRAME);
+      this.kind = 'frame'; this.dev = [d]; this.tx = [tx]; this.rx = [rx];
+      // stop whatever app the glasses are running, so they listen to us, then ask how long one message may be
+      await this.raw(tx, new Uint8Array([3])).catch(() => {});
+      this.max = 100;
+      const got = new Promise((res) => { this.frameReply = res; setTimeout(() => res(''), 1500); });
+      await this.lua('print(frame.bluetooth.max_length())').catch(() => {});
+      const n = parseInt(await got, 10); if (n >= 20 && n <= 512) this.max = n;
+      this.frameReply = null;
+    } else {
+      // two arms, two connections: the browser asks for each one
+      const pick = (side) => bt.requestDevice({ filters: [{ namePrefix: 'Even G1' }, { namePrefix: 'G1' }], optionalServices: [this.NUS.svc] })
+        .then((d) => { if (!new RegExp(`_${side}_`, 'i').test(d.name || '') && /_[LR]_/i.test(d.name || '')) throw Object.assign(new Error(`pick the ${side === 'L' ? 'left' : 'right'} arm (its name has _${side}_)`), { name: 'WrongArm' }); return d; });
+      const L = await pick('L'); const l = await this.open(L, this.NUS);
+      let R, r;
+      try { R = await pick('R'); r = await this.open(R, this.NUS); } catch (e) { try { L.gatt.disconnect(); } catch (x) { /* gone */ } throw e; }
+      this.kind = 'g1'; this.dev = [L, R]; this.tx = [l.tx, r.tx]; this.rx = [l.rx, r.rx];
+    }
+    this.dev.forEach((d) => d.addEventListener('gattserverdisconnected', () => { if (this.dev.includes(d)) { this.forget(); this.changed(); } }));
+    this.shown = null; this.changed();
+    this.show(['MKCinema', 'Subtitles will show here']);
+    return this.label();
+  },
+  async open(d, S) {
+    const g = await d.gatt.connect(), s = await g.getPrimaryService(S.svc);
+    const tx = await s.getCharacteristic(S.tx), rx = await s.getCharacteristic(S.rx);
+    try { await rx.startNotifications(); rx.addEventListener('characteristicvaluechanged', (e) => this.heard(e.target.value)); } catch (e) { /* replies are optional */ }
+    return { tx, rx };
+  },
+  heard(v) {
+    const b = new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
+    if (this.kind === 'g1' || (!this.kind && b[0] === 0x4e)) { const a = this.acks.shift(); if (a) a(b); return; }
+    if (this.frameReply) { try { this.frameReply(new TextDecoder().decode(b).trim()); } catch (e) { /* not text */ } }
+  },
+  forget() { this.kind = ''; this.dev = []; this.tx = []; this.rx = []; this.busy = false; this.want = null; this.shown = null; this.acks = []; },
+  async disconnect(quiet) {
+    const ds = this.dev.slice();
+    if (ds.length) { try { await this.send([]); } catch (e) { /* gone */ } }
+    this.forget();
+    ds.forEach((d) => { try { d.gatt.disconnect(); } catch (e) { /* gone */ } });
+    if (!quiet) this.changed();
+  },
+  raw(c, bytes) { return (c.writeValueWithResponse ? c.writeValueWithResponse(bytes) : c.writeValue(bytes)); },
+  lua(code) { return this.raw(this.tx[0], new TextEncoder().encode(code)); },
+  /* lines of text in, wrapped to what the glasses can show */
+  wrap(lines, width, rows) {
+    const out = [];
+    lines.forEach((l) => {
+      let cur = '';
+      String(l).replace(/\s+/g, ' ').trim().split(' ').forEach((w) => {
+        while (w.length > width) { if (cur) { out.push(cur); cur = ''; } out.push(w.slice(0, width)); w = w.slice(width); }
+        if (!w) return;
+        if (!cur) cur = w; else if (cur.length + 1 + w.length <= width) cur += ` ${w}`; else { out.push(cur); cur = w; }
+      });
+      if (cur) out.push(cur);
+    });
+    if (out.length > rows) { out.length = rows; out[rows - 1] = `${out[rows - 1].slice(0, width - 1)}…`; }
+    return out;
+  },
+  /* Lua string literal: printable ASCII as is, everything else as \ddd bytes */
+  luaStr(s) {
+    let o = '';
+    new TextEncoder().encode(s).forEach((c) => { o += c === 34 || c === 92 ? `\\${String.fromCharCode(c)}` : c >= 32 && c < 127 ? String.fromCharCode(c) : `\\${c}`; });
+    return `"${o}"`;
+  },
+  /* the latest wanted text always wins: lines that came and went while the glasses were busy are skipped */
+  show(lines) {
+    if (!this.on()) return;
+    const clean = (Array.isArray(lines) ? lines : [lines]).map((l) => String(l || '').trim()).filter(Boolean);
+    const key = clean.join('\n'); if (key === this.shown && !this.busy) return;
+    this.want = clean; if (!this.busy) this.pump();
+  },
+  clear() { this.show([]); },
+  async pump() {
+    this.busy = true;
+    try {
+      while (this.want && this.on()) {
+        const l = this.want; this.want = null; const key = l.join('\n');
+        if (key === this.shown) continue;
+        await this.send(l); this.shown = key;
+      }
+    } catch (e) { this.shown = null; } finally { this.busy = false; }
+  },
+  async send(lines) {
+    if (this.kind === 'frame') {
+      const rows = this.wrap(lines, 24, 5), top = Math.max(40, 200 - rows.length * 30);
+      for (let i = 0; i < rows.length; i++) {
+        let s = rows[i], cmd;
+        // keep each message inside one Bluetooth packet
+        while ((cmd = `frame.display.text(${this.luaStr(s)},40,${top + i * 60})`).length > this.max - 4 && s.length > 1) s = s.slice(0, -1);
+        await this.lua(cmd);
+      }
+      await this.lua('frame.display.show()');
+      return;
+    }
+    if (this.kind === 'g1') {
+      const rows = this.wrap(lines, 26, 5), body = new TextEncoder().encode(rows.join('\n') || ' ');
+      const per = 180, total = Math.max(1, Math.ceil(body.length / per)), seq = this.seq = (this.seq + 1) & 255;
+      for (let p = 0; p < total; p++) {
+        const part = body.slice(p * per, (p + 1) * per), pkt = new Uint8Array(9 + part.length);
+        pkt.set([0x4e, seq, total, p, 0x71, 0, 0, 1, 1]); pkt.set(part, 9);
+        for (let side = 0; side < 2; side++) {
+          const ack = new Promise((res) => {
+            const f = (b) => { clearTimeout(t); res(b); };
+            const t = setTimeout(() => { const i = this.acks.indexOf(f); if (i >= 0) this.acks.splice(i, 1); res(null); }, 400);
+            this.acks.push(f);
+          });
+          await this.raw(this.tx[side], pkt);
+          await ack; // the left arm must take it before the right one gets it
+        }
+      }
+    }
+  },
+};
+/* ---------- 2.55 Subtitles on glasses (phone) ----------
+   In the phone's subtitle view, the line that shows here also goes to the glasses. "Dark phone" blacks out this
+   screen so it doesn't light up the room while the glasses do the reading. */
+const GlPhone = {
+  dark: false, obs: null,
+  text() {
+    return Array.from($('#psText').querySelectorAll('p')).filter((p) => !p.classList.contains('ps-gap') && !p.classList.contains('ps-wait')).map((p) => p.textContent);
+  },
+  paint() {
+    const box = $('#psGl'), b = $('#psGlBtn'); if (!box || !b) return;
+    const on = Glasses.on();
+    b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    $('#psGlState').textContent = on ? `${Glasses.label()} is showing the subtitles.` : 'Show these subtitles on your smart glasses. Turn the glasses on and keep them close.';
+    $('#psGlPick').hidden = on; $('#psGlOn').hidden = !on;
+    $('#psGlDark').textContent = this.dark ? 'Light phone' : 'Dark phone';
+    if (!on && this.dark) this.setDark(false);
+  },
+  toggle() { const box = $('#psGl'); box.hidden = !box.hidden; this.paint(); },
+  async pick(kind) {
+    if (kind === 'g1') toast('Pick the left arm first, then the right arm', 3200);
+    $('#psGlState').textContent = 'Connecting…';
+    try { const n = await Glasses.connect(kind); buzz([10, 40, 10]); toast(`${n} connected`, 2000); this.send(); }
+    catch (e) { const w = Glasses.why(e); this.paint(); if (w) { $('#psGlState').textContent = w; toast(w, 4200); } }
+  },
+  send() { if (Glasses.on()) Glasses.show(this.text()); },
+  setDark(v) { this.dark = !!v; $('#psView').classList.toggle('ps-dark', this.dark); this.paint(); },
+  init() {
+    if (!$('#psView') || !$('#psText')) return;
+    if (!Glasses.can()) { const b = $('#psGlBtn'); if (b) b.hidden = true; return; }
+    Glasses.onchange = () => this.paint();
+    this.obs = new MutationObserver(() => this.send());
+    this.obs.observe($('#psText'), { childList: true, subtree: true, characterData: true });
+    $('#psGlBtn').onclick = () => { buzz(6); this.toggle(); };
+    $('#psGl').addEventListener('click', (e) => {
+      const k = e.target.closest('[data-glk]'); if (k) { this.pick(k.dataset.glk); return; }
+      if (e.target.closest('#psGlOff')) { Glasses.disconnect(); this.setDark(false); toast('Glasses disconnected', 1600); return; }
+      if (e.target.closest('#psGlDark')) { this.setDark(!this.dark); $('#psGl').hidden = true; }
+    });
+    // tap anywhere on a dark phone to light it up again
+    $('#psView').addEventListener('click', (e) => { if (this.dark && !e.target.closest('#psGl, .ps-top')) this.setDark(false); });
+    const close = PSub.close.bind(PSub);
+    PSub.close = function () { Glasses.clear(); GlPhone.setDark(false); $('#psGl').hidden = true; return close(); };
+    this.paint();
+  },
+};
+GlPhone.init();
 
 /* ---------- Start ---------- */
 (() => {
