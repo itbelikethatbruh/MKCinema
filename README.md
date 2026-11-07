@@ -1,47 +1,62 @@
+<p align="center">
+  <a href="https://mkcinema.app"><img src="docs/readme/logo.png" width="140" alt="MKCinema logo"></a>
+</p>
+
 <h1 align="center">MKCinema</h1>
 
 <p align="center">
   <b>Your addons look better here.</b><br>
-  A free, open-source player for Stremio addons, with debrid support, account sync<br>
-  and apps for Android, Android TV, Windows, macOS, Linux and smart TVs.
+  A free, open-source player for Stremio addons, built for phones, computers and TVs.<br>
+  <i>No ads. No paywalls. No tracking. Just your addons, at their best.</i>
 </p>
 
+> [!IMPORTANT]
+> **Web 2.45 is live.** Ratings addons now show real IMDb, TMDB and Rotten Tomatoes scores, debrid notice clips are caught, and SDK addons get a settings screen, all with no changes from the addon's developer. [See what's new](CHANGELOG.md).
+
 <p align="center">
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/itbelikethatbruh/MKCinema?style=flat-square&label=release"></a>
+  <img alt="Platforms" src="https://img.shields.io/badge/platforms-Web%20%7C%20Android%20%7C%20TV%20%7C%20Windows%20%7C%20macOS%20%7C%20Linux-2ea44f?style=flat-square">
   <a href="LICENSE"><img alt="License: GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/itbelikethatbruh/MKCinema?style=flat-square&label=release"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/itbelikethatbruh/MKCinema/total?style=flat-square&label=downloads&color=2ea44f"></a>
   <a href="https://github.com/itbelikethatbruh/MKCinema/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/itbelikethatbruh/MKCinema?style=flat-square"></a>
-  <a href="https://app.mkcinema.app"><img alt="Web app" src="https://img.shields.io/badge/web%20app-live-brightgreen?style=flat-square"></a>
   <a href="https://ko-fi.com/mkcinema"><img alt="Support on Ko-fi" src="https://img.shields.io/badge/Ko--fi-support-72a4f2?style=flat-square&logo=kofi&logoColor=white"></a>
 </p>
 
 <p align="center">
-  <a href="https://app.mkcinema.app">Web app</a> ·
+  <a href="https://app.mkcinema.app"><b>Open the web app</b></a> ·
+  <a href="docs/install.md"><b>Download</b></a> ·
   <a href="https://mkcinema.app">Website</a> ·
-  <a href="docs/install.md">Install</a> ·
   <a href="docs/features.md">Features</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
   <a href="https://ko-fi.com/mkcinema">Ko-fi</a>
 </p>
 
-<p align="center"><img src="docs/screenshots/app-side-menu.webp" width="100%" alt="MKCinema Home with the side menu, the featured banner and Top 10 films today"></p>
+---
 
-## About
+## Showcase
 
-MKCinema is an independent project, designed, built and maintained by one developer, Dee Lavish. There is no company or team behind it. Everything in this repository was built for MKCinema:
+<p align="center"><img src="docs/screenshots/app-side-menu.webp" width="100%" alt="Home with the side menu, the featured banner and Top 10 films today"></p>
 
-- **The player.** A full video player with HLS and direct playback, styled anime subtitles, an audio engine with sound modes and volume boost, skip markers, X-Ray, touch gestures and automatic source failover.
-- **The addon engine.** It speaks the Stremio addon protocol, queries every addon in parallel, ranks and checks sources, and handles debrid accounts.
-- **The apps.** One web app plus native apps for Android, Android TV and Fire TV, Windows, macOS, Linux, LG webOS and Samsung TVs, all sharing one codebase.
-- **The services around it.** Account sync, a phone remote, watch parties with voice, a subtitle translation service, and the website.
-- **Tools for addon developers.** A visual addon builder, an addon finder, and an optional manifest field that lets addons shape how they look.
+<table>
+<tr>
+<td width="50%" align="center"><img src="docs/screenshots/app-detail.webp" alt="A film page with Smart Play and its sources"><br><sub>Film page: Smart Play explains every pick</sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/app-player.webp" alt="The player's Audio tab"><br><sub>The player: audio languages, 200% volume, Listen on phone</sub></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/screenshots/app-tv.webp" alt="MKCinema on a TV"><br><sub>On a TV: built for the remote</sub></td>
+<td align="center"><img src="docs/screenshots/app-anime-home.webp" alt="Home in the Anime look"><br><sub>The Anime look, one of five</sub></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/screenshots/app-party.webp" alt="Watch party"><br><sub>Watch parties with synced playback and voice</sub></td>
+<td align="center"><img src="docs/screenshots/app-addon-studio.jpg" alt="Addon Studio"><br><sub>Addon Studio: build a Stremio addon visually</sub></td>
+</tr>
+</table>
 
-It is free forever. MKCinema will never charge for anything: no paid tier, no ads and no feature behind a paywall. If you'd like to support the work, you can [donate on Ko-fi](https://ko-fi.com/mkcinema). Donations are optional and unlock nothing.
+<p align="center"><sub>Player shots show <a href="https://studio.blender.org/films/">Blender open movies</a> (CC BY). Poster and backdrop art comes from the catalogs and belongs to its owners.</sub></p>
 
-MKCinema ships no titles or streams. Catalogs come from Cinemeta, subtitles from OpenSubtitles, and the only built-in source is official trailers. Everything else comes from addons and debrid accounts you add yourself.
+## What makes MKCinema different
 
-## Built for addons
-
-These features exist so the addons you already use look and work better. All of them are live, and we haven't seen them in any other player yet.
+MKCinema is built around the addons you already use, and goes further than playing them: it makes them look and work better. Every feature below is live, and we haven't seen them in any other player yet.
 
 **For everyone, with no changes from the addon developer:**
 
@@ -61,6 +76,20 @@ These features exist so the addons you already use look and work better. All of 
 | **Playback events and skips** | Receive start, pause and finish events, add intro, recap and credit times, and read the device's supported codecs. |
 
 Everything is validated data that MKCinema draws with its own components. Addon code, HTML and CSS never run, viewers choose whether an addon gets their watchlist or playback events, and other apps simply ignore the field. Specs: [docs/addon-looks.md](docs/addon-looks.md) and [docs/addon-extras.md](docs/addon-extras.md).
+
+## About
+
+MKCinema is an independent project, designed, built and maintained by one developer, Dee Lavish. There is no company or team behind it. Everything in this repository was built for MKCinema:
+
+- **The player.** A full video player with HLS and direct playback, styled anime subtitles, an audio engine with sound modes and volume boost, skip markers, X-Ray, touch gestures and automatic source failover.
+- **The addon engine.** It speaks the Stremio addon protocol, queries every addon in parallel, ranks and checks sources, and handles debrid accounts.
+- **The apps.** One web app plus native apps for Android, Android TV and Fire TV, Windows, macOS, Linux, LG webOS and Samsung TVs, all sharing one codebase.
+- **The services around it.** Account sync, a phone remote, watch parties with voice, a subtitle translation service, and the website.
+- **Tools for addon developers.** A visual addon builder, an addon finder, and an optional manifest field that lets addons shape how they look.
+
+It is free forever. MKCinema will never charge for anything: no paid tier, no ads and no feature behind a paywall. If you'd like to support the work, you can [donate on Ko-fi](https://ko-fi.com/mkcinema). Donations are optional and unlock nothing.
+
+MKCinema ships no titles or streams. Catalogs come from Cinemeta, subtitles from OpenSubtitles, and the only built-in source is official trailers. Everything else comes from addons and debrid accounts you add yourself.
 
 ## What's built
 
