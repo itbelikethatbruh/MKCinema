@@ -4,10 +4,11 @@
 // Settings call TMDB directly instead and never reach this function.
 //
 // Only fixed lookups are offered, never a free path: ping, search (a person by name), cast (a title's people,
-// by IMDb or TMDB id), person (bio and combined credits) and ids (a film's or show's IMDb id). Answers are trimmed to
+// by IMDb or TMDB id), person (bio and combined credits), ids (a film's or show's IMDb id) and art (the best backdrop
+// without the title printed on it, plus a logo, for the Home banner and title pages). Answers are trimmed to
 // the fields the person page draws. Calls must carry the project's publishable key in `apikey` and come from the live
 // sites (the same rule as debrid-relay). Nothing is stored and nothing is logged: this file has no console calls on purpose.
-const VERSION = 1;
+const VERSION = 2;
 const ORIGINS = [/^https:\/\/(mkcinema|mkctv)\.pages\.dev$/, /^https:\/\/((app|tv)\.)?mkcinema\.app$/];
 const RATE = { limit: 90, windowMs: 60_000 }; // per client IP, per isolate (best effort)
 const API = 'https://api.themoviedb.org/3';
@@ -60,6 +61,21 @@ const credit = (c: any, crew: boolean) => ({
 });
 const LANG = /^[a-z]{2}(-[A-Z]{2})?$/;
 
+// Backdrops tagged with a language have the title printed on them; untagged ones are textless (TMDB's own rule).
+// TMDB's main backdrop wins when it is textless, else the best-rated textless one. `titled` is only filled when no
+// textless backdrop exists, so the app can show known titled art and keep its own logo off.
+function pickArt(hit: any, im: any) {
+  const bds = ((im && im.backdrops) || []).filter((x: any) => x && x.file_path && num(x.width) >= 1280);
+  const score = (x: any) => num(x.vote_average) * 100 + Math.min(num(x.vote_count), 99);
+  const clean = bds.filter((x: any) => !x.iso_639_1).sort((x: any, y: any) => score(y) - score(x));
+  const main = clean.find((x: any) => x.file_path === hit.backdrop_path);
+  const titled = bds.filter((x: any) => x.iso_639_1 === 'en').sort((x: any, y: any) => score(y) - score(x))[0];
+  const logos = ((im && im.logos) || []).filter((l: any) => l && l.file_path && !/\.svg$/i.test(l.file_path));
+  const logo = logos.find((l: any) => l.iso_639_1 === 'en') || null;
+  const bg = (main || clean[0] || null);
+  return { bg: str(bg && bg.file_path, 80), titled: bg ? '' : str(titled && titled.file_path, 80), logo: str(logo && logo.file_path, 80) };
+}
+
 async function answer(a: string, p: URLSearchParams): Promise<[number, unknown, number]> {
   const lang = LANG.test(p.get('lang') || '') ? p.get('lang')! : 'en-US';
   const id = p.get('id') || '', kind = p.get('kind') === 'tv' ? 'tv' : 'movie';
@@ -110,6 +126,15 @@ async function answer(a: string, p: URLSearchParams): Promise<[number, unknown, 
     if (!/^\d{1,9}$/.test(id)) return [400, { error: 'bad title id' }, 0];
     const j = await tmdb(`${kind}/${id}/external_ids`);
     return [200, { imdb_id: str(j && j.imdb_id, 12) }, 7 * 86400];
+  }
+  if (a === 'art') {
+    const tt = p.get('tt') || '';
+    if (!/^tt\d{5,10}$/.test(tt)) return [400, { error: 'bad title id' }, 0];
+    const f = await tmdb(`find/${tt}`, { external_source: 'imdb_id' });
+    const hit = f && ((f.movie_results || [])[0] ? { k: 'movie', x: f.movie_results[0] } : (f.tv_results || [])[0] ? { k: 'tv', x: f.tv_results[0] } : null);
+    if (!hit) return [200, { tmdb: null, bg: '', titled: '', logo: '' }, 86400];
+    const im = await tmdb(`${hit.k}/${num(hit.x.id)}/images`, { include_image_language: 'en,null' });
+    return [200, { tmdb: { kind: hit.k, id: num(hit.x.id) }, ...pickArt(hit.x, im) }, 7 * 86400];
   }
   return [400, { error: 'unknown lookup' }, 0];
 }
