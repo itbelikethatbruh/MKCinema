@@ -26,6 +26,7 @@
   <a href="https://app.mkcinema.app"><b>Open the web app</b></a> ·
   <a href="docs/install.md"><b>Download</b></a> ·
   <a href="https://mkcinema.app">Website</a> ·
+  <a href="#premieres"><b>Premieres</b></a> ·
   <a href="docs/features.md">Features</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
   <a href="https://ko-fi.com/mkcinema">Ko-fi</a>
@@ -54,28 +55,45 @@
 
 <p align="center"><sub>Player shots show <a href="https://studio.blender.org/films/">Blender open movies</a> (CC BY). Poster and backdrop art comes from the catalogs and belongs to its owners.</sub></p>
 
-## What makes MKCinema different
+## Premieres
 
-MKCinema is built around the addons you already use, and goes further than playing them: it makes them look and work better. Every feature below is live, and we haven't seen them in any other player yet.
+**Things we haven't seen in any other player.** Every one of these is live in MKCinema today.
 
-**For everyone, with no changes from the addon developer:**
+### Your addons, made better
+
+They work better in MKCinema with no changes from the people who make them.
 
 | Feature | What it does |
 |---|---|
-| **Real ratings** | Ratings addons that show their scores as rows in the source list become IMDb, TMDB and Rotten Tomatoes ratings on the title line, with an IMDb rating next to every episode. |
+| **Real ratings** | Ratings addons that show their scores as rows in the source list become IMDb, TMDB and Rotten Tomatoes ratings on the title line, with a rating next to every episode. |
 | **No more notice clips** | When a debrid addon plays a 20 or 30 second notice video instead of the film, MKCinema explains the problem in plain words and moves on to the next source. |
-| **Settings screens** | Addons built with the Stremio addon SDK that describe their settings get a proper settings form on the Addons screen, which works with a TV remote and keeps the addon in place in your list. |
+| **Settings screens** | Addons built with the Stremio addon SDK that describe their settings get a proper settings form, which works with a TV remote and keeps the addon in place in your list. |
 
-**For addon developers who want more,** through one optional, data-only `mkcinema` field:
+### It knows the line, not just the second
+
+MKCinema follows a film by its dialogue, so it knows where you are in any version of it.
 
 | Feature | What it does |
 |---|---|
-| **Addon looks** | Choose row styles (poster, wide, square, Top 10) and where catalogs appear (Home, Discover or Library). |
-| **Badges and panels** | Add poster badges, film-page info panels and per-episode ratings to any title, not only your own. |
-| **Library sync** | Show your lists as Library tabs and receive a copy of the viewer's watchlist. |
-| **Playback events and skips** | Receive start, pause and finish events, add intro, recap and credit times, and read the device's supported codecs. |
+| **Watch party on any version** | Friends can each use their own source, even a different release or frame rate. MKCinema lines everyone up by the dialogue. |
+| **Find a line** | Type words someone says and play from that moment, in the player or on a film's page. |
+| **Subtitles on your phone** | Everyone reads their own language on their own phone, in step with the TV. |
+| **Same line on any source** | Resume and automatic source switching land on the line you left, even on a different version. |
+| **Share this moment** | A link that opens your friend's MKCinema at the same line, on whatever source they have. |
+| **Couch match** | Everyone swipes on their phone, and the first title you all like plays on the TV. |
 
-Everything is validated data that MKCinema draws with its own components. Addon code, HTML and CSS never run, viewers choose whether an addon gets their watchlist or playback events, and other apps simply ignore the field. Specs: [docs/addon-looks.md](docs/addon-looks.md) and [docs/addon-extras.md](docs/addon-extras.md).
+### For addon developers who want more
+
+One optional, data-only `mkcinema` field in your manifest. MKCinema draws everything with its own components, addon code never runs, and other apps simply ignore it.
+
+| Feature | What it does |
+|---|---|
+| **Addon looks** | Row styles (poster, wide, square, Top 10) and where catalogs appear: Home, Discover or Library. |
+| **Badges and panels** | Poster badges, film-page info panels and per-episode ratings on any title. |
+| **Library sync** | Your lists as Library tabs, and a copy of the viewer's watchlist if they allow it. |
+| **Playback events and skips** | Start, pause and finish events, plus intro, recap and credit times. |
+
+Specs: [addon looks](docs/addon-looks.md) and [addon extras](docs/addon-extras.md).
 
 ## About
 
