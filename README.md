@@ -11,6 +11,7 @@
   <a href="LICENSE"><img alt="License: GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square"></a>
   <a href="https://github.com/itbelikethatbruh/MKCinema/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/itbelikethatbruh/MKCinema?style=flat-square"></a>
   <a href="https://app.mkcinema.app"><img alt="Web app" src="https://img.shields.io/badge/web%20app-live-brightgreen?style=flat-square"></a>
+  <a href="https://ko-fi.com/mkcinema"><img alt="Support on Ko-fi" src="https://img.shields.io/badge/Ko--fi-support-72a4f2?style=flat-square&logo=kofi&logoColor=white"></a>
 </p>
 
 <p align="center">
@@ -18,39 +19,48 @@
   <a href="https://mkcinema.app">Website</a> ·
   <a href="docs/install.md">Install</a> ·
   <a href="docs/features.md">Features</a> ·
-  <a href="CHANGELOG.md">Changelog</a>
+  <a href="CHANGELOG.md">Changelog</a> ·
+  <a href="https://ko-fi.com/mkcinema">Ko-fi</a>
 </p>
 
 <p align="center"><img src="docs/screenshots/app-home.webp" width="100%" alt="MKCinema Home screen"></p>
 
 ## About
 
-MKCinema is an independent project, designed, built and maintained by Drake Christopher. It started as a better-looking way to watch from Stremio addons and grew into a full media app: one codebase that runs on eight platforms, the browser included, with a player, a library, account sync, TV support, watch parties and tools for addon developers.
+MKCinema is an independent project, designed, built and maintained by one developer, Drake Christopher. There is no company or team behind it. Everything in this repository was built for MKCinema:
 
-A few principles shape everything in it:
+- **The player.** A full video player with HLS and direct playback, styled anime subtitles, an audio engine with sound modes and volume boost, skip markers, X-Ray, touch gestures and automatic source failover.
+- **The addon engine.** It speaks the Stremio addon protocol, queries every addon in parallel, ranks and checks sources, and handles debrid accounts.
+- **The apps.** One web app plus native apps for Android, Android TV and Fire TV, Windows, macOS, Linux, LG webOS and Samsung TVs, all sharing one codebase.
+- **The services around it.** Account sync, a phone remote, watch parties with voice, a subtitle translation service, and the website.
+- **Tools for addon developers.** A visual addon builder, an addon finder, and an optional manifest field that lets addons shape how they look.
 
-- **Free forever.** MKCinema will never charge for anything. There is no paid tier, no ads and no feature behind a paywall. Donations on [Ko-fi](https://ko-fi.com/mkcinema) are optional and unlock nothing.
-- **Your addons, your accounts.** MKCinema ships no titles or streams. Catalogs come from Cinemeta, subtitles from OpenSubtitles, and the only built-in source is official trailers. Everything else comes from addons and debrid accounts you add yourself, and your keys stay in your own account.
-- **Addons first.** Any addon that speaks the Stremio addon protocol works as it is, and MKCinema does extra work to make it look and behave better without its developer changing anything.
-- **Private by default.** No ads, cookies or tracking profiles, and recommendations are worked out on your device.
-- **Open source.** The full code is here under GPL-3.0.
+It is free forever. MKCinema will never charge for anything: no paid tier, no ads and no feature behind a paywall. If you'd like to support the work, you can [donate on Ko-fi](https://ko-fi.com/mkcinema). Donations are optional and unlock nothing.
 
-## Addon support
+MKCinema ships no titles or streams. Catalogs come from Cinemeta, subtitles from OpenSubtitles, and the only built-in source is official trailers. Everything else comes from addons and debrid accounts you add yourself.
 
-Works with unchanged addons (web app 2.45):
+## Built for addons
 
-- **Ratings.** Ratings addons that return their scores as stream rows are shown as IMDb, TMDB and Rotten Tomatoes ratings on the title line, with an IMDb rating per episode. The rows are removed from the source list.
-- **Debrid notice clips.** When a debrid addon returns a short notice clip instead of the film, the player explains the problem and moves on to the next source.
-- **Settings forms.** Addons built with the Stremio addon SDK that declare `manifest.config` can be configured in the app, including with a TV remote.
+These features exist so the addons you already use look and work better. All of them are live.
 
-Opt-in for addon developers, through an optional `mkcinema` object in manifest and meta responses:
+**For everyone, with no changes from the addon developer:**
 
-- Row layouts (poster, landscape, square, Top 10) and catalog placement (Home, Discover, Library)
-- Poster badges, film-page panels and per-episode ratings on any title
-- Library tabs and a copy of the viewer's watchlist
-- Playback events, a `skips` resource for intro, recap and credit times, and device capabilities
+| Feature | What it does |
+|---|---|
+| **Real ratings** | Ratings addons that show their scores as rows in the source list become IMDb, TMDB and Rotten Tomatoes ratings on the title line, with an IMDb rating next to every episode. |
+| **No more notice clips** | When a debrid addon plays a 20 or 30 second notice video instead of the film, MKCinema explains the problem in plain words and moves on to the next source. |
+| **Settings screens** | Addons built with the Stremio addon SDK that describe their settings get a proper settings form on the Addons screen, which works with a TV remote and keeps the addon in place in your list. |
 
-Everything is validated data. MKCinema draws it with its own components and never runs addon code, HTML or CSS, and other clients ignore the field. Specs: [docs/addon-looks.md](docs/addon-looks.md) and [docs/addon-extras.md](docs/addon-extras.md).
+**For addon developers who want more,** through one optional, data-only `mkcinema` field:
+
+| Feature | What it does |
+|---|---|
+| **Addon looks** | Choose row styles (poster, wide, square, Top 10) and where catalogs appear (Home, Discover or Library). |
+| **Badges and panels** | Add poster badges, film-page info panels and per-episode ratings to any title, not only your own. |
+| **Library sync** | Show your lists as Library tabs and receive a copy of the viewer's watchlist. |
+| **Playback events and skips** | Receive start, pause and finish events, add intro, recap and credit times, and read the device's supported codecs. |
+
+Everything is validated data that MKCinema draws with its own components. Addon code, HTML and CSS never run, viewers choose whether an addon gets their watchlist or playback events, and other apps simply ignore the field. Specs: [docs/addon-looks.md](docs/addon-looks.md) and [docs/addon-extras.md](docs/addon-extras.md).
 
 ## What's built
 
@@ -102,7 +112,7 @@ Everything is validated data. MKCinema draws it with its own components and neve
 - Addon Studio: design a Stremio addon visually, test it in the app, and export a ready-to-run server.
 - Addon Finder: search the community addon list and install in one press.
 - One-tap install links from an addon's setup page.
-- The optional `mkcinema` manifest field described above, with a built-in checker.
+- The optional `mkcinema` manifest field described above, with a checker built into Settings.
 
 **Support**
 - A troubleshooting guide in Settings with buttons that go straight to the right setting.
