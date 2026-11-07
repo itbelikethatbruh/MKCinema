@@ -73,6 +73,16 @@ Every app opens the same MKCinema in its own window, so it always runs the lates
 <p><img src="docs/readme/h-features.svg" width="100%" alt="Features"></p>
 
 <a name="new"></a>
+### New in 2.43
+
+<table>
+<tr>
+<td width="33%" valign="top"><img src="docs/readme/icon-vol.svg" width="52" alt=""><br><b>Sound modes</b><br><sub>Clear voices brings dialogue forward. Night keeps quiet lines audible and loud scenes softer. Original is one tap away.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-film.svg" width="52" alt=""><br><b>More like this</b><br><sub>Every film and series page ends with similar titles, starting with the rest of a film's universe.</sub></td>
+<td width="33%" valign="top"><img src="docs/readme/icon-skip.svg" width="52" alt=""><br><b>Scene skips from addons</b><br><sub>Addons can add intro, recap and credit times, and mark scenes you can choose to skip. Kids seats skip them by default.</sub></td>
+</tr>
+</table>
+
 ### New in 2.37
 
 <table>
@@ -247,6 +257,15 @@ MKCinema does more out of the box than Stremio, Plex, Jellyfin or Kodi in the ro
 </details>
 
 <sub>Checked November 2026 against each app's public docs and issue trackers, and for Nuvio its [site](https://nuvio.tv), [FAQ](https://nuvio.tv/faq) and [source on GitHub](https://github.com/NuvioMedia). Apps change, so open an issue if something's out of date.</sub>
+
+### For addon developers
+
+Any Stremio addon works in MKCinema as it is. A few optional fields let it do more here, and Stremio simply ignores them:
+
+- **[Addon looks](docs/addon-looks.md):** row styles (wide, square, Top 10), where catalogs live (Home, Discover or Library), poster badges, info panels, ratings on any title and episode, and a copy of the watchlist.
+- **[Addon extras](docs/addon-extras.md):** playback events (start, pause, stop, finished) after the viewer allows them, intro, recap, credits and scene times through a `skips` resource that follows the format proposed for Stremio's SDK, and the codecs and resolution the device plays.
+
+Everything is data only and opt-in for the viewer, and MKCinema never runs addon code.
 
 ### Coming from VLC?
 
