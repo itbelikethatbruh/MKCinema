@@ -167,6 +167,36 @@ section{position:relative}
   .card img{width:100%;aspect-ratio:16/10;object-fit:contain}
 }
 
+/* golden tickets */
+.tickets{background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(216,194,154,.08),transparent 70%)}
+.tk-group{margin-top:64px}
+.tk-group>h3{font-size:clamp(24px,2.6vw,32px)}
+.tk-group>p{margin-top:10px;color:var(--mute);max-width:62ch}
+.tks{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px;margin-top:28px}
+.tk{--rx:0deg;--ry:0deg;position:relative;display:flex;flex-direction:column;padding:26px 26px 0;border-radius:16px;border:1px solid rgba(216,194,154,.32);
+  background:linear-gradient(155deg,rgba(216,194,154,.16),#0e0d0b 48%,#0a0a09);
+  transform:perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));transition:transform .5s var(--ease),border-color .4s,box-shadow .4s,opacity .9s var(--ease)}
+.tk.rv{transform:perspective(900px) translateY(26px)}
+.tk.rv.in{transform:perspective(900px) rotateX(var(--rx)) rotateY(var(--ry))}
+.tk:hover{border-color:rgba(216,194,154,.6);box-shadow:0 30px 60px -30px rgba(216,194,154,.35)}
+.tk::before,.tk::after{content:"";position:absolute;bottom:31px;width:20px;height:20px;border-radius:50%;background:var(--bg);border:1px solid rgba(216,194,154,.32)}
+.tk::before{left:-11px;clip-path:inset(0 0 0 50%)}
+.tk::after{right:-11px;clip-path:inset(0 50% 0 0)}
+.tk .ic{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:rgba(216,194,154,.14);color:var(--gold);margin-bottom:18px}
+.tk .ic svg{width:21px;height:21px;stroke-width:1.6}
+.tk h4{margin:0;font:400 23px/1.15 var(--serif);font-variation-settings:"opsz" 36}
+.tk p{margin-top:10px;font-size:14.5px;line-height:1.55;color:var(--ink2);flex:1}
+.tk .stub{display:flex;justify-content:space-between;gap:10px;margin-top:22px;padding:13px 0 14px;border-top:1px dashed rgba(216,194,154,.35);font:600 10.5px/1.2 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--gold2)}
+.tks.sm .tk{padding:22px 22px 0}
+.tks.sm .tk h4{font-size:20px}
+.devline{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1px;margin-top:28px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--line)}
+.devline div{padding:20px 22px;background:#0b0b0b}
+.devline b{display:block;font:600 15px/1.3 var(--sans)}
+.devline span{display:block;margin-top:6px;font-size:13.5px;color:var(--mute);line-height:1.5}
+.devnote{margin-top:16px;font-size:13.5px;color:var(--mute)}
+.devnote a{color:var(--gold)}
+.tk-group code{font:500 14px ui-monospace,Menlo,monospace;color:var(--ink)}
+
 /* feature grid */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:56px}
 .tile{position:relative;padding:26px 24px 24px;border-radius:var(--r);background:linear-gradient(180deg,#101010,#0b0b0b);border:1px solid var(--line);transition:transform .5s var(--ease),border-color .4s}
@@ -286,6 +316,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
   <div class="wrap nav-in">
     <a class="brand" href="#top" aria-label="MKCinema home"><svg aria-hidden="true"><use href="#logo"/></svg><span><b>MK</b><i>Cinema</i></span></a>
     <nav class="links" aria-label="Sections">
+      <a href="#tickets">Golden tickets</a>
       <a href="#tour">Features</a>
       <a href="#download">Download</a>
       <a href="#promise">Free forever</a>
@@ -328,6 +359,54 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 </section>
 
 <hr class="hr">
+
+<section class="sec tickets" id="tickets" aria-labelledby="tk-h">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="eyebrow">Golden tickets</span>
+      <h2 id="tk-h">Things we haven't seen <em>in any other player.</em></h2>
+      <p class="lead">Every one of these is live in MKCinema today.</p>
+    </div>
+
+    <div class="tk-group">
+      <h3 class="rv">Your addons, made better.</h3>
+      <p class="rv">They work better in MKCinema with no changes from the people who make them.</p>
+      <div class="tks">
+        <div class="tk rv"><span class="ic"><svg><use href="#i-spark"/></svg></span><h4>Real ratings</h4><p>Ratings addons that show their scores as rows in the source list become IMDb, TMDB and Rotten Tomatoes ratings on the title line, with a rating next to every episode.</p><div class="stub"><span>Admit one</span><span>No addon changes</span></div></div>
+        <div class="tk rv"><span class="ic"><svg><use href="#i-bolt"/></svg></span><h4>No more notice clips</h4><p>When a debrid addon plays a 20 or 30 second notice video instead of the film, MKCinema explains the problem in plain words and moves on to the next source.</p><div class="stub"><span>Admit one</span><span>No addon changes</span></div></div>
+        <div class="tk rv"><span class="ic"><svg><use href="#i-layers"/></svg></span><h4>Settings screens</h4><p>Addons built with the Stremio addon SDK that describe their settings get a proper settings form, which works with a TV remote and keeps the addon in place in your list.</p><div class="stub"><span>Admit one</span><span>No addon changes</span></div></div>
+      </div>
+    </div>
+
+    <div class="tk-group">
+      <h3 class="rv">It knows the line, not just the second.</h3>
+      <p class="rv">MKCinema follows a film by its dialogue, so it knows where you are in any version of it.</p>
+      <div class="tks sm">
+        <div class="tk rv"><span class="ic"><svg><use href="#i-users"/></svg></span><h4>Watch party on any version</h4><p>Friends can each use their own source, even a different release or frame rate. MKCinema lines everyone up by the dialogue.</p><div class="stub"><span>Admit all</span><span>Together</span></div></div>
+        <div class="tk rv"><span class="ic"><svg><use href="#i-eye"/></svg></span><h4>Find a line</h4><p>Type words someone says and play from that moment, in the player or on a film’s page.</p><div class="stub"><span>Admit one</span><span>Player</span></div></div>
+        <div class="tk rv"><span class="ic"><svg><use href="#i-phone"/></svg></span><h4>Subtitles on your phone</h4><p>Everyone reads their own language on their own phone, in step with the TV.</p><div class="stub"><span>Admit all</span><span>Phone</span></div></div>
+        <div class="tk rv"><span class="ic"><svg><use href="#i-sync"/></svg></span><h4>Same line on any source</h4><p>Resume and automatic source switching land on the line you left, even on a different version.</p><div class="stub"><span>Admit one</span><span>Player</span></div></div>
+        <div class="tk rv"><span class="ic"><svg><use href="#i-ext"/></svg></span><h4>Share this moment</h4><p>A link that opens your friend’s MKCinema at the same line, on whatever source they have.</p><div class="stub"><span>Admit all</span><span>Share</span></div></div>
+        <div class="tk rv"><span class="ic"><svg><use href="#i-film"/></svg></span><h4>Couch match</h4><p>Everyone swipes on their phone, and the first title you all like plays on the TV.</p><div class="stub"><span>Admit all</span><span>Phone</span></div></div>
+      </div>
+    </div>
+
+    <div class="tk-group">
+      <h3 class="rv">For addon developers who want more.</h3>
+      <p class="rv">One optional, data-only <code>mkcinema</code> field in your manifest. MKCinema draws everything with its own components, addon code never runs, and other apps simply ignore it.</p>
+      <div class="devline rv">
+        <div><b>Addon looks</b><span>Row styles (poster, wide, square, Top 10) and where catalogs appear: Home, Discover or Library.</span></div>
+        <div><b>Badges and panels</b><span>Poster badges, film-page info panels and per-episode ratings on any title.</span></div>
+        <div><b>Library sync</b><span>Your lists as Library tabs, and a copy of the viewer's watchlist if they allow it.</span></div>
+        <div><b>Playback events and skips</b><span>Start, pause and finish events, plus intro, recap and credit times.</span></div>
+      </div>
+      <p class="devnote rv">Specs on GitHub: <a href="https://github.com/itbelikethatbruh/MKCinema/blob/main/docs/addon-looks.md">addon looks</a> and <a href="https://github.com/itbelikethatbruh/MKCinema/blob/main/docs/addon-extras.md">addon extras</a>.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="hr">
+
 
 <section class="sec" id="tour" aria-labelledby="tour-h">
   <div class="wrap">
@@ -615,7 +694,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
     <div class="foot">
       <a class="brand" href="#top"><svg aria-hidden="true"><use href="#logo"/></svg><span><b>MK</b><i>Cinema</i></span></a>
       <nav aria-label="Footer">
-        <a href="#tour">Features</a><a href="#download">Download</a><a href="#faq">FAQ</a><a href="https://ko-fi.com/mkcinema">Ko-fi</a><a href="https://github.com/itbelikethatbruh/MKCinema">GitHub</a><a href="https://app.mkcinema.app/">Open app</a>
+        <a href="#tickets">Golden tickets</a><a href="#tour">Features</a><a href="#download">Download</a><a href="#faq">FAQ</a><a href="https://ko-fi.com/mkcinema">Ko-fi</a><a href="https://github.com/itbelikethatbruh/MKCinema">GitHub</a><a href="https://app.mkcinema.app/">Open app</a>
       </nav>
     </div>
     <p class="legal">MKCinema does not host, provide or link to any copyrighted content. It plays sources from third-party addons that users install themselves. Stremio is a trademark of its owner; MKCinema is an independent project, not affiliated with or endorsed by Stremio. VLC, debrid services and other names belong to their owners.</p>
@@ -666,6 +745,12 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
     tmx = e.clientX / innerWidth * 2 - 1; tmy = e.clientY / innerHeight * 2 - 1; go();
   }, { passive: true });
   if (reduce) room.style.setProperty('--p', 1);
+
+  // Golden tickets tilt toward the pointer
+  if (fine && !reduce) $$('.tk').forEach(t => {
+    t.addEventListener('pointermove', e => { const r = t.getBoundingClientRect(); t.style.setProperty('--ry', ((e.clientX - r.left) / r.width - .5) * 10 + 'deg'); t.style.setProperty('--rx', ((e.clientY - r.top) / r.height - .5) * -8 + 'deg'); }, { passive: true });
+    t.addEventListener('pointerleave', () => { t.style.setProperty('--rx', '0deg'); t.style.setProperty('--ry', '0deg'); });
+  });
 
   // Tour: a 3D deck that brings each chapter's screen to the front
   const deck = $('#deck'), cards = $$('.card', deck), chs = $$('.ch');
