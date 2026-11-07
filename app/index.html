@@ -27096,6 +27096,7 @@ body.reduce-motion #uniBody .uni-swap{animation:none}
     hold.style.cssText = 'position:absolute;left:-9999px;top:0;width:8px;height:8px;overflow:hidden;opacity:0;pointer-events:none';
     document.body.appendChild(hold);
     const warmSides = () => {
+      if (window.MK_WARM_OK === false) { setTimeout(warmSides, 1500); return; }
       const n = S.hero.length; if (n < 2) return;
       const ms = [S.hero[(S.heroIdx + 1) % n], S.hero[(S.heroIdx - 1 + n) % n]];
       hold.innerHTML = ms.map((m) => { const lg = metaLogo(m); return imgTag(metaBg(m), m.name, m.id, { wide: true, lazy: false }) + (lg ? imgTag(lg, m.name, m.id, { nofb: true, lazy: false }) : ''); }).join('');
