@@ -6,7 +6,7 @@
   "dependencies": {
     "acorn": "8.14.0",
     "acorn-walk": "8.3.4",
-    "core-js": "3.39.0",
+    "core-js": "3.51.0",
     "esbuild": "0.24.0",
     "fflate": "0.8.2",
     "lightningcss": "1.28.2",
