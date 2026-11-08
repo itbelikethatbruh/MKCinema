@@ -321,6 +321,18 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .ps-gl-row button{min-height:48px;padding:8px 10px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff;font:600 13px/1.25 var(--f-body)}
 #psView.ps-dark #psText,#psView.ps-dark .ps-ctl{opacity:0;transition:opacity .4s ease}
 #psView.ps-dark .ps-top{opacity:.18;transition:opacity .4s ease}
+#psGlMeta{margin-top:8px;grid-template-columns:1fr}
+.ps-gl-how{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.ps-gl-how[hidden]{display:none}
+.ps-gl-how ol{margin:0 0 10px;padding-left:20px;color:#fff;font-size:13px;line-height:1.45}
+.ps-gl-how code{display:block;margin:0 0 8px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.06);color:var(--dim);font:500 11px/1.4 var(--f-mono,monospace);word-break:break-all;user-select:all}
+.ps-gl-how button{width:100%;min-height:48px;padding:8px 10px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff;font:600 13px/1.25 var(--f-body)}
+html.glass,html.glass body{background:#000}
+html.glass #psView{background:#000;padding:16px}
+html.glass .ps-top .iconbtn,html.glass .ps-ctl,html.glass #psGl,html.glass #psHow{display:none}
+html.glass .ps-top b{font-size:18px;color:#9a9a9a}
+html.glass #psText{justify-content:flex-end;padding:8px 8px 36px}
+html.glass #psText p{font:600 34px/1.25 var(--f-body);color:#fff}
 </style>
 </head>
 <body>
@@ -513,7 +525,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 </div>
 <div id="psView" hidden role="dialog" aria-label="Subtitles">
   <div class="ps-top"><span class="grow"><b id="psLang">Subtitles</b><small id="psHow"></small></span><button class="iconbtn" type="button" id="psGlBtn" aria-label="Subtitles on glasses" aria-pressed="false"><svg class="i"><use href="#i-glasses"/></svg></button><button class="iconbtn" type="button" id="psLangBtn" aria-label="Change language"><svg class="i"><use href="#i-cc"/></svg></button><button class="iconbtn" type="button" id="psClose" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></div>
-<div id="psGl" class="ps-gl" hidden><p id="psGlState"></p><div id="psGlPick" class="ps-gl-row"><button type="button" data-glk="frame">Brilliant Labs Frame</button><button type="button" data-glk="g1">Even Realities G1</button><button type="button" data-glk="g2">Even Realities G2</button></div><div id="psGlOn" class="ps-gl-row" hidden><button type="button" id="psGlDark">Dark phone</button><button type="button" id="psGlOff">Disconnect</button></div><small>Glasses that plug into the phone as a screen don’t need this: they already show this view.</small></div><!-- /psGl -->
+<div id="psGl" class="ps-gl" hidden><p id="psGlState"></p><div id="psGlPick" class="ps-gl-row"><button type="button" data-glk="frame">Brilliant Labs Frame</button><button type="button" data-glk="g1">Even Realities G1</button><button type="button" data-glk="g2">Even Realities G2</button></div><div id="psGlOn" class="ps-gl-row" hidden><button type="button" id="psGlDark">Dark phone</button><button type="button" id="psGlOff">Disconnect</button></div><div id="psGlMeta" class="ps-gl-row"><button type="button" data-glk="meta">Meta Ray-Ban Display</button></div><div id="psGlMetaHow" class="ps-gl-how" hidden><ol><li>In the Meta AI app, turn on Developer Mode for your glasses.</li><li>Go to App connections › Add a Web App and paste this link.</li><li>Open it on the glasses. Your TV asks to allow “Meta glasses”: say yes.</li></ol><code id="psGlLink"></code><button type="button" id="psGlCopy">Copy link</button><small>The link lets your glasses join this TV, so keep it to yourself. Meta’s glasses apps are still a developer preview.</small></div><small>Glasses that plug into the phone as a screen don’t need this: they already show this view.</small></div><!-- /psGl -->
   <div id="psText"></div>
   <div class="ps-ctl"><button type="button" id="psSmall">A−</button><button type="button" id="psBig">A+</button><button type="button" id="psEarly">−0.5 s</button><button type="button" id="psLate">+0.5 s</button></div>
 </div><!-- /2.35.0 -->
@@ -2086,6 +2098,54 @@ const Glasses = {
     }
   },
 };
+/* ---------- 2.55 Meta Ray-Ban Display ----------
+   Meta's display glasses run small web apps opened by link (Developer Mode in the Meta AI app). The phone hands over a
+   link to this same remote page in glasses mode: it pairs with the TV like a new phone (the TV asks first), opens
+   Subtitles on this phone, and shows only the lines, large and white on black (black is see-through on the lens).
+   Ray-Ban Meta glasses without a display are Bluetooth headphones: Listen on phone already plays the film in them. */
+const MetaGlass = {
+  on: /(^|[?&])glass=meta(&|$)/.test(location.search), auto: false,
+  link() {
+    const c = R.code; if (!c) return '';
+    const rec = TVs.get(c) || {}, qk = R.qk || rec.k || '', sb = TVs.sb(c);
+    const cfg = sb ? `.${btoa(JSON.stringify({ u: sb.url, k: sb.key })).replace(/\+/g, '-').replace(/\//g, '_')}` : '';
+    return `${location.origin}${location.pathname}?glass=meta#${c}${/^[A-Za-z0-9_-]{22}$/.test(qk) ? `_${qk}` : ''}${cfg}~subs`;
+  },
+  how() {
+    const l = this.link();
+    $('#psGlMetaHow').hidden = false;
+    $('#psGlLink').textContent = l || 'Connect this phone to your TV first.';
+    $('#psGlCopy').disabled = !l;
+  },
+  async copy() {
+    const l = this.link(); if (!l) return;
+    try { await navigator.clipboard.writeText(l); toast('Link copied. Paste it in the Meta AI app', 2600); buzz(8); }
+    catch (e) { const r = document.createRange(); r.selectNodeContents($('#psGlLink')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('Copy the selected link', 2600); }
+  },
+  init() {
+    if (!this.on) return;
+    document.documentElement.classList.add('glass');
+    try { const m = document.createElement('meta'); m.name = 'application-name'; m.content = 'MKCinema subtitles'; document.head.appendChild(m); } catch (e) { /* fine */ }
+    // the TV shows this name when it asks to allow the glasses
+    const send = R.send.bind(R);
+    R.send = function (m) { if (m && (m.t === 'hi' || m.t === 'pair')) m = { ...m, name: 'Meta glasses' }; return send(m); };
+    const sp = R.sendPair.bind(R);
+    R.sendPair = function () { const l = this.link; if (l && !l._mg) { const a = l.sendPlain.bind(l); l.sendPlain = (m) => a(m && m.t === 'pair' ? { ...m, name: 'Meta glasses' } : m); l._mg = true; } return sp(); };
+    // pick the language the glasses used last time by themselves
+    const paint = PSub.paint.bind(PSub);
+    PSub.paint = function () {
+      paint();
+      if (MetaGlass.auto || !this.list || !this.list.length) return;
+      let want = ''; try { want = localStorage.getItem('mkc:glassLang') || ''; } catch (e) { /* none */ }
+      const s = want && this.list.find((x) => x.lang === want); if (!s) return;
+      MetaGlass.auto = true; const b = $(`#psList [data-psi="${s.i}"]`); if (b) b.click();
+    };
+    $('#psList').addEventListener('click', (e) => { const b = e.target.closest('[data-psi]'); if (!b) return; const s = (PSub.list || []).find((x) => String(x.i) === b.dataset.psi); try { if (s) localStorage.setItem('mkc:glassLang', s.lang); } catch (x) { /* full */ } });
+    PSub.want = true;
+  },
+};
+MetaGlass.init();
+
 /* ---------- 2.55 Subtitles on glasses (phone) ----------
    In the phone's subtitle view, the line that shows here also goes to the glasses. "Dark phone" blacks out this
    screen so it doesn't light up the room while the glasses do the reading. */
@@ -2098,13 +2158,14 @@ const GlPhone = {
     const box = $('#psGl'), b = $('#psGlBtn'); if (!box || !b) return;
     const on = Glasses.on();
     b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
-    $('#psGlState').textContent = on ? `${Glasses.label()} is showing the subtitles.` : 'Show these subtitles on your smart glasses. Turn the glasses on and keep them close.';
-    $('#psGlPick').hidden = on; $('#psGlOn').hidden = !on;
+    $('#psGlState').textContent = on ? `${Glasses.label()} is showing the subtitles.` : Glasses.can() ? 'Show these subtitles on your smart glasses. Turn the glasses on and keep them close.' : 'Show these subtitles on Meta Ray-Ban Display glasses. Other glasses need Chrome or Edge on this phone.';
+    $('#psGlPick').hidden = on || !Glasses.can(); $('#psGlOn').hidden = !on;
     $('#psGlDark').textContent = this.dark ? 'Light phone' : 'Dark phone';
     if (!on && this.dark) this.setDark(false);
   },
   toggle() { const box = $('#psGl'); box.hidden = !box.hidden; this.paint(); },
   async pick(kind) {
+    if (kind === 'meta') { MetaGlass.how(); return; }
     if (kind === 'g1') toast('Pick the left arm first, then the right arm', 3200);
     if (kind === 'g2') toast('Close the Even app first, then pick the one with _R_ in its name', 3800);
     $('#psGlState').textContent = 'Connecting…';
@@ -2115,13 +2176,14 @@ const GlPhone = {
   setDark(v) { this.dark = !!v; $('#psView').classList.toggle('ps-dark', this.dark); this.paint(); },
   init() {
     if (!$('#psView') || !$('#psText')) return;
-    if (!Glasses.can()) { const b = $('#psGlBtn'); if (b) b.hidden = true; return; }
+    if (MetaGlass.on) { const b = $('#psGlBtn'); if (b) b.hidden = true; return; }
     Glasses.onchange = () => this.paint();
     this.obs = new MutationObserver(() => this.send());
     this.obs.observe($('#psText'), { childList: true, subtree: true, characterData: true });
     $('#psGlBtn').onclick = () => { buzz(6); this.toggle(); };
     $('#psGl').addEventListener('click', (e) => {
       const k = e.target.closest('[data-glk]'); if (k) { this.pick(k.dataset.glk); return; }
+      if (e.target.closest('#psGlCopy')) { MetaGlass.copy(); return; }
       if (e.target.closest('#psGlOff')) { Glasses.disconnect(); this.setDark(false); toast('Glasses disconnected', 1600); return; }
       if (e.target.closest('#psGlDark')) { this.setDark(!this.dark); $('#psGl').hidden = true; }
     });
