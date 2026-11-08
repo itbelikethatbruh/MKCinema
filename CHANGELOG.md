@@ -2,6 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.61.0 (automatic skips)
+
+- **Intros, recaps and credits skip themselves.** When the times are known (chapters in the file, your addons, AniSkip for anime, TheIntroDB), MKCinema skips them for you and shows a Watch button for a few seconds in case you wanted to see it. Settings › Playback › Skip intros, recaps and credits: Automatically, Show a Skip button, or Off.
+- **Straight to the scene after the credits.** Credits followed by more of the episode or film get a Skip credits button, or skip on their own.
+- **Better guesses.** When an episode has no intro times but the episodes either side agree, a Skip intro button is offered. Guessed times never skip on their own.
+- **No more waiting clips.** A source that sends a short waiting clip instead of the film is spotted and passed over for the next source.
+
 ## Releases: built from source on every version tag
 
 - **Every app built by GitHub Actions.** Pushing a version tag builds the Android and TV APK, the Windows exe, the Linux .deb and .tar.gz and the Mac zip and disk image from source, then publishes them together with checksums and build attestations. How it works: [docs/releases.md](docs/releases.md).
