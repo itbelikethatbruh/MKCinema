@@ -324,7 +324,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 .lx-on .lx-stage{position:sticky;top:0;height:100vh;height:100svh;max-width:none;margin:0;padding:0;overflow:hidden;isolation:isolate}
 .lx-on .lx-poster{display:none}
 .lx-on canvas{display:block;position:absolute;inset:0;width:100%;height:100%}
-.lx-on .lx-shot,.lx-on .lx-veil{display:block;position:absolute;inset:0;opacity:0;pointer-events:none}
+.lx-on .lx-shot,.lx-on .lx-veil{display:block;position:absolute;inset:0;z-index:-1;opacity:0;pointer-events:none}
 .lx-shot picture,.lx-shot img{display:block;width:100%;height:100%;object-fit:cover}
 .lx-veil{background:linear-gradient(180deg,rgba(5,5,5,.1),rgba(5,5,5,.25) 45%,rgba(5,5,5,.94) 88%)}
 .lx-on .lx-b1,.lx-on .lx-b2{position:absolute;left:var(--g);right:var(--g);bottom:clamp(26px,7vh,76px);margin:0 auto;max-width:760px;text-align:center;opacity:0;will-change:opacity,transform}
@@ -336,6 +336,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 .lx-on .lx-beam{display:block;position:absolute;left:50%;top:-20%;width:1500px;height:120%;transform:translateX(-50%);z-index:-1;pointer-events:none;opacity:0;
   background:conic-gradient(from 180deg at 50% 0%,transparent 164deg,rgba(255,236,205,.06) 173deg,rgba(255,240,215,.12) 180deg,rgba(255,236,205,.06) 187deg,transparent 196deg);
   -webkit-mask:linear-gradient(#000 25%,transparent 80%);mask:linear-gradient(#000 25%,transparent 80%)}
+.lx-on .lx-veil{background:linear-gradient(180deg,rgba(5,5,5,.4),rgba(5,5,5,.35) 38%,rgba(5,5,5,.9) 62%,rgba(5,5,5,.97))}
 .lx-on .lx-big{display:flex;align-items:center;position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden;opacity:0}
 .lx-big span{white-space:nowrap;font:italic 400 clamp(110px,19vw,300px)/1 var(--serif);letter-spacing:-.03em;color:transparent;-webkit-text-stroke:1px rgba(216,194,154,.22);will-change:transform;transform:translate3d(100vw,-12vh,0)}
 </style>
@@ -433,32 +434,6 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
     <div class="tag tag3"><span class="ic"><svg><use href="#i-users"/></svg></span><span><b>Watch party</b><small>Six letters, same scene</small></span></div>
   </div>
   <div class="floor"></div>
-</section>
-
-<hr class="hr">
-
-<section class="lx" id="lens" aria-labelledby="lx-h">
-  <div class="lx-stage">
-    <img class="lx-poster" src="lens/poster-960.webp" srcset="lens/poster-960.webp 960w, lens/poster.webp 1600w" sizes="(max-width: 1180px) 92vw, 1100px" width="1600" height="1000" alt="Smart glasses showing a subtitle line in one lens" loading="lazy" decoding="async">
-    <div class="lx-beam" aria-hidden="true"></div>
-    <div class="lx-big" aria-hidden="true"><span>Every line, in your eyeline.</span></div>
-    <canvas aria-hidden="true"></canvas>
-    <div class="lx-shot" aria-hidden="true"><picture><source media="(orientation: portrait)" srcset="shots/phone-home-480.webp 480w, shots/phone-home.webp 600w" sizes="100vw"><img data-portrait="shots/phone-home.webp" src="shots/home-960.webp" srcset="shots/home-960.webp 960w, shots/home.webp 1600w" sizes="100vw" width="1600" height="1000" alt="" loading="lazy" decoding="async"></picture></div>
-    <div class="lx-veil" aria-hidden="true"></div>
-    <div class="lx-b1">
-      <span class="eyebrow">New · Subtitles on smart glasses</span>
-      <h2 id="lx-h">Read the film <em>in your glasses.</em></h2>
-      <p class="lead">MKCinema sends each subtitle line to your smart glasses as the film plays, in your own language and in step with the screen. It works with Brilliant Labs Frame, Even Realities G1 and G2, and Meta Ray-Ban Display.</p>
-      <p class="lx-note">Glasses shown are illustrative. MKCinema isn't affiliated with any glasses maker.</p>
-    </div>
-    <div class="lx-b2">
-      <h2>Look through. <em>It's all here.</em></h2>
-      <div class="cta">
-        <a class="btn btn-plat" href="https://app.mkcinema.app/"><svg><use href="#i-play"/></svg>Open MKCinema</a>
-        <a class="btn btn-ghost" href="#download"><svg><use href="#i-down"/></svg><span>Download free</span></a>
-      </div>
-    </div>
-  </div>
 </section>
 
 <hr class="hr">
@@ -644,6 +619,32 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
     </div>
     <div class="works rv" aria-label="Works with">
       <span>Stremio addons</span><span>Major debrid services</span><span>VLC</span><span>mpv</span><span>Trakt</span><span>Simkl</span><span>AniList</span><span>MyAnimeList</span><span>Plex</span><span>Jellyfin</span><span>Emby</span>
+    </div>
+  </div>
+</section>
+
+<hr class="hr">
+
+<section class="lx" id="lens" aria-labelledby="lx-h">
+  <div class="lx-stage">
+    <img class="lx-poster" src="lens/poster-960.webp" srcset="lens/poster-960.webp 960w, lens/poster.webp 1600w" sizes="(max-width: 1180px) 92vw, 1100px" width="1600" height="1000" alt="Smart glasses showing a subtitle line in one lens" loading="lazy" decoding="async">
+    <div class="lx-beam" aria-hidden="true"></div>
+    <div class="lx-big" aria-hidden="true"><span>Every line, in your eyeline.</span></div>
+    <canvas aria-hidden="true"></canvas>
+    <div class="lx-shot" aria-hidden="true"><picture><source media="(orientation: portrait)" srcset="shots/phone-home-480.webp 480w, shots/phone-home.webp 600w" sizes="100vw"><img data-portrait="shots/phone-home.webp" src="shots/home-960.webp" srcset="shots/home-960.webp 960w, shots/home.webp 1600w" sizes="100vw" width="1600" height="1000" alt="" loading="lazy" decoding="async"></picture></div>
+    <div class="lx-veil" aria-hidden="true"></div>
+    <div class="lx-b1">
+      <span class="eyebrow">New · Subtitles on smart glasses</span>
+      <h2 id="lx-h">Read the film <em>in your glasses.</em></h2>
+      <p class="lead">MKCinema sends each subtitle line to your smart glasses as the film plays, in your own language and in step with the screen. It works with Brilliant Labs Frame, Even Realities G1 and G2, and Meta Ray-Ban Display.</p>
+      <p class="lx-note">Ray-Ban, Meta, Even Realities and Brilliant Labs are trademarks of their owners. MKCinema isn't affiliated with, sponsored by or endorsed by any of them.</p>
+    </div>
+    <div class="lx-b2">
+      <h2>Look through. <em>It's all here.</em></h2>
+      <div class="cta">
+        <a class="btn btn-plat" href="https://app.mkcinema.app/"><svg><use href="#i-play"/></svg>Open MKCinema</a>
+        <a class="btn btn-ghost" href="#download"><svg><use href="#i-down"/></svg><span>Download free</span></a>
+      </div>
     </div>
   </div>
 </section>
@@ -960,12 +961,13 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
   // progress starts while the section is still rising into view, so the glasses are already arriving when it pins
   const prog = () => { const r = sec.getBoundingClientRect(), lead = innerHeight * .7; return Math.min(1, Math.max(0, (lead - r.top) / Math.max(1, r.height - innerHeight + lead))); };
   const ui = v => {
-    const o1 = ss(.13, .22, v) * (1 - ss(.55, .61, v));
-    b1.style.opacity = o1.toFixed(3); b1.style.transform = `translate3d(0,${((1 - ss(.13, .24, v)) * 26 - ss(.55, .61, v) * 18).toFixed(1)}px,0)`;
-    beam.style.opacity = (ss(.02, .2, v) * (1 - ss(.6, .7, v))).toFixed(3);
-    big.style.opacity = (ss(.04, .16, v) * (1 - ss(.56, .64, v))).toFixed(3);
+    const o1 = ss(.13, .22, v) * (1 - ss(.62, .68, v));
+    b1.style.opacity = o1.toFixed(3); b1.style.transform = `translate3d(0,${((1 - ss(.13, .24, v)) * 26 - ss(.62, .68, v) * 18).toFixed(1)}px,0)`;
+    beam.style.opacity = (ss(.02, .2, v) * (1 - ss(.38, .46, v))).toFixed(3);
+    big.style.opacity = (ss(.04, .16, v) * (1 - ss(.36, .44, v))).toFixed(3);
     bigT.style.transform = `translate3d(${(100 - v * 260).toFixed(2)}vw,-12vh,0)`;
-    shot.style.opacity = ss(.83, .9, v).toFixed(3); veil.style.opacity = ss(.87, .94, v).toFixed(3);
+    // what the wearer is looking at: the app, behind the glasses once they turn round
+    shot.style.opacity = ss(.4, .5, v).toFixed(3); veil.style.opacity = ss(.4, .5, v).toFixed(3);
     const o2 = ss(.9, .96, v); b2.style.opacity = o2.toFixed(3); b2.style.transform = `translate3d(0,${((1 - o2) * 26).toFixed(1)}px,0)`; b2.classList.toggle('live', o2 > .6);
   };
   const frame = now => {
