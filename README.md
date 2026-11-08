@@ -36,6 +36,18 @@ You bring the sources: Stremio-compatible addons, your own Plex, Jellyfin or Emb
 > [!IMPORTANT]
 > **New in 2.56:** a cleaner phone remote, cast and details on your phone while the film plays, and Miko, the remote's assistant. 2.55 brought party cameras, subtitles on smart glasses and sensory-friendly mode. [See what's new](CHANGELOG.md).
 
+## A powerhouse player, right in the browser
+
+Most web players give up at the first MKV file and send you off to VLC. MKCinema doesn't. Its player engine runs inside the browser and handles what browsers can't on their own:
+
+- **MKV, MP4 and TS files** play directly, repackaged on the fly with no server in between.
+- **Dolby Digital, Dolby Digital Plus, DTS and TrueHD sound** is converted as it plays, 5.1 included, so you never get a silent film.
+- **HEVC (H.265)** decodes in software on computers when the browser has no decoder, up to 1080p, and quietly picks a lighter copy if your machine struggles.
+- **Every audio and subtitle track** inside the file, including styled anime subtitles and picture-based (PGS) Blu-ray subtitles.
+- **iPhone and iPad** play MKV files in Safari, with nothing to install.
+
+For almost everything you watch, you won't need another app. Handing off to VLC, mpv or Infuse is still one press away for the odd file the browser really can't decode, such as 4K HEVC on a phone.
+
 ## One house, every screen
 
 <table>
@@ -145,7 +157,8 @@ We've looked, and we haven't found these in other apps. Every one is live today.
 - **Sound from another source.** Keep one release's picture and play another's dub, kept in step.
 - **Sensory-friendly mode** softens sudden bangs and dims flashing light as it happens.
 - **Subtitles on smart glasses:** Even Realities G1 and G2 and Brilliant Labs Frame over Bluetooth, and Meta Ray-Ban Display through the Meta AI app.
-- **Hand off to any player** your device supports, such as VLC, mpv, Infuse or MX Player. Picture-in-picture, lock-screen controls, and Send to TV (Chromecast).
+- **The in-browser engine** plays MKV, MP4 and TS, converts Dolby, DTS and TrueHD sound, shows PGS subtitles and decodes HEVC on computers, so an outside player is rarely needed.
+- **Hand off to any player** your device supports, such as VLC, mpv, Infuse or MX Player, for the rare file that still needs one. Picture-in-picture, lock-screen controls, and Send to TV (Chromecast).
 - **Spoiler Guard**, **Never miss a line** after a pause, and **Last time…** to remind you where you were.
 
 </details>
