@@ -50,6 +50,7 @@ void main() {
     constructor(E, info) {
       this.E = E; this.info = info; this.q = []; this.gen = 0; this.target = 0; this.hold = false; this.rate = 1; this.late = false;
       this.drawn = -1; this.lastPts = -1; this.shown = 0; this.texKey = ''; this.dropped = 0; this.t0 = performance.now(); this.dead = false;
+      this.stalls = []; this.lateT = 0; this.awayT = 0; this.onVis = () => { this.awayT = performance.now(); }; document.addEventListener('visibilitychange', this.onVis);
       const c = info.video.color || {};
       this.color = { mat: c.matrix || (info.video.bits > 8 && (c.prim === 9 || c.trc === 16 || c.trc === 18) ? 9 : 1), tf: c.trc || 1, full: c.range === 2 ? 1 : 0 };
       this.dec = new Worker(new URL('engine/hevc-decoder.worker.js', location.href));
@@ -65,7 +66,7 @@ void main() {
       this.holdOn();
     }
     reset(gen, t) {
-      this.gen = gen; this.target = t; this.q = []; this.drawn = -1; this.lastPts = -1; this.ended = false;
+      this.gen = gen; this.target = t; this.q = []; this.drawn = -1; this.lastPts = -1; this.ended = false; this.lateT = 0;
       this.dec.postMessage({ op: 'gen', gen, credit: CAP });
       this.holdOn();
     }
@@ -158,7 +159,25 @@ void main() {
       const behind = this.lastPts >= 0 ? t - this.lastPts : 0;
       if (behind > 0.25 && !this.late) { this.late = true; this.dec.postMessage({ op: 'late', on: true }); }
       else if (behind < -0.6 && this.late) { this.late = false; this.dec.postMessage({ op: 'late', on: false }); }
-      if (behind > 1.2 && !this.q.length) { this.target = t; this.holdOn(); }
+      if (behind > 1.2 && !this.q.length) { this.target = t; this.holdOn(); this.stall(); }
+      this.guard(behind > 0.25);
+    }
+    /* stutter guard: three catch-up pauses in 30 s, or 8 s straight behind, means this computer can't keep up.
+       Moments right after the tab was hidden don't count (pictures aren't drawn in a hidden tab). */
+    away() { return this.ended || document.hidden || performance.now() - this.awayT < 3000; }
+    stall() {
+      if (this.away()) return;
+      const now = performance.now(); this.stalls = this.stalls.filter((x) => now - x < 30000); this.stalls.push(now);
+      if (this.stalls.length >= 3) this.tooSlow();
+    }
+    guard(late) {
+      const now = performance.now();
+      if (!late || this.away()) { this.lateT = 0; return; }
+      if (!this.lateT) this.lateT = now; else if (now - this.lateT > 8000) this.tooSlow();
+    }
+    tooSlow() {
+      if (this.gaveUp) return; this.gaveUp = true;
+      if (this.E && typeof this.E.slow === 'function') this.E.slow();
     }
     stats() {
       this.dec.postMessage({ op: 'stats' });
@@ -166,7 +185,7 @@ void main() {
       return `decoded here${d && d.ms ? ` · ${Math.round(d.n / (d.ms / 1000))} fps possible` : ''} · ${Math.round(this.shown / Math.max(1, s))} fps shown${this.dropped ? ` · ${this.dropped} skipped` : ''}`;
     }
     destroy() {
-      this.dead = true; cancelAnimationFrame(this.raf); this.holdOff();
+      this.dead = true; cancelAnimationFrame(this.raf); this.holdOff(); document.removeEventListener('visibilitychange', this.onVis);
       try { this.dec.terminate(); } catch (e) { /* gone */ }
       if (this.cv) { this.cv.remove(); this.cv = null; }
       try { const x = this.gl && this.gl.getExtension('WEBGL_lose_context'); if (x) x.loseContext(); } catch (e) { /* ignore */ }

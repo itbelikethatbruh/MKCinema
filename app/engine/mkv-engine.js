@@ -44,18 +44,21 @@
     mark(u, v) { const k = this.key(u); if (!k) return; const m = this.load(); m[k] = { v, t: Date.now() }; try { localStorage.setItem(this.K, JSON.stringify(m)); } catch (e) { /* private mode */ } },
     blocked(u) { const e = this.load()[this.key(u)]; return !!(e && e.v === 'blocked' && Date.now() - e.t < 7 * 864e5); },
   };
-  /* software HEVC decoding: computers only (no phones or tablets), off by default, needs WebGL 2 */
+  /* software HEVC decoding: computers only (no phones or tablets), on by default, needs WebGL 2.
+     A computer that can't keep up is remembered for 14 days, and HEVC sources count as unplayable there meanwhile. */
   const SOFT = {
-    p: null,
+    p: null, K: 'mkc.softSlow',
     offered() { return !TOUCH_UI && !MANAGED && !!window.WebGL2RenderingContext && !can('video/mp4; codecs="hvc1.1.6.L120.90"'); },
-    ready() { return CFG.swHevc === true && this.offered(); },
+    slow() { try { return Date.now() - Number(localStorage.getItem(this.K) || 0) < 14 * 864e5; } catch (e) { return false; } },
+    markSlow() { try { localStorage.setItem(this.K, String(Date.now())); } catch (e) { /* private mode */ } },
+    ready() { return CFG.swHevc !== false && this.offered() && !this.slow(); },
     load() {
       if (window.MkSoft) return Promise.resolve();
       if (!this.p) this.p = new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'engine/soft-hevc.js'; sc.onload = () => res(); sc.onerror = () => { this.p = null; rej(new Error('load')); }; document.head.appendChild(sc); });
       return this.p;
     },
   };
-  if (CFG_DEFAULTS.swHevc === undefined) CFG_DEFAULTS.swHevc = false;
+  if (CFG_DEFAULTS.swHevc === undefined) CFG_DEFAULTS.swHevc = true;
   async function reachable(u) {
     const c = new AbortController(), t = setTimeout(() => c.abort(), 4000);
     try { await fetch(u, { mode: 'no-cors', credentials: 'omit', referrerPolicy: 'no-referrer', signal: c.signal }); return true; } catch (e) { return false; } finally { clearTimeout(t); c.abort(); }
@@ -112,7 +115,7 @@
       if (!can(`video/mp4; codecs="${v.useMime}"`)) {
         // computers without an HEVC decoder: MKCinema decodes it itself when that's switched on (up to 1080p, needs sound as the clock)
         if (v.kind === 'hevc' && SOFT.ready() && v.cfg && v.w * v.h <= 1920 * 1088 && a && this.audioMode(a) !== 'none') { this.dv = false; return { go: true, ai, mode: this.audioMode(a), soft: true }; }
-        const hint = v.kind === 'hevc' && SOFT.offered() && CFG.swHevc !== true && v.w * v.h <= 1920 * 1088 ? ' (switch on "Play HEVC films on this computer" in Settings › Playback)' : v.kind === 'hevc' && SOFT.offered() && v.w * v.h > 1920 * 1088 ? ' (4K HEVC is too heavy to decode here; use VLC)' : '';
+        const hint = v.kind === 'hevc' && SOFT.offered() && CFG.swHevc === false && v.w * v.h <= 1920 * 1088 ? ' (switch on "Play HEVC films on this computer" in Settings › Playback)' : v.kind === 'hevc' && SOFT.offered() && v.w * v.h > 1920 * 1088 ? ' (4K HEVC is too heavy to decode here; use VLC)' : '';
         return { go: false, why: `this ${TOUCH_UI ? 'device' : 'browser'} can’t decode ${NAMES[v.kind]}${v.bits > 8 ? ` ${v.bits}-bit` : ''} video${hint}`, hard: true };
       }
       // Chrome, Edge and Firefox play this file well on their own: keep their player (faster seeking, no extra work)
@@ -317,6 +320,18 @@
       return true;
     },
 
+    /* software HEVC can't keep up on this computer: remember it and move to another copy the browser plays itself */
+    slow() {
+      if (!this.active || !this.soft) return;
+      const s = this.stream; SOFT.markSlow(); log('warn', 'engine: software HEVC too slow on this computer');
+      if (P.stream !== s || $('#player').hidden) return;
+      const n = typeof Failover !== 'undefined' && CFG.failover !== false && P.ctx ? Failover.candidates(s).find((c) => c._tel && c._tel.codec !== 'HEVC') : null;
+      if (!n) { toast('This computer is struggling with this copy. VLC will play it smoothly.', 'info', 6000); return; }
+      const at = video.currentTime || 0; this.stop(); s._engNo = 'this computer couldn’t decode it smoothly'; this.reason.set(s, s._engNo);
+      Failover.tried.add(s);
+      toast('This computer can’t play that copy smoothly. Switching to one that plays better here…', 'info', 4200, 'failover');
+      playStream(P.ctx, n, { startAt: at });
+    },
     fail(why) {
       if (!this.active) return;
       const s = this.stream, at = video.currentTime || this.reqT || 0, base = this.base;
@@ -531,9 +546,25 @@
       } finally { E.softName = false; }
     };
   }
+  // HEVC this browser can't play itself comes last: a 720p or better copy it plays natively is picked first
+  if (typeof engine !== 'undefined' && engine && typeof engine.pickBest === 'function') {
+    const pb = engine.pickBest.bind(engine), sd = { SD: 1, '480p': 1, '360p': 1 };
+    engine.pickBest = function (streams, opts) {
+      if (CFG.engine === false || !SOFT.ready() || !Array.isArray(streams)) return pb(streams, opts);
+      const nat = streams.filter((s) => s && s._tel && s._tel.codec !== 'HEVC' && s._tel.res && !sd[s._tel.res]);
+      const n = nat.length ? pb(nat, opts) : null;
+      return n && n._tel.cached !== false ? n : pb(streams, opts);
+    };
+  }
   if (typeof Failover !== 'undefined' && typeof Failover.candidates === 'function') {
     const cand = Failover.candidates.bind(Failover);
     Failover.candidates = function (failed) { return cand(failed).filter((s) => !(s.url && Hosts.blocked(s.url) && needsEngine(s))); };
+    // software-decoded HEVC draws on a canvas, so the <video> itself reports no picture size: that isn't a failure
+    const next = Failover.next.bind(Failover);
+    Failover.next = function (failed, reason, at) {
+      if (E.active && E.soft && E.stream === failed && /no picture/i.test(String(reason || ''))) return true;
+      return next(failed, reason, at);
+    };
   }
 
   // the audio language menu lists the file's own tracks and switches them here
@@ -609,10 +640,10 @@
       const rows = sec.rows;
       sec.rows = function () {
         const r = rows.apply(this, arguments); const i = r.findIndex((x) => x.key === 'browserOnly');
-        r.splice(i < 0 ? r.length : i, 0, { key: 'engine', label: 'Play MKV and TS files in MKCinema', help: `Plays MKV and TS files ${MANAGED || !nativeMkv ? 'in Safari' : 'here'} and converts Dolby Digital, DTS and TrueHD sound that browsers can’t play (in MKV, MP4 and TS files), right on this ${TOUCH_UI ? 'device' : 'computer'}. The picture is never converted, so a file plays only if this ${TOUCH_UI ? 'device' : 'computer'} can decode its video. Some hosts don’t allow it; those files play the old way.${MANAGED ? ' AirPlay is off while it plays; use VLC or Infuse to AirPlay an MKV.' : ''}`, type: 'toggle' });
+        r.splice(i < 0 ? r.length : i, 0, { key: 'engine', label: 'Play MKV and TS files in MKCinema', help: `Plays MKV and TS files ${MANAGED || !nativeMkv ? 'in Safari' : 'here'} and converts Dolby Digital, DTS and TrueHD sound that browsers can’t play (in MKV, MP4 and TS files), right on this ${TOUCH_UI ? 'device' : 'computer'}. The picture is never converted, so a file plays only if this ${TOUCH_UI ? 'device' : 'computer'} can decode its video. Some hosts don’t allow it; those files play the old way.${MANAGED ? ' AirPlay is off while it plays; use VLC or Infuse to AirPlay an MKV.' : ''}`, type: 'toggle', get: () => CFG.engine !== false });
         if (SOFT.offered()) {
           const j = r.findIndex((x) => x.key === 'engine');
-          r.splice(j + 1, 0, { key: 'swHevc', label: 'Play HEVC films on this computer', help: 'This browser can’t play HEVC (x265) video by itself. With this on, MKCinema decodes it on your computer instead: films up to 1080p, HDR shown as normal colour. It works the processor hard, so older or slower computers may stutter; 4K files still need VLC. Off by default.', type: 'toggle' });
+          r.splice(j + 1, 0, { key: 'swHevc', label: 'Play HEVC films on this computer', help: 'This browser can’t play HEVC (x265) video by itself. With this on, MKCinema decodes it on your computer instead: films up to 1080p, HDR shown as normal colour. It works the processor hard: if this computer can’t keep up, MKCinema moves to another copy of the film and stops picking HEVC copies here for two weeks. 4K files still need VLC.', type: 'toggle', get: () => CFG.swHevc !== false, set: (v) => { if (v) { try { localStorage.removeItem(SOFT.K); } catch (e) { /* ignore */ } } setCfg('swHevc', v); } });
         }
         return r;
       };

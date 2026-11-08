@@ -18,7 +18,7 @@ async function open(cfg) {
 }
 async function setSkip(on) {
   if (D.skip === on || !D.la) return; D.skip = on;
-  try { await D.la.av_opt_set(D.c, 'skip_frame', on ? 'nonref' : 'default', 0); } catch (e) { /* older build */ }
+  try { await D.la.av_opt_set(D.c, 'skip_frame', on ? '8' : '0', 0); } catch (e) { /* older build */ }
 }
 async function pump() {
   if (D.busy || !D.la) return;

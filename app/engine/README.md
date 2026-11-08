@@ -20,13 +20,16 @@
   The reason shows in Playback stats and X-Ray. MKCinema never relays the video.
 - **Seeking:** MKV: the Cues index, or cluster timestamps (8 reads at most) without one. MP4: the sample tables.
   TS: byte-position guesses narrowed by PES timestamps (10 reads at most), starting 3 s early for a keyframe.
-- **Software HEVC (computers only, off by default):** Settings › Playback › "Play HEVC films on this computer"
+- **Software HEVC (computers only, on by default):** Settings › Playback › "Play HEVC films on this computer"
   (`CFG.swHevc`), offered only where the browser can't decode HEVC, never on phones/tablets. Up to 1080p. The sound
   plays through the normal `<video>` element (MSE, audio only) as the clock; the engine worker sends the video samples
   over a MessagePort to `hevc-decoder.worker.js` (FFmpeg HEVC decoder, WebAssembly, one thread), and `soft-hevc.js`
   (loaded on demand) draws the pictures with WebGL 2 over the video, HDR10/HLG tone-mapped to SDR. After a seek, or
   when decoding falls far behind, the sound holds (playbackRate 0) until the picture catches up; when slightly behind,
   the decoder skips pictures nothing refers to. 4K and Dolby Vision 5 are refused (VLC).
+  When the browser can't play HEVC itself, the automatic pick prefers a 720p-or-better copy it plays natively. Stutter
+  guard: three catch-up holds in 30 s, or 8 s straight behind, marks the computer slow for 14 days (`mkc.softSlow`,
+  cleared by switching the setting on again) and moves to the next non-HEVC copy.
 - **Not handled:** fragmented MP4 input, AVI, TS TrueHD, PGS inside TS.
 - **Settings:** Settings › Playback › "Play MKV and TS files in MKCinema" (`CFG.engine`, on by default).
 
