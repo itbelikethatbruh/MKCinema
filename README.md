@@ -237,7 +237,8 @@ We've looked, and we haven't found these in other apps. Every one is live today.
 
 | Platform | Get it | Notes |
 |---|---|---|
-| Web | [app.mkcinema.app](https://app.mkcinema.app) | Chrome, Edge and Firefox. Installable as an app. Every app below loads it, so all platforms update together |
+| Web | [app.mkcinema.app](https://app.mkcinema.app) | Chrome, Edge, Firefox and Safari. Installable as an app. Every app below loads it, so all platforms update together |
+| iPhone, iPad | [app.mkcinema.app](https://app.mkcinema.app) in Safari | Share › Add to Home Screen. Opens full screen, and most MKV files play right in the browser. iOS 17.1 or later |
 | Android | [MKCinema.apk](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.apk) (1.9.1) | Phones and tablets, with its own player, picture-in-picture and downloads |
 | Android TV, Google TV, Fire TV | [MKCinema-TV.apk](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema-TV.apk) (1.9.1, same file) | Fire TV: type `tv.mkcinema.app` into Downloader |
 | Windows | [MKCinema.exe](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.exe) (1.3.1) | Not code-signed yet: More info › Run anyway |
@@ -246,7 +247,7 @@ We've looked, and we haven't found these in other apps. Every one is live today.
 | LG webOS | [IPK](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/com.mkcinema.app_1.1.0_all.ipk) (1.1.0) | Beta, needs Developer Mode |
 | Samsung Tizen | [TizenBrew module](tizen/README.md) | Beta, 2023 models and later |
 
-iPhone and iPad are not supported. Every download has a SHA-256 checksum and a build provenance attestation on its release ([how to check](SECURITY.md)). Install notes for each platform are in [docs/install.md](docs/install.md).
+Every download has a SHA-256 checksum and a build provenance attestation on its release ([how to check](SECURITY.md)). Install notes for each platform are in [docs/install.md](docs/install.md).
 
 ## Free forever, private by default
 

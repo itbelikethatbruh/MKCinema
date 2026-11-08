@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.59.1 (iPhone, iPad and bigger on phones)
+
+- **MKCinema on iPhone and iPad.** Open app.mkcinema.app in Safari, tap Share, then Add to Home Screen, and MKCinema opens full screen like any other app. Most MKV files play right in the browser, and the player now recommends the built-in player on iPhone and iPad.
+- **Easier to see on phones.** Words, posters and episode cards are bigger on phones, and they grow to fit phones whose browser shows pages small. Settings › Appearance › Text size still makes them bigger or smaller.
+
 ## Web app 2.56.0 (a better phone remote)
 
 - **A cleaner phone remote.** Shortcuts in a tidy grid, a touchpad that takes the rest of the screen, and hold-then-slide to scrub. Nothing gets cut off on small phones.

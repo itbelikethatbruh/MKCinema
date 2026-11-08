@@ -94,7 +94,7 @@ Like a sensory-friendly cinema showing, it softens sudden loud bangs and dims fl
 <details>
 <summary><b>Is iPhone supported?</b></summary>
 
-No. iPhone and iPad are not supported platforms.
+Yes, iPhone and iPad both. Open [app.mkcinema.app](https://app.mkcinema.app) in Safari, tap Share, then Add to Home Screen, and MKCinema opens full screen like any other app. Most MKV files play right in the browser, with Dolby and DTS sound converted as they play. If a file still won't start, VLC for iPhone is free and MKCinema hands it over in one tap. Needs iOS or iPadOS 17.1 or later.
 </details>
 
 <details>
