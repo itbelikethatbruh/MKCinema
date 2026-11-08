@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script id="mkc-evt">/* image fallbacks, font swap and the import button, handled here instead of in on*= attributes */(function(){function fx(e){var t=e.target,g,p;if(!t||t.nodeType!==1)return;if(e.type==='error'){g=t.getAttribute('data-gone');if(g===null)return;p=t.parentNode;if(g==='label'&&p){p.textContent=p.getAttribute('aria-label')||'';return}if(g==='logo'&&p&&p.classList)p.classList.remove('has-logo');t.remove();return}if(t.hasAttribute('data-fadein'))t.classList.add('in');if(t.hasAttribute('data-print-swap'))t.media='all'}document.addEventListener('error',fx,true);document.addEventListener('load',fx,true);document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-see-home]');if(!b)return;closeLayer('stremioImport');closeLayer('settings');go('home')})})();</script>
-<script>/* settings are read and parsed once here and reused below and by CFG */window.__CFG0={};try{window.__CFG0=JSON.parse(localStorage.getItem('mkc:cfg')||'{}')||{}}catch(e){}try{var _ts=+window.__CFG0.textScale;if(_ts>=85&&_ts<=130&&_ts!==100)document.documentElement.style.setProperty('--ts',String(_ts/100))}catch(e){}</script>
+<script>/* settings are read and parsed once here and reused below and by CFG */window.__CFG0={};try{window.__CFG0=JSON.parse(localStorage.getItem('mkc:cfg')||'{}')||{}}catch(e){}try{window.__mkBoost=function(){var w=innerWidth;return w<=760&&matchMedia('(pointer:coarse)').matches&&!/AFT|Android TV|GoogleTV|BRAVIA|SMART-TV|SmartTV|Web0S|Tizen|MKCinemaTV/i.test(navigator.userAgent)?Math.min(1.3,Math.max(1.06,w/390)):1};var _ts=+window.__CFG0.textScale;if(!(_ts>=85&&_ts<=130))_ts=100;var _v=_ts/100*window.__mkBoost();if(_v!==1)document.documentElement.style.setProperty('--ts',String(+_v.toFixed(3)))}catch(e){}</script>
 <script>try{var _ul=(window.__CFG0||{}).uiLang||'auto',_uc=_ul!=='auto'?_ul:((navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en']).map(function(x){return String(x).slice(0,2).toLowerCase()}).filter(function(x){return /^(en|es|pt|fr|de|it|hi|ta|te|bn|ml|sm)$/.test(x)})[0]||'en');if(/^(es|pt|fr|de|it|hi|ta|te|bn|ml|sm)$/.test(_uc))window.__i18nP=fetch('i18n/'+_uc+'.json')}catch(e){}if (/MKCinemaTV|Android TV|GoogleTV|AFT[A-Z]|SMART-TV|SmartTV|Web0S|webOS|Tizen|BRAVIA/i.test(navigator.userAgent)) document.documentElement.classList.add('tv');try{if(JSON.parse(localStorage.getItem('mkc:navMode')||'0')==='side'){document.documentElement.classList.add('nav-side');if(document.documentElement.classList.contains('tv')||innerWidth<1200)document.documentElement.classList.add('side-mini')}}catch(e){}try{var _fn=(window.__CFG0||{}).font,_FF={"editorial":"Bodoni+Moda:opsz,wght@6..96,400..900&family=Manrope:wght@400..800","classic":"DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400..700","wide":"Unbounded:wght@400..800&family=Inter:opsz,wght@14..32,400..700","condensed":"Oswald:wght@400..700&family=Barlow:wght@400;500;600;700","rounded":"Nunito:wght@400..900","deco":"Josefin+Sans:wght@300..700&family=Jost:wght@400..700","slab":"Zilla+Slab:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700","techno":"Chakra+Petch:wght@400;600;700&family=Barlow:wght@400;500;600;700","groovy":"Shrikhand","bubble":"Bagel+Fat+One","graffiti":"Sedgwick+Ave+Display","gothic":"Pirata+One","street":"Bungee","outline":"Rampart+One","drip":"Rubik+Wet+Paint","heavy":"Climate+Crisis","brush":"Kaushan+Script"};if(_FF[_fn]){document.documentElement.setAttribute('data-font',_fn);var _fl=document.createElement('link');_fl.rel='stylesheet';_fl.id='mkcFont';_fl.href='https://fonts.googleapis.com/css2?family='+_FF[_fn]+'&display=swap';document.head.appendChild(_fl)}}catch(e){}try{var _lk=(window.__CFG0||{}).look;if(_lk&&_lk!=='noir'&&/^[a-z]+$/.test(_lk))document.documentElement.setAttribute('data-look',_lk);if(_lk==='atelier'){var _ac=JSON.parse(localStorage.getItem('mkc:atelierCss')||'null');if(typeof _ac==='string'){var _st=document.createElement('style');_st.id='atelier';_st.textContent=_ac;document.head.appendChild(_st);}}}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script id="mkc-domain">
@@ -9588,7 +9588,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.56.0';
+const APP_VERSION = '2.59.1';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -19830,9 +19830,9 @@ html.tv .pzv .nav-focus{outline:2px solid #f2f2f3;outline-offset:2px}
       const t = stream._tel || {}, fmt = t._wkBad;
       const title = why === 'format' ? 'Safari can’t play this file' : 'These sources won’t play in Safari';
       const lead = why === 'format'
-        ? `This source is ${fmt === 'avi' ? 'an AVI' : 'an MKV'} file, and Safari can’t open those.`
+        ? (fmt === 'avi' ? 'This source is an AVI file, and Safari can’t open those.' : 'MKCinema couldn’t prepare this MKV file for Safari.')
         : 'MKCinema tried a few sources and none of them started.';
-      const body = `${lead} Safari on iPhone and iPad plays MP4 and HLS (.m3u8) streams. Many debrid files are MKV, or use audio Safari can’t decode. VLC is free and plays all of them: open this one there, or pick an MP4 or HLS source.`;
+      const body = `${lead} Safari on iPhone and iPad plays MP4, HLS and most MKV files right in the browser, but some files or servers won’t open here. VLC is free and plays all of them: open this one there, or pick another source.`;
       const force = why === 'format' ? '<button class="btn btn-ghost" type="button" id="wkForce"><i data-lucide="play"></i>Try anyway</button>' : '';
       showMsg(title, body, `${handoffHTML(stream)}<button class="btn btn-ghost" type="button" data-act="sources"><i data-lucide="layers"></i>Sources</button>${force}${vlcButtons()}`);
       const f = $('#wkForce');
@@ -20253,7 +20253,9 @@ const PlayerAsk = {
     if (IS_TV) return this.native()
       ? { pick: 'native', why: 'The TV player uses your TV’s own video hardware, so MKV, HEVC, HDR and Dolby Vision play smoothly.' }
       : { pick: 'builtin', bo: true, why: 'TV browsers cannot install other players, so turn on Only sources that play here below.' };
-    if (PLATFORM === 'ios') return { pick: 'ext', why: 'Safari on iPhone and iPad cannot open MKV files, and many sources are MKV. VLC is free and plays them.' };
+    if (PLATFORM === 'ios') return (window.ManagedMediaSource || window.MediaSource) && CFG.engine !== false
+      ? { pick: 'builtin', why: 'Safari on iPhone and iPad plays MP4, HLS and most MKV files right here. If one will not start, VLC is free and one tap away.' }
+      : { pick: 'ext', why: 'This version of iOS cannot play MKV files in Safari, and many sources are MKV. Update to iOS 17.1 or later, or use VLC, which is free.' };
     if (PLATFORM === 'android' && !this.hevc()) return { pick: 'ext', why: 'This browser cannot play HEVC (x265), which many 4K and anime files use. VLC is free and plays them.' };
     return { pick: 'builtin', why: 'This browser plays most streams. If one will not start, Smart Play moves to the next source, and VLC is always one tap away.' };
   },
@@ -21148,6 +21150,29 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
+  { v: '2.59.1', date: '2026-11-08', items: [
+    ['new', 'MKCinema on iPhone and iPad', 'iPhone and iPad are now fully supported. Open app.mkcinema.app in Safari, tap Share, then Add to Home Screen, and MKCinema opens full screen like any other app. Most MKV files play right in the browser, no extra app needed.'],
+    ['better', 'Easier to see on phones', 'Words, posters and episode cards are bigger on phones, and they grow to fit phones whose browser shows pages small. Settings › Appearance › Text size still makes them bigger or smaller.'],
+  ] },
+  { v: '2.59.0', date: '2026-11-08', items: [
+    ['new', 'HEVC films on any computer', 'When your browser can’t play an HEVC (x265) film, MKCinema now plays it itself on your computer, up to 1080p, with HDR films shown in normal colour. Copies your browser plays by itself still come first, and if a computer can’t keep up, MKCinema moves to another copy on its own. You can turn it off in Settings › Playback.'],
+  ] },
+  { v: '2.58.0', date: '2026-11-08', items: [
+    ['new', 'More films play with sound', 'MP4 and TS files with Dolby Digital, Dolby Digital Plus or DTS sound now play with sound in MKCinema’s own player, and TS files from TV recordings and Blu-ray backups play at all. If a film ever starts without sound, MKCinema now fixes it on your device by itself, or moves straight to a copy that plays with sound. Blu-ray picture subtitles show in MKV files, surround sound stays 5.1 when your speakers can play it, and Dolby Vision plays as Dolby Vision on Apple devices.'],
+  ] },
+  { v: '2.57.2', date: '2026-11-08', items: [
+    ['better', 'Scrolling that lands cleanly', 'Rows of films and shows, the source list, episodes, cast and menus now come to rest on a whole item when you swipe, so nothing is left half cut off.'],
+    ['new', 'Copy a source’s link', 'Press and hold any source (or right-click it) to copy its stream link or file name, for another player or a friend.'],
+  ] },
+  { v: '2.57.1', date: '2026-11-08', items: [
+    ['better', 'Smoother episode opening', 'Opening an episode now shows its sheet together with the page, without a flash, and the still image fades in gently.'],
+  ] },
+  { v: '2.57.0', date: '2026-11-08', items: [
+    ['new', 'MKV files play right here', 'MKV files now play in MKCinema’s own player on Safari, and films with Dolby Digital, Dolby Digital Plus, DTS or TrueHD sound no longer play silent in Chrome, Edge and Firefox. The sound is converted on your device and the picture is never touched, so it looks exactly as it should. You can switch the sound language from the player menu too. Turn it off in Settings › Playback.'],
+  ] },
+  { v: '2.56.1', date: '2026-11-08', items: [
+    ['better', 'Clearer menu previews', 'Both menu layouts in Settings › Appearance, and in the first-run menu chooser, now light up gold, so you can see each one clearly before you pick.'],
+  ] },
   { v: '2.56.0', date: '2026-11-08', items: [
     ['new', 'A better phone remote', 'The touchpad and buttons always fit on your phone now, with the extras in one tidy grid. Hold the touchpad, then slide to scrub through a film (slide down for finer steps). Set the swipe speed in the remote’s menu, and search by voice with the new Voice key.'],
     ['new', 'Meet Miko, your AI assistant', 'Tap Miko on the phone remote, then say or type what you want: “pause”, “back 30 seconds”, “subtitles off”, “next episode”, “how long is left?”, “who’s in this?”, “play Dune”, “films with Zendaya”. It works on every phone, free. If you like, add your own AI key in Miko’s settings to say anything in your own words. The key stays on your phone.'],
@@ -22636,7 +22661,7 @@ const AppFont = {
       de.setAttribute('data-font', id);
     }
     const ts = CFG.textScale >= 85 && CFG.textScale <= 130 ? CFG.textScale : 100;
-    if (ts === 100) de.style.removeProperty('--ts'); else de.style.setProperty('--ts', String(ts / 100));
+    const tsv = ts / 100 * (window.__mkBoost ? window.__mkBoost() : 1); if (tsv === 1) de.style.removeProperty('--ts'); else de.style.setProperty('--ts', String(+tsv.toFixed(3)));
     // tab labels change width with the font: refit the top menu once the faces arrive
     const refit = () => { if (typeof DockFit !== 'undefined') DockFit.run(); };
     refit(); try { document.fonts.ready.then(refit); setTimeout(refit, 1200); } catch (e) { refit(); }
@@ -32460,6 +32485,119 @@ const TourDeep = {
 const tdInit = () => { try { TourDeep.init(); } catch (e) { console.warn('Tour in depth:', e); } };
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tdInit, { once: true }); else tdInit();
 </script>
+<script src="engine/mkv-engine.js" defer></script>
+<!-- mk-steady-open:start -->
+<style>
+/* 2.57.1: an episode still that is still on its way fades in instead of popping in */
+.es-still img{transition:opacity .28s ease}
+.es-still img.es-wait{opacity:0}
+</style>
+<script>
+/* 2.57.1 steady open: opening an episode (Continue watching, phone remote, new-episode alerts) used to show the
+   whole title page first, redraw it, and only then slide the episode sheet over it, with its picture drawn blank
+   and popping in. Now the sheet opens in the same moment as the page when the episode is already known, a second
+   open of the same episode keeps the sheet as it is, and the episode picture is carried over or fades in. */
+(() => {
+  if (typeof EpSheet === 'undefined' || typeof openDetail !== 'function') return;
+  const vidOf = () => { try { return D.meta && D.video ? videoIdFor(D.meta, D.video) : ''; } catch (e) { return ''; } };
+  const head = EpSheet.head, open = EpSheet.open;
+  EpSheet.head = function () {
+    const old = document.querySelector('#esHead .es-still img');
+    const r = head.apply(this, arguments);
+    this._vid = vidOf();
+    try {
+      const im = document.querySelector('#esHead .es-still img'); if (!im) return r;
+      const src = im.getAttribute('src') || '';
+      if (old && old !== im && (old.getAttribute('src') || '') === src && old.complete && old.naturalWidth) { old.classList.remove('es-wait'); im.replaceWith(old); return r; }
+      if (!(im.complete && im.naturalWidth)) {
+        im.classList.add('es-wait');
+        const done = () => im.classList.remove('es-wait');
+        im.addEventListener('load', done, { once: true }); im.addEventListener('error', done, { once: true }); setTimeout(done, 5000);
+      }
+    } catch (e) { /* the picture just shows */ }
+    return r;
+  };
+  EpSheet.open = function () {
+    const id = vidOf();
+    // the same episode is already up: keep the sheet as it is and only refresh its sources
+    if (id && this.isOpen() && this._vid === id && this.box && this.box.id === 'dStreams') { try { renderStreamsPanel(); } catch (e) { /* stays */ } return; }
+    const r = open.apply(this, arguments); this._vid = id; return r;
+  };
+  const close = EpSheet.close;
+  EpSheet.close = function () { this._vid = ''; return close.apply(this, arguments); };
+  const od = openDetail;
+  openDetail = function (seed, opts) {
+    const p = od.apply(this, arguments);
+    try {
+      const videoId = opts && opts.videoId;
+      if (videoId && seed && seed.type === 'series' && Array.isArray(seed.videos) && seed.videos.length && D.meta === seed) {
+        const v = seed.videos.find((x) => videoIdFor(seed, x) === videoId);
+        if (v) { D.video = v; D.season = Number(v.season); try { markEpisodes(); } catch (e) { /* list catches up */ } EpSheet.open(); }
+      }
+    } catch (e) { /* the sheet opens once the details arrive, as before */ }
+    return p;
+  };
+})();
+</script>
+<!-- mk-steady-open:end -->
+<!-- mk-lpcopy:start -->
+<style>
+.stream{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.lp-menu{position:fixed;z-index:400;min-width:220px;padding:6px;border-radius:calc(var(--r-l) * 0.7778);background:var(--s2,#151517);border:1px solid var(--line-hi,rgba(255,255,255,.14));box-shadow:0 18px 50px rgba(0,0,0,.6);opacity:0;transform:translateY(6px) scale(.98);transition:opacity .16s,transform .16s}
+.lp-menu.on{opacity:1;transform:none}
+.lp-menu button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;border:0;border-radius:var(--r-m);background:none;color:var(--ink,#fff);font:inherit;font-size:15px;text-align:left;cursor:pointer}
+.lp-menu button:hover,.lp-menu button:focus-visible{background:rgba(255,255,255,.07);outline:none}
+.lp-menu .lp-h{padding:8px 14px 6px;font-size:12px;color:var(--mute,#9a9aa0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
+.stream.lp-hold{transform:scale(.985)}
+</style>
+<script>
+(() => {
+  const HOLD = 480; let timer = 0, sx = 0, sy = 0, el = null, fired = false, menu = null;
+  const listOf = (row) => (row.closest('#srcList') && typeof P !== 'undefined' && P.ctx ? P.ctx.streams : (typeof D !== 'undefined' ? D.streams : null)) || [];
+  const linkOf = (st) => {
+    if (!st) return '';
+    const h = typeof handoffUrl === 'function' ? handoffUrl(st) : null;
+    if (h) return h;
+    if (st.url) return st.url;
+    if (st.infoHash) return 'magnet:?xt=urn:btih:' + st.infoHash;
+    if (st.externalUrl) return st.externalUrl;
+    return '';
+  };
+  const close = () => { if (!menu) return; const m = menu; menu = null; m.classList.remove('on'); setTimeout(() => m.remove(), 180); };
+  const open = (row, x, y) => {
+    close();
+    const st = listOf(row)[Number(row.dataset.si)]; if (!st) return;
+    const link = linkOf(st), name = ((st._tel && (st._tel.lines[0] || st._tel.headline)) || st.title || st.name || '').split('\n')[0];
+    const m = document.createElement('div'); m.className = 'lp-menu'; m.setAttribute('role', 'menu');
+    const h = document.createElement('div'); h.className = 'lp-h'; h.textContent = name || 'Source'; m.appendChild(h);
+    const add = (icon, label, fn) => { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'menuitem'); b.innerHTML = `<i data-lucide="${icon}"></i>`; b.appendChild(document.createTextNode(label)); b.addEventListener('click', (e) => { e.stopPropagation(); close(); fn(); }); m.appendChild(b); return b; };
+    const first = link ? add('link', 'Copy stream link', () => copyText(link, 'Stream link copied')) : null;
+    if (!link) { const n = document.createElement('div'); n.className = 'lp-h'; n.textContent = 'This source has no link to copy'; m.appendChild(n); }
+    if (name) add('copy', 'Copy file name', () => copyText(name, 'File name copied'));
+    document.body.appendChild(m); if (typeof icons === 'function') icons();
+    const r = m.getBoundingClientRect(), vw = innerWidth, vh = innerHeight;
+    m.style.left = Math.max(8, Math.min(x - r.width / 2, vw - r.width - 8)) + 'px';
+    m.style.top = Math.max(8, Math.min(y - r.height - 12 > 8 ? y - r.height - 12 : y + 12, vh - r.height - 8)) + 'px';
+    menu = m; requestAnimationFrame(() => m.classList.add('on'));
+    if (first) first.focus({ preventScroll: true });
+    if (navigator.vibrate) try { navigator.vibrate(12); } catch (e) { /* ignore */ }
+  };
+  const cancel = () => { clearTimeout(timer); timer = 0; if (el) el.classList.remove('lp-hold'); el = null; };
+  document.addEventListener('pointerdown', (e) => {
+    if (menu && !menu.contains(e.target)) close();
+    const row = e.target.closest && e.target.closest('.stream[data-si]'); if (!row || e.button > 0) return;
+    fired = false; sx = e.clientX; sy = e.clientY; el = row; row.classList.add('lp-hold');
+    timer = setTimeout(() => { fired = true; row.classList.remove('lp-hold'); open(row, sx, sy); }, HOLD);
+  }, true);
+  document.addEventListener('pointermove', (e) => { if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) cancel(); }, true);
+  ['pointerup', 'pointercancel'].forEach((t) => document.addEventListener(t, cancel, true));
+  document.addEventListener('scroll', cancel, true);
+  document.addEventListener('click', (e) => { if (fired && e.target.closest && e.target.closest('.stream[data-si]')) { e.preventDefault(); e.stopImmediatePropagation(); fired = false; } }, true);
+  document.addEventListener('contextmenu', (e) => { const row = e.target.closest && e.target.closest('.stream[data-si]'); if (!row) return; e.preventDefault(); cancel(); fired = false; open(row, e.clientX, e.clientY); }, true);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menu) { e.stopPropagation(); close(); } }, true);
+})();
+</script>
+<!-- mk-lpcopy:end -->
 <!-- mk-ds:start -->
 <style id="mkc-ds-css">
 /* ===== Design system: one set of tokens for type, weight, corners, surfaces, layers, icons and focus =====
@@ -32755,5 +32893,7 @@ html.tv .ea-badge,html.tv .ea-dot{display:none!important}
 })();
 </script>
 <!-- mk-ds:end -->
+<style id="mkc-2591-phone">@media (max-width:760px) and (pointer:coarse){html:not(.tv) body .rail>.card:not(.wide):not(.ax-sq){width:clamp(132px,35vw,230px)}html:not(.tv) body .rail>.card.wide{width:clamp(250px,68vw,440px)!important}}</style>
+<script id="mkc-2591-phone-js">(function(){var w0=innerWidth,t=0;addEventListener('resize',function(){if(innerWidth===w0)return;w0=innerWidth;clearTimeout(t);t=setTimeout(function(){try{var c=JSON.parse(localStorage.getItem('mkc:cfg')||'{}')||{},ts=+c.textScale;if(typeof CFG!=='undefined'&&CFG)ts=+CFG.textScale;if(!(ts>=85&&ts<=130))ts=100;var v=ts/100*window.__mkBoost(),de=document.documentElement;if(v===1)de.style.removeProperty('--ts');else de.style.setProperty('--ts',String(+v.toFixed(3)))}catch(e){}},150)})})();</script>
 </body>
 </html>

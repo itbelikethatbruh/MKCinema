@@ -18,7 +18,8 @@ Back to the [README](../README.md).
   <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest">Latest release</a> (Android 1.9.1, Windows 1.3.1, Mac 1.1.1, Linux 1.1, webOS 1.1.0) &nbsp;·&nbsp;
   Linux also as <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/mkcinema-1.1-linux-x86_64.tar.gz">.tar.gz</a> &nbsp;·&nbsp;
   Fire TV: type <code>tv.mkcinema.app</code> into the Downloader app &nbsp;·&nbsp;
-  Samsung TV (2023+): <a href="../tizen/README.md">install with TizenBrew</a>
+  Samsung TV (2023+): <a href="../tizen/README.md">install with TizenBrew</a> &nbsp;·&nbsp;
+  iPhone and iPad: open <a href="https://app.mkcinema.app">app.mkcinema.app</a> in Safari, then Share › Add to Home Screen
 </sub></p>
 
 Every app opens the same MKCinema in its own window, so it always runs the latest version. Sign in with email and your library, progress, addons and settings follow you between devices.
