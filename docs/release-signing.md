@@ -34,7 +34,8 @@ saved keys and session. The repository now has an **Android APK** workflow (`.gi
 that builds and signs the APK from GitHub secrets instead. It does nothing until both secrets exist.
 
 1. **Settings › Environments › New environment** `android-release`, with yourself as **required reviewer** and
-   deployment branch `main`.
+   deployment branch `main` plus the tag rule `v*` (tag releases sign the APK in this environment, see
+   [releases.md](releases.md)).
 2. Add two environment secrets:
    - `ANDROID_KEYSTORE_B64`: the keystore as one line of base64. On Linux: `base64 -w0 mkcinema.jks`;
      on a Mac: `base64 -i mkcinema.jks`; in PowerShell: `[Convert]::ToBase64String([IO.File]::ReadAllBytes("mkcinema.jks"))`.

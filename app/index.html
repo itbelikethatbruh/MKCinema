@@ -5420,7 +5420,7 @@ const isSecretKey = (k) => {
    setting, and tombstones for removed watchlist, progress and watched entries, so devices merge instead of overwriting.
    `secrets` is sealed with AES-GCM under a key derived from the account password (PBKDF2-SHA256, per-user salt kept in
    the sealed box). The key never leaves the device except inside the already sealed "Sign in with your phone" hand-off. */
-const SYNC_V = 3, SYNC_AV_MAX = 40000;
+const SYNC_V = 4, SYNC_V_OLD = 3, SYNC_AV_MAX = 40000;
 const SYNC_SECTIONS = ['cfg', 'watchlist', 'progress', 'watched', 'addons', 'disabled', 'studio', 'taste', 'homeLayout', 'homeArrange', 'avatar', 'lists', 'channels', 'seats', 'secrets'];
 const SYNC_ITEMS = ['watchlist', 'progress', 'watched'];
 const SYNC_NEWER = 'A newer MKCinema saved your account. Reload to update, then sync again.';
@@ -5443,6 +5443,18 @@ async function shrinkDataUrl(src, max) {
   }
   return out.length <= max ? out : null;
 }
+/* the account's clock: the database stamps every row write, so each device learns how far its own clock is off and
+   stamps its changes with the corrected time. Ignored below 2 s (network jitter). */
+const SyncClock = {
+  off: (() => { try { return +localStorage.getItem('mkc:clockOff') || 0; } catch (e) { return 0; } })(),
+  now() { return Date.now() + this.off; },
+  learn(iso) {
+    const t = Date.parse(iso || ''); if (!t) return;
+    const off = t - Date.now(); if (Math.abs(off) < 2000 && Math.abs(this.off) < 2000) return;
+    this.off = Math.abs(off) < 2000 ? 0 : Math.round(off);
+    try { localStorage.setItem('mkc:clockOff', String(this.off)); } catch (e) { /* this session only */ }
+  },
+};
 const SyncCrypt = {
   ITER: 310000, mem: null,
   enc: (b) => { let s = ''; for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); },
@@ -5509,6 +5521,150 @@ const SyncCrypt = {
   },
   async fromTv(tok) { if (tok && tok.u && tok.k && tok.k.s && tok.k.r) await this.keep(tok.u, tok.k.s, this.dec(tok.k.r)); },
 };
+/* ---- Account keys, format 2 ----
+   The password never leaves the device. From it (and the email as salt) the app derives two unrelated keys:
+   a login key, which is what Supabase receives as the account password, and a wrap key, which never leaves the
+   device. A random vault key seals the synced keys; the vault key is stored in the account only wrapped, once by
+   the wrap key and once by a recovery code shown to the user. Changing the password re-wraps the vault key only. */
+const Kdf2 = {
+  ITER: 600000, PREFIX: 'mkc2.',
+  te: new TextEncoder(),
+  b64: (b) => SyncCrypt.enc(b), unb64: (s) => SyncCrypt.dec(s),
+  isBox: (x) => !!(x && typeof x === 'object' && x.enc === 2 && typeof x.ct === 'string' && typeof x.iv === 'string' && typeof x.salt === 'string' && x.wraps && typeof x.wraps === 'object'),
+  norm: (email) => String(email || '').trim().toLowerCase(),
+  async hash(s) { return new Uint8Array(await crypto.subtle.digest('SHA-256', this.te.encode(s))); },
+  async hkdf(ikm, info) {
+    const k = await crypto.subtle.importKey('raw', ikm, 'HKDF', false, ['deriveBits']);
+    return new Uint8Array(await crypto.subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(32), info: this.te.encode(info) }, k, 256));
+  },
+  /* one slow step per sign-in; the result is reused for login, unlock and re-wrapping */
+  /* the salt is fixed when an account moves (kept in its metadata as mkc_salt), so a later email change keeps working */
+  async saltOf(email) { return this.b64(await this.hash(`mkcinema|${this.norm(email)}`)); },
+  async derive(email, password, salt) {
+    salt = salt || await this.saltOf(email);
+    const base = await crypto.subtle.importKey('raw', this.te.encode(String(password)), 'PBKDF2', false, ['deriveBits']);
+    const master = new Uint8Array(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: this.unb64(salt), iterations: this.ITER }, base, 256));
+    return { email: this.norm(email), salt, login: this.PREFIX + this.b64(await this.hkdf(master, 'mkc-login')), wrap: await this.hkdf(master, 'mkc-wrap') };
+  },
+  /* which format an account uses, asked before sign-in so the plain password is only ever sent to an account that
+     has not moved yet. { v: 1 } = not moved; { v: 2, s } = moved, with its salt; null = could not ask (older server) */
+  async format(client, email) {
+    try {
+      const { data, error } = await client.rpc('mkc_account_format', { p_email: this.norm(email) });
+      if (error || !data || typeof data !== 'object') return null;
+      return data.v === 2 && typeof data.s === 'string' && data.s ? { v: 2, s: data.s } : data.v === 1 ? { v: 1 } : null;
+    } catch (e) { return null; }
+  },
+  metaSalt: (user) => { const m = (user && user.user_metadata) || {}; return typeof m.mkc_salt === 'string' && m.mkc_salt ? m.mkc_salt : ''; },
+  aad: (uid, what) => new TextEncoder().encode(`mkc-${what}|${uid}`),
+  async aes(raw, extractable) { return crypto.subtle.importKey('raw', raw, 'AES-GCM', !!extractable, ['encrypt', 'decrypt']); },
+  async wrapWith(raw, vaultRaw, uid) {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: this.aad(uid, 'vault') }, await this.aes(raw), vaultRaw);
+    return { iv: this.b64(iv), ct: this.b64(new Uint8Array(ct)) };
+  },
+  async unwrapWith(raw, w, uid) {
+    if (!w || typeof w.iv !== 'string' || typeof w.ct !== 'string') return null;
+    try { return new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: this.unb64(w.iv), additionalData: this.aad(uid, 'vault') }, await this.aes(raw), this.unb64(w.ct))); } catch (e) { return null; }
+  },
+  /* recovery code: 16 random bytes as 26 Crockford base32 characters, shown as MKC-XXXX-XXXX-... */
+  ALPHA: '0123456789ABCDEFGHJKMNPQRSTVWXYZ',
+  newCode() {
+    const b = crypto.getRandomValues(new Uint8Array(16)); let bits = 0, n = 0, out = '';
+    for (const x of b) { n = (n << 8) | x; bits += 8; while (bits >= 5) { out += this.ALPHA[(n >> (bits - 5)) & 31]; bits -= 5; } }
+    if (bits) out += this.ALPHA[(n << (5 - bits)) & 31];
+    return `MKC-${out.match(/.{1,4}/g).join('-')}`;
+  },
+  codeBytes(code) {
+    const s = String(code || '').toUpperCase().replace(/^MKC-?/, '').replace(/[^0-9A-Z]/g, '').replace(/[IL]/g, '1').replace(/O/g, '0');
+    if (s.length !== 26) return null;
+    let bits = 0, n = 0; const out = [];
+    for (const ch of s) { const v = this.ALPHA.indexOf(ch); if (v < 0) return null; n = ((n << 5) | v) & 0xffff; bits += 5; if (bits >= 8) { out.push((n >> (bits - 8)) & 255); bits -= 8; } }
+    return out.length >= 16 ? new Uint8Array(out.slice(0, 16)) : null;
+  },
+  async codeKey(code) { const b = this.codeBytes(code); return b ? this.hkdf(b, 'mkc-recovery') : null; },
+  /* a fresh vault: new vault key, wrapped by the password and by a new recovery code */
+  async newVault(uid, wrap) {
+    const vault = crypto.getRandomValues(new Uint8Array(32)), code = this.newCode();
+    const wraps = { at: Date.now(), pw: { it: this.ITER, ...(await this.wrapWith(wrap, vault, uid)) }, rc: await this.wrapWith(await this.codeKey(code), vault, uid) };
+    return { vault, code, wraps, vid: this.b64(crypto.getRandomValues(new Uint8Array(9))) };
+  },
+  /* the device keeps the vault key (exportable, so it can be re-wrapped after a password change or handed to a TV) */
+  async keep(uid, vid, vaultRaw, wraps) {
+    const rec = { uid, v: 2, vid, salt: `v2:${vid}`, wraps, key: await this.aes(vaultRaw, true) };
+    SyncCrypt.mem = rec;
+    try { await SyncCrypt.idb('readwrite', (st) => st.put(rec, 'sec')); try { localStorage.removeItem('mkc:syncKeyRaw'); } catch (e) { /* blocked */ } }
+    catch (e) { try { localStorage.setItem('mkc:syncKeyRaw', JSON.stringify({ v: 2, uid, vid, wraps, raw: this.b64(vaultRaw) })); } catch (e2) { /* this session only */ } }
+    return rec;
+  },
+  async raw(rec) { return new Uint8Array(await crypto.subtle.exportKey('raw', rec.key)); },
+  /* sign in with the login key and/or the plain password. Order: a device that has seen this account on format 2
+     never sends the plain password; otherwise UPGRADE decides which goes first. Returns { data, error, mode, d }. */
+  UPGRADE: true,
+  hintKey: async (email) => `mkc:kdf2:${SyncCrypt.enc((await Kdf2.hash(`hint|${Kdf2.norm(email)}`)).slice(0, 9))}`,
+  async signIn(client, email, password, d, known) {
+    const fmt = await this.format(client, email);
+    if (fmt && fmt.v === 2 && (!d || d.salt !== fmt.s)) d = await this.derive(email, password, fmt.s);
+    d = d || await this.derive(email, password);
+    const hk = await this.hintKey(email); try { known = known || localStorage.getItem(hk) === '1'; } catch (e) { /* blocked */ }
+    const tryKey = async () => ({ ...(await client.auth.signInWithPassword({ email, password: d.login })), mode: 2 });
+    const tryRaw = async () => ({ ...(await client.auth.signInWithPassword({ email, password })), mode: 1 });
+    // the server says which one: no guessing, so a mistyped password never goes out in plain for a moved account
+    const order = fmt ? (fmt.v === 2 ? [tryKey] : [tryRaw]) : known ? [tryKey] : this.UPGRADE ? [tryKey, tryRaw] : [tryRaw, tryKey];
+    let r = null;
+    for (const f of order) { r = await f(); if (!r.error) break; if (!/invalid/i.test(`${r.error.message || ''} ${r.error.code || ''}`)) break; }
+    if (r && !r.error && r.mode === 2) { try { localStorage.setItem(hk, '1'); } catch (e) { /* blocked */ } }
+    return { ...r, d };
+  },
+  async markKnown(email) { try { localStorage.setItem(await this.hintKey(email), '1'); } catch (e) { /* blocked */ } },
+};
+/* SyncCrypt learns format 2: same call sites, a rec of v:2 seals and opens format 2 boxes */
+(() => {
+  const isBox1 = SyncCrypt.isBox, seal1 = SyncCrypt.seal.bind(SyncCrypt), open1 = SyncCrypt.open.bind(SyncCrypt), load1 = SyncCrypt.load.bind(SyncCrypt);
+  SyncCrypt.isBox = (x) => isBox1(x) || Kdf2.isBox(x);
+  /* wraps change on another device (new password, new recovery code): the newest set wins, matched by vault id */
+  Kdf2.freshWraps = (rec) => {
+    const r = typeof Account !== 'undefined' ? Account.remoteSecrets : null;
+    if (Kdf2.isBox(r) && r.vid === rec.vid && (+(r.wraps && r.wraps.at) || 0) > (+(rec.wraps && rec.wraps.at) || 0)) {
+      rec.wraps = r.wraps; SyncCrypt.idb('readwrite', (st) => st.put(rec, 'sec')).catch(() => {});
+    }
+    return rec.wraps;
+  };
+  SyncCrypt.seal = async function (rec, obj) {
+    if (!rec || rec.v !== 2) return seal1(rec, obj);
+    Kdf2.freshWraps(rec);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: Kdf2.aad(rec.uid, 'secrets') }, rec.key, new TextEncoder().encode(JSON.stringify(obj)));
+    return { enc: 2, alg: 'AES-GCM/vault', salt: rec.salt, vid: rec.vid, iv: this.enc(iv), ct: this.enc(new Uint8Array(ct)), wraps: rec.wraps };
+  };
+  SyncCrypt.open = async function (rec, box) {
+    if (!Kdf2.isBox(box)) return rec && rec.v === 2 ? null : open1(rec, box);
+    if (!rec || rec.v !== 2 || box.salt !== rec.salt) return null;
+    try { return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: this.dec(box.iv), additionalData: Kdf2.aad(rec.uid, 'secrets') }, rec.key, this.dec(box.ct)))); } catch (e) { return null; }
+  };
+  SyncCrypt.load = async function (uid) {
+    if (this.mem && this.mem.uid === uid) return this.mem;
+    try { const j = JSON.parse(localStorage.getItem('mkc:syncKeyRaw') || 'null'); if (j && j.v === 2 && j.uid === uid && j.raw) { this.mem = { uid, v: 2, vid: j.vid, salt: `v2:${j.vid}`, wraps: j.wraps, key: await Kdf2.aes(this.dec(j.raw), true) }; return this.mem; } } catch (e) { /* none */ }
+    return load1(uid);
+  };
+  /* "Sign in with your phone": the phone opens the account's vault with the password just typed and hands the TV
+     the vault key inside the already sealed session (format 1 accounts keep the old hand-off) */
+  const forTv1 = SyncCrypt.forTv.bind(SyncCrypt), fromTv1 = SyncCrypt.fromTv.bind(SyncCrypt);
+  SyncCrypt.forTv = async function (tmp, data, password, d) {
+    try {
+      const uid = data.user.id, { data: row } = await tmp.from(SYNC_TABLE).select('data->secrets').eq('user_id', uid).maybeSingle();
+      const box = row && row.secrets;
+      if (!Kdf2.isBox(box)) return forTv1(tmp, data, password);
+      d = d || await Kdf2.derive(data.user.email, password);
+      const vault = await Kdf2.unwrapWith(d.wrap, box.wraps.pw, uid);
+      return vault ? { u: uid, k2: { vid: box.vid, w: box.wraps, r: this.enc(vault) } } : { u: uid };
+    } catch (e) { return {}; }
+  };
+  SyncCrypt.fromTv = async function (tok) {
+    if (tok && tok.u && tok.k2 && tok.k2.r && tok.k2.vid) { await Kdf2.keep(tok.u, tok.k2.vid, this.dec(tok.k2.r), tok.k2.w); return; }
+    return fromTv1(tok);
+  };
+})();
 const Account = {
   client: null, user: null, source: null, serverCfg: null, error: '',
   sync: { state: 'idle', at: Store.get('syncAt', null), error: '' }, pushT: 0, applying: false,
@@ -5673,15 +5829,15 @@ const Account = {
     if (prev === undefined || this.applying) return;
     let now; try { now = localStorage.getItem(`mkc:${lk}`); } catch (e) { return; }
     if (now === prev) return;
-    const m = this.m(), s = syncSection(lk), t = Date.now();
-    m.at[s] = Math.max(t, (m.rat[s] || 0) + 1);
+    const m = this.m(), s = syncSection(lk), t = Date.now(), ts = SyncClock.now();
+    m.at[s] = Math.max(ts, (m.rat[s] || 0) + 1);
     if (!/(^|:)progress$/.test(lk)) this.lastNonProg = t;
     if (SYNC_ITEMS.includes(lk)) {
       const ids = (x) => (Array.isArray(x) ? x.map((i) => i && i.id).filter(Boolean) : x && typeof x === 'object' ? Object.keys(x) : []);
       let a = [], b = []; try { a = ids(JSON.parse(prev)); b = ids(JSON.parse(now)); } catch (e) { /* unreadable */ }
       const was = new Set(a), keep = new Set(b), del = m.del[lk] || (m.del[lk] = {});
-      a.forEach((id) => { if (!keep.has(id)) del[id] = t; });
-      if (lk === 'watchlist') b.forEach((id) => { if (!was.has(id)) { m.add[id] = t; delete del[id]; } });
+      a.forEach((id) => { if (!keep.has(id)) del[id] = ts; });
+      if (lk === 'watchlist') b.forEach((id) => { if (!was.has(id)) { m.add[id] = ts; delete del[id]; } });
     }
     this.saveMeta(); this.schedule();
   },
@@ -5692,11 +5848,11 @@ const Account = {
     const m = this.m(), t = Date.now(); let hit = false;
     new Set([...Object.keys(was), ...Object.keys(cur)]).forEach((k) => {
       if (k === 'cfgRev' || JSON.stringify(was[k]) === JSON.stringify(cur[k])) return;
-      m.cf[k] = Math.max(t, (m.rcf[k] || 0) + 1); hit = true;
+      m.cf[k] = Math.max(SyncClock.now(), (m.rcf[k] || 0) + 1); hit = true;
     });
     if (!hit) return;
     this.lastNonProg = t;
-    if ((was.syncKeys !== false) !== (cur.syncKeys !== false)) ['addons', 'channels'].forEach((s) => { m.at[s] = Math.max(t, (m.rat[s] || 0) + 1); });
+    if ((was.syncKeys !== false) !== (cur.syncKeys !== false)) ['addons', 'channels'].forEach((s) => { m.at[s] = Math.max(SyncClock.now(), (m.rat[s] || 0) + 1); });
     this.saveMeta();
   },
   canWriteSecrets() { const rec = this.keyRec, r = this.remoteSecrets; return !!rec && (this.forceSeal || !SyncCrypt.isBox(r) || (r.salt === rec.salt && !this.boxLocked)); },
@@ -5788,7 +5944,7 @@ const Account = {
         if (await SyncCrypt.open(rec, box)) return;
         // sealed under an older password (reset by email): keep this device's keys and seal them again
         await SyncCrypt.fromPassword(uid, pw, SyncCrypt.newSalt()); this.forceSeal = true;
-        const m = this.m(); m.at.secrets = Math.max(Date.now(), (m.rat.secrets || 0) + 1); this.saveMeta();
+        const m = this.m(); m.at.secrets = Math.max(SyncClock.now(), (m.rat.secrets || 0) + 1); this.saveMeta();
         return;
       }
       const mine = await SyncCrypt.load(uid);
@@ -5799,7 +5955,7 @@ const Account = {
     if (!this.user || !(window.crypto && crypto.subtle)) return;
     try {
       this.keyRec = await SyncCrypt.fromPassword(this.user.id, password, SyncCrypt.newSalt()); this.keyChecked = true; this.forceSeal = true;
-      const m = this.m(); m.at.secrets = Math.max(Date.now(), (m.rat.secrets || 0) + 1); this.saveMeta(); this.schedule(true);
+      const m = this.m(); m.at.secrets = Math.max(SyncClock.now(), (m.rat.secrets || 0) + 1); this.saveMeta(); this.schedule(true);
     } catch (e) { /* keys stay as they are */ }
   },
   mergeItems(s, L, R, o) {
@@ -5862,7 +6018,7 @@ const Account = {
       if (s === 'watchlist') Object.entries(addR).forEach(([id, t]) => { if (!(m.add[id] >= +t)) m.add[id] = +t; });
       const ms = JSON.stringify(merged);
       if (ms !== JSON.stringify(L)) { d[s] = merged; changed = true; }
-      m.at[s] = R[s] !== undefined && ms === JSON.stringify(R[s]) ? rt : Math.max(Date.now(), rt + 1);
+      m.at[s] = R[s] !== undefined && ms === JSON.stringify(R[s]) ? rt : Math.max(SyncClock.now(), rt + 1);
       m.rat[s] = rt;
     });
     // everything else: the newer copy wins as a whole, so removed addons, playlists and lists stay removed
@@ -5906,7 +6062,7 @@ const Account = {
     } finally { this.applying = false; }
     if (changed) { try { engine.clearCache(); Vault.cached.clear(); } catch (e) { /* not ready yet */ } }
     // keys from an older app are plain text: a device with the key seals them on its next upload
-    m.at.secrets = (extra || !sealed) && this.keyRec ? Math.max(Date.now(), rt + 1) : Math.max(unite ? lt : 0, rt);
+    m.at.secrets = (extra || !sealed) && this.keyRec ? Math.max(SyncClock.now(), rt + 1) : Math.max(unite ? lt : 0, rt);
     return changed;
   },
   applyRemote(d) {
@@ -5962,7 +6118,7 @@ const Account = {
     SYNC_ITEMS.forEach((s) => { const e = Object.entries(m.del[s] || {}).filter(([, t]) => t > cut).sort((a, b) => b[1] - a[1]).slice(0, 800); m.del[s] = Object.fromEntries(e); if (e.length) del[s] = m.del[s]; });
     const wl = new Set((Array.isArray(out.watchlist) ? out.watchlist : []).map((x) => x && x.id));
     m.add = Object.fromEntries(Object.entries(m.add || {}).filter(([id, t]) => wl.has(id) && t > cut));
-    out._sync = { v: SYNC_V, app: typeof APP_VERSION === 'string' ? APP_VERSION : '', at, cf, del, add: m.add, ks: CFG.syncKeys !== false };
+    out._sync = { v: Kdf2.isBox(out.secrets) ? SYNC_V : SYNC_V_OLD, app: typeof APP_VERSION === 'string' ? APP_VERSION : '', at, cf, del, add: m.add, ks: CFG.syncKeys !== false };
     this.composedAt = Date.now();
     return { doc: out, at, cf };
   },
@@ -8339,11 +8495,11 @@ const TvLogin = {
         await Account.loadLib();
         // a separate, throwaway client: the TV gets its own session instead of sharing this phone's
         const tmp = window.supabase.createClient(c.url.replace(/\/+$/, ''), c.anonKey, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'mkc:tvlogin' } });
-        const tvPass = $('#tvl-pass').value; const { data, error } = await tmp.auth.signInWithPassword({ email: $('#tvl-email').value.trim(), password: tvPass });
+        const tvPass = $('#tvl-pass').value; const tvR = await Kdf2.signIn(tmp, $('#tvl-email').value.trim(), tvPass), { data, error } = tvR;
         if (error) throw error;
         $('#tvl-pass').value = '';
         const iv = crypto.getRandomValues(new Uint8Array(12));
-        const sealed = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await this.aes(key), new TextEncoder().encode(JSON.stringify({ a: data.session.access_token, r: data.session.refresh_token, c: check || '', ...(await SyncCrypt.forTv(tmp, data, tvPass)) })));
+        const sealed = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await this.aes(key), new TextEncoder().encode(JSON.stringify({ a: data.session.access_token, r: data.session.refresh_token, c: check || '', ...(await SyncCrypt.forTv(tmp, data, tvPass, tvR.d)) })));
         const reply = new Promise((res) => { answer = res; setTimeout(() => res(null), 15000); });
         bus.send({ t: 'session', iv: b64url.enc(iv), data: b64url.enc(new Uint8Array(sealed)) });
         msg('Sending to your TV…');
@@ -9272,7 +9428,7 @@ const SECTIONS = [
     { key: 'resume', label: 'Resume where you left off', type: 'toggle' },
     { key: 'browserOnly', label: 'Only sources that play here', help: 'For devices where you cannot install VLC or another player. Lists only sources this browser can play with working picture and sound (H.264 or a codec this device supports, AAC/Opus sound), and torrents only through your debrid service. Fewer sources, but the ones you see play right here.', type: 'toggle' },
     { key: 'audioOnly', label: 'Audio language', help: 'Hides sources dubbed only in other languages, so Smart Play and auto-switch never pick them. Releases that name no language, or MULTi and Dual Audio releases, stay listed.', type: 'select', options: [['eng', 'English'], ['spa', 'Spanish'], ['fre', 'French'], ['ger', 'German'], ['ita', 'Italian'], ['por', 'Portuguese'], ['hin', 'Hindi'], ['any', 'Any language']] },
-    { key: 'failover', label: 'Switch sources automatically', help: 'If a source has not started after 3.5 s, errors, or stalls for 12 s, the next best one takes over at the same spot.', type: 'toggle' },
+    { key: 'failover', label: 'Switch sources automatically', help: 'If a source has not started after 10 s, errors, or stalls for 12 s, the next best one takes over at the same spot.', type: 'toggle' },
     { key: 'skipIntro', label: 'Skip Intro button', help: 'Shows for 8 s when an intro is known: from chapters in the file, AniSkip for anime, or your own skips on earlier episodes. Enter or gamepad A presses it.', type: 'toggle' },
     { key: 'autoSkipIntro', label: 'Skip intros automatically', type: 'toggle' },
     { key: 'xray', label: 'X-Ray when paused', help: 'Cast, picture and audio details, and a scene bookmark, a moment after you pause.', type: 'toggle' },
@@ -9588,7 +9744,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.59.1';
+const APP_VERSION = '2.61.1';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -21150,6 +21306,31 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
+  { v: '2.61.1', date: '2026-11-08', items: [
+    ['new', 'Recovery code', 'The next time you sign in, MKCinema gives you a recovery code. If you ever forget your password, it brings your synced keys back. You can make a new one in Settings › Debrid.'],
+  ] },
+  { v: '2.61.0', date: '2026-11-08', items: [
+    ['better', 'Faster sync between your devices', 'A change on your phone shows up on your TV almost at once, and anything you change offline is sent the moment you are back online.'],
+    ['fixed', 'No more waiting clips', 'Some sources that are not ready yet send a short waiting clip instead of the film. MKCinema now spots it and moves on to the next source by itself.'],
+    ['new', 'Straight to the scene after the credits', 'When the credits are followed by more of the episode or film, Skip credits takes you right to it.'],
+    ['new', 'Intros, recaps and credits skip themselves', 'When MKCinema knows where an intro, a “previously on” recap or the credits are, it now skips them for you. A Watch button shows for a few seconds in case you wanted to see it. Choose Automatically, a Skip button, or Off in Settings › Playback.'],
+  ] },
+  { v: '2.60.2', date: '2026-11-08', items: [
+    ['fixed', 'A quieter sync notice', 'The “synced from your account” message after you sign in no longer covers buttons. It is now a small note in the corner that you can tap straight through, and it fades away on its own.'],
+  ] },
+  { v: '2.60.1', date: '2026-11-08', items: [
+    ['fixed', 'The right audio language is ticked', 'On some films in Chrome and on Android, the Audio menu ticked one language while another was playing, and picking it played the wrong one. It now ticks the language you hear, and picking another switches to it.'],
+    ['better', 'A source your device can play comes first', 'Play now picks a source your phone, tablet or computer can actually play, so films start on the first try more often. On phones it also starts with 1080p instead of huge 4K files.'],
+    ['better', 'A tidier Audio menu', 'The Audio tab now lists the language first, then sound mode, volume and audio delay, in one consistent style, with a tick beside what is playing.'],
+  ] },
+  { v: '2.60.0', date: '2026-11-08', items: [
+    ['new', 'Captions for films without subtitles', 'No subtitles for a film? Open Subtitles and tap Make captions with AI. MKCinema listens to the film on your device and writes captions a minute or two ahead of what you’re watching, and English viewers get foreign films translated into English. The speech model downloads once (about 77 MB), and the sound never leaves your device. It works on sources that let the browser read the file, and best on computers. For everything else, the same menu shows how to switch on Live Caption on your phone or computer.'],
+  ] },
+  { v: '2.59.2', date: '2026-11-08', items: [
+    ['better', 'Films start on the first try', 'Sources get more time to start on their first play, so a film no longer gives up on links that were just getting ready.'],
+    ['better', 'Steadier page changes', 'Moving between films, shows and Home no longer blinks to black: the next page fades in over the last one, a title’s backdrop stays put until the new one has loaded, and the Home banner text doesn’t replay when you come back.'],
+    ['fixed', 'Episode pictures', 'Episode pictures now match their episodes.'],
+  ] },
   { v: '2.59.1', date: '2026-11-08', items: [
     ['new', 'MKCinema on iPhone and iPad', 'iPhone and iPad are now fully supported. Open app.mkcinema.app in Safari, tap Share, then Add to Home Screen, and MKCinema opens full screen like any other app. Most MKV files play right in the browser, no extra app needed.'],
     ['better', 'Easier to see on phones', 'Words, posters and episode cards are bigger on phones, and they grow to fit phones whose browser shows pages small. Settings › Appearance › Text size still makes them bigger or smaller.'],
@@ -32486,6 +32667,7 @@ const tdInit = () => { try { TourDeep.init(); } catch (e) { console.warn('Tour i
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tdInit, { once: true }); else tdInit();
 </script>
 <script src="engine/mkv-engine.js" defer></script>
+<script src="captions/auto-captions.js" defer></script>
 <!-- mk-steady-open:start -->
 <style>
 /* 2.57.1: an episode still that is still on its way fades in instead of popping in */
@@ -32598,6 +32780,879 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 })();
 </script>
 <!-- mk-lpcopy:end -->
+<style id="mkc-2591-phone">@media (max-width:760px) and (pointer:coarse){html:not(.tv) body .rail>.card:not(.wide):not(.ax-sq){width:clamp(132px,35vw,230px)}html:not(.tv) body .rail>.card.wide{width:clamp(250px,68vw,440px)!important}}</style>
+<script id="mkc-2591-phone-js">(function(){var w0=innerWidth,t=0;addEventListener('resize',function(){if(innerWidth===w0)return;w0=innerWidth;clearTimeout(t);t=setTimeout(function(){try{var c=JSON.parse(localStorage.getItem('mkc:cfg')||'{}')||{},ts=+c.textScale;if(typeof CFG!=='undefined'&&CFG)ts=+CFG.textScale;if(!(ts>=85&&ts<=130))ts=100;var v=ts/100*window.__mkBoost(),de=document.documentElement;if(v===1)de.style.removeProperty('--ts');else de.style.setProperty('--ts',String(+v.toFixed(3)))}catch(e){}},150)})})();</script>
+<!-- mk-steady-views:start -->
+<style>
+/* 2.59.1 steady views: switching Home, Movies, Series and the other pages no longer drops the screen to black
+   before the new page fades in. The page eases in from mostly visible, so it still moves but never blinks. */
+.view.on{animation:mkViewIn .34s var(--ease)}
+@keyframes mkViewIn{from{opacity:.6;transform:translateY(8px)}}
+/* moving from one title to another inside its page keeps the old backdrop under the new one until it arrives */
+.d-hero > img.bg.mk-under{z-index:-3;transition:none}
+</style>
+<script>
+/* 2.59.1 steady views: coming back to Home used to replay the featured banner's text fade (title, details and
+   buttons dropped out and came back) on top of the page fade. The banner text now only animates when the
+   featured film changes. */
+(() => {
+  if (typeof go !== 'function') return;
+  const g0 = go;
+  go = function (view) {
+    try {
+      if (view === 'home' && S.view !== 'home') { const hb = document.querySelector('#hero .hero-body'); if (hb) hb.classList.remove('swap'); }
+    } catch (e) { /* the banner just fades as before */ }
+    return g0.apply(this, arguments);
+  };
+  // 2. From one title page to another (More like this, cast, collections): the old backdrop stays under the new
+  // one while it loads, so the top of the page no longer goes black before the new picture fades in
+  if (typeof renderDetail === 'function') {
+    const rd = renderDetail;
+    renderDetail = function () {
+      let old = null;
+      try {
+        // a backdrop already held underneath (the page drew again before the new picture came) stays held
+        const o = document.querySelector('#detailPanel .d-hero > img.bg.mk-under') || document.querySelector('#detailPanel .d-hero > img.bg');
+        if (o && !document.querySelector('#detail').hidden && o.complete && o.naturalWidth && !o.classList.contains('d-wait')) old = o;
+      } catch (e) { /* nothing to carry */ }
+      const r = rd.apply(this, arguments);
+      try {
+        const nb = document.querySelector('#detailPanel .d-hero > img.bg');
+        if (old && nb && nb !== old && !old.isConnected && nb.classList.contains('d-wait') && old.getAttribute('src') !== nb.getAttribute('src')) {
+          old.classList.add('mk-under'); old.classList.remove('d-wait'); old.removeAttribute('data-osrc');
+          nb.before(old);
+          let gone = false;
+          const drop = () => { if (gone) return; gone = true; setTimeout(() => old.remove(), 380); };
+          nb.addEventListener('load', drop, { once: true }); nb.addEventListener('error', drop, { once: true }); setTimeout(drop, 6000);
+        }
+      } catch (e) { /* the new picture just fades in */ }
+      return r;
+    };
+  }
+})();
+</script>
+<!-- mk-steady-views:end -->
+<!-- mk-firsttry:start -->
+<script id="mkc-firsttry">
+/* ---------------- First try plays, every episode its own picture (2.59.2) ----------------
+   1) Sources were given 3.5 s to start on Chrome, Edge and Firefox. A debrid link that is played for the first time has
+      to be prepared by the addon and the debrid service first, which often takes longer, so a source that was about to
+      play was dropped, then the next one, until "None of the sources would start" after three. By then the services had
+      prepared the files, which is why Try again worked. A start now gets 10 s (12 s on TV), and keeps waiting up to 25 s
+      while the file is still arriving. If every try only ran out of time, MKCinema tries once more by itself, as Try
+      again does, before it shows that message. Safari keeps its own rules.
+   2) Episode pictures from the catalog come from a shared picture service that can be out of step with TMDB, so two
+      episodes could show the same picture, or one of a different episode. For shows with an IMDb id the season's own
+      TMDB stills replace them, only where TMDB's episode has the same name or air date, and only over the catalog's
+      shared pictures (an addon's own picture is never replaced). A viewer with their own TMDB key asks TMDB directly;
+      everyone else asks MKCinema's tmdb-person function (lookup `stills`). Answers are kept for three days. */
+(() => {
+  /* ---------- 1) start time ---------- */
+  const WK = !!(window.MKSafari && MKSafari.on);
+  const Start = {
+    BASE: IS_TV ? 12000 : 10000, MAX: 25000, lastProg: 0,
+    allSlow: true, retried: new Set(),
+    slow: (r) => /did not start within/i.test(String(r || '')),
+  };
+  window.MkStart = Start;
+  if (!WK && typeof Failover !== 'undefined') {
+    video.addEventListener('progress', () => { Start.lastProg = performance.now(); });
+    const arm = Failover.arm.bind(Failover);
+    Failover.arm = function (stream) {
+      const key = P.ctx ? (P.ctx.video ? P.ctx.video.id : P.ctx.meta.id) : '';
+      if (key !== this.key) Start.allSlow = true; // a new title: the bookkeeping below starts over too
+      arm(stream);
+      if (!CFG.failover || stream._local || stream._handoff || stream._audioTry) return;
+      clearTimeout(this.t);
+      const t0 = performance.now(); Start.lastProg = 0;
+      const check = () => {
+        if (P.stream !== stream || $('#player').hidden || video.readyState >= 1 || !$('#pMsg').hidden) return;
+        const now = performance.now();
+        // bytes still arriving: the file is on its way, so keep waiting a little longer
+        if (now - t0 < Start.MAX && Start.lastProg && now - Start.lastProg < 4000) { Failover.t = setTimeout(check, 3000); return; }
+        Failover.next(stream, `did not start within ${Math.round((now - t0) / 1000)} s`, P.startAt || 0);
+      };
+      this.t = setTimeout(check, Start.BASE);
+    };
+    const next = Failover.next.bind(Failover);
+    Failover.next = function (failed, reason, at) {
+      if (!Start.slow(reason)) Start.allSlow = false;
+      return next(failed, reason, at);
+    };
+  }
+  // one quiet retry per episode when every source only ran out of time: they are usually ready by then
+  if (!WK && typeof Preflight !== 'undefined') {
+    const give = Preflight.giveUp.bind(Preflight);
+    Preflight.giveUp = function (stream, reason) {
+      const ctx = P.ctx;
+      const key = ctx ? (ctx.video ? ctx.video.id : ctx.meta.id) : '';
+      if (ctx && !$('#player').hidden && key && Start.allSlow && Start.slow(reason) && !Start.retried.has(key)) {
+        Start.retried.add(key);
+        const s = pickBest(ctx.streams || []);
+        if (s) {
+          try { MKLog.add('info', 'sources were slow to start; trying the best one again'); } catch (e) { /* no log */ }
+          (ctx.streams || []).forEach((x) => this.res.delete(x));
+          Failover.tried = new Set(); Failover.hops = 0; Failover.key = ''; Start.allSlow = true;
+          this.tok++; clearTimeout(Failover.t); clearTimeout(Failover.stallT);
+          toast('The sources are getting ready. Starting again…', 'info', 3600, 'failover');
+          playStream(ctx, s, { startAt: P.startAt || 0 });
+          return;
+        }
+      }
+      return give(stream, reason);
+    };
+  }
+
+  /* ---------- 2) episode pictures ---------- */
+  const Stills = {
+    FN: 'tmdb-person', IMG: 'https://image.tmdb.org/t/p/w780', TTL: 3 * 86400e3,
+    mem: null, wait: new Map(), offUntil: 0,
+    tt(m) { const id = String((m && (m.imdb_id || m.id)) || '').split(':')[0]; return /^tt\d{5,10}$/.test(id) ? id : null; },
+    store() {
+      if (!this.mem) {
+        const raw = Store.raw.get('stillCache', {}), now = Date.now(); this.mem = new Map();
+        Object.entries(raw && typeof raw === 'object' ? raw : {}).forEach(([k, v]) => { if (v && Array.isArray(v.e) && now - v.t < this.TTL) this.mem.set(k, v); });
+      }
+      return this.mem;
+    },
+    save() {
+      const m = this.store(); while (m.size > 120) m.delete(m.keys().next().value);
+      clearTimeout(this.saveT); this.saveT = setTimeout(() => Store.raw.set('stillCache', Object.fromEntries(m)), 800);
+    },
+    // only the catalog's shared pictures are replaced; an addon's own picture stays
+    shared: (u) => !u || /^https?:\/\/episodes\.metahub\.space\//i.test(String(u)),
+    norm: (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ''),
+    day: (d) => { const t = Date.parse(String(d || '').slice(0, 10)); return isFinite(t) ? t / 864e5 : NaN; },
+    async ask(tt, season) {
+      if (TMDB.key()) {
+        const f = await TMDB.find(tt); const tv = f && (f.tv_results || [])[0]; if (!tv) return [];
+        const j = await TMDB.get(`tv/${tv.id}/season/${season}`);
+        return ((j && j.episodes) || []).map((e) => ({ e: e.episode_number, n: e.name || '', d: e.air_date || '', s: e.still_path || '' }));
+      }
+      if (Date.now() < this.offUntil) return null;
+      const c = (typeof Account !== 'undefined' && Account.config && Account.config()) || {}; if (!c.url) return null;
+      const r = await netFetch(`${String(c.url).replace(/\/+$/, '')}/functions/v1/${this.FN}?a=stills&tt=${tt}&season=${season}`, { headers: { apikey: c.anonKey || '', accept: 'application/json' } }, 10000);
+      // an older function without this lookup, not set up, or busy: keep the catalog's pictures for a while
+      if (r.status === 400 || r.status === 503 || r.status === 429) { this.offUntil = Date.now() + 30 * 60e3; return null; }
+      if (!r.ok) return null;
+      const j = await r.json(); return Array.isArray(j.eps) ? j.eps : [];
+    },
+    get(tt, season) {
+      const k = `${tt}:${season}`, have = this.store().get(k);
+      if (have) return Promise.resolve(have);
+      if (!this.wait.has(k)) {
+        this.wait.set(k, this.ask(tt, season).then((e) => {
+          if (!e) return undefined;
+          const v = { e: e.filter((x) => x && x.s).map((x) => [Number(x.e), String(x.n || ''), String(x.d || ''), String(x.s)]), t: Date.now() };
+          this.store().set(k, v); this.save(); return v;
+        }).catch(() => undefined).finally(() => this.wait.delete(k)));
+      }
+      return this.wait.get(k);
+    },
+    // TMDB's still for this episode, when TMDB's episode is clearly the same one (same name or air date)
+    match(v, eps) {
+      const n = this.norm(v.name || v.title), d = this.day(v.released || v.firstAired), num = Number(v.episode);
+      const same = (x) => (n && n.length >= 3 && this.norm(x[1]) === n) || (isFinite(d) && Math.abs(this.day(x[2]) - d) <= 1);
+      const byNum = eps.find((x) => x[0] === num);
+      if (byNum && same(byNum)) return byNum[3];
+      if (n.length >= 6) { const hits = eps.filter((x) => this.norm(x[1]) === n); if (hits.length === 1) return hits[0][3]; }
+      return '';
+    },
+    // puts the stills on the show itself, so the list, the episode sheet, Up next and Continue watching all agree
+    apply(meta, season, v) {
+      if (!v || !v.e.length) return [];
+      const changed = [];
+      (meta.videos || []).forEach((ep) => {
+        if (Number(ep.season ?? 1) !== season || !this.shared(ep.thumbnail)) return;
+        const p = this.match(ep, v.e); if (!p) return;
+        const url = this.IMG + p; if (ep.thumbnail === url) return;
+        ep.thumbnail = url; changed.push(ep);
+      });
+      return changed;
+    },
+    // a late answer swaps the pictures already on screen
+    paint(meta, eps) {
+      eps.forEach((ep) => {
+        const id = videoIdFor(meta, ep);
+        $$(`#dEps [data-vid="${CSS.escape(id)}"] .th img`).forEach((img) => {
+          img.removeAttribute('data-fb'); img.removeAttribute('srcset'); img.src = ep.thumbnail;
+        });
+        try { if (D.video === ep && EpSheet.isOpen()) $$('#esHead .es-still img').forEach((img) => { img.removeAttribute('data-fb'); img.removeAttribute('srcset'); img.src = ep.thumbnail; }); } catch (e) { /* no sheet */ }
+      });
+    },
+    fix(meta, season) {
+      const tt = this.tt(meta); if (!tt || meta.type !== 'series' || !(season >= 1)) return;
+      if (!(meta.videos || []).some((ep) => Number(ep.season ?? 1) === season && this.shared(ep.thumbnail))) return;
+      const k = `${tt}:${season}`, have = this.store().get(k);
+      if (have) { this.apply(meta, season, have); return; }
+      this.get(tt, season).then((v) => { if (v) this.paint(meta, this.apply(meta, season, v)); });
+    },
+  };
+  window.MkStills = Stills;
+  if (typeof episodesHTML === 'function') {
+    const eh = episodesHTML;
+    episodesHTML = function (meta, season) {
+      try { if (meta) Stills.fix(meta, Number(season)); } catch (e) { /* the catalog's pictures stay */ }
+      return eh.apply(this, arguments);
+    };
+  }
+  // the episode sheet can open straight from Continue watching, before the list is drawn
+  if (typeof EpSheet !== 'undefined' && typeof EpSheet.head === 'function') {
+    const head = EpSheet.head;
+    EpSheet.head = function () {
+      try { if (D.meta && D.video) Stills.fix(D.meta, Number(D.video.season)); } catch (e) { /* the catalog's picture stays */ }
+      return head.apply(this, arguments);
+    };
+  }
+})();
+</script>
+<!-- mk-firsttry:end -->
+<script id="mkc-2601al">
+'use strict';
+/* 2.60.1 Audio language: mark the track that is really playing. Chromium plays the first audio track it can decode,
+   so a file with Italian AC3 first and English AAC second plays English on Android. TorBox's stream index (when its
+   track list gives one) is what goes to TorBox, since it can count every stream in the file, picture included. */
+(() => {
+  if (typeof AudioLang === 'undefined') return;
+  const MIME = { aac: 'audio/mp4; codecs="mp4a.40.2"', ac3: 'audio/mp4; codecs="ac-3"', eac3: 'audio/mp4; codecs="ec-3"', opus: 'audio/mp4; codecs="opus"', flac: 'audio/mp4; codecs="flac"', mp3: 'audio/mpeg', vorbis: 'audio/webm; codecs="vorbis"' };
+  // true: this browser decodes it; false: it never does; null: unknown codec name
+  const playable = (c) => {
+    const k0 = String(c || '').toLowerCase().replace(/[^a-z0-9]/g, ''); if (!k0) return null;
+    if (/dts|dca|truehd|mlp|pcm/.test(k0)) return false;
+    const k = /^(eac3|ec3|ddp|ddplus)/.test(k0) ? 'eac3' : /^(ac3|dd)$/.test(k0) ? 'ac3' : /aac|mp4a/.test(k0) ? 'aac' : k0;
+    if (!MIME[k]) return null;
+    try { return !!BrowserPlay.can(MIME[k]); } catch (e) { return null; }
+  };
+  const tracks0 = AudioLang.tracks.bind(AudioLang);
+  AudioLang.tracks = function (list) {
+    const out = tracks0(list);
+    (Array.isArray(list) ? list : []).forEach((t, n) => {
+      if (!t || typeof t !== 'object' || !out[n]) return;
+      out[n].codec = String(t.codec || t.codec_name || '');
+      const x = Number(t.index != null ? t.index : t.stream_index);
+      if (Number.isInteger(x) && x >= 0) out[n].src = x;
+    });
+    return out;
+  };
+  if (/Chrome\//.test(navigator.userAgent) && !('audioTracks' in HTMLMediaElement.prototype)) {
+    AudioLang.defIndex = (tracks) => { const t = (tracks || []).find((x) => playable(x.codec) !== false); return t ? t.i : 0; };
+  }
+  const tb0 = AudioLang.tbStream.bind(AudioLang);
+  AudioLang.tbStream = function (ref, idx) {
+    const st = P.stream && this.info.get(P.stream), t = st && st.ref === ref && (st.tracks || []).find((x) => x.i === idx);
+    return tb0(ref, t && t.src != null ? t.src : idx);
+  };
+})();
+</script>
+<!-- mk-devicefit:start -->
+<script id="mkc-devicefit">
+/* ---------------- The first pick fits this device (2.59.3) ----------------
+   Sources were ranked by picture quality first, so the automatic pick was often a 4K Dolby Vision remux with DTS sound:
+   the file a phone browser is least able to play. It failed, the next one failed the same way, and only the third or
+   fourth (a plain 1080p file) played. Now a source this device can't play by itself (the same test as "Only sources
+   that play here", which counts what the MKCinema engine can convert) ranks below every one it can, and on phones 4K and
+   very large files come after 1080p, since they take longer to start on mobile data and don't look sharper on a phone
+   screen. Nothing is hidden: the source list shows every source, and picking one by hand plays it. */
+(() => {
+  if (typeof Telemetry === 'undefined' || typeof BrowserPlay === 'undefined') return;
+  const PHONE = TOUCH_UI && !IS_TV;
+  const parse = Telemetry.parse.bind(Telemetry);
+  Telemetry.parse = function (s) {
+    const t = parse(s);
+    if (!t || t.isTrailer || t.kind === 'yt' || !t.webReady || (s && s._local)) return t;
+    let fits = true;
+    // BrowserPlay reads the result it is judging from the source, so it gets this one
+    try { fits = BrowserPlay.ok(Object.assign({}, s, { _tel: t })); } catch (e) { fits = true; }
+    t.fits = fits;
+    if (!fits) t.score -= 350;
+    if (PHONE) {
+      if (t.res === '4K UHD') t.score -= 120;
+      const gb = (t.sizeBytes || 0) / 1073741824;
+      if (gb > 8) t.score -= Math.min(90, (gb - 8) * 3);
+    }
+    return t;
+  };
+})();
+</script>
+<!-- mk-devicefit:end -->
+<!-- mk-attidy:start -->
+<style id="mkc-attidy-css">
+/* 2.60.1 Audio tab, tidied: one header style, one row style, one control style, in a fixed order
+   (language, sound mode, volume, anything else, audio delay). Transform and opacity only. */
+#optMenu .at-sec{padding:16px 0 8px;border-top:1px solid rgba(255,255,255,.08)}
+#optMenu .at-sec:first-child{border-top:0;padding-top:6px}
+#optMenu .at-sec>.at-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 12px 10px;padding:0;font-family:var(--f-body);font-size:calc(15px * var(--ts,1));font-weight:600;line-height:1.25;letter-spacing:0;text-transform:none;color:var(--ink,#f2f2f3)}
+#optMenu .at-sec>.at-h em{font-style:normal;font-weight:500;font-size:calc(13px * var(--ts,1));color:var(--mute)}
+/* rows: audio languages and sound modes look the same, and the one playing carries a tick */
+#optMenu .at-lang>button,#optMenu .at-mode .snd-m{display:flex;align-items:center;gap:12px;width:100%;min-height:46px;padding:8px 12px;border:0;border-radius:calc(var(--r-m) * 1.2);background:transparent;font-size:calc(14px * var(--ts,1));font-weight:500;text-align:left;color:var(--ink,#f2f2f3)}
+#optMenu .at-lang>button.on,#optMenu .at-mode .snd-m.on{background:rgba(255,255,255,.08)}
+#optMenu .at-lang>button svg,#optMenu .at-mode .snd-m svg{flex:none;width:18px;height:18px;margin:0;opacity:.75}
+#optMenu .at-lang>button.on::after,#optMenu .at-mode .snd-m.on::after{content:"";flex:none;margin-left:auto;width:7px;height:13px;border:solid var(--accent,#cdb47e);border-width:0 2px 2px 0;transform:rotate(45deg) translate(-2px,-2px)}
+#optMenu .at-mode .snd-modes{display:flex;flex-direction:column;gap:2px;margin:0;padding:0}
+#optMenu .at-mode .snd-m{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"i b t" "i s t";align-items:center;column-gap:12px;row-gap:1px;padding:9px 12px}
+#optMenu .at-mode .snd-m svg{grid-area:i}
+#optMenu .at-mode .snd-m b{grid-area:b;font-size:inherit;font-weight:500}
+#optMenu .at-mode .snd-m small{grid-area:s;margin:0;max-width:none;text-align:left;font-size:calc(12px * var(--ts,1));line-height:1.3;color:var(--mute)}
+#optMenu .at-mode .snd-m.on::after{grid-area:t;margin-left:0}
+/* controls: volume and delay are one segmented bar of equal buttons */
+#optMenu .at-sec .seg-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:0 12px;padding:0;border:1px solid rgba(255,255,255,.14);border-radius:calc(var(--r-m) * 1.2);overflow:hidden}
+html #optMenu .at-sec .seg-row button{justify-content:center;width:auto;min-height:44px;padding:8px 4px;border:0;border-radius:0;font-family:var(--f-body);font-size:calc(14px * var(--ts,1));font-weight:500;letter-spacing:0;font-variant-numeric:normal;text-align:center;background:transparent}
+html #optMenu .at-sec .seg-row button+button{border-left:1px solid rgba(255,255,255,.08)}
+html #optMenu .at-sec .seg-row button.on{background:rgba(255,255,255,.12);color:#fff}
+/* notes: full width, readable, quiet */
+#optMenu .at-sec .px-note,#optMenu .at-sec .as-note,#optMenu .at-sec .sens-note,#optMenu .at-sec .al-note{margin:10px 12px 0;padding:0;max-width:none;font-size:calc(13px * var(--ts,1));line-height:1.5;color:var(--mute)}
+</style>
+<script id="mkc-attidy">
+/* 2.60.1 Audio tab, tidied. After the menu has drawn and sorted itself into tabs, the Audio tab's pieces are put in one
+   order and given one look. Nothing is added or removed, so every control keeps its own handler (they are moved, not copied). */
+(() => {
+  const KIND = [
+    [/^audio( language)?$/i, 'lang', 0],
+    [/^sound mode/i, 'mode', 1],
+    [/^volume/i, 'vol', 2],
+    [/^audio delay/i, 'delay', 4],
+  ];
+  const kindOf = (t) => { for (const [re, k, r] of KIND) if (re.test(t.split(' · ')[0].trim())) return [k, r]; return ['other', 3]; };
+  const head = (el) => {
+    const raw = el.textContent.replace(/\s+/g, ' ').trim(), i = raw.indexOf(' · ');
+    let title = i < 0 ? raw : raw.slice(0, i), state = i < 0 ? '' : raw.slice(i + 3);
+    if (/^audio$/i.test(title)) title = 'Audio language';
+    el.classList.add('at-h');
+    el.innerHTML = `<span>${esc(title)}</span>${state ? `<em>${esc(state.charAt(0).toUpperCase() + state.slice(1))}</em>` : ''}`;
+    return title;
+  };
+  function run() {
+    const pane = $('#optMenu .px-pane[data-pane="audio"]'); if (!pane || pane.dataset.tidy) return;
+    pane.dataset.tidy = '1';
+    const secs = []; let cur = null;
+    Array.from(pane.children).forEach((el) => {
+      if (el.tagName === 'H5' || el.classList.contains('snd-h')) {
+        const title = head(el), [k, r] = kindOf(title);
+        cur = { k, r, i: secs.length, h: el, els: [] }; secs.push(cur); return;
+      }
+      if (!cur) { cur = { k: 'other', r: 3, i: secs.length, h: null, els: [] }; secs.push(cur); }
+      cur.els.push(el);
+    });
+    if (secs.length < 2) return;
+    secs.sort((a, b) => a.r - b.r || a.i - b.i);
+    secs.forEach((s) => {
+      const sec = document.createElement('section'); sec.className = `at-sec at-${s.k}`;
+      if (s.h) sec.appendChild(s.h);
+      s.els.forEach((e) => sec.appendChild(e));
+      pane.appendChild(sec);
+    });
+  }
+  const base = renderOptMenu;
+  renderOptMenu = function () {
+    const r = base.apply(this, arguments);
+    try { run(); } catch (e) { console.error('audio tab tidy', e); }
+    return r;
+  };
+})();
+</script>
+<!-- mk-attidy:end -->
+<script id="mkc-2602qs">
+'use strict';
+/* 2.60.2 Quiet sign-in sync notice: a tap-through pill, not a toast. */
+(() => {
+  if (typeof toast !== 'function') return;
+  const st = document.createElement('style');
+  st.textContent = '.mk-qs{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;pointer-events:none;padding:7px 12px;border-radius:999px;font-size:calc(12px * var(--ts,1));line-height:1.2;background:rgba(20,20,22,.82);color:rgba(244,241,234,.9);border:1px solid rgba(255,255,255,.1);opacity:0;transform:translateY(6px);transition:opacity .25s ease,transform .25s ease}.mk-qs.on{opacity:1;transform:none}@media (prefers-reduced-motion:reduce){.mk-qs{transition:none;transform:none}}body.mk-phone .mk-qs,html.tv .mk-qs{bottom:calc(84px + env(safe-area-inset-bottom,0px))}';
+  document.head.appendChild(st);
+  let el = null, t1 = 0, t2 = 0;
+  const quiet = (msg) => {
+    if (!document.getElementById('player') || !document.getElementById('player').hidden) return;
+    if (!el) { el = document.createElement('div'); el.className = 'mk-qs'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite'); document.body.appendChild(el); }
+    clearTimeout(t1); clearTimeout(t2); el.textContent = msg;
+    requestAnimationFrame(() => el.classList.add('on'));
+    t1 = setTimeout(() => el.classList.remove('on'), 2000);
+  };
+  const t0 = toast;
+  toast = function (msg) {
+    if (/^Synced your (library and )?settings/i.test(String(msg))) { quiet('Synced from your account'); return; }
+    return t0.apply(this, arguments);
+  };
+})();
+</script>
+<!-- mk-livesync:start -->
+<script>
+/* 2.61 live sync: devices tell each other the moment the account row changes, pending changes go up as soon as the
+   network is back, and failed uploads retry on their own. The nudge travels on a private channel only the signed-in
+   owner can join, and carries just the row time and a random device id: no library data, no keys. */
+(() => {
+  if (typeof Account === 'undefined' || Account._live261) return;
+  Account._live261 = true;
+  let dev = ''; try { dev = localStorage.getItem('mkc:devId') || ''; if (!dev) { dev = SyncCrypt.newSalt(); localStorage.setItem('mkc:devId', dev); } } catch (e) { dev = Math.random().toString(36).slice(2); }
+  const L = { ch: null, key: '', held: false, tries: 0, retryT: 0 };
+  const playing = () => { const pl = document.getElementById('player'); return !!(pl && !pl.hidden); };
+  const nudged = (at) => {
+    if (!Account.user || CFG.cloudSync === false || (at && at === Account.sync.at)) return;
+    if (playing()) { L.held = true; return; }
+    Account.pull({ quiet: true });
+  };
+  const drop = () => { const c = L.ch; L.ch = null; L.key = ''; if (c) { try { Account.client.removeChannel(c); } catch (e) { /* gone */ } } };
+  const ensure = () => {
+    const c = Account.client, u = Account.user, want = c && u && CFG.cloudSync !== false && typeof c.channel === 'function' ? `${u.id}` : '';
+    if (want === L.key) return;
+    drop(); if (!want) return;
+    try {
+      const ch = c.channel(`mkc-sync:${want}`, { config: { private: true, broadcast: { self: false } } });
+      ch.on('broadcast', { event: 'row' }, (m) => { const p = m && m.payload; if (p && p.d !== dev) nudged(typeof p.at === 'string' ? p.at : ''); });
+      ch.subscribe((st) => { if (st === 'SUBSCRIBED') Account.pull({ quiet: true, soon: true, every: 5000 }); });
+      L.ch = ch; L.key = want;
+    } catch (e) { L.ch = null; L.key = ''; }
+  };
+  // after every upload this device made, tell the others
+  const pushed = Account.pushed;
+  Account.pushed = function (updatedAt) {
+    const r = pushed.apply(this, arguments);
+    try { SyncClock.learn(updatedAt); } catch (e) { /* keep the old offset */ }
+    try { if (L.ch) L.ch.send({ type: 'broadcast', event: 'row', payload: { at: updatedAt, d: dev } }); } catch (e) { /* the minute pull still catches it */ }
+    return r;
+  };
+  // failed uploads retry by themselves: 5 s, 15 s, then every minute while the error lasts
+  const setSync = Account.setSync;
+  Account.setSync = function (state) {
+    const r = setSync.apply(this, arguments);
+    if (state === 'ok') { L.tries = 0; clearTimeout(L.retryT); L.retryT = 0; }
+    else if (state === 'error' && !this.newer && this.user && !L.retryT) {
+      const wait = [5000, 15000][L.tries] || 60000; L.tries++;
+      L.retryT = setTimeout(() => { L.retryT = 0; if (navigator.onLine !== false && Account.user) Account.pull({ quiet: true, force: true }); }, wait);
+    }
+    return r;
+  };
+  addEventListener('online', () => { if (!Account.user) return; L.tries = 0; Account.pull({ quiet: true }); });
+  // progress and watched marks use the account clock too, so a device whose clock runs fast cannot win every time
+  const fix = (map, before) => { const off = SyncClock.off; if (!off || !map) return false; let hit = false; const now = Date.now();
+    Object.keys(map).forEach((k) => { const v = map[k]; if (v && typeof v === 'object' && typeof v.at === 'number' && v.at >= before && v.at <= now) { v.at += off; hit = true; } else if (typeof v === 'number' && v >= before && v <= now) { map[k] = v + off; hit = true; } }); return hit; };
+  if (typeof saveProgress === 'function') {
+    const sp = saveProgress;
+    saveProgress = function () { const t = Date.now(); const r = sp.apply(this, arguments); try { if (fix(S.progress, t)) Store.set('progress', S.progress); } catch (e) { /* as saved */ } return r; };
+  }
+  if (typeof markWatched === 'function') {
+    const mw = markWatched;
+    markWatched = function () { const t = Date.now(); const r = mw.apply(this, arguments); try { const w = watchedMap(); if (fix(w, t)) { Store.set('watched', w); WATCHED = null; } } catch (e) { /* as saved */ } return r; };
+  }
+  // keys only ever leave this device sealed: a readable keys box is never passed back up, and a device that cannot
+  // seal keeps addon links that carry a key to itself (ks:false tells other devices to keep their own)
+  const comp = Account.compose;
+  Account.compose = function () {
+    const r = comp.apply(this, arguments), out = r && r.doc; if (!out) return r;
+    if (out.secrets !== undefined && !SyncCrypt.isBox(out.secrets)) delete out.secrets;
+    if (!SyncCrypt.isBox(out.secrets) || !(out._sync && out._sync.sa)) {
+      const keyed = (u) => { try { const x = new URL(String(u)); return keyedAddon(u) || !!(x.search || x.username || x.password); } catch (e) { return false; } };
+      if (Array.isArray(out.addons) && out.addons.some(keyed)) { out.addons = out.addons.filter((u) => !keyed(u)); out._sync = { ...(out._sync || {}), ks: false }; }
+    }
+    return r;
+  };
+  setInterval(() => { ensure(); if (L.held && !playing()) { L.held = false; nudged(''); } }, 3000);
+  ensure();
+})();
+</script>
+<!-- mk-livesync:end -->
+<style id="mkc-261skcss">
+#skipBtn.sk-undo svg{transform:scaleX(-1)}
+</style>
+<script id="mkc-261sk">
+'use strict';
+/* 2.61 Automatic skips. Exact times (chapters, addon times, AniSkip, TheIntroDB) skip on their own and leave a
+   "Watch" pill for 6 s; guessed times (neighbouring episodes, your own earlier skips) only show the button.
+   Short waiting clips that some sources send instead of the film are spotted and passed over. */
+(() => {
+  if (typeof Skip === 'undefined' || typeof Marks === 'undefined') return;
+  const NAME = { recap: 'Recap', intro: 'Intro', ed: 'Credits' };
+  const now = () => performance.now();
+
+  /* ---- one setting: Automatically / Show a Skip button / Off ---- */
+  if (typeof CFG_DEFAULTS === 'object') CFG_DEFAULTS.skipAuto = 'auto';
+  if (CFG.skipAuto == null) { CFG.skipAuto = CFG.skipIntro === false ? 'off' : 'auto'; saveCfg(); }
+  const mode = () => (CFG.skipAuto === 'ask' || CFG.skipAuto === 'off' ? CFG.skipAuto : 'auto');
+  const mirror = () => { CFG.skipIntro = mode() !== 'off'; CFG.autoSkipIntro = mode() === 'auto'; };
+  mirror();
+  const pb = typeof secById === 'function' && secById('playback');
+  if (pb) {
+    const rows = pb.rows;
+    pb.rows = () => {
+      const r = rows(), at = r.findIndex((x) => x.key === 'skipIntro' || x.key === 'autoSkipIntro');
+      const out = r.filter((x) => x.key !== 'skipIntro' && x.key !== 'autoSkipIntro');
+      const row = { key: 'skipAuto', label: 'Skip intros, recaps and credits', type: 'select',
+        help: 'Times come from chapters in the file, your addons, AniSkip for anime and TheIntroDB. After an automatic skip a Watch button shows for a few seconds. Times guessed from nearby episodes or from your own skips only ever show the button. Enter or gamepad A presses it.',
+        options: [['auto', 'Automatically'], ['ask', 'Show a Skip button'], ['off', 'Off']], get: mode,
+        set: (v) => { setCfg('skipAuto', v); mirror(); saveCfg(); } };
+      out.splice(at >= 0 ? at : out.length, 0, row);
+      return out;
+    };
+  }
+
+  /* ---- TheIntroDB, keeping the end of the credits, plus neighbouring episodes when an episode has no intro ---- */
+  const A = {
+    tok: -1, est: null, undo: null, seg: null, quiet: {},
+    ids(ctx) {
+      if (!ctx || !ctx.meta) return null;
+      const meta = ctx.meta, v = ctx.video;
+      let imdb = String((v && v.id) || meta.id || '').split(':')[0], season = v && Number(v.season), ep = v && Number(v.episode);
+      if (!/^tt\d+$/.test(imdb)) { imdb = (v && v.imdb_id) || meta.imdb_id || ''; if (v) { season = Number(v.imdbSeason); ep = Number(v.imdbEpisode); } }
+      if (!/^tt\d+$/.test(imdb) || (v && !(season >= 0 && ep > 0))) return null;
+      return { imdb, season: v ? season : null, ep: v ? ep : null };
+    },
+    one(imdb, season, ep) {
+      const q = `imdb_id=${imdb}${season != null ? `&season=${season}&episode=${ep}` : ''}`;
+      if (Marks.cache.has(q)) return Marks.cache.get(q);
+      const p = (async () => {
+        const r = await fetch(`https://api.theintrodb.org/v2/media?${q}`); if (!r.ok) return null;
+        const j = await r.json(), seg = (k) => (Array.isArray(j[k]) ? j[k][0] : j[k]) || null, m = {};
+        const i = seg('intro'), rc = seg('recap'), cr = seg('credits');
+        if (i && i.end_ms > (i.start_ms || 0)) m.intro = [(i.start_ms || 0) / 1000, i.end_ms / 1000];
+        if (rc && rc.end_ms > (rc.start_ms || 0)) m.recap = [(rc.start_ms || 0) / 1000, rc.end_ms / 1000];
+        if (cr && cr.start_ms) {
+          m.credits = cr.start_ms / 1000;
+          // credits that end before the file does: more of the story follows, so they get their own skip
+          if (cr.end_ms > cr.start_ms) m.ed = [cr.start_ms / 1000, cr.end_ms / 1000];
+        }
+        return Object.keys(m).length ? m : null;
+      })().catch(() => null);
+      Marks.cache.set(q, p); return p;
+    },
+    async near(ctx, tok) {
+      const id = this.ids(ctx); if (!id || id.season == null || CFG.introDb === false) return;
+      const own = await this.one(id.imdb, id.season, id.ep); if (tok !== Skip.token || (own && own.intro)) return;
+      const nb = (await Promise.all([id.ep - 1, id.ep + 1].filter((e) => e > 0).map((e) => this.one(id.imdb, id.season, e))))
+        .map((m) => m && m.intro).filter(Boolean);
+      if (tok !== Skip.token || nb.length < 2) return;
+      const [a, b] = nb; if (Math.abs(a[0] - b[0]) > 3 || Math.abs(a[1] - b[1]) > 3) return;
+      this.est = { k: 'intro', s: (a[0] + b[0]) / 2, e: (a[1] + b[1]) / 2 };
+      MKLog.add('info', `skip: intro guessed from the episodes either side (${Math.round(this.est.s)}-${Math.round(this.est.e)} s)`);
+    },
+    /* the intro you taught it by skipping earlier episodes yourself is a guess too */
+    learned(m) {
+      try {
+        const l = P.ctx && Store.get('introLearn', {})[P.ctx.meta.id];
+        return !!(l && m.intro && Math.abs(m.intro[0] - Math.max(0, l.s - 3)) < 0.01 && Math.abs(m.intro[1] - l.e) < 0.01);
+      } catch (e) { return false; }
+    },
+    segs(m, d) {
+      const out = [];
+      if (m) for (const k of ['recap', 'intro', 'ed']) {
+        const w = m[k]; if (!Array.isArray(w) || !(w[1] > w[0])) continue;
+        if (k === 'ed' && !(d && w[1] < d - 20)) continue; // credits to the end: Up next takes over
+        out.push({ k, s: w[0], e: w[1], est: k === 'intro' && this.learned(m) });
+      }
+      if (this.est && !out.some((x) => x.k === 'intro')) out.push({ ...this.est, est: true });
+      return out;
+    },
+    label(k, m) { return k === 'ed' ? (/AniSkip|chapters/.test((m && m.src) || '') ? 'Skip ending' : 'Skip credits') : k === 'recap' ? 'Skip recap' : 'Skip intro'; },
+    pill(text, undo) {
+      const b = $('#skipBtn'); if (!b) return;
+      const sp = $('span', b); if (sp && sp.textContent !== text) sp.textContent = text;
+      b.classList.toggle('sk-undo', !!undo); b.classList.remove('out'); b.hidden = false;
+    },
+    guest() { try { return !!(Party.code && !Party.isHost()); } catch (e) { return false; } },
+  };
+  window.MkAutoSkip = A;
+  Marks.introdb = function (ctx) {
+    if (CFG.introDb === false) return Promise.resolve(null);
+    const id = A.ids(ctx); return id ? A.one(id.imdb, id.season, id.ep) : Promise.resolve(null);
+  };
+  const ld = Skip.load.bind(Skip);
+  Skip.load = function (ctx) {
+    const r = ld(ctx); A.est = null; A.undo = null; A.seg = null; A.quiet = {}; A.tok = Skip.token;
+    A.near(ctx, Skip.token).catch(() => {});
+    return r;
+  };
+
+  /* ---- the button, the automatic skip and its Watch pill ---- */
+  Skip.tick = function (t) {
+    const m = this.m, md = mode();
+    if (A.undo) {
+      if (now() < A.undo.until && !P.locked) { A.pill(`Watch ${NAME[A.undo.k].toLowerCase()}`, true); return; }
+      A.undo = null; $('#skipBtn').classList.remove('sk-undo'); this.hide();
+    }
+    if (md === 'off' || P.locked) { this.hide(); return; }
+    const seg = A.segs(m, pDur()).find((x) => t >= x.s && t < x.e - 1);
+    A.seg = seg || null;
+    if (!seg || A.quiet[seg.k]) { this.hide(); this.shownAt = 0; this.cur = null; return; }
+    if (this.cur !== seg.k) { this.cur = seg.k; this.shownAt = 0; }
+    if (md === 'auto' && !seg.est && !A.guest() && !this.usedK[seg.k] && t < seg.e - 3) { this.usedK[seg.k] = true; this.go(true); return; }
+    if (!this.shownAt) { this.shownAt = now(); A.pill(A.label(seg.k, m), false); }
+    else if (now() - this.shownAt > 8000) this.hide();
+  };
+  Skip.go = function (auto) {
+    const u = A.undo;
+    if (!auto && u && now() < u.until) {
+      A.undo = null; A.quiet[u.k] = true; this.usedK[u.k] = true; this.cur = u.k; this.shownAt = now() + 1e9;
+      $('#skipBtn').classList.remove('sk-undo'); this.hide(); pSeek(u.s, { user: false });
+      return;
+    }
+    const seg = A.seg; if (!seg) return;
+    this.usedK[seg.k] = true; this.cur = seg.k; this.shownAt = now() + 1e9;
+    pSeek(seg.e, { user: false });
+    if (auto) { A.undo = { k: seg.k, s: Math.max(0, seg.s - 0.5), until: now() + 6000 }; A.pill(`Watch ${NAME[seg.k].toLowerCase()}`, true); }
+    else this.hide();
+    toast(`${NAME[seg.k]} skipped${auto ? ' automatically' : ''}`, 'info', 1400, 'autoskip');
+    MKLog.add('info', `skip ${seg.k} ${auto ? 'auto' : 'button'} ${Math.round(seg.s)}-${Math.round(seg.e)} s (${(this.m && this.m.src) || (seg.est ? 'guess' : '?')})`);
+  };
+
+  /* ---- TV player: autoSkip follows the setting, and guessed intros are not sent ---- */
+  if (typeof TvParity !== 'undefined' && TvParity.prep) {
+    const prep = TvParity.prep.bind(TvParity);
+    TvParity.prep = async function (ctx) {
+      mirror();
+      const out = await prep(ctx);
+      try {
+        out.autoSkip = mode() === 'auto' && !A.guest();
+        if (out.skips && out.skips.intro && Skip.m && A.learned(Skip.m) && out.autoSkip) delete out.skips.intro;
+      } catch (e) { /* plays without */ }
+      return out;
+    };
+  }
+
+  /* ---- waiting clips: a "not ready yet" video a few seconds long, sent in place of the film ---- */
+  const Stub = {
+    seen: new WeakSet(),
+    check() {
+      const s = P.stream, ctx = P.ctx; if (!s || !ctx || $('#player').hidden || this.seen.has(s)) return;
+      if (s._local || s._handoff || (s._tel && s._tel.isTrailer) || P.hls || P.remux) return;
+      if (/^blob:/.test(video.currentSrc || '')) return; // streamed by a player engine: its duration can grow while it loads
+      const d = video.duration; if (!isFinite(d) || d <= 0 || d >= 60) return;
+      const type = ctx.meta && ctx.meta.type; if (type !== 'movie' && type !== 'series' && type !== 'anime') return;
+      const rt = parseInt(ctx.meta.runtime, 10); if (rt > 0 && rt < 3) return;
+      this.seen.add(s);
+      MKLog.add('info', `waiting clip (${d.toFixed(1)} s) instead of the film: ${MKLog.describe ? MKLog.describe(s) : ''}`);
+      if (s._tel) s._tel.cached = false;
+      if (CFG.failover && Failover.candidates(s).length && Failover.next(s, 'isn’t cached yet', P.startAt || 0)) return;
+      // the player starts it a moment later, so it is held on the first frame then too
+      const hold = () => { if (P.stream === s) video.pause(); };
+      hold(); video.addEventListener('playing', hold, { once: true }); setTimeout(() => video.removeEventListener('playing', hold), 5000);
+      toast('This source isn’t ready yet. It sent a short waiting clip instead of the film. Pick another source, or try this one again in a few minutes.', 'info', 8000, 'stubclip');
+    },
+  };
+  ['loadedmetadata', 'durationchange'].forEach((ev) => video.addEventListener(ev, () => { try { Stub.check(); } catch (e) { /* playback goes on */ } }));
+  window.MkStubClip = Stub;
+})();
+</script>
+<!-- mk-kdf2:start -->
+<div id="rcLayer" class="layer-ov" hidden>
+  <div class="modal glass-solid" role="dialog" aria-modal="true" aria-labelledby="rcTitle" style="max-width:520px">
+    <span class="eyebrow">Your account</span>
+    <h2 id="rcTitle">Your recovery code</h2>
+    <p class="sub">If you ever forget your password, this code brings back your synced keys. Keep it somewhere safe, like a password manager. It can't be shown again, and nobody else can recover it for you.</p>
+    <div id="rcCode" style="font:600 17px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.04em;padding:14px 16px;border-radius:12px;background:color-mix(in srgb,currentColor 8%,transparent);user-select:all;-webkit-user-select:all;overflow-wrap:anywhere;margin-top:14px"></div>
+    <div class="actions" style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost" type="button" id="rcCopy" data-nav>Copy</button>
+      <button class="btn btn-ghost" type="button" id="rcSave" data-nav>Download</button>
+      <button class="btn btn-prime" type="button" id="rcDone" data-nav>I saved it</button>
+    </div>
+  </div>
+</div>
+<script>
+/* 2.62 account keys: sign-in, unlock, new password and "Sign in with your phone" use the login key derived on the
+   device; a recovery code can bring synced keys back after a password reset. Kdf2.UPGRADE turns on the move of
+   existing accounts, which happens the next time each person types their password. */
+(() => {
+  if (typeof Account === 'undefined' || typeof Kdf2 === 'undefined' || Account._kdf2) return;
+  Account._kdf2 = true;
+  const A = Account;
+  const emailUser = () => { const u = A.user, prov = u && u.app_metadata && u.app_metadata.provider; return !!(u && u.email && (!prov || prov === 'email')); };
+  const stamp = () => (typeof SyncClock !== 'undefined' ? SyncClock.now() : Date.now());
+  const bump = () => { const m = A.m(); m.at.secrets = Math.max(stamp(), (m.rat.secrets || 0) + 1); A.saveMeta(); };
+  const rerenderSettings = () => { try { if (!$('#settings').hidden && typeof renderSettingsBody === 'function') renderSettingsBody(); } catch (e) { /* closed */ } };
+  const samePw = (e) => /same_password|different from the old/i.test(`${e && e.code} ${e && e.message}`);
+
+  /* ---- recovery code dialog ---- */
+  const showCode = (code) => {
+    $('#rcCode').innerHTML = String(code).replace(/[^A-Z0-9-]/g, '').split('-').join('-<wbr>'); openLayer('rcLayer');
+    $('#rcCopy').onclick = () => { try { navigator.clipboard.writeText(code).then(() => toast('Recovery code copied', 'ok')); } catch (e) { toast('Select the code and copy it', 'info'); } };
+    $('#rcSave').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([`MKCinema recovery code\n\n${code}\n\nAccount: ${(A.user && A.user.email) || ''}\nKeep this safe. It brings back your synced keys if you forget your password.\n`], { type: 'text/plain' })); a.download = 'MKCinema-recovery-code.txt'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); };
+    $('#rcDone').onclick = () => closeLayer('rcLayer');
+    $$('#rcLayer [data-close]').forEach((b) => { b.onclick = () => closeLayer('rcLayer'); });
+    setTimeout(() => { try { $('#rcDone').focus(); } catch (e) { /* gone */ } }, 60);
+  };
+  A.showRecoveryCode = showCode;
+
+  /* ---- sign in ---- */
+  A.signIn = function () {
+    return this.run('Sign in', async () => {
+      const { email, password } = this.creds(); if (!password) throw new Error('Enter your password');
+      this.pendingPass = password; let done; this.kdfD = new Promise((res) => { done = res; });
+      let r; try { r = await Kdf2.signIn(this.client, email, password); } catch (e) { done(null); this.pendingPass = ''; this.kdfD = null; throw e; }
+      done(r.d);
+      if (r.error) { this.pendingPass = ''; this.kdfD = null; throw r.error; }
+      this.kdf = { mode: r.mode, d: r.d };
+      setTimeout(() => { if (this.pendingPass && this.user) this.pull({ force: true, quiet: true }); }, 1500);
+    });
+  };
+  const signUp1 = A.signUp;
+  A.signUp = function () {
+    if (!Kdf2.UPGRADE) return signUp1.apply(this, arguments);
+    return this.run('Create account', async () => {
+      const { email, password } = this.creds(); if (password.length < 10) throw new Error('Use a password of at least 10 characters');
+      const d = await Kdf2.derive(email, password); this.kdfD = Promise.resolve(d); this.kdf = { mode: 2, d }; this.pendingPass = password;
+      const { data, error } = await this.client.auth.signUp({ email, password: d.login, options: { ...(this.canRedirect() ? { emailRedirectTo: this.redirectTo() } : {}), data: { mkc_kdf: 2, mkc_salt: d.salt } } }); if (error) throw error;
+      await Kdf2.markKnown(email);
+      return data.session ? '' : 'Check your inbox to confirm your email, then sign in.';
+    });
+  };
+
+  /* ---- the password just typed opens the account's vault (or queues the move to it) ---- */
+  const derive1 = A.derive;
+  A.derive = async function (uid, box) {
+    const pw = this.pendingPass;
+    if (!pw || !emailUser() || !(window.crypto && crypto.subtle)) return derive1.call(this, uid, box);
+    let d; try { d = await (this.kdfD || (this.kdfD = Kdf2.derive(this.user.email, pw, Kdf2.metaSalt(this.user) || undefined))); } catch (e) { d = null; }
+    if (!d) return derive1.call(this, uid, box);
+    const mode = this.kdf && this.kdf.mode;
+    if (!Kdf2.isBox(box)) {
+      await derive1.call(this, uid, box);
+      if (Kdf2.UPGRADE) this.kdfUp = { uid, d, pass: mode !== 2 };
+      return;
+    }
+    this.pendingPass = '';
+    const vault = await Kdf2.unwrapWith(d.wrap, box.wraps.pw, uid);
+    if (vault) {
+      await Kdf2.keep(uid, box.vid, vault, box.wraps); this.kdfLost = null; await Kdf2.markKnown(this.user.email);
+      if (Kdf2.UPGRADE && mode === 1) this.kdfUp = { uid, d, pass: true, only: true };
+      return;
+    }
+    // the password does not open the vault (it was reset by email): nothing changes until the recovery code or "Start fresh"
+    this.kdfLost = { uid, d };
+  };
+  const pull1 = A.pull;
+  A.pull = function () { return pull1.apply(this, arguments).then((r) => (this.kdfUp && !this.kdfBusy ? this.upgrade().then(() => r) : r)); };
+
+  /* ---- move an account to format 2: new vault, saved first, then the login key replaces the password ---- */
+  A.upgrade = async function () {
+    const up = this.kdfUp; this.kdfUp = null;
+    if (!up || !this.user || this.user.id !== up.uid || !emailUser()) return;
+    this.kdfBusy = true;
+    try {
+      let code = '';
+      if (!up.only) {
+        if (Kdf2.isBox(this.remoteSecrets)) return; // another device already moved it
+        if (SyncCrypt.isBox(this.remoteSecrets) && !this.canWriteSecrets()) return; // locked old box: the old flow handles it first
+        const v = await Kdf2.newVault(up.uid, up.d.wrap);
+        this.keyRec = await Kdf2.keep(up.uid, v.vid, v.vault, v.wraps); this.secCache = null; this.forceSeal = true; this.keyChecked = true; bump();
+        await this.push({ force: true });
+        if (!Kdf2.isBox(this.remoteSecrets) || this.remoteSecrets.vid !== v.vid) return; // not saved: tried again at the next sign-in
+        code = v.code;
+      }
+      if (up.pass) {
+        const { error } = await this.client.auth.updateUser({ password: up.d.login, data: { mkc_kdf: 2, mkc_salt: up.d.salt } });
+        if (error && !samePw(error)) { if (code) showCode(code); return; }
+      }
+      await Kdf2.markKnown(up.d.email);
+      if (code) showCode(code);
+    } catch (e) { /* tried again at the next sign-in */ } finally { this.kdfBusy = false; rerenderSettings(); }
+  };
+
+  /* ---- unlock on a device with a restored session ---- */
+  A.unlock = async function (pass) {
+    if (!this.user || !this.client) throw new Error('Sign in first');
+    const c = this.config(); await this.loadLib();
+    const tmp = window.supabase.createClient(c.url.replace(/\/+$/, ''), c.anonKey, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'mkc:unlock' } });
+    const r = await Kdf2.signIn(tmp, this.user.email || '', pass, null, !!((this.user.user_metadata && this.user.user_metadata.mkc_kdf === 2) || Kdf2.isBox(this.remoteSecrets)));
+    if (r.error) throw new Error(/invalid/i.test(r.error.message || '') ? 'That password did not work' : r.error.message);
+    tmp.auth.signOut({ scope: 'local' }).catch(() => {});
+    this.kdf = { mode: r.mode, d: r.d }; this.kdfD = Promise.resolve(r.d);
+    this.pendingPass = pass; this.unlocking = true;
+    try { await this.pull({ force: true, quiet: true }); } finally { this.unlocking = false; }
+    if (this.kdfLost) return 'Your password changed since your keys were saved. Enter your recovery code below.';
+    return this.canWriteSecrets() ? 'Synced keys unlocked on this device' : 'Could not unlock your keys. Try again.';
+  };
+
+  /* ---- recovery code: brings the vault back, and re-wraps it with the current password when that is known ---- */
+  A.recover = async function (code) {
+    const box = this.remoteSecrets, uid = this.user && this.user.id;
+    if (!uid || !Kdf2.isBox(box)) throw new Error('There are no synced keys to bring back');
+    const k = await Kdf2.codeKey(code); if (!k) throw new Error('That code is not complete. It has 26 letters and digits after MKC.');
+    const vault = await Kdf2.unwrapWith(k, box.wraps.rc, uid); if (!vault) throw new Error('That recovery code did not work');
+    const lost = this.kdfLost; let wraps = box.wraps;
+    if (lost && lost.d) wraps = { ...box.wraps, at: stamp(), pw: { it: Kdf2.ITER, ...(await Kdf2.wrapWith(lost.d.wrap, vault, uid)) } };
+    this.keyRec = await Kdf2.keep(uid, box.vid, vault, wraps); this.secCache = null; this.kdfLost = null; this.keyChecked = true;
+    this.unlocking = true; try { await this.pull({ force: true, quiet: true }); } finally { this.unlocking = false; }
+    if (wraps !== box.wraps) { this.forceSeal = true; bump(); await this.push({ force: true }); }
+    return 'Synced keys are back on this device';
+  };
+  /* ---- start over: a new vault with this device's keys (keys only the old vault held are gone) ---- */
+  A.startFresh = async function () {
+    const lost = this.kdfLost, uid = this.user && this.user.id; if (!uid || !lost || !lost.d) throw new Error('Enter your password first');
+    const v = await Kdf2.newVault(uid, lost.d.wrap);
+    this.keyRec = await Kdf2.keep(uid, v.vid, v.vault, v.wraps); this.secCache = null; this.kdfLost = null; this.forceSeal = true; this.keyChecked = true; bump();
+    await this.push({ force: true });
+    showCode(v.code);
+    return 'Your keys on this device are synced again';
+  };
+  /* ---- a new recovery code (the old one stops working) ---- */
+  A.newRecoveryCode = async function () {
+    const rec = this.keyRec, uid = this.user && this.user.id; if (!uid || !rec || rec.v !== 2 || !this.canWriteSecrets()) throw new Error('Unlock your synced keys first');
+    const code = Kdf2.newCode(), raw = await Kdf2.raw(rec);
+    const wraps = { ...Kdf2.freshWraps(rec), at: stamp(), rc: await Kdf2.wrapWith(await Kdf2.codeKey(code), raw, uid) };
+    this.keyRec = await Kdf2.keep(uid, rec.vid, raw, wraps); this.secCache = null; this.forceSeal = true; bump();
+    await this.push({ force: true });
+    if (!Kdf2.isBox(this.remoteSecrets) || !this.remoteSecrets.wraps || this.remoteSecrets.wraps.rc.ct !== wraps.rc.ct) throw new Error('Could not save the new code. Check your connection and try again.');
+    showCode(code); return '';
+  };
+
+  /* ---- new password after a reset link ---- */
+  const newPassword1 = A.newPassword;
+  A.newPassword = function () {
+    const box = this.remoteSecrets, meta = (this.user && this.user.user_metadata) || {};
+    if (!Kdf2.UPGRADE && meta.mkc_kdf !== 2 && !Kdf2.isBox(box)) return newPassword1.apply(this, arguments);
+    return this.run('New password', async () => {
+      const password = ($('#acc-newpass') || {}).value || ''; if (password.length < 10) throw new Error('Use a password of at least 10 characters');
+      const uid = this.user.id, d = await Kdf2.derive(this.user.email, password, Kdf2.metaSalt(this.user) || undefined);
+      const { error } = await this.client.auth.updateUser({ password: d.login, data: { mkc_kdf: 2, mkc_salt: d.salt } }); if (error && !samePw(error)) throw error;
+      this.recovering = false; await Kdf2.markKnown(d.email);
+      const rec = this.keyRec || await SyncCrypt.load(uid);
+      if (rec && rec.v === 2) {
+        const raw = await Kdf2.raw(rec), wraps = { ...Kdf2.freshWraps(rec), at: stamp(), pw: { it: Kdf2.ITER, ...(await Kdf2.wrapWith(d.wrap, raw, uid)) } };
+        this.keyRec = await Kdf2.keep(uid, rec.vid, raw, wraps); this.secCache = null; this.forceSeal = true; bump(); this.schedule(true);
+        return 'Password updated';
+      }
+      if (!Kdf2.isBox(box) && (!SyncCrypt.isBox(box) || this.canWriteSecrets())) {
+        const v = await Kdf2.newVault(uid, d.wrap);
+        this.keyRec = await Kdf2.keep(uid, v.vid, v.vault, v.wraps); this.secCache = null; this.forceSeal = true; this.keyChecked = true; bump();
+        await this.push({ force: true }); showCode(v.code);
+        return 'Password updated';
+      }
+      this.kdfLost = { uid, d }; rerenderSettings();
+      return Kdf2.isBox(box) ? 'Password updated. Enter your recovery code in Settings › Debrid to bring back your synced keys.' : 'Password updated';
+    });
+  };
+  /* a sealed copy made before the wraps changed is sealed again with the newest wraps */
+  const prep1 = A.prepare;
+  A.prepare = async function () {
+    const sc = this.secCache, rec = this.keyRec;
+    if (sc && sc.box && rec && rec.v === 2) { const w = Kdf2.freshWraps(rec); if (!Kdf2.isBox(sc.box) || sc.box.vid !== rec.vid || ((sc.box.wraps || {}).at || 0) !== ((w || {}).at || 0)) this.secCache = null; }
+    return prep1.apply(this, arguments);
+  };
+  const signedOut1 = A.signedOut;
+  A.signedOut = function () { this.kdfLost = null; this.kdfUp = null; this.kdf = null; this.kdfD = null; return signedOut1.apply(this, arguments); };
+
+  /* ---- Settings › Debrid rows ---- */
+  const row = (title, sub, ctl) => `<div class="set-row"><div><b>${title}</b><small>${sub}</small></div><div class="set-ctl">${ctl}</div></div>`;
+  const uh1 = A.unlockHTML, bu1 = A.bindUnlock;
+  A.unlockHTML = function () {
+    const v2box = Kdf2.isBox(this.remoteSecrets);
+    if (this.user && (this.kdfLost || (v2box && this.needsUnlock()))) {
+      const pw = this.kdfLost ? '' : uh1.call(this);
+      return `${pw}${row('Use your recovery code', 'Changed your password? Your recovery code brings your synced keys back.', '<input class="inp" type="text" id="rc-in" autocomplete="off" spellcheck="false" placeholder="MKC-…" aria-label="Recovery code" style="width:min(240px,100%)"><button class="btn btn-ghost btn-sm" type="button" id="rc-go" data-nav>Bring back</button>')}${this.kdfLost ? row('No recovery code?', 'Start fresh with the keys on this device. Keys saved only in your account are removed.', '<button class="btn btn-ghost btn-sm" type="button" id="rc-fresh" data-nav>Start fresh</button>') : ''}`;
+    }
+    const base = uh1.call(this); if (base) return base;
+    const rec = this.keyRec;
+    if (rec && rec.v === 2 && this.keysSync()) return row('Recovery code', 'Lost your code? Make a new one. The old code stops working.', '<button class="btn btn-ghost btn-sm" type="button" id="rc-new" data-nav>New recovery code</button>');
+    return '';
+  };
+  A.bindUnlock = function () {
+    bu1.apply(this, arguments);
+    const act = (sel, fn) => { const b = $(sel); if (!b) return; b.onclick = async () => { b.disabled = true; try { const m = await fn(); if (m) toast(m, 'ok', 6000); } catch (e) { toast(e.message || String(e), 'err', 7000); } b.disabled = false; rerenderSettings(); }; };
+    act('#rc-go', () => this.recover(($('#rc-in') || {}).value || ''));
+    act('#rc-fresh', () => (confirm('Start fresh? Keys saved only in your account (not on this device) will be removed.') ? this.startFresh() : ''));
+    act('#rc-new', () => this.newRecoveryCode());
+    const i = $('#rc-in'); if (i) i.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('#rc-go').click(); } });
+  };
+})();
+</script>
+<!-- mk-kdf2:end -->
 <!-- mk-ds:start -->
 <style id="mkc-ds-css">
 /* ===== Design system: one set of tokens for type, weight, corners, surfaces, layers, icons and focus =====
@@ -32893,7 +33948,5 @@ html.tv .ea-badge,html.tv .ea-dot{display:none!important}
 })();
 </script>
 <!-- mk-ds:end -->
-<style id="mkc-2591-phone">@media (max-width:760px) and (pointer:coarse){html:not(.tv) body .rail>.card:not(.wide):not(.ax-sq){width:clamp(132px,35vw,230px)}html:not(.tv) body .rail>.card.wide{width:clamp(250px,68vw,440px)!important}}</style>
-<script id="mkc-2591-phone-js">(function(){var w0=innerWidth,t=0;addEventListener('resize',function(){if(innerWidth===w0)return;w0=innerWidth;clearTimeout(t);t=setTimeout(function(){try{var c=JSON.parse(localStorage.getItem('mkc:cfg')||'{}')||{},ts=+c.textScale;if(typeof CFG!=='undefined'&&CFG)ts=+CFG.textScale;if(!(ts>=85&&ts<=130))ts=100;var v=ts/100*window.__mkBoost(),de=document.documentElement;if(v===1)de.style.removeProperty('--ts');else de.style.setProperty('--ts',String(+v.toFixed(3)))}catch(e){}},150)})})();</script>
 </body>
 </html>

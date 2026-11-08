@@ -18,7 +18,7 @@ Out of scope: third-party addons, debrid services and other services MKCinema co
 
 ## Verifying downloads
 
-The website lists the SHA-256 checksum of every file it serves at [mkcinema.app/download/SHA256SUMS](https://mkcinema.app/download/SHA256SUMS). Every release on the [Releases page](https://github.com/itbelikethatbruh/mkcinema/releases) lists the same checksums in its notes and attaches them as `SHA256SUMS`; a release is published automatically whenever the website's downloads change, so the two always match. Releases up to v1.6 were published before this and carry no checksums. Download only from mkcinema.app or that page, then check the file before you install it:
+The website lists the SHA-256 checksum of every file it serves at [mkcinema.app/download/SHA256SUMS](https://mkcinema.app/download/SHA256SUMS). Every release on the [Releases page](https://github.com/itbelikethatbruh/mkcinema/releases) lists the checksums of its own files in its notes and attaches them as `SHA256SUMS` (and in `release.json`). Version releases (v…) are built from source by GitHub Actions; whenever the website's downloads change, a "website files" release with those exact files is published too, so every file the website serves has its checksum on GitHub. Releases up to v1.6 were published before this and carry no checksums. Download only from mkcinema.app or that page, then check the file before you install it:
 
 - **Windows** (PowerShell): `Get-FileHash .\MKCinema.exe -Algorithm SHA256`
 - **Mac**: `shasum -a 256 MKCinema-1.1.1-mac.zip`
@@ -29,7 +29,7 @@ The website lists the SHA-256 checksum of every file it serves at [mkcinema.app/
 
 The number you get must match the one in the release notes exactly. If it does not, don't install the file, and tell us (see above).
 
-Releases from now on also carry a build provenance attestation. With the GitHub CLI: `gh attestation verify MKCinema.exe -R itbelikethatbruh/mkcinema`. It proves the file was published by this repository's release workflow from a specific commit.
+Releases from now on also carry a build provenance attestation. With the GitHub CLI: `gh attestation verify MKCinema.exe -R itbelikethatbruh/mkcinema`. It proves the file was built and published by this repository's release workflow from a specific commit.
 
 The Windows app is not code-signed yet and the Mac app is not notarized, so Windows SmartScreen and macOS Gatekeeper warn the first time. That warning alone does not mean the file is bad, but it is exactly why you should compare the checksum.
 
