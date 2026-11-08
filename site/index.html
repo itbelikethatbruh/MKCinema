@@ -8,7 +8,7 @@
 <script id="mkc-home">/* the site lives at mkcinema.app; the old address and www send browsers there, keeping the #section */
 (function () { var h = location.hostname; if (h === 'mkcinema-site.pages.dev' || h === 'www.mkcinema.app') location.replace('https://mkcinema.app' + location.pathname + location.search + location.hash); })();</script>
 <title>MKCinema · The cinema for the whole house</title>
-<meta name="description" content="A free, open-source home cinema for the whole family: a real cinema player, a seat for everyone, watch parties with cameras and a phone remote, on Android, TV, Windows, Mac, Linux and the web.">
+<meta name="description" content="A free, open-source home cinema for the whole family: a real cinema player, a seat for everyone, watch parties with cameras and a phone remote, on Android, iPhone, iPad, TV, Windows, Mac, Linux and the web.">
 <meta name="theme-color" content="#050505">
 <meta name="color-scheme" content="dark">
 <meta property="og:type" content="website">
@@ -22,10 +22,10 @@
 <meta property="og:url" content="https://mkcinema.app/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="MKCinema · The cinema for the whole house">
-<meta name="twitter:description" content="A free, open-source home cinema for the whole family: a real cinema player, a seat for everyone, watch parties with cameras and a phone remote, on Android, TV, Windows, Mac, Linux and the web.">
+<meta name="twitter:description" content="A free, open-source home cinema for the whole family: a real cinema player, a seat for everyone, watch parties with cameras and a phone remote, on Android, iPhone, iPad, TV, Windows, Mac, Linux and the web.">
 <meta name="twitter:image" content="https://mkcinema.app/og.jpg">
 <meta name="twitter:image:alt" content="MKCinema: Your addons. A private cinema. The MKCinema player showing the open movie Elephants Dream.">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"MKCinema","url":"https://mkcinema.app/","description":"A free, open-source home cinema for the whole family: a real cinema player, a seat for everyone, watch parties with cameras and a phone remote, on Android, TV, Windows, Mac, Linux and the web.","applicationCategory":"MultimediaApplication","operatingSystem":"Android, Android TV, Fire TV, Windows, macOS, Linux, Web","image":"https://mkcinema.app/og.jpg","screenshot":"https://mkcinema.app/shots/player.webp","downloadUrl":"https://mkcinema.app/#download","license":"https://www.gnu.org/licenses/gpl-3.0.html","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Dee Lavish"},"sameAs":["https://github.com/itbelikethatbruh/MKCinema"]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"MKCinema","url":"https://mkcinema.app/","description":"A free, open-source home cinema for the whole family: a real cinema player, a seat for everyone, watch parties with cameras and a phone remote, on Android, iPhone, iPad, TV, Windows, Mac, Linux and the web.","applicationCategory":"MultimediaApplication","operatingSystem":"Android, Android TV, Fire TV, Windows, macOS, Linux, Web","image":"https://mkcinema.app/og.jpg","screenshot":"https://mkcinema.app/shots/player.webp","downloadUrl":"https://mkcinema.app/#download","license":"https://www.gnu.org/licenses/gpl-3.0.html","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Dee Lavish"},"sameAs":["https://github.com/itbelikethatbruh/MKCinema"]}</script>
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -361,7 +361,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 .lx-b1 h2{margin-top:16px}
 .lx-b1 .lead{margin:16px auto 0}
 .lx-note{margin:12px auto 0;max-width:34em;font-size:10px;line-height:1.45;letter-spacing:.01em;color:var(--mute);opacity:.6}
-.lx.lx-on{height:340vh}
+.lx.lx-on{height:400vh}
 .lx-on .lx-stage{position:sticky;top:0;height:100vh;height:100svh;max-width:none;margin:0;padding:0;overflow:hidden;isolation:isolate}
 .lx-on .lx-poster{display:none}
 .lx-on canvas{display:block;position:absolute;inset:0;width:100%;height:100%}
@@ -486,11 +486,8 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 
   <div class="room" id="room" aria-hidden="true">
     <div class="glow"></div>
-    <div class="screen"><img data-clip="clips/home.mp4?v=1" src="shots/home.webp" srcset="shots/home-960.webp 960w, shots/home.webp 1600w" sizes="(max-width: 1100px) 92vw, 1100px" width="1600" height="1000" alt="" fetchpriority="high"></div>
-    <div class="phone"><img data-clip="clips/phone.mp4?v=1" src="shots/phone-home.webp" srcset="shots/phone-home-320.webp 320w, shots/phone-home-480.webp 480w, shots/phone-home.webp 600w" sizes="(max-width: 760px) 30vw, 230px" width="600" height="1301" alt="" decoding="async"></div>
-    <div class="tag tag1"><span class="ic"><svg><use href="#i-bolt"/></svg></span><span><b>Smart Play</b><small>Best stream, picked for you</small></span></div>
-    <div class="tag tag2"><span class="ic"><svg><use href="#i-head"/></svg></span><span><b>A seat for everyone</b><small>Kids seats, PINs, own picks</small></span></div>
-    <div class="tag tag3"><span class="ic"><svg><use href="#i-users"/></svg></span><span><b>Watch party</b><small>Voice, cameras, same scene</small></span></div>
+    <div class="screen"><img data-clip="clips/hero.mp4?v=2" src="shots/home.webp" srcset="shots/home-960.webp 960w, shots/home.webp 1600w" sizes="(max-width: 1100px) 92vw, 1100px" width="1600" height="1000" alt="" fetchpriority="high"></div>
+    <div class="phone"><img data-clip="clips/phone15.mp4?v=2" src="shots/phone-home.webp" srcset="shots/phone-home-320.webp 320w, shots/phone-home-480.webp 480w, shots/phone-home.webp 600w" sizes="(max-width: 760px) 30vw, 230px" width="600" height="1301" alt="" decoding="async"></div>
   </div>
   <div class="floor"></div>
 </section>
@@ -585,7 +582,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
             <li><svg><use href="#i-spark"/></svg><span><b>Smart Play.</b> One tap picks the best stream. If a source stalls, the next one takes over by itself.</span></li>
             <li><svg><use href="#i-sync"/></svg><span><b>Sync everywhere.</b> Library, progress, addons and settings follow your account. Scrobble to Trakt or Simkl.</span></li>
           </ul>
-          <figure class="ch-media"><img data-clip="clips/home.mp4?v=1" src="shots/home-960.webp" width="960" height="600" alt="MKCinema Home with a featured film and the Top 10 row" loading="lazy" decoding="async"></figure>
+          <figure class="ch-media"><img data-clip="clips/home.mp4?v=2" src="shots/home-960.webp" width="960" height="600" alt="MKCinema Home with a featured film and the Top 10 row" loading="lazy" decoding="async"></figure>
         </article>
         <article class="ch" data-i="1">
           <span class="n">02 · PLAYER</span>
@@ -596,7 +593,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
             <li><svg><use href="#i-cc"/></svg><span><b>Subtitles done properly.</b> Styled anime subtitles, subtitles inside MKV files, OpenSubtitles and a sync strip you drag.</span></li>
             <li><svg><use href="#i-ext"/></svg><span><b>One tap to VLC</b>, mpv, Infuse, MX Player, IINA or PotPlayer. Only players your device supports are listed.</span></li>
           </ul>
-          <figure class="ch-media"><img data-clip="clips/player.mp4?v=1" src="shots/player-960.webp" width="960" height="600" alt="The MKCinema player with the Audio tab open" loading="lazy" decoding="async"></figure>
+          <figure class="ch-media"><img data-clip="clips/player.mp4?v=2" src="shots/player-960.webp" width="960" height="600" alt="The MKCinema player with the Audio tab open" loading="lazy" decoding="async"></figure>
         </article>
                 <article class="ch" data-i="2">
           <span class="n">03 · LIVE</span>
@@ -607,7 +604,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
             <li><svg><use href="#i-monitor"/></svg><span><b>Sports.</b> Live sports from your own sources, sorted by sport.</span></li>
             <li><svg><use href="#i-layers"/></svg><span><b>From anywhere.</b> Open Split Screen from Live TV or straight from any film page.</span></li>
           </ul>
-          <figure class="ch-media"><img data-clip="clips/split.mp4?v=1" src="shots/split-960.webp" width="960" height="600" alt="Split Screen playing three open films at once" loading="lazy" decoding="async"></figure>
+          <figure class="ch-media"><img data-clip="clips/split.mp4?v=2" src="shots/split-960.webp" width="960" height="600" alt="Split Screen playing three open films at once" loading="lazy" decoding="async"></figure>
         </article>
         <article class="ch" data-i="3">
           <span class="n">04 · TOGETHER</span>
@@ -628,7 +625,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
             <li><svg><use href="#i-torii"/></svg><span><b>Anime mode.</b> Trending and airing rows, Skip Opening from any addon, and AniList and MyAnimeList progress.</span></li>
             <li><svg><use href="#i-palette"/></svg><span><b>Custom posters</b> from a poster service you choose, plus plugins and themes from a reviewed, signed gallery.</span></li>
           </ul>
-          <figure class="ch-media"><img data-clip="clips/anime.mp4?v=1" src="shots/anime-960.webp" width="960" height="600" alt="MKCinema in the Anime look" loading="lazy" decoding="async"></figure>
+          <figure class="ch-media"><img data-clip="clips/anime.mp4?v=2" src="shots/anime-960.webp" width="960" height="600" alt="MKCinema in the Anime look" loading="lazy" decoding="async"></figure>
         </article>
         <article class="ch" data-i="5">
           <span class="n">06 · BIG SCREEN</span>
@@ -638,17 +635,17 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
             <li><svg><use href="#i-layers"/></svg><span><b>Ambient Mode.</b> When you step away, Home becomes slowly moving film art. OK opens the film.</span></li>
             <li><svg><use href="#i-skip"/></svg><span><b>Skip Intro and next episode</b> with a countdown while the next sources warm up.</span></li>
           </ul>
-          <figure class="ch-media"><img data-clip="clips/tv.mp4?v=1" src="shots/tv-home-960.webp" width="960" height="540" alt="MKCinema on a TV, with remote focus on the Top 10 row" loading="lazy" decoding="async"></figure>
+          <figure class="ch-media"><img data-clip="clips/tv.mp4?v=2" src="shots/tv-home-960.webp" width="960" height="540" alt="MKCinema on a TV, with remote focus on the Top 10 row" loading="lazy" decoding="async"></figure>
         </article>
       </div>
       <div class="deck" id="deck" aria-hidden="true">
         <div class="deck-in">
-          <div class="card"><img data-clip="clips/home.mp4?v=1" src="shots/home.webp" srcset="shots/home-960.webp 960w, shots/home.webp 1600w" sizes="(min-width: 1180px) 640px, 56vw" width="1600" height="1000" alt="" loading="lazy" decoding="async"></div>
-          <div class="card"><img data-clip="clips/player.mp4?v=1" src="shots/player.webp" srcset="shots/player-960.webp 960w, shots/player.webp 1600w" sizes="(min-width: 1180px) 640px, 56vw" width="1600" height="1000" alt="" loading="lazy" decoding="async"></div>
-          <div class="card"><img data-clip="clips/split.mp4?v=1" src="shots/split.webp" srcset="shots/split-960.webp 960w, shots/split.webp 1600w" sizes="(min-width: 1180px) 640px, 56vw" width="1600" height="1000" alt="" loading="lazy" decoding="async"></div>
+          <div class="card"><img data-clip="clips/hero.mp4?v=2" src="shots/home.webp" srcset="shots/home-960.webp 960w, shots/home.webp 1600w" sizes="(min-width: 1180px) 640px, 56vw" width="1600" height="1000" alt="" loading="lazy" decoding="async"></div>
+          <div class="card"><img data-clip="clips/player.mp4?v=2" src="shots/player.webp" srcset="shots/player-960.webp 960w, shots/player.webp 1600w" sizes="(min-width: 1180px) 640px, 56vw" width="1600" height="1000" alt="" loading="lazy" decoding="async"></div>
+          <div class="card"><img data-clip="clips/split.mp4?v=2" src="shots/split.webp" srcset="shots/split-960.webp 960w, shots/split.webp 1600w" sizes="(min-width: 1180px) 640px, 56vw" width="1600" height="1000" alt="" loading="lazy" decoding="async"></div>
           <div class="card"><img src="shots/party.webp" width="1000" height="800" alt="" loading="lazy" decoding="async"></div>
-          <div class="card"><img data-clip="clips/anime.mp4?v=1" src="shots/anime.webp" srcset="shots/anime-960.webp 960w, shots/anime.webp 1600w" sizes="(min-width: 1180px) 640px, 56vw" width="1600" height="1000" alt="" loading="lazy" decoding="async"></div>
-          <div class="card"><img data-clip="clips/tv.mp4?v=1" src="shots/tv-home.webp" srcset="shots/tv-home-960.webp 960w, shots/tv-home.webp 1600w" sizes="(min-width: 1180px) 640px, 56vw" width="1600" height="900" alt="" loading="lazy" decoding="async"></div>
+          <div class="card"><img data-clip="clips/anime.mp4?v=2" src="shots/anime.webp" srcset="shots/anime-960.webp 960w, shots/anime.webp 1600w" sizes="(min-width: 1180px) 640px, 56vw" width="1600" height="1000" alt="" loading="lazy" decoding="async"></div>
+          <div class="card"><img data-clip="clips/tv.mp4?v=2" src="shots/tv-home.webp" srcset="shots/tv-home-960.webp 960w, shots/tv-home.webp 1600w" sizes="(min-width: 1180px) 640px, 56vw" width="1600" height="900" alt="" loading="lazy" decoding="async"></div>
         </div>
       </div>
     </div>
@@ -664,16 +661,16 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
     </div>
   </div>
   <div class="gal rv" tabindex="0" aria-label="Screenshots, scroll sideways">
-        <figure class="shot"><img data-clip="clips/split.mp4?v=1" src="shots/split-960.webp" width="960" height="600" alt="Split Screen in MKCinema" loading="lazy" decoding="async"><figcaption><b>Split Screen</b><span>Three films at once, sound on the tile you pick.</span></figcaption></figure>
-        <figure class="shot"><img data-clip="clips/film.mp4?v=1" src="shots/film-960.webp" width="960" height="600" alt="Film pages in MKCinema" loading="lazy" decoding="async"><figcaption><b>Film pages</b><span>Smart Play, Find a line, lists and every source in one place.</span></figcaption></figure>
+        <figure class="shot"><img data-clip="clips/split.mp4?v=2" src="shots/split-960.webp" width="960" height="600" alt="Split Screen in MKCinema" loading="lazy" decoding="async"><figcaption><b>Split Screen</b><span>Three films at once, sound on the tile you pick.</span></figcaption></figure>
+        <figure class="shot"><img data-clip="clips/film.mp4?v=2" src="shots/film-960.webp" width="960" height="600" alt="Film pages in MKCinema" loading="lazy" decoding="async"><figcaption><b>Film pages</b><span>Smart Play, Find a line, lists and every source in one place.</span></figcaption></figure>
         <figure class="shot"><img src="shots/more-like-960.webp" width="960" height="600" alt="More like this in MKCinema" loading="lazy" decoding="async"><figcaption><b>More like this</b><span>Every page ends with what to watch next.</span></figcaption></figure>
         <figure class="shot"><img src="shots/studio-960.webp" width="960" height="600" alt="Addon Studio in MKCinema" loading="lazy" decoding="async"><figcaption><b>Addon Studio</b><span>Design an addon visually and export a ready server.</span></figcaption></figure>
         <figure class="shot"><img src="shots/appearance-960.webp" width="960" height="600" alt="Appearance in MKCinema" loading="lazy" decoding="async"><figcaption><b>Appearance</b><span>Top or side menu, five looks and a colour wheel.</span></figcaption></figure>
         <figure class="shot"><img src="shots/seats-960.webp" width="960" height="600" alt="Seats in MKCinema" loading="lazy" decoding="async"><figcaption><b>Seats</b><span>A seat for everyone, with PINs and kids seats.</span></figcaption></figure>
         <figure class="shot"><img src="shots/plugins-960.webp" width="960" height="600" alt="Plugins & themes in MKCinema" loading="lazy" decoding="async"><figcaption><b>Plugins & themes</b><span>A reviewed, signed gallery you switch on in a tap.</span></figcaption></figure>
-        <figure class="shot"><img data-clip="clips/player.mp4?v=1" src="shots/player-960.webp" width="960" height="600" alt="The player in MKCinema" loading="lazy" decoding="async"><figcaption><b>The player</b><span>Audio tab with 200 % volume and every language.</span></figcaption></figure>
-        <figure class="shot"><img data-clip="clips/anime.mp4?v=1" src="shots/anime-960.webp" width="960" height="600" alt="Anime look in MKCinema" loading="lazy" decoding="async"><figcaption><b>Anime look</b><span>Its own tab, mascot and manga frames.</span></figcaption></figure>
-        <figure class="shot"><img data-clip="clips/tv.mp4?v=1" src="shots/tv-home-960.webp" width="960" height="540" alt="On a TV in MKCinema" loading="lazy" decoding="async"><figcaption><b>On a TV</b><span>Remote-first, with the Top 10 and networks.</span></figcaption></figure>
+        <figure class="shot"><img data-clip="clips/player.mp4?v=2" src="shots/player-960.webp" width="960" height="600" alt="The player in MKCinema" loading="lazy" decoding="async"><figcaption><b>The player</b><span>Audio tab with 200 % volume and every language.</span></figcaption></figure>
+        <figure class="shot"><img data-clip="clips/anime.mp4?v=2" src="shots/anime-960.webp" width="960" height="600" alt="Anime look in MKCinema" loading="lazy" decoding="async"><figcaption><b>Anime look</b><span>Its own tab, mascot and manga frames.</span></figcaption></figure>
+        <figure class="shot"><img data-clip="clips/tv.mp4?v=2" src="shots/tv-home-960.webp" width="960" height="540" alt="On a TV in MKCinema" loading="lazy" decoding="async"><figcaption><b>On a TV</b><span>Remote-first, with the Top 10 and networks.</span></figcaption></figure>
         <figure class="shot tall"><img src="shots/remote.webp" width="600" height="1333" alt="The MKCinema phone remote, paired and in a watch party" loading="lazy" decoding="async"><figcaption><b>Phone remote</b><span>Pair with a code, no app. It’s your party camera too.</span></figcaption></figure><figure class="shot"><img src="shots/party-cams-960.webp" width="960" height="600" alt="Party cameras beside the film in MKCinema" loading="lazy" decoding="async"><figcaption><b>Party cameras</b><span>Friends beside the film; whoever talks gets a ring.</span></figcaption></figure><figure class="shot"><img src="shots/sensory-960.webp" width="960" height="600" alt="Sensory-friendly mode in the MKCinema player" loading="lazy" decoding="async"><figcaption><b>Sensory-friendly</b><span>Softer bangs and dimmed flashes, on your device.</span></figcaption></figure><figure class="shot"><img src="shots/glasses-960.webp" width="960" height="600" alt="Subtitles on smart glasses in the MKCinema player" loading="lazy" decoding="async"><figcaption><b>Smart glasses</b><span>Subtitles on Frame, G1 and G2 glasses.</span></figcaption></figure><figure class="shot tall"><img src="shots/phone-title.webp" width="600" height="1333" alt="A film’s cast and details on the phone remote" loading="lazy" decoding="async"><figcaption><b>Details on your phone</b><span>Cast, episodes and filmographies while the TV plays.</span></figcaption></figure><figure class="shot tall"><img src="shots/phone-ask.webp" width="600" height="1333" alt="Miko, the remote’s assistant, on a phone" loading="lazy" decoding="async"><figcaption><b>Miko</b><span>“Back 30 seconds”, “who’s in this”.</span></figcaption></figure>
   </div>
 </section>
@@ -697,7 +694,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-tv"/></svg></span><h3>Live</h3><span class="cnt">4</span></div><ul><li>Split Screen, up to four</li><li>Live TV with an XMLTV guide</li><li>M3U and Xtream</li><li>Sports</li></ul></div>
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-palette"/></svg></span><h3>Looks</h3><span class="cnt">8</span></div><ul><li>Noir, Midnight, Velvet, Sepia, Anime</li><li>Colour wheel</li><li>Nine fonts and text size</li><li>Top or side menu</li><li>Custom poster URL</li><li>Plugins & themes</li><li>Ambient Mode</li><li>Twelve languages</li></ul></div>
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-shield"/></svg></span><h3>Household</h3><span class="cnt">5</span></div><ul><li>Seats with pictures and PINs</li><li>Kids seats by age rating</li><li>Shows per day for kids</li><li>Family Helper</li><li>Every seat its own language</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-monitor"/></svg></span><h3>Everywhere</h3><span class="cnt">6</span></div><ul><li>Web app, nothing to install</li><li>Android with its own player</li><li>Android TV and Fire TV</li><li>LG and Samsung (beta)</li><li>Windows, Mac and Linux</li><li>Discord status on Windows</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-monitor"/></svg></span><h3>Everywhere</h3><span class="cnt">7</span></div><ul><li>Web app, nothing to install</li><li>iPhone and iPad from Safari</li><li>Android with its own player</li><li>Android TV and Fire TV</li><li>LG and Samsung (beta)</li><li>Windows, Mac and Linux</li><li>Discord status on Windows</li></ul></div>
     </div>
     <div class="works rv" aria-label="Works with">
       <span>Stremio addons</span><span>Major debrid services</span><span>VLC</span><span>mpv</span><span>Trakt</span><span>Simkl</span><span>AniList</span><span>MyAnimeList</span><span>Plex</span><span>Jellyfin</span><span>Emby</span>
@@ -743,14 +740,14 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
     <div class="head rv">
       <span class="eyebrow">Download</span>
       <h2 id="dl-h">On every screen <em>you own.</em></h2>
-      <p class="lead">Free apps for Android, TVs, Windows, Mac and Linux, or the full app in any modern browser. Sign in once and your library follows you.</p>
+      <p class="lead">Free apps for Android, iPhone, iPad, TVs, Windows, Mac and Linux, or the full app in any modern browser. Sign in once and your library follows you.</p>
     </div>
     <div class="devices">
       <div class="dev rv" data-os="android">
         <div class="top"><svg><use href="#b-android"/></svg><h3>Android</h3></div>
         <p>Phones and tablets, with a full-screen player and one-tap hand-off to VLC.</p>
         <div class="acts"><a class="btn btn-plat" href="download/MKCinema.apk" download="MKCinema.apk"><svg><use href="#i-down"/></svg>Download APK</a><a class="btn btn-ghost" href="obtainium://add/https://github.com/itbelikethatbruh/MKCinema" rel="nofollow">Get updates with Obtainium</a></div>
-        <span class="meta">Version 1.8.1 · 14 MB · Android 7 or later</span>
+        <span class="meta">Version 1.9.1 · 17 MB · Android 7 or later</span>
       </div>
       <div class="dev rv" data-os="windows">
         <div class="top"><svg><use href="#b-windows"/></svg><h3>Windows</h3></div>
@@ -770,15 +767,21 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
         <div class="acts"><a class="btn btn-plat" href="download/mkcinema_1.1_amd64.deb" download><svg><use href="#i-down"/></svg>.deb</a><a class="btn btn-ghost" href="download/mkcinema-1.1-linux-x86_64.tar.gz" download>.tar.gz</a></div>
         <span class="meta">Version 1.1 · x86-64 · WebKitGTK 4.1 (2.40 or newer)</span>
       </div>
+      <div class="dev rv" data-os="ios">
+        <div class="top"><svg><use href="#b-apple"/></svg><h3>iPhone &amp; iPad</h3></div>
+        <p>Add MKCinema to your Home Screen from Safari and it opens full screen like any app. Most MKV files play right in the browser, no extra app needed.</p>
+        <div class="acts"><a class="btn btn-plat" href="https://app.mkcinema.app/"><svg><use href="#i-arrow"/></svg>Open in Safari</a><a class="btn btn-ghost" href="#ios-help">How to add it</a></div>
+        <span class="meta">iOS and iPadOS 17.1 or later · nothing to download</span>
+      </div>
       <div class="dev rv" data-os="tv" id="tv">
         <div class="top"><svg><use href="#b-amazonfiretv"/></svg><h3>Smart TV</h3></div>
         <p>Android TV and Fire TV, plus LG webOS and Samsung in beta. On Fire TV, open Downloader and type <b>tv.mkcinema.app</b>.</p>
         <div class="acts"><a class="btn btn-plat" href="download/MKCinema-TV.apk" download="MKCinema-TV.apk"><svg><use href="#i-down"/></svg>Android TV &amp; Fire TV</a><a class="btn btn-ghost" href="download/com.mkcinema.app_1.1.0_all.ipk" download>LG .ipk</a></div>
-        <span class="meta">Version 1.8.1 · 14 MB · Android TV 7 or later</span>
+        <span class="meta">Version 1.9.1 · 17 MB · Android TV 7 or later</span>
       </div>
       <div class="dev rv" data-os="web">
         <div class="top"><svg class="st"><use href="#i-globe"/></svg><h3>Any browser</h3></div>
-        <p>Nothing to install. Chrome, Edge or Firefox on any computer. iPhone and iPad aren't supported.</p>
+        <p>Nothing to install. Chrome, Edge, Firefox or Safari on any computer, phone or tablet.</p>
         <div class="acts"><a class="btn btn-ghost" href="https://app.mkcinema.app/"><svg><use href="#i-arrow"/></svg>Open MKCinema</a></div>
         <span class="meta">app.mkcinema.app</span>
       </div>
@@ -796,6 +799,17 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
           </ol>
           <p>MKCinema isn't on Google Play, so Android warns about apps installed from outside the store. Only download the APK from this page.</p>
           <p><b>Automatic updates without Google:</b> install <a href="https://obtainium.imranr.dev/" rel="noopener">Obtainium</a> (free and open source), then tap <a href="obtainium://add/https://github.com/itbelikethatbruh/MKCinema" rel="nofollow">Get updates with Obtainium</a> on your phone, or add <code>github.com/itbelikethatbruh/MKCinema</code> in Obtainium by hand. It installs each new MKCinema straight from our GitHub releases. If it asks which file, pick <b>MKCinema.apk</b>.</p>
+        </div>
+      </details>
+      <details id="ios-help">
+        <summary>How to install on iPhone or iPad</summary>
+        <div class="det">
+          <ol>
+            <li>Open <b>app.mkcinema.app</b> in <b>Safari</b>.</li>
+            <li>Tap <b>Share</b> (the square with an arrow), then <b>Add to Home Screen</b>, then <b>Add</b>.</li>
+            <li>Open MKCinema from your Home Screen. It runs full screen, like any other app. Sign in and your addons, library and settings come with you.</li>
+          </ol>
+          <p>Most MKV files play right in the browser: MKCinema prepares them for Safari as they play, Dolby and DTS sound included. If a file still won't start, VLC for iPhone is free and MKCinema hands it over in one tap. AirPlay to an Apple TV works for MP4 and HLS streams.</p>
         </div>
       </details>
       <details>
@@ -942,8 +956,8 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
       </nav>
     </div>
     <p class="legal">MKCinema does not host, provide or link to any copyrighted content. It plays sources from third-party addons that users install themselves. Stremio is a trademark of its owner; MKCinema is an independent project, not affiliated with or endorsed by Stremio. VLC, debrid services and other names belong to their owners.</p>
-        <p class="legal" id="clipcredit">Films in the clips: Elephants Dream, Sintel and Tears of Steel, © Blender Foundation, licensed CC BY.</p>
-        <p class="legal">© <span id="yr">2026</span> MKCinema · Made by Dee Lavish · Free forever · Open source under GPL-3.0</p>
+    <p class="legal" id="clipcredit">Films in the clips: Elephants Dream, Sintel and Tears of Steel, © Blender Foundation, licensed CC BY.</p>
+    <p class="legal">© <span id="yr">2026</span> MKCinema · Made by Dee Lavish · Free forever · Open source under GPL-3.0</p>
   </div>
 </footer>
 
@@ -972,9 +986,10 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 
   // Pick the right download for this device
   const ua = navigator.userAgent, dl = $('#heroDl');
-  const os = /AFT|Android TV|GoogleTV|BRAVIA|SMART-TV|SmartTV|Web0S|Tizen/i.test(ua) ? 'tv' : /Android/i.test(ua) ? 'android' : /iPhone|iPad|iPod/.test(ua) ? 'web' : /Win/.test(ua) ? 'windows' : /Mac/.test(ua) ? (navigator.maxTouchPoints > 1 ? 'web' : 'mac') : /Linux|X11/.test(ua) ? 'linux' : '';
-  const map = { android: ['download/MKCinema.apk', 'Download for Android'], windows: ['download/MKCinema.exe', 'Download for Windows'], mac: ['download/MKCinema-1.1.1-mac.zip', 'Download for Mac'], linux: ['download/mkcinema_1.1_amd64.deb', 'Download for Linux'], tv: ['download/MKCinema-TV.apk', 'Download for TV'] };
-  if (map[os]) { dl.href = map[os][0]; dl.setAttribute('download', ''); dl.querySelector('span').textContent = map[os][1]; }
+  const os = /AFT|Android TV|GoogleTV|BRAVIA|SMART-TV|SmartTV|Web0S|Tizen/i.test(ua) ? 'tv' : /Android/i.test(ua) ? 'android' : /iPhone|iPad|iPod/.test(ua) ? 'ios' : /Win/.test(ua) ? 'windows' : /Mac/.test(ua) ? (navigator.maxTouchPoints > 1 ? 'ios' : 'mac') : /Linux|X11/.test(ua) ? 'linux' : '';
+  const map = { android: ['download/MKCinema.apk', 'Download for Android'], windows: ['download/MKCinema.exe', 'Download for Windows'], mac: ['download/MKCinema-1.1.1-mac.zip', 'Download for Mac'], linux: ['download/mkcinema_1.1_amd64.deb', 'Download for Linux'], tv: ['download/MKCinema-TV.apk', 'Download for TV'], ios: ['https://app.mkcinema.app/', 'Open in Safari'] };
+  if (map[os]) { dl.href = map[os][0]; if (!/^https:/.test(map[os][0])) dl.setAttribute('download', ''); dl.querySelector('span').textContent = map[os][1]; }
+  $$('a[href="#ios-help"]').forEach(a => a.addEventListener('click', () => { const d = $('#ios-help'); if (d) d.open = true; }));
   if (os) { const card = $(`.dev[data-os="${os}"]`); if (card) { card.classList.add('me'); card.parentNode.prepend(card); } }
 
   // Hero: the screen rises to face you as you scroll; the pointer adds a little depth
@@ -1051,10 +1066,12 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
   const fine = !calm && matchMedia('(hover: hover) and (pointer: fine)').matches;
   let R = null, p = 0, tp = 0, vis = false, raf = 0, last = 0, n = 0, acc = 0, step = 0, mx = 0, my = 0, tmx = 0, tmy = 0, w = 0, h = 0;
   // progress starts while the section is still rising into view, so the glasses are already arriving when it pins
-  const prog = () => { const r = sec.getBoundingClientRect(), lead = innerHeight * .7; return Math.min(1, Math.max(0, (lead - r.top) / Math.max(1, r.height - innerHeight + lead))); };
+  const prog = () => { const r = sec.getBoundingClientRect(), lead = innerHeight * .7; return warp(Math.min(1, Math.max(0, (lead - r.top) / Math.max(1, r.height - innerHeight + lead)))); };
+  // reading hold: the scroll from .28 to .48 moves the story only .28 to .35, so the heading stays up long enough to read before it clears for the lens subtitle
+  const warp = x => x < .28 ? x : x < .48 ? .28 + (x - .28) * .35 : .35 + (x - .48) * (.65 / .52);
   const ui = v => {
-    const o1 = ss(.13, .22, v) * (1 - ss(.62, .68, v));
-    b1.style.opacity = o1.toFixed(3); b1.style.transform = `translate3d(0,${((1 - ss(.13, .24, v)) * 26 - ss(.62, .68, v) * 18).toFixed(1)}px,0)`;
+    const o1 = ss(.12, .2, v) * (1 - ss(.38, .46, v)); // gone before the subtitle reaches the lens (.48)
+    b1.style.opacity = o1.toFixed(3); b1.style.transform = `translate3d(0,${((1 - ss(.12, .22, v)) * 26 - ss(.38, .46, v) * 18).toFixed(1)}px,0)`;
     beam.style.opacity = (ss(.02, .2, v) * (1 - ss(.38, .46, v))).toFixed(3);
     big.style.opacity = (ss(.04, .16, v) * (1 - ss(.36, .44, v))).toFixed(3);
     bigT.style.transform = `translate3d(${(100 - v * 260).toFixed(2)}vw,-12vh,0)`;
