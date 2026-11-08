@@ -1,7 +1,7 @@
 {
   "name": "MKCinema",
   "short_name": "MKCinema",
-  "description": "Your Stremio addons in a premium cinema: one place for everything you stream.",
+  "description": "Tomorrow’s cinema, for the whole house. Free forever, on every screen.",
   "id": "./",
   "start_url": "./",
   "scope": "./",
