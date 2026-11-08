@@ -84,6 +84,7 @@ public class MainActivity extends Activity {
     WebChromeClient.CustomViewCallback customCb;
     ValueCallback<Uri[]> fileCb;
     PermissionRequest pendingPerm;
+    String[] pendingWant;
     boolean tv;
     /** Phone picture-in-picture (1.2.6): the page reports when a film plays, and its shape */
     volatile boolean pipPlaying; volatile int pipW = 16, pipH = 9; boolean wasPip;
@@ -201,16 +202,21 @@ public class MainActivity extends Activity {
                 catch (ActivityNotFoundException e) { fileCb = null; return false; }
                 return true;
             }
+            /* The microphone (party voice, voice search) and, since 1.9.1, the camera (party cameras). Only MKCinema's own
+               page may use them, and Android asks the person first for whichever one they have not allowed yet. */
             @Override public void onPermissionRequest(PermissionRequest req) {
-                boolean mic = false;
-                for (String r : req.getResources()) if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(r)) mic = true;
-                if (!mic) { req.deny(); return; }
-                if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                    req.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});
-                } else {
-                    pendingPerm = req;
-                    requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQ_MIC);
+                Uri o = req.getOrigin();
+                if (o == null || !HOST.equals(o.getHost())) { req.deny(); return; }
+                java.util.ArrayList<String> want = new java.util.ArrayList<>(), ask = new java.util.ArrayList<>();
+                for (String r : req.getResources()) {
+                    if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(r)) { want.add(r); if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) ask.add(Manifest.permission.RECORD_AUDIO); }
+                    else if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(r)) { want.add(r); if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) ask.add(Manifest.permission.CAMERA); }
                 }
+                if (want.isEmpty()) { req.deny(); return; }
+                if (ask.isEmpty()) { req.grant(want.toArray(new String[0])); return; }
+                if (pendingPerm != null) pendingPerm.deny();
+                pendingPerm = req; pendingWant = want.toArray(new String[0]);
+                requestPermissions(ask.toArray(new String[0]), REQ_MIC);
             }
         });
         // the service worker's own requests get the same plain-http rule
@@ -362,10 +368,14 @@ public class MainActivity extends Activity {
             return;
         }
         if (req == REQ_MIC && pendingPerm != null) {
-            if (g.length > 0 && g[0] == PackageManager.PERMISSION_GRANTED)
-                pendingPerm.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});
-            else pendingPerm.deny();
-            pendingPerm = null;
+            // grant what the person allowed; a camera refusal still lets the microphone through, and the other way round
+            java.util.ArrayList<String> ok = new java.util.ArrayList<>();
+            for (String r : pendingWant) {
+                String perm = PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(r) ? Manifest.permission.CAMERA : Manifest.permission.RECORD_AUDIO;
+                if (checkSelfPermission(perm) == PackageManager.PERMISSION_GRANTED) ok.add(r);
+            }
+            if (ok.isEmpty()) pendingPerm.deny(); else pendingPerm.grant(ok.toArray(new String[0]));
+            pendingPerm = null; pendingWant = null;
         }
     }
 

@@ -29,6 +29,13 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.9.1 (versionCode 22): camera for party cameras
+
+`onPermissionRequest` now grants `RESOURCE_VIDEO_CAPTURE` as well as `RESOURCE_AUDIO_CAPTURE`, only to pages on
+`mkcinema.pages.dev`, after Android's own runtime prompt (`CAMERA`, `RECORD_AUDIO`). A refused camera still lets the
+microphone through. The manifest adds `CAMERA` and marks `android.hardware.camera`/`camera.front` as not required, so TVs
+without a camera can still install it. Needs web 2.55.0 for the Camera button.
+
 ## 1.9.0 (versionCode 21): styled subtitles, Dolby Vision profile 7, Skip intro in the TV player
 
 - **ASS/SSA styling** (`Ass.java`): libass through ass-media 0.4.0 (MIT, built for Media3 1.8.0) in `OVERLAY_CANVAS` mode.

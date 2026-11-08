@@ -11,7 +11,7 @@
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), geolocation=(), payment=(), usb=(), serial=(), hid=(), bluetooth=(self), midi=(), magnetometer=(), gyroscope=(), accelerometer=(), display-capture=(), browsing-topics=(), microphone=(self)
+  Permissions-Policy: camera=(self), geolocation=(), payment=(), usb=(), serial=(), hid=(), bluetooth=(self), midi=(), magnetometer=(), gyroscope=(), accelerometer=(), display-capture=(), browsing-topics=(), microphone=(self)
   ! Access-Control-Allow-Origin
 
 # The service worker must always be checked for a new version
