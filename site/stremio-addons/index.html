@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stremio addon player for phone, TV, Windows, Mac and Linux · MKCinema</title>
+<meta name="description" content="MKCinema is a free, open-source player for Stremio-compatible addons. Paste an addon link, bring your own debrid key, and watch on Android, TV, Windows, Mac, Linux, iPhone and the web.">
+<link rel="canonical" href="https://mkcinema.app/stremio-addons/">
+<meta name="theme-color" content="#050505">
+<meta name="color-scheme" content="dark">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Stremio addon player for phone, TV, Windows, Mac and Linux · MKCinema">
+<meta property="og:description" content="MKCinema is a free, open-source player for Stremio-compatible addons. Paste an addon link, bring your own debrid key, and watch on Android, TV, Windows, Mac, Linux, iPhone and the web.">
+<meta property="og:image" content="https://mkcinema.app/og.jpg">
+<meta property="og:url" content="https://mkcinema.app/stremio-addons/">
+<meta property="og:site_name" content="MKCinema">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Stremio addon player for phone, TV, Windows, Mac and Linux · MKCinema">
+<meta name="twitter:description" content="MKCinema is a free, open-source player for Stremio-compatible addons. Paste an addon link, bring your own debrid key, and watch on Android, TV, Windows, Mac, Linux, iPhone and the web.">
+<meta name="twitter:image" content="https://mkcinema.app/og.jpg">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/fonts/fraunces-v1.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/onest-v1.woff2" as="font" type="font/woff2" crossorigin>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"MKCinema","item":"https://mkcinema.app/"},{"@type":"ListItem","position":2,"name":"Stremio addons","item":"https://mkcinema.app/stremio-addons/"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Stremio addon player for phone, TV, Windows, Mac and Linux","description":"MKCinema is a free, open-source player for Stremio-compatible addons. Paste an addon link, bring your own debrid key, and watch on Android, TV, Windows, Mac, Linux, iPhone and the web.","dateModified":"2026-11-08","mainEntityOfPage":"https://mkcinema.app/stremio-addons/","image":"https://mkcinema.app/og.jpg","author":{"@type":"Person","name":"Dee Lavish"},"publisher":{"@type":"Organization","name":"MKCinema","url":"https://mkcinema.app/"}}</script>
+<style>
+@font-face{font-family:"Fraunces";font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/fraunces-v1.woff2) format("woff2")}
+@font-face{font-family:"Fraunces";font-style:italic;font-weight:400 600;font-display:swap;src:url(/fonts/fraunces-italic-v1.woff2) format("woff2")}
+@font-face{font-family:"Onest";font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/onest-v1.woff2) format("woff2")}
+:root{--bg:#050505;--card:#0f0f0f;--ink:#f3f0e9;--ink2:#c9c5bc;--mute:#8f8b84;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);--gold:#d8c29a;--serif:"Fraunces",Georgia,serif;--sans:"Onest",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.65 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--gold)}img{display:block;max-width:100%;height:auto}
+.wrap{max-width:860px;margin:0 auto;padding:0 clamp(16px,4vw,32px)}
+.skip{position:absolute;left:12px;top:-60px;padding:10px 16px;border-radius:10px;background:var(--ink);color:#0a0a0a;font-weight:600;text-decoration:none}.skip:focus{top:12px}
+header.bar{border-bottom:1px solid var(--line)}
+.bar-in{display:flex;align-items:center;gap:18px;height:68px;max-width:1180px;margin:0 auto;padding:0 clamp(16px,4vw,32px)}
+.brand{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font:500 18px/1 var(--serif);letter-spacing:.02em}
+.brand img{width:34px;height:34px}.brand b{font-weight:600}.brand i{font-style:normal;color:var(--ink2)}
+.bar nav{margin-left:auto;display:flex;align-items:center;gap:20px}.bar nav a.t{color:var(--ink2);text-decoration:none;font-size:14px}.bar nav a.t:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 22px;border-radius:999px;font:600 15px/1 var(--sans);text-decoration:none;white-space:nowrap}
+.btn.plat{color:#0a0a0a;background:linear-gradient(180deg,#fbf9f4,#d9d5cc);box-shadow:inset 0 1px 0 #fff,0 10px 30px -10px rgba(216,194,154,.5)}
+.btn.ghost{color:var(--ink);border:1px solid var(--line2);background:rgba(255,255,255,.03)}
+.crumbs{font-size:13px;color:var(--mute);margin:40px 0 0}.crumbs a{color:var(--ink2);text-decoration:none}.crumbs a:hover{color:var(--ink)}
+.eyebrow{margin-top:28px;font:600 11.5px/1 var(--sans);letter-spacing:.24em;text-transform:uppercase;color:var(--gold)}
+h1,h2,h3{font-family:var(--serif);font-weight:400;letter-spacing:-.02em;margin:0}
+h1{font-size:clamp(38px,6.4vw,66px);line-height:1.02;margin-top:14px}h1 em,h2 em{font-style:italic;color:var(--gold)}
+h2{font-size:clamp(26px,3.6vw,36px);line-height:1.1;margin-top:56px}
+h3{font-size:20px;margin-top:28px}
+.lead{font-size:clamp(17px,1.8vw,20px);color:var(--ink2);margin-top:22px;max-width:62ch}
+p{margin:16px 0 0;color:var(--ink2)}
+ol,ul{margin:16px 0 0;padding-left:22px;color:var(--ink2);display:grid;gap:10px}
+li b,p b{color:var(--ink);font-weight:600}
+code{font:500 13.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;background:rgba(255,255,255,.07);padding:3px 7px;border-radius:6px;color:var(--ink)}
+.shot{margin:34px 0 0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--card)}
+.shot figcaption{padding:12px 18px;font-size:13px;color:var(--mute);border-top:1px solid var(--line)}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.note{margin-top:22px;padding:16px 20px;border:1px solid var(--line);border-radius:14px;background:var(--card);font-size:14.5px;color:var(--ink2)}
+details{border:1px solid var(--line);border-radius:14px;background:#0a0a0a;margin-top:10px}
+summary{cursor:pointer;list-style:none;padding:18px 22px;font-weight:500;color:var(--ink)}summary::-webkit-details-marker{display:none}
+summary::after{content:"+";float:right;color:var(--gold);font-size:20px;line-height:1}details[open] summary::after{content:"\2212"}
+.det{padding:0 22px 20px;color:var(--ink2);font-size:15px}.det p{margin-top:0}
+.more{display:grid;gap:10px;margin-top:18px}.more a{display:block;padding:16px 20px;border:1px solid var(--line);border-radius:14px;background:var(--card);text-decoration:none;color:var(--ink)}
+.more a span{display:block;font-size:14px;color:var(--mute);margin-top:4px}.more a:hover{border-color:rgba(216,194,154,.5)}
+footer{border-top:1px solid var(--line);margin-top:80px;padding:40px 0 calc(40px + env(safe-area-inset-bottom));font-size:13.5px;color:var(--mute)}
+.foot{display:flex;flex-wrap:wrap;gap:8px 22px}.foot a{color:var(--ink2);text-decoration:none}.foot a:hover{color:var(--ink)}
+.legal{margin-top:22px;font-size:12.5px;line-height:1.6;color:var(--mute)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:6px}
+@media(max-width:560px){.bar nav a.t{display:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="bar"><div class="bar-in">
+  <a class="brand" href="/" aria-label="MKCinema home"><img src="/icon-192.png" width="34" height="34" alt=""><span><b>MK</b><i>Cinema</i></span></a>
+  <nav aria-label="Main"><a class="t" href="/#download">Download</a><a class="t" href="/#faq">FAQ</a><a class="btn plat" href="https://app.mkcinema.app/">Open MKCinema</a></nav>
+</div></header>
+<main id="main" class="wrap">
+  <p class="crumbs"><a href="/">MKCinema</a> › Stremio addons</p>
+  <div class="eyebrow">Works with your addons</div>
+  <h1>A free player for <em>Stremio addons</em>, on every screen.</h1>
+  <p class="lead">MKCinema speaks the Stremio addon protocol, so the addons you already use for catalogues, subtitles and streams work here. You get a player made for films, a seat for everyone in the house, and apps for phones, TVs and computers. It is free forever and open source.</p>
+  <figure class="shot"><img src="/shots/home-960.webp" width="960" height="600" alt="The MKCinema home screen with rows of films and shows" fetchpriority="high"><figcaption>The MKCinema home screen.</figcaption></figure>
+  
+<h2>Add an addon in <em>three steps</em></h2>
+<ol>
+<li>Open the <b>Addons</b> page in MKCinema.</li>
+<li>Paste the addon's link (it ends in <code>manifest.json</code>). MKCinema reads it and lists what it offers.</li>
+<li>Open any film or show. Sources from your addons appear in the source list, and Smart Play picks the best one that works on your device.</li>
+</ol>
+<p>Each person brings their own addons and debrid key. MKCinema hosts no titles, channels or streams. The only built-in source is official trailers.</p>
+
+<h2>Moving over from <em>Stremio</em></h2>
+<p>Go to <b>Settings › Account › Import from Stremio</b>. Your library, progress and addons are copied over. Your Stremio password is used once to fetch them and is never stored.</p>
+
+<h2>What you get on top of <em>the addons you have</em></h2>
+<ul>
+<li><b>Source failover.</b> If a source does not start in time, errors, or stalls, the next best one takes over at the same spot.</li>
+<li><b>A real film player.</b> Keyboard and remote friendly, subtitle styling and sync, audio track menu, and styled anime subtitles.</li>
+<li><b>Watch parties</b> with voice and cameras, and a phone that works as a remote.</li>
+<li><b>Skip intro, recap and credits</b> where times are known. <a href="/skip-intro/">How skipping works</a>.</li>
+<li><b>Your keys stay yours.</b> Debrid keys sync only to your own account row, and you can switch that off in Settings › Debrid.</li>
+</ul>
+
+<h2>Every <em>screen</em></h2>
+<p>Android, Android TV, Google TV and Fire TV, Windows, Mac, Linux, LG webOS (beta), Samsung TV (beta), and any browser. On iPhone and iPad, open the web app and add it to your Home Screen.</p>
+<div class="cta"><a class="btn plat" href="https://app.mkcinema.app/">Open MKCinema</a><a class="btn ghost" href="/#download">Download the app</a></div>
+
+  <h2>Questions, <em>answered.</em></h2>
+  <details><summary>Do I need a Stremio account?</summary><div class="det"><p>No. You can add addons by pasting their link. An account is only needed if you want to import your Stremio library.</p></div></details><details><summary>Does MKCinema include movies or shows?</summary><div class="det"><p>No. It hosts nothing. Catalogues, subtitles and streams come from addons you choose to install, and you are responsible for what you watch.</p></div></details><details><summary>Is it really free?</summary><div class="det"><p>Yes. Every feature is free, with no ads and no paid tier, and the code is public on GitHub under GPL-3.0.</p></div></details><details><summary>Which debrid services work?</summary><div class="det"><p>The major debrid services work with your own key. Use whichever you prefer.</p></div></details>
+  <h2>More <em>guides</em></h2>
+  <div class="more"><a href="/fire-tv/">Fire TV and Android TV<span>MKCinema guide</span></a><a href="/iphone-ipad/">iPhone and iPad<span>MKCinema guide</span></a><a href="/mkv-in-browser/">MKV in the browser<span>MKCinema guide</span></a><a href="/skip-intro/">Skip intro and credits<span>MKCinema guide</span></a></div>
+</main>
+<footer><div class="wrap">
+  <div class="foot"><a href="/">Home</a><a href="/stremio-addons/">Stremio addons</a><a href="/fire-tv/">Fire TV and Android TV</a><a href="/iphone-ipad/">iPhone and iPad</a><a href="/mkv-in-browser/">MKV in the browser</a><a href="/skip-intro/">Skip intro and credits</a><a href="/#download">Download</a><a href="https://github.com/itbelikethatbruh/MKCinema">GitHub</a><a href="https://ko-fi.com/mkcinema">Ko-fi</a></div>
+  <p class="legal">MKCinema does not host, provide or link to any copyrighted content. It plays sources from third-party addons that users install themselves. Stremio is a trademark of its owner; MKCinema is an independent project, not affiliated with or endorsed by Stremio. © 2026 MKCinema · Made by Dee Lavish · Free forever · Open source under GPL-3.0</p>
+</div></footer>
+</body>
+</html>
