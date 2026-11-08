@@ -9,25 +9,27 @@ export function start(sec, opts = {}) {
 
   const VS = `attribute vec4 aP;attribute vec4 aN;
 uniform vec3 uQs,uQo;uniform mat4 uM,uV,uP;uniform vec2 uFold;uniform vec4 uPiv;
-varying vec3 vW,vN,vL;varying float vPart;varying vec2 vUV;
+varying vec3 vW,vN,vL;varying float vPart;
 vec3 ry(vec3 p,float a){float c=cos(a),s=sin(a);return vec3(p.x*c+p.z*s,p.y,-p.x*s+p.z*c);}
-void main(){vec3 p=aP.xyz*uQs+uQo;vec3 n=aN.xyz/127.;float part=aP.w;vL=p;
+void main(){vec3 p=aP.xyz*uQs+uQo;vec3 n=aN.xyz/32767.;float part=aP.w;vL=p;
 if(part>.5&&part<1.5){vec3 o=vec3(uPiv.x,0.,uPiv.y);p=ry(p-o,-uFold.x)+o;n=ry(n,-uFold.x);}
 else if(part>1.5&&part<2.5){vec3 o=vec3(uPiv.z,0.,uPiv.w);p=ry(p-o,uFold.y)+o;n=ry(n,uFold.y);}
-vUV=vec2(mod(aN.w,2.),1.-floor(aN.w/2.));
 vec4 w=uM*vec4(p,1.);vW=w.xyz;vN=mat3(uM)*n;vPart=part;gl_Position=uP*uV*w;}`;
 
   const FS = `precision highp float;
-varying vec3 vW,vN,vL;varying float vPart;varying vec2 vUV;
+varying vec3 vW,vN,vL;varying float vPart;
 uniform vec3 uEye;uniform float uSweep,uFade,uWin,uSubA,uType,uAlpha;uniform vec4 uBox;
-uniform sampler2D uLogo,uSub;
+uniform sampler2D uSub;
 vec3 env(vec3 r){float az=atan(r.x,r.z);
-float top=smoothstep(.5,.95,r.y);
-float strip=exp(-pow((az-uSweep)*5.,2.))*smoothstep(-.7,.15,r.y);
-float strip2=exp(-pow((az+2.2-uSweep*.5)*9.,2.))*smoothstep(-.3,.5,r.y)*.6;
-float rim=smoothstep(.15,.95,-r.x)*smoothstep(-.5,.5,r.y);
-float floorb=smoothstep(-.2,-.9,r.y)*.25;
-return vec3(.92,.94,1.)*top*2.4+vec3(1.,.96,.88)*strip*5.+vec3(1.)*strip2*1.6+vec3(.95,.8,.55)*rim*.35+vec3(.9,.75,.5)*floorb*.4+vec3(.03);}
+/* studio: crisp softboxes give black acetate long, sharp highlights; neutral so the frame stays black */
+float key=smoothstep(.34,.3,abs(az-uSweep))*smoothstep(-.05,.02,r.y)*smoothstep(.62,.55,r.y);
+float fill=smoothstep(.16,.13,abs(az+1.9))*smoothstep(-.3,-.24,r.y)*smoothstep(.5,.44,r.y);
+float top=smoothstep(.78,.86,r.y);
+float rim=smoothstep(.07,.05,abs(az-2.6))*smoothstep(-.4,-.3,r.y)*smoothstep(.7,.6,r.y);
+float hor=exp(-pow(r.y*14.,2.))*.25;
+float front=exp(-pow(az*1.1,2.))*smoothstep(-.7,.35,r.y)*.32;
+float line=smoothstep(.035,.0,abs(r.y-.3))*smoothstep(1.3,.3,abs(az+.25*uSweep));
+return vec3(1.)*key*7.+vec3(.9,.94,1.)*fill*2.5+vec3(.95,.97,1.)*top*1.8+vec3(1.,.9,.72)*rim*3.+vec3(.8,.82,.86)*hor+vec3(.85,.88,.95)*front+vec3(1.)*line*3.5+vec3(.008);}
 vec3 tone(vec3 c){c=c*(2.51*c+.03)/(c*(2.43*c+.59)+.14);return pow(clamp(c,0.,1.),vec3(1./2.2));}
 void main(){vec3 n=normalize(vN);vec3 v=normalize(uEye-vW);if(dot(n,v)<0.)n=-n;
 vec3 r=reflect(-v,n);float nv=clamp(dot(n,v),0.,1.);float fr=pow(1.-nv,5.);
@@ -35,9 +37,6 @@ vec3 L=normalize(vec3(-.5,.8,.6));vec3 h=normalize(L+v);float spec=pow(max(dot(n
 vec3 col;float a=1.;
 if(vPart>3.5&&vPart<4.5){ /* camera glass */
  col=vec3(.004,.004,.01)+env(r)*(.12+.88*fr)+vec3(.4,.35,.6)*pow(1.-nv,2.)*.08+spec;}
-else if(vPart>5.5){ /* printed logos: white, on the lens surface */
- vec2 t=vPart<6.5?vec2(vUV.x*.5,vUV.y):vec2(.5+vUV.x*.5,vUV.y*.715);
- float m=texture2D(uLogo,t).a*.92;col=vec3(.96);a=m;}
 else if(vPart>2.5&&vPart<3.5){ /* lens: tinted until you put them on, then clear */
  float f=.05+.95*fr;vec3 glass=vec3(.01,.012,.016)+env(r)*f+spec*.8;a=mix(.62,1.,f);
  col=mix(glass,env(r)*f*.6+spec*.5,uWin);a=mix(a,.06+.5*f,uWin);
@@ -46,7 +45,7 @@ else if(vPart>2.5&&vPart<3.5){ /* lens: tinted until you put them on, then clear
  if(uSubA>0.&&q.x>0.&&q.x<1.&&q.y>0.&&q.y<1.){vec4 t=texture2D(uSub,vec2(q.x,q.y));float m=t.a*uSubA*clamp((uType*1.1-q.x)/.06,0.,1.);
   col=mix(col,t.rgb,m);a=max(a,m);}}
 else{ /* gloss black acetate */
- float f=.06+.94*fr;col=vec3(.012)*(.3+.7*max(dot(n,L),0.))+env(r)*f+spec*1.2+vec3(.95,.78,.5)*pow(1.-nv,4.)*.22;}
+ float f=.04+.96*fr;col=vec3(.006)*(.4+.6*max(dot(n,L),0.))+env(r)*f+spec*1.4;}
 gl_FragColor=vec4(tone(col)*a*uFade*uAlpha,a*uFade*uAlpha);}`;
 
   const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; };
@@ -54,7 +53,7 @@ gl_FragColor=vec4(tone(col)*a*uFade*uAlpha,a*uFade*uAlpha);}`;
   gl.bindAttribLocation(pr, 0, 'aP'); gl.bindAttribLocation(pr, 1, 'aN'); gl.linkProgram(pr);
   if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return Promise.reject(new Error(gl.getProgramInfoLog(pr)));
   gl.useProgram(pr);
-  const U = {}; ['uQs', 'uQo', 'uM', 'uV', 'uP', 'uFold', 'uPiv', 'uEye', 'uSweep', 'uFade', 'uWin', 'uSubA', 'uType', 'uAlpha', 'uBox', 'uLogo', 'uSub'].forEach(k => U[k] = gl.getUniformLocation(pr, k));
+  const U = {}; ['uQs', 'uQo', 'uM', 'uV', 'uP', 'uFold', 'uPiv', 'uEye', 'uSweep', 'uFade', 'uWin', 'uSubA', 'uType', 'uAlpha', 'uBox', 'uSub'].forEach(k => U[k] = gl.getUniformLocation(pr, k));
 
   const tex = (src, unit, flip = true) => { const t = gl.createTexture(); gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flip); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
@@ -75,16 +74,15 @@ gl_FragColor=vec4(tone(col)*a*uFade*uAlpha,a*uFade*uAlpha);}`;
     x.fillText(line, 512, 280); x.shadowBlur = 0; x.fillText(line, 512, 280); return sc2; };
 
   const ok = new Promise((res, rej) => {
-    const logo = new Image(); logo.decoding = 'async'; logo.src = opts.logos || '/lens/logos.webp';
     const model = fetch(opts.model || '/lens/glasses.bin').then(r => { if (!r.ok) throw new Error('model ' + r.status); return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); });
-    Promise.all([model, logo.decode().then(() => logo), document.fonts ? document.fonts.ready : 0]).then(([buf, img]) => res([buf, img]), rej);
+    Promise.all([model, document.fonts ? document.fonts.ready : 0]).then(([buf]) => res([buf]), rej);
   });
 
-  return ok.then(([buf, img]) => {
-    if (new TextDecoder().decode(new Uint8Array(buf, 0, 4)) !== 'MKG1') throw new Error('bad model');
+  return ok.then(([buf]) => {
+    if (new TextDecoder().decode(new Uint8Array(buf, 0, 4)) !== 'MKG2') throw new Error('bad model');
     const H = new Float32Array(buf, 4, 19), n = H[0], ni = H[1];
-    const posOff = 4 + 19 * 4, nrmOff = posOff + n * 8, idxOff = nrmOff + n * 4;
-    const pos = new Int16Array(buf, posOff, n * 4), nrm = new Int8Array(buf, nrmOff, n * 4), idx = new Uint16Array(buf.slice(idxOff, idxOff + ni * 2));
+    const posOff = 4 + 19 * 4, nrmOff = posOff + n * 8, idxOff = nrmOff + n * 8;
+    const pos = new Int16Array(buf, posOff, n * 4), nrm = new Int16Array(buf, nrmOff, n * 4), idx = new Uint16Array(buf.slice(idxOff, idxOff + ni * 2));
     const ranges = [H[8], H[9], H[10], H[11], H[12], H[13]];
     const qs = [H[2], H[3], H[4]], qo = [H[5], H[6], H[7]];
     // the lens the subtitle sits in: the viewer-left lens (the wearer's right eye)
@@ -97,11 +95,11 @@ gl_FragColor=vec4(tone(col)*a*uFade*uAlpha,a*uFade*uAlpha);}`;
     const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, pos, gl.STATIC_DRAW);
     gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 4, gl.SHORT, false, 0, 0);
     const bn = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bn); gl.bufferData(gl.ARRAY_BUFFER, nrm, gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 4, gl.BYTE, false, 0, 0);
+    gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 4, gl.SHORT, false, 0, 0);
     const bi = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bi); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
     gl.uniform3fv(U.uQs, qs); gl.uniform3fv(U.uQo, qo);
     gl.uniform4f(U.uPiv, H[14], H[15], H[16], H[17]); gl.uniform4fv(U.uBox, box);
-    tex(img, 0, false); const subT = tex(subCanvas(0), 1); let lang = 0; gl.uniform1i(U.uLogo, 0); gl.uniform1i(U.uSub, 1);
+    const subT = tex(subCanvas(0), 1); let lang = 0; gl.uniform1i(U.uSub, 1);
     gl.enable(gl.DEPTH_TEST); gl.clearColor(0, 0, 0, 0);
 
     // ---- maths ----
