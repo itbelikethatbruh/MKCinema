@@ -38,3 +38,5 @@
 /download/SHA256SUMS
   Content-Type: text/plain; charset=utf-8
   Cache-Control: no-cache
+/lens/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400

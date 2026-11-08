@@ -310,6 +310,34 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
   .js .rv{opacity:1;transform:none}
   .room{--p:1!important}
 }
+/* lx: glasses reveal (site-glasses-reveal patch) */
+.lx{background:radial-gradient(70% 55% at 50% 40%,rgba(216,194,154,.09),transparent 70%),var(--bg)}
+.lx-stage{position:relative;max-width:var(--wrap);margin:0 auto;padding:clamp(90px,12vw,160px) var(--g)}
+.lx-poster{width:100%;aspect-ratio:16/10;border-radius:20px;border:1px solid var(--line);background:#050505}
+.lx canvas,.lx-shot,.lx-veil,.lx-b2,.lx-beam,.lx-big{display:none}
+.lx-b1{max-width:720px;margin:clamp(28px,4vw,44px) auto 0;text-align:center}
+.lx-b1 .eyebrow,.lx-b2 .cta{justify-content:center}
+.lx-b1 h2{margin-top:16px}
+.lx-b1 .lead{margin:16px auto 0}
+.lx-note{margin-top:14px;font-size:12.5px;color:var(--mute)}
+.lx.lx-on{height:340vh}
+.lx-on .lx-stage{position:sticky;top:0;height:100vh;height:100svh;max-width:none;margin:0;padding:0;overflow:hidden;isolation:isolate}
+.lx-on .lx-poster{display:none}
+.lx-on canvas{display:block;position:absolute;inset:0;width:100%;height:100%}
+.lx-on .lx-shot,.lx-on .lx-veil{display:block;position:absolute;inset:0;opacity:0;pointer-events:none}
+.lx-shot picture,.lx-shot img{display:block;width:100%;height:100%;object-fit:cover}
+.lx-veil{background:linear-gradient(180deg,rgba(5,5,5,.1),rgba(5,5,5,.25) 45%,rgba(5,5,5,.94) 88%)}
+.lx-on .lx-b1,.lx-on .lx-b2{position:absolute;left:var(--g);right:var(--g);bottom:clamp(26px,7vh,76px);margin:0 auto;max-width:760px;text-align:center;opacity:0;will-change:opacity,transform}
+.lx-on .lx-b1 h2{font-size:clamp(30px,4.6vw,58px)}
+.lx-on .lx-b2{display:block;pointer-events:none}
+.lx-on .lx-b2.live,.lx-on .lx-b2:focus-within{opacity:1;pointer-events:auto}
+.lx-b2 .cta{margin-top:24px}
+@media (max-width:760px){.lx-on .lx-b1 .lead{font-size:15px}.lx-on .lx-b1{bottom:max(22px,env(safe-area-inset-bottom))}}
+.lx-on .lx-beam{display:block;position:absolute;left:50%;top:-20%;width:1500px;height:120%;transform:translateX(-50%);z-index:-1;pointer-events:none;opacity:0;
+  background:conic-gradient(from 180deg at 50% 0%,transparent 164deg,rgba(255,236,205,.06) 173deg,rgba(255,240,215,.12) 180deg,rgba(255,236,205,.06) 187deg,transparent 196deg);
+  -webkit-mask:linear-gradient(#000 25%,transparent 80%);mask:linear-gradient(#000 25%,transparent 80%)}
+.lx-on .lx-big{display:flex;align-items:center;position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden;opacity:0}
+.lx-big span{white-space:nowrap;font:italic 400 clamp(110px,19vw,300px)/1 var(--serif);letter-spacing:-.03em;color:transparent;-webkit-text-stroke:1px rgba(216,194,154,.22);will-change:transform;transform:translate3d(100vw,-12vh,0)}
 </style>
 </head>
 <body>
@@ -405,6 +433,32 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
     <div class="tag tag3"><span class="ic"><svg><use href="#i-users"/></svg></span><span><b>Watch party</b><small>Six letters, same scene</small></span></div>
   </div>
   <div class="floor"></div>
+</section>
+
+<hr class="hr">
+
+<section class="lx" id="lens" aria-labelledby="lx-h">
+  <div class="lx-stage">
+    <img class="lx-poster" src="lens/poster-960.webp" srcset="lens/poster-960.webp 960w, lens/poster.webp 1600w" sizes="(max-width: 1180px) 92vw, 1100px" width="1600" height="1000" alt="Smart glasses showing a subtitle line in one lens" loading="lazy" decoding="async">
+    <div class="lx-beam" aria-hidden="true"></div>
+    <div class="lx-big" aria-hidden="true"><span>Every line, in your eyeline.</span></div>
+    <canvas aria-hidden="true"></canvas>
+    <div class="lx-shot" aria-hidden="true"><picture><source media="(orientation: portrait)" srcset="shots/phone-home-480.webp 480w, shots/phone-home.webp 600w" sizes="100vw"><img data-portrait="shots/phone-home.webp" src="shots/home-960.webp" srcset="shots/home-960.webp 960w, shots/home.webp 1600w" sizes="100vw" width="1600" height="1000" alt="" loading="lazy" decoding="async"></picture></div>
+    <div class="lx-veil" aria-hidden="true"></div>
+    <div class="lx-b1">
+      <span class="eyebrow">New · Subtitles on smart glasses</span>
+      <h2 id="lx-h">Read the film <em>in your glasses.</em></h2>
+      <p class="lead">MKCinema sends each subtitle line to your smart glasses as the film plays, in your own language and in step with the screen. It works with Brilliant Labs Frame, Even Realities G1 and G2, and Meta Ray-Ban Display.</p>
+      <p class="lx-note">Glasses shown are illustrative. MKCinema isn't affiliated with any glasses maker.</p>
+    </div>
+    <div class="lx-b2">
+      <h2>Look through. <em>It's all here.</em></h2>
+      <div class="cta">
+        <a class="btn btn-plat" href="https://app.mkcinema.app/"><svg><use href="#i-play"/></svg>Open MKCinema</a>
+        <a class="btn btn-ghost" href="#download"><svg><use href="#i-down"/></svg><span>Download free</span></a>
+      </div>
+    </div>
+  </div>
 </section>
 
 <hr class="hr">
@@ -889,6 +943,59 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
     }, { passive: true });
     deck.addEventListener('pointerleave', () => { deck.style.setProperty('--mx', 0); deck.style.setProperty('--my', 0); });
   }
+})();
+</script>
+<script id="mkc-lens">/* glasses reveal: loads /lens/lens.js only near the section; still poster for reduced motion, TVs, low-end and data saver */
+(() => {
+  const sec = document.getElementById('lens'); if (!sec) return;
+  const ua = navigator.userAgent, nc = navigator.connection || {};
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || /AFT|Android TV|GoogleTV|BRAVIA|SMART-TV|SmartTV|Web0S|WebOS|Tizen|CrKey|NetCast|HbbTV|Viera|AQUOS/i.test(ua)
+    || nc.saveData || /2g/.test(nc.effectiveType || '') || navigator.deviceMemory <= 2 || navigator.hardwareConcurrency <= 2
+    || !window.WebGLRenderingContext || !window.DecompressionStream || !window.IntersectionObserver) return;
+  sec.classList.add('lx-on');
+  const q = s => sec.querySelector(s), b1 = q('.lx-b1'), b2 = q('.lx-b2'), shot = q('.lx-shot'), veil = q('.lx-veil'), stage = q('.lx-stage'), beam = q('.lx-beam'), big = q('.lx-big'), bigT = big.firstElementChild;
+  const ss = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  let R = null, p = 0, tp = 0, vis = false, raf = 0, last = 0, n = 0, acc = 0, step = 0, mx = 0, my = 0, tmx = 0, tmy = 0, w = 0, h = 0;
+  // progress starts while the section is still rising into view, so the glasses are already arriving when it pins
+  const prog = () => { const r = sec.getBoundingClientRect(), lead = innerHeight * .7; return Math.min(1, Math.max(0, (lead - r.top) / Math.max(1, r.height - innerHeight + lead))); };
+  const ui = v => {
+    const o1 = ss(.13, .22, v) * (1 - ss(.55, .61, v));
+    b1.style.opacity = o1.toFixed(3); b1.style.transform = `translate3d(0,${((1 - ss(.13, .24, v)) * 26 - ss(.55, .61, v) * 18).toFixed(1)}px,0)`;
+    beam.style.opacity = (ss(.02, .2, v) * (1 - ss(.6, .7, v))).toFixed(3);
+    big.style.opacity = (ss(.04, .16, v) * (1 - ss(.56, .64, v))).toFixed(3);
+    bigT.style.transform = `translate3d(${(100 - v * 260).toFixed(2)}vw,-12vh,0)`;
+    shot.style.opacity = ss(.83, .9, v).toFixed(3); veil.style.opacity = ss(.87, .94, v).toFixed(3);
+    const o2 = ss(.9, .96, v); b2.style.opacity = o2.toFixed(3); b2.style.transform = `translate3d(0,${((1 - o2) * 26).toFixed(1)}px,0)`; b2.classList.toggle('live', o2 > .6);
+  };
+  const frame = now => {
+    raf = 0; if (!vis) { last = 0; return; }
+    const dt = last ? Math.min(100, now - last) : 16; last = now;
+    p += (tp - p) * Math.min(1, dt / 80); if (Math.abs(tp - p) < 1e-4) p = tp;
+    mx += (tmx - mx) * .05; my += (tmy - my) * .05;
+    ui(p);
+    if (R) {
+      Object.assign(R.S, { p, mx, my, t: now / 1000 }); R.draw();
+      // frame-time guard: drop resolution on slow GPUs, twice at most
+      if (step < 2 && ++n > 12) { acc += dt; if (n === 72) { if (acc / 60 > 30) R.setMaxDpr(step++ ? .75 : 1); else step = 2; n = acc = 0; } }
+    }
+    raf = requestAnimationFrame(frame);
+  };
+  const kick = () => { if (!raf && vis) raf = requestAnimationFrame(frame); };
+  const fail = e => { console.warn('lens', e); vis = false; R = null; sec.classList.remove('lx-on'); [b1, b2, shot, veil].forEach(el => el.removeAttribute('style')); };
+  addEventListener('scroll', () => { tp = prog(); kick(); }, { passive: true });
+  addEventListener('resize', () => { if (!R) return; const r = stage.getBoundingClientRect(); if (r.width !== w || Math.abs(r.height - h) > 80) { w = r.width; h = r.height; R.size(); } tp = prog(); kick(); });
+  if (fine) addEventListener('pointermove', e => { if (vis) { tmx = e.clientX / innerWidth * 2 - 1; tmy = e.clientY / innerHeight * 2 - 1; } }, { passive: true });
+  let asked = false;
+  new IntersectionObserver(([e]) => {
+    if (!e.isIntersecting || asked) return; asked = true;
+    import('/lens/lens.js').then(m => m.start(sec)).then(r => {
+      R = r; const s = stage.getBoundingClientRect(); w = s.width; h = s.height;
+      r.gl.canvas.addEventListener('webglcontextlost', e2 => { e2.preventDefault(); fail('context lost'); });
+      tp = prog(); kick();
+    }).catch(fail);
+  }, { rootMargin: '50% 0px' }).observe(sec);
+  new IntersectionObserver(([e]) => { vis = e.isIntersecting; tp = prog(); kick(); }).observe(sec);
 })();
 </script>
 </body>
