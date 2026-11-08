@@ -40,3 +40,5 @@
   Cache-Control: no-cache
 /lens/*
   Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+/clips/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
