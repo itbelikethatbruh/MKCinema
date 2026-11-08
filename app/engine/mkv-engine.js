@@ -44,6 +44,18 @@
     mark(u, v) { const k = this.key(u); if (!k) return; const m = this.load(); m[k] = { v, t: Date.now() }; try { localStorage.setItem(this.K, JSON.stringify(m)); } catch (e) { /* private mode */ } },
     blocked(u) { const e = this.load()[this.key(u)]; return !!(e && e.v === 'blocked' && Date.now() - e.t < 7 * 864e5); },
   };
+  /* software HEVC decoding: computers only (no phones or tablets), off by default, needs WebGL 2 */
+  const SOFT = {
+    p: null,
+    offered() { return !TOUCH_UI && !MANAGED && !!window.WebGL2RenderingContext && !can('video/mp4; codecs="hvc1.1.6.L120.90"'); },
+    ready() { return CFG.swHevc === true && this.offered(); },
+    load() {
+      if (window.MkSoft) return Promise.resolve();
+      if (!this.p) this.p = new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'engine/soft-hevc.js'; sc.onload = () => res(); sc.onerror = () => { this.p = null; rej(new Error('load')); }; document.head.appendChild(sc); });
+      return this.p;
+    },
+  };
+  if (CFG_DEFAULTS.swHevc === undefined) CFG_DEFAULTS.swHevc = false;
   async function reachable(u) {
     const c = new AbortController(), t = setTimeout(() => c.abort(), 4000);
     try { await fetch(u, { mode: 'no-cors', credentials: 'omit', referrerPolicy: 'no-referrer', signal: c.signal }); return true; } catch (e) { return false; } finally { clearTimeout(t); c.abort(); }
@@ -68,7 +80,8 @@
       if (isTs(s)) return true; // Chrome, Edge and Firefox can't open TS files at all
       // MP4: only when the name says Dolby or DTS sound (most browsers would play it silent), or the film already played silent
       if (!isMp4(s)) return false;
-      return !!s._engForce || DOLBY_HINT.test(`${bh.filename || ''} ${s.title || ''} ${s.name || ''} ${s.description || ''}`);
+      const name = `${bh.filename || ''} ${s.title || ''} ${s.name || ''} ${s.description || ''}`;
+      return !!s._engForce || DOLBY_HINT.test(name) || (SOFT.ready() && /(?:^|[^a-z0-9])(x265|h\.?265|hevc)(?:[^a-z0-9]|$)/i.test(name));
     },
 
     /* which audio track plays first: the file's default track (Chromium itself always plays the first one) */
@@ -95,8 +108,13 @@
       const dvOk = !!(v.dvMime && v.kind === 'hevc' && (v.dv === 5 || v.dv === 8) && can(`video/mp4; codecs="${v.dvMime}"`));
       if (v.dv === 5 && !dvOk) return { go: false, why: 'Dolby Vision profile 5 needs a device that decodes Dolby Vision (an iPhone, iPad or Mac); elsewhere its colours would be wrong', hard: true };
       if (dvOk) { this.dv = true; v.useMime = v.dvMime; } else { this.dv = false; v.useMime = v.mime; }
-      if (!can(`video/mp4; codecs="${v.useMime}"`)) return { go: false, why: `this ${TOUCH_UI ? 'device' : 'browser'} can’t decode ${NAMES[v.kind]}${v.bits > 8 ? ` ${v.bits}-bit` : ''} video`, hard: true };
       const ai = this.defAudio(info), a = info.audio[ai];
+      if (!can(`video/mp4; codecs="${v.useMime}"`)) {
+        // computers without an HEVC decoder: MKCinema decodes it itself when that's switched on (up to 1080p, needs sound as the clock)
+        if (v.kind === 'hevc' && SOFT.ready() && v.cfg && v.w * v.h <= 1920 * 1088 && a && this.audioMode(a) !== 'none') { this.dv = false; return { go: true, ai, mode: this.audioMode(a), soft: true }; }
+        const hint = v.kind === 'hevc' && SOFT.offered() && CFG.swHevc !== true && v.w * v.h <= 1920 * 1088 ? ' (switch on "Play HEVC films on this computer" in Settings › Playback)' : v.kind === 'hevc' && SOFT.offered() && v.w * v.h > 1920 * 1088 ? ' (4K HEVC is too heavy to decode here; use VLC)' : '';
+        return { go: false, why: `this ${TOUCH_UI ? 'device' : 'browser'} can’t decode ${NAMES[v.kind]}${v.bits > 8 ? ` ${v.bits}-bit` : ''} video${hint}`, hard: true };
+      }
       // Chrome, Edge and Firefox play this file well on their own: keep their player (faster seeking, no extra work)
       const first = ai === info.audio.findIndex((x) => !x.enc);
       if (force && !a) return { go: false, native: true, why: 'the file has no sound track' };
@@ -108,7 +126,7 @@
       const v = info.video, a = info.audio[ai];
       const vs = v ? `${NAMES[v.kind] || v.codec}${v.bits > 8 ? ` ${v.bits}-bit` : ''}${v.dv ? (this.dv ? ` · Dolby Vision ${v.dv}` : ` · Dolby Vision ${v.dv} shown as HDR10`) : ''}` : '';
       const as = a ? `${NAMES[a.kind] || a.codec} ${chName(a.ch)}`.trim() + (mode === 'aac' ? (a.ch >= 6 && surroundOut() ? ' → AAC 5.1' : ' → AAC stereo') : mode === 'none' ? ' (no sound here)' : '') : 'no sound';
-      return `${{ webm: 'WebM', mp4: 'MP4', ts: 'TS', m2ts: 'M2TS' }[info.doc] || 'MKV'} · ${vs} · ${as}`;
+      return `${{ webm: 'WebM', mp4: 'MP4', ts: 'TS', m2ts: 'M2TS' }[info.doc] || 'MKV'} · ${vs}${this.soft ? ' (decoded here)' : ''} · ${as}`;
     },
 
     /* returns true when the engine took over, false to let the browser's own player try */
@@ -140,12 +158,17 @@
         if (r.hard) stream._engHard = r.why;
         return false;
       }
+      if (r.soft) {
+        try { await SOFT.load(); } catch (e) { w.terminate(); this.reason.set(stream, 'the HEVC decoder could not load'); return false; }
+        if (tok !== this.tok || P.stream !== stream) { w.terminate(); return true; }
+      }
       this.attach(w, stream, info, r, startAt, base);
       return true;
     },
 
     attach(w, stream, info, r, startAt, base) {
       this.w = w; this.stream = stream; this.info = info; this.active = true; this.eos = false;
+      this.soft = !!r.soft; this.sw = null;
       this.aIdx = r.ai; this.aMode = r.mode; this.gen = 1; this.aGen = 1; this.reqT = startAt || 0; this.reqAt = performance.now();
       this.label = this.describe(info, r.ai, r.mode);
       this.reason.set(stream, '');
@@ -178,12 +201,19 @@
       const info = this.info, a = info.audio[this.aIdx];
       try {
         if (isFinite(info.duration) && info.duration > 0) this.ms.duration = info.duration;
-        this.sb.v = this.ms.addSourceBuffer(`video/mp4; codecs="${info.video.useMime || info.video.mime}"`);
+        if (!this.soft) this.sb.v = this.ms.addSourceBuffer(`video/mp4; codecs="${info.video.useMime || info.video.mime}"`);
         if (a && this.aMode !== 'none') this.sb.a = this.ms.addSourceBuffer(this.aMode === 'aac' ? 'audio/mp4; codecs="mp4a.40.2"' : `audio/mp4; codecs="${a.mime}"`);
       } catch (e) { this.fail(`the browser refused the stream (${e.message})`); return; }
       for (const k of ['v', 'a']) if (this.sb[k]) { this.sb[k].addEventListener('updateend', () => { this.busy[k] = false; this.drain(k); }); this.sb[k].addEventListener('error', () => this.fail('the browser could not decode the stream')); }
-      this.w.postMessage({ op: 'start', t: startAt || 0, audio: this.sb.a ? this.aIdx : -1, mode: this.aMode, surround: surroundOut(), vmime: info.video.useMime || info.video.mime, dv: !!this.dv, gen: this.gen, until: (startAt || 0) + AHEAD });
+      const start = { op: 'start', t: startAt || 0, audio: this.sb.a ? this.aIdx : -1, mode: this.aMode, surround: surroundOut(), vmime: info.video.useMime || info.video.mime, dv: !!this.dv, gen: this.gen, until: (startAt || 0) + this.ahead() };
+      if (!this.soft) { this.w.postMessage(start); return; }
+      // software HEVC: the engine worker sends the picture's samples straight to the decoder worker
+      try { this.sw = new window.MkSoft(this, info); } catch (e) { this.fail(`software decoding isn’t available here (${e.message})`); return; }
+      const ch = new MessageChannel();
+      this.sw.connect(ch.port2, this.gen, startAt || 0);
+      this.w.postMessage({ ...start, port: ch.port1 }, [ch.port1]);
     },
+    ahead() { return this.soft ? Math.min(AHEAD, 20) : AHEAD; },
 
     msg(m) {
       if (!this.active) return;
@@ -201,6 +231,7 @@
     /* the sound couldn't be read or converted: play the picture alone rather than waiting for sound that never comes */
     dropAudio() {
       const sb = this.sb.a; if (!sb || !this.ms) return;
+      if (this.soft) { this.fail('the sound couldn’t be converted, and software-decoded pictures need it as their clock'); return; }
       this.q.a = []; this.sb.a = null; this.busy.a = false;
       try { if (this.ms.readyState === 'open') this.ms.removeSourceBuffer(sb); } catch (e) { /* already gone */ }
     },
@@ -238,23 +269,25 @@
     },
     seek(t) {
       if (!this.active || !this.w) return;
-      if (this.buffered(t)) return;
+      if (!this.soft && this.buffered(t)) return;
       // just asked for this spot (the resume point right after start): nothing new to fetch
       if (Math.abs(t - this.reqT) < 1.5 && performance.now() - (this.reqAt || 0) < 4000) return;
       this.gen++; this.reqT = t; this.reqAt = performance.now(); this.eos = false;
       this.q.v = this.q.v.filter((j) => j.fn || j.init); this.q.a = this.q.a.filter((j) => j.fn || j.init);
-      this.w.postMessage({ op: 'seek', t, gen: this.gen, until: t + AHEAD });
+      if (this.sw) this.sw.reset(this.gen, t);
+      this.w.postMessage({ op: 'seek', t, gen: this.gen, until: t + this.ahead() });
     },
     reread() {
       if (!this.active || !this.w) return;
       const t = video.currentTime || 0; this.gen++; this.reqT = t; this.reqAt = performance.now(); this.eos = false;
       this.q.v = this.q.v.filter((j) => j.fn || j.init); this.q.a = this.q.a.filter((j) => j.fn || j.init);
-      this.w.postMessage({ op: 'seek', t, gen: this.gen, until: t + AHEAD });
+      if (this.sw) this.sw.reset(this.gen, t);
+      this.w.postMessage({ op: 'seek', t, gen: this.gen, until: t + this.ahead() });
     },
     pump() {
       if (!this.active || !this.w) return;
       const t = video.currentTime || 0;
-      this.w.postMessage({ op: 'until', t: this.hold ? t + 4 : t + AHEAD });
+      this.w.postMessage({ op: 'until', t: this.hold ? t + 4 : t + this.ahead() });
       this.drain('v'); this.drain('a');
       // keep memory low: drop what is more than 15 s behind
       if (performance.now() - this.lastEvict > 5000 && t > BEHIND + 10) {
@@ -279,6 +312,7 @@
       this.q.a.push({ fn: (sb) => { sb.remove(0, Infinity); } });
       this.q.a.push({ fn: (sb) => { if (sb.changeType) sb.changeType(mime); return false; } });
       this.drain('a');
+      if (this.sw) this.sw.reset(this.gen, t);
       this.w.postMessage({ op: 'audio', audio: i, mode, surround: surroundOut(), t, gen: this.gen, vmime: this.info.video.useMime || this.info.video.mime, dv: !!this.dv, until: t + AHEAD });
       return true;
     },
@@ -300,13 +334,14 @@
       if (this.ms && this.ms.readyState === 'open') { try { this.ms.endOfStream(); } catch (e) { /* ignore */ } }
       if (this.url) { URL.revokeObjectURL(this.url); this.url = ''; }
       if (MANAGED && this.prevRemote != null) { video.disableRemotePlayback = this.prevRemote; this.prevRemote = null; }
+      if (this.sw) { this.sw.destroy(); this.sw = null; } this.soft = false;
       this.ms = null; this.sb = { v: null, a: null }; this.q = { v: [], a: [] }; this.stream = null; this.info = null; Pgs.off(true);
     },
     stats() {
       if (!this.active) return null;
       const t = video.currentTime; let ahead = 0;
-      try { const b = this.sb.v.buffered; for (let i = 0; i < b.length; i++) if (t >= b.start(i) - 0.2 && t <= b.end(i)) ahead = b.end(i) - t; } catch (e) { /* ignore */ }
-      return `${this.label} · ${ahead.toFixed(0)} s buffered`;
+      try { const b = (this.sb.v || this.sb.a).buffered; for (let i = 0; i < b.length; i++) if (t >= b.start(i) - 0.2 && t <= b.end(i)) ahead = b.end(i) - t; } catch (e) { /* ignore */ }
+      return `${this.label} · ${ahead.toFixed(0)} s buffered${this.sw ? ` · ${this.sw.stats()}` : ''}`;
     },
   };
 
@@ -485,9 +520,15 @@
   if (typeof BrowserPlay !== 'undefined') {
     const rs = BrowserPlay.rescue.bind(BrowserPlay), ok = BrowserPlay.ok.bind(BrowserPlay);
     BrowserPlay.rescue = function () { return (!E.strict && CFG.engine !== false) || rs(); };
+    const can0 = BrowserPlay.can.bind(BrowserPlay);
+    BrowserPlay.can = function (type) { return (E.softName && /codecs="hvc1/.test(type)) || can0(type); };
     BrowserPlay.ok = function (s) {
-      if (CFG.engine === false || !s || !s.url || !Hosts.blocked(s.url)) return ok(s);
-      E.strict = true; try { return ok(s); } finally { E.strict = false; }
+      // HEVC up to 1080p plays here when "Play HEVC films on this computer" is on
+      E.softName = !!(s && SOFT.ready() && CFG.engine !== false && !/(2160p|\b4k\b|\buhd\b)/i.test([s.name, s.title, s.description, s.behaviorHints && s.behaviorHints.filename].filter(Boolean).join(' ')));
+      try {
+        if (CFG.engine === false || !s || !s.url || !Hosts.blocked(s.url)) return ok(s);
+        E.strict = true; try { return ok(s); } finally { E.strict = false; }
+      } finally { E.softName = false; }
     };
   }
   if (typeof Failover !== 'undefined' && typeof Failover.candidates === 'function') {
@@ -569,6 +610,10 @@
       sec.rows = function () {
         const r = rows.apply(this, arguments); const i = r.findIndex((x) => x.key === 'browserOnly');
         r.splice(i < 0 ? r.length : i, 0, { key: 'engine', label: 'Play MKV and TS files in MKCinema', help: `Plays MKV and TS files ${MANAGED || !nativeMkv ? 'in Safari' : 'here'} and converts Dolby Digital, DTS and TrueHD sound that browsers can’t play (in MKV, MP4 and TS files), right on this ${TOUCH_UI ? 'device' : 'computer'}. The picture is never converted, so a file plays only if this ${TOUCH_UI ? 'device' : 'computer'} can decode its video. Some hosts don’t allow it; those files play the old way.${MANAGED ? ' AirPlay is off while it plays; use VLC or Infuse to AirPlay an MKV.' : ''}`, type: 'toggle' });
+        if (SOFT.offered()) {
+          const j = r.findIndex((x) => x.key === 'engine');
+          r.splice(j + 1, 0, { key: 'swHevc', label: 'Play HEVC films on this computer', help: 'This browser can’t play HEVC (x265) video by itself. With this on, MKCinema decodes it on your computer instead: films up to 1080p, HDR shown as normal colour. It works the processor hard, so older or slower computers may stutter; 4K files still need VLC. Off by default.', type: 'toggle' });
+        }
         return r;
       };
     }
