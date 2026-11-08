@@ -15,7 +15,7 @@ Back to the [README](../README.md).
 </p>
 
 <p align="center"><sub>
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest">Latest release</a> (Android 1.8.1, Windows 1.3.0, Mac 1.1.1, Linux 1.1, webOS 1.1.0) &nbsp;·&nbsp;
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest">Latest release</a> (Android 1.9.1, Windows 1.3.1, Mac 1.1.1, Linux 1.1, webOS 1.1.0) &nbsp;·&nbsp;
   Linux also as <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/mkcinema-1.1-linux-x86_64.tar.gz">.tar.gz</a> &nbsp;·&nbsp;
   Fire TV: type <code>tv.mkcinema.app</code> into the Downloader app &nbsp;·&nbsp;
   Samsung TV (2023+): <a href="../tizen/README.md">install with TizenBrew</a>

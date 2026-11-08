@@ -7,13 +7,13 @@
 <script>document.documentElement.classList.add('js')</script>
 <script id="mkc-home">/* the site lives at mkcinema.app; the old address and www send browsers there, keeping the #section */
 (function () { var h = location.hostname; if (h === 'mkcinema-site.pages.dev' || h === 'www.mkcinema.app') location.replace('https://mkcinema.app' + location.pathname + location.search + location.hash); })();</script>
-<title>MKCinema · Your addons, in a private cinema</title>
-<meta name="description" content="A free, open-source cinema for the Stremio addons you choose, with a real player, watch parties and apps for Android, TV, Windows, Mac and Linux.">
+<title>MKCinema · The cinema for the whole house</title>
+<meta name="description" content="A free, open-source home cinema for the whole family: a real cinema player, a seat for everyone, watch parties with cameras and a phone remote, on Android, TV, Windows, Mac, Linux and the web.">
 <meta name="theme-color" content="#050505">
 <meta name="color-scheme" content="dark">
 <meta property="og:type" content="website">
-<meta property="og:title" content="MKCinema">
-<meta property="og:description" content="Your addons, in a private cinema. Every device, one library. Free forever.">
+<meta property="og:title" content="MKCinema · The cinema for the whole house">
+<meta property="og:description" content="Tomorrow’s cinema, for the whole house. Every screen, every seat. Free forever.">
 <meta property="og:image" content="https://mkcinema.app/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -21,11 +21,11 @@
 <meta property="og:site_name" content="MKCinema">
 <meta property="og:url" content="https://mkcinema.app/">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="MKCinema · Your addons, in a private cinema">
-<meta name="twitter:description" content="A free, open-source cinema for the Stremio addons you choose. Phones, TVs, desktops and the web.">
+<meta name="twitter:title" content="MKCinema · The cinema for the whole house">
+<meta name="twitter:description" content="A free, open-source home cinema for the whole family: a real cinema player, a seat for everyone, watch parties with cameras and a phone remote, on Android, TV, Windows, Mac, Linux and the web.">
 <meta name="twitter:image" content="https://mkcinema.app/og.jpg">
 <meta name="twitter:image:alt" content="MKCinema: Your addons. A private cinema. The MKCinema player showing the open movie Elephants Dream.">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"MKCinema","url":"https://mkcinema.app/","description":"A free, open-source cinema for the Stremio addons you choose, with a real player, watch parties and apps for every screen.","applicationCategory":"MultimediaApplication","operatingSystem":"Android, Android TV, Fire TV, Windows, macOS, Linux, Web","image":"https://mkcinema.app/og.jpg","screenshot":"https://mkcinema.app/shots/player.webp","downloadUrl":"https://mkcinema.app/#download","license":"https://www.gnu.org/licenses/gpl-3.0.html","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Dee Lavish"},"sameAs":["https://github.com/itbelikethatbruh/MKCinema"]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"MKCinema","url":"https://mkcinema.app/","description":"A free, open-source home cinema for the whole family: a real cinema player, a seat for everyone, watch parties with cameras and a phone remote, on Android, TV, Windows, Mac, Linux and the web.","applicationCategory":"MultimediaApplication","operatingSystem":"Android, Android TV, Fire TV, Windows, macOS, Linux, Web","image":"https://mkcinema.app/og.jpg","screenshot":"https://mkcinema.app/shots/player.webp","downloadUrl":"https://mkcinema.app/#download","license":"https://www.gnu.org/licenses/gpl-3.0.html","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Dee Lavish"},"sameAs":["https://github.com/itbelikethatbruh/MKCinema"]}</script>
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -347,6 +347,47 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 .lx-meta{width:auto;height:22px;stroke:none}
 .lx-even{width:auto;height:13px;stroke:none}
 @media (max-width:760px){.lx-on .lx-works{gap:10px 22px;margin-top:14px}.lx-works img{height:18px}.lx-works li:first-child img{height:30px;margin:-6px 0}.lx-meta{height:18px}.lx-even{height:11px}}
+/* hx: the whole house (site-brand-house patch) */
+.hero h1{max-width:15ch}
+.hx{position:relative;overflow:hidden}
+.hx-plan{position:relative;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-areas:"a b c" "d core e" "f f f";gap:14px;margin-top:44px;padding:14px;border-radius:24px;border:1px solid rgba(216,194,154,.22);isolation:isolate;overflow:hidden;
+  background:linear-gradient(rgba(216,194,154,.05) 1px,transparent 1px) 0 0/32px 32px,linear-gradient(90deg,rgba(216,194,154,.05) 1px,transparent 1px) 0 0/32px 32px,radial-gradient(60% 60% at 50% 50%,rgba(216,194,154,.08),transparent 70%),#070707}
+.hx-plan::before,.hx-plan::after{content:"";position:absolute;width:22px;height:22px;border:1px solid var(--gold);opacity:.6;pointer-events:none}
+.hx-plan::before{left:8px;top:8px;border-right:0;border-bottom:0;border-radius:6px 0 0 0}
+.hx-plan::after{right:8px;bottom:8px;border-left:0;border-top:0;border-radius:0 0 6px 0}
+.hx-a{grid-area:a}.hx-b{grid-area:b}.hx-c{grid-area:c}.hx-d{grid-area:d}.hx-e{grid-area:e}
+.hx-f{grid-area:f}
+.hx-room{position:relative;padding:20px 20px 18px;border-radius:16px;border:1px solid var(--line2);background:linear-gradient(180deg,rgba(16,16,16,.96),rgba(9,9,9,.96));transition:border-color .3s,transform .3s var(--ease)}
+.hx-room:hover{border-color:rgba(216,194,154,.5);transform:translateY(-3px)}
+.hx-tag{display:inline-flex;align-items:center;gap:9px;font:600 10.5px/1 var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+.hx-tag i{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 3px rgba(216,194,154,.18);animation:hxlive 2.4s ease-in-out infinite}
+.hx-room h3{margin:14px 0 0;font:400 23px/1.15 var(--serif);font-variation-settings:"opsz" 36}
+.hx-room ul{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:7px}
+.hx-room li{position:relative;padding-left:16px;font-size:14px;line-height:1.45;color:var(--ink2)}
+.hx-room li::before{content:"";position:absolute;left:0;top:.62em;width:7px;height:1px;background:var(--gold2)}
+.hx-f ul{grid-template-columns:repeat(3,1fr);gap:7px 18px}
+.hx-core{grid-area:core;position:relative;display:grid;place-items:center;align-content:center;gap:6px;min-height:260px;text-align:center}
+.hx-core svg{width:46px;height:46px;color:var(--gold)}
+.hx-core b{font:400 24px/1 var(--serif);letter-spacing:.01em}
+.hx-core small{font:600 10px/1 var(--sans);letter-spacing:.28em;text-transform:uppercase;color:var(--gold2)}
+.hx-ring{position:absolute;left:50%;top:50%;width:250px;height:250px;margin:-125px 0 0 -125px;border-radius:50%;border:1px dashed rgba(216,194,154,.35);animation:hxspin 40s linear infinite;pointer-events:none}
+.hx-ring.r2{width:196px;height:196px;margin:-98px 0 0 -98px;border:1px solid rgba(216,194,154,.14);border-top-color:rgba(216,194,154,.7);animation-duration:9s}
+.hx-scan{position:absolute;left:0;right:0;top:0;height:120px;z-index:-1;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(216,194,154,.07) 70%,rgba(216,194,154,.22) 99%,transparent);animation:hxscan 7s linear infinite;will-change:transform}
+.hx-strip{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 34px;margin-top:26px;font-size:13.5px;color:var(--mute)}
+.hx-strip span{display:inline-flex;align-items:baseline;gap:8px}
+.hx-strip b{font:400 26px/1 var(--serif);color:var(--ink)}
+@keyframes hxspin{to{transform:rotate(360deg)}}
+@keyframes hxscan{from{transform:translateY(-130px)}to{transform:translateY(900px)}}
+@keyframes hxlive{50%{opacity:.35}}
+@media (max-width:900px){
+  .hx-plan{grid-template-columns:1fr 1fr;grid-template-areas:"core core" "a b" "c d" "e f"}
+  .hx-core{min-height:240px}.hx-f ul{grid-template-columns:1fr}}
+@media (max-width:600px){
+  .hx-wide{display:none}
+  .hx-plan{grid-template-columns:1fr;grid-template-areas:"core" "a" "b" "c" "d" "e" "f";padding:10px;gap:10px}
+  .hx-room h3{font-size:21px}.hx-scan{display:none}}
+@media (prefers-reduced-motion:reduce){.hx-ring,.hx-scan,.hx-tag i{animation:none}.hx-scan{display:none}}
+/* hx end */
 </style>
 </head>
 <body>
@@ -400,12 +441,12 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
     <a class="brand" href="#top" aria-label="MKCinema home"><svg aria-hidden="true"><use href="#logo"/></svg><span><b>MK</b><i>Cinema</i></span></a>
     <button class="menu" type="button" aria-label="Sections" aria-expanded="false" aria-controls="links"><svg aria-hidden="true"><use href="#i-menu"/></svg></button>
     <nav class="links" id="links" aria-label="Sections">
-      <a href="#different">What's different</a>
+      <a href="#house">The house</a>
       <a href="#tour">Tour</a>
+      <a href="#different">What's different</a>
       <a href="#everything">All features</a>
       <a href="#download">Download</a>
-      <a href="#promise">Free forever</a>
-      <a href="#faq">FAQ</a>
+            <a href="#faq">FAQ</a>
     </nav>
     <a class="gh" href="https://github.com/itbelikethatbruh/MKCinema" aria-label="MKCinema on GitHub"><svg><use href="#b-github"/></svg></a>
     <a class="btn btn-plat btn-sm" href="https://app.mkcinema.app/">Open MKCinema</a>
@@ -417,9 +458,9 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 <section class="hero">
   <div class="beam" aria-hidden="true"></div>
   <div class="wrap">
-    <span class="eyebrow fade">Free forever · Open source</span>
-    <h1><span class="ln"><span>Your addons.</span></span><span class="ln"><span><em>A private cinema.</em></span></span></h1>
-    <p class="lead fade d1">MKCinema turns the Stremio addons you choose into a cinema on every screen. A real player, built-in debrid, watch parties and picks that never leave your device. No ads, no account needed.</p>
+    <span class="eyebrow fade">Free forever · Open source<span class="hx-wide"> · Every screen</span></span>
+    <h1><span class="ln"><span>Tomorrow’s cinema.</span></span><span class="ln"><span><em>For the whole house.</em></span></span></h1>
+    <p class="lead fade d1">MKCinema is the home cinema app for the whole family. Find something everyone likes, watch it on any screen with a player made for films, and share it with the people you love, on the same sofa or across town. Bring your own addons, servers and services. No ads, and no account needed.</p>
     <div class="cta fade d2">
       <a class="btn btn-plat" href="https://app.mkcinema.app/"><svg><use href="#i-play"/></svg>Open MKCinema</a>
       <a class="btn btn-ghost" href="#download" id="heroDl"><svg><use href="#i-down"/></svg><span>Download the app</span></a>
@@ -438,10 +479,33 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
     <div class="screen"><img src="shots/home.webp" srcset="shots/home-960.webp 960w, shots/home.webp 1600w" sizes="(max-width: 1100px) 92vw, 1100px" width="1600" height="1000" alt="" fetchpriority="high"></div>
     <div class="phone"><img src="shots/phone-home.webp" srcset="shots/phone-home-320.webp 320w, shots/phone-home-480.webp 480w, shots/phone-home.webp 600w" sizes="(max-width: 760px) 30vw, 230px" width="600" height="1301" alt="" decoding="async"></div>
     <div class="tag tag1"><span class="ic"><svg><use href="#i-bolt"/></svg></span><span><b>Smart Play</b><small>Best stream, picked for you</small></span></div>
-    <div class="tag tag2"><span class="ic"><svg><use href="#i-head"/></svg></span><span><b>Listen on phone</b><small>TV sound in your headphones</small></span></div>
-    <div class="tag tag3"><span class="ic"><svg><use href="#i-users"/></svg></span><span><b>Watch party</b><small>Six letters, same scene</small></span></div>
+    <div class="tag tag2"><span class="ic"><svg><use href="#i-head"/></svg></span><span><b>A seat for everyone</b><small>Kids seats, PINs, own picks</small></span></div>
+    <div class="tag tag3"><span class="ic"><svg><use href="#i-users"/></svg></span><span><b>Watch party</b><small>Voice, cameras, same scene</small></span></div>
   </div>
   <div class="floor"></div>
+</section>
+
+<hr class="hr">
+
+<section class="sec hx" id="house" aria-labelledby="hx-h">
+  <div class="wrap">
+    <div class="head center rv">
+      <span class="eyebrow">One house · Every screen<span class="hx-wide"> · Everyone</span></span>
+      <h2 id="hx-h">A cinema that lives <em>in every room.</em></h2>
+      <p class="lead">MKCinema runs the whole evening, from finding something everyone likes to the last line of the credits. Everyone gets their own seat, every screen plays its part, and the phone in your pocket ties it all together.</p>
+    </div>
+    <div class="hx-plan rv" role="list">
+      <div class="hx-scan" aria-hidden="true"></div>
+      <article class="hx-room hx-a" role="listitem"><span class="hx-tag"><i></i>Living room · TV</span><h3>The big screen</h3><ul><li>Smart Play starts the best source in one press</li><li>HDR and Dolby Vision on Android TV and Fire TV</li><li>Live TV, sports and Split Screen</li></ul></article>
+      <article class="hx-room hx-b" role="listitem"><span class="hx-tag"><i></i>Every phone · Remote</span><h3>The phone in your hand</h3><ul><li>A remote with voice search, no app to install</li><li>Miko, the assistant: “who’s in this?”</li><li>Listen on phone, in your own headphones</li></ul></article>
+      <article class="hx-room hx-c" role="listitem"><span class="hx-tag"><i></i>Kids’ room · Seat</span><h3>A seat for everyone</h3><ul><li>Each seat keeps its own watchlist, picks and stats</li><li>Kids seats by age rating, with a grown-up PIN</li><li>Shows per day that stop at the end of an episode</li></ul></article>
+      <div class="hx-core" aria-hidden="true"><span class="hx-ring"></span><span class="hx-ring r2"></span><svg><use href="#logo"/></svg><b>MKCinema</b><small>House online</small></div>
+      <article class="hx-room hx-d" role="listitem"><span class="hx-tag"><i></i>Across town · Party</span><h3>Friends on other sofas</h3><ul><li>Watch parties with voice and cameras</li><li>Everyone in sync, even on different versions</li><li>Couch match and film night pick the film</li></ul></article>
+      <article class="hx-room hx-e" role="listitem"><span class="hx-tag"><i></i>Grandparents · Helper</span><h3>Help from anywhere</h3><ul><li>Family Helper fixes the sound from your phone</li><li>Sensory-friendly mode for gentler nights</li><li>Twelve languages, and every seat its own</li></ul></article>
+      <article class="hx-room hx-f" role="listitem"><span class="hx-tag"><i></i>On the move · Downloads</span><h3>Take it with you</h3><ul><li>Downloads on phones, tablets, Windows and TVs</li><li>Leave the sofa and carry on at the same line</li><li>Subtitles on your smart glasses</li></ul></article>
+    </div>
+    <div class="hx-strip rv"><span><b>12</b>languages</span><span><b>8</b>platforms</span><span><b>1</b>account for every screen</span><span><b>0</b>ads, paywalls or cookies</span></div>
+  </div>
 </section>
 
 <hr class="hr">
@@ -450,8 +514,8 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
   <div class="wrap">
     <div class="head rv">
       <span class="eyebrow">What makes MKCinema different</span>
-      <h2 id="tk-h">Things we haven't seen <em>in any other player.</em></h2>
-      <p class="lead">We’ve looked, and we haven’t found these in any other player. Every one is live in MKCinema today.</p>
+      <h2 id="tk-h">Things we haven't seen <em>anywhere else.</em></h2>
+      <p class="lead">We’ve looked, and we haven’t found these anywhere else. Every one is live in MKCinema today.</p>
     </div>
 
     <div class="tk-group">
@@ -608,21 +672,21 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
   <div class="wrap">
     <div class="head rv">
       <span class="eyebrow">Everything inside</span>
-      <h2 id="all-h">79 features. <em>All free.</em></h2>
+      <h2 id="all-h">105 features. <em>All free.</em></h2>
       <p class="lead">The whole list, in one place. Nothing here is locked, and nothing ever will be.</p>
     </div>
     <div class="cats">
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-puzzle"/></svg></span><h3>Addons</h3><span class="cnt">7</span></div><ul><li>Any Stremio addon by link</li><li>Ratings, notices and settings, made better</li><li>Find addons in the app</li><li>Addon Studio</li><li>Manage addons from your phone</li><li>Import from Stremio</li><li>Plex, Jellyfin and Emby as sources</li></ul></div>
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-bolt"/></svg></span><h3>Sources</h3><span class="cnt">8</span></div><ul><li>Debrid built in, your own key</li><li>Smart Play</li><li>Automatic failover</li><li>Source Check and source rules</li><li>Duplicate sources folded</li><li>Browser only mode</li><li>One tap to VLC, mpv, Infuse and more</li><li>Slow internet mode</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-play"/></svg></span><h3>Player</h3><span class="cnt">11</span></div><ul><li>Edge-to-edge player with tabs</li><li>Volume to 200 %</li><li>Clear voices and Night sound modes</li><li>Audio delay and language pick</li><li>Picture adjustments</li><li>Sharp upscaling on the GPU</li><li>Gestures, sleep timer, A-B repeat</li><li>Stats, still frames, bookmarks</li><li>Send to TV (Chromecast)</li><li>Spoiler Guard</li><li>Sensory-friendly mode</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-play"/></svg></span><h3>Player</h3><span class="cnt">16</span></div><ul><li>Edge-to-edge player with tabs</li><li>Volume to 200 %</li><li>Clear voices and Night sound modes</li><li>Audio delay and language pick</li><li>Picture adjustments</li><li>Sharp upscaling on the GPU</li><li>Gestures, sleep timer, A-B repeat</li><li>Stats, still frames, bookmarks</li><li>Send to TV (Chromecast)</li><li>Spoiler Guard</li><li>Sensory-friendly mode</li><li>Skip intro, recap and credits</li><li>X-Ray and cast pages</li><li>Next episode, found early</li><li>Learn mode for languages</li><li>Sound from another source</li></ul></div>
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-cc"/></svg></span><h3>Subtitles</h3><span class="cnt">7</span></div><ul><li>Styled anime subtitles</li><li>Subtitles inside MKV files</li><li>Subtitles that line up by themselves</li><li>Translated when none exist</li><li>Signs & Songs with dubs</li><li>Second subtitles, fonts and size</li><li>Subtitles on smart glasses</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-wave"/></svg></span><h3>Dialogue-aware</h3><span class="cnt">8</span></div><ul><li>Watch party on any version</li><li>Find a line</li><li>Subtitles on your phone</li><li>Same line on any source</li><li>Share this moment</li><li>Couch match</li><li>Last time…</li><li>Never miss a line</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-users"/></svg></span><h3>Together</h3><span class="cnt">8</span></div><ul><li>Watch party with voice and chat</li><li>Listen on phone</li><li>Phone remote with keyboard and voice</li><li>Party voice on your phone</li><li>Party cameras, your phone as the camera</li><li>Ask the host to pause</li><li>Cast and details on your phone</li><li>Miko, the remote’s assistant</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-film"/></svg></span><h3>Discover</h3><span class="cnt">8</span></div><ul><li>Arrange Home</li><li>Top 10, Networks and 142 Universes</li><li>More like this</li><li>Scores and Where to watch</li><li>Your Picks, on your device</li><li>Peak Cinema</li><li>MDBList rows</li><li>Endless rows</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-list"/></svg></span><h3>Library</h3><span class="cnt">7</span></div><ul><li>Watchlist, lists and progress</li><li>Airing calendar</li><li>New-episode alerts</li><li>Trakt, Simkl, AniList, MyAnimeList</li><li>Downloads, TVs included</li><li>Sync across devices</li><li>Backup code</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-wave"/></svg></span><h3>Dialogue-aware</h3><span class="cnt">11</span></div><ul><li>Watch party on any version</li><li>Find a line</li><li>Subtitles on your phone</li><li>Same line on any source</li><li>Share this moment</li><li>Couch match</li><li>Last time…</li><li>Never miss a line</li><li>Which cut is this?</li><li>Shape of the film</li><li>Watch-along commentary</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-users"/></svg></span><h3>Together</h3><span class="cnt">12</span></div><ul><li>Watch party with voice and chat</li><li>Listen on phone</li><li>Phone remote with keyboard and voice</li><li>Party voice on your phone</li><li>Party cameras, your phone as the camera</li><li>Ask the host to pause</li><li>Cast and details on your phone</li><li>Miko, the remote’s assistant</li><li>Catch up to the room</li><li>Film night</li><li>Take it with you</li><li>Your language on your phone</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-film"/></svg></span><h3>Discover</h3><span class="cnt">12</span></div><ul><li>Arrange Home</li><li>Top 10, Networks and 142 Universes</li><li>More like this</li><li>Scores and Where to watch</li><li>Your Picks, on your device</li><li>Peak Cinema</li><li>MDBList rows</li><li>Endless rows</li><li>Your apps, with Watch on</li><li>Other ways to watch</li><li>MK Channel</li><li>Anime tab</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-list"/></svg></span><h3>Library</h3><span class="cnt">9</span></div><ul><li>Watchlist, lists and progress</li><li>Airing calendar</li><li>New-episode alerts</li><li>Trakt, Simkl, AniList, MyAnimeList</li><li>Downloads, TVs included</li><li>Sync across devices</li><li>Backup code</li><li>Your stats</li><li>Ticket stubs</li></ul></div>
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-tv"/></svg></span><h3>Live</h3><span class="cnt">4</span></div><ul><li>Split Screen, up to four</li><li>Live TV with an XMLTV guide</li><li>M3U and Xtream</li><li>Sports</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-palette"/></svg></span><h3>Looks</h3><span class="cnt">8</span></div><ul><li>Noir, Midnight, Velvet, Sepia, Anime</li><li>Colour wheel</li><li>Nine fonts and text size</li><li>Top or side menu</li><li>Custom poster URL</li><li>Plugins & themes</li><li>Ambient Mode</li><li>Seven languages</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-shield"/></svg></span><h3>Household</h3><span class="cnt">3</span></div><ul><li>Seats with pictures and PINs</li><li>Kids seats by age rating</li><li>Shows per day for kids</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-palette"/></svg></span><h3>Looks</h3><span class="cnt">8</span></div><ul><li>Noir, Midnight, Velvet, Sepia, Anime</li><li>Colour wheel</li><li>Nine fonts and text size</li><li>Top or side menu</li><li>Custom poster URL</li><li>Plugins & themes</li><li>Ambient Mode</li><li>Twelve languages</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-shield"/></svg></span><h3>Household</h3><span class="cnt">5</span></div><ul><li>Seats with pictures and PINs</li><li>Kids seats by age rating</li><li>Shows per day for kids</li><li>Family Helper</li><li>Every seat its own language</li></ul></div>
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-monitor"/></svg></span><h3>Everywhere</h3><span class="cnt">6</span></div><ul><li>Web app, nothing to install</li><li>Android with its own player</li><li>Android TV and Fire TV</li><li>LG and Samsung (beta)</li><li>Windows, Mac and Linux</li><li>Discord status on Windows</li></ul></div>
     </div>
     <div class="works rv" aria-label="Works with">
@@ -833,7 +897,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
       <h2 id="faq-h">Questions, <em>answered.</em></h2>
     </div>
     <div class="faq">
-      <details><summary>What is MKCinema?</summary><div class="det">A premium player for Stremio-compatible addons. It brings your catalogues, sources and subtitles together in one library you can style your way, with a player built for phones, tablets and big screens.</div></details>
+      <details><summary>What is MKCinema?</summary><div class="det">A free home cinema app for the whole family. It brings everything you watch into one place, with a player made for films, a seat for everyone in the house, watch parties with voice and cameras, a phone remote with an assistant, and apps for phones, computers and TVs. You bring the sources: Stremio-compatible addons, your own media server, or the streaming services you already pay for.</div></details>
       <details><summary>Does MKCinema provide movies or shows?</summary><div class="det">No. MKCinema hosts no titles, channels or streams. Catalogues come from Cinemeta, subtitles from OpenSubtitles, and the only built-in source is official trailers. Anything else comes from addons you choose to install, and you are responsible for using them lawfully where you live.</div></details>
       <details><summary>Is it really free?</summary><div class="det">Yes, and it stays free forever: MKCinema will never charge for anything. Every feature is included, with no ads and no paid tier, and the code is public on <a href="https://github.com/itbelikethatbruh/MKCinema">GitHub</a> under GPL-3.0. You can support development on <a href="https://ko-fi.com/mkcinema">Ko-fi</a> if you like. Donations never unlock anything.</div></details>
       <details><summary>Do I need an account?</summary><div class="det">No. Everything works without one. Signing in with email and password adds sync of your library, progress, addons and settings across your devices.</div></details>
