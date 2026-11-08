@@ -2,6 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.61.0 (automatic skips)
+
+- **Intros, recaps and credits skip themselves.** When the times are known (chapters in the file, your addons, AniSkip for anime, TheIntroDB), MKCinema skips them for you and shows a Watch button for a few seconds in case you wanted to see it. Settings › Playback › Skip intros, recaps and credits: Automatically, Show a Skip button, or Off.
+- **Straight to the scene after the credits.** Credits followed by more of the episode or film get a Skip credits button, or skip on their own.
+- **Better guesses.** When an episode has no intro times but the episodes either side agree, a Skip intro button is offered. Guessed times never skip on their own.
+- **No more waiting clips.** A source that sends a short waiting clip instead of the film is spotted and passed over for the next source.
+
 ## Web app 2.59.1 (iPhone, iPad and bigger on phones)
 
 - **MKCinema on iPhone and iPad.** Open app.mkcinema.app in Safari, tap Share, then Add to Home Screen, and MKCinema opens full screen like any other app. Most MKV files play right in the browser, and the player now recommends the built-in player on iPhone and iPad.
