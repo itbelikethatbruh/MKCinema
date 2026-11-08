@@ -35,6 +35,19 @@
   const isTs = (s) => /\.(ts|m2ts|mts)(\?|#|$)/i.test(s.url || '') || /\.(ts|m2ts|mts)$/i.test((s.behaviorHints && s.behaviorHints.filename) || '');
   const isMp4 = (s) => /\.(mp4|m4v|mov)(\?|#|$)/i.test(s.url || '') || /\.(mp4|m4v|mov)$/i.test((s.behaviorHints && s.behaviorHints.filename) || '');
   const DOLBY_HINT = /(?:^|[^a-z0-9])(e-?ac-?3|ac-?3|ddp(?:\d(?:\.\d)?)?|dd\+|dd5\.1|dts(?:-?hd|-?x|-?ma)?|true-?hd|atmos)(?:[^a-z0-9]|$)/i;
+  /* Hosts that don't let web pages read their files (no CORS), remembered on this device for 7 days. The key is the host,
+     plus the debrid service for resolver links (/resolve/torbox/…), since one addon serves several services. */
+  const Hosts = {
+    K: 'mkc.engHosts', map: null,
+    key(u) { try { const x = new URL(u); const m = x.pathname.match(/\/(?:resolve|playback|stream|dl)\/([a-z][a-z-]{1,20})\//i); return x.host + (m ? `/${m[1].toLowerCase()}` : ''); } catch (e) { return ''; } },
+    load() { if (!this.map) { try { this.map = JSON.parse(localStorage.getItem(this.K) || '{}') || {}; } catch (e) { this.map = {}; } } return this.map; },
+    mark(u, v) { const k = this.key(u); if (!k) return; const m = this.load(); m[k] = { v, t: Date.now() }; try { localStorage.setItem(this.K, JSON.stringify(m)); } catch (e) { /* private mode */ } },
+    blocked(u) { const e = this.load()[this.key(u)]; return !!(e && e.v === 'blocked' && Date.now() - e.t < 7 * 864e5); },
+  };
+  async function reachable(u) {
+    const c = new AbortController(), t = setTimeout(() => c.abort(), 4000);
+    try { await fetch(u, { mode: 'no-cors', credentials: 'omit', referrerPolicy: 'no-referrer', signal: c.signal }); return true; } catch (e) { return false; } finally { clearTimeout(t); c.abort(); }
+  }
   const NAMES = { avc: 'H.264', hevc: 'HEVC', av1: 'AV1', aac: 'AAC', opus: 'Opus', flac: 'FLAC', mp3: 'MP3', mp2: 'MP2', ac3: 'Dolby Digital', eac3: 'Dolby Digital Plus', dts: 'DTS', truehd: 'TrueHD', mlp: 'MLP', vorbis: 'Vorbis', alac: 'ALAC' };
   const log = (k, m) => { try { MKLog.add(k, m); } catch (e) { /* no log here */ } };
   const chName = (n) => ({ 1: 'mono', 2: 'stereo', 6: '5.1', 8: '7.1' }[n] || (n ? `${n} ch` : ''));
@@ -114,10 +127,13 @@
       if (info.fail) {
         w.terminate();
         const blocked = /Failed to fetch|NetworkError|Load failed|network/i.test(info.fail);
+        // a blocked read also looks like this when the network drops: only a host that answers a plain (no-cors) request counts as blocking
+        if (blocked && await reachable(stream.url)) { Hosts.mark(stream.url, 'blocked'); stream._engBlocked = true; }
         this.reason.set(stream, blocked ? 'the host doesn’t let browsers read this file directly' : info.fail);
         log('info', `engine: not used (${info.fail})`);
         return false;
       }
+      Hosts.mark(stream.url, 'ok');
       const r = this.route(info, force);
       if (!r.go) {
         w.terminate(); this.reason.set(stream, r.native ? 'not needed: the browser plays this file by itself' : r.why);
@@ -406,7 +422,11 @@
     E.base = (s, t) => lu.call(this, s, t);
     if (!E.wants(stream)) return lu.apply(this, arguments);
     Loader.show && P.ctx && Loader.show(P.ctx.meta);
-    E.start(stream, startAt, E.base).then((took) => { if (!took && P.stream === stream && !$('#player').hidden) lu.call(this, stream, startAt); })
+    E.start(stream, startAt, E.base).then((took) => {
+      if (took || P.stream !== stream || $('#player').hidden) return;
+      if (stream._engBlocked && needsEngine(stream) && skipSilent(stream, startAt)) return;
+      lu.call(this, stream, startAt);
+    })
       .catch(() => { if (P.stream === stream) lu.call(this, stream, startAt); });
   };
   const td = teardown;
@@ -428,6 +448,21 @@
       return t;
     };
   }
+  /* would the browser's own player lose this file's sound (judged by its name, as "Only sources that play here" does)? */
+  function needsEngine(s) {
+    if (typeof BrowserPlay === 'undefined' || !s || !s._tel) return false;
+    E.strict = true; try { return !BrowserPlay.ok(Object.assign({}, s, { url: '' })) && !!s._tel.webReady; } catch (e) { return false; } finally { E.strict = false; }
+  }
+  /* rather than a silent film: the next source that plays here with sound */
+  function skipSilent(s, at) {
+    if (typeof Failover === 'undefined' || !P.ctx || CFG.failover === false) return false;
+    const n = Failover.candidates(s)[0]; if (!n) return false;
+    Failover.tried.add(s);
+    log('info', 'engine: host blocks reads, moving to a source with sound');
+    toast('That copy’s sound can’t play in the browser. Switching to one that can…', 'info', 4200, 'failover');
+    playStream(P.ctx, n, { startAt: at != null ? at : pNow() });
+    return true;
+  }
   // a film playing without sound (Dolby or DTS in an MP4 or MKV the browser opened itself): the engine converts the sound
   // here first, before the older offers (the server-side conversion or an external player)
   if (typeof Rescue !== 'undefined' && Rescue && typeof Rescue.found === 'function') {
@@ -440,12 +475,25 @@
         if (E.wants(s)) { try { took = await E.start(s, at, E.base, true); } catch (e) { took = false; } }
         s._engForce = false;
         if (took) { log('info', 'engine: took over a film that played without sound'); if (wasPaused) setTimeout(() => video.pause(), 0); return; }
+        if (s._engBlocked && skipSilent(s, at)) return;
       }
       return found(s);
     };
   }
   // "Only sources that play here" keeps MKV files with Dolby/DTS sound when the engine can convert it
-  if (typeof BrowserPlay !== 'undefined') { const rs = BrowserPlay.rescue.bind(BrowserPlay); BrowserPlay.rescue = function () { return CFG.engine !== false || rs(); }; }
+  // (only for hosts that let the engine read their files: a host known to block it keeps those sources hidden)
+  if (typeof BrowserPlay !== 'undefined') {
+    const rs = BrowserPlay.rescue.bind(BrowserPlay), ok = BrowserPlay.ok.bind(BrowserPlay);
+    BrowserPlay.rescue = function () { return (!E.strict && CFG.engine !== false) || rs(); };
+    BrowserPlay.ok = function (s) {
+      if (CFG.engine === false || !s || !s.url || !Hosts.blocked(s.url)) return ok(s);
+      E.strict = true; try { return ok(s); } finally { E.strict = false; }
+    };
+  }
+  if (typeof Failover !== 'undefined' && typeof Failover.candidates === 'function') {
+    const cand = Failover.candidates.bind(Failover);
+    Failover.candidates = function (failed) { return cand(failed).filter((s) => !(s.url && Hosts.blocked(s.url) && needsEngine(s))); };
+  }
 
   // the audio language menu lists the file's own tracks and switches them here
   if (typeof AudioLang !== 'undefined') {
