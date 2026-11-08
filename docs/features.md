@@ -1,6 +1,6 @@
 # Screenshots, privacy and questions
 
-Back to the [README](../README.md). The full list of what MKCinema does is in the README under [What's built](../README.md#whats-built), the one feature list for the repository.
+Back to the [README](../README.md). The full list of what MKCinema does is in the README under [Everything inside](../README.md#everything-inside), the one feature list for the repository.
 
 ## Free forever
 
@@ -38,7 +38,7 @@ Coming from Stremio? **Settings › Account › Import from Stremio** (also in t
 </tr>
 </table>
 
-<p align="center"><sub>The player shots show <a href="https://studio.blender.org/films/sintel/">Sintel</a> © Blender Foundation, CC BY 3.0. Poster and backdrop art comes from the catalogues and belongs to its owners.</sub></p>
+<p align="center"><sub>The player shots show <a href="https://studio.blender.org/films/">Blender open movies</a> (CC BY). Poster and backdrop art comes from the catalogues and belongs to its owners.</sub></p>
 
 ## Privacy
 

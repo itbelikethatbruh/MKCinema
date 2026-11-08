@@ -25,6 +25,16 @@ All notable changes to MKCinema. The web app version and the native app versions
 
 - Party cameras work in the app: Android asks once before MKCinema can use the camera.
 
+## Android app 1.9.0
+
+- **Styled subtitles in the TV player.** Anime subtitles (ASS/SSA) keep their fonts, colours, positions and signs in the Android TV and Fire TV player.
+- **Dolby Vision on more TVs.** Dolby Vision profile 7 files play as HDR10 on TVs that can't show Dolby Vision.
+- **Skip intro in the TV player**, with the same intro, recap and credit times as the web player, and progress sent to Trakt, Simkl and AniList from the TV.
+
+## Web app 2.54.0
+
+- The Android TV player gets the skip times, next-episode and subtitle details it needs from the web app, and reports what you watched to your tracking services.
+
 ## Web app 2.53.0 (your stats)
 
 - **Your stats.** Library › Your stats (also Settings › Playback and the command palette) shows your top films and shows, how much you've watched, the genres you lean on, when in the day and week you watch, your longest streak, your busiest day, your longest sitting and who you watch with most, for this month, this year or all time. Save it as a picture to share.
