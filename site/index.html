@@ -351,6 +351,15 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
   .hx-room h3{font-size:21px}.hx-scan{display:none}}
 @media (prefers-reduced-motion:reduce){.hx-ring,.hx-scan,.hx-tag i{animation:none}.hx-scan{display:none}}
 /* hx end */
+/* clips */
+.clipw{position:relative;display:block}
+.clipw>video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .7s var(--ease,ease);pointer-events:none;background:transparent}
+.clipw>video.on{opacity:1}
+.phone .clipw>video{border-radius:22px}
+.shot .clipw>video{border-radius:14px;border:1px solid var(--line2);box-sizing:border-box}
+.ch-media .clipw>video,.card .clipw>video{object-fit:contain}
+@media (prefers-reduced-motion:reduce){.clipw>video{transition:none}}
+/* /clips */
 /* lx: glasses reveal (site-glasses-reveal patch) */
 .lx{background:radial-gradient(70% 55% at 50% 40%,rgba(216,194,154,.09),transparent 70%),var(--bg)}
 .lx-stage{position:relative;max-width:var(--wrap);margin:0 auto;padding:clamp(90px,12vw,160px) var(--g)}
@@ -389,15 +398,6 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 .lx-even{width:auto;height:13px;stroke:none}
 @media (max-width:760px){.lx-on .lx-works{gap:10px 22px;margin-top:14px}.lx-works img{height:18px}.lx-works li:first-child img{height:30px;margin:-6px 0}.lx-meta{height:18px}.lx-even{height:11px}}
 /* /lx */
-/* clips */
-.clipw{position:relative;display:block}
-.clipw>video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .7s var(--ease,ease);pointer-events:none;background:transparent}
-.clipw>video.on{opacity:1}
-.phone .clipw>video{border-radius:22px}
-.shot .clipw>video{border-radius:14px;border:1px solid var(--line2);box-sizing:border-box}
-.ch-media .clipw>video,.card .clipw>video{object-fit:contain}
-@media (prefers-reduced-motion:reduce){.clipw>video{transition:none}}
-/* /clips */
 </style>
 </head>
 <body>
@@ -1034,6 +1034,28 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
   }
 })();
 </script>
+<script id="mkc-clips">(()=>{
+  const ua=navigator.userAgent||'',c=navigator.connection||{};
+  if(/SMART-TV|SmartTV|Tizen|Web0S|webOS|NetCast|BRAVIA|AFT[A-Z]|Android TV|GoogleTV|CrKey|HbbTV|MKCinemaTV/i.test(ua))return;
+  if(c.saveData||/(^|-)2g$/.test(c.effectiveType||''))return;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  if((navigator.deviceMemory||4)<2)return;
+  if(!('IntersectionObserver' in window))return;
+  const vs=[];
+  document.querySelectorAll('img[data-clip]').forEach(img=>{
+    const w=document.createElement('span');w.className='clipw';img.parentNode.insertBefore(w,img);w.appendChild(img);
+    const v=document.createElement('video');v.muted=true;v.defaultMuted=true;v.loop=true;v.playsInline=true;v.setAttribute('playsinline','');v.setAttribute('muted','');v.preload='none';v.setAttribute('aria-hidden','true');v.tabIndex=-1;v.disablePictureInPicture=true;
+    v.dataset.src=img.dataset.clip;v.addEventListener('playing',()=>v.classList.add('on'),{once:true});
+    w.appendChild(v);vs.push(v);
+  });
+  if(!vs.length)return;
+  const near=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const v=e.target;if(!v.src){v.src=v.dataset.src;v.preload='auto'}near.unobserve(v)}}),{rootMargin:'400px 400px'});
+  const vis=new Set(),play=v=>{if(!v.src)v.src=v.dataset.src;const p=v.play();p&&p.catch(()=>{})};
+  const seen=new IntersectionObserver(es=>es.forEach(e=>{const v=e.target;if(e.isIntersecting){vis.add(v);if(!document.hidden)play(v)}else{vis.delete(v);v.pause()}}),{threshold:.2});
+  const go=()=>vs.forEach(v=>{near.observe(v);seen.observe(v)});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)vs.forEach(v=>v.pause());else vis.forEach(play)});
+  if(document.readyState==='complete')setTimeout(go,300);else addEventListener('load',()=>setTimeout(go,300),{once:true});
+})();</script>
 <script id="mkc-lens">/* glasses reveal: loads /lens/lens.js only near the section; still poster for TVs, very low-end devices, data saver and no WebGL.
    Reduced motion keeps the scroll-driven 3D (you drive it by scrolling) but drops the idle float, pointer tilt and the close camera dive. */
 (() => {
@@ -1053,8 +1075,8 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
   // progress starts while the section is still rising into view, so the glasses are already arriving when it pins
   const prog = () => { const r = sec.getBoundingClientRect(), lead = innerHeight * .7; return Math.min(1, Math.max(0, (lead - r.top) / Math.max(1, r.height - innerHeight + lead))); };
   const ui = v => {
-    const o1 = ss(.13, .22, v) * (1 - ss(.62, .68, v));
-    b1.style.opacity = o1.toFixed(3); b1.style.transform = `translate3d(0,${((1 - ss(.13, .24, v)) * 26 - ss(.62, .68, v) * 18).toFixed(1)}px,0)`;
+    const o1 = ss(.12, .2, v) * (1 - ss(.38, .46, v)); // gone before the subtitle reaches the lens (.48)
+    b1.style.opacity = o1.toFixed(3); b1.style.transform = `translate3d(0,${((1 - ss(.12, .22, v)) * 26 - ss(.38, .46, v) * 18).toFixed(1)}px,0)`;
     beam.style.opacity = (ss(.02, .2, v) * (1 - ss(.38, .46, v))).toFixed(3);
     big.style.opacity = (ss(.04, .16, v) * (1 - ss(.36, .44, v))).toFixed(3);
     bigT.style.transform = `translate3d(${(100 - v * 260).toFixed(2)}vw,-12vh,0)`;
@@ -1092,27 +1114,5 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
   new IntersectionObserver(([e]) => { vis = e.isIntersecting; tp = prog(); kick(); }).observe(sec);
 })();
 </script>
-<script id="mkc-clips">(()=>{
-  const ua=navigator.userAgent||'',c=navigator.connection||{};
-  if(/SMART-TV|SmartTV|Tizen|Web0S|webOS|NetCast|BRAVIA|AFT[A-Z]|Android TV|GoogleTV|CrKey|HbbTV|MKCinemaTV/i.test(ua))return;
-  if(c.saveData||/(^|-)2g$/.test(c.effectiveType||''))return;
-  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-  if((navigator.deviceMemory||4)<2)return;
-  if(!('IntersectionObserver' in window))return;
-  const vs=[];
-  document.querySelectorAll('img[data-clip]').forEach(img=>{
-    const w=document.createElement('span');w.className='clipw';img.parentNode.insertBefore(w,img);w.appendChild(img);
-    const v=document.createElement('video');v.muted=true;v.defaultMuted=true;v.loop=true;v.playsInline=true;v.setAttribute('playsinline','');v.setAttribute('muted','');v.preload='none';v.setAttribute('aria-hidden','true');v.tabIndex=-1;v.disablePictureInPicture=true;
-    v.dataset.src=img.dataset.clip;v.addEventListener('playing',()=>v.classList.add('on'),{once:true});
-    w.appendChild(v);vs.push(v);
-  });
-  if(!vs.length)return;
-  const near=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const v=e.target;if(!v.src){v.src=v.dataset.src;v.preload='auto'}near.unobserve(v)}}),{rootMargin:'400px 400px'});
-  const vis=new Set(),play=v=>{if(!v.src)v.src=v.dataset.src;const p=v.play();p&&p.catch(()=>{})};
-  const seen=new IntersectionObserver(es=>es.forEach(e=>{const v=e.target;if(e.isIntersecting){vis.add(v);if(!document.hidden)play(v)}else{vis.delete(v);v.pause()}}),{threshold:.2});
-  const go=()=>vs.forEach(v=>{near.observe(v);seen.observe(v)});
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)vs.forEach(v=>v.pause());else vis.forEach(play)});
-  if(document.readyState==='complete')setTimeout(go,300);else addEventListener('load',()=>setTimeout(go,300),{once:true});
-})();</script>
 </body>
 </html>
