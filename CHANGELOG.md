@@ -9,6 +9,12 @@ All notable changes to MKCinema. The web app version and the native app versions
 - **Better guesses.** When an episode has no intro times but the episodes either side agree, a Skip intro button is offered. Guessed times never skip on their own.
 - **No more waiting clips.** A source that sends a short waiting clip instead of the film is spotted and passed over for the next source.
 
+## Releases: built from source on every version tag
+
+- **Every app built by GitHub Actions.** Pushing a version tag builds the Android and TV APK, the Windows exe, the Linux .deb and .tar.gz and the Mac zip and disk image from source, then publishes them together with checksums and build attestations. How it works: [docs/releases.md](docs/releases.md).
+- **release.json for updaters.** Each release lists every file with its app version, size and SHA-256, and the newest one is always at `releases/latest/download/release.json`.
+- **One-tap Obtainium setup.** Release titles name the Android version, so Obtainium compares the same numbers as the installed app and always picks `MKCinema.apk`.
+
 ## Web app 2.59.1 (iPhone, iPad and bigger on phones)
 
 - **MKCinema on iPhone and iPad.** Open app.mkcinema.app in Safari, tap Share, then Add to Home Screen, and MKCinema opens full screen like any other app. Most MKV files play right in the browser, and the player now recommends the built-in player on iPhone and iPad.
@@ -269,7 +275,7 @@ Ten features built on one idea: MKCinema already knows when people speak in each
 
 ## Web app 2.31.0 (2026-11-06)
 
-- **Custom poster URL.** Settings › Appearance › Posters has a new **Custom poster URL** field for poster services such as [Pictorium](https://github.com/Eful97/Pictorium) by [Eful97](https://github.com/Eful97), who suggested it (free public instance at pictorium.elfhosted.com, or your own on Vercel or Docker). Paste the link template from Pictorium's Install Hub (Nuvio tab). MKCinema fills in `{type}`, `{imdb_id}`, `{tmdb_id}`, `{tmdb_id|imdb_id}` and `{shape}`; with `{shape}` in the link, wide cards ask for landscape art. It takes over from RPDB while set, and any title the service cannot draw keeps its normal poster. The link syncs with your account like your other keys (unless key sync is off). No Pictorium code is bundled: MKCinema only loads the images your instance serves.
+- **Custom poster URL.** Settings › Appearance › Posters has a new **Custom poster URL** field for poster services such as [Pictorium](https://github.com/Eful97/Pictorium) by [Eful97](https://github.com/Eful97), who suggested it (free public instance at pictorium.elfhosted.com, or your own on Vercel or Docker). Paste the link template from Pictorium's Install Hub. MKCinema fills in `{type}`, `{imdb_id}`, `{tmdb_id}`, `{tmdb_id|imdb_id}` and `{shape}`; with `{shape}` in the link, wide cards ask for landscape art. It takes over from RPDB while set, and any title the service cannot draw keeps its normal poster. The link syncs with your account like your other keys (unless key sync is off). No Pictorium code is bundled: MKCinema only loads the images your instance serves.
 
 ## Web app 2.29.0 (2026-11-06)
 
