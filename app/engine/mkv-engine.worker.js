@@ -554,7 +554,7 @@ async function runMp4(t, gen) {
   }
   if (A && A.n) { const at = (V && V.n ? St.startT : t) - 0.05; let lo = 0, hi = A.n; while (lo < hi) { const m = (lo + hi) >> 1; if (A.pts(m) < at) lo = m + 1; else hi = m; } ia = lo; }
   let buf = new Uint8Array(0), base = 0, reader = null, retries = 0, jumps = 0, jumpT = performance.now();
-  const want = () => St.lastVideoT == null || St.lastVideoT < St.until;
+  const want = () => { const t = St.v ? St.lastVideoT : St.lastAudioT; return t == null || t < St.until; };
   const open = async (at) => {
     try { if (reader) reader.cancel(); } catch (e) { /* ignore */ }
     const r = await fetch(Net.url, { headers: { ...Net.headers, Range: `bytes=${at}-` }, signal: St.ctl.signal, cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer' });
@@ -828,7 +828,7 @@ async function runTs(t, gen) {
   St.startT = at.t;
   const dm = new TsDemux(tsPes, (pid) => (St.v && pid === St.v.num) || (St.a && pid === St.a.num));
   let buf = new Uint8Array(0), base = at.pos, retries = 0, started = false;
-  const want = () => St.lastVideoT == null || St.lastVideoT < St.until;
+  const want = () => { const t = St.v ? St.lastVideoT : St.lastAudioT; return t == null || t < St.until; };
   while (gen === St.gen) {
     let reader = null;
     try {
@@ -982,6 +982,13 @@ class Rescue {
   constructor(tr, surround) { this.tr = tr; this.ch = surround ? 6 : 2; this.layout = surround ? 0x3F : 3; // 5.1 (L R C LFE Ls Rs as AAC config 6; 0x60F made FFmpeg write a PCE that browsers reject) or stereo
     this.la = null; this.dec = null; this.q = Promise.resolve(); this.tok = 0; }
   async open() {
+    await this.openDecoder();
+    const la = this.la;
+    const [, ec, efr, epkt, fsize] = await la.ff_init_encoder('aac', { ctx: { bit_rate: this.ch === 6 ? 384000 : 192000, sample_fmt: la.AV_SAMPLE_FMT_FLTP, sample_rate: 48000, channel_layout: this.layout, channels: this.ch }, time_base: [1, 48000] });
+    this.enc = { c: ec, frame: efr, pkt: epkt, fsize };
+    this.graph = null; this.n = 0; this.start = null;
+  }
+  async openDecoder() {
     const la = this.la = await loadLibAV(), tr = this.tr;
     const cp = await la.avcodec_parameters_alloc();
     await la.AVCodecParameters_codec_type_s(cp, la.AVMEDIA_TYPE_AUDIO);
@@ -996,9 +1003,6 @@ class Rescue {
     const name = { dts: 'dca', opus: 'opus', vorbis: 'vorbis', mp2: 'mp2', mp3: 'mp3' }[tr.kind] || tr.kind;
     const [, c, pkt, frame] = await la.ff_init_decoder(name, { codecpar: cp });
     this.dec = { c, pkt, frame };
-    const [, ec, efr, epkt, fsize] = await la.ff_init_encoder('aac', { ctx: { bit_rate: this.ch === 6 ? 384000 : 192000, sample_fmt: la.AV_SAMPLE_FMT_FLTP, sample_rate: 48000, channel_layout: this.layout, channels: this.ch }, time_base: [1, 48000] });
-    this.enc = { c: ec, frame: efr, pkt: epkt, fsize };
-    this.graph = null; this.n = 0; this.start = null;
   }
   async filterFor(f) {
     const key = `${f.format}/${f.sample_rate}/${f.channel_layout}/${f.channels}`;
@@ -1058,6 +1062,44 @@ class Rescue {
   }
 }
 
+/* Caption listener (2.60): a second copy of this worker reads only what it needs for the sound (MP4 skips the video
+   bytes; MKV and TS carry both interleaved), decodes it with the same FFmpeg build and sends 16 kHz mono samples to the
+   page, which hands them to the on-device speech model. Nothing is encoded or played. */
+class Listen extends Rescue {
+  constructor(tr) { super(tr, false); }
+  async open() { await this.openDecoder(); this.graph = null; this.n = 0; this.start = null; }
+  async filterFor(f) {
+    const key = `${f.format}/${f.sample_rate}/${f.channel_layout}/${f.channels}`;
+    if (this.graph && this.graph.key === key) return this.graph;
+    if (this.graph) { try { await this.la.avfilter_graph_free_js(this.graph.g); } catch (e) { /* older build */ } }
+    const layout = f.channel_layout || ({ 1: 4, 2: 3, 6: 0x3F, 8: 0x63F }[f.channels] || 3);
+    const [g, src, sink] = await this.la.ff_init_filter_graph('aresample=16000', { sample_rate: f.sample_rate, sample_fmt: f.format, channel_layout: layout }, { sample_rate: 16000, sample_fmt: this.la.AV_SAMPLE_FMT_FLT, channel_layout: 4 });
+    this.graph = { key, g, src, sink }; return this.graph;
+  }
+  async run(batch, tok, gen, fin) {
+    if (tok !== this.tok || gen !== St.gen) return;
+    const la = this.la;
+    if (this.flushNext) {
+      this.flushNext = false;
+      try { await la.avcodec_flush_buffers(this.dec.c); } catch (e) { /* ignore */ }
+      if (this.graph) { try { await la.avfilter_graph_free_js(this.graph.g); } catch (e) { /* ignore */ } this.graph = null; }
+    }
+    if (this.start == null && batch.length) this.start = batch[0].pts;
+    const frames = batch.length ? await la.ff_decode_multi(this.dec.c, this.dec.pkt, this.dec.frame, batch.map((b) => ({ data: b.data })), { fin: false, ignoreErrors: true }) : [];
+    if (tok !== this.tok || gen !== St.gen) return;
+    let out = [];
+    if (frames.length) { const g = await this.filterFor(frames[0]); out = await la.ff_filter_multi(g.src, g.sink, this.dec.frame, frames, false); }
+    else if (fin && this.graph) out = await la.ff_filter_multi(this.graph.src, this.graph.sink, this.dec.frame, [], true);
+    if (tok !== this.tok || gen !== St.gen) return;
+    let len = 0; for (const f of out) len += f.data.length;
+    if (!len) { if (fin) post({ op: 'pcm', t0: this.start + this.n / 16000, data: new Float32Array(0).buffer, end: true }); return; }
+    const pcm = new Float32Array(len); let o = 0;
+    for (const f of out) { pcm.set(f.data, o); o += f.data.length; }
+    const t0 = this.start + this.n / 16000; this.n += len;
+    post({ op: 'pcm', t0, data: pcm.buffer, end: !!fin }, [pcm.buffer]);
+  }
+}
+
 /* ---------------- Cluster reader ---------------- */
 async function seekPos(t) {
   if (File.cues.length) { let c = File.cues[0]; for (const x of File.cues) { if (x.t <= t + 0.001) c = x; else break; } return { pos: c.pos, t: c.t }; }
@@ -1111,14 +1153,15 @@ function parseBlock(u, p, end, clusterTc, key) {
   }
 }
 function onAudio(data, pts) {
+  St.lastAudioT = pts;
   if (St.aMode === 'copy') pushAudioCopy(data, pts);
-  else if (St.aMode === 'aac' && St.rescue) St.rescue.push(St.a.strip ? cat([St.a.strip, data]) : data, pts);
+  else if ((St.aMode === 'aac' || St.aMode === 'pcm') && St.rescue) St.rescue.push(St.a.strip ? cat([St.a.strip, data]) : data, pts);
 }
 
 /* Streaming loop: one open-ended Range request from the chosen cluster, paused while enough is buffered */
 async function run(pos, gen) {
   let buf = new Uint8Array(0), base = pos, p = 0, clusterTc = 0, clusterEnd = -1, retries = 0;
-  const want = () => St.lastVideoT == null || St.lastVideoT < St.until;
+  const want = () => { const t = St.v ? St.lastVideoT : St.lastAudioT; return t == null || t < St.until; };
   while (gen === St.gen) {
     let reader = null;
     try {
@@ -1200,7 +1243,7 @@ self.onmessage = async (e) => {
     } else if (m.op === 'start' || m.op === 'seek' || m.op === 'audio') {
       St.gen = m.gen; if (St.ctl) St.ctl.abort();
       if (m.op !== 'seek') {
-        St.v = File.tracks.find((x) => x.type === 1) || null;
+        St.v = m.listen ? null : File.tracks.find((x) => x.type === 1) || null; St.lastAudioT = null;
         St.a = m.audio == null || m.audio < 0 ? null : File.tracks.filter((x) => x.type === 2)[m.audio] || null;
         St.aMode = St.a ? m.mode : 'none'; St.aInit = false;
         if (m.port) St.soft = m.port;
@@ -1209,6 +1252,12 @@ self.onmessage = async (e) => {
           post({ op: 'init', kind: 'v', mime: `video/mp4; codecs="${m.vmime}"`, data: init.buffer }, [init.buffer]);
         }
         St.rescue = null;
+        if (St.aMode === 'pcm') {
+          // caption listener (2.60): the sound only, decoded to 16 kHz mono for on-device speech recognition
+          const r = new Listen(St.a);
+          try { await r.open(); St.rescue = r; r.reset(); }
+          catch (err) { St.aMode = 'none'; post({ op: 'note', msg: `This film’s sound couldn’t be read for captions: ${err.message || err}`, audioFail: true }); }
+        }
         if (St.aMode === 'aac') {
           const r = new Rescue(St.a, !!m.surround && (St.a.ch || 2) >= 6);
           try { await r.open(); St.rescue = r; r.reset(); }
