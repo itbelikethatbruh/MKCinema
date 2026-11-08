@@ -75,7 +75,16 @@ async function openCode() {
   $('#copy').onclick = () => navigator.clipboard.writeText(JSON.stringify(data, null, 2));
   $('#del').onclick = async () => { if (!confirm(`Delete log ${code}?`)) return; const { error: e } = await sb.from('mkcinema_logs').delete().eq('code', code); $('#msg').textContent = e ? e.message : `${code} deleted.`; if (!e) { $('#one').innerHTML = ''; latest(); } };
 }
-$('#go').onclick = async () => { $('#sErr').textContent = ''; const { error } = await sb.auth.signInWithPassword({ email: $('#em').value.trim(), password: $('#pw').value }); if (error) $('#sErr').textContent = error.message; else show(); };
+async function mkcLoginKey(email, pw) {
+  const te = new TextEncoder(); let salt = new Uint8Array(await crypto.subtle.digest('SHA-256', te.encode(`mkcinema|${email.trim().toLowerCase()}`)));
+  try { const { data } = await sb.rpc('mkc_account_format', { p_email: email.trim().toLowerCase() }); if (data && data.v === 1) return null; if (data && data.v === 2 && data.s) salt = Uint8Array.from(atob(data.s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((data.s.length + 3) % 4)), (c) => c.charCodeAt(0)); } catch (e) { /* older server */ }
+  const base = await crypto.subtle.importKey('raw', te.encode(pw), 'PBKDF2', false, ['deriveBits']);
+  const master = new Uint8Array(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations: 600000 }, base, 256));
+  const hk = await crypto.subtle.importKey('raw', master, 'HKDF', false, ['deriveBits']);
+  const b = new Uint8Array(await crypto.subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(32), info: te.encode('mkc-login') }, hk, 256));
+  let x = ''; b.forEach((c) => { x += String.fromCharCode(c); }); return 'mkc2.' + btoa(x).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+$('#go').onclick = async () => { $('#sErr').textContent = ''; const em = $('#em').value.trim(), pw = $('#pw').value; const lk = await mkcLoginKey(em, pw); let { error } = await sb.auth.signInWithPassword({ email: em, password: lk || pw }); if (lk && error && /invalid/i.test(error.message || '')) { const { data: f } = await sb.rpc('mkc_account_format', { p_email: em.toLowerCase() }).catch(() => ({})); if (!f) ({ error } = await sb.auth.signInWithPassword({ email: em, password: pw })); } if (error) $('#sErr').textContent = error.message; else show(); };
 $('#open').onclick = openCode; $('#code').addEventListener('keydown', (e) => { if (e.key === 'Enter') openCode(); });
 $('#out').onclick = async () => { await sb.auth.signOut(); show(); };
 const q = new URLSearchParams(location.search).get('code'); if (q) $('#code').value = q;
