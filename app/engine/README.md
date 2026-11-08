@@ -1,19 +1,27 @@
-# MKCinema engine (play MKV files in the built-in player)
+# MKCinema engine (play MKV, MP4 and TS files in the built-in player)
 
 `mkv-engine.js` runs on the page, `mkv-engine.worker.js` in a dedicated worker. Loaded by `index.html` with
 `<script src="engine/mkv-engine.js" defer>`, after every inline block, so its wrappers are the outermost ones.
 
-- **What it does:** reads an MKV/WebM file with HTTP Range requests straight from its host, copies the video into
+- **What it does:** reads an MKV/WebM, MP4/MOV or MPEG-TS/M2TS file with HTTP Range requests straight from its host, copies the video into
   fragmented MP4 (never re-encoded), and copies the audio or converts it to AAC-LC stereo. Media Source Extensions
   play it (`ManagedMediaSource` on iPhone/iPad, so AirPlay is off while it plays).
-- **When:** MKV sources only. On Chrome, Edge and Firefox it is used only when their own player would play the file
-  badly: Dolby Digital/Plus, DTS, TrueHD or PCM sound, or a default audio track that isn't the first one. On Safari it
-  plays every MKV whose video the device can decode.
+- **When:** MKV: on Chrome, Edge and Firefox only when their own player would play the file badly (Dolby Digital/Plus,
+  DTS, TrueHD or PCM sound, or a default audio track that isn't the first one); on Safari every MKV whose video the
+  device can decode. TS/M2TS: always (browsers can't open them). MP4: when the name says Dolby/DTS sound, or when any
+  film (MP4 or MKV) the browser opened itself plays without sound (`Rescue.found` hook, before the older offers).
+- **Sound:** copied when the browser plays it, else converted to AAC-LC: 5.1 (AAC channel configuration 6, layout
+  0x3F; 0x60F makes FFmpeg write a PCE that browsers reject) when the device reports six output channels, else stereo.
+- **Picture subtitles:** Blu-ray PGS tracks in MKV are decoded on the page and drawn on a canvas over the video.
+- **Dolby Vision:** profiles 5/8 play as Dolby Vision where the browser decodes it (Apple); profile 5 is refused
+  elsewhere (no HDR10 layer, wrong colours), other profiles play their HDR10/SDR base layer.
 - **Fallback:** browser player → engine → external player. A host that doesn't allow browser reads (no CORS), a
   video codec the device can't decode, Dolby Vision profile 5, or an error mid-film goes back to the old behaviour.
   The reason shows in Playback stats and X-Ray. MKCinema never relays the video.
-- **Seeking:** the file's Cues index; files without Cues are searched by cluster timestamps (8 reads at most).
-- **Settings:** Settings › Playback › "Play MKV files in MKCinema" (`CFG.engine`, on by default).
+- **Seeking:** MKV: the Cues index, or cluster timestamps (8 reads at most) without one. MP4: the sample tables.
+  TS: byte-position guesses narrowed by PES timestamps (10 reads at most), starting 3 s early for a keyframe.
+- **Not handled:** fragmented MP4 input, AVI, TS TrueHD, PGS inside TS, software video decoding.
+- **Settings:** Settings › Playback › "Play MKV and TS files in MKCinema" (`CFG.engine`, on by default).
 
 ## audio/: FFmpeg audio decoders (LGPL 2.1)
 
