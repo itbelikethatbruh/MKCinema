@@ -59,13 +59,22 @@
 </tr>
 <tr>
 <td width="50%" align="center"><img src="site/shots/anime-home.webp" alt="Home in the Anime look"><br><sub>The Anime look</sub></td>
-<td width="50%" align="center"><img src="site/shots/party.webp" alt="Watch party"><br><sub>Watch parties with synced playback and voice</sub></td>
+<td width="50%" align="center"><img src="site/shots/party.webp" alt="Watch party panel with Camera and Faces buttons"><br><sub>Watch parties with synced playback, voice and cameras</sub></td>
+</tr>
+<tr>
+<td width="50%" align="center"><img src="site/shots/sensory.webp" alt="Sensory-friendly mode in the player's Picture tab"><br><sub>Sensory-friendly mode: softer bangs, dimmed flashes</sub></td>
+<td width="50%" align="center"><img src="site/shots/glasses.webp" alt="Subtitles on smart glasses in the player's More tab"><br><sub>Subtitles on Brilliant Labs Frame and Even Realities G1 or G2</sub></td>
 </tr>
 </table>
 
 <table>
 <tr>
-<td width="33%" align="center"><img src="docs/screenshots/app-remote.webp" alt="Phone remote pairing"><br><sub>Your phone as a remote, no app needed</sub></td>
+<td width="33%" align="center"><img src="docs/screenshots/app-remote.webp" alt="The phone remote paired to a computer, with Party camera"><br><sub>Your phone as a remote and party camera, no app needed</sub></td>
+<td width="33%" align="center"><img src="site/shots/phone-title.webp" alt="A film's details on the phone remote"><br><sub>Cast and details on your phone</sub></td>
+<td width="33%" align="center"><img src="site/shots/phone-ask.webp" alt="Miko, the remote's assistant"><br><sub>Miko, the remote's assistant</sub></td>
+</tr>
+<tr>
+<td width="33%" align="center"><img src="site/shots/phone-glasses.webp" alt="Subtitles going to Even Realities G1 glasses from the phone"><br><sub>Subtitles on smart glasses</sub></td>
 <td width="33%" align="center"><img src="site/shots/listen.webp" alt="Listen on this phone"><br><sub>Listen on phone</sub></td>
 <td width="33%" align="center"><img src="site/shots/phone-anime.webp" alt="The Anime tab on a phone"><br><sub>Phones are first-class</sub></td>
 </tr>
@@ -173,6 +182,7 @@ Everything below is live today. ★ marks the features we haven't seen in any ot
 - **Picture-in-picture** in the Android app.
 - **Send to TV.** Cast to Chromecast or Google TV (AirPlay where the browser offers it).
 - **Spoiler Guard** hides synopses of episodes you haven't seen.
+- **Subtitles on smart glasses.** Brilliant Labs Frame and Even Realities G1 or G2 over Bluetooth (Chrome or Edge, or the phone remote), and Meta Ray-Ban Display through a link in the Meta AI app.
 
 ### Subtitles
 
@@ -199,7 +209,9 @@ Everything below is live today. ★ marks the features we haven't seen in any ot
 
 - **Watch party.** Six-letter rooms with play, pause and seek in sync, chat, reactions, push-to-talk voice with its own volume, and the film dips while people talk. The host can hand over. No extension needed.
 - **★ Listen on phone.** The film plays on the TV and the sound plays on your phone and headphones. No app to install.
-- **Phone remote.** Scan the TV's code for a touchpad or D-pad, keyboard and voice search. The TV asks before a new phone can take control.
+- **Phone remote.** Scan the TV's code for a touchpad or D-pad, keyboard and voice search. The TV asks before a new phone can take control. Hold the touchpad and slide to scrub.
+- **Details on your phone.** While the TV plays, browse the film's cast, crew, episodes and anyone's filmography on the phone, then send a title, trailer or watchlist change to the TV.
+- **Miko, the remote's assistant.** Type or say "back 30 seconds", "who's in this" or "play the next episode". Everyday asks are understood on the phone itself, free and with no account. You can add your own AI key for open conversation; it stays on the phone.
 - **Party voice on your phone.**
 - **Party cameras.** See each other while you watch. On a TV, your phone is the camera (phone remote › Party camera), with a face light for dark rooms and every TV control underneath. Faces sit in a slim column during the film, get big in the lobby and at the credits, and the person talking gets a ring. Phones, laptops and TVs can all be in the same party.
 - **Ask to pause.** A guest who pauses asks the host, who can pause for everyone with one tap.
