@@ -68,6 +68,30 @@ No. Everything works without one. Sign in with email only if you want sync betwe
 </details>
 
 <details>
+<summary><b>Can we see each other in a watch party?</b></summary>
+
+Yes. In the party panel, tap Camera. On a TV, use your phone as the camera: open the phone remote, tap Party camera, then Camera. Phones, laptops and TVs can be in the same party. Video goes straight between your devices, through an encrypted relay only when two networks can't reach each other, and it is never recorded. The camera needs MKCinema on an https address, such as app.mkcinema.app, or the Android or Windows app.
+</details>
+
+<details>
+<summary><b>Can I read the subtitles in smart glasses?</b></summary>
+
+Yes. Brilliant Labs Frame and Even Realities G1 and G2 connect over Bluetooth: on a computer with Chrome or Edge, open Player › More › Glasses; on a phone, open the phone remote, tap Subtitles, then the glasses button. Meta Ray-Ban Display glasses get a link to add in the Meta AI app. TVs and the desktop apps have no Bluetooth for this, so use the phone remote there.
+</details>
+
+<details>
+<summary><b>Does Miko, the remote's assistant, cost anything?</b></summary>
+
+No. Everyday asks like "pause", "back 30 seconds" or "who's in this" are understood on the phone itself, free and with no account. If you want open conversation, you can add your own key from an AI service; it stays on your phone and goes only to that service. MKCinema is free forever.
+</details>
+
+<details>
+<summary><b>What does Sensory-friendly mode do?</b></summary>
+
+Like a sensory-friendly cinema showing, it softens sudden loud bangs and dims flashing light as it happens, all on your device. Turn it on in the player under Picture, or in Settings › Playback. Dimming needs a source that lets the app read the picture, and the first flash can still get through, so it is not a medical safeguard.
+</details>
+
+<details>
 <summary><b>Is iPhone supported?</b></summary>
 
 No. iPhone and iPad are not supported platforms.

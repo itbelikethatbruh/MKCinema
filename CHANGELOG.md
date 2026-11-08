@@ -2,6 +2,29 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.56.0 (a better phone remote)
+
+- **A cleaner phone remote.** Shortcuts in a tidy grid, a touchpad that takes the rest of the screen, and hold-then-slide to scrub. Nothing gets cut off on small phones.
+- **Details on your phone.** Cast with photos, crew, episodes by season, awards, where to watch and anyone's full filmography, while the film keeps playing on the TV. Send a title, its trailer or a watchlist change to the TV.
+- **Miko, your remote's assistant.** Type or say what you want: pause, back 30 seconds, go to 1:20:00, subtitles off, who's in this, play the next episode. Everyday asks are understood on the phone itself, free and with no account. For open conversation you can add your own AI key, which stays on the phone.
+
+## Web app 2.55.0 (party cameras, glasses and sensory-friendly mode)
+
+- **Party cameras.** Tap Camera in the party panel to show your face to everyone in the party. Phones, laptops and TVs can all join the same party.
+- **Your phone as the TV's camera.** On the phone remote, tap Party camera, then Camera. The phone sends a small picture of you to the party while every TV control stays underneath. Your own face shows once, on the TV; the phone's preview is off unless you want it.
+- **Face light.** A Light button on the phone turns the screen into a soft ring or a full white light, so you can be seen in a dark room.
+- **Lobby, after-film talk and the talker ring.** With no film open, the party panel shows everyone big with "Vote on what to watch" (Couch match on your phones). Faces get big again when the credits roll, and whoever is talking gets a ring.
+- **Ask to pause.** A guest who pauses asks the host, who can pause for everyone or say not now.
+- **Faces on the group stub.** Everyone who agrees (Settings › Playback › Watch party) is on the ticket stub saved after a party film.
+- **Better connections.** When two devices can't reach each other directly (a phone on mobile data and a laptop on home Wi-Fi, say), the party goes through an encrypted relay. Video goes straight between devices whenever it can, and is never recorded.
+- **Sensory-friendly mode.** Softens sudden loud bangs and dims flashing light as it happens, all on your device. Player › Picture, or Settings › Playback › Comfort.
+- **Subtitles on smart glasses.** Read the subtitles in Brilliant Labs Frame or Even Realities G1 or G2 glasses, in step with the film: Player › More › Glasses on a computer with Chrome or Edge, or Subtitles on this phone on the phone remote. Meta Ray-Ban Display glasses get a link to add in the Meta AI app.
+- **A welcome tour that shows you around.** A screen for each feature in five short chapters, with where to find it. Skip any time.
+
+## Android app 1.9.1
+
+- Party cameras work in the app: Android asks once before MKCinema can use the camera.
+
 ## Web app 2.53.0 (your stats)
 
 - **Your stats.** Library › Your stats (also Settings › Playback and the command palette) shows your top films and shows, how much you've watched, the genres you lean on, when in the day and week you watch, your longest streak, your busiest day, your longest sitting and who you watch with most, for this month, this year or all time. Save it as a picture to share.
