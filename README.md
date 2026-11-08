@@ -59,7 +59,7 @@
 </tr>
 <tr>
 <td width="50%" align="center"><img src="site/shots/anime-home.webp" alt="Home in the Anime look"><br><sub>The Anime look</sub></td>
-<td width="50%" align="center"><img src="site/shots/party.webp" alt="Watch party panel with Camera and Faces buttons"><br><sub>Watch parties with synced playback, voice and cameras</sub></td>
+<td width="50%" align="center"><img src="site/shots/party-cams.webp" alt="Party cameras beside the film"><br><sub>Watch parties with synced playback, voice and cameras</sub></td>
 </tr>
 <tr>
 <td width="50%" align="center"><img src="site/shots/sensory.webp" alt="Sensory-friendly mode in the player's Picture tab"><br><sub>Sensory-friendly mode: softer bangs, dimmed flashes</sub></td>
@@ -80,7 +80,7 @@
 </tr>
 </table>
 
-<p align="center"><sub>Player and Split Screen shots show <a href="https://studio.blender.org/films/">Blender open movies</a> (CC BY). Poster and backdrop art comes from the catalogs and belongs to its owners.</sub></p>
+<p align="center"><sub>Player and Split Screen shots show <a href="https://studio.blender.org/films/">Blender open movies</a> (CC BY). Poster and backdrop art comes from the catalogs and belongs to its owners. Faces in the party shots are stock photos from Pexels.</sub></p>
 
 ## What makes MKCinema different
 
