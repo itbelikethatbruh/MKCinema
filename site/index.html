@@ -174,7 +174,7 @@ section{position:relative}
 .ch.in .ch-media{transform:none}
 .ch-media img{width:100%;aspect-ratio:16/10;object-fit:contain}
 .deck{display:none}
-@media (min-width:960px){
+@media (min-width:960px) and (min-aspect-ratio:5/4){
   .tour{grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:56px}
   .ch{min-height:80vh;display:flex;flex-direction:column;justify-content:center;padding:0}
   .ch-media{display:none}
@@ -997,7 +997,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 
   // Tour: a 3D deck that brings each chapter's screen to the front
   const deck = $('#deck'), cards = $$('.card', deck), chs = $$('.ch');
-  const wide = matchMedia('(min-width: 960px)');
+  const wide = matchMedia('(min-width: 960px) and (min-aspect-ratio: 5/4)');
   let active = -1;
   const show = i => {
     if (i === active) return; active = i;
