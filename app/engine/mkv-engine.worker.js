@@ -79,7 +79,7 @@ function hevcCodec(h) {
   const cons = [h[6], h[7], h[8], h[9], h[10], h[11]]; while (cons.length && !cons[cons.length - 1]) cons.pop();
   return `hvc1.${['', 'A', 'B', 'C'][space]}${prof}.${(rev >>> 0).toString(16).toUpperCase()}.${tier ? 'H' : 'L'}${h[12]}${cons.length ? '.' + cons.map((c) => c.toString(16).toUpperCase()).join('.') : ''}`;
 }
-function hevcBitDepth(h) { return h && h.length > 20 ? (h[20] & 7) + 8 : 8; }
+function hevcBitDepth(h) { return h && h.length > 22 ? (h[17] & 7) + 8 : 8; } // hvcC byte 17: bitDepthLumaMinus8
 function av1Codec(c) {
   if (!c || c.length < 4) return 'av01.0.08M.08';
   const prof = c[1] >> 5, lvl = c[1] & 31, tier = c[2] >> 7, hi = (c[2] >> 6) & 1, twelve = (c[2] >> 5) & 1;
@@ -233,7 +233,7 @@ function parseTracks(u, p, end) {
         case ID.FlagEnabled: t.enabled = !!readUint(u, s, n); break;
         case ID.DefaultDuration: t.dur = readUint(u, s, n); break;
         case ID.CodecDelay: t.delay = readUint(u, s, n); break;
-        case ID.Video: for (const v of children(u, s, s + n)) { const x = readUint(u, v.start, v.size); if (v.id === ID.PixelWidth) t.w = x; else if (v.id === ID.PixelHeight) t.h = x; else if (v.id === ID.DisplayWidth) t.dw = x; else if (v.id === ID.DisplayHeight) t.dh = x; } break;
+        case ID.Video: for (const v of children(u, s, s + n)) { const x = readUint(u, v.start, v.size); if (v.id === ID.PixelWidth) t.w = x; else if (v.id === ID.PixelHeight) t.h = x; else if (v.id === ID.DisplayWidth) t.dw = x; else if (v.id === ID.DisplayHeight) t.dh = x; else if (v.id === 0x55B0) for (const c of children(u, v.start, v.start + v.size)) { const y = readUint(u, c.start, c.size); if (c.id === 0x55B1) t.matrix = y; else if (c.id === 0x55BA) t.trc = y; else if (c.id === 0x55BB) t.prim = y; else if (c.id === 0x55B9) t.range = y; } } break;
         case ID.Audio: for (const a of children(u, s, s + n)) { if (a.id === ID.SamplingFrequency) t.rate = readFloat(u, a.start, a.size); else if (a.id === ID.OutputSamplingFrequency) t.orate = readFloat(u, a.start, a.size); else if (a.id === ID.Channels) t.ch = readUint(u, a.start, a.size); else if (a.id === ID.BitDepth) t.bits = readUint(u, a.start, a.size); } break;
         case ID.ContentEncodings:
           for (const ce of children(u, s, s + n)) for (const x of children(u, ce.start, ce.start + ce.size)) {
@@ -369,6 +369,7 @@ function describeFile() {
     video: v ? { num: v.num, codec: v.codec, kind: v.kind, w: v.w, h: v.h, enc: v.enc || !!v.zlib, dv: v.dv,
       mime: v.kind === 'hevc' ? hevcCodec(v.priv) : v.kind === 'avc' ? avcCodec(v.priv) : v.kind === 'av1' ? av1Codec(v.priv) : null,
       dvMime: v.dvc ? `dvh1.${String(v.dv).padStart(2, '0')}.${String(((v.dvc[2] & 1) << 5) | (v.dvc[3] >> 3)).padStart(2, '0')}` : null,
+      color: { matrix: v.matrix || 0, trc: v.trc || 0, prim: v.prim || 0, range: v.range || 0 }, cfg: v.kind === 'hevc' && v.priv ? v.priv.slice() : null,
       bits: v.kind === 'hevc' ? hevcBitDepth(v.priv) : v.kind === 'av1' && v.priv && v.priv.length > 2 ? ((v.priv[2] >> 6) & 1 ? 10 : 8) : 8 } : null,
     audio: File.tracks.filter((t) => t.type === 2).map((t, i) => ({ i, num: t.num, codec: t.codec, kind: t.kind, mime: t.mime, lang: LANG(t.lang), name: t.name, def: t.def, forced: t.forced, ch: t.ch, rate: t.rate, enc: t.enc || !!t.zlib })),
     subs: File.tracks.filter((t) => t.type === 17).map((t) => ({ num: t.num, codec: t.codec, zlib: !!t.zlib, enc: !!t.enc, lang: LANG(t.lang), name: t.name, def: t.def, forced: t.forced })),
@@ -428,6 +429,7 @@ function mp4Track(u, trak, movieTs) {
       if ((c.type === 'dvcC' || c.type === 'dvvC' || c.type === 'dvwC') && c.end - c.start > 3) { t.dvc = u.slice(c.start, c.end); t.dv = t.dvc[2] >> 1; }
       if (c.type === 'pasp') { const hs = readUint(u, c.start, 4), vs = readUint(u, c.start + 4, 4); if (hs && vs && hs !== vs) { t.dw = Math.round(t.w * hs / vs); t.dh = t.h; } }
       if (c.type === 'sinf') t.enc = true;
+      if (c.type === 'colr' && readStr(u, c.start, 4) === 'nclx') { t.prim = readUint(u, c.start + 4, 2); t.trc = readUint(u, c.start + 6, 2); t.matrix = readUint(u, c.start + 8, 2); t.range = u[c.start + 10] & 0x80 ? 2 : 1; }
     }
     t.codec = { avc1: 'V_MPEG4/ISO/AVC', avc3: 'V_MPEG4/ISO/AVC', hvc1: 'V_MPEGH/ISO/HEVC', hev1: 'V_MPEGH/ISO/HEVC', dvh1: 'V_MPEGH/ISO/HEVC', dvhe: 'V_MPEGH/ISO/HEVC', av01: 'V_AV1' }[ent.type] || (ent.type === 'encv' ? 'encrypted' : ent.type);
     if (ent.type === 'encv') t.enc = true;
@@ -877,6 +879,13 @@ function resetStreams() {
 function pushVideo(data, pts, key) {
   if (St.needKey) { if (!key) return; St.needKey = false; }
   const tr = St.v; if (tr.strip) data = cat([tr.strip, data]);
+  if (St.soft) {
+    // software decoding (computers without an HEVC decoder): decode order as read, straight to the decoder worker
+    const d = data.byteOffset || data.length !== data.buffer.byteLength ? data.slice() : data;
+    St.soft.postMessage({ op: 's', gen: St.gen, data: d, pts, key }, [d.buffer]);
+    St.lastVideoT = St.lastVideoT == null ? pts : Math.max(St.lastVideoT, pts);
+    return;
+  }
   const ts = Math.round(pts * 90000);
   St.vq.push({ data, pts: ts, key });
   // keep vpts sorted
@@ -1163,6 +1172,7 @@ async function run(pos, gen) {
   }
 }
 async function finish(gen) {
+  if (St.soft && gen === St.gen) St.soft.postMessage({ op: 'end', gen });
   while (St.vq.length) takeVideo(St.vq.length === 1);
   if (St.vLast) takeVideo(true);
   flushVideo(); flushAudio();
@@ -1193,7 +1203,8 @@ self.onmessage = async (e) => {
         St.v = File.tracks.find((x) => x.type === 1) || null;
         St.a = m.audio == null || m.audio < 0 ? null : File.tracks.filter((x) => x.type === 2)[m.audio] || null;
         St.aMode = St.a ? m.mode : 'none'; St.aInit = false;
-        if (St.v && !St.vInit) {
+        if (m.port) St.soft = m.port;
+        if (St.v && !St.vInit && !St.soft) {
           const init = initSegment(St.v, videoEntry(St.v, !!m.dv), 90000, true); St.vInit = true;
           post({ op: 'init', kind: 'v', mime: `video/mp4; codecs="${m.vmime}"`, data: init.buffer }, [init.buffer]);
         }
