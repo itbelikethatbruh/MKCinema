@@ -2821,6 +2821,17 @@ const TvPlayer = {
     if (!IS_TV || CFG.tvPlayer === 'web') return false;
     try { return !!(window.MKAndroid && typeof MKAndroid.play === 'function'); } catch (e) { return false; }
   },
+  /* Android phone app: a file whose release name lists more than one audio language (MULTi, Dual Audio, Hindi +
+     English...) opens in the app's Android player, which starts the track in your Audio language. In the web player
+     such a file can start in the wrong language when its host doesn't let MKCinema read it. The player's options row
+     can still switch to the MKCinema player. Settings › Playback › Multi-language files turns it off. */
+  phone(stream) {
+    if (IS_TV || CFG.phoneNativeAudio === false || !stream || !stream.url || stream._local || stream._noNative) return false;
+    try { if (!(window.MKAndroid && typeof MKAndroid.play === 'function')) return false; } catch (e) { return false; }
+    const want = CFG.audioOnly; if (!want || want === 'any') return false;
+    if (stream._tel && (stream._tel.isTrailer || stream._tel.kind === 'yt')) return false;
+    try { const { langs, multi } = AudioPref.langs(stream); return multi || langs.size > 1; } catch (e) { return false; }
+  },
   cur: null,
   async subUrl(ctx) {
     if (CFG.subAuto === false || !CFG.subLang || CFG.subLang === 'off') return '';
@@ -2841,7 +2852,7 @@ const TvPlayer = {
   init() {
     const lu = loadUrl;
     loadUrl = function (stream, startAt) {
-      if (!TvPlayer.on() || !P.ctx || stream._local || stream._noNative) return lu.apply(this, arguments);
+      if (!(TvPlayer.on() || TvPlayer.phone(stream)) || !P.ctx || stream._local || stream._noNative) return lu.apply(this, arguments);
       const bh = stream.behaviorHints || {}, headers = bh.proxyHeaders && bh.proxyHeaders.request;
       // streams that ask for request headers (Referer, User-Agent...): TV app 1.2.8 sends them itself, no proxy needed
       const nativeHdr = !!(headers && Object.keys(headers).length && (() => { try { return Updater.newer(MKAndroid.version(), '1.2.7'); } catch (e) { return false; } })());
@@ -2890,6 +2901,11 @@ const TvPlayer = {
       sec.rows = () => [...rows(),
         { key: 'tvPlayer', label: 'TV player', help: 'The TV player uses your TV’s own video hardware: MKV, HEVC, HDR and Dolby Vision play smoothly. The MKCinema player keeps subtitle styling and X-Ray. Needs the MKCinema TV app 1.2.5 or later.', type: 'select', options: [['native', 'TV player (smoothest)'], ['web', 'MKCinema player']], get: () => CFG.tvPlayer || 'native' },
         { key: 'matchRate', label: 'Match the film’s frame rate', help: 'The TV switches to 24 Hz for films shot at 24 frames, so panning shots don’t judder, and switches back afterwards. Some TVs blank for a second while switching.', type: 'toggle', get: () => CFG.matchRate !== false },
+      ];
+    } else if (sec && !IS_TV && window.MKAndroid && typeof MKAndroid.play === 'function') {
+      const rows = sec.rows;
+      sec.rows = () => [...rows(),
+        { key: 'phoneNativeAudio', label: 'Multi-language files', help: 'Files that carry several audio languages open in the Android player, which starts in your Audio language. Turn off to play them in the MKCinema player.', type: 'toggle', get: () => CFG.phoneNativeAudio !== false },
       ];
     }
   },
