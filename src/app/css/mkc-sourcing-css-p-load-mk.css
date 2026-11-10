@@ -1,0 +1,7 @@
+
+.p-load .mk-src{position:absolute;left:0;right:0;bottom:max(14%,64px);text-align:center;font-size:calc(14px * var(--ts,1));letter-spacing:.06em;color:rgba(255,255,255,.72);opacity:0;transform:translateY(6px);transition:opacity .4s ease,transform .4s ease;pointer-events:none}
+.p-load .mk-src.on{opacity:1;transform:none}
+.p-load .mk-src i{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:10px;vertical-align:middle;background:currentColor;animation:mkSrcDot 1.2s ease-in-out infinite}
+@keyframes mkSrcDot{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+body.reduce-motion .p-load .mk-src i,.p-load.flat .mk-src i{animation:none;opacity:.8}
+@media (prefers-reduced-motion:reduce){.p-load .mk-src,.p-load .mk-src i{transition:none;animation:none}}

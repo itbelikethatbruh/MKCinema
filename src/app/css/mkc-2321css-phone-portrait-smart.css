@@ -1,0 +1,31 @@
+
+/* 2.32.1 phone portrait: Smart Play on its own row, the other actions as one even row of icon-over-label buttons */
+@media (max-width:560px){
+  .hero .actions,.d-hero .actions{display:flex;flex-wrap:wrap;gap:8px;width:100%}
+  .hero .actions .btn-bolt,.d-hero .actions .btn-bolt{flex:1 1 100%;height:50px;grid-column:auto}
+  .hero .actions .btn-ghost,.d-hero .actions .btn-ghost{flex:1 1 0;min-width:0;height:calc(58px * var(--ts,1));flex-direction:column;justify-content:center;align-items:center;gap:5px;
+    padding:6px 4px;border-radius:calc(var(--r-l) * 0.8889);font-size:calc(12px * var(--ts,1));font-weight:600;line-height:1.12;letter-spacing:.01em;white-space:normal;text-align:center;overflow:hidden}
+  .hero .actions .btn-ghost>svg,.d-hero .actions .btn-ghost>svg{width:19px;height:19px;flex:none;margin:0}
+  /* six buttons on the film page: two rows of three instead of six slivers */
+  .d-hero .actions:has(> .btn-ghost:nth-child(7)) > .btn-ghost{flex-basis:calc((100% - 16px) / 3)}
+}
+/* 2.32.1 phone tab bar: long translated labels (Mediathek, Live-TV) no longer run into their neighbours.
+   :where() keeps this below the 2.32.0 font rules and the Anime look */
+@media (max-width:420px){
+  :where(html:not([data-look="anime"]) #mtabs) button{padding-inline:0}
+  :where(html:not([data-look="anime"]) #mtabs) button span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:calc(min(10.5px, 2.75vw) * var(--ts,1));letter-spacing:-.01em}
+}
+/* 2.32.1 settings on phones: the section blurb uses the full width instead of a narrow column beside the icon,
+   and cards inside cards lose a layer of padding */
+@media (max-width:560px){
+  .set-hd{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 12px;align-items:center}
+  .set-hd>div:not(.set-hd-ic){display:contents}
+  .set-hd-ic{width:40px;height:40px;border-radius:calc(var(--r-m) * 1.3)}
+  .set-hd h3{margin:0}
+  .set-hd p{grid-column:1/-1;margin-top:12px}
+  .set-card .acct-card{padding:16px 14px}
+}
+/* 2.32.1 phones: network logos rest until touched (TVs already did this) */
+@media (hover:none) and (pointer:coarse){
+  .net-tile .net-logo,.net-tile::before,.net-tile .net-shade{animation:none}
+}

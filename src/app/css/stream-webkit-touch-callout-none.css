@@ -1,0 +1,8 @@
+
+.stream{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.lp-menu{position:fixed;z-index:400;min-width:220px;padding:6px;border-radius:calc(var(--r-l) * 0.7778);background:var(--s2,#151517);border:1px solid var(--line-hi,rgba(255,255,255,.14));box-shadow:0 18px 50px rgba(0,0,0,.6);opacity:0;transform:translateY(6px) scale(.98);transition:opacity .16s,transform .16s}
+.lp-menu.on{opacity:1;transform:none}
+.lp-menu button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;border:0;border-radius:var(--r-m);background:none;color:var(--ink,#fff);font:inherit;font-size:15px;text-align:left;cursor:pointer}
+.lp-menu button:hover,.lp-menu button:focus-visible{background:rgba(255,255,255,.07);outline:none}
+.lp-menu .lp-h{padding:8px 14px 6px;font-size:12px;color:var(--mute,#9a9aa0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
+.stream.lp-hold{transform:scale(.985)}

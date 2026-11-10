@@ -1,0 +1,36 @@
+
+/* Steady web: pages never flash empty, chip rows and settings keep their place, Universes swap in place.
+   Motion is opacity and transform only. */
+/* a page that is still loading keeps the screen filled, so the footer never flashes up to the top */
+#app .view.on{min-height:calc(100vh - 140px)}
+@supports (height:100svh){#app .view.on{min-height:calc(100svh - 140px)}}
+/* tapping the page you are already on does not replay the page fade */
+body.mk-same .view.on{animation:none!important}
+/* Universes: the loading placeholder holds the page's size */
+#uniBody .uni-sk-hero{height:clamp(150px,22vw,260px);border-radius:var(--r-l,20px);margin-bottom:18px}
+#uniBody .uni-sk-chips{height:38px;border-radius:calc(var(--r-l) * 1.0556);margin-bottom:16px;max-width:560px}
+#uniBody .uni-sk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+#uniBody .uni-sk-grid .skeleton{aspect-ratio:2/3;height:auto}
+@media (max-width:600px){#uniBody .uni-sk-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}}
+/* Universes: the new banner art fades in over the old one instead of flashing dark */
+#uniBody .uni-hero{background-size:cover;background-position:center}
+#uniBody .uni-hero img.mk-hf{opacity:0;transition:opacity .45s ease}
+#uniBody .uni-hero img.mk-hf.in{opacity:.75}
+#uniBody .uni-swap{animation:mkStFade .35s ease-out}
+@keyframes mkStFade{from{opacity:0}}
+body.reduce-motion #uniBody .uni-swap{animation:none}
+@media (prefers-reduced-motion:reduce){#uniBody .uni-swap{animation:none}#uniBody .uni-hero img.mk-hf{transition:none}}
+/* Featured banner swipe: the slide-in is the motion, so the text's own entrance does not run on top of it */
+.hero.mk-flung .hero-body.swap>*{animation:none!important}
+#hero .mk-peek{pointer-events:none}
+#hero .mk-peek img{width:100%;height:100%;object-fit:cover}
+#heroBg,#hero .hero-body{will-change:auto}
+.hero.dragging #heroBg,.hero.dragging .hero-body,.hero.mk-flung #heroBg,.hero.mk-flung .hero-body{will-change:transform,opacity}
+/* settings: re-drawing a section never nudges the scroll position */
+#setBody{overflow-anchor:none}
+#setBody.mk-redraw .set-sec{animation:none!important}
+/* the colour wheel sits in the middle of its card on phones */
+@media (max-width:640px){
+  #settings .cw-wrap{flex-direction:column;justify-content:center;text-align:center}
+  #settings .cw-side{align-items:center;max-width:none}
+}

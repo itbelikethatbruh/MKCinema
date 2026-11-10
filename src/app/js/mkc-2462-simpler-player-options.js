@@ -1,0 +1,163 @@
+
+/* ---------------- 2.46.2 Simpler player ----------------
+   The options menu only offers what works for the film that is playing, and drops what a phone has no use for:
+   · Volume above 100 % and Sound modes need a source the browser can read the sound of. Sources that don't allow it
+     no longer show them (a quiet check runs once per host; until it answers, they stay hidden, no spinner).
+   · Audio language is hidden when the file has one track.
+   · On phones: Listen on phone, the phone-handoff icon, A-B repeat, Theatre view and the rarest speeds go; Split Screen moves to More.
+   · Pop-ups opened from a full-screen player (Your phone, Send to TV…) now show over it instead of behind it.
+   · "Synced your library and settings" no longer pops up over the player. */
+(function () {
+  const isPhone = () => !IS_TV && PX_TOUCH() && Math.min(screen.width || 9999, screen.height || 9999) < 600;
+  const markBody = () => { document.body.classList.toggle('mk-phone', isPhone()); document.body.classList.toggle('mk-player-on', !$('#player').hidden); };
+  markBody();
+  new MutationObserver(markBody).observe($('#player'), { attributes: true, attributeFilter: ['hidden'] });
+
+  /* ---- can the browser read this source's sound? ---- */
+  const Fx = {
+    memo: new Map(), // host -> 'yes' | 'no'
+    host(s) { try { return new URL(s.url).host; } catch (e) { return ''; } },
+    state() {
+      const s = P.stream;
+      if (!s) return 'no';
+      if (typeof TvPlayer !== 'undefined' && TvPlayer.cur) return 'no';
+      if (DSP.attached || DSP.clean() || s._local || P.hls || P.remux) return 'yes';
+      if (!s.url || !/^https?:/i.test(s.url)) return 'no';
+      const h = this.host(s);
+      if (typeof SoundModes !== 'undefined' && SoundModes.bad.has(h)) return 'no';
+      if (s._cors === 'none') return 'no';
+      if (s._cors === 'direct' || s._cors === 'proxy') return 'yes';
+      if (this.memo.has(h)) return this.memo.get(h);
+      this.check(s, h); return 'unknown';
+    },
+    check(s, h) {
+      if (this.memo.has(h) || this['_' + h]) return; this['_' + h] = true;
+      // the same one-time Range probe Night Mode uses, shared per host
+      if (!DSP.probes.has(h)) {
+        DSP.probes.set(h, (async () => {
+          try { const r = await fetchT(s.url, { headers: { Range: 'bytes=0-1' }, mode: 'cors' }, 3000); try { r.body && r.body.cancel(); } catch (e) { /* ignore */ } return r.ok || r.status === 206; }
+          catch (e) { return false; }
+        })());
+      }
+      DSP.probes.get(h).then(async (ok) => {
+        let v = ok ? 'yes' : 'no';
+        if (!ok) { try { v = (await proxyOnline()) ? 'yes' : 'no'; } catch (e) { v = 'no'; } }
+        this.memo.set(h, v); delete this['_' + h];
+        const m = $('#optMenu');
+        if (v === 'yes' && P.stream === s && m && !m.hidden && PxMenu.tab === 'audio') renderOptMenu();
+      });
+    },
+  };
+
+  /* a heading with everything under it, up to the next heading */
+  const section = (pane, re) => {
+    const h = $$('h5', pane).find((x) => re.test(x.textContent.trim())); if (!h) return null;
+    const els = [h]; let n = h.nextElementSibling;
+    while (n && n.tagName !== 'H5') { els.push(n); n = n.nextElementSibling; }
+    return els;
+  };
+  const drop = (els) => { if (els) els.forEach((e) => e.remove()); };
+
+  function simplify() {
+    const m = $('#optMenu'); if (!m || m.hidden || !$('.px-tabs', m)) return;
+    const phone = isPhone(), touch = PX_TOUCH() && !IS_TV;
+    const pane = (k) => $(`.px-pane[data-pane="${k}"]`, m);
+
+    // Audio
+    const a = pane('audio');
+    if (a) {
+      const fx = Fx.state();
+      const active = (typeof PxBoost !== 'undefined' && PxBoost.g > 1) || (typeof SoundModes !== 'undefined' && SoundModes.live() && SoundModes.cur().k !== 'original');
+      if (fx !== 'yes' && !active) {
+        const vol = section(a, /^volume/i);
+        if (vol) drop(vol); // the Volume steps, its note, and the Sound mode block that sits inside it
+        drop($$('.snd-h, .snd-modes, .snd-st, .px-boost', a));
+      }
+      // one track: nothing to choose
+      const lang = section(a, /^audio language/i);
+      if (lang) {
+        const rows = lang.filter((e) => e.matches('.al-row')), others = lang.filter((e) => e.tagName === 'BUTTON' && !e.matches('.al-row'));
+        if (rows.length <= 1 && !others.length && !lang.some((e) => e.querySelector && e.querySelector('button:not(.al-row)'))) drop(lang);
+      }
+      if (phone) drop(section(a, /^listen on phone/i));
+    }
+
+    // Playback
+    const p = pane('play');
+    if (p && touch) {
+      const rate = video.playbackRate;
+      ['0.25', '1.75', '2.5', '3'].forEach((v) => { const b = $(`[data-speed="${v}"]`, p); if (b && Number(v) !== rate) b.remove(); });
+    }
+    if (p && phone) $$('[data-tl="ab"]', p).forEach((b) => b.remove());
+
+    // Picture
+    const pic = pane('pic');
+    if (pic && touch) $$('[data-amb], [data-lock]', pic).forEach((b) => b.remove());
+
+    // More
+    const more = pane('more');
+    if (more && phone) {
+      $$('[data-pp="cast"]', more).forEach((b) => b.remove());
+    }
+    // Split Screen stays on phones, one tap away under More (its click handler moves with it)
+    const split = p && $('[data-tl="split"]', p);
+    if (split && phone && more) {
+      const h = $$('h5', more).find((x) => /^more$/i.test(x.textContent.trim()));
+      if (h) { let n = h; while (n.nextElementSibling && n.nextElementSibling.tagName !== 'H5') n = n.nextElementSibling; n.after(split); } else more.appendChild(split);
+    }
+
+    // empty headings and tabs go
+    $$('.px-pane', m).forEach((pn) => {
+      $$('h5', pn).forEach((h) => { const n = h.nextElementSibling; if (!n || n.tagName === 'H5') h.remove(); });
+      const tab = $(`.px-tabs [data-pxtab="${pn.dataset.pane}"]`, m);
+      if (!pn.children.length) { pn.remove(); if (tab) tab.remove(); }
+    });
+    if (!$(`.px-pane[data-pane="${PxMenu.tab}"]`, m)) { const f = $('.px-pane', m); if (f) { PxMenu.tab = f.dataset.pane; PxMenu.show(); } }
+
+    // a close button at the end of the tabs
+    const bar = $('.px-tabs', m);
+    if (bar && !IS_TV && !$('.px-x', bar)) {
+      bar.insertAdjacentHTML('beforeend', '<button type="button" class="px-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>');
+      $('.px-x', bar).addEventListener('click', (e) => { e.stopPropagation(); m.hidden = true; wakeHud(); });
+    }
+  }
+  const base = renderOptMenu;
+  renderOptMenu = function () { const r = base.apply(this, arguments); try { simplify(); } catch (e) { console.error('simple player', e); } return r; };
+  // the Audio tab redraws itself on its own schedule; simplify after any tab switch too
+  const show = PxMenu.show.bind(PxMenu);
+  PxMenu.show = function () { const r = show(); try { if (!this._simp) { this._simp = true; simplify(); this._simp = false; } } catch (e) { this._simp = false; } return r; };
+
+  /* ---- pop-ups and notices while the player fills the screen ----
+     Full screen shows only the player, so a pop-up opened from it (Your phone, a watch party, a question) moves into
+     the player for as long as it is open, and the notices follow. */
+  const home = new Map();
+  const fsPlayer = () => document.fullscreenElement && document.fullscreenElement.id === 'player' ? document.fullscreenElement : null;
+  const adopt = (el) => {
+    const pl = fsPlayer(); if (!pl || !el || el.id === 'player' || el.parentElement === pl) return;
+    home.set(el, [el.parentElement, el.nextSibling]); el.classList.add('mk-fsl'); pl.appendChild(el);
+  };
+  const giveBack = (el) => {
+    const h = home.get(el); if (!h) return; home.delete(el); el.classList.remove('mk-fsl');
+    const [par, nx] = h; if (nx && nx.parentNode === par) par.insertBefore(el, nx); else par.appendChild(el);
+  };
+  const ol = openLayer;
+  openLayer = function (id) { const r = ol.apply(this, arguments); try { if (id !== 'player') adopt($(`#${id}`)); } catch (e) { /* stays where it is */ } return r; };
+  const cl = closeLayer;
+  closeLayer = function (id) { const r = cl.apply(this, arguments); try { const el = $(`#${id}`); if (el && home.has(el)) setTimeout(() => { if (el.hidden) giveBack(el); }, 260); } catch (e) { /* ignore */ } return r; };
+  const toastBox = $('#toasts'), toastHome = toastBox && toastBox.parentElement;
+  document.addEventListener('fullscreenchange', () => {
+    const pl = fsPlayer();
+    if (toastBox) { if (pl) pl.appendChild(toastBox); else if (toastBox.parentElement !== toastHome) toastHome.appendChild(toastBox); }
+    if (!pl) [...home.keys()].forEach(giveBack);
+  });
+
+  /* ---- the sign-in sync notice: short, and never over the player ---- */
+  const t0 = toast;
+  toast = function (msg, kind, ms, key) {
+    if (/^Synced your (library and )?settings/i.test(String(msg))) {
+      if (!$('#player').hidden) return;
+      ms = Math.min(ms || 3600, 2200);
+    }
+    return t0.call(this, msg, kind, ms, key);
+  };
+})();

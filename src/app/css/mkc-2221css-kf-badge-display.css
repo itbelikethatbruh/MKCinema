@@ -1,0 +1,8 @@
+
+.kf-badge{display:inline-flex;align-items:center;gap:9px;height:50px;padding:0 24px;border-radius:999px;background:#72a4f2;color:#fff;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:calc(16px * var(--ts,1));font-weight:700;box-shadow:inset 0 1px 0 rgba(255,255,255,.25);transition:transform .15s,filter .15s}
+.kf-badge svg{width:24px;height:24px;flex:none}
+.kf-badge.sm{height:38px;padding:0 15px;font-size:calc(14px * var(--ts,1));gap:7px}.kf-badge.sm svg{width:19px;height:19px}
+@media (hover:hover){.kf-badge:hover{filter:brightness(1.06);transform:translateY(-1px)}}
+.kf-badge:active{transform:scale(.97)}
+.sup .inrow{flex-wrap:wrap;gap:10px}
+.sup-qr-cap{display:block;margin-top:4px;text-align:center;font-size:calc(11px * var(--ts,1));font-weight:600;color:#333}

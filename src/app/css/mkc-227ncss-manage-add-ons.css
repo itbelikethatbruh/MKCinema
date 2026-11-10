@@ -1,0 +1,10 @@
+
+/* 2.27.0 Manage add-ons from your phone: the QR card on the TV's Add-ons screen */
+.phx-card{display:flex;align-items:center;gap:22px;margin:4px 0 18px;padding:16px 20px 16px 16px;border-radius:var(--r-l);border:1px solid var(--line);background:rgba(255,255,255,.035)}
+.phx-card .qr-wrap{width:150px;flex:none;margin:0;padding:9px;border-radius:calc(var(--r-m) * 1.2)}
+.ph-ad-t{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ph-ad-t small{font:600 11px/1 var(--f-display);letter-spacing:.24em;text-transform:uppercase;color:var(--champ)}
+.ph-ad-t>b{font:600 20px/1.2 var(--f-display);color:var(--ink)}
+.ph-ad-t span{font-size:calc(14px * var(--ts,1));color:var(--mute);line-height:1.45;max-width:46ch}
+.ph-ad-t span b{color:var(--ink)}
+.ph-ad-t .ph-ad-code b.mono{letter-spacing:.18em}

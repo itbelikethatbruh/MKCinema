@@ -1,0 +1,32 @@
+
+/* 2.46 Universes: each franchise's own title logo floats over its dimmed art. Only transform/translate/opacity move */
+.uni-card.has-logo img.uni-art.in{opacity:.55}
+.uni-card.has-logo::after{background:radial-gradient(ellipse 70% 60% at 50% 45%,rgba(0,0,0,.5),rgba(0,0,0,.12) 75%),linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,0,0,.8) 100%)}
+.uni-card img.uni-logo{inset:auto;left:50%;top:45%;width:auto;height:auto;max-width:76%;max-height:48%;object-fit:contain;z-index:2;
+  transform:translate(-50%,-50%);transition:transform .35s cubic-bezier(.2,.7,.2,1),opacity .4s ease;
+  filter:drop-shadow(0 2px 0 rgba(0,0,0,.55)) drop-shadow(0 12px 14px rgba(0,0,0,.85))}
+.uni-card img.uni-logo.in{opacity:1}
+.uni-card.has-logo .uni-txt b{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (hover:hover){.uni-card.has-logo:hover img.uni-art{opacity:.75}.uni-card:hover img.uni-logo{transform:translate(-50%,-50%) scale(1.08)}}
+.uni-card:focus-visible img.uni-logo,.uni-card.nav-focus img.uni-logo{transform:translate(-50%,-50%) scale(1.08)}
+html.tv .uni-card img.uni-logo{transition:none}
+@keyframes uniFloat{0%,100%{translate:0 0}50%{translate:0 -6px}}
+@media (hover:hover){html:not(.tv) .uni-rail .uni-card img.uni-logo{animation:uniFloat 6s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.7s)}}
+body.reduce-motion .uni-card img.uni-logo{animation:none}
+@media (prefers-reduced-motion:reduce){.uni-card img.uni-logo{animation:none;transition:none}}
+@media (max-width:600px){.uni-card img.uni-logo{max-width:80%;max-height:50%}}
+.uni-grid .uni-card img.uni-logo{max-height:46%}
+#uniBody .uni-hero img.uni-hero-logo{position:static;display:block;width:auto;height:auto;max-height:clamp(64px,9vw,128px);max-width:min(460px,78vw);object-fit:contain;opacity:1;
+  filter:drop-shadow(0 2px 0 rgba(0,0,0,.55)) drop-shadow(0 14px 18px rgba(0,0,0,.85))}
+#uniBody .uni-title{margin-bottom:12px}
+/* 2.46 network logos: about a third bigger everywhere */
+.net-rail .net-tile{width:290px;height:164px}
+.net-tile .net-logo{height:86px;left:20px;right:20px;width:calc(100% - 40px)}
+.net-tile .net-logo[src$="dnp.svg"]{height:110px}
+.net-tile .net-shade{bottom:6px;height:20px}
+.net-tile::before{width:240px;height:140px;margin:-70px 0 0 -120px}
+@media (max-width:600px){.net-rail .net-tile{width:220px;height:136px}.net-tile .net-logo{height:72px;left:14px;right:14px;width:calc(100% - 28px)}.net-tile .net-logo[src$="dnp.svg"]{height:94px}.net-tile::before{width:190px;height:116px;margin:-58px 0 0 -95px}}
+html.tv .net-rail .net-tile{width:320px;height:180px}
+html.tv .net-tile .net-logo{height:94px}
+html.tv .net-tile .net-logo[src$="dnp.svg"]{height:120px}
+html.tv .net-tile::before{width:250px;height:146px;margin:-73px 0 0 -125px}

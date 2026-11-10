@@ -1,0 +1,75 @@
+
+/* ===== 2.7.26 Peak Cinema ===== */
+.pk{position:fixed;inset:0;z-index:66;background:var(--n000000,#000);overflow:hidden;color:var(--nececee,#ececee)}
+.pk[hidden]{display:none}
+.pk.leaving[hidden]{display:block!important;pointer-events:none;animation:ovOut .22s ease-in forwards}
+.pk-stage{position:absolute;inset:0}
+.pk-v{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:fill;background:var(--n000000,#000);opacity:0;transition:opacity .45s ease}
+.pk-v.on{opacity:1}
+.pk-shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(var(--n000000-c,0,0,0),.72) 0,rgba(var(--n000000-c,0,0,0),0) 22%,rgba(var(--n000000-c,0,0,0),0) 50%,rgba(var(--n000000-c,0,0,0),.86) 100%);transition:opacity .4s ease}
+.pk-ui{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none;padding:calc(18px + env(safe-area-inset-top,0px)) max(28px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(28px,env(safe-area-inset-left,0px));transition:opacity .35s ease}
+.pk-ui>*{pointer-events:auto}
+.pk.idle .pk-ui,.pk.idle .pk-shade{opacity:0}
+.pk.idle .pk-ui>*{pointer-events:none}
+.pk.idle{cursor:none}
+.pk-top{display:flex;align-items:center;gap:18px}
+.pk-brand{display:flex;flex-direction:column;gap:3px;flex:none}
+.pk-mark{font-family:var(--f-mono);font-size:calc(11px * var(--ts,1));letter-spacing:.24em;text-transform:uppercase;color:var(--nd9d4c7,#d9d4c7)}
+.pk-sub{font-size:calc(12px * var(--ts,1));color:var(--n9a9aa2,#9a9aa2);min-height:15px}
+.pk-moods{flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:6px 4px;justify-content:center}
+.pk-moods::-webkit-scrollbar{display:none}
+.pk .chip{background:rgba(var(--n141417-c,20,20,23),.78);color:var(--nc9c9cf,#c9c9cf);border-color:rgba(255,255,255,.1)}
+.pk .chip.on,body.hc .pk .chip.on{background:var(--nececee,#ececee);color:var(--n0a0a0b,#0a0a0b);border-color:var(--nececee,#ececee)}
+.pk-tools{display:flex;gap:6px;flex:none}
+.pk-tools .ibtn{background:rgba(var(--n141417-c,20,20,23),.78);border:1px solid rgba(255,255,255,.08)}
+.pk-status{align-self:center;display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:999px;background:rgba(var(--n0e0e10-c,14,14,16),.9);border:1px solid rgba(255,255,255,.08);font-size:calc(14px * var(--ts,1));color:var(--nd2d2d8,#d2d2d8);max-width:min(560px,92vw)}
+.pk-status[hidden]{display:none}
+.pk-status:has(.pk-block){border-radius:calc(var(--r-l) * 1.1111);padding:0;background:none;border:0}
+.pk-block{background:var(--n0e0e10,#0e0e10);border:1px solid rgba(255,255,255,.09);border-radius:calc(var(--r-l) * 1.1111);padding:26px 28px;text-align:left}
+.pk-block h3,.pk-how-box h3{font-family:var(--f-serif);font-weight:500;font-size:calc(24px * var(--ts,1));margin:0 0 8px;color:var(--nf2f2f4,#f2f2f4)}
+.pk-block p,.pk-how-box p{color:var(--nb9b9c0,#b9b9c0);font-size:calc(14px * var(--ts,1));line-height:1.6;margin:0 0 10px}
+.pk-how-acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.pk-bottom{display:flex;flex-direction:column;gap:16px;max-width:1100px}
+.pk-eye{font-family:var(--f-mono);font-size:calc(12px * var(--ts,1));letter-spacing:.08em;color:var(--na9a9b0,#a9a9b0);margin-bottom:10px}
+.pk-logo .hero-logo{display:block;max-height:96px;max-width:min(420px,70vw);width:auto;height:auto;object-fit:contain;object-position:left bottom;filter:drop-shadow(0 6px 22px rgba(var(--n000000-c,0,0,0),.6))}
+.pk-title{font-family:var(--f-serif);font-weight:500;font-size:calc(clamp(28px,4vw,48px) * var(--ts,1));line-height:1.05;margin:0;text-shadow:0 4px 24px rgba(var(--n000000-c,0,0,0),.6)}
+.pk-info .metaline{margin-top:10px}
+.pk-info:empty{display:none}
+.pk-acts{display:flex;flex-wrap:wrap;gap:10px}
+.pk.pk-empty .pk-acts,.pk.pk-empty .pk-foot{display:none}
+.pk-foot{display:flex;flex-direction:column;gap:10px}
+.pk-next{display:flex;align-items:center;gap:8px;font-size:calc(13px * var(--ts,1));color:var(--n9a9aa2,#9a9aa2);min-height:16px}
+.pk-next .spin{width:11px;height:11px;border-width:1.5px}
+.pk-dot{width:6px;height:6px;border-radius:50%;background:var(--nd9d4c7,#d9d4c7);flex:none}
+.pk-bar{height:2px;background:rgba(255,255,255,.14);border-radius:calc(var(--r-s) * 0.25);overflow:hidden}
+.pk-bar i{display:block;height:100%;background:var(--nd9d4c7,#d9d4c7);transform:scaleX(0);transform-origin:left center}
+.pk-how{position:absolute;inset:0;display:grid;place-items:center;background:rgba(var(--n000000-c,0,0,0),.72);padding:20px}
+.pk-how[hidden]{display:none}
+.pk-how-box{max-width:560px;background:var(--n0e0e10,#0e0e10);border:1px solid rgba(255,255,255,.09);border-radius:calc(var(--r-l) * 1.1111);padding:28px 30px}
+/* Home invitation */
+.pk-strip{display:flex;align-items:center;justify-content:space-between;gap:24px;margin:6px 0 30px;padding:24px 28px;border-radius:calc(var(--r-l) * 1.1111);background:linear-gradient(110deg,var(--n111114,#111114) 0%,var(--n0a0a0c,#0a0a0c) 60%,var(--n121214,#121214) 100%);border:1px solid rgba(255,255,255,.07)}
+.pk-strip h3{font-family:var(--f-serif);font-weight:500;font-size:calc(clamp(20px,2.2vw,27px) * var(--ts,1));margin:8px 0 6px;color:var(--nf2f2f4,#f2f2f4)}
+.pk-strip p{margin:0;color:var(--na9a9b0,#a9a9b0);font-size:calc(14px * var(--ts,1));line-height:1.55;max-width:640px}
+.pk-strip .btn{flex:none}
+@media (max-width:760px){
+  .pk-ui{padding-inline:16px}
+  .pk-top{flex-wrap:wrap;gap:10px}
+  .pk-moods{order:3;flex-basis:100%;justify-content:flex-start;padding-inline:0}
+  .pk-brand{flex:1}
+  .pk-acts .btn{height:42px;padding-inline:14px;font-size:calc(13px * var(--ts,1))}
+
+  .pk-logo .hero-logo{max-height:64px}
+  .pk-strip{flex-direction:column;align-items:flex-start;padding:20px}
+}
+html.tv .pk-moods{isolation:isolate}
+html.tv .pk-v{transition:none}
+/* pk-2738: on TVs the scene is centred by layout, not by offsets */
+html.tv .pk-stage{display:flex;align-items:center;justify-content:center}
+html.tv .pk-v{position:static;display:block;flex:none;max-width:100%;max-height:100%}
+html.tv .pk-ui{transition:opacity .2s linear}
+html.tv .pk-acts .btn{height:54px;font-size:calc(16px * var(--ts,1));padding-inline:22px}
+html.tv .pk-strip .btn{height:58px}
+html.tv .pk-strip{flex-direction:column;align-items:flex-start;gap:18px}
+.pk .btn-ghost{background:rgba(var(--n0e0e10-c,14,14,16),.74);border-color:rgba(255,255,255,.12)}
+.pk,.pk-stage{outline:none}
+.pk-v{outline:none;border:0}

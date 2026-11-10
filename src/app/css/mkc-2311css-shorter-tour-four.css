@@ -1,0 +1,12 @@
+
+/* 2.31.1 shorter tour: four short points, two per row on wide screens, tight on phones */
+.tw-list.tw-short{grid-template-columns:repeat(2,minmax(0,1fr))}
+.pc-bo[hidden]{display:none!important}
+@media (max-width:620px){
+  .tw-list.tw-short{grid-template-columns:1fr}
+  .tw-list.tw-short li{padding:14px 0 15px}
+  .tw-list.tw-short small{line-height:1.45}
+  #tour .tw-cr,#tour .tw-ch{padding:11px 0}
+  .pc .pc-why{margin-bottom:10px}
+  .pc .pc-opt{padding:12px 2px}
+}

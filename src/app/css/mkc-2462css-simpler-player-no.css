@@ -1,0 +1,42 @@
+
+/* ---------------- 2.46.2 Simpler player ----------------
+   No blue tap boxes, one modern font in the player, menus that fit portrait and landscape, quiet notices. */
+html,html *{-webkit-tap-highlight-color:transparent}
+/* a light press instead of the browser's blue box (transform and opacity only) */
+#player .ibtn:active,#player .menu button:active{opacity:.72}
+/* one modern face for every chip, value and time in the player (numbers stay the same width) */
+html #player .menu .seg-row button,html #player .menu .seg-row span,html #player .px-sl b,html #player .px-t,html #player .px-speed,
+html #player .px-pill b,html #player .px-pill small,html #player .seek .tip,html #player .tnum,html #player .menu kbd{font-family:var(--f-body);font-variant-numeric:tabular-nums;letter-spacing:0}
+html #player .menu .seg-row button{font-size:calc(13px * var(--ts,1));font-weight:500}
+html #player .px-t{font-weight:500}
+/* the tab bar gets a close button */
+#optMenu .px-tabs{align-items:center}
+#optMenu .px-tabs .px-x{flex:0 0 auto;width:36px;height:36px;padding:0;display:grid;place-items:center;border-radius:999px;color:var(--mute);background:rgba(255,255,255,.06)}
+#optMenu .px-tabs .px-x svg{width:18px;height:18px}
+html.tv #optMenu .px-tabs .px-x{display:none}
+/* touch: bigger targets */
+@media (pointer:coarse){
+  html #player .menu .seg-row button{min-height:40px;padding:9px 14px;font-size:calc(14px * var(--ts,1))}
+  html #player .menu>button,html #player .menu .px-pane>button{min-height:44px}
+  html #player .px-sl{grid-template-columns:96px 1fr 52px;padding:10px 12px}
+}
+/* phones upright: one bottom sheet, edge to edge */
+@media (pointer:coarse) and (max-width:760px) and (min-height:501px){
+  html #player #optMenu,html #player #subMenu{left:0;right:0;bottom:0;top:auto;width:auto;max-height:min(68vh,620px);border-radius:calc(var(--r-l) * 1.2222) calc(var(--r-l) * 1.2222) 0 0;padding:0 10px calc(10px + env(safe-area-inset-bottom,0px))}
+  html #player #subMenu{padding-top:10px}
+}
+/* phones and tablets on their side: a full-height panel on the right, the picture and seek bar stay visible on the left */
+@media (pointer:coarse) and (max-height:500px){
+  html #player #optMenu,html #player #subMenu{top:0;bottom:0;right:0;left:auto;width:min(420px,52vw);max-height:none;border-radius:calc(var(--r-l) * 1.1111) 0 0 calc(var(--r-l) * 1.1111);padding:0 max(10px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) 10px}
+  html #player #subMenu{padding-top:10px}
+  html #player #optMenu .px-tabs{padding-top:calc(8px + env(safe-area-inset-top,0px))}
+}
+/* on a phone the phone-handoff icon and the speed chip live in the menu, not the bar */
+body.mk-phone #pCast,body.mk-phone #pxSpeed{display:none!important}
+/* notices never block a tap, and in the player they sit at the top, away from the menus */
+.toast:not(.mk-ask){pointer-events:none}
+#player #toasts{position:absolute}
+body.mk-player-on #toasts{top:calc(12px + env(safe-area-inset-top,0px));bottom:auto;width:min(440px,calc(100% - 32px))}
+body.mk-player-on .toast{padding:9px 14px;font-size:calc(13px * var(--ts,1))}
+/* a pop-up opened from the player while it fills the screen shows over it */
+#player>.layer-ov.mk-fsl{position:absolute;z-index:120}

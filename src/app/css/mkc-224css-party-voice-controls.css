@@ -1,0 +1,19 @@
+
+/* 2.24.0 party voice controls */
+.pzv{display:grid;gap:10px;padding:12px 14px;border-radius:calc(var(--r-l) * 0.7778);border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.025)}
+.pzv-row{display:flex;align-items:center;justify-content:space-between;gap:8px 14px;flex-wrap:wrap}
+.pzv-l{display:flex;align-items:center;gap:8px;font-size:calc(14px * var(--ts,1));font-weight:600;color:var(--ink);min-width:0}
+.pzv-l svg{width:16px;height:16px;color:var(--mute);flex:none}
+.pzv-c{display:flex;align-items:center;gap:10px}
+input[type=range].pzv-rng{width:min(180px,44vw)}
+.pzv-n{font-size:calc(13px * var(--ts,1));color:var(--mute);min-width:40px;text-align:right;font-weight:600}
+.pzv-seg button{height:32px;padding-inline:12px;font-size:calc(13px * var(--ts,1))}
+.pzv-st{min-width:44px;justify-content:center;font-size:calc(18px * var(--ts,1))}
+.pzv-sel{max-width:260px;height:36px}
+.pzv-note{margin:0;font-size:calc(12px * var(--ts,1));color:var(--mute);line-height:1.4;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pzv-note.ok{color:var(--ok,#9ccfb0)}
+.pm-v{margin-left:6px}
+html.tv .pzv-seg button{height:40px}
+/* phones: reactions get their own row instead of a one-emoji-wide column between Mic and Leave */
+@media (max-width:560px){.pz-ctl{justify-content:space-between}.pz-ctl .py-reacts{order:3;flex:1 1 100%}}
+html.tv .pzv .nav-focus{outline:2px solid #f2f2f3;outline-offset:2px}

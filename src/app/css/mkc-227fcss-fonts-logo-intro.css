@@ -1,0 +1,108 @@
+
+/* ===== 2.27.0 fonts: the logo and the intro title keep their own type ===== */
+
+
+
+html[data-font="condensed"]{--f-display:"Oswald",system-ui,-apple-system,"Segoe UI",sans-serif;--f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif}
+
+
+
+
+
+
+html[data-font="graffiti"]{--f-display:"Sedgwick Ave Display",system-ui,-apple-system,"Segoe UI",sans-serif;--f-body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif}
+
+html[data-font="street"]{--f-display:"Bungee",system-ui,-apple-system,"Segoe UI",sans-serif;--f-body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif}
+html[data-font="outline"]{--f-display:"Rampart One",system-ui,-apple-system,"Segoe UI",sans-serif;--f-body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif}
+html[data-font="drip"]{--f-display:"Rubik Wet Paint",system-ui,-apple-system,"Segoe UI",sans-serif;--f-body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif}
+
+html[data-font="brush"]{--f-display:"Kaushan Script",system-ui,-apple-system,"Segoe UI",sans-serif;--f-body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif}
+html[data-font] #intro h1{font-family:"Sora",system-ui,sans-serif}
+html[data-font] .dock .brand{font-family:"Sora",system-ui,sans-serif}
+/* display faces that only come in one weight must not be faux-bolded */
+html[data-font="classic"]{font-synthesis-weight:none}
+/* optical fixes so every pairing sits at the same visual size as Studio */
+html[data-font="wide"] :is(.hero-title,.page-title){font-size:calc(clamp(24px,3.6vw,46px) * var(--ts,1))}
+html[data-font="wide"] .row-title{font-size:calc(clamp(15px,1.5vw,19px) * var(--ts,1));}
+html[data-font="condensed"] :is(.hero-title,.page-title){text-transform:uppercase}
+html[data-font="condensed"] .row-title{font-size:calc(clamp(17px,1.85vw,23px) * var(--ts,1));letter-spacing:.02em}
+html[data-font="editorial"] :is(.hero-title,.page-title){font-weight:600;letter-spacing:-.01em}
+html[data-font="editorial"] .row-title{font-weight:600;font-size:calc(clamp(17px,1.85vw,23px) * var(--ts,1))}
+html[data-font="classic"] .row-title{font-size:calc(clamp(18px,1.9vw,24px) * var(--ts,1))}
+
+html[data-font="deco"] .row-title{font-weight:600;font-size:calc(clamp(17px,1.8vw,22px) * var(--ts,1));letter-spacing:.02em}
+html[data-font="deco"] :is(.hero-title,.page-title){font-weight:700;letter-spacing:.01em}
+html[data-font="rounded"] :is(.hero-title,.page-title){font-weight:900}
+html[data-font="rounded"] .row-title{font-weight:800}
+html[data-font="slab"] .row-title{font-size:calc(clamp(17px,1.8vw,22px) * var(--ts,1))}
+html[data-font="techno"] .row-title{font-weight:600;letter-spacing:.01em}
+html[data-font="techno"] :is(.hero-title,.page-title){letter-spacing:0}
+/* Bold set: one-weight display faces, drawn as designed (no faux bold), a little larger so their character shows */
+html:is([data-font="groovy"],[data-font="bubble"],[data-font="graffiti"],[data-font="gothic"],[data-font="street"],[data-font="outline"],[data-font="drip"],[data-font="heavy"],[data-font="brush"]){font-synthesis-weight:none}
+html:is([data-font="groovy"],[data-font="bubble"],[data-font="graffiti"],[data-font="gothic"],[data-font="street"],[data-font="outline"],[data-font="drip"],[data-font="heavy"],[data-font="brush"]) :is(.row-title,.page-title,.hero-title,.sec-title,.modal h2,.s-card h3){font-weight:400;letter-spacing:0;text-transform:none}
+html:is([data-font="groovy"],[data-font="bubble"],[data-font="graffiti"],[data-font="gothic"],[data-font="street"],[data-font="outline"],[data-font="drip"],[data-font="heavy"],[data-font="brush"]) .row-title{font-size:calc(clamp(18px,2vw,25px) * var(--ts,1));line-height:1.15}
+html:is([data-font="street"],[data-font="heavy"]) .row-title{font-size:calc(clamp(15px,1.6vw,20px) * var(--ts,1))}
+html[data-font="heavy"] :is(.hero-title,.page-title){font-size:calc(clamp(22px,3.2vw,40px) * var(--ts,1))}
+html[data-font="graffiti"] .row-title{font-size:calc(clamp(21px,2.3vw,29px) * var(--ts,1))}
+html[data-font="brush"] .row-title{font-size:calc(clamp(20px,2.2vw,27px) * var(--ts,1))}
+html[data-font="gothic"] .row-title{font-size:calc(clamp(21px,2.3vw,28px) * var(--ts,1))}
+.fnt-sub{margin:14px 0 4px;font-size:calc(12px * var(--ts,1));color:var(--mute)}
+
+/* Settings > Appearance > Font */
+.fnt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:6px 0}
+.fnt-opt{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;padding:14px 14px 12px;border-radius:calc(var(--r-l) * 0.7778);border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;text-align:left;transition:border-color .15s,background-color .15s}
+.fnt-opt:hover{border-color:var(--line-hi)}
+.fnt-opt.on{border-color:var(--ink);background:rgba(255,255,255,.045)}
+.fnt-opt .fs{line-height:1.1;white-space:nowrap;overflow:hidden;max-width:100%}
+.fnt-opt .fb{font-size:calc(13px * var(--ts,1));color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+html.tv .fnt-grid{grid-template-columns:repeat(3,1fr)}
+/* the sample scales to the card so it never gets cut off (smaller fixed size for older browsers) */
+.fnt-opt{container-type:inline-size}
+.fnt-opt .fs{font-size:calc(20px * var(--ts,1));font-size:calc(min(26px,15cqi) * var(--ts,1));text-overflow:clip}
+.fnt-opt[data-font="wide"] .fs,.fnt-opt[data-font="heavy"] .fs{font-size:calc(16px * var(--ts,1));font-size:calc(min(20px,11cqi) * var(--ts,1))}
+.fnt-opt[data-font="street"] .fs{font-size:calc(16px * var(--ts,1));font-size:calc(min(22px,12.5cqi) * var(--ts,1))}
+@media (max-width:760px){.fnt-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+html.tv .fnt-opt.nav-focus{box-shadow:inset 0 0 0 3px #f2f2f3;border-color:transparent}
+
+/* ===== 2.27.0 side menu: faint liquid glass + logo lockup ===== */
+@media (min-width:761px){
+  html.nav-side:not(.tv):not([data-look="anime"]) .dock{position:relative;isolation:isolate;
+    background:linear-gradient(168deg,rgba(255,255,255,.07) 0,rgba(255,255,255,.02) 26%,rgba(255,255,255,.008) 62%,rgba(255,255,255,.035) 100%),rgba(var(--n0b0b0c-c,11,11,12),.6);
+    border:1px solid rgba(255,255,255,.07);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 1px 0 0 rgba(255,255,255,.035),inset 0 -1px 0 rgba(var(--n000000-c,0,0,0),.45),0 30px 70px -36px var(--n000000,#000);
+    -webkit-backdrop-filter:blur(28px) saturate(150%);backdrop-filter:blur(28px) saturate(150%)}
+  /* specular rim: brightest on the top-left edge, fading away; static */
+  html.nav-side:not(.tv):not([data-look="anime"]) .dock::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;padding:1px;pointer-events:none;
+    background:linear-gradient(162deg,rgba(255,255,255,.3) 0,rgba(255,255,255,.07) 18%,rgba(255,255,255,0) 45%,rgba(255,255,255,0) 80%,rgba(255,255,255,.1) 100%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+  /* Low graphics, touch screens: the same tint, solid, no blur */
+  html.nav-side:not(.tv):not([data-look="anime"]) body.noblur .dock{-webkit-backdrop-filter:none;backdrop-filter:none;
+    background:linear-gradient(168deg,rgba(255,255,255,.06) 0,rgba(255,255,255,.016) 26%,rgba(255,255,255,0) 62%,rgba(255,255,255,.03) 100%),var(--n0b0b0c,#0b0b0c)}
+
+  /* logo lockup */
+  html.nav-side:not([data-look="anime"]) .dock .brand{position:relative;gap:13px;min-height:58px;padding:4px 10px 22px;margin-bottom:8px}
+  html.nav-side:not([data-look="anime"]) .dock .brand::after{content:"";position:absolute;left:10px;right:10px;bottom:8px;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.05) 65%,rgba(255,255,255,0))}
+  html.nav-side:not([data-look="anime"]) .dock .brand .mk{width:42px;height:42px;flex:none;border-radius:50%;box-shadow:0 0 0 1px rgba(255,255,255,.06),0 8px 22px -6px var(--n000000,#000),0 0 26px -4px rgba(232,227,216,.16)}
+  html.nav-side:not([data-look="anime"]) .dock .brand .word{display:inline-flex!important;flex-direction:column;align-items:flex-start;line-height:1;font-family:var(--f-serif);font-size:calc(28px * var(--ts,1));font-weight:500;letter-spacing:.18em;text-transform:uppercase;
+    background:linear-gradient(176deg,#fff 0,#ece8df 42%,#a8a49c 58%,#f3efe7 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+  html.nav-side:not([data-look="anime"]) .dock .brand .word em{display:block;margin:7px 0 0 .1em;font-family:var(--f-serif);font-size:calc(10px * var(--ts,1));font-weight:500;letter-spacing:.62em;line-height:1;color:var(--nb4b4bc,#b4b4bc);-webkit-text-fill-color:var(--nb4b4bc,#b4b4bc);background:none}
+  html.side-mini:not([data-look="anime"]) .dock .brand{padding-inline:0;justify-content:center}
+  @media (max-height:820px){html.nav-side:not([data-look="anime"]) .dock .brand{min-height:48px;padding-bottom:16px;margin-bottom:4px}html.nav-side:not([data-look="anime"]) .dock .brand .mk{width:36px;height:36px}html.nav-side:not([data-look="anime"]) .dock .brand .word{font-size:calc(24px * var(--ts,1))}}
+  html.side-mini:not([data-look="anime"]) .dock .brand::after{left:14px;right:14px;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.16),rgba(255,255,255,0))}
+  html.side-mini:not([data-look="anime"]) .dock-wrap:is(:hover,:focus-within) .brand{justify-content:flex-start;padding-inline:10px}
+  html.side-mini:not([data-look="anime"]) .dock-wrap:is(:hover,:focus-within) .brand .word{display:inline-flex!important}
+}
+html.tv.nav-side .dock .brand{display:none}
+
+/* phone drawer: same tint and rim, fully solid: unblurred see-through text behind it looks messy, and touch screens get no backdrop-filter */
+#sideDrawer .sd-panel{background:linear-gradient(168deg,rgba(255,255,255,.065) 0,rgba(255,255,255,.018) 24%,rgba(255,255,255,0) 60%,rgba(255,255,255,.03) 100%),var(--n0b0b0c,#0b0b0c);border-right:1px solid rgba(255,255,255,.09);box-shadow:inset -1px 0 0 rgba(255,255,255,.03),inset 0 1px 0 rgba(255,255,255,.1),24px 0 60px -30px var(--n000000,#000)}
+body:not(.noblur) #sideDrawer .sd-panel{background:linear-gradient(168deg,rgba(255,255,255,.07) 0,rgba(255,255,255,.02) 24%,rgba(255,255,255,0) 60%,rgba(255,255,255,.035) 100%),rgba(var(--n0b0b0c-c,11,11,12),.66);-webkit-backdrop-filter:blur(28px) saturate(150%);backdrop-filter:blur(28px) saturate(150%)}
+#sideDrawer .sd-top{padding:2px 4px 18px 8px;margin-bottom:8px;position:relative}
+#sideDrawer .sd-top::after{content:"";position:absolute;left:8px;right:4px;bottom:6px;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.05) 65%,rgba(255,255,255,0))}
+#sideDrawer .sd-brand{display:flex;align-items:center;gap:13px;font-size:inherit;letter-spacing:0;text-transform:none}
+#sideDrawer .sd-brand .mk{width:42px;height:42px;flex:none;border-radius:50%;box-shadow:0 0 0 1px rgba(255,255,255,.06),0 8px 22px -6px var(--n000000,#000),0 0 26px -4px rgba(232,227,216,.16)}
+#sideDrawer .sd-word{display:inline-flex;flex-direction:column;align-items:flex-start;line-height:1;font-family:var(--f-serif);font-size:calc(28px * var(--ts,1));font-weight:500;letter-spacing:.18em;text-transform:uppercase;font-optical-sizing:none;font-variation-settings:"opsz" 72,"SOFT" 0,"WONK" 0;
+  background:linear-gradient(176deg,#fff 0,#ece8df 42%,#a8a49c 58%,#f3efe7 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+#sideDrawer .sd-word em{display:block;margin:7px 0 0 .1em;font-style:normal;font-size:calc(10px * var(--ts,1));letter-spacing:.62em;color:var(--nb4b4bc,#b4b4bc);-webkit-text-fill-color:var(--nb4b4bc,#b4b4bc)}
+html[data-look="anime"] #sideDrawer .sd-brand :is(.mk,.sd-word){display:none}
+html[data-look="anime"] #sideDrawer .sd-top::after{display:none}
