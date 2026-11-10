@@ -3,6 +3,11 @@
 #include <webkit2/webkit2.h>
 #include <string.h>
 
+/* G_APPLICATION_DEFAULT_FLAGS arrived in GLib 2.74; Ubuntu 22.04 (the release runner) has 2.72 */
+#if !GLIB_CHECK_VERSION(2, 74, 0)
+#define G_APPLICATION_DEFAULT_FLAGS G_APPLICATION_FLAGS_NONE
+#endif
+
 /* The app opens HOME (its saved sign-in and settings live on that origin). Both of the web app's hosts count as
    MKCinema everywhere a page is checked: app.mkcinema.app is the public home, mkcinema.pages.dev serves the apps. */
 #define HOME "https://mkcinema.pages.dev/"
