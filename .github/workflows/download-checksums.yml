@@ -30,6 +30,6 @@ jobs:
           mkdir -p "$RUNNER_TEMP/live" && cp site/download/SHA256SUMS "$RUNNER_TEMP/live/"
           cd "$RUNNER_TEMP/live"
           awk '{print $2}' SHA256SUMS | while read -r f; do
-            curl -fsSL --retry 3 -o "$f" "https://mkcinema.app/download/$f"
+            curl -fsSL --retry 4 --retry-all-errors --retry-delay 5 -o "$f" "https://mkcinema.app/download/$f"
           done
           sha256sum -c SHA256SUMS || { echo "::error::site/download/SHA256SUMS does not match what mkcinema.app serves. Run tools/download-checksums.sh"; exit 1; }
