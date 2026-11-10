@@ -2675,7 +2675,7 @@ const Updater = {
     let el = $('#updBar'); if (el) el.remove();
     const tvApp = IS_TV, canSelf = (() => { try { return typeof MKAndroid.update === 'function'; } catch (e) { return false; } })();
     const msg = kind === 'web' ? `MKCinema ${esc(v.web)} is ready` : `${tvApp ? 'TV app' : 'Android app'} ${esc(v.android)} is ready`;
-    const sub = kind === 'web' ? 'Refresh to get the newest version.' : canSelf ? 'Download it and install over this one. Your settings stay.' : tvApp ? 'Open Downloader on your TV and enter tv.mkcinema.app, then install over this one.' : 'Download it and install over this one. Your settings stay.';
+    const sub = kind === 'web' ? 'Refresh to get the newest version.' : canSelf ? 'Download it and install over this one. Your settings stay.' : tvApp ? 'Open Downloader on your TV and enter 6400996 (or tv.mkcinema.app), then install over this one.' : 'Download it and install over this one. Your settings stay.';
     el = document.createElement('div'); el.id = 'updBar'; el.setAttribute('role', 'status');
     el.innerHTML = `<div><b>${msg}</b><small>${sub}</small></div><div class="inrow">${kind === 'app' && !canSelf && tvApp ? '' : `<button class="btn btn-prime btn-sm" type="button" data-nav id="updGo">${kind === 'web' ? 'Refresh' : 'Update'}</button>`}<button class="btn btn-ghost btn-sm" type="button" data-nav id="updLater">Later</button></div>`;
     document.body.appendChild(el);
