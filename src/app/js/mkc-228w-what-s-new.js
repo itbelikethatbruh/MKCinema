@@ -7,8 +7,12 @@
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
+  { v: '2.62.6', date: '2026-11-10', items: [
+    ['better', 'Your audio language plays first', 'When a film or episode has more than one language, MKCinema now starts the one you chose in Settings (Preferred audio language, or Audio language) wherever this device lets it choose: MKV files in the built-in player, streams with several audio tracks, Safari and the Mac app, debrid services that offer their own streams, and the TV player. Picking a language in the Audio menu still wins.'],
+    ['better', 'More sources play in the app', 'Sources an addon marks as not web-ready now play in MKCinema’s own player when this device can handle them, and Smart Play can pick them, instead of stopping at a “Try in browser” screen. If one won’t play, MKCinema moves to the next copy by itself.'],
+  ] },
   { v: '2.62.5', date: '2026-11-08', items: [
-    ['better', 'Finds a working copy before it plays', 'When Play picks a copy for you, MKCinema now checks the best few first, behind the title’s logo with “Sourcing a working copy…”, and starts one whose picture shows and whose sound plays here. A copy that fails is no longer shown as an error, and the time always starts at 0:00 (or where you left off).']
+    ['better', 'Finds a working copy before it plays', 'When Play picks a copy for you, MKCinema now checks the best few first, behind the title’s logo with “Sourcing a working copy…”, and starts one whose picture shows and whose sound plays here. A copy that fails is no longer shown as an error, and the time always starts at 0:00 (or where you left off).'],
     ['better', 'A bigger, smoother side menu', 'On computers the side menu now has larger names and icons that are easier to read, and it glides open and closed instead of snapping.'],
   ] },
   { v: '2.62.4', date: '2026-11-08', items: [
