@@ -7,6 +7,7 @@ package main
 //     and deletes what it downloaded when it stops or the app closes.
 //   - presence: Discord "Now watching" status, only when the user turns it on and Discord is running.
 //   - dl (1.3.0): offline downloads into Videos\MKCinema, played in MKCinema or in the user's own video player.
+//   - pass: lets the in-app engine read video files from hosts that don't send CORS headers (see package pass).
 
 import (
 	"encoding/json"
@@ -17,6 +18,7 @@ import (
 
 	"mkcinema/dl"
 	engine "mkcinema/p2p"
+	"mkcinema/pass"
 )
 
 var (
@@ -120,10 +122,40 @@ func mkPresence(raw string) (bool, error) {
 	return presenceSet(a), nil
 }
 
+var (
+	passMu  sync.Mutex
+	passSrv *pass.Server
+)
+
+// mkPass("start") starts the local pass server once and returns its base address.
+func mkPass(cmd string) (string, error) {
+	if cmd != "start" {
+		return "", errors.New("unknown command")
+	}
+	passMu.Lock()
+	defer passMu.Unlock()
+	if passSrv == nil {
+		s, err := pass.Start()
+		if err != nil {
+			return "", err
+		}
+		passSrv = s
+	}
+	return passSrv.Base, nil
+}
+
+func stopPass() {
+	passMu.Lock()
+	defer passMu.Unlock()
+	passSrv.Close()
+	passSrv = nil
+}
+
 func desktopInit() string {
 	b, _ := json.Marshal(map[string]any{"platform": "windows", "version": version, "presence": discordAppID != ""})
 	return `(function(){if(!(` + pageGuardJS + `))return;var d=` + string(b) + `;
 d.p2p={start:function(){return window.mkP2P('start')},stop:function(){return window.mkP2P('stop')}};
+d.pass={start:function(){return window.mkPass('start')}};
 if(d.presence)d.setPresence=function(a){return window.mkPresence(a?JSON.stringify(a):'')};
 d.dl={start:function(o){return window.mkDL('start',JSON.stringify(o))},list:function(){return window.mkDL('list','').then(function(s){return JSON.parse(s||'[]')})},
 remove:function(id){return window.mkDL('remove',String(id))},url:function(id){return window.mkDL('url',String(id))},open:function(id){return window.mkDL('open',String(id))},folder:function(){return window.mkDL('folder','')}};

@@ -42,7 +42,18 @@
     key(u) { try { const x = new URL(u); const m = x.pathname.match(/\/(?:resolve|playback|stream|dl)\/([a-z][a-z-]{1,20})\//i); return x.host + (m ? `/${m[1].toLowerCase()}` : ''); } catch (e) { return ''; } },
     load() { if (!this.map) { try { this.map = JSON.parse(localStorage.getItem(this.K) || '{}') || {}; } catch (e) { this.map = {}; } } return this.map; },
     mark(u, v) { const k = this.key(u); if (!k) return; const m = this.load(); m[k] = { v, t: Date.now() }; try { localStorage.setItem(this.K, JSON.stringify(m)); } catch (e) { /* private mode */ } },
-    blocked(u) { const e = this.load()[this.key(u)]; return !!(e && e.v === 'blocked' && Date.now() - e.t < 7 * 864e5); },
+    blocked(u) { if (Pass.on()) return false; const e = this.load()[this.key(u)]; return !!(e && e.v === 'blocked' && Date.now() - e.t < 7 * 864e5); },
+  };
+  /* Windows app: a host that doesn't let pages read its files is read through the app's own pass server on 127.0.0.1
+     (windows/pass), which makes the same Range request and adds the header the browser wants. No MKCinema server. */
+  const Pass = {
+    p: null,
+    on() { return !!(window.MKDesktop && MKDesktop.pass && typeof MKDesktop.pass.start === 'function'); },
+    base() {
+      if (!this.p) this.p = Promise.resolve().then(() => MKDesktop.pass.start()).then((b) => (/^http:\/\/127\.0\.0\.1:\d+\/[0-9a-f]{32}$/.test(String(b)) ? String(b) : null)).catch(() => null).then((b) => { if (!b) this.p = null; return b; });
+      return this.p;
+    },
+    async wrap(u) { const b = this.on() ? await this.base() : null; return b ? `${b}/r?u=${encodeURIComponent(u)}` : null; },
   };
   /* software HEVC decoding: computers only (no phones or tablets), on by default, needs WebGL 2.
      A computer that can't keep up is remembered for 14 days, and HEVC sources count as unplayable there meanwhile. */
@@ -138,18 +149,31 @@
     async start(stream, startAt, base, force) {
       const tok = ++this.tok;
       let w;
-      try { w = new Worker(new URL('engine/mkv-engine.worker.js', location.href)); } catch (e) { this.reason.set(stream, 'workers are blocked here'); return false; }
       const bh = stream.behaviorHints || {};
-      const info = await new Promise((res) => {
-        const t = setTimeout(() => res({ fail: 'the host took too long to answer' }), 7000);
-        w.onmessage = (e) => { const m = e.data || {}; if (m.op === 'info') { clearTimeout(t); res(m.info); } if (m.op === 'fail') { clearTimeout(t); res({ fail: m.reason, container: m.container }); } };
-        w.onerror = () => { clearTimeout(t); res({ fail: 'the engine could not start' }); };
-        w.postMessage({ op: 'open', url: stream.url, headers: (bh.proxyHeaders && bh.proxyHeaders.request) || {} });
-      });
+      const open = (url) => {
+        try { w = new Worker(new URL('engine/mkv-engine.worker.js', location.href)); } catch (e) { return Promise.resolve(null); }
+        return new Promise((res) => {
+          const t = setTimeout(() => res({ fail: 'the host took too long to answer' }), 7000);
+          w.onmessage = (e) => { const m = e.data || {}; if (m.op === 'info') { clearTimeout(t); res(m.info); } if (m.op === 'fail') { clearTimeout(t); res({ fail: m.reason, container: m.container }); } };
+          w.onerror = () => { clearTimeout(t); res({ fail: 'the engine could not start' }); };
+          w.postMessage({ op: 'open', url, headers: (bh.proxyHeaders && bh.proxyHeaders.request) || {} });
+        });
+      };
+      const isBlocked = (f) => /Failed to fetch|NetworkError|Load failed|network/i.test(f || '');
+      let info = await open(stream.url);
+      if (!info) { this.reason.set(stream, 'workers are blocked here'); return false; }
+      // Windows app: a host that refuses the page goes through the app's pass server instead
+      if (info.fail && isBlocked(info.fail) && Pass.on() && tok === this.tok && P.stream === stream) {
+        const via = await Pass.wrap(stream.url);
+        if (via) {
+          w.terminate(); log('info', 'engine: the host refuses web pages, reading it through the Windows app');
+          const again = await open(via); if (again) info = again;
+        }
+      }
       if (tok !== this.tok || P.stream !== stream) { w.terminate(); return true; }
       if (info.fail) {
         w.terminate();
-        const blocked = /Failed to fetch|NetworkError|Load failed|network/i.test(info.fail);
+        const blocked = isBlocked(info.fail);
         // a blocked read also looks like this when the network drops: only a host that answers a plain (no-cors) request counts as blocking
         if (blocked && await reachable(stream.url)) { Hosts.mark(stream.url, 'blocked'); stream._engBlocked = true; }
         this.reason.set(stream, blocked ? 'the host doesn’t let browsers read this file directly' : info.fail);
