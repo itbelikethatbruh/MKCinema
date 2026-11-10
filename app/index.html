@@ -536,8 +536,8 @@ textarea.inp{height:auto;padding-block:10px;resize:vertical;font-family:var(--f-
 
 /* ---------- Card info modes ---------- */
 .l1,.info,.badge-q{transition:opacity .25s}
-body.ci-hover .card:not(.wide):not(:hover):not(.nav-focus):not(:focus-visible) :is(.l1,.info,.badge-q){opacity:0}
-body.ci-below .card:not(.wide) :is(.l1,.info){display:none}
+body.ci-hover .card:not(.wide):not(:hover):not(.nav-focus):not(:focus-visible) .l1,body.ci-hover .card:not(.wide):not(:hover):not(.nav-focus):not(:focus-visible) .info,body.ci-hover .card:not(.wide):not(:hover):not(.nav-focus):not(:focus-visible) .badge-q{opacity:0}
+body.ci-below .card:not(.wide) .l1,body.ci-below .card:not(.wide) .info{display:none}
 .card-sub b{display:block;color:var(--ink);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* ---------- Performance switches ---------- */
@@ -1002,11 +1002,11 @@ body.touch-ui.layer-open #app{visibility:hidden}
 .view.on{animation:viewIn .42s var(--ease)}
 @keyframes viewIn{from{opacity:0;transform:translateY(10px)}}
 .layer-ov:not([hidden]){animation:ovIn .26s ease-out}
-.layer-ov:not([hidden])>:is(.panel,.modal,.tr-box){animation:panelIn .42s var(--ease)}
+.layer-ov:not([hidden])>.panel,.layer-ov:not([hidden])>.modal,.layer-ov:not([hidden])>.tr-box{animation:panelIn .42s var(--ease)}
 @keyframes ovIn{from{opacity:0}}
 @keyframes panelIn{from{opacity:0;transform:translateY(18px) scale(.985)}}
 .layer-ov.leaving[hidden]{display:flex!important;pointer-events:none;animation:ovOut .22s ease-in forwards}
-.layer-ov.leaving[hidden]>:is(.panel,.modal,.tr-box){animation:panelOut .22s ease-in forwards}
+.layer-ov.leaving[hidden]>.panel,.layer-ov.leaving[hidden]>.modal,.layer-ov.leaving[hidden]>.tr-box{animation:panelOut .22s ease-in forwards}
 #player:not([hidden]){animation:ovIn .3s ease-out}
 #player.leaving[hidden]{display:flex!important;pointer-events:none;animation:ovOut .22s ease-in forwards}
 @keyframes ovOut{to{opacity:0}}
@@ -9745,7 +9745,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.63.0';
+const APP_VERSION = '2.63.1';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -21323,6 +21323,9 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
+  { v: '2.63.1', date: '2026-11-10', items: [
+    ['better', 'Faster screen changes', 'Moving between screens now does about half the styling work, most noticeable on TVs.'],
+  ] },
   { v: '2.63.0', date: '2026-11-10', items: [
     ['new', 'Friends', 'Choose a username and display name, then add friends by typing their username. See who is online and, if they choose to share it, what they are watching, and open the same title in one press. Requests need their OK, and Remove, Block and Report are always one tap away.'],
     ['new', 'Messages and watch party invites', 'Chat with friends inside MKCinema, and send a watch party invite they can join straight from the chat. Messages never pop up over a film: the Friends button shows a count instead.'],
@@ -21771,9 +21774,9 @@ html[data-look="anime"]{--mg-pink:#ff8fb4;--mg-pink-c:255,143,180;--mg-hot:#ff4f
   --mg-hair:0 0 0 1px rgba(var(--mg-pink-c),.16)}
 
 /* --- .mg-panel: the banner and the Anime splash --- */
-html[data-look="anime"] :is(.mg-panel,.hero,.an-splash){border:0;border-radius:0;box-shadow:none;clip-path:var(--mg-clip)}
-html[data-look="anime"] :is(.mg-panel,.hero)::after,html[data-look="anime"] .an-splash::before{content:"";position:absolute;inset:0;pointer-events:none;border:0 solid transparent;border-image:var(--mg-frame)}
-html[data-look="anime"] :is(.mg-panel,.hero)::after{z-index:-1;background:var(--mg-tone)}
+html[data-look="anime"] .mg-panel,html[data-look="anime"] .hero,html[data-look="anime"] .an-splash{border:0;border-radius:0;box-shadow:none;clip-path:var(--mg-clip)}
+html[data-look="anime"] .mg-panel::after,html[data-look="anime"] .hero::after,html[data-look="anime"] .an-splash::before{content:"";position:absolute;inset:0;pointer-events:none;border:0 solid transparent;border-image:var(--mg-frame)}
+html[data-look="anime"] .mg-panel::after,html[data-look="anime"] .hero::after{z-index:-1;background:var(--mg-tone)}
 html[data-look="anime"] .an-splash::before{z-index:3}
 html[data-look="anime"] .an-lines{opacity:.6}
 html[data-look="anime"] .an-splash::after{background:radial-gradient(rgba(0,0,0,.22) 1.2px,transparent 1.6px) 0 0/8px 8px}
@@ -21789,8 +21792,8 @@ html[data-look="anime"] #sideDrawer .sd-panel{clip-path:var(--mg-clip);backgroun
   html[data-look="anime"] .dock-tools .ibtn:hover{box-shadow:0 0 0 1px rgba(var(--mg-pink-c),.6),0 0 18px -4px rgba(var(--mg-hot-c),.7)}}
 
 /* --- .mg-section: settings cards and pop-up windows --- */
-html[data-look="anime"] :is(.mg-section,.set-card,.modal){border-radius:calc(var(--r-s) * 0.375);border-image:var(--mg-section)}
-html[data-look="anime"] :is(.mg-section,.modal):not(.set-card){border-width:1px;border-style:solid;border-color:transparent}
+html[data-look="anime"] .mg-section,html[data-look="anime"] .set-card,html[data-look="anime"] .modal{border-radius:calc(var(--r-s) * 0.375);border-image:var(--mg-section)}
+html[data-look="anime"] .mg-section:not(.set-card),html[data-look="anime"] .modal:not(.set-card){border-width:1px;border-style:solid;border-color:transparent}
 
 /* --- .mg-pick: posters stay clean; brackets and a glow appear on the one you point at --- */
 html[data-look="anime"] .card .card-inner,html[data-look="anime"]:not(.tv) .card-inner{border-image:none;border-radius:calc(var(--r-s) * 0.5);box-shadow:var(--mg-hair);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
@@ -21801,10 +21804,10 @@ html.an-fx .card.an-tilt .card-inner::after{background:radial-gradient(circle at
 @media (max-width:760px){html[data-look="anime"]:not(.tv) .card-inner{border-image-outset:0}}
 
 /* --- .mg-rule: headings get a thin double slash instead of a block --- */
-html[data-look="anime"] :is(.mg-rule,.row-title)::before{width:8px;box-shadow:none;background:linear-gradient(90deg,var(--an-red) 0 4px,transparent 4px 6px,var(--mg-pink) 6px 7px,transparent 7px)}
+html[data-look="anime"] .mg-rule::before,html[data-look="anime"] .row-title::before{width:8px;box-shadow:none;background:linear-gradient(90deg,var(--an-red) 0 4px,transparent 4px 6px,var(--mg-pink) 6px 7px,transparent 7px)}
 html[data-look="anime"] .mg-rule{position:relative;padding-left:16px}
 
-html[data-look="anime"] :is(.page-title,.x8-h){text-shadow:2px 2px 0 var(--an-red),4px 4px 0 var(--an-ink)}
+html[data-look="anime"] .page-title,html[data-look="anime"] .x8-h{text-shadow:2px 2px 0 var(--an-red),4px 4px 0 var(--an-ink)}
 
 /* --- buttons: hairline pink outline, a glow on hover --- */
 html[data-look="anime"] .btn-ghost{border:1px solid rgba(var(--mg-pink-c),.5)!important;box-shadow:none!important}
@@ -22641,27 +22644,27 @@ html[data-font] .dock .brand{font-family:"Sora",system-ui,sans-serif}
 /* display faces that only come in one weight must not be faux-bolded */
 html[data-font="classic"]{font-synthesis-weight:none}
 /* optical fixes so every pairing sits at the same visual size as Studio */
-html[data-font="wide"] :is(.hero-title,.page-title){font-size:calc(clamp(24px,3.6vw,46px) * var(--ts,1))}
+html[data-font="wide"] .hero-title,html[data-font="wide"] .page-title{font-size:calc(clamp(24px,3.6vw,46px) * var(--ts,1))}
 html[data-font="wide"] .row-title{font-size:calc(clamp(15px,1.5vw,19px) * var(--ts,1));}
-html[data-font="condensed"] :is(.hero-title,.page-title){text-transform:uppercase}
+html[data-font="condensed"] .hero-title,html[data-font="condensed"] .page-title{text-transform:uppercase}
 html[data-font="condensed"] .row-title{font-size:calc(clamp(17px,1.85vw,23px) * var(--ts,1));letter-spacing:.02em}
-html[data-font="editorial"] :is(.hero-title,.page-title){font-weight:600;letter-spacing:-.01em}
+html[data-font="editorial"] .hero-title,html[data-font="editorial"] .page-title{font-weight:600;letter-spacing:-.01em}
 html[data-font="editorial"] .row-title{font-weight:600;font-size:calc(clamp(17px,1.85vw,23px) * var(--ts,1))}
 html[data-font="classic"] .row-title{font-size:calc(clamp(18px,1.9vw,24px) * var(--ts,1))}
 
 html[data-font="deco"] .row-title{font-weight:600;font-size:calc(clamp(17px,1.8vw,22px) * var(--ts,1));letter-spacing:.02em}
-html[data-font="deco"] :is(.hero-title,.page-title){font-weight:700;letter-spacing:.01em}
-html[data-font="rounded"] :is(.hero-title,.page-title){font-weight:900}
+html[data-font="deco"] .hero-title,html[data-font="deco"] .page-title{font-weight:700;letter-spacing:.01em}
+html[data-font="rounded"] .hero-title,html[data-font="rounded"] .page-title{font-weight:900}
 html[data-font="rounded"] .row-title{font-weight:800}
 html[data-font="slab"] .row-title{font-size:calc(clamp(17px,1.8vw,22px) * var(--ts,1))}
 html[data-font="techno"] .row-title{font-weight:600;letter-spacing:.01em}
-html[data-font="techno"] :is(.hero-title,.page-title){letter-spacing:0}
+html[data-font="techno"] .hero-title,html[data-font="techno"] .page-title{letter-spacing:0}
 /* Bold set: one-weight display faces, drawn as designed (no faux bold), a little larger so their character shows */
 html:is([data-font="groovy"],[data-font="bubble"],[data-font="graffiti"],[data-font="gothic"],[data-font="street"],[data-font="outline"],[data-font="drip"],[data-font="heavy"],[data-font="brush"]){font-synthesis-weight:none}
 html:is([data-font="groovy"],[data-font="bubble"],[data-font="graffiti"],[data-font="gothic"],[data-font="street"],[data-font="outline"],[data-font="drip"],[data-font="heavy"],[data-font="brush"]) :is(.row-title,.page-title,.hero-title,.sec-title,.modal h2,.s-card h3){font-weight:400;letter-spacing:0;text-transform:none}
 html:is([data-font="groovy"],[data-font="bubble"],[data-font="graffiti"],[data-font="gothic"],[data-font="street"],[data-font="outline"],[data-font="drip"],[data-font="heavy"],[data-font="brush"]) .row-title{font-size:calc(clamp(18px,2vw,25px) * var(--ts,1));line-height:1.15}
 html:is([data-font="street"],[data-font="heavy"]) .row-title{font-size:calc(clamp(15px,1.6vw,20px) * var(--ts,1))}
-html[data-font="heavy"] :is(.hero-title,.page-title){font-size:calc(clamp(22px,3.2vw,40px) * var(--ts,1))}
+html[data-font="heavy"] .hero-title,html[data-font="heavy"] .page-title{font-size:calc(clamp(22px,3.2vw,40px) * var(--ts,1))}
 html[data-font="graffiti"] .row-title{font-size:calc(clamp(21px,2.3vw,29px) * var(--ts,1))}
 html[data-font="brush"] .row-title{font-size:calc(clamp(20px,2.2vw,27px) * var(--ts,1))}
 html[data-font="gothic"] .row-title{font-size:calc(clamp(21px,2.3vw,28px) * var(--ts,1))}
@@ -22723,7 +22726,7 @@ body:not(.noblur) #sideDrawer .sd-panel{background:linear-gradient(168deg,rgba(2
 #sideDrawer .sd-word{display:inline-flex;flex-direction:column;align-items:flex-start;line-height:1;font-family:var(--f-serif);font-size:calc(28px * var(--ts,1));font-weight:500;letter-spacing:.18em;text-transform:uppercase;font-optical-sizing:none;font-variation-settings:"opsz" 72,"SOFT" 0,"WONK" 0;
   background:linear-gradient(176deg,#fff 0,#ece8df 42%,#a8a49c 58%,#f3efe7 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
 #sideDrawer .sd-word em{display:block;margin:7px 0 0 .1em;font-style:normal;font-size:calc(10px * var(--ts,1));letter-spacing:.62em;color:var(--nb4b4bc,#b4b4bc);-webkit-text-fill-color:var(--nb4b4bc,#b4b4bc)}
-html[data-look="anime"] #sideDrawer .sd-brand :is(.mk,.sd-word){display:none}
+html[data-look="anime"] #sideDrawer .sd-brand .mk,html[data-look="anime"] #sideDrawer .sd-brand .sd-word{display:none}
 html[data-look="anime"] #sideDrawer .sd-top::after{display:none}
 </style>
 <style id="mkc-2321css">
@@ -24590,8 +24593,8 @@ SetX.init();
 .mk-rowin{animation:mkRowIn .45s var(--ease,cubic-bezier(.22,.8,.24,1)) backwards}
 .mk-dim{opacity:.38;transition:opacity .25s ease-out;pointer-events:none}
 .card.mk-in.nav-focus,.card.mk-in:focus-visible{animation:none}
-body.reduce-motion :is(.mk-in,.mk-gin,.mk-pick,.mk-rowin){animation:none!important}
-@media (prefers-reduced-motion:reduce){:is(.mk-in,.mk-gin,.mk-pick,.mk-rowin){animation:none!important}}
+body.reduce-motion .mk-in,body.reduce-motion .mk-gin,body.reduce-motion .mk-pick,body.reduce-motion .mk-rowin{animation:none!important}
+@media (prefers-reduced-motion:reduce){.mk-in,.mk-gin,.mk-pick,.mk-rowin{animation:none!important}}
 </style>
 <script id="mk-swaps-js">
 'use strict';
@@ -27564,7 +27567,7 @@ body.mk-player-on .toast{padding:9px 14px;font-size:calc(13px * var(--ts,1))}
 /* the welcome card fades in without moving, so nothing on screen jumps */
 @keyframes tourIn{from{opacity:0}to{opacity:1}}
 /* Home's looping animations rest while the player is open */
-body:has(#player:not([hidden])) #app,body:has(#player:not([hidden])) #app *{animation-play-state:paused!important}
+body.mk-player-on #app,body.mk-player-on #app *{animation-play-state:paused!important}
 /* the mouse pointer hides with the controls */
 #player:has(#hud.idle),#player:has(#hud.idle) video{cursor:none}
 </style>

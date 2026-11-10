@@ -462,8 +462,8 @@ textarea.inp{height:auto;padding-block:10px;resize:vertical;font-family:var(--f-
 
 /* ---------- Card info modes ---------- */
 .l1,.info,.badge-q{transition:opacity .25s}
-body.ci-hover .card:not(.wide):not(:hover):not(.nav-focus):not(:focus-visible) :is(.l1,.info,.badge-q){opacity:0}
-body.ci-below .card:not(.wide) :is(.l1,.info){display:none}
+body.ci-hover .card:not(.wide):not(:hover):not(.nav-focus):not(:focus-visible) .l1,body.ci-hover .card:not(.wide):not(:hover):not(.nav-focus):not(:focus-visible) .info,body.ci-hover .card:not(.wide):not(:hover):not(.nav-focus):not(:focus-visible) .badge-q{opacity:0}
+body.ci-below .card:not(.wide) .l1,body.ci-below .card:not(.wide) .info{display:none}
 .card-sub b{display:block;color:var(--ink);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* ---------- Performance switches ---------- */
@@ -928,11 +928,11 @@ body.touch-ui.layer-open #app{visibility:hidden}
 .view.on{animation:viewIn .42s var(--ease)}
 @keyframes viewIn{from{opacity:0;transform:translateY(10px)}}
 .layer-ov:not([hidden]){animation:ovIn .26s ease-out}
-.layer-ov:not([hidden])>:is(.panel,.modal,.tr-box){animation:panelIn .42s var(--ease)}
+.layer-ov:not([hidden])>.panel,.layer-ov:not([hidden])>.modal,.layer-ov:not([hidden])>.tr-box{animation:panelIn .42s var(--ease)}
 @keyframes ovIn{from{opacity:0}}
 @keyframes panelIn{from{opacity:0;transform:translateY(18px) scale(.985)}}
 .layer-ov.leaving[hidden]{display:flex!important;pointer-events:none;animation:ovOut .22s ease-in forwards}
-.layer-ov.leaving[hidden]>:is(.panel,.modal,.tr-box){animation:panelOut .22s ease-in forwards}
+.layer-ov.leaving[hidden]>.panel,.layer-ov.leaving[hidden]>.modal,.layer-ov.leaving[hidden]>.tr-box{animation:panelOut .22s ease-in forwards}
 #player:not([hidden]){animation:ovIn .3s ease-out}
 #player.leaving[hidden]{display:flex!important;pointer-events:none;animation:ovOut .22s ease-in forwards}
 @keyframes ovOut{to{opacity:0}}

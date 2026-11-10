@@ -11,5 +11,5 @@
 .mk-rowin{animation:mkRowIn .45s var(--ease,cubic-bezier(.22,.8,.24,1)) backwards}
 .mk-dim{opacity:.38;transition:opacity .25s ease-out;pointer-events:none}
 .card.mk-in.nav-focus,.card.mk-in:focus-visible{animation:none}
-body.reduce-motion :is(.mk-in,.mk-gin,.mk-pick,.mk-rowin){animation:none!important}
-@media (prefers-reduced-motion:reduce){:is(.mk-in,.mk-gin,.mk-pick,.mk-rowin){animation:none!important}}
+body.reduce-motion .mk-in,body.reduce-motion .mk-gin,body.reduce-motion .mk-pick,body.reduce-motion .mk-rowin{animation:none!important}
+@media (prefers-reduced-motion:reduce){.mk-in,.mk-gin,.mk-pick,.mk-rowin{animation:none!important}}

@@ -22,27 +22,27 @@ html[data-font] .dock .brand{font-family:"Sora",system-ui,sans-serif}
 /* display faces that only come in one weight must not be faux-bolded */
 html[data-font="classic"]{font-synthesis-weight:none}
 /* optical fixes so every pairing sits at the same visual size as Studio */
-html[data-font="wide"] :is(.hero-title,.page-title){font-size:calc(clamp(24px,3.6vw,46px) * var(--ts,1))}
+html[data-font="wide"] .hero-title,html[data-font="wide"] .page-title{font-size:calc(clamp(24px,3.6vw,46px) * var(--ts,1))}
 html[data-font="wide"] .row-title{font-size:calc(clamp(15px,1.5vw,19px) * var(--ts,1));}
-html[data-font="condensed"] :is(.hero-title,.page-title){text-transform:uppercase}
+html[data-font="condensed"] .hero-title,html[data-font="condensed"] .page-title{text-transform:uppercase}
 html[data-font="condensed"] .row-title{font-size:calc(clamp(17px,1.85vw,23px) * var(--ts,1));letter-spacing:.02em}
-html[data-font="editorial"] :is(.hero-title,.page-title){font-weight:600;letter-spacing:-.01em}
+html[data-font="editorial"] .hero-title,html[data-font="editorial"] .page-title{font-weight:600;letter-spacing:-.01em}
 html[data-font="editorial"] .row-title{font-weight:600;font-size:calc(clamp(17px,1.85vw,23px) * var(--ts,1))}
 html[data-font="classic"] .row-title{font-size:calc(clamp(18px,1.9vw,24px) * var(--ts,1))}
 
 html[data-font="deco"] .row-title{font-weight:600;font-size:calc(clamp(17px,1.8vw,22px) * var(--ts,1));letter-spacing:.02em}
-html[data-font="deco"] :is(.hero-title,.page-title){font-weight:700;letter-spacing:.01em}
-html[data-font="rounded"] :is(.hero-title,.page-title){font-weight:900}
+html[data-font="deco"] .hero-title,html[data-font="deco"] .page-title{font-weight:700;letter-spacing:.01em}
+html[data-font="rounded"] .hero-title,html[data-font="rounded"] .page-title{font-weight:900}
 html[data-font="rounded"] .row-title{font-weight:800}
 html[data-font="slab"] .row-title{font-size:calc(clamp(17px,1.8vw,22px) * var(--ts,1))}
 html[data-font="techno"] .row-title{font-weight:600;letter-spacing:.01em}
-html[data-font="techno"] :is(.hero-title,.page-title){letter-spacing:0}
+html[data-font="techno"] .hero-title,html[data-font="techno"] .page-title{letter-spacing:0}
 /* Bold set: one-weight display faces, drawn as designed (no faux bold), a little larger so their character shows */
 html:is([data-font="groovy"],[data-font="bubble"],[data-font="graffiti"],[data-font="gothic"],[data-font="street"],[data-font="outline"],[data-font="drip"],[data-font="heavy"],[data-font="brush"]){font-synthesis-weight:none}
 html:is([data-font="groovy"],[data-font="bubble"],[data-font="graffiti"],[data-font="gothic"],[data-font="street"],[data-font="outline"],[data-font="drip"],[data-font="heavy"],[data-font="brush"]) :is(.row-title,.page-title,.hero-title,.sec-title,.modal h2,.s-card h3){font-weight:400;letter-spacing:0;text-transform:none}
 html:is([data-font="groovy"],[data-font="bubble"],[data-font="graffiti"],[data-font="gothic"],[data-font="street"],[data-font="outline"],[data-font="drip"],[data-font="heavy"],[data-font="brush"]) .row-title{font-size:calc(clamp(18px,2vw,25px) * var(--ts,1));line-height:1.15}
 html:is([data-font="street"],[data-font="heavy"]) .row-title{font-size:calc(clamp(15px,1.6vw,20px) * var(--ts,1))}
-html[data-font="heavy"] :is(.hero-title,.page-title){font-size:calc(clamp(22px,3.2vw,40px) * var(--ts,1))}
+html[data-font="heavy"] .hero-title,html[data-font="heavy"] .page-title{font-size:calc(clamp(22px,3.2vw,40px) * var(--ts,1))}
 html[data-font="graffiti"] .row-title{font-size:calc(clamp(21px,2.3vw,29px) * var(--ts,1))}
 html[data-font="brush"] .row-title{font-size:calc(clamp(20px,2.2vw,27px) * var(--ts,1))}
 html[data-font="gothic"] .row-title{font-size:calc(clamp(21px,2.3vw,28px) * var(--ts,1))}
@@ -104,5 +104,5 @@ body:not(.noblur) #sideDrawer .sd-panel{background:linear-gradient(168deg,rgba(2
 #sideDrawer .sd-word{display:inline-flex;flex-direction:column;align-items:flex-start;line-height:1;font-family:var(--f-serif);font-size:calc(28px * var(--ts,1));font-weight:500;letter-spacing:.18em;text-transform:uppercase;font-optical-sizing:none;font-variation-settings:"opsz" 72,"SOFT" 0,"WONK" 0;
   background:linear-gradient(176deg,#fff 0,#ece8df 42%,#a8a49c 58%,#f3efe7 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
 #sideDrawer .sd-word em{display:block;margin:7px 0 0 .1em;font-style:normal;font-size:calc(10px * var(--ts,1));letter-spacing:.62em;color:var(--nb4b4bc,#b4b4bc);-webkit-text-fill-color:var(--nb4b4bc,#b4b4bc)}
-html[data-look="anime"] #sideDrawer .sd-brand :is(.mk,.sd-word){display:none}
+html[data-look="anime"] #sideDrawer .sd-brand .mk,html[data-look="anime"] #sideDrawer .sd-brand .sd-word{display:none}
 html[data-look="anime"] #sideDrawer .sd-top::after{display:none}

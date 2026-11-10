@@ -7,6 +7,9 @@
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
+  { v: '2.63.1', date: '2026-11-10', items: [
+    ['better', 'Faster screen changes', 'Moving between screens now does about half the styling work, most noticeable on TVs.'],
+  ] },
   { v: '2.63.0', date: '2026-11-10', items: [
     ['new', 'Friends', 'Choose a username and display name, then add friends by typing their username. See who is online and, if they choose to share it, what they are watching, and open the same title in one press. Requests need their OK, and Remove, Block and Report are always one tap away.'],
     ['new', 'Messages and watch party invites', 'Chat with friends inside MKCinema, and send a watch party invite they can join straight from the chat. Messages never pop up over a film: the Friends button shows a count instead.'],

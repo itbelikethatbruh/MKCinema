@@ -18,9 +18,9 @@ html[data-look="anime"]{--mg-pink:#ff8fb4;--mg-pink-c:255,143,180;--mg-hot:#ff4f
   --mg-hair:0 0 0 1px rgba(var(--mg-pink-c),.16)}
 
 /* --- .mg-panel: the banner and the Anime splash --- */
-html[data-look="anime"] :is(.mg-panel,.hero,.an-splash){border:0;border-radius:0;box-shadow:none;clip-path:var(--mg-clip)}
-html[data-look="anime"] :is(.mg-panel,.hero)::after,html[data-look="anime"] .an-splash::before{content:"";position:absolute;inset:0;pointer-events:none;border:0 solid transparent;border-image:var(--mg-frame)}
-html[data-look="anime"] :is(.mg-panel,.hero)::after{z-index:-1;background:var(--mg-tone)}
+html[data-look="anime"] .mg-panel,html[data-look="anime"] .hero,html[data-look="anime"] .an-splash{border:0;border-radius:0;box-shadow:none;clip-path:var(--mg-clip)}
+html[data-look="anime"] .mg-panel::after,html[data-look="anime"] .hero::after,html[data-look="anime"] .an-splash::before{content:"";position:absolute;inset:0;pointer-events:none;border:0 solid transparent;border-image:var(--mg-frame)}
+html[data-look="anime"] .mg-panel::after,html[data-look="anime"] .hero::after{z-index:-1;background:var(--mg-tone)}
 html[data-look="anime"] .an-splash::before{z-index:3}
 html[data-look="anime"] .an-lines{opacity:.6}
 html[data-look="anime"] .an-splash::after{background:radial-gradient(rgba(0,0,0,.22) 1.2px,transparent 1.6px) 0 0/8px 8px}
@@ -36,8 +36,8 @@ html[data-look="anime"] #sideDrawer .sd-panel{clip-path:var(--mg-clip);backgroun
   html[data-look="anime"] .dock-tools .ibtn:hover{box-shadow:0 0 0 1px rgba(var(--mg-pink-c),.6),0 0 18px -4px rgba(var(--mg-hot-c),.7)}}
 
 /* --- .mg-section: settings cards and pop-up windows --- */
-html[data-look="anime"] :is(.mg-section,.set-card,.modal){border-radius:calc(var(--r-s) * 0.375);border-image:var(--mg-section)}
-html[data-look="anime"] :is(.mg-section,.modal):not(.set-card){border-width:1px;border-style:solid;border-color:transparent}
+html[data-look="anime"] .mg-section,html[data-look="anime"] .set-card,html[data-look="anime"] .modal{border-radius:calc(var(--r-s) * 0.375);border-image:var(--mg-section)}
+html[data-look="anime"] .mg-section:not(.set-card),html[data-look="anime"] .modal:not(.set-card){border-width:1px;border-style:solid;border-color:transparent}
 
 /* --- .mg-pick: posters stay clean; brackets and a glow appear on the one you point at --- */
 html[data-look="anime"] .card .card-inner,html[data-look="anime"]:not(.tv) .card-inner{border-image:none;border-radius:calc(var(--r-s) * 0.5);box-shadow:var(--mg-hair);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
@@ -48,10 +48,10 @@ html.an-fx .card.an-tilt .card-inner::after{background:radial-gradient(circle at
 @media (max-width:760px){html[data-look="anime"]:not(.tv) .card-inner{border-image-outset:0}}
 
 /* --- .mg-rule: headings get a thin double slash instead of a block --- */
-html[data-look="anime"] :is(.mg-rule,.row-title)::before{width:8px;box-shadow:none;background:linear-gradient(90deg,var(--an-red) 0 4px,transparent 4px 6px,var(--mg-pink) 6px 7px,transparent 7px)}
+html[data-look="anime"] .mg-rule::before,html[data-look="anime"] .row-title::before{width:8px;box-shadow:none;background:linear-gradient(90deg,var(--an-red) 0 4px,transparent 4px 6px,var(--mg-pink) 6px 7px,transparent 7px)}
 html[data-look="anime"] .mg-rule{position:relative;padding-left:16px}
 
-html[data-look="anime"] :is(.page-title,.x8-h){text-shadow:2px 2px 0 var(--an-red),4px 4px 0 var(--an-ink)}
+html[data-look="anime"] .page-title,html[data-look="anime"] .x8-h{text-shadow:2px 2px 0 var(--an-red),4px 4px 0 var(--an-ink)}
 
 /* --- buttons: hairline pink outline, a glow on hover --- */
 html[data-look="anime"] .btn-ghost{border:1px solid rgba(var(--mg-pink-c),.5)!important;box-shadow:none!important}
