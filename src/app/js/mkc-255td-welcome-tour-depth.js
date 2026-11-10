@@ -16,6 +16,7 @@ const TourDeep = {
       case 'Cams': return typeof Cams !== 'undefined';
       case 'WatchStats': return typeof WatchStats !== 'undefined';
       case 'RmInfo': return typeof RmInfo !== 'undefined';
+      case 'Friends': return typeof Friends !== 'undefined' && !Friends.kids();
       default: return false;
     }
   },
@@ -101,6 +102,10 @@ const TourDeep = {
         pts: [['waypoints', 'Any version', 'Friends can use different releases. Everyone is lined up by the dialogue.'], ['rewind', 'Catch up to the room', 'Late? Catch up at 1.5× with subtitles and rejoin by yourself.'],
           has('Cams') ? ['camera', 'Party cameras', 'See each other, or use a phone as the TV’s camera. Video goes straight between your devices.'] : ['headphones', 'Voice on your phone', 'Talk through your phone while the film plays on the TV.'], ['mic-vocal', 'Watch-along', 'Record your own commentary and share it. It lines up with anyone’s copy.']],
         where: 'Settings › Devices › Watch party' },
+      { id: 'friends', ch: 'together', t: 'Friends', art: 'friends', when: () => has('Friends'),
+        lede: 'Add friends by their username. See who is online and what they are watching, chat, and start a watch party together.',
+        pts: [['users', 'Only people you accept', 'Requests need your OK. Remove or block anyone, any time, without them being told.'], ['eye-off', 'You choose what shows', 'Hide your online status or what you watch in one switch.'], ['phone', 'Calls on your terms', 'Off until you turn them on, and they can wait until the film ends.']],
+        where: 'Friends, the speech-bubble button in the menu' },
       { id: 'remote', ch: 'together', t: 'Your phone is the remote', art: 'remote',
         lede: 'Scan the TV’s code and your phone becomes a touchpad, keyboard and voice search. The TV asks before a new phone can take control.',
         pts: [['headphones', 'Listen on phone', 'The film plays on the TV, the sound in your headphones.'], ['subtitles', 'Subtitles on your phone', 'Everyone reads their own language, in step with the TV.'], ['monitor-smartphone', 'Take it with you', 'Leaving the room? The film carries on on your phone at the same line.'], ['languages', 'Hear it in your language', 'A dub plays on your phone while the TV keeps its sound for the room.']],

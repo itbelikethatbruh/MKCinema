@@ -7,6 +7,14 @@
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
+  { v: '2.63.0', date: '2026-11-10', items: [
+    ['new', 'Friends', 'Choose a username and display name, then add friends by typing their username. See who is online and, if they choose to share it, what they are watching, and open the same title in one press. Requests need their OK, and Remove, Block and Report are always one tap away.'],
+    ['new', 'Messages and watch party invites', 'Chat with friends inside MKCinema, and send a watch party invite they can join straight from the chat. Messages never pop up over a film: the Friends button shows a count instead.'],
+    ['new', 'Calls that wait for the credits', 'Call a friend by voice, with camera if you like. Calls are off until you turn them on in Settings › Friends, and “When I’m not watching” never rings during a film: your friend sees you are busy and you get a missed call later.'],
+    ['new', 'Xtream logins, done properly', 'Sign in with your TV service’s Xtream login and MKCinema now reads the service itself: your account (active, end date, screens in use), live channels in their categories, Catch-up for channels that keep past programmes, and Movies and Series with every season and episode.'],
+    ['better', 'Your TV service in the Android app', 'In the Android and Android TV app (1.10.0 and later), any TV service you add loads directly, plain http:// ones included, and channels, catch-up, films and episodes play in the app’s own player.'],
+    ['better', 'Multi-language files on Android phones', 'Android phones: multi-language files start in your audio language.'],
+  ] },
   { v: '2.62.6', date: '2026-11-10', items: [
     ['better', 'Your audio language plays first', 'When a film or episode has more than one language, MKCinema now starts the one you chose in Settings (Preferred audio language, or Audio language) wherever this device lets it choose: MKV files in the built-in player, streams with several audio tracks, Safari and the Mac app, debrid services that offer their own streams, and the TV player. Picking a language in the Audio menu still wins.'],
     ['better', 'More sources play in the app', 'Sources an addon marks as not web-ready now play in MKCinema’s own player when this device can handle them, and Smart Play can pick them, instead of stopping at a “Try in browser” screen. If one won’t play, MKCinema moves to the next copy by itself.'],
