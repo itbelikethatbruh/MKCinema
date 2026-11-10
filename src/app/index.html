@@ -610,7 +610,14 @@ html:not(.tv) .net-rail{margin-top:-6px}
 <script id="mkc-fast">@@src:js/mkc-fast-faster-first-screen.js@@</script>
 <!-- mk-fast:end -->
 <!-- mk-tune:start -->
-<style id="mkc-tune-css">@@src:css/mkc-tune-css-welcome-card-fades.css@@</style>
+<style id="mkc-tune-css">
+/* the welcome card fades in without moving, so nothing on screen jumps */
+@keyframes tourIn{from{opacity:0}to{opacity:1}}
+/* Home's looping animations rest while the player is open */
+body.mk-player-on #app,body.mk-player-on #app *{animation-play-state:paused!important}
+/* the mouse pointer hides with the controls */
+#player:has(#hud.idle),#player:has(#hud.idle) video{cursor:none}
+</style>
 <script id="mkc-tune">@@src:js/mkc-tune-tidy-ups-episode.js@@</script>
 <!-- mk-tune:end -->
 <!-- mk-rel2466:start -->
