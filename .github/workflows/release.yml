@@ -281,7 +281,12 @@ jobs:
             want="$SITE_FILES"
           fi
           for f in $want; do
-            type=$(curl -fsSL --retry 3 -o "$RUNNER_TEMP/dist/$f" -w '%{content_type}' "$SITE/$f")
+            # Cloudflare's bot protection on mkcinema.app can turn GitHub's runners away (HTTP 403), so the copy on the
+            # newest GitHub release is the fallback. Either way the SHA256SUMS check below decides.
+            if ! type=$(curl -fsSL --retry 3 -o "$RUNNER_TEMP/dist/$f" -w '%{content_type}' "$SITE/$f"); then
+              echo "::warning::$f could not be read from the website, using the newest GitHub release's copy"
+              type=$(curl -fsSL --retry 3 -o "$RUNNER_TEMP/dist/$f" -w '%{content_type}' "https://github.com/$GITHUB_REPOSITORY/releases/latest/download/$f")
+            fi
             size=$(stat -c %s "$RUNNER_TEMP/dist/$f")
             # Unknown paths on the site return the home page, so reject HTML and tiny files.
             if [[ "$type" == text/html* || "$size" -lt 100000 ]]; then
