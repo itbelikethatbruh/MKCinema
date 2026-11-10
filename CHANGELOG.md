@@ -2,10 +2,25 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
-## Android app 1.10.0 and web app 2.63.0 (TV services)
+## Android app 1.10.0 and web app 2.63.0 (friends and TV services)
 
+- **Friends.** Choose a username and the name other people see, then add friends by typing their username. See who is online and, if they choose to share it, what they are watching, and open the same title in one press. Requests need their OK, and Remove, Block and Report are always one tap away.
+- **Messages and watch party invites.** Chat with friends inside MKCinema and send a party invite they can join straight from the chat. Messages never pop up over a film: the Friends button shows a count instead.
+- **Calls that wait for the credits.** Call a friend by voice, with camera if you like. Calls are off until you turn them on in Settings › Friends, and "When I'm not watching" never rings during a film.
+- **Faster screen changes** (2.63.1), most noticeable on TVs.
 - **Xtream logins, done properly.** MKCinema now reads your TV service itself: your account (active, end date, screens in use), live channels in their categories, Catch-up for channels that keep past programmes, and Movies and Series with every season and episode. Services without the Xtream API still load through their playlist.
 - **Your TV service in the Android app.** On Android and Android TV, any TV service you add loads directly, plain http:// ones included, and channels, catch-up, films and episodes play in the app's own player with your preferred audio language.
+
+## Web app 2.62 (Top 10s, Films and Series homes, Miko everywhere)
+
+- **Top 10s for every taste.** The Top 10 on Home can show worldwide or your country, one network, one category, or one year or decade.
+- **A home for Series, and one for Films**, each opening with its own Top 10 and the networks, and a **Year menu** next to every catalog and genre.
+- **Peak Cinema** now sits right under the Top 10.
+- **Miko is on every screen.** Tap Miko in the corner and say or type what you want: "play Dune", "who's in this?", "films with Zendaya", "something funny for tonight". She steps aside while a film plays, and Settings › Appearance turns her off.
+- **Finds a working copy before it plays.** Play checks the best few copies first and starts one whose picture shows and whose sound plays on this device. Smart Play also passes over camera recordings, samples and files too small to be the film.
+- **Your audio language plays first** on files with more than one language, and sources an addon marks as not web-ready play in MKCinema's own player when the device can handle them.
+- **Sized for your screen** on phones and big monitors, and a bigger, smoother side menu on computers.
+- **Addons follow you** to every device you sign in on.
 
 ## Web app 2.61.0 (automatic skips)
 
@@ -13,6 +28,14 @@ All notable changes to MKCinema. The web app version and the native app versions
 - **Straight to the scene after the credits.** Credits followed by more of the episode or film get a Skip credits button, or skip on their own.
 - **Better guesses.** When an episode has no intro times but the episodes either side agree, a Skip intro button is offered. Guessed times never skip on their own.
 - **No more waiting clips.** A source that sends a short waiting clip instead of the film is spotted and passed over for the next source.
+
+## Web app 2.57 to 2.60 (the in-browser engine and AI captions)
+
+- **MKV files play right here** (2.57), including on Safari, and Dolby Digital, Dolby Digital Plus, DTS and TrueHD sound is converted on your device so nothing plays silent.
+- **More films play with sound** (2.58): MP4 and TS files with Dolby or DTS sound, Blu-ray picture subtitles in MKV files, and 5.1 kept when your speakers can play it.
+- **HEVC films on any computer** (2.59), up to 1080p, when the browser has no decoder of its own.
+- **Captions for films without subtitles** (2.60). Make captions with AI listens on your device and writes captions a minute or two ahead, translating foreign films into English. The sound never leaves your device.
+- Rows, sources and episodes come to rest on a whole item when you swipe, press and hold any source to copy its link, and page changes fade instead of blinking.
 
 ## Releases: built from source on every version tag
 
