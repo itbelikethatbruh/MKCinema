@@ -29,6 +29,15 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.10.0 (versionCode 23): your own TV service in the app
+
+`Iptv.java`: the TV services the person adds in Live TV › Add playlist (Xtream login or playlist link) load directly in
+the app, plain `http://` ones included and with no CORS headers needed. The page sends their addresses with
+`MKAndroid.iptvHosts` (kept in the app's settings), and requests from the page to those servers, or to the servers they
+redirect to or name in a channel's HLS playlist, are fetched by the app and handed back to the page. Every other address
+keeps the 1.8.1 rules in `cleartext()`. Channels, catch-up, films and episodes play in the app's own player
+(`MKAndroid.play`) on phones as well as TVs. Needs web 2.63.0 for the Xtream API screens (Catch-up, Movies, Series).
+
 ## 1.9.1 (versionCode 22): camera for party cameras
 
 `onPermissionRequest` now grants `RESOURCE_VIDEO_CAPTURE` as well as `RESOURCE_AUDIO_CAPTURE`, only to pages on
