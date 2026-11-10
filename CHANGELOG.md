@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Android app 1.10.0 and web app 2.63.0 (TV services)
+
+- **Xtream logins, done properly.** MKCinema now reads your TV service itself: your account (active, end date, screens in use), live channels in their categories, Catch-up for channels that keep past programmes, and Movies and Series with every season and episode. Services without the Xtream API still load through their playlist.
+- **Your TV service in the Android app.** On Android and Android TV, any TV service you add loads directly, plain http:// ones included, and channels, catch-up, films and episodes play in the app's own player with your preferred audio language.
+
 ## Web app 2.61.0 (automatic skips)
 
 - **Intros, recaps and credits skip themselves.** When the times are known (chapters in the file, your addons, AniSkip for anime, TheIntroDB), MKCinema skips them for you and shows a Watch button for a few seconds in case you wanted to see it. Settings › Playback › Skip intros, recaps and credits: Automatically, Show a Skip button, or Off.

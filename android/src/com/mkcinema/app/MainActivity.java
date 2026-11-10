@@ -70,7 +70,7 @@ public class MainActivity extends Activity {
     static final String[] APP_HOSTS = { HOST, "app.mkcinema.app" };
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6;
-    static final String VER = "1.9.0";
+    static final String VER = "1.10.0";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -108,6 +108,7 @@ public class MainActivity extends Activity {
         root = new FrameLayout(this);
         root.setBackgroundColor(Color.BLACK);
         setContentView(root);
+        Iptv.load(this); // 1.10.0: the TV servers the person added (Live TV › Add playlist)
         buildWeb();
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -159,8 +160,8 @@ public class MainActivity extends Activity {
             @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
                 return route(r.getUrl());
             }
-            @Override public void onPageStarted(WebView v, String url, android.graphics.Bitmap icon) { pageHost = hostOf(url); tvJsDone = false; giveKey(v); }
-            @Override public void doUpdateVisitedHistory(WebView v, String url, boolean reload) { pageHost = hostOf(url); }
+            @Override public void onPageStarted(WebView v, String url, android.graphics.Bitmap icon) { pageHost = hostOf(url); iptvOrigin(); tvJsDone = false; giveKey(v); }
+            @Override public void doUpdateVisitedHistory(WebView v, String url, boolean reload) { pageHost = hostOf(url); iptvOrigin(); }
             @Override public void onPageCommitVisible(WebView v, String url) { giveKey(v); if (tv && !tvJsDone) { tvJsDone = true; v.evaluateJavascript(TV_JS, null); } }
             @Override public void onPageFinished(WebView v, String url) { giveKey(v); if (tv && !tvJsDone) { tvJsDone = true; v.evaluateJavascript(TV_JS, null); } }
             @Override public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) { return cleartext(r); }
@@ -414,6 +415,9 @@ public class MainActivity extends Activity {
         return true;
     }
 
+    /** 1.10.0: the CORS answer for the person's TV servers names the MKCinema page on screen */
+    void iptvOrigin() { if (appHost(pageHost)) Iptv.origin = "https://" + pageHost.toLowerCase(Locale.US); }
+
     /** "https://host" of a page, so the bridge only answers MKCinema itself over HTTPS. */
     static String hostOf(String url) { try { Uri u = Uri.parse(url); return "https".equals(u.getScheme()) && u.getHost() != null ? u.getHost() : ""; } catch (Exception e) { return ""; } }
 
@@ -497,6 +501,12 @@ public class MainActivity extends Activity {
         }
         /** The TV player: {url, title, sub, startMs, subUrl, matchRate}. 1.8.1: http(s) addresses only (films on this
             device play through dlPlay, never a file:// or content:// address from the page). */
+        /** 1.10.0: the addresses of the TV services the person added in Live TV (JSON array of URLs). Only these hosts
+            get past cleartext() and CORS, fetched by the app (Iptv). Returns how many hosts were kept, or -1. */
+        @JavascriptInterface public int iptvHosts(String k, String json) {
+            if (!ok(k) || json == null || json.length() > 20000) return -1;
+            return Iptv.set(getApplicationContext(), json);
+        }
         @JavascriptInterface public boolean play(String k, String json) {
             if (!ok(k)) return false;
             try {
@@ -554,7 +564,7 @@ public class MainActivity extends Activity {
     /** Every MKAndroid method, for BRIDGE_JS */
     static final String[] BRIDGE_METHODS = { "voice", "voiceStop", "version", "fps", "watchNext", "watchNextRemove", "p2pStart", "p2pStop",
         "p2pAvailable", "dlStart", "dlSpace", "setSlow", "epEnable", "epOn", "epSync", "dlList", "dlRemove", "dlPlay", "pipState", "pip", "play",
-        "setEngine", "update", "youtube", "exit" };
+        "setEngine", "update", "youtube", "exit", "iptvHosts" };
 
     static String newKey() {
         byte[] b = new byte[24]; new SecureRandom().nextBytes(b);
@@ -600,6 +610,9 @@ public class MainActivity extends Activity {
         engine on 127.0.0.1). Elsewhere only pictures and video may load over http, like in a browser: scripts, frames
         and data are blocked, so nobody on the network can rewrite what MKCinema runs or reads. */
     static WebResourceResponse cleartext(WebResourceRequest r) {
+        // 1.10.0: the person's own TV servers (Xtream or playlist) are fetched by the app itself, see Iptv
+        WebResourceResponse tv = Iptv.intercept(r);
+        if (tv != null) return tv;
         try {
             Uri u = r.getUrl();
             if (!"http".equalsIgnoreCase(u.getScheme()) || r.isForMainFrame() || lanHost(u.getHost())) return null;
