@@ -1,0 +1,7 @@
+
+/* the welcome card fades in without moving, so nothing on screen jumps */
+@keyframes tourIn{from{opacity:0}to{opacity:1}}
+/* Home's looping animations rest while the player is open */
+body:has(#player:not([hidden])) #app,body:has(#player:not([hidden])) #app *{animation-play-state:paused!important}
+/* the mouse pointer hides with the controls */
+#player:has(#hud.idle),#player:has(#hud.idle) video{cursor:none}

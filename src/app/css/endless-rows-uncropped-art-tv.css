@@ -1,0 +1,25 @@
+
+/* ===== Endless rows, uncropped art, TV contrast ===== */
+/* Art crops from the bottom, under the fade, so heads and faces stay in view */
+.d-hero .bg,.pal-top .pt-bg img{object-position:50% 12%}
+@media (min-width:761px) and (min-height:541px){.d-hero{min-height:clamp(300px,54vh,560px)}}
+/* the tile that ends an endless row */
+.rail-all{flex:none;align-self:stretch;width:clamp(120px,11vw,160px);display:grid;place-content:center;justify-items:center;gap:10px;border-radius:var(--r-m);border:1px solid var(--line-hi);background:rgba(255,255,255,.03);color:var(--ink);font-weight:600;font-size:calc(14px * var(--ts,1));scroll-snap-align:start}
+.rail-all .lucide{width:26px;height:26px}
+@media (hover:hover){.rail-all:hover{background:rgba(255,255,255,.07)}}
+.rail>.skeleton.rail-sk{flex:none;width:clamp(132px,14vw,192px)}
+/* TV: no dark text on a light fill. Light text on dark with a platinum edge reads on every TV picture mode */
+html.tv .btn-prime,html.tv .btn-bolt,html.tv a.btn.btn-prime,html.tv a.btn.btn-bolt,html.tv .exit-ask .xa-stay{color:#fff!important;background:linear-gradient(180deg,var(--n2b2b30,#2b2b30),var(--n121215,#121215))!important;box-shadow:inset 0 0 0 2px var(--ne6e6e9,#e6e6e9)!important;border:0}
+html.tv .btn-bolt>svg.lucide{background:var(--nf2f2f3,#f2f2f3);color:var(--n000000,#000);fill:var(--n000000,#000);box-shadow:none}
+html.tv .sp-l small{color:rgba(255,255,255,.66)}
+html.tv .btn-bolt::after{display:none}
+html.tv .chip.on,html.tv .pk .chip.on,html.tv .segc button.on,html.tv .qp-g.on{color:#fff!important;background:var(--n26262b,#26262b)!important;border-color:var(--nf2f2f3,#f2f2f3)!important;box-shadow:inset 0 0 0 1px var(--nf2f2f3,#f2f2f3)!important}
+html.tv .chip.on .tag-s{color:#fff!important;background:rgba(255,255,255,.12)!important;border-color:rgba(255,255,255,.45)!important}
+html.tv .tb.res,html.tv .tb.res.k4,html.tv .tb.deb{color:#fff;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.6)}
+html.tv .tb.res.k4,html.tv .tb.deb{color:#efe7d2;border-color:var(--nd9d4c7,#d9d4c7);background:rgba(var(--nd9d4c7-c,217,212,199),.14)}
+html.tv .imdb,html.tv .imdb.r-hi,html.tv .imdb.r-lo{color:#fff;background:var(--n141417,#141417);box-shadow:inset 0 0 0 1.5px #f5c518}
+html.tv .imdb.r-hi{box-shadow:inset 0 0 0 1.5px #3fd98a}
+html.tv .imdb.r-lo{box-shadow:inset 0 0 0 1.5px #f07a66}
+html.tv .badge-r.r-hi,html.tv .badge-r.r-mid,html.tv .badge-r.r-lo{color:#fff;background:rgba(var(--n0a0a0c-c,10,10,12),.88);box-shadow:inset 0 0 0 1.5px currentColor}
+html.tv .badge-r.r-hi{color:#7af0b4}html.tv .badge-r.r-mid{color:#ffd76a}html.tv .badge-r.r-lo{color:#ff9a85}
+html.tv .rail-all.nav-focus{background:rgba(255,255,255,.08)}

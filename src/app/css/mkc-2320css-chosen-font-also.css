@@ -1,0 +1,16 @@
+
+/* 2.32.0: the chosen font also sets the menu words (top menu, phone tab bar, side rail, phone side drawer) */
+html[data-font]:not([data-look="anime"]) :where(#tabs .tab,#tabs .tab .lbl,.dock .searchbtn .lbl,#mtabs button,#mtabs button span,#sideDrawer .sd-list button,#sideDrawer .sd-list button span){font-family:var(--f-display)}
+#mtabs button span{max-width:100%;overflow:hidden;text-overflow:clip;white-space:nowrap}
+/* eight labels share a phone bar: big text sizes stop at a size that still fits */
+#mtabs button span{font-size:min(1em,12.5px)}
+/* faces that run wide or tall get a smaller cut so labels keep their room */
+html[data-font]:is([data-font="wide"],[data-font="heavy"],[data-font="street"],[data-font="outline"]):not([data-look="anime"]) :where(#tabs .tab .lbl,.dock .searchbtn .lbl,#mtabs button span,#sideDrawer .sd-list button span){font-size:.84em;letter-spacing:0}
+html[data-font="groovy"]:not([data-look="anime"]) :where(#tabs .tab .lbl,#mtabs button span){font-size:.94em}
+html[data-font][data-font]:is([data-font="wide"],[data-font="street"],[data-font="outline"]):not([data-look="anime"]) #mtabs button span{font-size:.8em}
+/* Climate Crisis is too wide for eight labels on a phone: the phone tab bar keeps the reading face */
+html[data-font="heavy"][data-font]:not([data-look="anime"]) :is(#mtabs button,#mtabs button span){font-family:var(--f-body)}
+html[data-font]:is([data-font="groovy"],[data-font="bubble"],[data-font="drip"],[data-font="gothic"],[data-font="brush"],[data-font="graffiti"]):not([data-look="anime"]) :is(#tabs .tab,#mtabs button,#sideDrawer .sd-list button){font-weight:400}
+html[data-font="gothic"]:not([data-look="anime"]) :where(#tabs .tab .lbl,#mtabs button span,#sideDrawer .sd-list button span){font-size:1.12em}
+/* 2.32.0: no white line sweeping through the logo when the app opens */
+#intro .sp-line{display:none!important}

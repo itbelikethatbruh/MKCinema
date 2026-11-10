@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script id="mkc-evt">@@src:js/mkc-evt-image-fallbacks-font.js@@</script>
+<script>@@src:js/settings-are-read-parsed-once.js@@</script>
+<script>@@src:js/try-var-ul-window-cfg0.js@@</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script id="mkc-fit-head">@@src:js/mkc-fit-head-phones-portrait-that.js@@</script>
+<script id="mkc-domain">@@src:js/mkc-domain-lives-at-app.js@@</script>
+<style id="mkc-domain-css">@@src:css/mkc-domain-css-mkcmove-position-fixed.css@@</style>
+<title>MKCinema</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="description" content="MKCinema: tomorrow’s cinema, for the whole house. A free home cinema app for the whole family, on every screen.">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=25">
+<meta name="apple-mobile-web-app-title" content="MKCinema">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=25">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- mk-fast-head -->
+<link rel="preconnect" href="https://images.metahub.space">
+<link rel="preconnect" href="https://live.metahub.space">
+<script>@@src:js/function-try-var-tv-android.js@@</script>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..700,0..100,0..1;1,9..144,400..700,0..100,0..1&display=swap" media="print" data-print-swap>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" media="print" data-print-swap>
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"></noscript>
+<!-- the intro animation library (GSAP) is loaded by runIntro(), only when the intro plays -->
+<script id="mkc-icons">@@src:js/mkc-icons-lucide-isc-only.js@@</script>
+<style>@@src:css/layout-plain-black-page-nothing.css@@</style>
+<style id="perf-2733">
+/* ===== 2.7.33 perf: on TVs every focus move is instant. Fades on poster info and buttons repainted the whole page on each frame ===== */
+html.tv :is(button,a,input,select,[data-nav],[tabindex],.card,.card *,.l1,.info,.badge-q,.chip,.tab,.ibtn,.btn):not(#saver):not(#saver *){transition:none!important}
+</style>
+<style>@@src:css/bc.css@@</style>
+<style>/* 2.8 trailers: nothing paints under a playing trailer */body.tr-on #app,body.tr-on .layer-ov:not(#trailer),body.tr-on .x8-full,body.tr-on .x8-modal{visibility:hidden}body.tr-on #trailer{background:var(--n000000,#000)}html.tv .tr-frame,body.touch-ui .tr-frame{border-radius:0;box-shadow:none;overflow:visible}</style>
+<style>@@src:css/bug-sweep.css@@</style>
+<style id="mkc-241a">@@src:css/mkc-241a-addon-finder-no.css@@</style>
+</head>
+<body class="locked">
+<div id="bootCover" aria-hidden="true"><svg class="bc-mark" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" fill="none" stroke="url(#mkRing)" stroke-width=".9"/><circle cx="60" cy="60" r="52.5" fill="none" stroke="url(#mkRing)" stroke-width=".35"/><use href="#mkLetters" fill="url(#mkPlat)" transform="translate(60 60) scale(.84)"/></svg><div class="bc-word">MKCINEMA</div><div class="bc-bar"><i id="bcFill"></i></div></div>
+<script>@@src:js/boot-cover-hold-home-until.js@@</script>
+
+<!-- ============ Boot intro ============ -->
+<!-- Brand: a Didone MK monogram whose letters share one stem, drawn once and reused -->
+<svg class="mk-sprite" width="0" height="0" aria-hidden="true" focusable="false">
+  <defs>
+    <path id="mkLetters" d="M-36.5 -28L-34.1 -28L-34.1 28L-36.5 28ZM-36.5 -28L-28 -28L-12.2 28L-15.2 28ZM-0.8 -28L1.5 -28L-12.2 28L-15.2 28ZM-0.5 -28L8.1 -28L8.1 28L-0.5 28ZM30.8 -28L33.5 -28L8.1 5.2L8.1 1.5ZM11.7 -2.4L18.3 -6.8L39.1 28L29.9 28ZM-41.9 -28L-28 -28L-28 -26.9L-41.9 -26.9ZM-41.9 26.9L-28.7 26.9L-28.7 28L-41.9 28ZM-5.3 -28L13.1 -28L13.1 -26.9L-5.3 -26.9ZM-5.3 26.9L13.1 26.9L13.1 28L-5.3 28ZM25.7 -28L38.3 -28L38.3 -26.9L25.7 -26.9ZM26.1 26.9L42.7 26.9L42.7 28L26.1 28Z"/>
+    <linearGradient id="mkPlat" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".38" stop-color="#dcd9d1"/><stop offset=".56" stop-color="#8f8c86"/><stop offset=".76" stop-color="#efebe2"/><stop offset="1" stop-color="#a9a59d"/></linearGradient>
+    <linearGradient id="mkRing" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6f3ec"/><stop offset=".5" stop-color="#6d6a65"/><stop offset="1" stop-color="#e8e3d8"/></linearGradient>
+    <linearGradient id="mkSheen" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <clipPath id="mkClip"><use href="#mkLetters" transform="translate(60 60) scale(.84)"/></clipPath>
+  </defs>
+</svg>
+<div id="intro" aria-hidden="true">
+  <div class="sp-glow"></div>
+  <div class="sp-line"></div>
+  <div class="sp-stage">
+    <div class="sp-emblem">
+      <svg class="sp-mark" viewBox="0 0 120 120">
+        <circle class="sp-ring sp-r1" cx="60" cy="60" r="56" pathLength="1" fill="none" stroke="url(#mkRing)" stroke-width=".9" transform="rotate(-90 60 60)"/>
+        <circle class="sp-ring sp-r2" cx="60" cy="60" r="52.5" pathLength="1" fill="none" stroke="url(#mkRing)" stroke-width=".35" transform="rotate(90 60 60)"/>
+        <use class="sp-mono" href="#mkLetters" fill="url(#mkPlat)" transform="translate(60 60) scale(.84)"/>
+        <g clip-path="url(#mkClip)"><rect class="sp-sheen" x="-40" y="0" width="26" height="120" fill="url(#mkSheen)" transform="skewX(-18)"/></g>
+      </svg>
+    </div>
+    <div class="wordmark">
+      <h1 id="introWord"></h1>
+      <div class="sp-rule"></div>
+      <div class="tag" id="introTag">YOUR CINEMA · EVERY SOURCE</div>
+    </div>
+  </div>
+</div>
+<button id="skip" class="glass" type="button" hidden><i data-lucide="skip-forward"></i>Skip intro</button>
+<button id="soundgate" class="glass" type="button" hidden><i data-lucide="volume-2"></i>Tap for sound</button>
+
+<!-- ============ App ============ -->
+<style id="mk-seatgate">html.seat-gate #app{visibility:hidden}</style><script>@@src:js/seat-first-home-stays-hidden.js@@</script>
+<div id="app" class="pre">
+  <div class="dock-wrap">
+    <nav class="dock glass" aria-label="Main">
+      <h1 class="sr-only">MKCinema</h1><div class="brand" role="img" aria-label="MKCinema, early access"><svg class="mk" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="55" fill="#050505" stroke="url(#mkRing)" stroke-width="3"/><use href="#mkLetters" fill="url(#mkPlat)" transform="translate(60 60) scale(.8)"/></svg><span class="word">MK<em>Cinema</em><span class="ea-badge" aria-hidden="true">Early access</span></span><i class="ea-dot" aria-hidden="true"></i></div>
+      <div class="tabs" id="tabs">
+        <button class="tab on" data-view="home" data-nav type="button" title="Home"><i data-lucide="house"></i><span class="lbl">Home</span></button>
+        <button class="tab" data-view="movie" data-nav type="button" title="Movies"><i data-lucide="clapperboard"></i><span class="lbl">Movies</span></button>
+        <button class="tab" data-view="series" data-nav type="button" title="Series"><i data-lucide="tv"></i><span class="lbl">Series</span></button>
+        <button class="tab" data-view="tv" data-nav type="button" title="Live TV"><i data-lucide="radio-tower"></i><span class="lbl">Live TV</span></button>
+        <button class="tab" data-view="library" data-nav type="button" title="Library"><i data-lucide="bookmark"></i><span class="lbl">Library</span></button>
+        <button class="tab" data-view="calendar" data-nav type="button" title="Airing calendar"><i data-lucide="calendar-days"></i><span class="lbl">Calendar</span></button>
+        <button class="tab" data-view="studio" data-nav type="button" title="Addon Studio"><i data-lucide="blocks"></i><span class="lbl">Studio</span></button>
+      </div>
+      <div class="dock-tools">
+        <button class="ibtn searchbtn" id="openPalette" data-nav type="button" title="Search" aria-label="Search"><i data-lucide="search"></i></button>
+        <div class="seg hide-s" role="group" aria-label="Catalog layout">
+          <button type="button" id="vRails" class="on" data-nav title="Standard rails"><i data-lucide="rows-3"></i><span>Rails</span></button>
+          <button type="button" id="vWall" data-nav title="Curved IMAX wall"><i data-lucide="gallery-horizontal"></i><span>IMAX</span></button>
+        </div>
+        <button class="ibtn hide-s" id="openFile" data-nav type="button" title="Play a file from this device" aria-label="Play a local file"><i data-lucide="folder-open"></i></button>
+        <button class="ibtn" id="openAddons" data-nav type="button" title="Addons" aria-label="Addons"><i data-lucide="puzzle"></i></button>
+        <button class="ibtn acct" id="openAccount" data-nav type="button" title="Account" aria-label="Account"><i data-lucide="circle-user-round"></i></button>
+        <button class="ibtn" id="openParty" data-nav type="button" title="Watch party" aria-label="Watch party"><i data-lucide="users"></i></button>
+        <button class="ibtn" id="muteBtn" data-nav type="button" title="Intro sound" aria-label="Toggle intro sound"><i data-lucide="volume-2"></i></button>
+        <button class="ibtn" id="openSettings" data-nav type="button" title="Settings" aria-label="Settings"><i data-lucide="settings-2"></i></button>
+      </div>
+    </nav>
+  </div>
+
+  <nav id="mtabs" class="glass" aria-label="Sections">
+    <button type="button" data-view="home" data-nav class="on"><i data-lucide="house"></i><span>Home</span></button>
+    <button type="button" data-view="movie" data-nav><i data-lucide="clapperboard"></i><span>Movies</span></button>
+    <button type="button" data-view="series" data-nav><i data-lucide="tv"></i><span>Series</span></button>
+    <button type="button" data-view="tv" data-nav><i data-lucide="radio-tower"></i><span>Live TV</span></button>
+    <button type="button" data-view="library" data-nav><i data-lucide="bookmark"></i><span>Library</span></button>
+    <button type="button" data-view="studio" data-nav><i data-lucide="blocks"></i><span>Studio</span></button>
+  </nav>
+
+  <main>
+    <div class="wrap">
+      <div id="offlineNotice" class="notice glass" hidden>
+        <i data-lucide="cloud-off"></i>
+        <div><strong>Live Cinemeta is unreachable from here.</strong>
+          <p>MKCinema has no catalog of its own, so nothing can show until Cinemeta answers. This usually means the page is inside a sandbox that blocks outside requests (like the Artifact preview) or you are offline. Open the downloaded index.html in a normal browser, or run mkcinema-server.js and visit it. <button class="row-more" style="display:inline-flex" id="retryCinemeta" type="button"><i data-lucide="refresh-cw"></i>Retry</button></p>
+        </div>
+      </div>
+
+      <!-- HOME -->
+      <section class="view on" id="view-home" aria-label="Home">
+        <div class="hero" id="hero">
+          <div class="hero-bg" id="heroBg"></div>
+          <div class="hero-body">
+            <div class="eyebrow" id="heroEyebrow"><i data-lucide="flame"></i>Featured</div>
+            <div id="heroLogoWrap"></div>
+            <div class="metaline" id="heroMeta"></div>
+            <p class="hero-desc" id="heroDesc"></p>
+            <div class="actions">
+              <button class="btn btn-bolt" id="heroPlay" data-nav type="button"><i data-lucide="play"></i><span class="sp-l">Smart Play<small>Best stream</small></span></button>
+              <button class="btn btn-ghost" id="heroTrailer" data-nav type="button"><i data-lucide="clapperboard"></i>Trailer</button>
+              <button class="btn btn-ghost" id="heroInfo" data-nav type="button"><i data-lucide="info"></i>Details</button>
+              <button class="btn btn-ghost" id="heroList" data-nav type="button"><i data-lucide="plus"></i>Watchlist</button>
+            </div>
+          </div>
+          <button class="hero-nav prev" id="heroPrev" type="button" aria-label="Previous featured title"><i data-lucide="chevron-left"></i></button>
+          <button class="hero-nav next" id="heroNext" type="button" aria-label="Next featured title"><i data-lucide="chevron-right"></i></button>
+          <div class="hero-dots" id="heroDots"></div>
+        </div>
+        <div class="rows" id="homeRows"></div>
+      </section>
+
+      <!-- DISCOVER (movies / series) -->
+      <section class="view" id="view-discover" aria-label="Discover">
+        <h1 class="page-title" id="discTitle">Movies</h1>
+        <p class="page-sub" id="discSub">Browse every catalog your addons provide.</p>
+        <div class="toolbar">
+          <select class="sel" id="discCatalog" aria-label="Catalog"></select>
+          <div class="chips" id="discGenres"></div>
+        </div>
+        <div class="grid" id="discGrid"></div>
+        <div style="display:flex;justify-content:center;margin-top:28px"><button class="btn btn-ghost" id="discMore" data-nav type="button" hidden><i data-lucide="chevrons-down"></i>Load more</button></div>
+      </section>
+
+      <!-- LIVE TV -->
+      <section class="view" id="view-tv" aria-label="Live TV">
+        <h1 class="page-title">Live TV &amp; Guide</h1>
+        <p class="page-sub">Channels come from any installed addon with a <span class="mono">tv</span> catalog. The guide uses each channel's schedule, or the addon's EPG provider hint when it has one.</p>
+        <div class="toolbar"><div class="chips" id="tvSources"></div></div>
+        <div class="epg glass" id="epg"></div>
+      </section>
+
+      <!-- LIBRARY -->
+      <section class="view" id="view-library" aria-label="Library">
+        <h1 class="page-title">Library</h1>
+        <p class="page-sub">Your watchlist, your lists and everything you have started. Signed in, they follow you to every device.</p>
+        <div class="rows" id="libRows"></div>
+      </section>
+
+      <!-- CALENDAR -->
+      <section class="view" id="view-calendar" aria-label="Airing calendar">
+        <h1 class="page-title">Airing calendar</h1>
+        <p class="page-sub">New episodes of the series in your watchlist and Continue watching. Aired ones play in one tap.</p>
+        <div class="toolbar"><div class="segc" id="calRange" role="radiogroup" aria-label="Range"><button type="button" data-days="7" class="on" role="radio" aria-checked="true">7 days</button><button type="button" data-days="30" role="radio" aria-checked="false">30 days</button></div><span class="cal-note" id="calNote"></span></div>
+        <div id="calBody"></div>
+      </section>
+
+      <!-- STUDIO -->
+      <section class="view" id="view-studio" aria-label="Addon Studio">
+        <h1 class="page-title">Addon Studio</h1>
+        <p class="page-sub">Design a Stremio addon visually, mount it into MKCinema instantly, then export a ready-to-run <span class="mono">stremio-addon-sdk</span> server.</p>
+        <div class="studio">
+          <div>
+            <div class="s-card glass">
+              <h3><i data-lucide="file-json"></i>Manifest</h3>
+              <div class="s-grid">
+                <div class="field"><label for="st-id">Addon ID</label><input class="inp" id="st-id"></div>
+                <div class="field"><label for="st-version">Version</label><input class="inp" id="st-version"></div>
+                <div class="field full"><label for="st-name">Name</label><input class="inp" id="st-name"></div>
+                <div class="field full"><label for="st-desc">Description</label><input class="inp" id="st-desc"></div>
+                <div class="field full"><label>Types</label><div class="checks" id="st-types"></div></div>
+                <div class="field full"><label for="st-prefixes">ID prefixes (comma separated)</label><input class="inp" id="st-prefixes"></div>
+                <div class="field"><label for="st-catname">Catalog name</label><input class="inp" id="st-catname"></div>
+                <div class="field"><label for="st-port">Export port</label><input class="inp" id="st-port" inputmode="numeric"></div>
+              </div>
+            </div>
+            <div class="s-card glass" style="margin-top:18px">
+              <h3><i data-lucide="library"></i>Catalog items</h3>
+              <div id="st-items"></div>
+              <button class="btn btn-ghost btn-sm" id="st-additem" type="button"><i data-lucide="plus"></i>Add item</button>
+            </div>
+            <div class="s-card glass" style="margin-top:18px">
+              <h3><i data-lucide="waypoints"></i>Stream rules</h3>
+              <p class="page-sub" style="margin-bottom:14px;font-size:calc(13px * var(--ts,1))">A rule answers stream requests for IDs that start with its match pattern. Use <span class="mono">*</span> to match everything. Proxy headers are sent through the MKCinema proxy.</p>
+              <div id="st-rules"></div>
+              <button class="btn btn-ghost btn-sm" id="st-addrule" type="button"><i data-lucide="plus"></i>Add rule</button>
+            </div>
+          </div>
+          <div style="position:sticky;top:calc(var(--dock-h) + 30px);min-width:0">
+            <div class="s-card glass">
+              <div class="seg" style="display:inline-flex;margin-bottom:14px" role="tablist">
+                <button type="button" class="on" id="st-tab-code"><i data-lucide="code-2"></i><span>addon.js</span></button>
+                <button type="button" id="st-tab-man"><i data-lucide="braces"></i><span>manifest.json</span></button>
+              </div>
+              <pre class="code" id="st-code"></pre>
+              <div class="studio-actions">
+                <button class="btn btn-prime" id="st-mount" data-nav type="button"><i data-lucide="plug-zap"></i>Hot-mount into MKCinema</button>
+                <button class="btn btn-ghost" id="st-export" data-nav type="button"><i data-lucide="download"></i>Export addon.js</button>
+                <button class="btn btn-ghost" id="st-copy" data-nav type="button"><i data-lucide="copy"></i>Copy code</button>
+                <button class="btn btn-ghost" id="st-reset" data-nav type="button"><i data-lucide="undo-2"></i>Reset example</button>
+              </div>
+              <p class="page-sub" style="font-size:calc(12.5px * var(--ts,1));margin:14px 0 0">Run the export with <span class="mono">npm i stremio-addon-sdk &amp;&amp; node addon.js</span>, then install <span class="mono" id="st-url"></span> in the addon manager.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <span>MKCinema is a client for the open Stremio addon protocol. Metadata from Cinemeta, subtitles from OpenSubtitles. It ships no streams of its own: playable sources come from the addons you install.</span>
+        <span>Keys: <span class="mono">Ctrl/⌘ K</span> search · arrows navigate · <span class="mono">Enter</span> open · <span class="mono">Esc</span> back · gamepad D-pad, A, B</span>
+      </footer>
+    </div>
+  </main>
+</div>
+
+<!-- ============ Your Picks ============ -->
+<div id="askLayer" class="layer-ov" hidden>
+  <div class="modal glass-solid ask-modal" role="dialog" aria-labelledby="askTitle">
+    <button class="ibtn panel-close" data-close type="button" aria-label="Close"><i data-lucide="x"></i></button>
+    <span class="eyebrow"><i data-lucide="sparkles"></i>Your Picks</span>
+    <h2 id="askTitle"></h2>
+    <p class="sub" id="askSub"></p>
+    <div class="grid" id="askGrid"></div>
+    <div class="actions" style="margin-top:18px"><button class="btn btn-ghost" type="button" id="askAgain"><i data-lucide="message-square-text"></i>Ask something else</button></div>
+  </div>
+</div>
+<div id="tastePick" class="layer-ov" hidden>
+  <div class="modal glass-solid qp-modal" role="dialog" aria-labelledby="tasteTitle">
+    <button class="ibtn panel-close" data-close type="button" aria-label="Close"><i data-lucide="x"></i></button>
+    <span class="eyebrow"><i data-lucide="wand-sparkles"></i>Your taste</span>
+    <h2 id="tasteTitle">Pick at least 3 favorites</h2>
+    <p class="sub">Shows, movies or genres. MKCinema builds your “For you” row from these, right on this device.</p>
+    <div id="tasteBody"></div>
+  </div>
+</div>
+
+<!-- ============ Detail ============ -->
+<div id="detail" class="layer-ov" role="dialog" aria-modal="true" aria-label="Title details" hidden>
+  <article class="panel glass-solid" id="detailPanel"></article>
+</div>
+<div id="epSheet" class="layer-ov sheet-ov" hidden>
+  <div class="ep-sheet" role="dialog" aria-label="Episode and its streams">
+    <button class="es-grab" type="button" aria-label="Close"><i></i></button>
+    <div class="es-head" id="esHead"></div>
+    <div class="es-body">
+      <h3 class="sec-title"><i data-lucide="layers"></i>Choose a source</h3>
+      <div id="esBox"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Addon manager ============ -->
+<div id="addons" class="layer-ov" hidden>
+  <div class="modal glass-solid" role="dialog" aria-labelledby="addonsTitle">
+    <button class="ibtn panel-close" data-close type="button" aria-label="Close"><i data-lucide="x"></i></button>
+    <h2 id="addonsTitle">Addons</h2>
+    <p class="sub">Paste any <span class="mono">stremio://</span> or <span class="mono">https://…/manifest.json</span> link. MKCinema talks to addons straight from your browser, so an addon must allow cross-origin requests.</p>
+    <form class="inrow" id="addonForm" style="margin-bottom:10px">
+      <input class="inp mono" id="addonUrl" placeholder="stremio://example.com/manifest.json" autocomplete="off" spellcheck="false">
+      <button class="btn btn-prime" type="submit" style="flex:none"><i data-lucide="download-cloud"></i>Install</button>
+    </form>
+    <div class="chips" id="addonSuggest" style="margin-bottom:22px"></div>
+    <div class="list" id="addonList"></div>
+    <div class="item-box" style="margin-top:22px">
+      <header><span>MKCinema proxy</span><span id="proxyState" class="tag-s">not checked</span></header>
+      <p class="sub" style="margin-bottom:12px;font-size:calc(13px * var(--ts,1))">Streams that ask for custom headers (<span class="mono">behaviorHints.proxyHeaders</span>) are routed through this URL. Run <span class="mono">node mkcinema-server.js</span> to get one.</p>
+      <div class="inrow">
+        <input class="inp mono" id="proxyUrl" spellcheck="false" autocomplete="off">
+        <button class="btn btn-ghost" id="proxyTest" type="button" style="flex:none"><i data-lucide="activity"></i>Test</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Command palette ============ -->
+<div id="palette" class="layer-ov" hidden style="padding-top:12vh">
+  <div class="modal glass-solid" role="dialog" aria-label="Search">
+    <div class="pal-in"><i data-lucide="search"></i><input id="palInput" type="search" enterkeyhint="search" placeholder="Search movies, series, channels, addons…" autocomplete="off" spellcheck="false"><button type="button" class="pal-x" id="palClear" aria-label="Clear search"><i data-lucide="x"></i></button><button type="button" class="pal-mic" id="palMic" data-voice-for="palInput" aria-label="Search by voice" title="Search by voice"><i data-lucide="mic"></i></button><button type="button" class="kbd pal-esc" data-close><span class="k-desk">Esc</span><span class="k-touch">Cancel</span></button></div>
+    <div class="pal-res" id="palRes"></div>
+    <div class="pal-foot"><span>↑↓ move</span><span>Enter open</span><span>Try “something like Arrival” for Your Picks</span></div>
+  </div>
+</div>
+
+<!-- ============ Player ============ -->
+<div id="player" role="dialog" aria-label="Player" hidden>
+  <canvas id="amb" width="64" height="36" aria-hidden="true"></canvas>
+  <div class="stage" id="stage">
+    <video id="video" playsinline preload="auto"></video>
+    <div id="ytwrap"></div>
+    <div class="p-load" id="pLoad" hidden aria-hidden="true"><div class="pl-art" id="pLoadArt"></div></div>
+    <div class="p-msg" id="pMsg" role="status" aria-live="polite" hidden></div>
+    <div class="hud" id="hud">
+      <div class="hud-top">
+        <button class="ibtn" id="pClose" type="button" aria-label="Close player"><i data-lucide="arrow-left"></i></button>
+        <div class="hud-title"><h3 id="pTitle"></h3><p id="pSub"></p></div>
+        <button class="ibtn" id="pEpsBtn" type="button" title="Episodes (E)" aria-label="Episodes" hidden><i data-lucide="list-video"></i></button>
+        <button class="ibtn" id="pLock" type="button" title="Lock controls" aria-label="Lock controls"><i data-lucide="lock"></i></button>
+        <button class="ibtn" id="pSrcBtn" type="button" title="Sources (S)" aria-label="Sources"><i data-lucide="layers"></i></button>
+      </div>
+      <div class="hud-mid" id="hudMid">
+        <button class="ibtn" id="pmBack" type="button" aria-label="Back 10 seconds"><i data-lucide="rotate-ccw"></i></button>
+        <button class="ibtn" id="pmPlay" type="button" aria-label="Play or pause"><i data-lucide="play"></i></button>
+        <button class="ibtn" id="pmFwd" type="button" aria-label="Forward 10 seconds"><i data-lucide="rotate-cw"></i></button>
+      </div>
+      <div class="hud-bot">
+        <div class="seek" id="seek"><div class="trk"><div class="buf" id="sBuf"></div><div class="cur" id="sCur"></div></div><div class="knob" id="sKnob"></div><div class="tip" id="sTip">0:00</div></div>
+        <div class="ctl">
+          <button class="ibtn" id="pPlay" type="button" aria-label="Play or pause"><i data-lucide="play"></i></button>
+          <button class="ibtn" id="pBack" type="button" aria-label="Back 10 seconds"><i data-lucide="rotate-ccw"></i></button>
+          <button class="ibtn" id="pFwd" type="button" aria-label="Forward 10 seconds"><i data-lucide="rotate-cw"></i></button>
+          <button class="ibtn" id="pNext" type="button" title="Next episode (N)" aria-label="Next episode" hidden><i data-lucide="skip-forward"></i></button>
+          <button class="ibtn" id="pMute" type="button" aria-label="Mute"><i data-lucide="volume-2"></i></button>
+          <input type="range" class="vol" id="pVol" min="0" max="1" step="0.02" value="1" aria-label="Volume">
+          <span class="time tnum" id="pTime">0:00 / 0:00</span>
+          <span class="sp"></span>
+          <button class="ibtn pp-desk" id="pDsp" type="button" title="Audio (A)" aria-label="Audio"><i data-lucide="audio-lines"></i></button>
+          <button class="ibtn pp-desk" id="pParty" type="button" title="Watch party (P)" aria-label="Watch party"><i data-lucide="users"></i></button>
+          <button class="ibtn pp-desk" id="pCast" type="button" title="Send to phone, or use your phone as a remote" aria-label="Phone handoff and remote"><i data-lucide="smartphone"></i></button>
+          <button class="ibtn" id="pSubs" type="button" title="Subtitles (C)" aria-label="Subtitles"><i data-lucide="captions"></i></button>
+          <button class="ibtn" id="pOpts" type="button" title="Speed, quality and audio" aria-label="Playback options"><i data-lucide="settings-2"></i></button>
+          <button class="ibtn on" id="pAmb" type="button" title="Ambilight" aria-label="Ambilight"><i data-lucide="sun"></i></button>
+          <button class="ibtn" id="pPip" type="button" title="Picture in picture" aria-label="Picture in picture"><i data-lucide="picture-in-picture-2"></i></button>
+          <button class="ibtn" id="pFull" type="button" title="Fullscreen (F)" aria-label="Fullscreen"><i data-lucide="maximize"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="seek-fx" id="seekFx" hidden></div>
+    <button class="unlock glass-solid" id="pUnlock" type="button" hidden><i data-lucide="lock-open"></i>Tap to unlock</button>
+    <div class="menu glass-solid" id="subMenu" hidden></div>
+    <div class="menu glass-solid" id="optMenu" hidden></div>
+    <div class="upnext glass-solid" id="upNext" hidden></div>
+    <div class="menu glass-solid dsp-pop" id="dspPop" hidden></div>
+    <button class="skip-btn pp-ui" id="skipBtn" type="button" hidden><i data-lucide="skip-forward"></i><span>Skip intro</span></button>
+    <div class="rescue pp-ui glass-solid" id="rescueBar" hidden></div>
+    <aside class="xray pp-ui" id="xray" hidden aria-label="X-Ray"></aside>
+    <div class="subsync pp-ui glass-solid" id="subSync" hidden></div>
+    <div class="reacts" id="reacts" aria-hidden="true"></div>
+    <aside class="drawer glass-solid" id="partyDrawer" aria-label="Watch party">
+      <header><h3>Watch party</h3><button class="ibtn" data-dclose type="button" aria-label="Close"><i data-lucide="x"></i></button></header>
+      <div class="party-body" id="partyDrawerBody"></div>
+    </aside>
+    <aside class="drawer glass-solid" id="txDrawer" aria-label="Transcript">
+      <header><h3>Transcript</h3><button class="ibtn" data-dclose type="button" aria-label="Close"><i data-lucide="x"></i></button></header>
+      <input class="inp" id="txFind" type="search" placeholder="Find a line…" autocomplete="off">
+      <p class="tx-hint">Hear a line out of sync? Tap <b>Sync here</b> on it the moment it is spoken.</p>
+      <div class="tx-list" id="txList"></div>
+    </aside>
+    <aside class="drawer glass-solid" id="srcDrawer" aria-label="Sources">
+      <header><h3>Sources</h3><button class="ibtn" data-dclose type="button" aria-label="Close"><i data-lucide="x"></i></button></header>
+      <div class="chips" id="srcFilters" style="margin-bottom:10px"></div>
+      <div class="streams" id="srcList"></div>
+    </aside>
+    <aside class="drawer glass-solid" id="epDrawer" aria-label="Episodes">
+      <header><h3 id="epDrawerTitle">Episodes</h3><button class="ibtn" data-dclose type="button" aria-label="Close"><i data-lucide="x"></i></button></header>
+      <div class="seasons" id="epDrawerSeasons"></div>
+      <div class="eps" id="epDrawerList"></div>
+    </aside>
+  </div>
+</div>
+
+<!-- ============ Settings ============ -->
+<!-- ============ Trailer pop-up: the picture and a slim control bar, nothing else ============ -->
+<div id="trailer" class="layer-ov center" hidden>
+  <div class="tr-box" role="dialog" aria-label="Trailer">
+    <button class="ibtn tr-x" id="trClose" type="button" aria-label="Close trailer"><i data-lucide="x"></i></button>
+    <div class="tr-frame" id="trFrame"><div id="trSlot"></div><div class="tr-msg" id="trMsg" hidden></div></div>
+    <div class="tr-bar" id="trBar">
+      <button class="ibtn" id="trPlay" type="button" aria-label="Pause"><i data-lucide="pause"></i></button>
+      <span class="tr-time tnum" id="trCur">0:00</span>
+      <div class="tr-seek" id="trSeek" role="slider" aria-label="Seek" tabindex="0"><div class="tr-trk"><i id="trFill"></i></div><b id="trKnob"></b></div>
+      <span class="tr-time tnum" id="trDur">0:00</span>
+      <button class="ibtn" id="trMute" type="button" aria-label="Mute"><i data-lucide="volume-2"></i></button>
+      <button class="ibtn" id="trFull" type="button" aria-label="Full screen"><i data-lucide="maximize"></i></button>
+    </div>
+  </div>
+</div>
+
+<div id="settings" class="layer-ov center" hidden>
+  <div class="modal glass-solid" role="dialog" aria-labelledby="setTitle">
+    <button class="ibtn panel-close" data-close type="button" aria-label="Close"><i data-lucide="x"></i></button>
+    <nav class="set-nav" id="setNav"><h2 id="setTitle">Settings</h2></nav>
+    <div class="set-body" id="setBody"></div>
+  </div>
+</div>
+
+<input type="file" id="fileVideo" accept="video/*,audio/*,.mkv,.mp4,.m4v,.webm,.mov,.ogv,.mp3,.flac,.ogg,.wav,.m3u8" hidden>
+<input type="file" id="fileSubs" accept=".srt,.vtt,.ass,.ssa,.sub,.txt" hidden>
+<!-- ============ Import from Stremio ============ -->
+<div id="stremioImport" class="layer-ov center" hidden>
+  <div class="modal glass-solid si-modal" role="dialog" aria-labelledby="siTitle">
+    <button class="ibtn panel-close" id="siClose" type="button" aria-label="Close"><i data-lucide="x"></i></button>
+    <span class="eyebrow"><i data-lucide="download"></i>Import</span>
+    <h2 id="siTitle">Bring your Stremio library</h2>
+    <form id="siForm" autocomplete="off">
+      <p class="sub">Sign in with your Stremio account once. MKCinema copies what you pick below, then signs that session out. Your password goes only to Stremio and is never saved.</p>
+      <label class="fld"><span>Stremio email</span><input class="inp" id="siEmail" type="email" autocomplete="username" required></label>
+      <label class="fld"><span>Stremio password</span><input class="inp" id="siPass" type="password" autocomplete="current-password" required></label>
+      <div class="si-opts">
+        <label class="check"><input type="checkbox" id="siLib" checked>Library (saved titles)</label>
+        <label class="check"><input type="checkbox" id="siProg" checked>Watch progress (Continue watching)</label>
+        <label class="check"><input type="checkbox" id="siSeen" checked>Watched history (films and episodes you finished)</label>
+        <label class="check"><input type="checkbox" id="siAdd" checked>Addons, including their settings and keys</label>
+      </div>
+      <p class="si-err" id="siErr" role="alert" hidden></p>
+      <div class="actions"><button class="btn btn-prime" type="submit" id="siGo"><i data-lucide="download"></i>Import</button></div>
+      <p class="tour-note">Signed up with Facebook? Set a Stremio password first. If your browser blocks the call to Stremio, MKCinema relays it through its own server without storing anything.</p>
+    </form>
+    <div id="siDone" hidden>
+      <div class="si-sum" id="siSummary"></div>
+      <p class="tour-note" id="siNote"></p>
+      <div class="actions"><button class="btn btn-prime" type="button" data-see-home><i data-lucide="sparkles"></i>See my Home</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ First-visit walkthrough ============ -->
+<div id="tour" class="layer-ov center" hidden>
+  <div class="modal glass-solid tour-modal" role="dialog" aria-label="Welcome to MKCinema">
+    <div class="tour-top"><div class="tour-dots" id="tourDots"></div><button class="linkish" type="button" id="tourSkip">Skip</button></div>
+    <div id="tourBody"></div>
+    <div class="tour-nav"><button class="btn btn-ghost" type="button" id="tourBack"><i data-lucide="chevron-left"></i>Back</button><button class="btn btn-prime" type="button" id="tourNext">Next<i data-lucide="chevron-right"></i></button></div>
+  </div>
+</div>
+
+<!-- ============ Watch party (outside the player) ============ -->
+<div id="partyLayer" class="layer-ov center top-layer" hidden>
+  <div class="modal glass-solid pp-modal" role="dialog" aria-label="Watch party">
+    <button class="ibtn panel-close" data-close type="button" aria-label="Close"><i data-lucide="x"></i></button>
+    <span class="eyebrow"><i data-lucide="users"></i>Watch party</span>
+    <div class="party-body" id="partyLayerBody"></div>
+  </div>
+</div>
+
+<!-- ============ Phone handoff and remote (QR) ============ -->
+<div id="castLayer" class="layer-ov center top-layer" hidden>
+  <div class="modal glass-solid pp-modal" role="dialog" aria-label="Phone">
+    <button class="ibtn panel-close" data-close type="button" aria-label="Close"><i data-lucide="x"></i></button>
+    <span class="eyebrow"><i data-lucide="smartphone"></i>Your phone</span>
+    <div id="castBody"></div>
+  </div>
+</div>
+
+
+<div id="partyPill" class="party-pill" hidden><button type="button" id="partyPillBtn"><i data-lucide="users"></i><span id="partyPillTxt"></span></button></div>
+<div id="partyAudio" hidden></div>
+<div id="dropzone" hidden>Drop a video to play it, or a subtitle file (.srt .vtt .ass .ssa .sub) to load it</div>
+<div id="fps" hidden></div>
+<div id="toasts" aria-live="polite"></div>
+<script>@@src:js/configuration-effects-presets.js@@</script>
+<script>@@src:js/core-utilities-storage-audio-stremio.js@@</script>
+<script>@@src:js/built-addon-official-trailers-it.js@@</script>
+<script>@@src:js/application-views-detail-player-studio.js@@</script>
+<script>@@src:js/accounts-supabase-auth-email-password.js@@</script>
+<script>@@src:js/your-picks-device-recommendations-taste.js@@</script>
+<script>@@src:js/player-extras-title-logo-loading.js@@</script>
+<script>@@src:js/devices-people-zero-dependency-qr.js@@</script>
+<script>@@src:js/services-debrid-vault-rating-posters.js@@</script>
+<script>@@src:js/settings-local-files-boot.js@@</script>
+<script>@@src:js/get-started-guide-settings-layout.js@@</script>
+<script>@@src:js/audio-language-chrome-edge-android.js@@</script>
+<script>@@src:js/wallpapers-banner-parallax-idle-screensaver.js@@</script>
+<style>@@src:css/ambient-mode-multi-plane-parallax.css@@</style>
+<style>@@src:css/about-licenses.css@@</style>
+<script>@@src:js/exit-prompt.js@@</script>
+<style>@@src:css/exit-prompt.css@@</style>
+<script>@@src:js/endless-rows.js@@</script>
+<style>@@src:css/endless-rows-uncropped-art-tv.css@@</style>
+<style>
+/* the featured banner crops art from the top third, where faces are */
+.hero-bg img{object-position:50% 22%}
+</style>
+<style>/* banner back to calm (screensaver keeps the effects) */</style>
+<style id="looks">@@src:css/looks-html-data-look.css@@</style>
+<script>@@src:js/peak-cinema.js@@</script>
+<style>@@src:css/peak-cinema.css@@</style>
+<style id="mkc-28css">@@src:css/mkc-28css-send-tv-channels.css@@</style>
+<script id="mkc-28">@@src:js/mkc-28-big-screen-release.js@@</script>
+<style id="mkc-214css">@@src:css/mkc-214css-offline-downloads.css@@</style>
+<script id="mkc-214">@@src:js/mkc-214-offline-downloads-films.js@@</script>
+<style id="mkc-233dcss">@@src:css/mkc-233dcss-download-room-fit.css@@</style>
+<script id="mkc-233d">@@src:js/mkc-233d-downloads-tvs-usb.js@@</script>
+<script id="mkc-215">@@src:js/mkc-215-interface-languages-menus.js@@</script>
+<style id="mkc-216css">@@src:css/mkc-216css-html-data-look.css@@</style>
+<script id="mkc-216">@@src:js/mkc-216-support-tools-extras.js@@</script>
+<style id="mkc-217css">
+/* 2.17.0 AniList sign-in: token box and the TV QR code under the status line */
+.ani-row .ani-tok { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.ani-row .ani-tok .inp { flex: 1 1 220px; min-width: 0; }
+.ani-row .ani-qr { margin-top: 12px; width: 168px; }
+</style>
+<script id="mkc-217">@@src:js/mkc-217-anime-list-sync.js@@</script>
+<style id="mkc-218css">@@src:css/mkc-218css-mdblist-lists-settings.css@@</style>
+<script id="mkc-218">@@src:js/mkc-218-mdblist-lists-as.js@@</script>
+<script id="mkc-219">@@src:js/mkc-219-new-episode-notifications.js@@</script>
+<style id="mkc-220css">@@src:css/mkc-220css-player-edge-edge.css@@</style>
+<script id="mkc-220">@@src:js/mkc-220-player-rebuilt-layout.js@@</script>
+<style id="mkc-221css">
+/* ===== 2.21.0: folded duplicate sources, audio sync note ===== */
+.stream .s-also{font-size:calc(12px * var(--ts,1));color:var(--mute);margin-top:3px}
+#optMenu .as-note{font-size:calc(12px * var(--ts,1));line-height:1.45;color:var(--mute);margin:4px 12px 8px;max-width:34ch}
+</style>
+<script id="mkc-221">@@src:js/mkc-221-what-still-needs.js@@</script>
+<style id="mkc-2211css">@@src:css/mkc-2211css-pencil-each-seat.css@@</style>
+<script id="mkc-2211">@@src:js/mkc-2211-small-fixes-phones.js@@</script>
+<style id="mkc-222css">@@src:css/mkc-222css-anime-look-comic.css@@</style>
+<script id="mkc-222">@@src:js/mkc-222-anime-icon-set.js@@</script>
+<style id="mkc-2221css">@@src:css/mkc-2221css-kf-badge-display.css@@</style>
+<style id="mkc-224css">@@src:css/mkc-224css-party-voice-controls.css@@</style>
+<script id="mkc-224">@@src:js/mkc-224-watch-party-voice.js@@</script>
+<script id="mkc-safari">@@src:js/mkc-safari-safari-playback-iphone.js@@</script>
+<style id="mkc-sportscss">@@src:css/mkc-sportscss-sports-hub.css@@</style>
+<script id="mkc-sports">@@src:js/mkc-sports-sports-hub-live.js@@</script>
+<script id="mkc-2251">@@src:js/mkc-2251-audio-menu-no.js@@</script>
+<style id="mkc-playeraskcss">@@src:css/mkc-playeraskcss-first-launch-player.css@@</style>
+<script id="mkc-playerask">@@src:js/mkc-playerask-first-launch-player.js@@</script>
+<style id="mkc-227ncss">@@src:css/mkc-227ncss-manage-add-ons.css@@</style>
+<script id="mkc-227n">@@src:js/mkc-227n-subtitle-auto-sync.js@@</script>
+<script id="mkc-2272s">@@src:js/mkc-2272s-samsung-tvs-tizenbrew.js@@</script>
+<style id="mkc-228css">@@src:css/mkc-228css-arrange-home-kids.css@@</style>
+<script id="mkc-228">@@src:js/mkc-228-arrange-home-hide.js@@</script>
+<style id="mkc-228wcss">@@src:css/mkc-228wcss-what-s-new.css@@</style>
+<script id="mkc-228w">@@src:js/mkc-228w-what-s-new.js@@</script>
+<style id="mkc-229css">@@src:css/mkc-229css-anime-look-manga.css@@</style>
+<style id="mkc-230css">@@src:css/mkc-230css-anime-page-banner.css@@</style>
+<script id="mkc-230">@@src:js/mkc-230-anime-page-banner.js@@</script>
+<style id="mkc-2311css">@@src:css/mkc-2311css-shorter-tour-four.css@@</style>
+<script id="mkc-2380-dubsigns">@@src:js/mkc-2380-dubsigns-signs-songs-with.js@@</script>
+<script id="mkc-239s">@@src:js/mkc-239s-subtitles-one-ranked.js@@</script>
+<script id="mkc-240l">@@src:js/mkc-240l-legal-pages-troubleshooting.js@@</script>
+<script id="mkc-cfwa">@@src:js/mkc-cfwa-cloudflare-web-analytics.js@@</script>
+<style id="mkc-227fcss">@@src:css/mkc-227fcss-fonts-logo-intro.css@@</style>
+<style id="mkc-2321css">@@src:css/mkc-2321css-phone-portrait-smart.css@@</style>
+<style id="mkc-2340css">@@src:css/mkc-2340css-networks-logos-float.css@@</style>
+<style id="mkc-2343css">@@src:css/mkc-2343css-network-logos-bigger.css@@</style>
+<style id="mkc-246unicss">@@src:css/mkc-246unicss-universes-each-franchise.css@@</style>
+
+<style id="mkc-2320css">@@src:css/mkc-2320css-chosen-font-also.css@@</style>
+<script id="mkc-227f">@@src:js/mkc-227f-app-fonts-settings.js@@</script>
+<script id="mkc-2340">@@src:js/mkc-2340-universes-scores-from.js@@</script>
+<style id="mkc-235css">@@src:css/mkc-235css-script-clock-find.css@@</style>
+<script id="mkc-235">@@src:js/mkc-235-script-clock-already.js@@</script>
+<style id="mkc-2351css">
+html:not(.tv) .uni-rail{margin-top:-4px}
+html:not(.tv) .net-rail{margin-top:-6px}
+</style>
+<style id="mkc-236css">@@src:css/mkc-236css-sharp-upscaling-canvas.css@@</style>
+<script id="mkc-236">@@src:js/mkc-236-sharp-upscaling-video.js@@</script>
+<style id="mkc-2382rail">@@src:css/mkc-2382rail-side-menu-never.css@@</style>
+<style id="mkc-240setcss">@@src:css/mkc-240setcss-settings-redesigned-transform.css@@</style>
+<script id="mkc-240set">@@src:js/mkc-240set-settings-redesigned-same.js@@</script>
+<!-- mk-swaps:start -->
+<style id="mk-swaps">@@src:css/mk-swaps-smooth-swaps-picking.css@@</style>
+<script id="mk-swaps-js">@@src:js/mk-swaps-js-smooth-swaps-block.js@@</script>
+<!-- mk-swaps:end -->
+<style id="mkc-242tcss">@@src:css/mkc-242tcss-welcome-tour-never.css@@</style>
+<script id="mkc-242t">@@src:js/mkc-242t-welcome-tour-redesigned.js@@</script>
+<style id="mkc-242axcss">@@src:css/mkc-242axcss-addon-looks-square.css@@</style>
+<script id="mkc-242ax">@@src:js/mkc-242ax-addon-looks-stremio.js@@</script>
+<style id="mkc-243css">@@src:css/mkc-243css-sound-modes-three.css@@</style>
+<script id="mkc-243">@@src:js/mkc-243-sound-modes-original.js@@</script>
+<style id="mkc-245css">@@src:css/mkc-245css-addon-settings-form.css@@</style>
+<script id="mkc-245">@@src:js/mkc-245-addons-as-they.js@@</script>
+<style id="mkc-2451css">@@src:css/mkc-2451css-t4-f-span.css@@</style>
+<script id="mkc-2451">@@src:js/mkc-2451-bigger-posters-pick.js@@</script>
+<style id="mkc-anisw-css">@@src:css/mkc-anisw-css-anime-look-switch.css@@</style>
+<script id="mkc-anisw">@@src:js/mkc-anisw-one-clear-switch.js@@</script>
+<script id="mkc-preflight">@@src:js/mkc-preflight-checked-sources-while.js@@</script>
+<!-- mk-steady:start -->
+<style id="mk-steady">@@src:css/mk-steady-steady-web-pages.css@@</style>
+<script id="mk-steady-js">@@src:js/mk-steady-js-steady-web.js@@</script>
+<!-- mk-steady:end -->
+<!-- mk-simpleplayer:start -->
+<style id="mkc-2462css">@@src:css/mkc-2462css-simpler-player-no.css@@</style>
+<script id="mkc-2462">@@src:js/mkc-2462-simpler-player-options.js@@</script>
+<!-- mk-simpleplayer:end -->
+<!-- mk-fast:start -->
+<script id="mkc-fast">@@src:js/mkc-fast-faster-first-screen.js@@</script>
+<!-- mk-fast:end -->
+<!-- mk-tune:start -->
+<style id="mkc-tune-css">@@src:css/mkc-tune-css-welcome-card-fades.css@@</style>
+<script id="mkc-tune">@@src:js/mkc-tune-tidy-ups-episode.js@@</script>
+<!-- mk-tune:end -->
+<!-- mk-rel2466:start -->
+<script>@@src:js/addon-links-that-carry-key.js@@</script>
+<!-- mk-rel2466:end -->
+<script id="mkc-p4p6">@@src:js/mkc-p4p6-lighter-home-posters.js@@</script>
+<!-- mk-p4p6:end -->
+<!-- mk-2470player:start -->
+<style id="mkc-2470css">@@src:css/mkc-2470css-smoother-sturdier-player.css@@</style>
+<script>@@src:js/progress-bar-scalex-for-bars.js@@</script>
+<!-- mk-2470player:end -->
+<!-- mk-cast:start -->
+<style id="mkc-cast">@@src:css/mkc-cast-cast-pages-names.css@@</style>
+<script id="mkc-cast">@@src:js/mkc-cast-cast-pages-names.js@@</script>
+<!-- mk-cast:end -->
+<style id="mkc-248xcss">@@src:css/mkc-248xcss-addon-extras.css@@</style>
+<script id="mkc-248x">@@src:js/mkc-248x-addon-extras-more.js@@</script>
+<!-- mk-artfix:start -->
+<style id="mkc-artfix-css">
+/* the art already shows the title, so our own logo and title text step aside; the slot keeps its size, so nothing moves.
+   Phones crop wide art to a tall banner and can cut its title off, so there our logo stays. */
+@media (min-width:761px){#heroLogoWrap.mk-art-titled>*,.d-hero .logo3d.mk-art-titled>*{opacity:0!important}}
+</style>
+<script id="mkc-artfix">@@src:js/mkc-artfix-one-title-banner.js@@</script>
+<!-- mk-artfix:end -->
+<style id="mkc-249scss">@@src:css/mkc-249scss-stream-info-pills.css@@</style>
+<script id="mkc-249s">@@src:js/mkc-249s-stream-info-scene.js@@</script>
+<style id="mkc-250css">@@src:css/mkc-250css-household-phone.css@@</style>
+<script id="mkc-250">@@src:js/mkc-250-household-phone-family.js@@</script>
+<script id="mkc-toursnd">@@src:js/mkc-toursnd-welcome-tour-sounds.js@@</script>
+<!-- mk-phonefix:start -->
+<style id="mk-phonefix-css">@@src:css/mk-phonefix-css-phone-fixes-rounded.css@@</style>
+<script id="mk-phonefix-js">@@src:js/mk-phonefix-js-phone-fixes-also.js@@</script>
+<!-- mk-phonefix:end -->
+<style id="mkc-251css">@@src:css/mkc-251css-future-proof.css@@</style>
+<script id="mkc-251">@@src:js/mkc-251-future-proof-still.js@@</script>
+<style id="mkc-252css">@@src:css/mkc-252css-rest-research.css@@</style>
+<script id="mkc-252">@@src:js/mkc-252-rest-research-catch.js@@</script>
+<style id="mkc-253css">@@src:css/mkc-253css-your-stats.css@@</style>
+<script id="mkc-253">@@src:js/mkc-253-your-stats-top.js@@</script>
+<script id="mkc-254tv">@@src:js/mkc-254tv-tv-player-parity.js@@</script>
+<style id="mkc-255css">
+#sensDim{position:absolute;inset:0;z-index:1;background:#000;opacity:0;pointer-events:none;transition:opacity .5s ease-out}
+#sensDim.on{opacity:.62;transition:opacity .05s linear}
+.sens-note{margin:0;padding:0 12px 8px;font-size:calc(12px * var(--ts,1));line-height:1.45;color:var(--mute)}
+@media (min-width:521px){.snd-modes{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+<script id="mkc-255">@@src:js/mkc-255-sensory-friendly-screening.js@@</script>
+<style id="mkc-255cmcss">@@src:css/mkc-255cmcss-lobby-after-film.css@@</style>
+<script id="mkc-255cm">@@src:js/mkc-255cm-party-relay-parties.js@@</script>
+<style id="mkc-255glcss">
+.gl-note{margin:0;padding:0 12px 8px;font-size:calc(12px * var(--ts,1));line-height:1.45;color:var(--mute)}
+</style>
+<script id="mkc-255gl">@@src:js/mkc-255gl-even-realities-g2.js@@</script>
+<script id="mkc-256rm">@@src:js/mkc-256rm-phone-remote-details.js@@</script>
+<style id="mkc-255tdcss">@@src:css/mkc-255tdcss-welcome-tour-depth.css@@</style>
+<script id="mkc-255td">@@src:js/mkc-255td-welcome-tour-depth.js@@</script>
+<script src="engine/mkv-engine.js" defer></script>
+<script src="captions/auto-captions.js" defer></script>
+<!-- mk-steady-open:start -->
+<style>
+/* 2.57.1: an episode still that is still on its way fades in instead of popping in */
+.es-still img{transition:opacity .28s ease}
+.es-still img.es-wait{opacity:0}
+</style>
+<script>@@src:js/steady-open-opening-episode-continue.js@@</script>
+<!-- mk-steady-open:end -->
+<!-- mk-lpcopy:start -->
+<style>@@src:css/stream-webkit-touch-callout-none.css@@</style>
+<script>@@src:js/const-hold-let-timer-sx.js@@</script>
+<!-- mk-lpcopy:end -->
+<style id="mkc-2591-phone">@media (max-width:760px) and (pointer:coarse){html:not(.tv) body .rail>.card:not(.wide):not(.ax-sq){width:clamp(132px,35vw,230px)}html:not(.tv) body .rail>.card.wide{width:clamp(250px,68vw,440px)!important}}</style>
+<script id="mkc-2591-phone-js">@@src:js/mkc-2591-phone-js-function-var-w0.js@@</script>
+<!-- mk-steady-views:start -->
+<style>@@src:css/steady-views-switching-home-movies.css@@</style>
+<script>@@src:js/steady-views-coming-back-home.js@@</script>
+<!-- mk-steady-views:end -->
+<!-- mk-firsttry:start -->
+<script id="mkc-firsttry">@@src:js/mkc-firsttry-first-try-plays.js@@</script>
+<!-- mk-firsttry:end -->
+<script id="mkc-2601al">@@src:js/mkc-2601al-audio-language-mark.js@@</script>
+<!-- mk-devicefit:start -->
+<script id="mkc-devicefit">@@src:js/mkc-devicefit-first-pick-fits.js@@</script>
+<!-- mk-devicefit:end -->
+<!-- mk-attidy:start -->
+<style id="mkc-attidy-css">@@src:css/mkc-attidy-css-audio-tab-tidied.css@@</style>
+<script id="mkc-attidy">@@src:js/mkc-attidy-audio-tab-tidied.js@@</script>
+<!-- mk-attidy:end -->
+<script id="mkc-2602qs">@@src:js/mkc-2602qs-quiet-sign-sync.js@@</script>
+<!-- mk-livesync:start -->
+<script>@@src:js/live-sync-devices-tell-each.js@@</script>
+<!-- mk-livesync:end -->
+<style id="mkc-261skcss">
+#skipBtn.sk-undo svg{transform:scaleX(-1)}
+</style>
+<script id="mkc-261sk">@@src:js/mkc-261sk-automatic-skips-exact.js@@</script>
+<!-- mk-kdf2:start -->
+<div id="rcLayer" class="layer-ov" hidden>
+  <div class="modal glass-solid" role="dialog" aria-modal="true" aria-labelledby="rcTitle" style="max-width:520px">
+    <span class="eyebrow">Your account</span>
+    <h2 id="rcTitle">Your recovery code</h2>
+    <p class="sub">If you ever forget your password, this code brings back your synced keys. Keep it somewhere safe, like a password manager. It can't be shown again, and nobody else can recover it for you.</p>
+    <div id="rcCode" style="font:600 17px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.04em;padding:14px 16px;border-radius:12px;background:color-mix(in srgb,currentColor 8%,transparent);user-select:all;-webkit-user-select:all;overflow-wrap:anywhere;margin-top:14px"></div>
+    <div class="actions" style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost" type="button" id="rcCopy" data-nav>Copy</button>
+      <button class="btn btn-ghost" type="button" id="rcSave" data-nav>Download</button>
+      <button class="btn btn-prime" type="button" id="rcDone" data-nav>I saved it</button>
+    </div>
+  </div>
+</div>
+<script>@@src:js/account-keys-sign-unlock-new.js@@</script>
+<!-- mk-kdf2:end -->
+<!-- mk-smartpick:start -->
+<script id="mkc-smartpick">@@src:js/mkc-smartpick-smart-play-avoids.js@@</script>
+<!-- mk-smartpick:end -->
+<!-- mk-sourcing:start -->
+<style id="mkc-sourcing-css">@@src:css/mkc-sourcing-css-p-load-mk.css@@</style>
+<script id="mkc-sourcing">@@src:js/mkc-sourcing-sourcing-working-copy.js@@</script>
+<!-- mk-sourcing:end -->
+<!-- mk-webcap:start -->
+<script id="mkc-webcap">@@src:js/mkc-webcap-smart-play-starts.js@@</script>
+<!-- mk-webcap:end -->
+<!-- mk-railfit:start -->
+<style id="mkc-railfit-css">@@src:css/mkc-railfit-css-side-menu-flush.css@@</style>
+<script id="mkc-railfit">@@src:js/mkc-railfit-interface-size-follows.js@@</script>
+<!-- mk-railfit:end -->
+<!-- mk-addonsync:start -->
+<style id="mkc-262ascss">
+.as-lock{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.as-lock span{flex:1 1 220px;min-width:0}
+.as-lock .as-b{display:flex;gap:8px;flex:none}
+#addons .as-lock{margin:0 0 16px;padding:12px 14px;border-radius:calc(var(--r-m) * 1.2);border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);font-size:calc(14px * var(--ts,1))}
+</style>
+<script id="mkc-262as">@@src:js/mkc-262as-addons-follow-account.js@@</script>
+<!-- mk-addonsync:end -->
+<!-- mk-miko:start -->
+<style id="mkc-miko-css">@@src:css/mkc-miko-css-miko-every-screen.css@@</style>
+<script id="mkc-miko">@@src:js/mkc-miko-miko-every-screen.js@@</script>
+<!-- mk-miko:end -->
+<!-- mk-top10:start -->
+<style id="mkc-top10-css">@@src:css/mkc-top10-css-top-you-can.css@@</style>
+<script id="mkc-top10">@@src:js/mkc-top10-top-you-can.js@@</script>
+<!-- mk-top10:end -->
+<!-- mk-ds:start -->
+<style id="mkc-ds-css">@@src:css/mkc-ds-css-design-system-one.css@@</style>
+<script id="mkc-ds">@@src:js/mkc-ds-design-system-runtime.js@@</script>
+<!-- mk-ds:end -->
+<!-- mk-railbig:start -->
+<style id="mkc-railbig">@@src:css/mkc-railbig-bigger-side-menu.css@@</style>
+<!-- mk-railbig:end -->
+</body>
+</html>

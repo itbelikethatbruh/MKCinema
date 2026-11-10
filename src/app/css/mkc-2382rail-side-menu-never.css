@@ -1,0 +1,25 @@
+
+/* 2.38.2 side menu: never overlap at any window height */
+@media (min-width:761px){
+  html.nav-side .dock{overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+  html.nav-side .dock::-webkit-scrollbar{display:none}
+  html.nav-side .dock>*,html.nav-side #tabs .tab,html.nav-side .dock-tools>.ibtn{flex-shrink:0}
+  html.side-mini .dock-wrap:not(:hover):not(:focus-within) .dock .brand .word{display:none!important}
+  html.side-mini .dock-wrap:not(:hover):not(:focus-within) .dock .brand{justify-content:center;padding-inline:0;gap:0}
+}
+@media (min-width:761px) and (max-height:900px){
+  html.nav-side:not(.tv) .dock{padding-top:14px;padding-bottom:10px;gap:2px}
+  html.nav-side:not(.tv) #tabs{gap:2px}
+  html.nav-side:not(.tv) #tabs .tab{height:40px}
+  html.nav-side:not(.tv) .dock-tools>.ibtn{height:38px}
+  html.nav-side:not(.tv) .dock-tools>.searchbtn{margin-bottom:6px}
+}
+@media (min-width:761px) and (max-height:720px){
+  html.nav-side:not(.tv) .dock{padding-top:10px;padding-bottom:8px;gap:1px}
+  html.nav-side:not(.tv) #tabs{gap:1px}
+  html.nav-side:not(.tv) .dock .brand{min-height:36px;padding-top:2px;padding-bottom:10px;margin-bottom:2px}
+  html.nav-side:not(.tv) .dock .brand .mk{width:30px;height:30px}
+  html.nav-side:not(.tv) #tabs .tab{height:34px}
+  html.nav-side:not(.tv) .dock-tools>.ibtn{height:32px}
+  html.nav-side:not(.tv) .dock-tools>.searchbtn{margin-bottom:4px}
+}

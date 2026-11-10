@@ -1,0 +1,34 @@
+
+/* 2.49.2 phone fixes: rounded search field, featured text that never cuts a line in half, the Movies and Series hubs */
+
+/* ---- search: one rounded field holding the icon, the text, Clear and the mic ---- */
+html:not(.tv) .pal-in{gap:10px}
+html:not(.tv) .pal-field{flex:1;min-width:0;display:flex;align-items:center;gap:2px;height:48px;padding:0 5px 0 16px;border-radius:999px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);transition:border-color .2s ease,background-color .2s ease,box-shadow .2s ease}
+html:not(.tv) .pal-field>svg{flex:none;width:18px;height:18px;color:var(--mute);margin-right:8px}
+html:not(.tv) .pal-field input{flex:1;min-width:0;height:100%;padding:0;background:none;border:0;border-radius:0;font-size:calc(16px * var(--ts,1))}
+html:not(.tv) .pal-field input:focus,html:not(.tv) .pal-field input:focus-visible{outline:none;box-shadow:none}
+html:not(.tv) .pal-field:focus-within{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.26);box-shadow:0 0 0 4px rgba(255,255,255,.05)}
+html:not(.tv) .pal-field .pal-x,html:not(.tv) .pal-field .pal-mic{width:38px;height:38px;border-radius:999px}
+html:not(.tv) .pal-field .pal-x:focus-visible,html:not(.tv) .pal-field .pal-mic:focus-visible{outline-offset:0;box-shadow:none}
+
+/* ---- featured text: up to three whole lines, and the slot is always three lines tall ----
+   An invisible three-line ghost shares the grid cell with the text, so the slot follows the real line height even
+   when Android's font size setting makes the letters bigger than the page asked for (that cut the third line). */
+.hero .hero-desc-slot{display:grid;margin:0 0 22px;max-width:58ch}
+.hero .hero-desc-slot::before{content:"\00a0\A\00a0\A\00a0";white-space:pre;visibility:hidden;grid-area:1/1;line-height:1.5}
+.hero .hero-desc-slot>.hero-desc{grid-area:1/1;height:auto;margin:0;max-width:none;line-height:1.5;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+@media (orientation:landscape) and (max-height:540px){
+  .hero .hero-desc-slot{margin-bottom:12px}
+  .hero .hero-desc-slot::before{content:"\00a0\A\00a0"}
+  .hero .hero-desc-slot>.hero-desc{-webkit-line-clamp:2}
+}
+
+/* ---- Movies and Series hubs: rows to browse first, then every title ---- */
+#mvhRows{margin:4px 0 8px}
+#mvhRows[hidden]{display:none}
+#mvhRows .row:last-child{margin-bottom:24px}
+.mvh-all{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:6px 0 14px}
+.mvh-all[hidden]{display:none}
+.mvh-all h2{margin:0;font-size:calc(20px * var(--ts,1));font-weight:600;letter-spacing:-.01em}
+.mvh-all small{color:var(--mute);font-size:calc(13px * var(--ts,1))}

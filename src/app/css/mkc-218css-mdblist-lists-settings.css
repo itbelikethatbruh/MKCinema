@@ -1,0 +1,8 @@
+
+/* 2.18.0 MDBList lists in Settings › Home */
+.mdb-row .mdb-add { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.mdb-row .mdb-add .inp { flex: 1 1 240px; min-width: 0; }
+.mdb-row .mdb-list { display: grid; gap: 6px; margin-top: 12px; }
+.mdb-row .mdb-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px; border: 1px solid var(--line, rgba(255,255,255,.08)); border-radius:var(--r-m); }
+.mdb-row .mdb-item span { display: grid; min-width: 0; }
+.mdb-row .mdb-item small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

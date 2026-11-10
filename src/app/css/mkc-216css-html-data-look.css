@@ -1,0 +1,91 @@
+
+html[data-look="anime"]{--n000000:#0e0616;--n000000-c:14,6,22;--n03050a:#0e0616;--n03050a-c:14,6,22;--n040404:#0e0616;--n040404-c:14,6,22;--n050505:#0e0616;--n050505-c:14,6,22;--n050506:#0e0616;--n050506-c:14,6,22;--n060607:#0e0616;--n060607-c:14,6,22;--n070707:#0e0616;--n070707-c:14,6,22;--n070708:#0e0616;--n070708-c:14,6,22;--n070910:#1a0c2e;--n070910-c:26,12,46;--n080809:#1b0b27;--n080809-c:27,11,39;--n08080a:#1b0b28;--n08080a-c:27,11,40;--n08090c:#1b0c2a;--n08090c-c:27,12,42;--n09090a:#1c0c28;--n09090a-c:28,12,40;--n090b14:#1c0e32;--n090b14-c:28,14,50;--n0a0a0b:#1d0d29;--n0a0a0b-c:29,13,41;--n0a0a0c:#1d0d2a;--n0a0a0c-c:29,13,42;--n0a0d17:#1c1034;--n0a0d17-c:28,16,52;--n0b0b0c:#1e0e2a;--n0b0b0c-c:30,14,42;--n0b0b0d:#1e0e2b;--n0b0b0d-c:30,14,43;--n0b0b0e:#1e0e2c;--n0b0b0e-c:30,14,44;--n0b0e18:#1d1135;--n0b0e18-c:29,17,53;--n0c0c0d:#1e0f2b;--n0c0c0d-c:30,15,43;--n0c0c0e:#1e0f2c;--n0c0c0e-c:30,15,44;--n0c0c10:#1e0f2d;--n0c0c10-c:30,15,45;--n0c0f1a:#1e1237;--n0c0f1a-c:30,18,55;--n0d0c0b:#1f0f29;--n0d0c0b-c:31,15,41;--n0d0d0e:#1f102b;--n0d0d0e-c:31,16,43;--n0d0d0f:#1f102c;--n0d0d0f-c:31,16,44;--n0e0e10:#20112d;--n0e0e10-c:32,17,45;--n101014:#221331;--n101014-c:34,19,49;--n111111:#23142e;--n111111-c:35,20,46;--n111113:#23142f;--n111113-c:35,20,47;--n111114:#231430;--n111114-c:35,20,48;--n121214:#241530;--n121214-c:36,21,48;--n121215:#241531;--n121215-c:36,21,49;--n141414:#251730;--n141414-c:37,23,48;--n141416:#251732;--n141416-c:37,23,50;--n141417:#251733;--n141417-c:37,23,51;--n141826:#251a41;--n141826-c:37,26,65;--n151517:#261833;--n151517-c:38,24,51;--n17181c:#281a37;--n17181c-c:40,26,55;--n19191c:#2a1b37;--n19191c-c:42,27,55;--n1a0705:#2c0a22;--n1a0705-c:44,10,34;--n1a1f2e:#2a2148;--n1a1f2e-c:42,33,72;--n1c1c1f:#2c1e39;--n1c1c1f-c:44,30,57;--n1d1d20:#2d1f3a;--n1d1d20-c:45,31,58;--n1e1e20:#2e203a;--n1e1e20-c:46,32,58;--n1f1f22:#2f213c;--n1f1f22-c:47,33,60;--n222226:#32243f;--n222226-c:50,36,63;--n26262a:#352842;--n26262a-c:53,40,66;--n26262b:#352843;--n26262b-c:53,40,67;--n2a2a2e:#392c45;--n2a2a2e-c:57,44,69;--n2b2b30:#3a2d47;--n2b2b30-c:58,45,71;--n2c2c30:#3a2e47;--n2c2c30-c:58,46,71;--n3a3a3f:#473c53;--n3a3a3f-c:71,60,83;--n57575d:#60586b;--n57575d-c:96,88,107;--n5f5f66:#676072;--n5f5f66-c:103,96,114;--n6b6862:#72696d;--n6b6862-c:114,105,109;--n6e6e74:#746e7d;--n6e6e74-c:116,110,125;--n6f6b65:#766b6f;--n6f6b65-c:118,107,111;--n78746c:#7d7474;--n78746c-c:125,116,116;--n7a7a82:#7f7a89;--n7a7a82-c:127,122,137;--n7c7c84:#807c8b;--n7c7c84-c:128,124,139;--n8b8b92:#a09ca4;--n8b8b92-c:160,156,164;--n8c867c:#a19892;--n8c867c-c:161,152,146;--n8c8c92:#a19da4;--n8c8c92-c:161,157,164;--n8d8d93:#a29ea5;--n8d8d93-c:162,158,165;--n8d8d95:#a29ea7;--n8d8d95-c:162,158,167;--n8d8d96:#a29ea8;--n8d8d96-c:162,158,168;--n8e8a83:#a29c98;--n8e8a83-c:162,156,152;--n9a968e:#aca5a1;--n9a968e-c:172,165,161;--n9a9aa2:#aca9b1;--n9a9aa2-c:172,169,177;--n9a9aa3:#aca9b2;--n9a9aa3-c:172,169,178;--na1a1aa:#b2aeb8;--na1a1aa-c:178,174,184;--na29e95:#b3aca7;--na29e95-c:179,172,167;--na8a8b0:#b8b4bd;--na8a8b0-c:184,180,189;--na9a59c:#b8b2ad;--na9a59c-c:184,178,173;--na9a9ae:#b8b5bb;--na9a9ae-c:184,181,187;--na9a9b0:#b8b5bd;--na9a9b0-c:184,181,189;--na9a9b1:#b8b5be;--na9a9b1-c:184,181,190;--na9a9b2:#b8b5bf;--na9a9b2-c:184,181,191;--nb4b4bb:#c2bec6;--nb4b4bb-c:194,190,198;--nb8b8c0:#c5c1ca;--nb8b8c0-c:197,193,202;--nb9b5ad:#c6bfba;--nb9b5ad-c:198,191,186;--nb9b9be:#c6c2c8;--nb9b9be-c:198,194,200;--nb9b9c0:#c6c2ca;--nb9b9c0-c:198,194,202;--nbdb8ae:#c9c1bb;--nbdb8ae-c:201,193,187;--nbdbdc2:#c9c5cc;--nbdbdc2-c:201,197,204;--nbdbdc5:#c9c5ce;--nbdbdc5-c:201,197,206;--nc0c0c8:#cbc8d1;--nc0c0c8-c:203,200,209;--nc2c2ca:#cdcad2;--nc2c2ca-c:205,202,210;--nc4c4cb:#cfcbd3;--nc4c4cb-c:207,203,211;--nc9c4ba:#d3cbc5;--nc9c4ba-c:211,203,197;--nc9c5bd:#d3ccc8;--nc9c5bd-c:211,204,200;--nc9c9ce:#d3cfd6;--nc9c9ce-c:211,207,214;--nc9c9cf:#d3cfd6;--nc9c9cf-c:211,207,214;--nc9c9d0:#d3cfd7;--nc9c9d0-c:211,207,215;--nc9cfdd:#d3d4e2;--nc9cfdd-c:211,212,226;--ncbd5e1:#d4d9e5;--ncbd5e1-c:212,217,229;--ncfc9bd:#d8cfc8;--ncfc9bd-c:216,207,200;--ncfcac0:#d8d0ca;--ncfcac0-c:216,208,202;--ncfccc5:#d8d2ce;--ncfccc5-c:216,210,206;--ncfcfd4:#d8d4da;--ncfcfd4-c:216,212,218;--ncfcfd5:#d8d4db;--ncfcfd5-c:216,212,219;--ncfd5e3:#d8d9e7;--ncfd5e3-c:216,217,231;--nd2d2d8:#dad7de;--nd2d2d8-c:218,215,222;--nd4d4d8:#dcd8de;--nd4d4d8-c:220,216,222;--nd4d4d9:#dcd8df;--nd4d4d9-c:220,216,223;--nd4d4da:#dcd8df;--nd4d4da-c:220,216,223;--nd6d6d9:#dddadf;--nd6d6d9-c:221,218,223;--nd6d6da:#dddadf;--nd6d6da-c:221,218,223;--nd6d6dc:#dddae1;--nd6d6dc-c:221,218,225;--nd9d4c7:#e0d8d0;--nd9d4c7-c:224,216,208;--nd9d9dd:#e0dce2;--nd9d9dd-c:224,220,226;--ndadae0:#e1dde4;--ndadae0-c:225,221,228;--ndddddd:#e3e0e2;--ndddddd-c:227,224,226;--ndfe5f2:#e5e6f3;--ndfe5f2-c:229,230,243;--ne3dcc9:#e8dfd1;--ne3dcc9-c:232,223,209;--ne3e3e6:#e8e5e9;--ne3e3e6-c:232,229,233;--ne4e4e7:#e9e5ea;--ne4e4e7-c:233,229,234;--ne5e7eb:#eae8ed;--ne5e7eb-c:234,232,237;--ne6e6e9:#ebe7ec;--ne6e6e9-c:235,231,236;--ne6e6ea:#ebe7ed;--ne6e6ea-c:235,231,237;--ne8e3d8:#ece5de;--ne8e3d8-c:236,229,222;--ne9e5dc:#ede6e1;--ne9e5dc-c:237,230,225;--ne9e9ec:#edeaee;--ne9e9ec-c:237,234,238;--ne9edf7:#ededf7;--ne9edf7-c:237,237,247;--nece6d6:#efe7dc;--nece6d6-c:239,231,220;--neceae5:#efeae8;--neceae5-c:239,234,232;--nececee:#efecf0;--nececee-c:239,236,240;--nececef:#efecf1;--nececef-c:239,236,241;--nefe9dc:#f2eae1;--nefe9dc-c:242,234,225;--nf0eadc:#f3eae1;--nf0eadc-c:243,234,225;--nf1f1f3:#f4f0f4;--nf1f1f3-c:244,240,244;--nf2efe8:#f4eeeb;--nf2efe8-c:244,238,235;--nf2f2f3:#f4f1f4;--nf2f2f3-c:244,241,244;--nf2f2f4:#f4f1f5;--nf2f2f4-c:244,241,245;--nf4f1ea:#f6f0ed;--nf4f1ea-c:246,240,237;--nf4f2ec:#f6f1ee;--nf4f2ec-c:246,241,238;--nf4f4f5:#f6f3f6;--nf4f4f5-c:246,243,246;--nf4f4f6:#f6f3f6;--nf4f4f6-c:246,243,246}
+/* ===== 2.16.0 styled subtitles: the libass canvas sits over the picture, under the controls ===== */
+#stage .JASSUB,#player .JASSUB{position:absolute!important;inset:0;pointer-events:none;z-index:1}
+#stage .JASSUB canvas,#player .JASSUB canvas{pointer-events:none}
+body.ass-on #player video::cue{color:transparent;background:transparent;text-shadow:none}
+
+/* ===== Send log ===== */
+.lg-note{display:flex;flex-direction:column;gap:6px;font-size:calc(13px * var(--ts,1));color:var(--mute);margin:10px 0 4px}
+.lg-note textarea{resize:vertical;min-height:64px;font:inherit;color:var(--ink)}
+.lg-last{font-size:calc(13px * var(--ts,1));color:var(--mute);align-self:center}
+.lg-code{display:flex;gap:8px;justify-content:center;margin:14px 0 6px}
+.lg-code span{width:44px;height:56px;display:grid;place-items:center;border-radius:var(--r-m);border:1px solid var(--line-hi,rgba(255,255,255,.2));background:rgba(255,255,255,.04);font:700 26px/1 var(--f-mono,monospace);color:var(--ink)}
+
+/* ===== Diagnostic ===== */
+.dg-steps{list-style:none;margin:14px 0 6px;padding:0;display:grid;gap:8px}
+.dg-steps li{display:grid;grid-template-columns:16px minmax(0,1fr) auto;align-items:center;gap:10px;font-size:calc(14px * var(--ts,1));color:var(--mute)}
+.dg-steps li small{font-size:calc(13px * var(--ts,1));color:var(--dim,var(--mute));text-align:right}
+.dg-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--line-hi,rgba(255,255,255,.3))}
+.dg-steps li.on{color:var(--ink)}.dg-steps li.on .dg-dot{border-color:var(--ink);animation:dgPulse 1s ease-in-out infinite}
+.dg-steps li.ok .dg-dot{background:#3ddc84;border-color:#3ddc84}.dg-steps li.bad .dg-dot{background:#ff5470;border-color:#ff5470}
+@keyframes dgPulse{50%{opacity:.35}}
+.dg-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 18px;margin:12px 0}
+.dg-grid div{display:flex;justify-content:space-between;gap:10px;font-size:calc(13px * var(--ts,1));border-bottom:1px solid var(--line,rgba(255,255,255,.08));padding:6px 0}
+.dg-grid span{color:var(--mute)}.dg-grid b{font-weight:600;text-align:right}.dg-grid b.dg-no{color:#ff8a9c}
+.dg-warn{font-size:calc(13px * var(--ts,1));line-height:1.5;color:var(--mute);margin:8px 0;padding:10px 12px;border-radius:var(--r-m);background:rgba(255,180,60,.07);border:1px solid rgba(255,180,60,.22)}
+.dg-h{margin:16px 0 8px;font-size:calc(14px * var(--ts,1))}
+.dg-rec{display:grid;gap:8px}
+.dg-opt{display:grid;grid-template-columns:20px minmax(0,1fr);gap:12px;align-items:start;text-align:left;padding:10px 12px;border-radius:calc(var(--r-m) * 1.2);border:1px solid var(--line,rgba(255,255,255,.1));background:transparent;color:var(--ink)}
+.dg-opt b{display:block;font-size:calc(14px * var(--ts,1))}.dg-opt small{display:block;font-size:calc(13px * var(--ts,1));line-height:1.45;color:var(--mute);margin-top:2px}
+.dg-box{width:18px;height:18px;border-radius:calc(var(--r-s) * 0.625);border:2px solid var(--line-hi,rgba(255,255,255,.35));margin-top:2px}
+.dg-opt.on .dg-box{background:var(--ink);border-color:var(--ink);box-shadow:inset 0 0 0 3px var(--n0b0b0d,#0b0b0d)}
+.dg-ok{display:flex;gap:8px;align-items:center;font-size:calc(14px * var(--ts,1));color:#8ff0b8;margin:12px 0}.dg-ok .lucide{width:18px;height:18px}
+@media (max-width:620px){.dg-grid{grid-template-columns:minmax(0,1fr)}.lg-code span{width:38px;height:50px;font-size:calc(20px * var(--ts,1))}}
+
+/* ===== Apple TV trailer ===== */
+#trSlot .apl-v{position:absolute;inset:0;width:100%;height:100%;background:#000;object-fit:contain}
+#trSlot .apl-src{position:absolute;right:12px;top:10px;font-size:calc(12px * var(--ts,1));letter-spacing:.04em;color:rgba(255,255,255,.72);background:rgba(0,0,0,.45);padding:4px 8px;border-radius:calc(var(--r-s) * 0.75);text-decoration:none;z-index:2}
+
+/* ===== Anime section ===== */
+.an-genres{margin-top:4px}
+#view-anime .an-head .toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.an-row .see-all{display:inline-flex;align-items:center;gap:4px;font-size:calc(13px * var(--ts,1));color:var(--mute);background:none;border:0;padding:4px 6px;border-radius:var(--r-s)}
+.an-row .see-all .lucide{width:15px;height:15px}
+
+/* ===== Appearance: five looks, early access badge ===== */
+.looks{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width:1300px){.looks{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:760px){.looks{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.lk-early{margin-left:auto;font-size:calc(10px * var(--ts,1));font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#ff5c7a;border:1px solid rgba(255,92,122,.45);border-radius:999px;padding:2px 7px}
+
+.an-early{display:grid;grid-template-columns:120px minmax(0,1fr);gap:18px;align-items:center}
+.an-early img{width:120px;height:auto}
+@media (max-width:520px){.an-early{grid-template-columns:minmax(0,1fr)}.an-early img{width:96px;margin:0 auto}}
+
+/* ===== The Anime look ===== */
+html[data-look="anime"]{--an-vio:#9b5cff;--an-pink:#ff8fb4;--gold:#ff5c7a}
+
+html[data-look="anime"] body{background:transparent}
+#anSky{display:none}
+html[data-look="anime"] #anSky{position:fixed;inset:0;z-index:-1;background:url(anime/night.svg) center bottom/cover no-repeat;opacity:.9;pointer-events:none}
+html[data-look="anime"] #anSky::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(14,6,22,.05),rgba(14,6,22,.55) 55%,rgba(14,6,22,.8))}
+
+
+
+
+
+@media (hover:hover){html[data-look="anime"] .card:hover .card-inner{box-shadow:0 0 0 1px rgba(var(--an-red-c),.55),0 10px 30px -10px rgba(var(--an-red-c),.55)}}
+html[data-look="anime"] .switch.on{background:var(--an-red)}
+/* TV: a crimson ring on whatever the remote is on, drawn once (no animation, no blur) */
+html.tv[data-look="anime"] .nav-focus:not(.card),html.tv[data-look="anime"] :focus-visible:not(.card){outline-color:var(--an-red)!important;box-shadow:0 0 0 6px rgba(var(--an-red-c),.28)!important}
+html.tv[data-look="anime"] .card.nav-focus .card-inner,html.tv[data-look="anime"] .card:focus-visible .card-inner{box-shadow:0 0 0 3px var(--an-red),0 0 22px rgba(var(--an-red-c),.45)}
+/* sakura petals: Home only, above everything but never catching a press; transform and opacity only */
+#anPetals{display:none}
+body.an-home.fx #anPetals{display:block;position:fixed;inset:0;pointer-events:none;z-index:40;overflow:hidden;contain:strict}
+#anPetals i{position:absolute;top:-6vh;left:var(--x);width:14px;height:11px;border-radius:60% 0 60% 0;background:linear-gradient(135deg,#ffd1e0,#ff8fb4);opacity:0;will-change:transform,opacity;animation:anFall var(--d) linear var(--w) infinite;transform:scale(var(--s))}
+@keyframes anFall{0%{opacity:0;transform:translate3d(0,0,0) rotate(0) scale(var(--s))}8%{opacity:.85}85%{opacity:.75}100%{opacity:0;transform:translate3d(-14vw,112vh,0) rotate(540deg) scale(var(--s))}}
+body.reduce-motion #anPetals{display:none!important}
+/* Miko: at the foot of the side menu (where there is room), and beside the Anime page title; never over posters */
+#anMiko{display:none}
+html.nav-side:not(.side-mini) body.an-home #anMiko{display:block;position:fixed;left:24px;bottom:0;width:120px;height:auto;pointer-events:none;z-index:5;animation:anPeek .7s cubic-bezier(.2,.8,.2,1) both}
+@keyframes anPeek{from{transform:translateY(40%);opacity:0}to{transform:none;opacity:1}}
+html.tv body.an-home #anMiko{animation:none}
+#view-anime .an-head{position:relative}
+.an-miko{display:none}
+html[data-look="anime"] .an-miko{display:block;position:absolute;right:0;top:-8px;width:clamp(84px,9vw,128px);height:auto;pointer-events:none}
+@media (max-width:760px){html[data-look="anime"] .an-miko{width:72px;top:-4px}}
+@media (prefers-reduced-motion:reduce){#anPetals{display:none!important}#anMiko{animation:none!important}}
+html[data-look="anime"] #view-anime .an-head{padding-right:clamp(90px,10vw,140px)}
+/* seek preview above the finger on touch screens */
+.sp-prev.touch{bottom:70px;width:156px}

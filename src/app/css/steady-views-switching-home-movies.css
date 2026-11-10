@@ -1,0 +1,7 @@
+
+/* 2.59.1 steady views: switching Home, Movies, Series and the other pages no longer drops the screen to black
+   before the new page fades in. The page eases in from mostly visible, so it still moves but never blinks. */
+.view.on{animation:mkViewIn .34s var(--ease)}
+@keyframes mkViewIn{from{opacity:.6;transform:translateY(8px)}}
+/* moving from one title to another inside its page keeps the old backdrop under the new one until it arrives */
+.d-hero > img.bg.mk-under{z-index:-3;transition:none}

@@ -1,0 +1,54 @@
+
+/* ===== 2.62 Top 10 you can filter, Films and Series homes, year filters, Peak Cinema up top ===== */
+section.t10x{position:relative;isolation:isolate;margin:6px 0 38px;padding:20px 0 4px}
+section.t10x::before{content:"";position:absolute;inset:0 calc(var(--pad,4vw) * -1);z-index:-1;pointer-events:none;
+  background:radial-gradient(90% 120% at 0% 0%,rgba(var(--nd9d4c7-c,217,212,199),.09) 0%,rgba(var(--nd9d4c7-c,217,212,199),0) 60%),linear-gradient(180deg,rgba(255,255,255,.035) 0%,rgba(255,255,255,0) 100%);
+  border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.05)}
+section.t10x .row-head{align-items:flex-end}
+section.t10x .row-title{font-family:var(--f-display);font-size:calc(clamp(28px,3.2vw,44px) * var(--ts,1));font-weight:800;letter-spacing:-.03em;line-height:1}
+section.t10x .row-title small{display:block;margin-top:8px;font-family:var(--f-body,inherit);font-size:calc(14px * var(--ts,1));font-weight:500;letter-spacing:0;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t10-bar{display:flex;gap:8px;align-items:center;margin:12px 0 4px;overflow-x:auto;scrollbar-width:none;padding:2px 0}
+.t10-bar::-webkit-scrollbar{display:none}
+.t10-bar select.sel{flex:none;height:38px;max-width:220px;-webkit-appearance:none;appearance:none;padding:0 34px 0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.12);color-scheme:dark;font:inherit;font-size:calc(14px * var(--ts,1));font-weight:600;color:var(--ink);
+  background:rgba(255,255,255,.05) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9b9c0' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center/14px;transition:border-color .2s ease,background-color .2s ease}
+.t10-bar select.sel.on{border-color:rgba(var(--nd9d4c7-c,217,212,199),.7);background-color:rgba(var(--nd9d4c7-c,217,212,199),.12)}
+.t10-bar select.sel:hover,.t10-bar select.sel:focus-visible{border-color:rgba(255,255,255,.34);outline:none}
+.t10-bar .segc{flex:none}
+.t10-bar .t10-reset{flex:none;height:38px;padding:0 14px;border-radius:999px;border:0;background:none;color:var(--mute);font:inherit;font-size:calc(13px * var(--ts,1));font-weight:600;cursor:pointer}
+.t10-bar .t10-reset:hover,.t10-bar .t10-reset:focus-visible{color:var(--ink);outline:none}
+section.t10x .rail{transition:opacity .25s ease}
+section.t10x.t10-busy .rail{opacity:.4}
+section.t10x .rail-empty{padding:28px 4px;color:var(--mute)}
+/* Films and Series homes: Top 10 and networks above the rows */
+#hubTop{margin:8px 0 6px}
+#hubTop[hidden]{display:none}
+#hubTop .net-row{margin-bottom:30px}
+/* Peak Cinema, right under the Top 10 */
+#pkStrip.pk2{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:0;
+  max-width:920px;margin:30px auto 8px;padding:40px clamp(20px,4vw,56px) 34px;border-radius:calc(var(--r-l) * 1.3);
+  background:linear-gradient(180deg,var(--n141417,#141417) 0%,var(--n0a0a0c,#0a0a0c) 100%);border:1px solid rgba(255,255,255,.09);box-shadow:0 30px 80px -40px rgba(0,0,0,.8)}
+#pkStrip.pk2 .pk2-art{position:absolute;inset:0;z-index:-1;display:flex;justify-content:center;align-items:center;gap:14px;opacity:.28;pointer-events:none}
+#pkStrip.pk2 .pk2-art img{width:clamp(90px,11vw,140px);aspect-ratio:2/3;object-fit:cover;border-radius:var(--r-m);flex:none}
+#pkStrip.pk2 .pk2-art img:nth-child(1){transform:translateY(18px) rotate(-6deg)}
+#pkStrip.pk2 .pk2-art img:nth-child(2){transform:translateY(-6px) rotate(-3deg)}
+#pkStrip.pk2 .pk2-art img:nth-child(4){transform:translateY(-6px) rotate(3deg)}
+#pkStrip.pk2 .pk2-art img:nth-child(5){transform:translateY(18px) rotate(6deg)}
+#pkStrip.pk2::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(70% 90% at 50% 50%,rgba(10,10,12,.55) 0%,rgba(10,10,12,.94) 75%)}
+#pkStrip.pk2 .pk-mark{margin:0 auto}
+#pkStrip.pk2 h3{font-family:var(--f-serif);font-weight:500;font-size:calc(clamp(26px,3.4vw,42px) * var(--ts,1));line-height:1.12;margin:14px 0 10px;color:var(--nf2f2f4,#f2f2f4);max-width:20ch}
+#pkStrip.pk2 p{margin:0 auto;color:var(--na9a9b0,#a9a9b0);font-size:calc(15px * var(--ts,1));line-height:1.55;max-width:52ch}
+#pkStrip.pk2 .pk2-go{margin-top:24px;height:56px;padding-inline:28px;font-size:calc(16px * var(--ts,1));transition:transform .2s ease,opacity .2s ease}
+#pkStrip.pk2 .pk2-go:hover{transform:translateY(-2px)}
+#pkStrip.pk2 .pk2-steps{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 22px;margin:20px 0 0;padding:0;list-style:none;color:var(--mute);font-size:calc(13px * var(--ts,1))}
+#pkStrip.pk2 .pk2-steps b{color:var(--ink);font-weight:600}
+@media (max-width:760px){
+  #pkStrip.pk2{padding:30px 18px 26px;margin-top:22px;align-items:center}
+  #pkStrip.pk2 .pk2-art img:nth-child(1),#pkStrip.pk2 .pk2-art img:nth-child(5){display:none}
+  #pkStrip.pk2 .pk2-go{width:100%;justify-content:center}
+  section.t10x .row-title small{white-space:normal}
+}
+html.tv #pkStrip.pk2{align-items:center;flex-direction:column}
+html.tv #pkStrip.pk2 .pk2-go{height:62px}
+html.tv #pkStrip.pk2 .pk2-go:hover{transform:none}
+html.tv .t10-bar{overflow:visible;flex-wrap:wrap}
+@media (prefers-reduced-motion:reduce){section.t10x .rail,#pkStrip.pk2 .pk2-go{transition:none}}

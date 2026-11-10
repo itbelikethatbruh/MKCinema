@@ -1,0 +1,15 @@
+
+/* 2.40 smooth swaps: picking a chip, a list, a season or loading more never just snaps in.
+   Opacity and transform only. TVs and Low graphics fade the whole list as one layer instead of each poster. */
+@keyframes mkCardIn{from{opacity:0;transform:translate3d(0,16px,0) scale(.97)}}
+@keyframes mkFade{from{opacity:0}}
+@keyframes mkPick{0%{transform:scale(.9)}55%{transform:scale(1.04)}100%{transform:none}}
+@keyframes mkRowIn{from{opacity:0;transform:translate3d(0,-8px,0)}}
+.mk-in{animation:mkCardIn .46s var(--ease,cubic-bezier(.22,.8,.24,1)) backwards;animation-delay:calc(var(--mk-i,0) * 24ms)}
+.mk-gin{animation:mkFade .45s ease-out}
+.mk-pick{animation:mkPick .45s var(--ease,cubic-bezier(.22,.8,.24,1))}
+.mk-rowin{animation:mkRowIn .45s var(--ease,cubic-bezier(.22,.8,.24,1)) backwards}
+.mk-dim{opacity:.38;transition:opacity .25s ease-out;pointer-events:none}
+.card.mk-in.nav-focus,.card.mk-in:focus-visible{animation:none}
+body.reduce-motion :is(.mk-in,.mk-gin,.mk-pick,.mk-rowin){animation:none!important}
+@media (prefers-reduced-motion:reduce){:is(.mk-in,.mk-gin,.mk-pick,.mk-rowin){animation:none!important}}

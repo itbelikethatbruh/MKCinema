@@ -9,7 +9,7 @@ on:
   pull_request:
   push:
     branches: [main]
-    paths: ["app/**", "site/**", "tv-site/**", "tools/**", "**/*.md", ".github/workflows/web.yml", ".github/lighthouserc.json"]
+    paths: ["app/**", "src/**", "site/**", "tv-site/**", "tools/**", "**/*.md", ".github/workflows/web.yml", ".github/lighthouserc.json"]
   workflow_dispatch:
 
 permissions:
@@ -34,6 +34,8 @@ jobs:
           done
       - name: Relative links
         run: node tools/check-links.mjs
+      - name: src/app matches app/index.html
+        run: node tools/web-src.mjs check
       - name: Minify a copy of the web app
         run: |
           cp -r app "$RUNNER_TEMP/web"

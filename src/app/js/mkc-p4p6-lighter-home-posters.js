@@ -1,0 +1,104 @@
+
+/* ---------------- 2.47 Lighter Home ----------------
+   1. Posters, wide cards and Universes cards ask for the image size their slot shows (up to 2x the screen's pixel
+      density). Only ever a smaller copy of the same picture, never a bigger one; if a smaller copy fails, the original
+      loads. Banners, logos and anything that loads at once keep their art untouched.
+   2. Home rows more than two screens down are built when they come within two screens, and each row starts with about
+      three screens' worth of posters (the rest join as you scroll along it, as endless rows already do). Not on TV,
+      where every row stays built for the remote. */
+const ImgFit = {
+  dpr: Math.min(window.devicePixelRatio || 1, 2),
+  RX: /^https:\/\/(image\.tmdb\.org\/t\/p\/|(images|live)\.metahub\.space\/(poster|background)\/|media\.kitsu\.(app|io)\/(anime|manga)\/poster_images\/)/,
+  TMDB: [['w92', 92], ['w154', 154], ['w185', 185], ['w300', 300], ['w342', 342], ['w500', 500], ['w780', 780], ['w1280', 1280], ['original', 1e9]],
+  MH_POSTER: [['small', 300], ['medium', 500], ['large', 780]],
+  MH_BG: [['small', 480], ['medium', 1920], ['large', 1920]],
+  KITSU: [['tiny', 110], ['small', 284], ['medium', 390], ['large', 550], ['original', 1e9]],
+  // the smallest size at least px wide, but never above the size that was asked for
+  pick(list, px, cur) {
+    const ci = list.findIndex(([n]) => n === cur); if (ci < 0) return cur;
+    for (let i = 0; i < ci; i++) if (list[i][1] >= px) return list[i][0];
+    return cur;
+  },
+  url(src, px) {
+    let m;
+    if ((m = /^(https:\/\/image\.tmdb\.org\/t\/p\/)(w\d+|original)(\/.+)$/.exec(src))) return m[1] + this.pick(this.TMDB, px, m[2]) + m[3];
+    if ((m = /^(https:\/\/(?:images|live)\.metahub\.space\/)(poster|background)\/(small|medium|large)(\/.+)$/.exec(src))) return `${m[1]}${m[2]}/${this.pick(m[2] === 'poster' ? this.MH_POSTER : this.MH_BG, px, m[3])}${m[4]}`;
+    if ((m = /^(https:\/\/media\.kitsu\.(?:app|io)\/(?:anime|manga)\/poster_images\/\d+\/)(tiny|small|medium|large|original)(\.\w+(?:\?.*)?)$/.exec(src))) return m[1] + this.pick(this.KITSU, px, m[2]) + m[3];
+    return src;
+  },
+  want(img) {
+    const lazy = img.dataset.lsrc, src = lazy || img.getAttribute('src');
+    if (img.dataset.alt || img.dataset.fit || (!lazy && img.complete && img.naturalWidth)) return null;
+    if (!src || (!lazy && img.getAttribute('loading') !== 'lazy') || !this.RX.test(src)) return null;
+    return src;
+  },
+  // an image sized by its own picture (a logo) has no width before it loads: its max-width is the slot
+  cap(im) {
+    const mw = getComputedStyle(im).maxWidth, p = im.parentElement;
+    if (/px$/.test(mw)) return parseFloat(mw) || 0;
+    if (/%$/.test(mw) && p) return (p.clientWidth * parseFloat(mw)) / 100;
+    return 0;
+  },
+  // all widths are read first, then all sources written, so the page is laid out once per batch
+  run(imgs) {
+    const todo = [];
+    for (const im of imgs) { const src = this.want(im); if (src) { const w = im.clientWidth || this.cap(im); if (w) todo.push([im, src, w]); } }
+    for (const [im, src, w] of todo) {
+      im.dataset.fit = '1';
+      const u = this.url(src, Math.ceil(w * this.dpr)); if (u === src) continue;
+      im.dataset.alt = src; // the error handler falls back to it
+      if (im.dataset.lsrc) im.dataset.lsrc = u; else im.src = u;
+    }
+  },
+  init() {
+    const SEL = 'img[loading="lazy"], img[data-lsrc]';
+    new MutationObserver((ms) => {
+      const imgs = [];
+      for (const m of ms) for (const n of m.addedNodes) {
+        if (n.nodeType !== 1) continue;
+        if (n.tagName === 'IMG') { if (n.matches(SEL)) imgs.push(n); } else if (n.firstElementChild) imgs.push(...n.querySelectorAll(SEL));
+      }
+      if (imgs.length) this.run(imgs);
+    }).observe(document.documentElement, { childList: true, subtree: true });
+    this.run(document.querySelectorAll(SEL));
+  },
+};
+ImgFit.init();
+
+const HomeLazy = {
+  on: !IS_TV && 'IntersectionObserver' in window,
+  io: null, wait: new Set(),
+  // posters a Home row starts with: about three screens' worth, 10 to 40
+  first() {
+    if (!this.on) return 40;
+    const w = innerWidth, card = Math.min(192, Math.max(132, w * 0.14)) + 12;
+    return Math.max(10, Math.min(40, Math.ceil((w * 3) / card)));
+  },
+  far(sec) {
+    if (!sec || !sec.isConnected || S.view !== 'home' || !sec.closest('#homeRows')) return false;
+    const r = sec.getBoundingClientRect(); return r.height > 0 && r.top > innerHeight * 3;
+  },
+  build(sec) {
+    const z = sec._lazy; if (!z) return;
+    this.io.unobserve(sec); this.wait.delete(sec); delete sec._lazy;
+    if (!sec.isConnected) return;
+    z.fill(sec, z.html, z.empty);
+    if (z.attach && typeof Endless !== 'undefined') Endless.attach(sec, ...z.attach);
+    if (typeof SimpleHome !== 'undefined' && SimpleHome.tidy) SimpleHome.tidy();
+    if (typeof KidsAge !== 'undefined' && typeof Seats !== 'undefined' && Seats.kids && Seats.kids()) KidsAge.prune();
+  },
+  init() {
+    if (!this.on) return;
+    this.io = new IntersectionObserver((ents) => ents.forEach((e) => { if (e.isIntersecting) this.build(e.target); }), { rootMargin: '0px 0px 200% 0px' });
+    const fr = fillRail;
+    fillRail = function (sec, html, empty) {
+      if (sec && sec._lazy) { sec._lazy.html = html; sec._lazy.empty = empty; return; }
+      if (HomeLazy.far(sec)) {
+        HomeLazy.wait.forEach((x) => { if (!x.isConnected) { HomeLazy.io.unobserve(x); HomeLazy.wait.delete(x); delete x._lazy; } });
+        sec._lazy = { html, empty, fill: fr }; HomeLazy.wait.add(sec); HomeLazy.io.observe(sec); return;
+      }
+      return fr.apply(this, arguments);
+    };
+  },
+};
+HomeLazy.init();

@@ -1,0 +1,21 @@
+
+/* side menu: flush on the left edge, full height; the whole column is the hover area */
+@media (min-width:761px){
+  :root.nav-side:not(.tv):not([data-look="anime"]) .dock-wrap{padding:0 0 0 env(safe-area-inset-left,0px);pointer-events:auto}
+  :root.nav-side:not(.tv):not([data-look="anime"]) .dock-wrap .dock{height:100%;border-radius:0;border:0;border-right:1px solid rgba(255,255,255,.08)}
+  :root.nav-side.side-mini:not(.tv):not([data-look="anime"]) .dock-wrap{width:calc(var(--side-w,96px) + env(safe-area-inset-left,0px))}
+  :root.nav-side.side-mini:not(.tv):not([data-look="anime"]) .dock-wrap:is(:hover,:focus-within){width:calc(276px + env(safe-area-inset-left,0px))}
+  :root.nav-side.side-mini:not(.tv):not([data-look="anime"]) .dock-wrap .dock{border-right:0;clip-path:inset(0 calc(276px - var(--side-w,96px)) 0 0);transition:clip-path .46s cubic-bezier(.22,1,.36,1),background-color .3s}
+  :root.nav-side.side-mini:not(.tv):not([data-look="anime"]) .dock-wrap:is(:hover,:focus-within) .dock{clip-path:inset(0 0 0 0);transition:clip-path .46s cubic-bezier(.22,1,.36,1) .08s,background-color .3s}
+  /* the menu's right edge line follows the opening menu (transform only) */
+  :root.nav-side.side-mini:not(.tv):not([data-look="anime"]) .dock-wrap::before{display:block;content:"";position:absolute;left:0;top:0;bottom:0;right:auto;width:1px;height:auto;z-index:3;pointer-events:none;background:rgba(255,255,255,.09);transform:translate3d(calc(var(--side-w,96px) - 1px + env(safe-area-inset-left,0px)),0,0);transition:transform .46s cubic-bezier(.22,1,.36,1)}
+  :root.nav-side.side-mini:not(.tv):not([data-look="anime"]) .dock-wrap:is(:hover,:focus-within)::before{transform:translate3d(calc(275px + env(safe-area-inset-left,0px)),0,0);transition:transform .46s cubic-bezier(.22,1,.36,1) .08s}
+  :root.nav-side.side-mini:not(.tv):not([data-look="anime"]) .dock-wrap:is(:hover,:focus-within)::after{transition:opacity .42s ease .08s}
+  /* highlights stay inside the closed menu with an even gap on both sides, and open with it */
+  :root.nav-side.side-mini:not(.tv):not([data-look="anime"]) .dock-wrap :is(#tabs .tab,.dock-tools>.ibtn){clip-path:inset(-1px calc(100% - var(--side-w,96px) + 15px) -1px -1px round calc(var(--r-m,10px) * 1.2 + 1px));transition:clip-path .46s cubic-bezier(.22,1,.36,1),background-color .2s,color .2s}
+  :root.nav-side.side-mini:not(.tv):not([data-look="anime"]) .dock-wrap:is(:hover,:focus-within) :is(#tabs .tab,.dock-tools>.ibtn){clip-path:inset(-1px -1px -1px -1px round calc(var(--r-m,10px) * 1.2 + 1px));transition:clip-path .46s cubic-bezier(.22,1,.36,1) .08s,background-color .2s,color .2s}
+  :root.nav-side.side-mini:not(.tv):not([data-look="anime"]) .dock-wrap:not(:hover):not(:focus-within) .dock .brand::after{left:14px;right:auto;width:calc(var(--side-w,96px) - 16px - 28px)}
+}
+@media (min-width:761px) and (prefers-reduced-motion:reduce){
+  :root.nav-side.side-mini:not(.tv):not([data-look="anime"]) .dock-wrap .dock,:root.nav-side.side-mini:not(.tv):not([data-look="anime"]) .dock-wrap::before,:root.nav-side.side-mini:not(.tv):not([data-look="anime"]) .dock-wrap :is(#tabs .tab,.dock-tools>.ibtn){transition:none!important}
+}

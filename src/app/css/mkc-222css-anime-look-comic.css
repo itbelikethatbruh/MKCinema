@@ -1,0 +1,184 @@
+
+/* ===== 2.22.0 Anime look, comic edition ===== */
+html[data-look="anime"]{--an-ink:#140818;--an-paper:#fff4f8;--an-red:#ff2d55;--an-red-c:255,45,85;--an-font:"Dela Gothic One","Sora",system-ui,sans-serif;background:#0a0410}
+/* the scene: four still pictures; Full mode moves them with transform only */
+#anScene{display:none}
+html[data-look="anime"] #anSky{display:none!important}
+html[data-look="anime"] #anScene{display:block;position:fixed;inset:-48px -64px;z-index:-1;pointer-events:none;overflow:hidden;contain:strict;will-change:transform;background:#0a0410}
+#anScene i{position:absolute;inset:0;background-position:center bottom;background-repeat:no-repeat;background-size:cover;will-change:auto}
+#anScene .l0{background-image:url(anime/scene-back.webp)}
+#anScene .l2{background-image:url(anime/scene-near.webp);top:auto;bottom:0;height:max(calc((100vw + 128px) * .2917),42vh);background-size:cover;background-position:center top}
+#anScene .l3{background:url(anime/branch.svg) left top/min(520px,46vw) auto no-repeat;inset:-10px auto auto -24px;width:min(560px,50vw);height:260px}
+html.an-fx #anScene .l2,html.an-fx #anScene .l3{will-change:transform}
+html.tv[data-look="anime"] #anScene .l3{display:none}
+@media (max-width:760px){html[data-look="anime"] #anScene .l3{width:62vw;background-size:58vw auto;opacity:.85}}
+
+/* type: Dela Gothic One with an ink shadow and a crimson echo */
+html[data-look="anime"] .page-title,html[data-look="anime"] .x8-h{font-family:var(--an-font);font-weight:400;letter-spacing:.01em;text-shadow:3px 3px 0 var(--an-red),6px 6px 0 var(--an-ink)}
+html[data-look="anime"] .row-title{font-family:var(--an-font);font-weight:400;letter-spacing:.01em;position:relative;padding-left:16px;text-shadow:2px 2px 0 var(--an-ink),3px 3px 0 rgba(var(--an-red-c),.85)}
+html[data-look="anime"] .row-title::before{content:"";position:absolute;left:0;top:.12em;bottom:.12em;width:7px;background:var(--an-red);transform:skewX(-14deg);box-shadow:2px 2px 0 var(--an-ink)}
+html[data-look="anime"] .row-title small{font-family:var(--f-body);font-weight:700;text-shadow:none;letter-spacing:.14em;color:#ff8fb4}
+html[data-look="anime"] .hero-title,html[data-look="anime"] .hero h1{font-family:var(--an-font);font-weight:400;text-shadow:4px 4px 0 var(--an-red),8px 8px 0 var(--an-ink)}
+html[data-look="anime"] .hero-logo{filter:drop-shadow(4px 4px 0 var(--an-ink)) drop-shadow(3px 3px 0 rgba(var(--an-red-c),.9))}
+html[data-look="anime"] .btn-prime{font-family:var(--an-font);font-weight:400;letter-spacing:0}
+html[data-look="anime"] #tabs .tab .lbl,html[data-look="anime"] #mtabs button span{font-weight:800;font-style:italic;letter-spacing:.01em}
+html[data-look="anime"] .btn-ghost{font-weight:800}
+html[data-look="anime"] #tabs .tab svg.an-ic,html[data-look="anime"] .dock-tools svg.an-ic{width:21px;height:21px}
+
+/* dock: an ink strip with a crimson underline */
+
+html[data-look="anime"] .dock .brand .mk{display:none}
+.an-mark{display:none}
+html[data-look="anime"] .dock .brand .an-mark{display:block;width:46px;height:46px;flex:none;filter:drop-shadow(2px 2px 0 var(--an-ink))}
+.an-mk-t{font-family:var(--an-font,"Sora");font-size:calc(20px * var(--ts,1));letter-spacing:-.04em}
+html.an-fx .dock .brand .an-mark{transition:transform .35s cubic-bezier(.2,1.6,.4,1)}
+html.an-fx .dock .brand:hover .an-mark{transform:rotate(-14deg) scale(1.08)}
+html[data-look="anime"] #tabs .tab{border-radius:0;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%)}
+html[data-look="anime"] #tabs .tab.on,html[data-look="anime"] #mtabs button.on{color:#fff;background:var(--an-red);box-shadow:none;text-shadow:2px 2px 0 var(--an-ink)}
+
+html[data-look="anime"] #mtabs button.on{clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);border-radius:0}
+svg.an-ic{overflow:visible}
+html[data-look="anime"] .tab.on svg.an-ic,html[data-look="anime"] #mtabs button.on svg.an-ic{--an-red:#fff;filter:drop-shadow(1.5px 1.5px 0 var(--an-ink))}
+
+/* buttons: slanted ink-shadowed panels */
+html[data-look="anime"] .btn-prime{color:#fff;background:var(--an-red);border:0;border-radius:calc(var(--r-s) * 0.5);clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%);padding-inline:26px;box-shadow:inset -5px -5px 0 rgba(20,8,24,.55),inset 2px 2px 0 rgba(255,255,255,.35);text-shadow:2px 2px 0 var(--an-ink)}
+html[data-look="anime"] .btn-prime::before{display:none!important}
+html[data-look="anime"] .btn-ghost{border-radius:calc(var(--r-s) * 0.5);background:rgba(20,8,24,.7)!important;}
+html[data-look="anime"] .btn-ghost::before{display:none!important}
+
+/* posters: comic panels, with a halftone and a 3D tilt on fast computers */
+html[data-look="anime"] .card-inner{border-radius:calc(var(--r-s) * 0.75);}
+html.an-fx .card.an-tilt .card-inner::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;z-index:3;}
+html.an-fx .card.an-tilt .card-inner{transform:perspective(800px) rotateX(var(--rx,0)) rotateY(var(--ry,0)) translateZ(0) scale(1.04);transition:transform .08s linear;}
+html[data-look="anime"] .card .card-inner{transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .2s}
+
+
+@media (max-width:760px){html[data-look="anime"] .card-inner{box-shadow:0 0 0 2px var(--an-ink),0 0 0 3px rgba(255,244,248,.8),3px 3px 0 3px rgba(var(--an-red-c),.5)}}
+
+/* featured banner: a framed comic panel; it never moves */
+html[data-look="anime"] .hero{border:3px solid var(--an-ink);box-shadow:0 0 0 2px rgba(255,244,248,.85),8px 8px 0 2px rgba(var(--an-red-c),.6);border-radius:calc(var(--r-s) * 0.75)}
+
+/* chips and switches */
+html[data-look="anime"] .chip.on,html[data-look="anime"] .segc button.on{background:var(--an-red);border-color:var(--an-ink);color:#fff;text-shadow:1px 1px 0 var(--an-ink)}
+html[data-look="anime"] .seg button.on{background:var(--an-red);color:#fff}
+
+/* toasts: speech bubbles */
+html[data-look="anime"] .toast{background:var(--an-paper)!important;color:var(--an-ink)!important;border:3px solid var(--an-ink)!important;border-radius:calc(var(--r-l) * 1.2222)!important;box-shadow:5px 5px 0 var(--an-red)!important;position:relative;font-weight:600}
+html[data-look="anime"] .toast .lucide{color:var(--an-red)}
+html[data-look="anime"] .toast::after{content:"";position:absolute;left:28px;bottom:-14px;width:18px;height:14px;background:var(--an-paper);clip-path:polygon(0 0,100% 0,0 100%);border-left:3px solid var(--an-ink)}
+
+/* the Anime page: a splash panel with the logo and Miko */
+html[data-look="anime"] #view-anime .an-head.an-comic{padding-right:0;min-height:0}
+.an-splash{display:none}
+html[data-look="anime"] .an-splash{display:block;position:relative;height:clamp(180px,20vw,270px);margin:0 0 18px;border:3px solid var(--an-ink);border-radius:calc(var(--r-s) * 0.75);overflow:hidden;background:linear-gradient(115deg,#2a0b33 0,#5a0f3e 55%,#ff2d55 140%);box-shadow:0 0 0 2px rgba(255,244,248,.85),8px 8px 0 2px rgba(var(--an-red-c),.6);isolation:isolate}
+.an-lines{position:absolute;inset:-40%;background:repeating-conic-gradient(from 0deg at 72% 60%,rgba(255,255,255,.13) 0 1.6deg,transparent 1.6deg 7deg);z-index:-1}
+.an-splash::after{content:"";position:absolute;inset:0;background:radial-gradient(rgba(0,0,0,.3) 1.4px,transparent 1.8px) 0 0/8px 8px;z-index:-1;pointer-events:none}
+.an-splash .an-logo.big{position:absolute;left:clamp(12px,3vw,40px);top:50%;width:min(56%,520px);height:auto;transform:translateY(-50%) rotate(-4deg)}
+.an-splash .an-miko2{position:absolute;right:clamp(4px,4vw,60px);bottom:-6%;height:118%;width:auto;filter:drop-shadow(6px 0 0 rgba(20,8,24,.6))}
+.an-bubble{position:absolute;right:calc(clamp(4px,4vw,60px) + clamp(170px,19vw,260px));top:14%;max-width:230px;padding:10px 14px;background:var(--an-paper);color:var(--an-ink);border:3px solid var(--an-ink);border-radius:calc(var(--r-l) * 1.1111);font:700 14px/1.3 var(--f-body);box-shadow:4px 4px 0 var(--an-ink)}
+.an-bubble::after{content:"";position:absolute;right:-16px;top:22px;width:18px;height:14px;background:var(--an-paper);clip-path:polygon(0 0,100% 50%,0 100%);border-top:3px solid var(--an-ink)}
+@media (max-width:760px){.an-splash .an-logo.big{width:62%;top:34%;left:8px}.an-bubble{display:none}.an-splash .an-miko2{height:104%;right:-8%}}
+html[data-look="anime"] #view-anime .an-head .page-title{font-size:calc(clamp(30px,4vw,52px) * var(--ts,1))}
+.an-logo-t text{font-family:var(--an-font,"Sora");font-size:calc(66px * var(--ts,1));letter-spacing:-.02em}
+.an-logo-t text.s{font-size:calc(38px * var(--ts,1));letter-spacing:0}
+.an-logo text.k{font-family:var(--an-font,"Sora");font-size:calc(15px * var(--ts,1));letter-spacing:.3em}
+html.an-fx .an-splash .an-miko2{animation:anBob 4.5s ease-in-out infinite}
+html.an-fx .an-splash .an-logo.big{animation:anSlam .55s cubic-bezier(.2,1.5,.4,1) both}
+html.an-fx .an-bubble{animation:anPop .4s .35s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes anBob{50%{transform:translateY(-6px) rotate(-1deg)}}
+@keyframes anSlam{from{opacity:0;transform:translateY(-50%) rotate(-4deg) scale(1.6)}to{opacity:1;transform:translateY(-50%) rotate(-4deg) scale(1)}}
+@keyframes anPop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+
+/* side drawer logo */
+html[data-look="anime"] #sideDrawer .sd-brand .an-logo{display:block;width:190px;height:auto}
+html[data-look="anime"] #sideDrawer .sd-brand{font-size:0}
+.an-logo.sd{display:none}
+html[data-look="anime"] #sideDrawer .sd-panel{border-right:3px solid var(--an-ink);}
+html[data-look="anime"] #sideDrawer .sd-list button.on{background:var(--an-red);color:#fff;border-radius:0;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);text-shadow:2px 2px 0 var(--an-ink)}
+html[data-look="anime"] #sideDrawer .sd-list button span{font-family:var(--an-font)}
+
+/* slash wipe between sections (Full only) */
+#anSlash{position:fixed;inset:0;z-index:120;pointer-events:none;overflow:hidden;display:none;contain:strict}
+html.an-fx #anSlash.go{display:block}
+#anSlash i{position:absolute;left:-30%;width:160%;top:50%;transform:translate3d(-110%,-50%,0) rotate(-14deg)}
+#anSlash .a{height:22vh;background:var(--an-ink)}
+#anSlash .b{height:9vh;background:var(--an-red)}
+#anSlash .c{height:4px;background:#fff;box-shadow:0 0 18px 4px rgba(255,255,255,.7)}
+#anSlash.go .a{animation:anCut .58s cubic-bezier(.7,0,.2,1) both}
+#anSlash.go .b{animation:anCut .58s .04s cubic-bezier(.7,0,.2,1) both}
+#anSlash.go .c{animation:anCut .5s .08s cubic-bezier(.7,0,.2,1) both}
+@keyframes anCut{0%{transform:translate3d(-110%,-50%,0) rotate(-14deg)}45%{transform:translate3d(0,-50%,0) rotate(-14deg)}100%{transform:translate3d(110%,-50%,0) rotate(-14deg)}}
+#anSlash b{position:absolute;left:50%;top:50%;font:400 clamp(44px,8vw,110px)/1 var(--an-font);color:#fff;text-shadow:5px 5px 0 var(--an-red),9px 9px 0 var(--an-ink);transform:translate(-50%,-50%) rotate(-10deg);opacity:0}
+#anSlash.go b{animation:anSfx .62s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes anSfx{0%{opacity:0;transform:translate(-50%,-50%) rotate(-10deg) scale(.4)}30%{opacity:1;transform:translate(-50%,-50%) rotate(-10deg) scale(1.08)}70%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) rotate(-10deg) scale(1.2)}}
+
+/* impact burst (Full only) */
+.an-burst{position:fixed;width:120px;height:120px;margin:-60px 0 0 -60px;z-index:121;pointer-events:none}
+.an-burst svg{width:100%;height:100%;animation:anBurst .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes anBurst{from{opacity:1;transform:scale(.3) rotate(0)}to{opacity:0;transform:scale(1.25) rotate(18deg)}}
+
+/* the Appearance thumbnail shows the new scene */
+.lk[data-look="anime"] .lk-scr{background:url(anime/scene-near.webp) center bottom/cover,url(anime/scene-back.webp) center bottom/cover,var(--lb)!important}
+.lk[data-look="anime"] .lk-scr i{font-family:"Dela Gothic One",var(--f-display);text-shadow:2px 2px 0 #ff2d55,4px 4px 0 #140818}
+
+@media (prefers-reduced-motion:reduce){#anSlash,.an-burst{display:none!important}.an-splash *{animation:none!important}}
+
+/* ===== round 2: jagged comic frames, icons that break out, the side menu ===== */
+/* posters: a crimson burst frame behind every poster */
+html[data-look="anime"] .card-inner{box-shadow:0 0 0 2px var(--an-ink)}
+html[data-look="anime"]:not(.tv) .card-inner{border:0 solid transparent;border-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2048%2048%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ff2d55%22/%3E%3Cstop%20offset%3D%22.6%22%20stop-color%3D%22%23b0123f%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%235a0f3e%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath%20fill%3D%22url%28%23g%29%22%20fill-rule%3D%22evenodd%22%20d%3D%22M0.0%200.0%20L6.0%207.0%20L12.0%200.0%20L18.0%207.0%20L24.0%200.0%20L30.0%207.0%20L36.0%200.0%20L42.0%207.0%20L48.0%200.0%20L41.0%206.0%20L48.0%2012.0%20L41.0%2018.0%20L48.0%2024.0%20L41.0%2030.0%20L48.0%2036.0%20L41.0%2042.0%20L48.0%2048.0%20L42.0%2041.0%20L36.0%2048.0%20L30.0%2041.0%20L24.0%2048.0%20L18.0%2041.0%20L12.0%2048.0%20L6.0%2041.0%20L0.0%2048.0%20L7.0%2042.0%20L0.0%2036.0%20L7.0%2030.0%20L0.0%2024.0%20L7.0%2018.0%20L0.0%2012.0%20L7.0%206.0Z%20M14%2014%20V34%20H34%20V14Z%22/%3E%3C/svg%3E") 16 / 14px / 9px round}
+
+
+@media (max-width:760px){html[data-look="anime"]:not(.tv) .card-inner{border-image-width:10px}}
+/* the featured banner and the Anime splash get torn comic edges */
+html[data-look="anime"] .hero,html[data-look="anime"] .an-splash{border:0;box-shadow:none;border-radius:0;clip-path:polygon(0.00% 0,2.27% 6.6px,4.55% 0,6.82% 6.0px,9.09% 0,11.36% 7.3px,13.64% 0,15.91% 6.2px,18.18% 0,20.45% 5.8px,22.73% 0,25.00% 7.3px,27.27% 0,29.55% 9.6px,31.82% 0,34.09% 9.1px,36.36% 0,38.64% 8.9px,40.91% 0,43.18% 6.5px,45.45% 0,47.73% 7.9px,50.00% 0,52.27% 6.7px,54.55% 0,56.82% 6.3px,59.09% 0,61.36% 6.0px,63.64% 0,65.91% 6.5px,68.18% 0,70.45% 9.7px,72.73% 0,75.00% 9.2px,77.27% 0,79.55% 9.1px,81.82% 0,84.09% 9.1px,86.36% 0,88.64% 6.4px,90.91% 0,93.18% 6.9px,95.45% 0,97.73% 8.3px,100% 0.00%,calc(100% - 8.8px) 6.25%,100% 12.50%,calc(100% - 9.3px) 18.75%,100% 25.00%,calc(100% - 9.5px) 31.25%,100% 37.50%,calc(100% - 5.9px) 43.75%,100% 50.00%,calc(100% - 8.2px) 56.25%,100% 62.50%,calc(100% - 8.5px) 68.75%,100% 75.00%,calc(100% - 7.8px) 81.25%,100% 87.50%,calc(100% - 6.3px) 93.75%,100.00% 100%,97.73% calc(100% - 7.6px),95.45% 100%,93.18% calc(100% - 5.9px),90.91% 100%,88.64% calc(100% - 9.7px),86.36% 100%,84.09% calc(100% - 9.4px),81.82% 100%,79.55% calc(100% - 8.0px),77.27% 100%,75.00% calc(100% - 6.9px),72.73% 100%,70.45% calc(100% - 9.6px),68.18% 100%,65.91% calc(100% - 8.1px),63.64% 100%,61.36% calc(100% - 9.5px),59.09% 100%,56.82% calc(100% - 9.3px),54.55% 100%,52.27% calc(100% - 7.8px),50.00% 100%,47.73% calc(100% - 7.4px),45.45% 100%,43.18% calc(100% - 8.2px),40.91% 100%,38.64% calc(100% - 7.4px),36.36% 100%,34.09% calc(100% - 6.2px),31.82% 100%,29.55% calc(100% - 6.9px),27.27% 100%,25.00% calc(100% - 9.2px),22.73% 100%,20.45% calc(100% - 5.7px),18.18% 100%,15.91% calc(100% - 5.7px),13.64% 100%,11.36% calc(100% - 8.3px),9.09% 100%,6.82% calc(100% - 6.8px),4.55% 100%,2.27% calc(100% - 7.9px),0 100.00%,7.6px 93.75%,0 87.50%,7.0px 81.25%,0 75.00%,10.0px 68.75%,0 62.50%,6.4px 56.25%,0 50.00%,7.4px 43.75%,0 37.50%,6.4px 31.25%,0 25.00%,8.3px 18.75%,0 12.50%,6.7px 6.25%)}
+/* the menu bar: an ink panel inside a crimson burst */
+html[data-look="anime"] .dock{position:relative;isolation:isolate;background:transparent!important;border:0!important;box-shadow:none!important;overflow:visible}
+html[data-look="anime"] .dock::before,html[data-look="anime"] .dock::after{content:"";position:absolute;pointer-events:none;z-index:-1}
+html[data-look="anime"] .dock::before{inset:-7px;background:linear-gradient(90deg,#ff2d55,#9b1d6a 50%,#ff2d55);clip-path:polygon(0.00% 0,1.47% 6.9px,2.94% 0,4.41% 6.8px,5.88% 0,7.35% 4.0px,8.82% 0,10.29% 4.1px,11.76% 0,13.24% 6.5px,14.71% 0,16.18% 6.2px,17.65% 0,19.12% 6.0px,20.59% 0,22.06% 4.8px,23.53% 0,25.00% 5.8px,26.47% 0,27.94% 5.8px,29.41% 0,30.88% 5.7px,32.35% 0,33.82% 4.3px,35.29% 0,36.76% 5.2px,38.24% 0,39.71% 5.1px,41.18% 0,42.65% 6.1px,44.12% 0,45.59% 7.0px,47.06% 0,48.53% 6.8px,50.00% 0,51.47% 5.6px,52.94% 0,54.41% 5.3px,55.88% 0,57.35% 4.7px,58.82% 0,60.29% 4.0px,61.76% 0,63.24% 3.9px,64.71% 0,66.18% 5.3px,67.65% 0,69.12% 4.9px,70.59% 0,72.06% 5.0px,73.53% 0,75.00% 6.7px,76.47% 0,77.94% 5.5px,79.41% 0,80.88% 5.6px,82.35% 0,83.82% 4.6px,85.29% 0,86.76% 3.9px,88.24% 0,89.71% 4.9px,91.18% 0,92.65% 4.3px,94.12% 0,95.59% 5.5px,97.06% 0,98.53% 7.0px,100% 0.00%,calc(100% - 6.0px) 25.00%,100% 50.00%,calc(100% - 4.4px) 75.00%,100.00% 100%,98.53% calc(100% - 6.7px),97.06% 100%,95.59% calc(100% - 6.4px),94.12% 100%,92.65% calc(100% - 6.2px),91.18% 100%,89.71% calc(100% - 6.7px),88.24% 100%,86.76% calc(100% - 6.3px),85.29% 100%,83.82% calc(100% - 6.3px),82.35% 100%,80.88% calc(100% - 5.0px),79.41% 100%,77.94% calc(100% - 6.9px),76.47% 100%,75.00% calc(100% - 6.9px),73.53% 100%,72.06% calc(100% - 4.4px),70.59% 100%,69.12% calc(100% - 6.2px),67.65% 100%,66.18% calc(100% - 6.1px),64.71% 100%,63.24% calc(100% - 5.3px),61.76% 100%,60.29% calc(100% - 5.5px),58.82% 100%,57.35% calc(100% - 5.4px),55.88% 100%,54.41% calc(100% - 6.8px),52.94% 100%,51.47% calc(100% - 5.4px),50.00% 100%,48.53% calc(100% - 6.5px),47.06% 100%,45.59% calc(100% - 5.0px),44.12% 100%,42.65% calc(100% - 6.6px),41.18% 100%,39.71% calc(100% - 6.7px),38.24% 100%,36.76% calc(100% - 5.3px),35.29% 100%,33.82% calc(100% - 5.6px),32.35% 100%,30.88% calc(100% - 6.7px),29.41% 100%,27.94% calc(100% - 6.1px),26.47% 100%,25.00% calc(100% - 5.4px),23.53% 100%,22.06% calc(100% - 4.5px),20.59% 100%,19.12% calc(100% - 4.9px),17.65% 100%,16.18% calc(100% - 6.1px),14.71% 100%,13.24% calc(100% - 4.4px),11.76% 100%,10.29% calc(100% - 6.7px),8.82% 100%,7.35% calc(100% - 4.7px),5.88% 100%,4.41% calc(100% - 6.7px),2.94% 100%,1.47% calc(100% - 4.8px),0 100.00%,6.9px 75.00%,0 50.00%,6.1px 25.00%)}
+html[data-look="anime"] .dock::after{inset:1px;background:radial-gradient(rgba(255,45,85,.18) 1px,transparent 1.5px) 0 0/6px 6px,linear-gradient(180deg,#1d0b26,#0e0616);clip-path:polygon(0.00% 0,1.47% 6.9px,2.94% 0,4.41% 6.8px,5.88% 0,7.35% 4.0px,8.82% 0,10.29% 4.1px,11.76% 0,13.24% 6.5px,14.71% 0,16.18% 6.2px,17.65% 0,19.12% 6.0px,20.59% 0,22.06% 4.8px,23.53% 0,25.00% 5.8px,26.47% 0,27.94% 5.8px,29.41% 0,30.88% 5.7px,32.35% 0,33.82% 4.3px,35.29% 0,36.76% 5.2px,38.24% 0,39.71% 5.1px,41.18% 0,42.65% 6.1px,44.12% 0,45.59% 7.0px,47.06% 0,48.53% 6.8px,50.00% 0,51.47% 5.6px,52.94% 0,54.41% 5.3px,55.88% 0,57.35% 4.7px,58.82% 0,60.29% 4.0px,61.76% 0,63.24% 3.9px,64.71% 0,66.18% 5.3px,67.65% 0,69.12% 4.9px,70.59% 0,72.06% 5.0px,73.53% 0,75.00% 6.7px,76.47% 0,77.94% 5.5px,79.41% 0,80.88% 5.6px,82.35% 0,83.82% 4.6px,85.29% 0,86.76% 3.9px,88.24% 0,89.71% 4.9px,91.18% 0,92.65% 4.3px,94.12% 0,95.59% 5.5px,97.06% 0,98.53% 7.0px,100% 0.00%,calc(100% - 6.0px) 25.00%,100% 50.00%,calc(100% - 4.4px) 75.00%,100.00% 100%,98.53% calc(100% - 6.7px),97.06% 100%,95.59% calc(100% - 6.4px),94.12% 100%,92.65% calc(100% - 6.2px),91.18% 100%,89.71% calc(100% - 6.7px),88.24% 100%,86.76% calc(100% - 6.3px),85.29% 100%,83.82% calc(100% - 6.3px),82.35% 100%,80.88% calc(100% - 5.0px),79.41% 100%,77.94% calc(100% - 6.9px),76.47% 100%,75.00% calc(100% - 6.9px),73.53% 100%,72.06% calc(100% - 4.4px),70.59% 100%,69.12% calc(100% - 6.2px),67.65% 100%,66.18% calc(100% - 6.1px),64.71% 100%,63.24% calc(100% - 5.3px),61.76% 100%,60.29% calc(100% - 5.5px),58.82% 100%,57.35% calc(100% - 5.4px),55.88% 100%,54.41% calc(100% - 6.8px),52.94% 100%,51.47% calc(100% - 5.4px),50.00% 100%,48.53% calc(100% - 6.5px),47.06% 100%,45.59% calc(100% - 5.0px),44.12% 100%,42.65% calc(100% - 6.6px),41.18% 100%,39.71% calc(100% - 6.7px),38.24% 100%,36.76% calc(100% - 5.3px),35.29% 100%,33.82% calc(100% - 5.6px),32.35% 100%,30.88% calc(100% - 6.7px),29.41% 100%,27.94% calc(100% - 6.1px),26.47% 100%,25.00% calc(100% - 5.4px),23.53% 100%,22.06% calc(100% - 4.5px),20.59% 100%,19.12% calc(100% - 4.9px),17.65% 100%,16.18% calc(100% - 6.1px),14.71% 100%,13.24% calc(100% - 4.4px),11.76% 100%,10.29% calc(100% - 6.7px),8.82% 100%,7.35% calc(100% - 4.7px),5.88% 100%,4.41% calc(100% - 6.7px),2.94% 100%,1.47% calc(100% - 4.8px),0 100.00%,6.9px 75.00%,0 50.00%,6.1px 25.00%)}
+html[data-look="anime"] .tabs{padding-block:10px;margin-block:-10px}
+/* tabs: a slanted crimson slash, and the icon bursts out of it */
+html[data-look="anime"] #tabs .tab,html[data-look="anime"] #mtabs button{clip-path:none!important;border-radius:0;overflow:visible}
+html[data-look="anime"] #tabs .tab.on,html[data-look="anime"] #mtabs button.on,html[data-look="anime"] #sideDrawer .sd-list button.on,html[data-look="anime"] #view-anime .segc button.on{clip-path:none!important;background:linear-gradient(104deg,transparent 9px,var(--an-red) 9px,var(--an-red) calc(100% - 9px),transparent calc(100% - 9px))!important;box-shadow:none!important}
+html[data-look="anime"] svg.an-ic{transition:transform .25s cubic-bezier(.2,1.6,.4,1)}
+html[data-look="anime"] #tabs .tab.on svg.an-ic{transform:translate(-3px,-6px) scale(1.75) rotate(-10deg)}
+html[data-look="anime"] .dock-tools svg.an-ic{transform:scale(1.18)}
+@media (hover:hover){html[data-look="anime"] #tabs .tab:hover svg.an-ic,html[data-look="anime"] .dock-tools .ibtn:hover svg.an-ic{transform:translate(-2px,-5px) scale(1.55) rotate(-8deg)}}
+html[data-look="anime"] .dock-tools .ibtn{overflow:visible}
+html[data-look="anime"] #mtabs{overflow:visible;isolation:isolate;background:transparent!important;border:0!important;box-shadow:none!important}
+html[data-look="anime"] #mtabs::before,html[data-look="anime"] #mtabs::after{content:"";position:absolute;pointer-events:none;z-index:-1}
+html[data-look="anime"] #mtabs::before{inset:-7px;background:linear-gradient(90deg,#ff2d55,#9b1d6a 50%,#ff2d55);clip-path:polygon(0.00% 0,1.47% 6.9px,2.94% 0,4.41% 6.8px,5.88% 0,7.35% 4.0px,8.82% 0,10.29% 4.1px,11.76% 0,13.24% 6.5px,14.71% 0,16.18% 6.2px,17.65% 0,19.12% 6.0px,20.59% 0,22.06% 4.8px,23.53% 0,25.00% 5.8px,26.47% 0,27.94% 5.8px,29.41% 0,30.88% 5.7px,32.35% 0,33.82% 4.3px,35.29% 0,36.76% 5.2px,38.24% 0,39.71% 5.1px,41.18% 0,42.65% 6.1px,44.12% 0,45.59% 7.0px,47.06% 0,48.53% 6.8px,50.00% 0,51.47% 5.6px,52.94% 0,54.41% 5.3px,55.88% 0,57.35% 4.7px,58.82% 0,60.29% 4.0px,61.76% 0,63.24% 3.9px,64.71% 0,66.18% 5.3px,67.65% 0,69.12% 4.9px,70.59% 0,72.06% 5.0px,73.53% 0,75.00% 6.7px,76.47% 0,77.94% 5.5px,79.41% 0,80.88% 5.6px,82.35% 0,83.82% 4.6px,85.29% 0,86.76% 3.9px,88.24% 0,89.71% 4.9px,91.18% 0,92.65% 4.3px,94.12% 0,95.59% 5.5px,97.06% 0,98.53% 7.0px,100% 0.00%,calc(100% - 6.0px) 25.00%,100% 50.00%,calc(100% - 4.4px) 75.00%,100.00% 100%,98.53% calc(100% - 6.7px),97.06% 100%,95.59% calc(100% - 6.4px),94.12% 100%,92.65% calc(100% - 6.2px),91.18% 100%,89.71% calc(100% - 6.7px),88.24% 100%,86.76% calc(100% - 6.3px),85.29% 100%,83.82% calc(100% - 6.3px),82.35% 100%,80.88% calc(100% - 5.0px),79.41% 100%,77.94% calc(100% - 6.9px),76.47% 100%,75.00% calc(100% - 6.9px),73.53% 100%,72.06% calc(100% - 4.4px),70.59% 100%,69.12% calc(100% - 6.2px),67.65% 100%,66.18% calc(100% - 6.1px),64.71% 100%,63.24% calc(100% - 5.3px),61.76% 100%,60.29% calc(100% - 5.5px),58.82% 100%,57.35% calc(100% - 5.4px),55.88% 100%,54.41% calc(100% - 6.8px),52.94% 100%,51.47% calc(100% - 5.4px),50.00% 100%,48.53% calc(100% - 6.5px),47.06% 100%,45.59% calc(100% - 5.0px),44.12% 100%,42.65% calc(100% - 6.6px),41.18% 100%,39.71% calc(100% - 6.7px),38.24% 100%,36.76% calc(100% - 5.3px),35.29% 100%,33.82% calc(100% - 5.6px),32.35% 100%,30.88% calc(100% - 6.7px),29.41% 100%,27.94% calc(100% - 6.1px),26.47% 100%,25.00% calc(100% - 5.4px),23.53% 100%,22.06% calc(100% - 4.5px),20.59% 100%,19.12% calc(100% - 4.9px),17.65% 100%,16.18% calc(100% - 6.1px),14.71% 100%,13.24% calc(100% - 4.4px),11.76% 100%,10.29% calc(100% - 6.7px),8.82% 100%,7.35% calc(100% - 4.7px),5.88% 100%,4.41% calc(100% - 6.7px),2.94% 100%,1.47% calc(100% - 4.8px),0 100.00%,6.9px 75.00%,0 50.00%,6.1px 25.00%)}
+html[data-look="anime"] #mtabs::after{inset:1px;background:linear-gradient(180deg,#1d0b26,#0e0616);clip-path:polygon(0.00% 0,1.47% 6.9px,2.94% 0,4.41% 6.8px,5.88% 0,7.35% 4.0px,8.82% 0,10.29% 4.1px,11.76% 0,13.24% 6.5px,14.71% 0,16.18% 6.2px,17.65% 0,19.12% 6.0px,20.59% 0,22.06% 4.8px,23.53% 0,25.00% 5.8px,26.47% 0,27.94% 5.8px,29.41% 0,30.88% 5.7px,32.35% 0,33.82% 4.3px,35.29% 0,36.76% 5.2px,38.24% 0,39.71% 5.1px,41.18% 0,42.65% 6.1px,44.12% 0,45.59% 7.0px,47.06% 0,48.53% 6.8px,50.00% 0,51.47% 5.6px,52.94% 0,54.41% 5.3px,55.88% 0,57.35% 4.7px,58.82% 0,60.29% 4.0px,61.76% 0,63.24% 3.9px,64.71% 0,66.18% 5.3px,67.65% 0,69.12% 4.9px,70.59% 0,72.06% 5.0px,73.53% 0,75.00% 6.7px,76.47% 0,77.94% 5.5px,79.41% 0,80.88% 5.6px,82.35% 0,83.82% 4.6px,85.29% 0,86.76% 3.9px,88.24% 0,89.71% 4.9px,91.18% 0,92.65% 4.3px,94.12% 0,95.59% 5.5px,97.06% 0,98.53% 7.0px,100% 0.00%,calc(100% - 6.0px) 25.00%,100% 50.00%,calc(100% - 4.4px) 75.00%,100.00% 100%,98.53% calc(100% - 6.7px),97.06% 100%,95.59% calc(100% - 6.4px),94.12% 100%,92.65% calc(100% - 6.2px),91.18% 100%,89.71% calc(100% - 6.7px),88.24% 100%,86.76% calc(100% - 6.3px),85.29% 100%,83.82% calc(100% - 6.3px),82.35% 100%,80.88% calc(100% - 5.0px),79.41% 100%,77.94% calc(100% - 6.9px),76.47% 100%,75.00% calc(100% - 6.9px),73.53% 100%,72.06% calc(100% - 4.4px),70.59% 100%,69.12% calc(100% - 6.2px),67.65% 100%,66.18% calc(100% - 6.1px),64.71% 100%,63.24% calc(100% - 5.3px),61.76% 100%,60.29% calc(100% - 5.5px),58.82% 100%,57.35% calc(100% - 5.4px),55.88% 100%,54.41% calc(100% - 6.8px),52.94% 100%,51.47% calc(100% - 5.4px),50.00% 100%,48.53% calc(100% - 6.5px),47.06% 100%,45.59% calc(100% - 5.0px),44.12% 100%,42.65% calc(100% - 6.6px),41.18% 100%,39.71% calc(100% - 6.7px),38.24% 100%,36.76% calc(100% - 5.3px),35.29% 100%,33.82% calc(100% - 5.6px),32.35% 100%,30.88% calc(100% - 6.7px),29.41% 100%,27.94% calc(100% - 6.1px),26.47% 100%,25.00% calc(100% - 5.4px),23.53% 100%,22.06% calc(100% - 4.5px),20.59% 100%,19.12% calc(100% - 4.9px),17.65% 100%,16.18% calc(100% - 6.1px),14.71% 100%,13.24% calc(100% - 4.4px),11.76% 100%,10.29% calc(100% - 6.7px),8.82% 100%,7.35% calc(100% - 4.7px),5.88% 100%,4.41% calc(100% - 6.7px),2.94% 100%,1.47% calc(100% - 4.8px),0 100.00%,6.9px 75.00%,0 50.00%,6.1px 25.00%)}
+html[data-look="anime"] #mtabs button.on svg.an-ic{transform:translateY(-16px) scale(1.6) rotate(-8deg);filter:drop-shadow(2px 2px 0 var(--an-ink)) drop-shadow(0 0 1px #fff)}
+html[data-look="anime"] #mtabs button.on{background:none!important}
+html[data-look="anime"] #mtabs button.on span{background:var(--an-red);padding:1px 7px;transform:skewX(-10deg);display:inline-block}
+html.tv[data-look="anime"] svg.an-ic{transition:none}
+/* the side menu: a torn ink rail with a crimson edge; icons break out to the left */
+html[data-look="anime"].nav-side .dock::before{inset:-4px -10px -4px -4px;clip-path:polygon(0.00% 0,25.00% 5.3px,50.00% 0,75.00% 6.4px,100% 0.00%,calc(100% - 5.7px) 1.92%,100% 3.85%,calc(100% - 6.6px) 5.77%,100% 7.69%,calc(100% - 6.7px) 9.62%,100% 11.54%,calc(100% - 4.6px) 13.46%,100% 15.38%,calc(100% - 4.4px) 17.31%,100% 19.23%,calc(100% - 7.4px) 21.15%,100% 23.08%,calc(100% - 5.3px) 25.00%,100% 26.92%,calc(100% - 5.2px) 28.85%,100% 30.77%,calc(100% - 8.0px) 32.69%,100% 34.62%,calc(100% - 6.1px) 36.54%,100% 38.46%,calc(100% - 7.4px) 40.38%,100% 42.31%,calc(100% - 6.1px) 44.23%,100% 46.15%,calc(100% - 6.7px) 48.08%,100% 50.00%,calc(100% - 4.9px) 51.92%,100% 53.85%,calc(100% - 6.7px) 55.77%,100% 57.69%,calc(100% - 7.5px) 59.62%,100% 61.54%,calc(100% - 6.3px) 63.46%,100% 65.38%,calc(100% - 7.1px) 67.31%,100% 69.23%,calc(100% - 6.8px) 71.15%,100% 73.08%,calc(100% - 4.6px) 75.00%,100% 76.92%,calc(100% - 7.1px) 78.85%,100% 80.77%,calc(100% - 6.5px) 82.69%,100% 84.62%,calc(100% - 5.5px) 86.54%,100% 88.46%,calc(100% - 4.5px) 90.38%,100% 92.31%,calc(100% - 7.5px) 94.23%,100% 96.15%,calc(100% - 6.1px) 98.08%,100.00% 100%,75.00% calc(100% - 7.0px),50.00% 100%,25.00% calc(100% - 7.6px),0 100.00%,7.0px 98.08%,0 96.15%,7.7px 94.23%,0 92.31%,5.8px 90.38%,0 88.46%,7.3px 86.54%,0 84.62%,6.0px 82.69%,0 80.77%,7.8px 78.85%,0 76.92%,7.6px 75.00%,0 73.08%,4.8px 71.15%,0 69.23%,4.9px 67.31%,0 65.38%,5.2px 63.46%,0 61.54%,7.9px 59.62%,0 57.69%,6.0px 55.77%,0 53.85%,6.7px 51.92%,0 50.00%,5.5px 48.08%,0 46.15%,6.2px 44.23%,0 42.31%,5.8px 40.38%,0 38.46%,5.7px 36.54%,0 34.62%,6.5px 32.69%,0 30.77%,6.5px 28.85%,0 26.92%,7.7px 25.00%,0 23.08%,6.9px 21.15%,0 19.23%,7.7px 17.31%,0 15.38%,7.5px 13.46%,0 11.54%,8.0px 9.62%,0 7.69%,6.8px 5.77%,0 3.85%,5.0px 1.92%)}
+html[data-look="anime"].nav-side .dock::after{inset:0 -2px 0 0;background:radial-gradient(rgba(255,45,85,.16) 1px,transparent 1.5px) 0 0/6px 6px,repeating-linear-gradient(115deg,rgba(255,255,255,.035) 0 2px,transparent 2px 22px),linear-gradient(180deg,#1d0b26,#0b0410);clip-path:polygon(0.00% 0,25.00% 5.3px,50.00% 0,75.00% 6.4px,100% 0.00%,calc(100% - 5.7px) 1.92%,100% 3.85%,calc(100% - 6.6px) 5.77%,100% 7.69%,calc(100% - 6.7px) 9.62%,100% 11.54%,calc(100% - 4.6px) 13.46%,100% 15.38%,calc(100% - 4.4px) 17.31%,100% 19.23%,calc(100% - 7.4px) 21.15%,100% 23.08%,calc(100% - 5.3px) 25.00%,100% 26.92%,calc(100% - 5.2px) 28.85%,100% 30.77%,calc(100% - 8.0px) 32.69%,100% 34.62%,calc(100% - 6.1px) 36.54%,100% 38.46%,calc(100% - 7.4px) 40.38%,100% 42.31%,calc(100% - 6.1px) 44.23%,100% 46.15%,calc(100% - 6.7px) 48.08%,100% 50.00%,calc(100% - 4.9px) 51.92%,100% 53.85%,calc(100% - 6.7px) 55.77%,100% 57.69%,calc(100% - 7.5px) 59.62%,100% 61.54%,calc(100% - 6.3px) 63.46%,100% 65.38%,calc(100% - 7.1px) 67.31%,100% 69.23%,calc(100% - 6.8px) 71.15%,100% 73.08%,calc(100% - 4.6px) 75.00%,100% 76.92%,calc(100% - 7.1px) 78.85%,100% 80.77%,calc(100% - 6.5px) 82.69%,100% 84.62%,calc(100% - 5.5px) 86.54%,100% 88.46%,calc(100% - 4.5px) 90.38%,100% 92.31%,calc(100% - 7.5px) 94.23%,100% 96.15%,calc(100% - 6.1px) 98.08%,100.00% 100%,75.00% calc(100% - 7.0px),50.00% 100%,25.00% calc(100% - 7.6px),0 100.00%,7.0px 98.08%,0 96.15%,7.7px 94.23%,0 92.31%,5.8px 90.38%,0 88.46%,7.3px 86.54%,0 84.62%,6.0px 82.69%,0 80.77%,7.8px 78.85%,0 76.92%,7.6px 75.00%,0 73.08%,4.8px 71.15%,0 69.23%,4.9px 67.31%,0 65.38%,5.2px 63.46%,0 61.54%,7.9px 59.62%,0 57.69%,6.0px 55.77%,0 53.85%,6.7px 51.92%,0 50.00%,5.5px 48.08%,0 46.15%,6.2px 44.23%,0 42.31%,5.8px 40.38%,0 38.46%,5.7px 36.54%,0 34.62%,6.5px 32.69%,0 30.77%,6.5px 28.85%,0 26.92%,7.7px 25.00%,0 23.08%,6.9px 21.15%,0 19.23%,7.7px 17.31%,0 15.38%,7.5px 13.46%,0 11.54%,8.0px 9.62%,0 7.69%,6.8px 5.77%,0 3.85%,5.0px 1.92%)}
+html[data-look="anime"].nav-side #tabs .tab.on svg.an-ic{transform:translate(-8px,-4px) scale(1.8) rotate(-10deg)}
+html[data-look="anime"].nav-side .dock .brand .word{font-family:var(--an-font);font-weight:400;color:#fff;text-shadow:2px 2px 0 var(--an-red),4px 4px 0 var(--an-ink);letter-spacing:.02em}
+html[data-look="anime"].nav-side .dock .brand .word em{color:var(--an-red);font-style:normal;text-shadow:2px 2px 0 var(--an-ink)}
+html[data-look="anime"].nav-side .dock .brand .an-mark{width:52px;height:52px;transform:rotate(-8deg)}
+html[data-look="anime"].nav-side #tabs .tab .lbl{font-size:calc(15px * var(--ts,1))}
+html.side-mini[data-look="anime"] .dock-wrap::after{background:linear-gradient(90deg,rgba(14,6,22,.95) 0,rgba(14,6,22,.7) 340px,rgba(14,6,22,0) 720px)}
+/* the phone drawer */
+html[data-look="anime"] #sideDrawer .sd-panel{box-shadow:none;}
+html[data-look="anime"] #sideDrawer .sd-list button.on svg.an-ic{transform:translate(-4px,-3px) scale(1.6) rotate(-10deg)}
+html[data-look="anime"] #sideDrawer .sd-list button span{text-shadow:2px 2px 0 var(--an-ink)}
+
+/* the Anime page list switcher: one line that scrolls on phones (every look) */
+#view-anime .an-head .toolbar .segc{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;max-width:100%;-webkit-overflow-scrolling:touch}
+#view-anime .an-head .toolbar .segc::-webkit-scrollbar{display:none}
+#view-anime .an-head .toolbar .segc button{flex:none;white-space:nowrap}
+html[data-look="anime"] #view-anime .segc{background:transparent;border:0;gap:6px;padding:4px 2px}
+html[data-look="anime"] #view-anime .segc button{font-family:var(--an-font);font-weight:400;padding:8px 16px;border-radius:0;color:#e9dff2;background:linear-gradient(104deg,transparent 9px,rgba(255,255,255,.06) 9px,rgba(255,255,255,.06) calc(100% - 9px),transparent calc(100% - 9px))}
+html[data-look="anime"] #view-anime .segc button.on{color:#fff;text-shadow:2px 2px 0 var(--an-ink)}
+html.an-measure svg.an-ic{transform:none!important}html.an-measure .tabs{padding-block:0!important;margin-block:0!important}
+@supports (animation-timeline: scroll()){
+  html.an-fx #anScene .l2{animation:anPy2 linear both;animation-timeline:scroll(root);animation-range:0 1400px}
+  html.an-fx #anScene .l3{animation:anPy3 linear both;animation-timeline:scroll(root);animation-range:0 1400px}
+}
+@keyframes anPy2{to{translate:0 -112px}}
+@keyframes anPy3{to{translate:0 -168px}}

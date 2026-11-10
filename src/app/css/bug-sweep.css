@@ -1,0 +1,15 @@
+
+/* bug-sweep-2.13.2 */
+@media (max-width:400px){.dock-tools{gap:2px}.dock .dock-tools .ibtn{width:40px}.dock .brand{padding-right:4px}}
+@media (max-width:340px){.dock .dock-tools .ibtn{width:36px}.dock .brand{padding-right:2px}}
+html.tv .rail{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px;scroll-padding-inline:16px}
+.hero-logo.logo-dark,.pk-det-logo.logo-dark,#pLoadArt img.logo-dark{filter:brightness(0) invert(1) drop-shadow(0 4px 18px rgba(0,0,0,.65))!important}
+@media (hover:none){.foot>span:last-child{display:none}}
+html.tv .foot>span:last-child{display:none}
+/* 2.28.2 steady details */
+.d-hero .logo3d.has-logo .hero-logo{height:120px;width:auto}
+@media (orientation:landscape) and (max-height:540px){.d-hero .logo3d.has-logo .hero-logo{height:84px}}
+.d-hero .bg,.d-hero .hero-logo{transition:opacity .32s ease-out}
+.d-hero .bg.d-wait,.d-hero .hero-logo.d-wait{opacity:0}
+/* while the full details load, a phone keeps room for the second line the runtime and source tags usually need */
+@media (max-width:600px){.d-hero .metaline.ml-wait{min-height:55px}}
