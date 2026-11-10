@@ -2,7 +2,7 @@
 //
 // Browsers let a page show a video from any host, but not read its bytes unless the host allows it (CORS). MKCinema's
 // in-app engine has to read the bytes to turn Dolby, DTS and TrueHD sound into AAC and to decode HEVC, so on hosts
-// that don't allow it (TorBox and others) it could not help in the web app. In the Windows app this small server on
+// that don't allow it (some debrid hosts among them) it could not help in the web app. In the Windows app this small server on
 // 127.0.0.1 makes the same Range request itself and hands the answer to the page with the CORS header added.
 //
 // It is not a proxy anyone can use: it listens on 127.0.0.1 only, every address has a random 128-bit token in its
