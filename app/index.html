@@ -9428,7 +9428,7 @@ const SECTIONS = [
     { key: 'preferFormat', label: 'Preferred format', type: 'select', options: [['any', 'No preference'], ['hls', 'HLS (adaptive)'], ['mp4', 'Direct file (MP4)']] },
     { key: 'resume', label: 'Resume where you left off', type: 'toggle' },
     { key: 'browserOnly', label: 'Only sources that play here', help: 'For devices where you cannot install VLC or another player. Lists only sources this browser can play with working picture and sound (H.264 or a codec this device supports, AAC/Opus sound), and torrents only through your debrid service. Fewer sources, but the ones you see play right here.', type: 'toggle' },
-    { key: 'audioOnly', label: 'Audio language', help: 'Hides sources dubbed only in other languages, so Smart Play and auto-switch never pick them. Releases that name no language, or MULTi and Dual Audio releases, stay listed.', type: 'select', options: [['eng', 'English'], ['spa', 'Spanish'], ['fre', 'French'], ['ger', 'German'], ['ita', 'Italian'], ['por', 'Portuguese'], ['hin', 'Hindi'], ['any', 'Any language']] },
+    { key: 'audioOnly', label: 'Audio language', help: 'Hides sources dubbed only in other languages, so Smart Play and auto-switch never pick them. Releases that name no language, or MULTi and Dual Audio releases, stay listed. When a file has several languages, this one plays first where this device allows it.', type: 'select', options: [['eng', 'English'], ['spa', 'Spanish'], ['fre', 'French'], ['ger', 'German'], ['ita', 'Italian'], ['por', 'Portuguese'], ['hin', 'Hindi'], ['any', 'Any language']] },
     { key: 'failover', label: 'Switch sources automatically', help: 'If a source has not started after 10 s, errors, or stalls for 12 s, the next best one takes over at the same spot.', type: 'toggle' },
     { key: 'skipIntro', label: 'Skip Intro button', help: 'Shows for 8 s when an intro is known: from chapters in the file, AniSkip for anime, or your own skips on earlier episodes. Enter or gamepad A presses it.', type: 'toggle' },
     { key: 'autoSkipIntro', label: 'Skip intros automatically', type: 'toggle' },
@@ -9745,7 +9745,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.62.5';
+const APP_VERSION = '2.62.6';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -14532,7 +14532,7 @@ const SourceRules = {
       { key: 'srMinRes', label: 'Lowest resolution', help: 'Sources below this are hidden.', type: 'select', options: [['', 'Any'], ['720p', '720p'], ['1080p', '1080p'], ['4K UHD', '4K']] },
       { key: 'srMaxGB', get: () => Number(CFG.srMaxGB) || 0, label: 'Largest file', help: 'Skips very large files on a slow or capped connection. 0 means no limit.', type: 'range', min: 0, max: 100, step: 5, fmt: (v) => (Number(v) ? `${v} GB` : 'No limit') },
       { key: 'srMinGB', label: 'Smallest file', help: 'Hides very small files, which are often fakes or poor quality. Episodes use a quarter of this. Files that list no size stay.', type: 'select', options: [['', 'No limit'], ['0.2', '200 MB'], ['0.5', '500 MB'], ['1', '1 GB'], ['2', '2 GB'], ['4', '4 GB']] },
-      { key: 'srAudio', label: 'Preferred audio language', help: 'Sources in this language move to the top, so Smart Play picks them first, and the Audio language setting never hides them. MULTi and Dual Audio releases move up a little.', type: 'select', options: [['', 'No preference'], ['eng', 'English'], ['spa', 'Spanish'], ['fre', 'French'], ['ger', 'German'], ['ita', 'Italian'], ['por', 'Portuguese'], ['hin', 'Hindi'], ['tam', 'Tamil'], ['tel', 'Telugu'], ['jpn', 'Japanese'], ['kor', 'Korean'], ['rus', 'Russian'], ['ara', 'Arabic'], ['pol', 'Polish'], ['tur', 'Turkish']] },
+      { key: 'srAudio', label: 'Preferred audio language', help: 'Sources in this language move to the top, so Smart Play picks them first, and the Audio language setting never hides them. MULTi and Dual Audio releases move up a little. When a file has several languages, this one plays first where this device allows it.', type: 'select', options: [['', 'No preference'], ['eng', 'English'], ['spa', 'Spanish'], ['fre', 'French'], ['ger', 'German'], ['ita', 'Italian'], ['por', 'Portuguese'], ['hin', 'Hindi'], ['tam', 'Tamil'], ['tel', 'Telugu'], ['jpn', 'Japanese'], ['kor', 'Korean'], ['rus', 'Russian'], ['ara', 'Arabic'], ['pol', 'Polish'], ['tur', 'Turkish']] },
       { key: 'srHdr', label: 'HDR and Dolby Vision', help: 'Avoid HDR on a screen that shows it washed out; prefer it on a TV that supports it.', type: 'select', options: [['', 'No preference'], ['prefer', 'Prefer HDR'], ['avoid', 'Avoid HDR']] },
       { key: 'srWords', label: 'Blocked words', help: 'Sources whose name contains any of these are hidden. Separate words with commas.', type: 'text', get: () => CFG.srWords || '', set: (v) => setCfg('srWords', v.trim()) },
       { html: () => this.debridHTML() },
@@ -14756,7 +14756,7 @@ const TvPlayer = {
       (async () => {
         const [subUrl, tvx] = await Promise.all([TvPlayer.subUrl(ctx), typeof TvParity !== 'undefined' ? TvParity.prep(ctx).catch(() => ({})) : Promise.resolve({})]);
         if (P.stream !== stream) return;
-        const ok = (() => { try { return MKAndroid.play(JSON.stringify({ url: src, title: ctx.meta.name || '', sub: v ? `S${v.season} · E${v.episode}${v.name || v.title ? ` · ${v.name || v.title}` : ''}` : [yearOf(ctx.meta), stream._tel && stream._tel.res].filter(Boolean).join(' · '), startMs: Math.round((startAt || 0) * 1000), subUrl, matchRate: CFG.matchRate !== false, audioLang: CFG.audioOnly || '', headers: nativeHdr ? headers : undefined, ...tvx })); } catch (e) { return false; } })();
+        const ok = (() => { try { return MKAndroid.play(JSON.stringify({ url: src, title: ctx.meta.name || '', sub: v ? `S${v.season} · E${v.episode}${v.name || v.title ? ` · ${v.name || v.title}` : ''}` : [yearOf(ctx.meta), stream._tel && stream._tel.res].filter(Boolean).join(' · '), startMs: Math.round((startAt || 0) * 1000), subUrl, matchRate: CFG.matchRate !== false, audioLang: (typeof MkAudioWant === 'function' ? MkAudioWant() : CFG.audioOnly) || '', headers: nativeHdr ? headers : undefined, ...tvx })); } catch (e) { return false; } })();
         if (!ok) { TvPlayer.cur = null; lu.call(this, stream, startAt); return; }
         Loader.hide && Loader.hide();
       })();
@@ -21307,8 +21307,12 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
+  { v: '2.62.6', date: '2026-11-10', items: [
+    ['better', 'Your audio language plays first', 'When a film or episode has more than one language, MKCinema now starts the one you chose in Settings (Preferred audio language, or Audio language) wherever this device lets it choose: MKV files in the built-in player, streams with several audio tracks, Safari and the Mac app, debrid services that offer their own streams, and the TV player. Picking a language in the Audio menu still wins.'],
+    ['better', 'More sources play in the app', 'Sources an addon marks as not web-ready now play in MKCinema’s own player when this device can handle them, and Smart Play can pick them, instead of stopping at a “Try in browser” screen. If one won’t play, MKCinema moves to the next copy by itself.'],
+  ] },
   { v: '2.62.5', date: '2026-11-08', items: [
-    ['better', 'Finds a working copy before it plays', 'When Play picks a copy for you, MKCinema now checks the best few first, behind the title’s logo with “Sourcing a working copy…”, and starts one whose picture shows and whose sound plays here. A copy that fails is no longer shown as an error, and the time always starts at 0:00 (or where you left off).']
+    ['better', 'Finds a working copy before it plays', 'When Play picks a copy for you, MKCinema now checks the best few first, behind the title’s logo with “Sourcing a working copy…”, and starts one whose picture shows and whose sound plays here. A copy that fails is no longer shown as an error, and the time always starts at 0:00 (or where you left off).'],
     ['better', 'A bigger, smoother side menu', 'On computers the side menu now has larger names and icons that are easier to read, and it glides open and closed instead of snapping.'],
   ] },
   { v: '2.62.4', date: '2026-11-08', items: [
@@ -35921,5 +35925,146 @@ html.tv .ea-badge,html.tv .ea-dot{display:none!important}
 }
 </style>
 <!-- mk-railbig:end -->
+<!-- mk-audiofirst:start -->
+<script id="mkc-audiofirst">
+'use strict';
+/* ---------------- 2.62.6 Your audio language plays first ----------------
+   The language you pick (Settings > Source rules > Preferred audio language, else Settings > Audio language) used to rank
+   and filter sources by their names only; which track played inside a file with several was up to the player.
+   Now, wherever the device lets MKCinema choose, that language is the one that starts:
+   - MKCinema's engine (MKV everywhere but TVs, MP4 whose name says it has several languages): picks the track itself
+     (engine/mkv-engine.js defAudio uses MkAudioMatch below).
+   - Streams with several audio tracks (hls.js) and players that expose video.audioTracks (Safari, the Mac app): switched
+     as soon as the tracks are known.
+   - Chrome, Edge and Android WebView playing a file directly (the engine couldn't read the host): only TorBox's own stream
+     and your MKCinema server can switch tracks there, so for a release whose name says it has several languages the
+     file's tracks are read once (AudioLang.probe) and the right one is loaded. Elsewhere nothing changes (the Audio menu
+     says to use VLC).
+   - The Android TV player gets the same language (ExoPlayer's preferred audio language).
+   A language picked by hand in the Audio menu always wins.
+
+   ---------------- Not web-ready sources ----------------
+   Stremio addons mark links "notWebReady" when a plain browser <video> might not play them (MKV, HEVC, Dolby sound).
+   MKCinema used to drop those from Smart Play, failover and "next source" and stop at a "Try in browser" screen. With
+   the engine, the codec checks (BrowserPlay, device fit), the sourcing check and failover, the flag alone no longer
+   decides: an http(s) link with no special headers is treated as web-ready, ranked a little lower than a link the addon
+   says is web-ready, and judged by what this device can actually play. */
+(() => {
+  if (typeof Telemetry === 'undefined' || typeof AudioPref === 'undefined' || typeof video === 'undefined') return;
+  const log = (m) => { try { MKLog.add('info', m); } catch (e) { /* no log */ } };
+  /* ---------- language codes: en / eng / en-US / fra / fre all compare equal ---------- */
+  const ISO = { en: 'eng', es: 'spa', fr: 'fre', fra: 'fre', de: 'ger', deu: 'ger', it: 'ita', pt: 'por', pob: 'por', ru: 'rus', ja: 'jpn',
+    ko: 'kor', zh: 'chi', zho: 'chi', ar: 'ara', hi: 'hin', nl: 'dut', nld: 'dut', pl: 'pol', tr: 'tur', ta: 'tam', te: 'tel', sv: 'swe',
+    no: 'nor', nb: 'nor', nob: 'nor', da: 'dan', fi: 'fin', el: 'gre', ell: 'gre', he: 'heb', cs: 'cze', ces: 'cze', hu: 'hun', ro: 'rum',
+    ron: 'rum', vi: 'vie', th: 'tha', id: 'ind', uk: 'ukr', bg: 'bul', hr: 'hrv', sr: 'srp', ml: 'mal', kn: 'kan', bn: 'ben', mr: 'mar',
+    english: 'eng', spanish: 'spa', french: 'fre', german: 'ger', italian: 'ita', portuguese: 'por', russian: 'rus', japanese: 'jpn',
+    korean: 'kor', chinese: 'chi', arabic: 'ara', hindi: 'hin', tamil: 'tam', telugu: 'tel' };
+  const code = (l) => { const x = String(l || '').toLowerCase().trim().split(/[-_\s]/)[0]; return ISO[x] || x; };
+  const want = () => {
+    const a = CFG.srAudio, b = CFG.audioOnly;
+    const w = a && a !== 'any' ? a : b && b !== 'any' ? b : '';
+    return w ? code(w) : '';
+  };
+  // does this track (language tag, track name) carry language w? A track with no real language tag (none, und, or a
+  // made-up one like "sp") counts only when its name says so.
+  const KNOWN = new Set([...Object.values(ISO), ...Object.keys(typeof LANGS === 'object' && LANGS ? LANGS : {}).map(code)]);
+  const match = (lang, name, w) => {
+    if (!w) return false;
+    const c = code(lang);
+    if (c && KNOWN.has(c)) return c === w;
+    const n = String(name || '').toLowerCase();
+    return AudioPref.WORD.some(([re, l]) => l === w && re.test(n));
+  };
+  // a release whose name says it carries several languages (MULTi, Dual Audio, or two named languages)
+  const multi = (s) => { try { const r = AudioPref.langs(s); return !!(r.multi || r.langs.size > 1); } catch (e) { return false; } };
+  window.MkAudioWant = want; window.MkAudioMatch = match; window.MkAudioMulti = (s) => !!want() && multi(s);
+
+  /* ---------- the Audio menu keeps each track's language, so the right one can be found ---------- */
+  if (typeof AudioLang !== 'undefined') {
+    const tr = AudioLang.tracks.bind(AudioLang);
+    AudioLang.tracks = function (list) {
+      const out = tr(list), raw = Array.isArray(list) ? list : [];
+      out.forEach((o, n) => {
+        const t = raw[n];
+        if (typeof t === 'string') o.lang = t;
+        else if (t && typeof t === 'object') { const g = t.tags || {}; o.lang = t.language || t.lang || t.language_code || g.language || ''; o.name = t.title || t.name || t.label || g.title || ''; }
+      });
+      return out;
+    };
+  }
+
+  const userPicked = (s) => !!(s && (s._audio != null || s._audioTry || s._mkAudUser));
+  const done = (s, label) => { s._mkAud = true; log(`audio: ${label} (your audio language)`); try { toast(`Audio: ${label}`, 'info', 2200, 'audiofirst'); } catch (e) { /* no toast */ } };
+
+  /* ---------- hls.js streams with several audio tracks ---------- */
+  const hlsPick = (h, s) => {
+    const w = want(); if (!w || !h || !s || s._mkAud || userPicked(s) || P.hls !== h || P.stream !== s) return;
+    const list = h.audioTracks || []; if (list.length < 2) return;
+    const cur = list[h.audioTrack];
+    if (cur && match(cur.lang, cur.name, w)) { s._mkAud = true; return; }
+    const i = list.findIndex((t) => match(t.lang, t.name, w)); if (i < 0) { s._mkAud = true; return; }
+    h.audioTrack = i; done(s, list[i].name || langName(list[i].lang));
+  };
+  const lu = loadUrl;
+  loadUrl = function (stream) {
+    const r = lu.apply(this, arguments);
+    const h = P.hls;
+    if (h && !h._mkAud && window.Hls && Hls.Events) {
+      h._mkAud = true;
+      const go = () => hlsPick(h, stream);
+      h.on(Hls.Events.AUDIO_TRACKS_UPDATED, go); h.on(Hls.Events.MANIFEST_PARSED, go);
+    }
+    return r;
+  };
+
+  /* ---------- players that expose video.audioTracks (Safari, the Mac app) ---------- */
+  video.addEventListener('loadedmetadata', () => {
+    const s = P.stream, w = want(), at = video.audioTracks;
+    if (!w || !s || P.hls || s._mkAud || userPicked(s) || !at || at.length < 2) return;
+    if (window.MkEngine && MkEngine.active) return; // the engine already picked
+    let on = -1; for (let k = 0; k < at.length; k++) if (at[k].enabled) { on = k; break; }
+    if (on >= 0 && match(at[on].language, at[on].label, w)) { s._mkAud = true; return; }
+    let i = -1; for (let k = 0; k < at.length; k++) if (match(at[k].language, at[k].label, w)) { i = k; break; }
+    s._mkAud = true; if (i < 0) return;
+    for (let k = 0; k < at.length; k++) at[k].enabled = k === i;
+    done(s, at[i].label || langName(at[i].language));
+  });
+  // a pick in the player's own audio list counts as yours
+  document.addEventListener('click', (e) => { if (e.target && e.target.closest && e.target.closest('[data-audio],[data-alang]') && P.stream) P.stream._mkAudUser = true; }, true);
+
+  /* ---------- Chrome, Edge, Android WebView playing the file directly ---------- */
+  video.addEventListener('playing', () => {
+    const s = P.stream, w = want();
+    if (!w || !s || s._mkAud || s._mkAudProbe || userPicked(s) || P.hls || s._local || !s.url || typeof AudioLang === 'undefined') return;
+    if ('audioTracks' in HTMLMediaElement.prototype) return; // handled above
+    if (window.MkEngine && MkEngine.active) return;
+    if (!multi(s)) return; // only releases that say they have several languages: no lookups for ordinary films
+    s._mkAudProbe = true;
+    setTimeout(async () => {
+      if (P.stream !== s || userPicked(s)) return;
+      let st; try { st = await AudioLang.probe(s); } catch (e) { return; }
+      if (P.stream !== s || userPicked(s) || !st || st.state !== 'ok' || !st.tracks || st.tracks.length < 2) return;
+      const cur = st.tracks.find((t) => t.i === st.cur);
+      if (cur && match(cur.lang, cur.name, w)) { s._mkAud = true; return; }
+      const t = st.tracks.find((x) => match(x.lang, x.name, w)); if (!t) { s._mkAud = true; return; }
+      s._mkAud = true; log(`audio: switching to ${t.label} (your audio language) via ${st.via}`);
+      AudioLang.pick(t.i);
+    }, 1200);
+  });
+
+  /* ---------- not web-ready sources ---------- */
+  const parse = Telemetry.parse.bind(Telemetry);
+  Telemetry.parse = function (s) {
+    const bh = s && s.behaviorHints;
+    if (bh && bh.notWebReady === true && !bh.proxyHeaders && /^https?:\/\//i.test(s.url || '')) {
+      s.behaviorHints = Object.assign({}, bh, { notWebReady: false }); s._nwr = true;
+    }
+    const t = parse(s);
+    if (s && s._nwr && t && !t._nwrDone) { t.nwr = true; t._nwrDone = true; t.score -= 100; }
+    return t;
+  };
+})();
+</script>
+<!-- mk-audiofirst:end -->
 </body>
 </html>

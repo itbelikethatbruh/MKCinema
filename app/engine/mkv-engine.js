@@ -84,17 +84,19 @@
       // MP4: only when the name says Dolby or DTS sound (most browsers would play it silent), or the film already played silent
       if (!isMp4(s)) return false;
       const name = `${bh.filename || ''} ${s.title || ''} ${s.name || ''} ${s.description || ''}`;
-      return !!s._engForce || DOLBY_HINT.test(name) || (SOFT.ready() && /(?:^|[^a-z0-9])(x265|h\.?265|hevc)(?:[^a-z0-9]|$)/i.test(name));
+      return !!s._engForce || DOLBY_HINT.test(name) || (SOFT.ready() && /(?:^|[^a-z0-9])(x265|h\.?265|hevc)(?:[^a-z0-9]|$)/i.test(name)) || !!(window.MkAudioMulti && MkAudioMulti(s));
     },
 
     /* which audio track plays first: the file's default track (Chromium itself always plays the first one) */
     defAudio(info) {
       const a = info.audio.filter((x) => !x.enc); if (!a.length) return -1;
-      const want = CFG.audioOnly && CFG.audioOnly !== 'any' ? CFG.audioOnly : '';
-      const byLang = want && info.audio.filter((x) => x.lang === want || (want === 'eng' && x.lang === 'en'));
+      // your audio language (2.62.6: Preferred audio language first, codes like en / eng / en-US compare equal)
+      const want = window.MkAudioWant ? MkAudioWant() : (CFG.audioOnly && CFG.audioOnly !== 'any' ? CFG.audioOnly : '');
+      const is = (x) => (window.MkAudioMatch ? MkAudioMatch(x.lang, x.name, want) : (x.lang === want || (want === 'eng' && x.lang === 'en')));
+      const byLang = want ? a.filter(is) : [];
       // a file whose default track is a dub keeps it, unless your audio language is in the file
-      const d = info.audio.find((x) => x.def) || info.audio[0];
-      if (byLang && byLang.length && !(d.lang === want)) return (byLang.find((x) => x.def) || byLang[0]).i;
+      const d = a.find((x) => x.def) || a[0];
+      if (byLang.length && !is(d)) { const ok = byLang.filter((x) => this.audioMode(x) !== 'none'), l = ok.length ? ok : byLang; return (l.find((x) => x.def) || l[0]).i; }
       return d.i;
     },
     audioMode(a) {
