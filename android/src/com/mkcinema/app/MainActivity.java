@@ -70,7 +70,7 @@ public class MainActivity extends Activity {
     static final String[] APP_HOSTS = { HOST, "app.mkcinema.app" };
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6;
-    static final String VER = "1.11.0";
+    static final String VER = "1.11.1";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
