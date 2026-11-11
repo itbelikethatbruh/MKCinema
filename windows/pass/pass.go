@@ -16,7 +16,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"net/http"
@@ -28,7 +27,8 @@ import (
 	"mkcinema/origins"
 )
 
-// Server is a running pass server. Base is http://127.0.0.1:PORT/TOKEN; files are read at Base + "/r?u=URL".
+// Server is a running pass server. Base is http://127.0.0.1:PORT/TOKEN; files are read at Base + "/r?u=URL" and
+// TV services at Base + "/tv?h=HEADERS&u=URL" (tv.go).
 type Server struct {
 	Base string
 	srv  *http.Server
@@ -110,6 +110,7 @@ func Start() (*Server, error) {
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/"+token+"/r", s.read)
+	mux.HandleFunc("/"+token+"/tv", s.tv) // the person's own TV service, see tv.go
 	s.srv = &http.Server{Handler: cors(mux), ReadHeaderTimeout: 10 * time.Second}
 	go func() { _ = s.srv.Serve(ln) }()
 	s.Base = fmt.Sprintf("http://127.0.0.1:%d/%s", ln.Addr().(*net.TCPAddr).Port, token)
@@ -186,24 +187,5 @@ func (s *Server) read(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodHead {
 		return
 	}
-	// copy as it arrives, so the engine sees the first bytes right away
-	buf := make([]byte, 64<<10)
-	fl, _ := w.(http.Flusher)
-	for {
-		n, rerr := res.Body.Read(buf)
-		if n > 0 {
-			if _, werr := w.Write(buf[:n]); werr != nil {
-				return
-			}
-			if fl != nil {
-				fl.Flush()
-			}
-		}
-		if rerr != nil {
-			if rerr != io.EOF && r.Context().Err() == nil {
-				log.Printf("pass: %s: %v", u.Host, rerr)
-			}
-			return
-		}
-	}
+	stream(w, r, res, u) // as it arrives, so the engine sees the first bytes right away
 }

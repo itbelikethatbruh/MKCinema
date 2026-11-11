@@ -1,6 +1,9 @@
 // mkp2p is the torrent engine as a small program, for the Android and TV app. The app starts it with the cache
 // folder, reads the local address from the first line it prints, and stops it by closing its input (which also
 // happens if the app is killed). Everything it downloaded is deleted when it stops.
+//
+// With -pass it runs the pass server instead (package pass): the Mac app uses it so the web app can read hosts
+// without CORS and open the person's own plain-http TV service. It prints its base address the same way.
 package main
 
 import (
@@ -16,6 +19,7 @@ import (
 	"time"
 
 	"mkcinema/p2p"
+	"mkcinema/pass"
 )
 
 func main() {
@@ -23,7 +27,20 @@ func main() {
 	keep := flag.Int("keep", 1, "torrents kept at once")
 	reserveMB := flag.Int64("reserve-mb", 600, "stop when free space falls below this")
 	conns := flag.Int("conns", 30, "peer connections per torrent")
+	passOnly := flag.Bool("pass", false, "run the pass server (CORS and plain-http TV) instead of the torrent engine")
 	flag.Parse()
+	if *passOnly {
+		log.SetOutput(os.Stderr)
+		s, err := pass.Start()
+		if err != nil {
+			fmt.Println("error: " + err.Error())
+			os.Exit(1)
+		}
+		fmt.Println(s.Base)
+		waitStop()
+		s.Close()
+		return
+	}
 	if *dir == "" {
 		fmt.Println("error: -dir is required")
 		os.Exit(2)
@@ -51,11 +68,16 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Println(e.Base)
+	waitStop()
+	e.Close()
+}
+
+// waitStop returns when the app closes our input (or quits or crashes), or on SIGTERM/SIGINT
+func waitStop() {
 	stop := make(chan struct{}, 2)
 	go func() { _, _ = io.Copy(io.Discard, os.Stdin); stop <- struct{}{} }()
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)
 	go func() { <-sig; stop <- struct{}{} }()
 	<-stop
-	e.Close()
 }
