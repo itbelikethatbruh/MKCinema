@@ -7,6 +7,9 @@
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
+  { v: '2.65.1', date: '2026-11-11', items: [
+    ['better', 'Friends colours fit on phones', 'Profile colours in Friends setup now show in full on narrow screens, including the selected ring.'],
+  ] },
   { v: '2.65.0', date: '2026-11-11', items: [
     ['new', 'Miko picks like a film buff', 'Ask for “something like Arrival but scarier”, “a Korean thriller under 2 hours” or “Christmas films for the kids” and she picks real, fitting titles, re-ranked for your taste on your device.'],
     ['better', 'Scrub previews show right away', 'The picture preview above the progress bar now appears almost instantly while you drag to find your spot.'],
