@@ -182,6 +182,7 @@ const Vault = {
       for (let i = 0; i < 8; i++) { info = await this.call(`${base}/torrents/info/${add.id}`, { headers: H }); if (info.status === 'downloaded' && info.links && info.links.length) break; await new Promise((r) => setTimeout(r, 1000)); }
       if (info.status !== 'downloaded') throw new Error(`Real-Debrid does not have it cached yet (${info.status}${info.progress != null ? `, ${info.progress}%` : ''}). It keeps downloading in your account.`);
       const un = await this.call(`${base}/unrestrict/link`, { method: 'POST', headers: H, body: this.form({ link: info.links[0] }) });
+      if (un.id) s._rd = String(un.id);
       return un.download;
     }
     if (k === 'tb') {

@@ -796,18 +796,6 @@ const LineSnap = {
     on('[data-sclink]', () => SceneLink.share());
     on('[data-scphone]', () => PhoneSubs.open());
   };
-  // X-Ray's "This scene" tab gets the same three
-  const xr = XRay.render.bind(XRay);
-  XRay.render = function () {
-    xr();
-    if (this.tab !== 'scene') return;
-    const mk = $('#xrMark'); if (!mk || $('#xrLine')) return;
-    mk.insertAdjacentHTML('beforeend', '<button class="btn btn-ghost btn-sm" type="button" id="xrLine"><i data-lucide="search"></i>Find a line</button><button class="btn btn-ghost btn-sm" type="button" id="xrNoteB"><i data-lucide="message-square-text"></i>Leave a note</button><button class="btn btn-ghost btn-sm" type="button" id="xrShare"><i data-lucide="share-2"></i>Share this moment</button>');
-    icons();
-    $('#xrLine').onclick = () => { this.hide(); Lines.openPlayer(); };
-    $('#xrNoteB').onclick = () => { this.hide(); Margins.open(); };
-    $('#xrShare').onclick = () => SceneLink.share();
-  };
   // the details page: Find a line next to Share
   const rd = renderDetail;
   renderDetail = function () {

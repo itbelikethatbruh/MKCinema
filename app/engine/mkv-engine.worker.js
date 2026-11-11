@@ -271,14 +271,14 @@ function parseCues(u, p, end, videoNum) {
   out.sort((a, b) => a.t - b.t);
   return out;
 }
-async function fetchElement(pos, signal) {
+async function fetchElement(pos, signal, ms) {
   // header first (an element's size isn't known until its header is read), then the rest in one go
-  const h = await Net.range(pos, pos + 65535, signal); const u = h.buf;
+  const h = await Net.range(pos, pos + 65535, signal, ms); const u = h.buf;
   const i = readId(u, 0, u.length), s = i && readSize(u, i[1], u.length); if (!s || s[0] === UNKNOWN) return null;
   const hdr = i[1] + s[1], size = s[0];
   if (hdr + size <= u.length) return { id: i[0], u, start: hdr, end: hdr + size };
   if (size > 32 * 1024 * 1024) return null;
-  const rest = await Net.range(pos + u.length, pos + hdr + size - 1, signal);
+  const rest = await Net.range(pos + u.length, pos + hdr + size - 1, signal, ms);
   return { id: i[0], u: cat([u, rest.buf]), start: hdr, end: hdr + size };
 }
 const VCODEC = { 'V_MPEG4/ISO/AVC': 'avc', 'V_MPEGH/ISO/HEVC': 'hevc', V_AV1: 'av1' };
@@ -352,7 +352,9 @@ async function probe(url, headers) {
   const v = File.tracks.find((t) => t.type === 1);
   if (cuesAt >= 0) File.cues = parseCues(...File.cuesRaw, v && v.num);
   else if (File.seek[ID.Cues]) {
-    try { const el = await fetchElement(File.seek[ID.Cues]); if (el && el.id === ID.Cues) File.cues = parseCues(el.u, el.start, el.end, v && v.num); } catch (e) { File.cues = []; }
+    // the index sits at the end of the file: a slow answer there must not hold back the start. Without it a seek
+    // guesses by bytes, and the index is asked for again (with more time) at the first seek.
+    try { const el = await fetchElement(File.seek[ID.Cues], null, 3500); if (el && el.id === ID.Cues) File.cues = parseCues(el.u, el.start, el.end, v && v.num); } catch (e) { File.cues = []; File.cuesLater = { pos: File.seek[ID.Cues], num: v && v.num }; }
   }
   if (!File.firstCluster && File.cues.length) File.firstCluster = File.cues[0].pos;
   if (!File.firstCluster) throw new Error('could not find where the video starts');
@@ -1102,6 +1104,10 @@ class Listen extends Rescue {
 
 /* ---------------- Cluster reader ---------------- */
 async function seekPos(t) {
+  if (!File.cues.length && File.cuesLater) {
+    const later = File.cuesLater; File.cuesLater = null;
+    try { const el = await fetchElement(later.pos, St.ctl && St.ctl.signal, 10000); if (el && el.id === ID.Cues) File.cues = parseCues(el.u, el.start, el.end, later.num); } catch (e) { /* guess by bytes */ }
+  }
   if (File.cues.length) { let c = File.cues[0]; for (const x of File.cues) { if (x.t <= t + 0.001) c = x; else break; } return { pos: c.pos, t: c.t }; }
   if (t <= 0.5 || !Net.size || !File.duration) return { pos: File.firstCluster, t: 0 };
   // no Cues: guess by bytes and narrow it down by reading cluster timestamps (at most 8 probes)

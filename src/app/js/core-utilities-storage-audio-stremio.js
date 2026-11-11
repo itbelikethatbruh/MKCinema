@@ -61,11 +61,29 @@ const SEAT_KEYS = ['watchlist', 'progress', 'watched', 'taste', 'recentSearches'
 const SEAT = (() => { try { const v = localStorage.getItem('mkc:seat') || ''; return /^[a-z0-9]{4,16}$/.test(v) ? v : ''; } catch (e) { return ''; } })();
 const Store = {
   key(k) { return SEAT && SEAT_KEYS.includes(k) ? `mkc:seat:${SEAT}:${k}` : 'mkc:' + k; },
-  get(k, d) { try { const v = localStorage.getItem(this.key(k)); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
-  set(k, v) { try { localStorage.setItem(this.key(k), JSON.stringify(v)); } catch (e) { /* storage blocked: keep running in memory */ } },
+  /* a saved value only counts when it has the same shape as the default: a list for a list, an object for an object,
+     and no null for a text or number. Anything else (an old format, a bad sync, a hand edit) gives the default back. */
+  fit(v, d) {
+    if (Array.isArray(d)) return Array.isArray(v) ? v : d;
+    if (d && typeof d === 'object') return v && typeof v === 'object' && !Array.isArray(v) ? v : d;
+    if (v === null && (typeof d === 'string' || typeof d === 'number')) return d;
+    return v;
+  },
+  read(full, d) { try { const v = localStorage.getItem(full); return v == null ? d : Store.fit(JSON.parse(v), d); } catch (e) { return d; } },
+  /* when the browser's storage is full, the caches that refill on their own make room so the user's own data still saves */
+  write(full, v) {
+    const json = JSON.stringify(v);
+    try { localStorage.setItem(full, json); return true; } catch (e) { /* full or blocked */ }
+    try {
+      ['mfc', 'artCache', 'stillCache', 'kidsAgeCache', 'mdbCache'].forEach((c) => localStorage.removeItem('mkc:' + c));
+      localStorage.setItem(full, json); return true;
+    } catch (e) { return false; /* storage blocked: keep running in memory */ }
+  },
+  get(k, d) { return this.read(this.key(k), d); },
+  set(k, v) { return this.write(this.key(k), v); },
   raw: {
-    get(k, d) { try { const v = localStorage.getItem('mkc:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
-    set(k, v) { try { localStorage.setItem('mkc:' + k, JSON.stringify(v)); } catch (e) { /* storage blocked */ } },
+    get(k, d) { return Store.read('mkc:' + k, d); },
+    set(k, v) { return Store.write('mkc:' + k, v); },
   },
 };
 
@@ -463,9 +481,19 @@ class StremioEngine {
   }
   static seriesId(imdbId, season, episode) { return `${imdbId}:${season}:${episode}`; }
 
-  async http(url, { timeout = (CFG.timeout || 15) * 1000, ttl = 10 * 60 * 1000 } = {}) {
+  async http(url, opts = {}) {
+    const ttl = opts.ttl == null ? 10 * 60 * 1000 : opts.ttl;
     const hit = this.cache.get(url);
     if (hit && Date.now() - hit.t < ttl) return hit.v;
+    // 2.64: an address already being downloaded is not downloaded again; every caller gets the same answer
+    if (ttl <= 0) return this.httpGet(url, opts);
+    const fly = this.inflight || (this.inflight = new Map());
+    if (fly.has(url)) return fly.get(url);
+    const p = this.httpGet(url, opts).finally(() => { if (fly.get(url) === p) fly.delete(url); });
+    fly.set(url, p);
+    return p;
+  }
+  async httpGet(url, { timeout = (CFG.timeout || 15) * 1000 } = {}) {
     const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), timeout);
     try {
       const res = await fetch(url, { signal: ctl.signal, headers: { Accept: 'application/json' } });

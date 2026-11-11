@@ -52,7 +52,7 @@ const Friends = {
       } catch (e) { this.ch = null; }
     }
     try { this.me = await this.rpc('mkc_me'); this.ready = true; } catch (e) { this.me = null; this.ready = /not switched on/.test(e.message) ? 'off' : true; }
-    if (this.me) { this.syncCfg(); await this.refresh(); this.beat(true); }
+    if (this.me) { this.syncCfg(); await this.refresh(); this.beat(true); if (typeof Social !== 'undefined') Social.start(); }
     clearInterval(this.beatT); this.beatT = setInterval(() => this.beat(), 60000);
     clearInterval(this.listT); this.listT = setInterval(() => { if (this.me && (this.layerOpen() || document.visibilityState === 'visible')) this.refresh(); }, 45000);
     this.paint();
@@ -60,7 +60,7 @@ const Friends = {
   drop() { const c = this.ch; this.ch = null; this.chKey = ''; if (c) { try { Account.client.removeChannel(c); } catch (e) { /* gone */ } } },
   stop() {
     if (this.me) this.here(false).catch(() => {});
-    this.drop(); clearInterval(this.beatT); clearInterval(this.listT); this.me = null; this.list = []; this.chat = null; this.badge(); this.paint();
+    this.drop(); clearInterval(this.beatT); clearInterval(this.listT); this.me = null; this.list = []; this.chat = null; if (typeof Social !== 'undefined') Social.stop(); this.badge(); this.paint();
     if (typeof FCall !== 'undefined') FCall.end('gone', true);
   },
   /* settings that live on the server too (search and calls), kept in CFG so they sync like every other setting */
@@ -126,6 +126,7 @@ const Friends = {
         else this.refresh().then(() => { const f = this.byId(from); if (f && f.state === 'friend') this.note(`${this.label(f)}: ${String(p.x || 'sent a message').slice(0, 80)}`, f.id); });
         break;
       case 'ring': case 'ok': case 'cx': case 'busy': if (typeof FCall !== 'undefined') FCall.inbox(p, from); break;
+      case 'k': { const f = this.byId(from); if (f && f.state === 'friend') this.note(`${this.label(f)} gave you kudos`); break; }
       default: break;
     }
   },
@@ -170,7 +171,8 @@ const Friends = {
   open(withId) {
     if (this.kids()) { toast('Not on the kids seat', 'err', 2200, 'kids'); return; }
     X8.layer('friendsLayer', { label: 'Friends', icon: 'users', eyebrow: 'Friends', wide: true });
-    X8.onClose.friendsLayer = () => { this.chat = null; };
+    X8.onClose.friendsLayer = () => { this.chat = null; if (typeof Social !== 'undefined') { Social.view = null; Social.viewCard = null; } };
+    if ((withId || this.pendingChat) && typeof Social !== 'undefined') Social.tab = 'friends';
     X8.open('friendsLayer');
     if (withId || this.pendingChat) { const id = withId || this.pendingChat; this.pendingChat = null; this.mode = 'list'; this.paint(); const f = this.byId(id); if (f) { this.openChat(f); return; } }
     this.mode = 'list'; this.paint();
@@ -191,11 +193,13 @@ const Friends = {
     if (!this.ready) { b.innerHTML = '<p class="x8-p">Loading…</p>'; return; }
     if (!this.me) { this.paintSetup(b); return; }
     if (this.mode === 'edit') { this.paintSetup(b, true); return; }
+    if (typeof Social !== 'undefined' && Social.owns()) { Social.paint(b); return; }
     if (this.mode !== 'list' || !$('#frLists', b)) this.paintShell(b);
     this.paintLists();
   },
   focusFirst(root) { if (IS_TV) { const x = $('[data-nav]', root); if (x) Nav.focus(x, true); } },
   bindCommon(root) {
+    if (root.dataset.frb) return; root.dataset.frb = '1'; // once per panel: every repaint used to add another listener
     root.addEventListener('click', (e) => {
       const x = e.target.closest('[data-fr]'); if (!x || !root.contains(x)) return;
       const id = x.dataset.id, f = id ? this.byId(id) : null;
@@ -208,6 +212,7 @@ const Friends = {
         case 'decline': this.act(x, () => this.rpc('mkc_friend_answer', { other: id, accept: false })); break;
         case 'cancel': this.act(x, () => this.rpc('mkc_friend_remove', { other: id })); break;
         case 'chat': if (f) this.openChat(f); break;
+        case 'profile': if (f && typeof Social !== 'undefined') Social.profile(f); break;
         case 'call': if (f) FCall.start(f); break;
         case 'more': this.more(f); break;
         case 'unblock': this.act(x, () => this.rpc('mkc_block', { other: id, on_: false }), () => toast('Unblocked', 'ok')); break;
@@ -262,13 +267,13 @@ const Friends = {
   },
   paintShell(b) {
     this.mode = 'list';
-    b.innerHTML = `<div class="fr-top fr-tophead">${this.av(Object.assign({}, this.me, { on: CFG.frOnline !== false }), true)}<div class="fr-who"><b>${esc(this.me.name || this.me.username)}</b><small>@${esc(this.me.username)} · ${CFG.frOnline !== false ? 'Online' : 'Appearing offline'}</small></div>
+    b.innerHTML = `${typeof Social !== 'undefined' ? Social.tabs() : ''}<div class="fr-top fr-tophead">${this.av(Object.assign({}, this.me, { on: CFG.frOnline !== false }), true)}<div class="fr-who"><b>${esc(this.me.name || this.me.username)}</b><small>@${esc(this.me.username)} · ${CFG.frOnline !== false ? 'Online' : 'Appearing offline'}</small></div>
         <button class="btn btn-ghost btn-sm" type="button" data-nav data-fr="edit" aria-label="Edit profile"><i data-lucide="pencil"></i><span>Edit</span></button><button class="btn btn-ghost btn-sm" type="button" data-nav data-fr="settings" aria-label="Privacy settings"><i data-lucide="settings-2"></i><span>Privacy</span></button></div>
       <div id="frCallBox"></div>
       <div class="fr-find"><i data-lucide="user-plus"></i><input class="inp" id="frQ" maxlength="21" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Add a friend: type their username" aria-label="Find a friend by username" data-nav></div>
       <div id="frRes" class="fr-res" aria-live="polite"></div>
       <div id="frLists"></div>`;
-    icons(); this.bindCommon(b);
+    icons(); this.bindCommon(b); if (typeof Social !== 'undefined') Social.bind(b);
     const q = $('#frQ', b); if (IS_TV) TvType.guard(q);
     q.addEventListener('input', () => { clearTimeout(this.qT); this.qT = setTimeout(() => this.search(), 320); });
     q.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !q.readOnly) this.search(); });
@@ -306,7 +311,7 @@ const Friends = {
           <button class="ibtn sm" type="button" data-nav data-fr="more" data-id="${esc(f.id)}" aria-label="More for ${esc(this.label(f))}"><i data-lucide="menu"></i></button>`;
       }
       const w = f.state === 'friend' && f.on && f.watching;
-      return `<div class="fr-row${w ? ' watching' : ''}${f.state === 'in' ? ' req' : ''}" data-fid="${esc(f.id)}">${this.av(f)}<div class="fr-who"><b>${esc(f.name || f.username)}</b><small>${f.name ? `@${esc(f.username)} · ` : ''}<span class="${f.on ? 'fr-live' : ''}">${esc(this.status(f))}</span></small></div><div class="fr-acts">${acts}</div></div>`;
+      return `<div class="fr-row${w ? ' watching' : ''}${f.state === 'in' ? ' req' : ''}" data-fid="${esc(f.id)}">${f.state === 'friend' ? `<button type="button" class="fr-whob" data-nav data-fr="profile" data-id="${esc(f.id)}" aria-label="Profile of ${esc(this.label(f))}">` : ''}${this.av(f)}<div class="fr-who"><b>${esc(f.name || f.username)}</b><small>${f.name ? `@${esc(f.username)} · ` : ''}<span class="${f.on ? 'fr-live' : ''}">${esc(this.status(f))}</span></small></div>${f.state === 'friend' ? '</button>' : ''}<div class="fr-acts">${acts}</div></div>`;
     };
     const sec = (title, l, empty) => (l.length || empty ? `<div class="fr-sec"><h4>${title}${l.length ? ` <span class="fr-dim tnum">${l.length}</span>` : ''}</h4>${l.length ? l.map(row).join('') : `<p class="fr-dim">${empty}</p>`}</div>` : '');
     const blocked = by('blocked');
@@ -459,6 +464,7 @@ const Friends = {
       { key: 'frCalls', label: 'Incoming calls', help: '“When I’m not watching” never rings during a film: friends see that you are busy, and you get a missed call in the chat.', type: 'seg', options: [['off', 'Off'], ['idle', 'When I’m not watching'], ['on', 'Always']], get: () => CFG.frCalls || 'off', set: (v) => srv('frCalls', v) },
       { key: 'frRing', label: 'Ring sound', help: 'A soft ring for incoming calls. Off shows the call silently.', type: 'toggle', get: () => CFG.frRing !== false, set: (v) => setCfg('frRing', v) },
       { key: 'frFindable', label: 'Suggest me in search', help: 'Off: people must type your whole username to find you.', type: 'toggle', get: () => !!CFG.frFindable, set: (v) => srv('frFindable', v) },
+      ...(typeof Social !== 'undefined' ? Social.settingsRows() : []),
     ];
   },
 };

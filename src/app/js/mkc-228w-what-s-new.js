@@ -7,6 +7,24 @@
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
+  { v: '2.64.0', date: '2026-11-10', items: [
+    ['fix', 'TV remote in Settings and X-Ray', 'On TVs, Settings pages open at the top and the remote walks every row, and the remote can now move into X-Ray: press Left from the player controls, then OK on an actor. Back returns.'],
+    ['better', 'Fewer interruptions mid-film', 'When the connection to a source drops or freezes, the player now reconnects to the same copy at the same second, and waits for your network to come back, before it tries another copy. Your audio language and subtitles stay as they were.'],
+    ['new', 'Cloud convert', 'When a file from your debrid service won’t play in your browser (its format, no sound, or Safari) and no other copy is left, MKCinema asks your own service for the web-ready version it makes, where the service offers one, and plays that instead. Nothing passes through MKCinema.'],
+    ['better', 'A cleaner X-Ray', 'Pause and X-Ray shows one calm panel: the cast with their faces, who made it, the story, and quick actions for this moment. Picture and sound details fold away until you want them.'],
+    ['better', 'Settings, easier to scan', 'Long Settings pages are split into short, named groups, menus sit beside their label on phones, and watch parties, film nights and ticket stubs have their own page, Watch together. Every setting is still there.'],
+    ['new', 'Social hub', 'Friends now has three tabs. Activity shows who is watching now, what friends finished lately and a friendly this-month board. You shows your profile, trophies and stats, and a QR code to carry it all to your phone.'],
+    ['new', 'Profiles and trophies', 'Add a short bio and four favourites, and earn trophies as you watch: first feature to 250 films, streaks, marathons, night owl, years on MKCinema and more. Tap a friend to see their profile and what you both watched.'],
+    ['new', 'Kudos', 'Give a friend a small thank-you: Great taste, Party host, Gem finder, Binge legend or Great company. Take it back any time.'],
+    ['better', 'Your history stays yours', 'Sharing what you watch is off until you turn it on, comes from one seat only, and single titles can be hidden. Trophies can be hidden too.'],
+    ['new', 'Ideas and thank-you notes', 'Suggest a feature or send a thank-you note from Settings › Ideas & thanks. If you are signed in, you can see whether your idea is planned or done, and any reply.'],
+    ['better', 'Play stands out', 'The Play and Smart Play buttons now glow with a soft light that runs round their edge, so the next thing to press is easy to find. It stays still on TVs, Low graphics and Reduce motion.'],
+    ['better', 'Peak Cinema in your language', 'Peak Cinema now only plays scenes in your audio language. Releases dubbed in other languages, and untagged copies of films made in another language, are skipped.'],
+    ['fix', 'One sound on Who’s watching', 'The profile picker no longer plays its sound twice when it opens.'],
+    ['new', 'Miko got a lot more human', 'Miko remembers your name, chats back, understands “the second one” and “the other one”, can continue what you were watching or surprise you from your watchlist, and speaks with a natural female voice.'],
+    ['fix', 'Starts normally with damaged saved data', 'MKCinema now starts normally even if some saved data on your device gets damaged, and newly added addons are still kept when your browser’s storage is full.'],
+    ['better', 'Smoother Home', 'Home rows below the screen are skipped until you scroll to them, so Home starts lighter on phones and TVs.'],
+  ] },
   { v: '2.63.1', date: '2026-11-10', items: [
     ['better', 'Faster screen changes', 'Moving between screens now does about half the styling work, most noticeable on TVs.'],
   ] },

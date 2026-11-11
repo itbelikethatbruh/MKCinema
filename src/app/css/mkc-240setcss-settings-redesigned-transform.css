@@ -114,3 +114,40 @@ html:not([data-look="anime"]) #settings .switch.on::after{transform:translateX(2
   #settings .set-row.sr-sw{grid-template-columns:minmax(0,1fr) auto;align-items:start}
   #settings .set-row.sr-sw>.set-ctl{padding-top:2px}
 }
+/* 2.64-setcss:start */
+/* ---------- 2.64 Settings: less stacked ---------- */
+/* controls line up in one column on wide screens */
+@media (min-width:761px){
+  #settings .set-row{grid-template-columns:minmax(0,1fr) minmax(220px,auto)}
+  #settings .set-row.sr-note{grid-template-columns:minmax(0,1fr)}
+  #settings .set-ctl select.sel{min-width:220px}
+  /* short on/off lists: two columns */
+  html:not(.tv) #settings .set-card.sc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:40px}
+  html:not(.tv) #settings .set-card.sc-grid>.set-row{grid-template-columns:minmax(0,1fr) auto}
+  html:not(.tv) #settings .set-card.sc-grid>.set-row:nth-last-child(2):nth-child(odd){border-bottom:0}
+}
+/* a row that only explains the one above reads as its footnote */
+#settings .set-row.sr-noted{border-bottom:0;padding-bottom:6px}
+#settings .set-row.sr-note{padding-top:0}
+#settings .set-row.sr-note>div:first-child>small{margin-top:0;font-size:calc(var(--fs-small) * var(--ts,1));color:var(--n9a9aa2,#9a9aa2);font-weight:400;max-width:70ch}
+#settings .set-row.sr-note::before{display:none}
+/* group names: a little more air above, so each group reads as its own block */
+#settings .set-sec>.set-group:first-of-type{margin-top:22px}
+#settings .set-card+.set-group{margin-top:34px}
+/* phones: menus sit beside their label, like switches; the page header is tighter */
+@media (max-width:760px){
+  #settings .set-row.sr-sel{grid-template-columns:minmax(0,1fr) auto;align-items:start;column-gap:14px}
+  #settings .set-row.sr-sel>.set-ctl{justify-content:flex-end;padding-top:0}
+  #settings .set-row.sr-sel select.sel{max-width:42vw;height:38px;padding:0 32px 0 12px;background-position:right 10px center;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
+  #settings .set-row{padding:14px 0}
+  #settings .set-row b{font-size:calc(var(--fs-ui) * var(--ts,1))}
+  #settings .set-row small{font-size:calc(var(--fs-small) * var(--ts,1));line-height:1.45}
+  #settings .sr-more{margin-top:2px;font-size:calc(var(--fs-label) * var(--ts,1))}
+  #settings .set-hd{padding:0 0 10px}
+  #settings .set-hd h3{font-size:calc(var(--fs-h3) * var(--ts,1))}
+  #settings .set-hd p{font-size:calc(var(--fs-small) * var(--ts,1));line-height:1.5;color:var(--na9a9b2,#a9a9b2)}
+  html:not([data-look="anime"]) #settings .set-hd-ic{width:38px;height:38px}
+  #settings .set-card+.set-group{margin-top:26px}
+}
+
+/* 2.64-setcss:end */

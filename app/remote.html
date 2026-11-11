@@ -3135,6 +3135,221 @@ const Info = {
   document.addEventListener('input', (e) => { if (e.target.id !== 'ifQ') return; const q = e.target.value, t = Info.top(); if (t && t.k === 'search') t.q = q; clearTimeout(qt); const job = Info.job; qt = setTimeout(() => Info.search(q, job), 320); });
   document.addEventListener('keydown', (e) => { if (e.target.id === 'ifQ' && e.key === 'Enter') { e.target.blur(); } });
 }
+/* ---------------- 2.64 Miko's personality and voice ----------------
+   Shared by the app and the phone remote. Everything here runs on this device: no server, no account, no key.
+   - lines(): many ways to say the same thing, never the same one twice in a row, so she doesn't sound canned.
+   - chat(): small talk (how are you, who are you, jokes, her name for you, a rough day) answered in her own voice.
+   - fix(): forgives typos in the words that matter ("plya dune", "trialer for oppenheimer").
+   - voice(): picks the most natural female voice the device has and speaks in short, sentence-sized breaths.
+   Honesty rules: asked sincerely, she says she's an AI. She never claims to have watched or done something. */
+const MikoSoul = (() => {
+  // each profile (seat) on a shared device has its own Miko memory: the kids' seat isn't called by Dad's name
+  const K = () => { try { return typeof SEAT !== 'undefined' && SEAT ? `mkc:seat:${SEAT}:miko.` : 'mkc:miko.'; } catch (e) { return 'mkc:miko.'; } };
+  const ls = {
+    get(k, d) { try { const v = localStorage.getItem(K() + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { if (v == null || v === '') localStorage.removeItem(K() + k); else localStorage.setItem(K() + k, JSON.stringify(v)); } catch (e) { /* private mode */ } },
+  };
+  const last = {};
+  const one = (key, list) => {
+    if (!Array.isArray(list)) return String(list || '');
+    if (list.length < 2) return list[0] || '';
+    let i = Math.floor(Math.random() * list.length);
+    if (i === last[key]) i = (i + 1 + Math.floor(Math.random() * (list.length - 1))) % list.length;
+    last[key] = i; return list[i];
+  };
+  const fill = (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => (v && v[k] != null ? String(v[k]) : '')).replace(/\s+([,.!?])/g, '$1').replace(/\s{2,}/g, ' ').trim();
+
+  /* ---- who you are to her ---- */
+  const name = () => { const n = ls.get('name', ''); return typeof n === 'string' && /^[\p{L}][\p{L}' -]{0,23}$/u.test(n) ? n : ''; };
+  const setName = (n) => ls.set('name', n ? String(n).trim().slice(0, 24) : null);
+  // her name for you, only some of the time: people don't say your name in every sentence
+  const nm = (p = 0.35) => { const n = name(); return n && Math.random() < p ? n : ''; };
+  const part = () => { const h = new Date().getHours(); return h < 5 ? 'late' : h < 12 ? 'morning' : h < 17 ? 'afternoon' : h < 22 ? 'evening' : 'late'; };
+
+  const LINES = {
+    hi_morning: ['Morning{c}! What are we watching today?', 'Good morning{c}. Coffee and a film? Tell me what you’re after.', 'Morning{c}. I’m here whenever you’re ready.'],
+    hi_afternoon: ['Hey{c}! What can I put on for you?', 'Afternoon{c}. Looking for something to watch?', 'Hi{c}. Tell me what you feel like, or just name a film.'],
+    hi_evening: ['Evening{c}! What are we in the mood for tonight?', 'Hey{c}, good timing. Want me to find tonight’s film?', 'Evening{c}. Tell me what to put on, or ask me anything about a film or show.'],
+    hi_late: ['Still up{c}? Same. What are we watching?', 'Late one, huh{c}? Tell me what you feel like and I’ll find it.', 'Hey night owl{c}. Something easy, or something gripping?'],
+    hi_page: ['You’re on “{t}”. Want me to play it, or tell you about it?', '“{t}”, good pick. Ask me anything about it, or say “play it”.', 'This is “{t}”. I can play it, show the trailer, or tell you who’s in it.'],
+    found: ['Here’s what I found.', 'Found it.', 'This one?', 'Got a match.'],
+    unsure: ['I’m not totally sure which you mean. Is it one of these?', 'Hmm, I found a few. Which one?', 'Did you mean one of these?'],
+    which: ['Which one?', 'There’s more than one. Which did you mean?', 'A few share that name. Which one?'],
+    lost: ['Sorry, I didn’t quite get that. Here are some things I’m good at.', 'I didn’t catch that one. Try something like these.', 'Hmm, that one went over my head. Here’s what I can do.'],
+    notfound: ['I couldn’t find “{q}”. Your addons might not have a search for it.', 'No luck with “{q}”, sorry. Maybe check the spelling, or your addons don’t list it.', 'I looked, but “{q}” didn’t turn up anywhere in your addons.'],
+    thanks: ['Any time{c}.', 'You’re welcome{c}!', 'Happy to help.', 'Of course. Enjoy!', 'No problem at all.'],
+    bye: ['Enjoy the film{c}!', 'See you in a bit.', 'Okay, I’ll be right here if you need me.'],
+    howareyou: ['I’m good, thanks for asking{c}! Ready when you are. What are we watching?', 'Doing great. Even better if you let me pick you something to watch.', 'All good here. How about you, what are you in the mood for?'],
+    goodyou: ['Glad to hear it! Want me to find you something?', 'Love that. Shall we keep the good mood going with a film?', 'Nice. Tell me what you feel like and I’ll sort it.'],
+    who: ['I’m Miko. I live in the corner of MKCinema and help you find things, play them, and answer questions about films, shows and the people in them.', 'I’m Miko, your film buddy in here. Tell me what to play, or ask me who’s in something, what it’s about, that sort of thing.'],
+    ai: ['Honestly? I’m an AI, so no popcorn for me. But I know my way around a film library.', 'I’m an AI, not a person. A pretty friendly one, though, and I’m here to help you find something good.'],
+    girl: ['I am, yes. Miko’s a she.', 'Yep, I’m a she.'],
+    age: ['Old enough to know every film by heart, young enough to still get excited about new ones.', 'A lady never tells. Let’s just say I’m younger than most of your watchlist.'],
+    love: ['Aw, stop it, you’ll make me blush. Want me to find you something good?', 'That’s sweet{c}. I like you too. Now, what are we watching?', 'You’re making my day. Let’s find you a great film.'],
+    rude: ['Ouch. Fair enough, I don’t always get it right. Try saying it another way and I’ll have another go.', 'Sorry, I missed that one. Give it to me again in different words?'],
+    bored: ['Bored? Not on my watch. Let me find you something.', 'Let’s fix that. Here’s what I’d try.'],
+    bored_np: ['Bored? Not on my watch. Tell me a mood, like “something funny” or “a twisty thriller”.', 'Let’s fix that. Name a genre or a film you love and I’ll go from there.'],
+    sad_np: ['I’m sorry you’re having a rough one{c}. If a film would help, tell me a favourite and I’ll put it on.', 'That sounds hard. Something warm and familiar might help. Want me to put one on?'],
+    tired_np: ['Long day? Something light and short might be just right. Name one and I’ll start it.', 'Let’s keep it easy then. Tell me something cosy to put on.'],
+    sad: ['I’m sorry you’re having a rough one{c}. Want something comforting? Here are a few feel-good picks.', 'That sounds hard. If a film helps, here’s something warm and easy.'],
+    tired: ['Long day? Something light and short might be just right.', 'Let’s keep it easy then. Here are some cosy picks.'],
+    night: ['Night{c}! Sleep well.', 'Good night. Sweet dreams.', 'Sleep well. I’ll be here tomorrow.'],
+    laugh: ['Glad I could make you laugh.', 'Ha! I try.', 'I’ll be here all week.'],
+    fav: ['Tough one. I’ve got a soft spot for films with a great score and a twist I didn’t see coming. What’s yours?', 'Ask me on a different day and you’ll get a different answer. Right now? Anything that sticks the landing. What do you love?'],
+    nicetomeet: ['Nice to meet you, {n}! I’ll remember that.', 'Got it, {n}. Lovely to meet you.', '{n}, perfect. I’ll call you that from now on.'],
+    forgot: ['Done, I’ve forgotten your name. It stays off this device.', 'Okay, I won’t use your name anymore.'],
+    yourname: ['You’re {n}. I haven’t forgotten.', 'You told me it’s {n}.'],
+    noname: ['You haven’t told me yet. Just say “call me” and your name.', 'I don’t know yet! Say “my name is” and I’ll remember.'],
+    time: ['It’s {t}{late}.'],
+    joke: [
+      'Why don’t film critics play hide and seek? Because good reviews are hard to find.',
+      'I asked the projector how it was doing. It said things were looking bright.',
+      'Why did the horror film go to therapy? Too many unresolved screams.',
+      'I tried to start a hot air balloon film club. It never really took off.',
+      'Why did the popcorn join the film crew? It wanted to be in the pop-ular scene.',
+    ],
+    crisis: ['I’m really sorry you’re feeling like this. I’m just a film assistant, but please reach out to someone you trust, or a local crisis line, right now. You don’t have to go through this alone.'],
+    offer: ['How about {t}?', 'Here’s one from your watchlist: {t}.', 'Let’s go with {t}. Sound good?'],
+    resume: ['Picking up {t} where you left off.', 'Back to {t}. Let’s go.', 'Resuming {t}.'],
+    nothingcw: ['You haven’t started anything yet. Want me to find something?', 'Nothing in progress yet. Tell me what you feel like.'],
+    emptywl: ['Your watchlist is empty, so here are some picks instead.', 'Nothing saved yet, so let me pick something for you.'],
+    yes_nothing: ['Yes to what? Tell me what you’d like to watch.', 'Sure, what should I put on?'],
+    no_ok: ['No worries. Tell me what you feel like instead.', 'Okay! Something else, then. What are you in the mood for?'],
+    cant_page: ['Open a film or show first, or name one, like “who’s in Dune?”.', 'Which one? Open its page, or just tell me the title.'],
+    busy_player: ['I step aside while a film plays, so use the player’s buttons, or Miko on the phone remote, which can pause, skip and change subtitles.'],
+  };
+  const line = (key, v = {}) => {
+    const n = v.n != null ? v.n : nm();
+    return fill(one(key, LINES[key] || [key]), { ...v, n, c: n ? `, ${n}` : '' });
+  };
+  const hello = (title) => {
+    if (title) return line('hi_page', { t: title });
+    return line(`hi_${part()}`, { n: nm(0.8) });
+  };
+
+  /* ---- small talk ---- */
+  const norm = (s) => String(s || '').toLowerCase().replace(/[’‘]/g, "'").replace(/[“”"]/g, '').replace(/[.!?,;:]+/g, ' ').replace(/\s+/g, ' ').trim();
+  // returns { say, picks?, quick? } or null when it isn't small talk
+  const chat = (text, o = {}) => {
+    const np = o.picks === false ? '_np' : '';
+    let t = norm(text);
+    for (let i = 0; i < 3; i++) t = t.replace(/^(hey|hi|hello|ok|okay|so|um|uh|miko|oh|yo)\s+(?=\S)/, '');
+    t = t.replace(/\s+miko$/, '');
+    if (!t) return null;
+    if (t === 'miko') return { say: hello() };
+    let m;
+    if (/\b(kill myself|suicid\w*|end my life|want to die|self ?harm|hurt myself)\b/.test(t)) return { say: line('crisis') };
+    if (/^(hi|hey|hello|hiya|yo|howdy|heya|sup|hey there|hi there|hello there)$/.test(t)) return { say: hello() };
+    if (/^(good )?(morning|afternoon|evening)$/.test(t)) return { say: hello() };
+    if (/^(good ?night|night|nighty night|gn|going to (bed|sleep)|off to bed)$/.test(t)) return { say: line('night') };
+    if (/^(how are (you|u)( doing| today)?|how('s| is) it going|how are things|how have you been|how('re| are) you|what's up|whats up|wassup|how you doing|you good|you ok(ay)?)$/.test(t)) return { say: line('howareyou') };
+    if (/^(i'?m |i am )?(good|great|fine|not bad|pretty good|doing (good|well|great)|all good|amazing)( thanks| thank you| and you| you)*$/.test(t)) return { say: line('goodyou') };
+    if (/^(who are (you|u)|what are you|what's your name|whats your name|what is your name|introduce yourself|tell me about yourself)$/.test(t)) return { say: line('who'), help: true };
+    if (/^are (you|u) (a |an )?(real|human|person|robot|bot|ai|a\.i|machine|computer|alive|sentient|chat ?gpt|claude)( person)?$/.test(t)) return { say: line('ai') };
+    if (/^are (you|u) (a )?(girl|woman|female|lady|she|boy|man|male|guy)$|^(what's|what is) your (gender|pronouns?)$/.test(t)) return { say: line('girl') };
+    if (/^how old are (you|u)$/.test(t)) return { say: line('age') };
+    if (/^(i love (you|u)|love (you|u)|you'?re (the best|awesome|amazing|so smart|smart|cute|great|the goat)|good (girl|job|bot)|well done|you rock|i like (you|u))$/.test(t)) return { say: line('love') };
+    if (/^(you'?re |you are |ur )?(stupid|dumb|useless|annoying|trash|garbage|the worst)$|^(i hate (you|u)|shut up|you suck)$/.test(t)) return { say: line('rude') };
+    if (/^(i'?m |i am |so |im )?(bored|boring|nothing to (do|watch))$/.test(t)) return { say: line('bored' + np), picks: 'something gripping and fun' };
+    if (/^(i'?m |i am |im |feeling )(so |really |kinda |a bit )?(sad|down|low|upset|lonely|depressed|stressed|anxious|heartbroken)( today| tonight| rn)?$|^(bad|rough|long|hard) day$/.test(t)) return { say: line((/long|tired/.test(t) ? 'tired' : 'sad') + np), picks: 'feel good comforting' };
+    if (/^(i'?m |i am |im )(so |really )?(tired|exhausted|sleepy|wiped)$/.test(t)) return { say: line('tired' + np), picks: 'light short comedy' };
+    if (/^(thanks|thank you|thank u|thx|ty|cheers|nice one|appreciate it|thanks a lot|thank you so much|nice|cool|great|perfect|awesome)$/.test(t)) return { say: line('thanks'), quick: true };
+    if (/^(lol|lmao|haha+|hehe+|rofl|that's funny|thats funny|funny)$/.test(t)) return { say: line('laugh') };
+    if (/^(tell me a joke|(say|tell me) something funny|joke|make me laugh|know any jokes)$/.test(t)) return { say: line('joke') };
+    if (/^(what's|whats|what is) your fav(ou?rite)? (film|movie|show|series)$|^do you have a fav(ou?rite)? (film|movie|show)$/.test(t)) return { say: line('fav') };
+    if (/^(what time is it|what's the time|whats the time|time)$/.test(t)) { const h = new Date().getHours(); return { say: line('time', { t: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), late: h >= 23 || h < 5 ? '. Bit late for a three-hour epic, maybe' : '' }) }; }
+    if ((m = t.match(/^(?:my name is|my name's|call me|you can call me|i'm called|im called|it's me|its me)\s+([\p{L}][\p{L}'-]{0,23}(?: [\p{L}][\p{L}'-]{0,23})?)$/u))) {
+      const n = m[1].replace(/(^|[\s-])\p{L}/gu, (c) => c.toUpperCase());
+      if (/^(miko|bored|tired|sad|back|here|done|good|fine|ok|okay)$/i.test(n)) return null;
+      setName(n); return { say: line('nicetomeet', { n }) };
+    }
+    if (/^(forget my name|don't call me that|dont call me that|stop using my name)$/.test(t)) { setName(''); return { say: line('forgot') }; }
+    if (/^(what's my name|whats my name|what is my name|do you know my name|who am i)$/.test(t)) { const n = name(); return { say: n ? line('yourname', { n }) : line('noname') }; }
+    return null;
+  };
+
+  /* ---- typo forgiveness for the command words ---- */
+  const dist = (a, b) => { // Damerau-Levenshtein (optimal string alignment), small words only
+    if (Math.abs(a.length - b.length) > 1) return 9;
+    const d = []; for (let i = 0; i <= a.length; i++) { d[i] = [i]; } for (let j = 0; j <= b.length; j++) d[0][j] = j;
+    for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) {
+      const c = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + c);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+    }
+    return d[a.length][b.length];
+  };
+  const FIRST = ['play', 'watch', 'trailer', 'open', 'show', 'search', 'find', 'remove', 'start', 'resume', 'pause', 'settings', 'library', 'home', 'movies', 'series', 'details', 'continue', 'surprise', 'recommend', 'suggest'];
+  const ANY = ['trailer', 'episode', 'watchlist', 'library', 'settings', 'directed', 'starring'];
+  const KNOWN = new Set(['plat', 'shoe', 'shot', 'plan', 'plane', 'plays', 'player', 'clan', 'ploy', 'oven', 'hole', 'hose', 'fund', 'wash', 'latch', 'patch', 'snow', 'slow', 'flow', 'what', 'when', 'stay', 'pray', 'clay', 'grey', 'gray', 'opens', 'opera', 'shows', 'start', 'stars', 'pause', 'paws', 'home', 'hope', 'homes', 'homie', 'movie', 'serie', 'find', 'fine', 'kind', 'mind', 'wind', 'films', 'watched', 'match', 'witch', 'catch', 'serious']);
+  const fix = (text) => {
+    const words = String(text || '').split(/(\s+)/);
+    let first = true;
+    for (let i = 0; i < words.length; i++) {
+      const w = words[i]; if (!w.trim()) continue;
+      const lw = w.toLowerCase();
+      if (lw.length >= 4 && !KNOWN.has(lw)) {
+        const pool = first ? FIRST : ANY;
+        if (!pool.includes(lw)) {
+          const hit = pool.find((p) => p.length >= 4 && (first ? dist(lw, p) === 1 : lw.length === p.length && dist(lw, p) === 1));
+          if (hit) words[i] = hit;
+        }
+      }
+      first = false;
+    }
+    return words.join('');
+  };
+
+  /* ---- her voice ---- */
+  const NOVELTY = /\b(albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|junior|ralph|fred|grandma|grandpa|rocko|shelley|sandy|flo|eddy|reed)\b/i;
+  const FEM = /\b(female|woman|samantha|victoria|karen|moira|tessa|fiona|veena|serena|allison|ava|susan|zira|aria|jenny|libby|sonia|natasha|clara|emma|michelle|joanna|salli|kendra|kimberly|ivy|amy|nicky|catherine|hazel|heera|neerja|sara|nora|paulina|monica|marisol|amelie|audrey|aurelie|anna|alice|elsa|luciana|ioana|zuzana|kyoko|yuna|mei-jia|ting-ting|sin-ji|lekha|ellen|helena|laura|lucia|elena|ximena|denise|seoyeon|nanami|yaelle|hortense|katja|vicki|zoe|zira|ana|google us english|google uk english female)\b/i;
+  const MALE = /\b(male|man|david|mark|guy|daniel|alex|tom|james|george|ryan|thomas|oliver|aaron|arthur|rishi|gordon|lee|christopher|eric|roger|steffan|brian|andrew|william|liam|google uk english male|diego|jorge|juan|luca|xander|yuri|maged|tarik)\b/i;
+  let voices = [];
+  const load = () => { try { voices = (window.speechSynthesis && speechSynthesis.getVoices()) || []; } catch (e) { voices = []; } return voices; };
+  try { if (window.speechSynthesis) { load(); speechSynthesis.addEventListener ? speechSynthesis.addEventListener('voiceschanged', load) : (speechSynthesis.onvoiceschanged = load); } } catch (e) { /* no speech */ }
+  const lang = () => String(navigator.language || 'en-US');
+  const score = (v) => {
+    const L = lang().toLowerCase(), vl = String(v.lang || '').toLowerCase().replace('_', '-'), n = String(v.name || '');
+    let s = vl === L ? 6 : vl.split('-')[0] === L.split('-')[0] ? 4 : -20;
+    if (NOVELTY.test(n)) s -= 30;
+    if (FEM.test(n) && !/\bmale\b/i.test(n.replace(/female/ig, ''))) s += 8;
+    if (MALE.test(n.replace(/female/ig, ''))) s -= 12;
+    if (/natural|neural|online|premium|enhanced|wavenet|studio/i.test(n)) s += 5;
+    if (/compact|eloquence|espeak/i.test(n)) s -= 4;
+    return s;
+  };
+  const female = () => load().filter((v) => score(v) > 4).sort((a, b) => score(b) - score(a));
+  const pickVoice = () => {
+    const want = ls.get('voice', '');
+    if (want) { const v = load().find((x) => x.name === want); if (v) return v; }
+    return female()[0] || null;
+  };
+  // text for the ear: no quotes or symbols read out, short breaths between sentences
+  const spoken = (t) => String(t || '').replace(/[“”"«»]/g, '').replace(/\bS(\d+) · E(\d+)\b/g, 'season $1, episode $2').replace(/·/g, ',').replace(/…/g, '.').replace(/\s+/g, ' ').trim();
+  const speak = (t) => {
+    try {
+      if (!window.speechSynthesis || typeof SpeechSynthesisUtterance === 'undefined') return;
+      speechSynthesis.cancel();
+      const v = pickVoice(), parts = spoken(t).match(/[^.!?]+[.!?]*/g) || [];
+      parts.map((s) => s.trim()).filter(Boolean).slice(0, 8).forEach((s) => {
+        const u = new SpeechSynthesisUtterance(s);
+        if (v) { u.voice = v; u.lang = v.lang; } else u.lang = lang();
+        // a touch brighter and unhurried; a question lifts a little at the end, like people do
+        u.pitch = /\?$/.test(s) ? 1.14 : 1.07; u.rate = v && /natural|neural|online/i.test(v.name) ? 1.02 : 0.98; u.volume = 1;
+        speechSynthesis.speak(u);
+      });
+    } catch (e) { /* no voice */ }
+  };
+
+  /* ---- for an AI key: who Miko is ---- */
+  const PERSONA = `Who you are: Miko, a warm, quick, slightly playful young woman (she/her) who knows films and TV inside out, like the friend everyone asks what to watch.
+How you talk: like a real person, never like a help desk. Use contractions and a natural rhythm, vary your wording, and keep it short (one to three sentences). The odd light joke or bit of enthusiasm when it fits, never forced. If the state line gives the person's name, use it now and then, not every time.
+Opinions: when asked what's good, have a view and give the reason in a few words. Never invent facts; if you're unsure, say so.
+Honesty: if someone sincerely asks whether you're a person, say you're an AI. Never claim you watched, felt or did something you didn't.
+Care: if someone seems down, be kind first. If someone mentions harming themselves, gently urge them to reach out to someone they trust or a local crisis line, right away.`;
+
+  return { ls, line, hello, chat, fix, speak, female, pickVoice, name, setName, PERSONA, norm, dist };
+})();
 /* ---------- 2.56 Miko, the AI assistant ----------
    Talk or type to the remote. Everyday asks are understood right here on the phone, free and with no account: pause,
    back 30 seconds, go to 1:20:00, louder, subtitles off, next episode, how long is left, who's in this, who directed
@@ -3221,7 +3436,7 @@ const Ask = {
   },
   hello() {
     const n = R.st && R.st.title && this.playing() ? `“${R.st.title}” is on. ` : '';
-    this.say(`${n}Tell me what to do, or ask about what you’re watching.`, { quiet: true });
+    this.say(n ? `${n}Tell me what to do, or ask me about it.` : MikoSoul.hello(), { quiet: true });
   },
   chips() {
     const s = R.st || {}, pl = this.playing(), ser = s.type === 'series';
@@ -3240,7 +3455,7 @@ const Ask = {
   me(t) { return this.bubble('me', `<p>${this.E(t)}</p>`); },
   say(t, o = {}) {
     const d = this.bubble('ai', `<p>${this.E(t)}</p>${o.html || ''}`);
-    if (!o.quiet && Store.get('akSpeak', false)) { try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = navigator.language || 'en-US'; speechSynthesis.speak(u); } catch (e) { /* no voice */ } }
+    if (!o.quiet && Store.get('akSpeak', false)) MikoSoul.speak(t);
     return d;
   },
   did(t) { this.bubble('did', `<p><svg class="i"><use href="#i-check"/></svg>${this.E(t)}</p>`); },
@@ -3263,7 +3478,10 @@ const Ask = {
     w.remove(); this.busy = false; $('#akView').classList.remove('busy'); this.chips(); this.mode();
   },
   async run(text) {
-    const local = this.parse(text);
+    const c = MikoSoul.chat(text, { picks: false });
+    if (c) { await new Promise((r) => setTimeout(r, Math.min(600, 200 + c.say.length * 3))); this.say(c.say, c.help ? { html: this.helpHtml() } : {}); return; }
+    let local = this.parse(text);
+    if (!local) { const f = MikoSoul.fix(text); if (f !== text) local = this.parse(f); }
     if (local) { const r = await local(); if (r !== 'defer') return; }
     if (this.cfg()) return this.agent(text);
     if (this.nano === undefined) await this.nanoUp();
@@ -3271,8 +3489,8 @@ const Ask = {
       try { const c = await this.nano.clone(); const out = String(await c.prompt(text)).trim().split('\n')[0].replace(/^["'“]|["'”]$/g, ''); try { c.destroy(); } catch (e) { /* gone */ } const f = out && !/^unknown/i.test(out) ? this.parse(out) : null; if (f) { const r = await f(); if (r !== 'defer') return; } } catch (e) { /* fall through to a search */ }
     }
     const res = await this.find(text);
-    if (res.length) { this.say(res[0].score >= 100 ? 'Here’s what I found.' : 'I’m not sure what you mean. Is it one of these?', { html: this.cards(res.slice(0, 3)) }); return; }
-    this.say('I didn’t catch that. Here’s what I can do.', { html: this.helpHtml() });
+    if (res.length) { this.say(MikoSoul.line(res[0].score >= 100 ? 'found' : 'unsure'), { html: this.cards(res.slice(0, 3)) }); return; }
+    this.say(MikoSoul.line('lost'), { html: this.helpHtml() });
   },
   helpHtml() {
     const ex = ['Pause', 'Play', 'Back 30 seconds', 'Forward 2 minutes', 'Go to 1:20:00', 'Start over', 'Volume 40', 'Mute', 'Subtitles off', 'Next episode', 'How long is left?', 'Who’s in this?', 'Who directed this?', 'What’s it about?', 'Play Breaking Bad season 2 episode 3', 'Trailer for Dune', 'Films with Florence Pugh', 'Add this to my watchlist', 'Go home'];
@@ -3703,7 +3921,7 @@ Rules:
     else h.push({ role: 'user', content: [{ type: 'text', text: line }] });
     let out = '';
     for (let step = 0; step < 6; step++) {
-      const body = { model: c.model, max_tokens: 4000, system: this.SYS, tools, messages: h };
+      const body = { model: c.model, max_tokens: 4000, system: (this.SYS + '\n\n' + MikoSoul.PERSONA), tools, messages: h };
       if (!c.noEffort) body.output_config = { effort: 'low' };
       let j;
       try { j = await this.post('https://api.anthropic.com/v1/messages', this.hdrA(c), body); } catch (e) {
@@ -3727,7 +3945,7 @@ Rules:
     const h = this.hist.slice(); h.push({ role: 'user', content: line });
     let out = '';
     for (let step = 0; step < 6; step++) {
-      const j = await this.post(`${c.base || this.PROV.openai.base}/chat/completions`, { 'content-type': 'application/json', authorization: `Bearer ${c.key}` }, { model: c.model, messages: [{ role: 'system', content: this.SYS }, ...h], tools, tool_choice: 'auto' });
+      const j = await this.post(`${c.base || this.PROV.openai.base}/chat/completions`, { 'content-type': 'application/json', authorization: `Bearer ${c.key}` }, { model: c.model, messages: [{ role: 'system', content: (this.SYS + '\n\n' + MikoSoul.PERSONA) }, ...h], tools, tool_choice: 'auto' });
       const ch = j && j.choices && j.choices[0], msg = ch && ch.message; if (!msg) break;
       const keep = { role: 'assistant', content: msg.content || '' }; if (msg.tool_calls && msg.tool_calls.length) keep.tool_calls = msg.tool_calls;
       h.push(keep); if (msg.content) out = String(msg.content).trim();

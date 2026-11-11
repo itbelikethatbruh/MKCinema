@@ -138,18 +138,47 @@
         playbackFailed(stream, why);
       });
     },
-    /* the browser's own player: one quiet reconnect after a network error, at the same spot */
-    native(stream, reason) {
-      const code = video.error && video.error.code, now = Date.now();
-      if (code === 2 && !stream._local && !P.remux && video.getAttribute('src') && !(now - (stream._mkRetryAt || 0) < 60000) && !$('#player').hidden) {
-        stream._mkRetryAt = now; const t = video.currentTime || 0;
-        setTimeout(() => {
-          if (P.stream !== stream || P.hls || $('#player').hidden) return;
-          video.addEventListener('loadedmetadata', () => { if (t > 1 && isFinite(video.duration)) video.currentTime = Math.min(t, video.duration - 5); video.play().catch(() => wakeHud(true)); }, { once: true });
-          video.load();
-        }, 1200);
-        return;
+    /* the browser's own player: a dropped connection or a stall reconnects the same copy at the same second, up to three
+       times in three minutes (0.8 s, 2.5 s, 6 s apart; when the device is offline it waits for the network, up to a minute).
+       If that copy still does not play within 14 s, the next copy takes over (or the usual message shows). */
+    can(stream) {
+      const src = video.getAttribute('src');
+      return !!(stream && stream.url && !stream._local && !P.remux && !P.hls && src && !/^blob:/i.test(src));
+    },
+    reconnect(stream, at) {
+      if (P.stream !== stream || $('#player').hidden || !this.can(stream)) return false;
+      const now = Date.now(), h = stream._mkHeal || (stream._mkHeal = { n: 0, since: now, tok: 0 });
+      if (now - h.since > 180000) { h.n = 0; h.since = now; }
+      if (h.n >= 3) return false;
+      h.n++; const tok = ++h.tok, t = at != null ? at : (video.currentTime || 0);
+      try { MKLog.add('play', `reconnecting the same copy at ${Math.round(t)} s (try ${h.n})`); } catch (e) { /* no log */ }
+      const live = () => P.stream === stream && h.tok === tok && !P.hls && !$('#player').hidden;
+      const go = () => {
+        if (!live()) return;
+        video.addEventListener('loadedmetadata', () => {
+          if (!live()) return;
+          if (t > 1 && isFinite(video.duration)) video.currentTime = Math.min(t, video.duration - 5);
+          video.playbackRate = CFG.speed || 1; video.play().catch(() => wakeHud(true));
+        }, { once: true });
+        video.load();
+        clearTimeout(Failover.healT);
+        Failover.healT = setTimeout(() => {
+          if (!live() || video.readyState >= 3) return;
+          if (!(CFG.failover && Failover.next(stream, 'stalled after reconnecting', t))) playbackFailed(stream, 'the connection to this copy keeps dropping');
+        }, 14000);
+      };
+      Loader.wait();
+      if (navigator.onLine === false) {
+        const on = () => { clearTimeout(cap); setTimeout(go, 400); };
+        const cap = setTimeout(() => { removeEventListener('online', on); if (live()) playbackFailed(stream, 'this device is offline'); }, 60000);
+        addEventListener('online', on, { once: true });
+        return true;
       }
+      setTimeout(go, [800, 2500, 6000][h.n - 1]);
+      return true;
+    },
+    native(stream, reason) {
+      if (video.error && video.error.code === 2 && this.reconnect(stream, video.currentTime || 0)) return;
       playbackFailed(stream, reason);
     },
   };

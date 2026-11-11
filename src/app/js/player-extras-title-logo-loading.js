@@ -201,15 +201,15 @@ showUpNext = function () {
    A source that has not loaded anything after 3.5 s, or that errors, is swapped for the next best one automatically.
    A source that stalls for 12 s mid-film is swapped at the same timestamp. Each source is tried once per episode. */
 const Failover = {
-  t: 0, stallT: 0, tried: new Set(), key: '',
-  clear() { clearTimeout(this.t); clearTimeout(this.stallT); },
+  t: 0, stallT: 0, healT: 0, tried: new Set(), key: '',
+  clear() { clearTimeout(this.t); clearTimeout(this.stallT); clearTimeout(this.healT); },
   arm(stream) {
     this.clear();
     const key = P.ctx ? (P.ctx.video ? P.ctx.video.id : P.ctx.meta.id) : '';
     if (key !== this.key) { this.key = key; this.tried = new Set(); this.hops = 0; }
     this.tried.add(stream);
     // a TorBox language stream is made on the fly and takes longer to start; it falls back to the original file instead
-    if (!CFG.failover || stream._local || stream._handoff || stream._audioTry) return;
+    if (!CFG.failover || stream._local || stream._handoff || stream._audioTry || stream._cloud) return;
     this.t = setTimeout(() => {
       if (P.stream === stream && !$('#player').hidden && video.readyState < 1 && $('#pMsg').hidden) this.next(stream, 'did not start within 3.5 s', P.startAt || 0);
     }, 3500);
@@ -235,11 +235,19 @@ const Failover = {
 };
 video.addEventListener('waiting', () => {
   clearTimeout(Failover.stallT);
-  if (!CFG.failover || !P.stream || P.remux || video.readyState < 1) return;
-  const s = P.stream, at = pNow();
-  Failover.stallT = setTimeout(() => { if (P.stream === s && video.readyState < 3 && !video.paused) Failover.next(s, 'stalled for 12 s', at); }, 12000);
+  if (!P.stream || P.remux || video.readyState < 1) return;
+  const s = P.stream, at = pNow(), heal = MkHeal.can(s);
+  if (!heal && !CFG.failover) return;
+  // most mid-film stalls are a dropped or frozen connection to the host, not a bad file: the same copy reconnects at the
+  // same second first (after 6 s), and the next copy only takes over if that does not help, so audio and subtitles stay
+  Failover.stallT = setTimeout(() => {
+    if (P.stream !== s || video.readyState >= 3 || video.paused) return;
+    if (heal && MkHeal.reconnect(s, at)) return;
+    if (CFG.failover) Failover.next(s, 'stalled for 12 s', at);
+  }, heal ? 6000 : 12000);
 });
 ['playing', 'pause', 'seeking'].forEach((ev) => video.addEventListener(ev, () => clearTimeout(Failover.stallT)));
+video.addEventListener('playing', () => clearTimeout(Failover.healT));
 video.addEventListener('loadedmetadata', () => clearTimeout(Failover.t));
 
 /* ---------------- Audio rescue: MKV files with EAC3, AC3, DTS or TrueHD audio play silently in browsers ----------------
@@ -270,6 +278,7 @@ const Rescue = {
   async found(stream) {
     const bar = $('#rescueBar');
     if (await this.caps()) { toast('No sound in this file’s audio format. Converting it to AAC on your MKCinema server…', 'info', 4200); this.start(stream, pNow()); return; }
+    if (typeof CloudConvert !== 'undefined' && CloudConvert.onFail(stream, 'no sound in this browser', pNow())) return;
     const ext = playersHere().filter((p) => !p.m3u).slice(0, 2), url = handoffUrl(stream), title = streamTitle(P.ctx);
     bar.innerHTML = `<i data-lucide="volume-x"></i><div class="rs-t"><b>No sound?</b><small>This file’s audio (often EAC3, AC3 or DTS in MKV) cannot play in browsers. Run mkcinema-server.js with ffmpeg to fix it here, or open it in a player app.</small></div>
       <div class="rs-a"><button class="btn btn-prime btn-sm" type="button" data-act="next-src"><i data-lucide="skip-forward"></i>Next source</button>${url ? ext.map((p) => playerBtn(p, url, title, false)).join('') : ''}<button class="ibtn" type="button" id="rsX" aria-label="Dismiss"><i data-lucide="x"></i></button></div>`;
@@ -415,7 +424,7 @@ setSubDelay = function (v, quiet) { P.subDelay = Math.round(v * 1000) / 1000; ap
 const XRay = {
   t: 0,
   schedule() { clearTimeout(this.t); if (!CFG.xray) return; this.t = setTimeout(() => { if (video.paused && !$('#player').hidden && !P.scrubbing && !P.locked && $('#pMsg').hidden && video.readyState >= 2 && !$('#player .drawer.open') && $('#subMenu').hidden && $('#optMenu').hidden && $('#dspPop').hidden && !Party.applying) this.show(); }, 900); },
-  hide() { clearTimeout(this.t); const x = $('#xray'); if (!x.hidden) { x.classList.add('out'); setTimeout(() => { x.hidden = true; x.classList.remove('out'); }, 200); } },
+  hide() { clearTimeout(this.t); const x = $('#xray'); if (!x.hidden) { const had = IS_TV && x.contains(document.activeElement); x.classList.add('out'); setTimeout(() => { x.hidden = true; x.classList.remove('out'); if (had && !$('#player').hidden) Nav.restore(true); }, 200); } },
   stats() {
     const q = video.getVideoPlaybackQuality ? video.getVideoPlaybackQuality() : null, tel = P.stream._tel || {};
     let rate = '';
@@ -432,7 +441,6 @@ const XRay = {
       ['Addon', P.stream._addon || '—'],
     ];
   },
-  tab: 'cast',
   // Cast with character names and photos: Cinemeta's own list when it has one, else names from the
   // title's links, with portraits and short bios from Wikipedia (free, no key, credited in the panel)
   people() {
@@ -445,60 +453,92 @@ const XRay = {
     const seen = new Set(cast.map((c) => c.name)); const crew = [...dirs, ...wri].filter((c) => !seen.has(c.name) && seen.add(c.name)).slice(0, 6);
     return { cast, crew };
   },
+  // 2.64: one calm panel instead of three tabs. Cast as a list with faces (initials until a photo arrives), who made
+  // it, the story, this moment's actions, and the stream's technical details folded behind one line.
+  open: { cast: false, tech: false },
+  ini(n) { return String(n || '').split(/\s+/).map((w) => w[0] || '').slice(0, 2).join('').toUpperCase(); },
   face(p, i) {
-    const ini = p.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('');
-    return `<button type="button" class="xr-p" data-person="${i}"><span class="xr-ph" data-ini="${esc(ini)}">${p.photo ? `<img src="${esc(p.photo)}" alt="" loading="lazy" data-gone>` : ''}</span><b>${esc(p.name)}</b>${p.character ? `<small>${esc(p.character)}</small>` : p.role !== 'cast' ? `<small>${esc(p.role)}</small>` : ''}</button>`;
+    return `<button type="button" class="xr2-p" data-nav data-person="${i}"><span class="xr2-av" data-ini="${esc(this.ini(p.name))}">${p.photo ? `<img src="${esc(p.photo)}" alt="" loading="lazy" decoding="async">` : ''}</span><span class="xr2-pt"><b>${esc(p.name)}</b>${p.character ? `<small>${esc(p.character)}</small>` : ''}</span><i data-lucide="chevron-right"></i></button>`;
+  },
+  metaLine(m, v) {
+    if (v) return [`S${v.season} · E${v.episode}`, v.name || v.title || ''].filter(Boolean).join(' · ');
+    return [yearOf(m), m.runtime, genresOf(m).slice(0, 2).join(', '), m.imdbRating ? `IMDb ${m.imdbRating}` : ''].filter(Boolean).join(' · ');
   },
   show() {
     if (!P.ctx || !P.stream) return;
     const x = $('#xray'), m = P.ctx.meta, v = P.ctx.video;
-    this.list = this.people(); const all = [...this.list.cast, ...this.list.crew];
-    x.innerHTML = `<div class="xr-head"><span class="xr-brand"><i data-lucide="scan-eye"></i>X-Ray</span><span class="xr-time tnum">${fmtTime(pNow())}</span><button class="ibtn" type="button" id="xrX" aria-label="Close"><i data-lucide="x"></i></button></div>
-      <h3>${esc(m.name)}</h3>${v ? `<p class="xr-sub">S${esc(v.season)} · E${esc(v.episode)}${v.name || v.title ? ` · ${esc(v.name || v.title)}` : ''}</p>` : ''}
-      <div class="xr-tabs" role="tablist">${[['cast', 'Cast'], ['about', 'About'], ['scene', 'This scene']].map(([k, l]) => `<button type="button" role="tab" data-xt="${k}" class="${this.tab === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+    this.list = this.people(); this.open = { cast: false, tech: false };
+    const all = [...this.list.cast, ...this.list.crew];
+    x.classList.add('xr2');
+    x.innerHTML = `<div class="xr2-top"><span class="xr2-eb"><i data-lucide="scan-eye"></i>X-Ray</span><button class="xr2-x" type="button" id="xrX" data-nav aria-label="Close"><i data-lucide="x"></i></button></div>
+      <h3 class="xr2-title">${esc(m.name)}</h3><p class="xr2-meta">${esc(this.metaLine(m, v))}</p>
       <div class="xr-body" id="xrBody"></div>`;
     x.hidden = false; icons();
     $('#xrX').onclick = () => this.hide();
-    $$('[data-xt]', x).forEach((b) => b.addEventListener('click', () => { this.tab = b.dataset.xt; $$('[data-xt]', x).forEach((o) => o.classList.toggle('on', o === b)); this.render(); }));
     this.render();
-    // fill in missing portraits a few at a time
-    // people without a portrait stay hidden, so the panel only shows faces
+    // portraits for people the metadata had none for, a few at a time; each one drops into its circle
     let i = 0; this.pending = all.filter((p) => !p.photo).length; const job = this.job = {};
-    const next = async () => { while (i < all.length) { const p = all[i++]; if (p.photo) continue; const w = await Wiki.person(p.name); if (job !== this.job) return; if (w && w.thumb) { p.photo = w.thumb; p.wiki = w; } this.pending--; this.recast(); } };
+    const next = async () => { while (i < all.length) { const k = i++, p = all[k]; if (p.photo) continue; const w = await Wiki.person(p.name); if (job !== this.job) return; if (w && w.thumb) { p.photo = w.thumb; p.wiki = w; this.paint(k); const c = $('#xrCred'); if (c) c.hidden = false; } this.pending--; } };
     if (this.pending) for (let k = 0; k < 4; k++) next();
   },
-  paint(i) { const el = $(`#xray [data-person="${i}"] .xr-ph`), p = [...this.list.cast, ...this.list.crew][i]; if (el && p && p.photo && !$('img', el)) el.innerHTML = `<img src="${esc(p.photo)}" alt="" loading="lazy" data-gone>`; },
-  // redraw the cast tab as portraits arrive (merged into one frame), unless an actor page is open
-  recast() { if (this.tab !== 'cast' || this.inPerson || this.raf) return; this.raf = requestAnimationFrame(() => { this.raf = 0; if (this.tab === 'cast' && !this.inPerson && !$('#xray').hidden) this.render(); }); },
+  // TV: after the panel redraws, the remote stays in it (a redraw would otherwise drop the focus on the page)
+  refocus(sel) { if (!IS_TV) return; const f = $(`#xray ${sel || '.xr2-p'}`) || $('#xray .xr2-n, #xray [data-nav]'); if (f) Nav.focus(f, true); },
+  // from an actor page: back to the panel (Back on the remote does the same)
+  back() { this.render(); this.refocus(); },
+  paint(i) { const el = $(`#xray [data-person="${i}"] .xr2-av`), p = [...this.list.cast, ...this.list.crew][i]; if (el && p && p.photo && !$('img', el)) el.insertAdjacentHTML('beforeend', `<img src="${esc(p.photo)}" alt="" decoding="async">`); },
   render() {
-    const body = $('#xrBody'); if (!body) return;
-    const { cast, crew } = this.list, m = P.ctx.meta;
+    const body = $('#xrBody'); if (!body || !this.list) return;
+    const { cast, crew } = this.list, m = P.ctx.meta, SHOW = 6, open = this.open.cast;
     this.inPerson = false;
-    if (this.tab === 'cast') {
-      const faces = (arr, off) => arr.map((p, i) => [p, off + i]).filter(([p]) => p.photo).map(([p, i]) => this.face(p, i)).join('');
-      const c = faces(cast, 0), w = faces(crew, cast.length), waiting = this.pending > 0;
-      body.innerHTML = c || w
-        ? `${c ? `<div class="xr-grid">${c}</div>` : ''}${w ? `<h5>Behind the camera</h5><div class="xr-grid">${w}</div>` : ''}${waiting ? '<div class="status-line xr-wait"><span class="spin"></span>Finding more faces…</div>' : ''}<p class="xr-credit">Photos and bios from Wikipedia</p>`
-        : waiting ? '<div class="status-line"><span class="spin"></span>Finding cast photos…</div>'
-        : cast.length ? `<p class="xr-names">${esc(cast.slice(0, 8).map((p) => p.name).join(' · '))}</p>`
-        : '<p class="xr-sub">This title lists no cast. Your metadata addon did not include one.</p>';
-      $$('[data-person]', body).forEach((b) => b.addEventListener('click', () => this.person([...cast, ...crew][Number(b.dataset.person)])));
-    } else if (this.tab === 'about') {
-      const facts = [['Released', m.released ? new Date(m.released).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : yearOf(m)], ['Runtime', m.runtime], ['Genres', genresOf(m).join(', ')], ['IMDb', m.imdbRating ? `${m.imdbRating} / 10` : ''], ['Awards', m.awards], ['Country', m.country], ['Language', m.language]].filter(([, val]) => val);
-      body.innerHTML = `<div class="xr-about" id="xrWiki"><div class="status-line"><span class="spin"></span>Looking up the story behind it…</div></div><dl class="xr-facts" id="xrFacts">${facts.map(([k, val]) => `<dt>${esc(k)}</dt><dd>${esc(val)}</dd>`).join('')}</dl>`;
-      Wiki.work(m).then((w) => { const el = $('#xrWiki'); if (!el) return; el.innerHTML = w ? `<p>${esc(w.extract)}</p><a class="xr-credit" href="${esc(safeHref(w.url) || '#')}" target="_blank" rel="noopener">Read more on Wikipedia</a>` : m.description ? `<p>${esc(m.description)}</p>` : ''; });
-      this.omdb(m);
-    } else {
-      body.innerHTML = `<div class="xr-scene"><b class="tnum">${fmtTime(pNow())}</b><span>${isFinite(pDur()) ? `${Math.round(pNow() / pDur() * 100)}% through` : ''}</span></div>
-        <div class="xr-mark" id="xrMark"><button class="btn btn-ghost btn-sm" type="button" id="xrBook"><i data-lucide="bookmark-plus"></i>Bookmark this scene</button></div>
-        <h5>Picture and sound</h5><dl class="xr-tech">${this.stats().map(([k, val]) => `<dt>${esc(k)}</dt><dd class="tnum">${esc(val)}</dd>`).join('')}</dl>`;
-      icons();
-      $('#xrBook').onclick = () => {
-        $('#xrMark').innerHTML = '<input class="inp" id="xrNote" placeholder="Add a note (optional)" maxlength="140"><button class="btn btn-prime btn-sm" type="button" id="xrSave"><i data-lucide="check"></i>Save</button>'; icons();
-        $('#xrNote').focus(); const save = () => { Bookmarks.add($('#xrNote').value.trim()); $('#xrMark').innerHTML = '<p class="xr-ok"><i data-lucide="check"></i>Saved to Library › Scene bookmarks</p>'; icons(); };
-        $('#xrSave').onclick = save; $('#xrNote').onkeydown = (e) => { if (e.key === 'Enter') save(); e.stopPropagation(); };
-      };
-    }
+    const roles = new Map();
+    crew.forEach((p, i) => { if (!roles.has(p.role)) roles.set(p.role, []); roles.get(p.role).push(`<button type="button" class="xr2-n" data-nav data-person="${cast.length + i}">${esc(p.name)}</button>`); });
+    const crewLine = [...roles].map(([r, l]) => `<span><small>${r === 'Director' ? 'Directed by' : r === 'Writer' ? 'Written by' : esc(r)}</small> ${l.join(', ')}</span>`).join('');
+    const facts = [['Released', m.released ? new Date(m.released).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : ''], ['Awards', m.awards], ['Country', m.country], ['Language', m.language]].filter(([, val]) => val);
+    const now = pNow(), d = pDur();
+    const act = (id, icon, label) => `<button type="button" data-nav id="${id}"><i data-lucide="${icon}"></i><span>${label}</span></button>`;
+    body.innerHTML = `${cast.length ? `<section class="xr2-sec"><h5>Cast</h5><div class="xr2-cast">${cast.slice(0, open ? cast.length : SHOW).map((p, i) => this.face(p, i)).join('')}</div>${cast.length > SHOW ? `<button type="button" class="xr2-more" id="xrAll" data-nav>${open ? 'Fewer' : `All ${cast.length} cast`}</button>` : ''}<p class="xr2-src" id="xrCred"${[...cast, ...crew].some((p) => p.wiki) ? '' : ' hidden'}>Photos from Wikipedia</p></section>` : ''}
+      ${crewLine ? `<section class="xr2-sec xr2-crew">${crewLine}</section>` : ''}
+      ${cast.length || crewLine ? '' : '<p class="xr2-none">This title lists no cast. Your metadata addon did not include one.</p>'}
+      <section class="xr2-sec"><h5>About</h5><p class="xr2-story" id="xrWiki">${m.description ? esc(m.description) : '<span class="xr2-wait">Looking up the story behind it…</span>'}</p><a class="xr2-src" id="xrSrc" hidden target="_blank" rel="noopener"></a>
+        <dl class="xr2-facts" id="xrFacts">${facts.map(([k, val]) => `<dt>${esc(k)}</dt><dd>${esc(val)}</dd>`).join('')}</dl></section>
+      <section class="xr2-sec"><h5>This moment <span class="tnum">${fmtTime(now)}${isFinite(d) && d > 0 ? ` · ${Math.round(now / d * 100)}%` : ''}</span></h5>
+        <div class="xr2-acts" id="xrMark">${act('xrBook', 'bookmark-plus', 'Bookmark')}${typeof Lines !== 'undefined' ? act('xrLine', 'search', 'Find a line') : ''}${typeof Margins !== 'undefined' ? act('xrNoteB', 'message-square-text', 'Note') : ''}${typeof SceneLink !== 'undefined' ? act('xrShare', 'share-2', 'Share') : ''}</div></section>
+      <section class="xr2-sec"><button type="button" class="xr2-tbtn" id="xrTech" data-nav aria-expanded="${this.open.tech}"><i data-lucide="activity"></i><span>Picture and sound</span><small id="xrTechSum"></small><i data-lucide="chevron-down" class="xr2-chev"></i></button><dl class="xr2-tech" id="xrTechList"${this.open.tech ? '' : ' hidden'}></dl></section>`;
+    icons();
+    $$('[data-person]', body).forEach((b) => b.addEventListener('click', () => this.person([...cast, ...crew][Number(b.dataset.person)])));
+    const on = (sel, fn) => { const b = $(sel, body); if (b) b.onclick = fn; };
+    on('#xrAll', () => { this.open.cast = !this.open.cast; this.render(); const a = $('#xrAll'); if (a && IS_TV) a.focus(); });
+    // the story: Wikipedia when it knows the title, else the addon's description; four lines, tap for all
+    const story = $('#xrWiki');
+    const long = () => { if (story.isConnected) story.classList.toggle('long', story.classList.contains('open') || story.scrollHeight > story.clientHeight + 4); };
+    story.onclick = () => { if (story.classList.contains('long')) story.classList.toggle('open'); };
+    Wiki.work(m).then((w) => {
+      if (!story.isConnected) return;
+      if (w) { story.textContent = w.extract; const s = $('#xrSrc'); if (s) { s.href = safeHref(w.url) || '#'; s.textContent = 'From Wikipedia'; s.hidden = false; } }
+      else if (!m.description) { story.remove(); return; }
+      requestAnimationFrame(long);
+    });
+    requestAnimationFrame(long);
+    this.omdb(m);
+    // this moment
+    on('#xrBook', () => {
+      const mk = $('#xrMark'); mk.classList.add('xr2-edit');
+      mk.innerHTML = '<input class="inp" id="xrNote" placeholder="Add a note (optional)" maxlength="140" data-nav><button class="btn btn-prime btn-sm" type="button" id="xrSave" data-nav><i data-lucide="check"></i>Save</button>'; icons();
+      const n = $('#xrNote'); n.focus();
+      const save = () => { Bookmarks.add(n.value.trim()); mk.classList.remove('xr2-edit'); mk.innerHTML = '<p class="xr-ok"><i data-lucide="check"></i>Saved to Library › Scene bookmarks</p>'; icons(); this.refocus('#xrTech'); };
+      $('#xrSave').onclick = save; n.onkeydown = (e) => { if (e.key === 'Enter') save(); e.stopPropagation(); };
+    });
+    on('#xrLine', () => { this.hide(); Lines.openPlayer(); });
+    on('#xrNoteB', () => { this.hide(); Margins.open(); });
+    on('#xrShare', () => SceneLink.share());
+    // picture and sound, folded into one line until asked for
+    const tech = () => {
+      const s = this.stats(), get = (k) => (s.find(([n]) => n === k) || [])[1] || '';
+      const sum = $('#xrTechSum'); if (sum) sum.textContent = [get('Picture'), get('Bitrate')].filter((t) => t && t !== '—').join(' · ');
+      const dl = $('#xrTechList'); if (dl && !dl.hidden) dl.innerHTML = s.map(([k, val]) => `<dt>${esc(k)}</dt><dd class="tnum">${esc(val)}</dd>`).join('');
+    };
+    tech();
+    on('#xrTech', () => { this.open.tech = !this.open.tech; $('#xrTech').setAttribute('aria-expanded', this.open.tech); $('#xrTechList').hidden = !this.open.tech; tech(); });
   },
   async omdb(m) {
     const key = Keys.get().omdb, id = imdbOf(m); if (!key || !id) return;
@@ -510,11 +550,11 @@ const XRay = {
   },
   async person(p) {
     const body = $('#xrBody'); if (!body || !p) return; this.inPerson = true;
-    body.innerHTML = `<button type="button" class="xr-back" id="xrBack"><i data-lucide="chevron-left"></i>All cast</button>
+    body.innerHTML = `<button type="button" class="xr-back" id="xrBack" data-nav><i data-lucide="chevron-left"></i>X-Ray</button>
       <div class="xr-bio"><span class="xr-ph lg" data-ini="${esc(p.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join(''))}">${p.photo ? `<img src="${esc(p.photo)}" alt="">` : ''}</span><div><h4>${esc(p.name)}</h4>${p.character ? `<p class="xr-as">as ${esc(p.character)}</p>` : p.role !== 'cast' ? `<p class="xr-as">${esc(p.role)}</p>` : ''}<p class="xr-desc" id="xrDesc"></p></div></div>
       <p class="xr-extract" id="xrExtract"><span class="spin"></span></p>
       <h5>Also with ${esc(p.name.split(' ')[0])}</h5><div id="xrMore"><div class="status-line"><span class="spin"></span>Searching your addons…</div></div>`;
-    icons(); $('#xrBack').onclick = () => this.render();
+    icons(); $('#xrBack').onclick = () => this.back(); this.refocus('#xrBack');
     Wiki.person(p.name).then((w) => {
       const ex = $('#xrExtract'); if (!ex) return;
       if (w) { $('#xrDesc').textContent = w.description || ''; ex.innerHTML = `${esc(w.extract)} <a class="xr-credit" href="${esc(safeHref(w.url) || '#')}" target="_blank" rel="noopener">Wikipedia</a>`; const ph = $('.xr-ph.lg', body); if (w.big && ph) ph.innerHTML = `<img src="${esc(w.big)}" alt="">`; } else ex.remove();
@@ -554,7 +594,7 @@ video.addEventListener('play', () => XRay.hide());
 
 /* ---------------- Scene bookmarks (kept on this device; thumbnails are too big to sync) ---------------- */
 const Bookmarks = {
-  list() { return Store.get('bookmarks', []); },
+  list() { return Store.get('bookmarks', []).filter((b) => b && typeof b === 'object' && b.id); },
   snapshot() {
     try { const c = document.createElement('canvas'); c.width = 320; c.height = Math.round(320 * (video.videoHeight / video.videoWidth || 9 / 16)); c.getContext('2d').drawImage(video, 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', 0.72); }
     catch (e) { return null; } // the host does not allow reading its frames
@@ -611,7 +651,7 @@ const PlayerPlus = {
   back() {
     if (!$('#dspPop').hidden) { $('#dspPop').hidden = true; DSP.stopDraw(); return true; }
     if (!$('#subSync').hidden) { SubTools.closeSync(); return true; }
-    if (!$('#xray').hidden) { XRay.hide(); return true; }
+    if (!$('#xray').hidden) { if (XRay.inPerson) XRay.back(); else XRay.hide(); return true; }
     if (!$('#rescueBar').hidden) { $('#rescueBar').hidden = true; return true; }
     return false;
   },

@@ -237,7 +237,7 @@ const SECTIONS = [
     { key: 'failover', label: 'Switch sources automatically', help: 'If a source has not started after 10 s, errors, or stalls for 12 s, the next best one takes over at the same spot.', type: 'toggle' },
     { key: 'skipIntro', label: 'Skip Intro button', help: 'Shows for 8 s when an intro is known: from chapters in the file, AniSkip for anime, or your own skips on earlier episodes. Enter or gamepad A presses it.', type: 'toggle' },
     { key: 'autoSkipIntro', label: 'Skip intros automatically', type: 'toggle' },
-    { key: 'xray', label: 'X-Ray when paused', help: 'Cast, picture and audio details, and a scene bookmark, a moment after you pause.', type: 'toggle' },
+    { key: 'xray', label: 'X-Ray when paused', help: 'A moment after you pause: who is on screen, the story, and quick actions for this moment.', type: 'toggle' },
     { key: 'spoilerGuard', label: 'Spoiler Guard', help: 'Blurs thumbnails and hides summaries of episodes you have not watched. Tap Reveal on any one.', type: 'toggle' },
     { key: 'autoNext', label: 'Play next episode automatically', help: 'Keeps the same source group (bingeGroup) when it can.', type: 'toggle' },
     { key: 'upNextAt', label: 'Show "Next episode" before the end', help: 'Also shows when the credits start, if the episode has a credits marker. With autoplay on, it counts down 10 s.', type: 'range', min: 10, max: 90, step: 5, fmt: (v) => `${v}s` },
