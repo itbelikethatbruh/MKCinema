@@ -43,6 +43,7 @@ const Offline = {
   status(r) {
     const pct = r.size > 0 ? Math.floor(clamp(r.got / r.size, 0, 1) * 100) : 0;
     if (r.state === 'done') { const p = S.progress[(r.meta || {}).key]; return `Downloaded${r.size > 0 ? ` · ${fmtBytes(r.size)}` : ''}${isWatched((r.meta || {}).key) ? ' · Watched' : p && p.t > 20 ? ` · ${fmtTime(p.t)} watched` : ''}`; }
+    if (r.state === 'running' && r.rec) return `Recording · ${fmtBytes(r.got || 0) || 'starting'}`;
     if (r.state === 'running') return r.size > 0 ? `Downloading ${pct}% · ${fmtBytes(r.got)} of ${fmtBytes(r.size)}` : `Downloading · ${fmtBytes(r.got || 0)}`;
     if (r.state === 'paused') return r.err || 'Paused, waiting for a connection';
     if (r.state === 'queued') return r.err || 'Waiting to start';

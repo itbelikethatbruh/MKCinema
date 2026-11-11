@@ -95,7 +95,7 @@ const TourDeep = {
         where: 'Open any poster' },
       { id: 'live', ch: 'discover', t: 'Live TV and Split Screen', art: 'live',
         lede: 'Bring your own playlist, Xtream login or channel addons, with a full guide grid and search.',
-        pts: [['layout-grid', 'Split Screen', tv ? 'Two channels or streams at once. Sound follows the one you pick.' : 'Up to four channels or streams at once, two on phones. Sound follows the tile you pick.'], ['trophy', 'Sports', 'Live sports from your own sources, sorted by sport.'], ['radio', 'MK Channel', 'Switch on and something is already playing, made from your progress and watchlist.']],
+        pts: [['layout-grid', 'Split Screen', tv ? 'Two channels or streams at once. Sound follows the one you pick.' : 'Up to four channels or streams at once, two on phones. Sound follows the tile you pick.'], ['trophy', 'Sports', 'Live sports from your own sources, sorted by sport.'], ['radio', 'MK Channel', 'Switch on and something is already playing, made from your progress and watchlist.'], ['clock', 'Record', 'Record a channel now, or pick a programme in the guide and it records when it starts.']],
         where: 'Live TV in the menu' },
       { id: 'anime', ch: 'discover', t: 'Anime', art: 'anime',
         lede: 'Its own section with Trending, Airing now, Most popular and Top rated, filled by your addons.',

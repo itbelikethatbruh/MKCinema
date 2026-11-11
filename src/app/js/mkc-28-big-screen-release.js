@@ -368,10 +368,11 @@ const Channels = {
   chips() {
     const box = $('#tvSources'); if (!box || $('#chAddChip')) return;
     const mine = this.lists().map((l) => `<button class="chip ${S.tvFilter === `iptv:${l.id}` ? 'on' : ''}" type="button" data-nav data-iptv="${esc(l.id)}"><i data-lucide="list-video"></i>${esc(l.name)}</button>`).join('');
-    box.insertAdjacentHTML('beforeend', `${mine}<button class="chip" type="button" data-nav id="chAddChip"><i data-lucide="plus"></i>Add playlist</button><button class="chip" type="button" data-nav id="chSplitChip"><i data-lucide="layout-grid"></i>Split Screen</button>`);
+    box.insertAdjacentHTML('beforeend', `${mine}<button class="chip" type="button" data-nav id="chAddChip"><i data-lucide="plus"></i>Add playlist</button><button class="chip" type="button" data-nav id="chSplitChip"><i data-lucide="layout-grid"></i>Split Screen</button>${window.MkRec ? '<button class="chip" type="button" data-nav id="chRecChip"><span class="rec-dot"></span>Recordings</button>' : ''}`);
     $$('[data-iptv]', box).forEach((b) => b.addEventListener('click', () => { S.tvFilter = `iptv:${b.dataset.iptv}`; this.st = { group: '', q: '', page: 1 }; renderTV(); }));
     $('#chAddChip').onclick = () => this.openAdd();
     $('#chSplitChip').onclick = () => Split.open();
+    const rc = $('#chRecChip'); if (rc) rc.onclick = () => MkRec.openList();
     icons();
   },
   addonChips() {
@@ -395,13 +396,14 @@ const Channels = {
     const PX = IS_TV ? 7 : 8, now = Date.now(), t0 = Math.floor((now - 30 * 60000) / (30 * 60000)) * 30 * 60000, span = 180, t1 = t0 + span * 60000, x = (t) => ((t - t0) / 60000) * PX;
     const times = Array.from({ length: span / 30 }, (_, i) => `<span style="width:${30 * PX}px">${new Date(t0 + i * 30 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`).join('');
     const hm = (t) => new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const fut = [];   // programmes that start later: a press offers to record them
     const rows = list.map((c, i) => {
       const k = this.key(c), progs = (d.epg.get(k) || []).filter((p) => p.end > t0 && p.start < t1);
       const blocks = (progs.length ? progs : [{ title: c.group ? `Live · ${c.group}` : 'Live', start: t0, end: t1, none: true }]).map((p) => {
         const left = Math.max(0, x(p.start)), w = Math.min(x(p.end), span * PX) - left, on = p.start <= now && now < p.end;
-        return `<button class="epg-prog ${on ? 'now' : ''}" type="button" data-nav data-ci="${i}" style="left:${left}px;width:${Math.max(30, w - 4)}px" title="${esc(p.desc || p.title)}"><b>${esc(p.title)}</b><small>${p.none ? esc(c.name) : `${hm(p.start)}–${hm(p.end)}`}</small></button>`;
+        return `<button class="epg-prog ${on ? 'now' : ''}" type="button" data-nav data-ci="${i}"${window.MkRec && !p.none && p.start > now + 60e3 ? ` data-fp="${fut.push({ c, p }) - 1}"` : ''} style="left:${left}px;width:${Math.max(30, w - 4)}px" title="${esc(p.desc || p.title)}"><b>${esc(p.title)}</b><small>${p.none ? esc(c.name) : `${hm(p.start)}–${hm(p.end)}`}</small></button>`;
       }).join('');
-      return `<div class="epg-row"><div class="epg-ch ch-cell"><button class="ch-tune" type="button" data-nav data-ci="${i}">${c.logo ? `<img src="${esc(c.logo)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-gone>` : `<span class="ch-mono">${esc((c.name || '?').replace(/[^\p{L}\p{N}]/gu, '').slice(0, 3).toUpperCase())}</span>`}<span><b>${esc(c.name)}</b><small>${esc(c.group)}</small></span></button><button class="ch-fav ${favs.has(k) ? 'on' : ''}" type="button" data-nav data-fav="${i}" aria-label="${favs.has(k) ? 'Remove from' : 'Add to'} favourites"><i data-lucide="star"></i></button></div><div class="epg-track">${blocks}</div></div>`;
+      return `<div class="epg-row"><div class="epg-ch ch-cell"><button class="ch-tune" type="button" data-nav data-ci="${i}">${c.logo ? `<img src="${esc(c.logo)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-gone>` : `<span class="ch-mono">${esc((c.name || '?').replace(/[^\p{L}\p{N}]/gu, '').slice(0, 3).toUpperCase())}</span>`}<span><b>${esc(c.name)}</b><small>${esc(c.group)}</small></span></button>${window.MkRec ? `<button class="ch-fav ch-rec" type="button" data-nav data-rec="${i}" title="Record ${esc(c.name)}" aria-label="Record ${esc(c.name)}"><span class="rec-dot"></span></button>` : ''}<button class="ch-fav ${favs.has(k) ? 'on' : ''}" type="button" data-nav data-fav="${i}" aria-label="${favs.has(k) ? 'Remove from' : 'Add to'} favourites"><i data-lucide="star"></i></button></div><div class="epg-track">${blocks}</div></div>`;
     }).join('');
     epg.innerHTML = `<div class="ch-bar">
         <div class="ch-search"><i data-lucide="search"></i><input class="inp" id="chQ" type="search" placeholder="Find a channel in ${esc(l.name)}" value="${esc(this.st.q)}" autocomplete="off"></div>
@@ -414,7 +416,8 @@ const Channels = {
       ${total > list.length ? `<div class="actions" style="justify-content:center;margin:14px 0"><button class="btn btn-ghost" type="button" data-nav id="chMore">Show more · ${total - list.length} left</button></div>` : ''}`;
     icons();
     const sc = $('#epg .epg-scroll'); if (sc) sc.scrollLeft = Math.max(0, x(now) - 120);
-    $$('#epg [data-ci]').forEach((b) => b.addEventListener('click', () => this.tune(list[Number(b.dataset.ci)])));
+    $$('#epg [data-ci]').forEach((b) => b.addEventListener('click', () => { const f = b.dataset.fp != null ? fut[Number(b.dataset.fp)] : null; if (f && window.MkRec) return MkRec.offer(f.c, f.p); this.tune(list[Number(b.dataset.ci)]); }));
+    $$('#epg [data-rec]').forEach((b) => b.addEventListener('click', () => MkRec.offer(list[Number(b.dataset.rec)])));
     $$('#epg [data-fav]').forEach((b) => b.addEventListener('click', () => { const c = list[Number(b.dataset.fav)]; this.toggleFav(this.key(c)); const on = this.favs().has(this.key(c)); b.classList.toggle('on', on); toast(on ? `${c.name} added to favourites` : `${c.name} removed from favourites`, 'ok', 1800, 'chfav'); }));
     const qi = $('#chQ'); qi.addEventListener('input', debounce(() => { this.st.q = qi.value; this.st.page = 1; this.renderGuide().then(() => { const n = $('#chQ'); if (n && !TOUCH_UI) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }); }, 250));
     $('#chGroup').onchange = (e) => { this.st.group = e.target.value; this.st.page = 1; this.renderGuide(); };

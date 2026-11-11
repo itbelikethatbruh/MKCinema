@@ -1014,6 +1014,7 @@ async function playStream(ctx, stream, { startAt } = {}) {
   loadSubtitles(ctx, stream);
   startAmbilight();
   PlayerPlus.started(ctx, stream);
+  if (window.MkRec) MkRec.playing(ctx, stream);
 }
 /* perf-2.7.33: hls.js (400 KB) is fetched when a details page opens, not at startup; an .m3u8 waits for it */
 const HlsLoad = {
@@ -1082,7 +1083,7 @@ async function closePlayer() {
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   $('#player').classList.remove('full'); cancelAnimationFrame(P.raf);
   closeDrawers(); $('#subMenu').hidden = true; $('#optMenu').hidden = true; P.aspect = 'fit'; P.zoom = 1; applyPicture(); setLock(false); releaseWake();
-  P.ctx = null; P.stream = null;
+  P.ctx = null; P.stream = null; if (window.MkRec) MkRec.playing(null);
   if (S.view === 'home') renderHome(); if (S.view === 'library') renderLibrary();
   if (!$('#detail').hidden && D.meta) renderDetail(false);
 }

@@ -249,10 +249,9 @@
     } catch (e) { b.innerHTML = `<h3 class="x8-h">${esc(c.name)}</h3><p class="sub">${esc(e.message === 'not-xtream' ? 'The service sent no programme list for this channel.' : e.message)}</p>`; return; }
     const day = (t) => new Date(t * 1000).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
     const hm = (t) => new Date(t * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    b.innerHTML = `<h3 class="x8-h">${esc(c.name)}</h3>${rows.length ? `<div class="xt-list">${rows.slice(0, 300).map((p, i) => `<button class="xt-row" type="button" data-nav data-pi="${i}" title="${esc(p.desc)}"><span><b>${esc(p.title)}</b><small>${esc(day(p.s))} · ${esc(hm(p.s))}–${esc(hm(p.e))}</small></span><span class="xt-when"><i data-lucide="play"></i></span></button>`).join('')}</div>` : '<p class="sub">Nothing to catch up on for this channel yet.</p>'}`;
+    b.innerHTML = `<h3 class="x8-h">${esc(c.name)}</h3>${rows.length ? `<div class="xt-list">${rows.slice(0, 300).map((p, i) => `<div class="xt-pair"><button class="xt-row" type="button" data-nav data-pi="${i}" title="${esc(p.desc)}"><span><b>${esc(p.title)}</b><small>${esc(day(p.s))} · ${esc(hm(p.s))}–${esc(hm(p.e))}</small></span><span class="xt-when"><i data-lucide="play"></i></span></button>${window.MkRec ? `<button class="ibtn xt-rec" type="button" data-nav data-pr="${i}" title="Save to a file" aria-label="Save ${esc(p.title)} to a file"><i data-lucide="download"></i></button>` : ''}</div>`).join('')}</div>` : '<p class="sub">Nothing to catch up on for this channel yet.</p>'}`;
     icons();
-    $$('[data-pi]', b).forEach((x) => x.addEventListener('click', () => {
-      const p = rows[Number(x.dataset.pi)];
+    const pick = (p) => {
       // Xtream wants the start in the service's own time zone, which is how it lists it ("2026-11-10 20:00:00")
       const m = p.start.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}):(\d{2})/);
       let at;
@@ -263,9 +262,10 @@
       const meta = { id: `xtv:${l.id}:c${c.xid}:${p.s}`, type: 'tv', name: `${p.title}`, poster: c.logo, logo: c.logo, background: c.logo, genres: [c.name] };
       const st = { name: l.name, title: p.title, url, _addon: 'Channels', _list: l.id, behaviorHints: {} };
       st._tel = Telemetry.parse(st);
-      X8.close('xtPast');
-      this.playAny(st, remember(meta), `${c.name} · ${day(p.s)} ${hm(p.s)}`);
-    }));
+      return { st, meta, sub: `${c.name} · ${day(p.s)} ${hm(p.s)}` };
+    };
+    $$('[data-pi]', b).forEach((x) => x.addEventListener('click', () => { const k = pick(rows[Number(x.dataset.pi)]); X8.close('xtPast'); this.playAny(k.st, remember(k.meta), k.sub); }));
+    $$('[data-pr]', b).forEach((x) => x.addEventListener('click', () => { const p = rows[Number(x.dataset.pr)], k = pick(p); MkRec.start({ url: k.st.url, name: p.title, channel: c.name, logo: c.logo, kind: 'catchup' }); }));
   };
 
   // Movies and Series, a category at a time
