@@ -34,7 +34,7 @@ MKCinema brings everything you watch into one place and turns the evening into a
 You bring the sources: Stremio-compatible addons, your own Plex, Jellyfin or Emby server, live TV playlists, or the streaming services you already pay for. MKCinema is free forever, with no ads, no paywalls and no account needed.
 
 > [!IMPORTANT]
-> **New in 2.56:** a cleaner phone remote, cast and details on your phone while the film plays, and Miko, the remote's assistant. 2.55 brought party cameras, subtitles on smart glasses and sensory-friendly mode. [See what's new](CHANGELOG.md).
+> **New in 2.63:** **Friends.** Pick a username, add friends, see who's online and what they're watching, chat, send watch party invites, and call with voice or camera, never during a film. Xtream TV logins now bring live channels, catch-up, films and series. 2.62 brought a Top 10 you can filter by country, network, category and year, homes for Films and Series, and Miko on every screen. [See what's new](CHANGELOG.md).
 
 ## A powerhouse player, right in the browser
 
@@ -55,13 +55,13 @@ For almost everything you watch, you won't need another app. Handing off to VLC,
 <td width="50%" valign="top">
 
 ### Watch
-A player made for films. **Smart Play** starts the best source in one press, and if it stalls the next one takes over at the same line. Skip intro, recap and credits, X-Ray and cast pages, styled anime subtitles, sound modes, volume to 200 %, and HDR and Dolby Vision on Android TV.
+A player made for films. **Smart Play** checks the best copies first and starts one that really plays, and if it stalls the next one takes over at the same line. Intros, recaps and credits **skip themselves**, AI captions for films with no subtitles, X-Ray and cast pages, styled anime subtitles, sound modes, volume to 200 %, and HDR and Dolby Vision on Android TV.
 
 </td>
 <td width="50%" valign="top">
 
 ### Discover
-A Home that's yours. **Your Picks** is worked out on your device. 142 **Universes** in order, Top 10 today, **Peak Cinema** scenes by mood, an Anime tab, MK Channel, Live TV with a guide, sports and **Split Screen**.
+A Home that's yours. **Your Picks** is worked out on your device. A **Top 10** for any country, network, category or year, homes for Films and Series, 142 **Universes** in order, **Peak Cinema** scenes by mood, an Anime tab, MK Channel, Live TV with a guide, sports and **Split Screen**.
 
 </td>
 </tr>
@@ -69,7 +69,7 @@ A Home that's yours. **Your Picks** is worked out on your device. 142 **Universe
 <td width="50%" valign="top">
 
 ### Together
-**Watch parties** with chat, voice and cameras, even when everyone has a different version of the film. **Couch match** and **film night** pick the film on your phones. **Listen on phone** puts the sound in your headphones.
+**Friends** to chat with, invite and call, and see what they're watching. **Watch parties** with chat, voice and cameras, even when everyone has a different version of the film. **Couch match** and **film night** pick the film on your phones. **Listen on phone** puts the sound in your headphones.
 
 </td>
 <td width="50%" valign="top">
@@ -83,7 +83,7 @@ A **seat** for everyone with their own watchlist, picks and stats. **Kids seats*
 <td width="50%" valign="top">
 
 ### Your phone, the remote
-Scan the TV's code and your phone is a touchpad, keyboard and voice remote, with cast and details for whatever's on. Ask **Miko**, the assistant: "who's in this?" Use it as the party camera, or send the subtitles to your **smart glasses**.
+Scan the TV's code and your phone is a touchpad, keyboard and voice remote, with cast and details for whatever's on. Ask **Miko**, the assistant on every screen: "who's in this?" Use it as the party camera, or send the subtitles to your **smart glasses**.
 
 </td>
 <td width="50%" valign="top">
@@ -99,29 +99,33 @@ Web, Android, Android TV and Fire TV, Windows, Mac, Linux, and LG and Samsung TV
 
 <table>
 <tr>
+<td width="50%" align="center"><img src="docs/screenshots/app-top10.webp" alt="Top 10 films on one network"><br><sub>A Top 10 for any country, network, category or year</sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/app-miko.webp" alt="Miko answering a request beside Your Picks"><br><sub>Miko on every screen: "something funny for tonight"</sub></td>
+</tr>
+<tr>
+<td width="50%" align="center"><img src="docs/screenshots/app-series-home.webp" alt="The Series home with its own Top 10"><br><sub>Films and Series each open with their own Top 10 and networks</sub></td>
 <td width="50%" align="center"><img src="docs/screenshots/app-film.webp" alt="A film page"><br><sub>Film pages with Smart Play, Find a line and every source</sub></td>
+</tr>
+<tr>
 <td width="50%" align="center"><img src="site/shots/player.webp" alt="The player's Audio tab"><br><sub>The player: audio languages, 200 % volume, Listen on phone</sub></td>
-</tr>
-<tr>
 <td width="50%" align="center"><img src="site/shots/party-cams.webp" alt="Party cameras beside the film"><br><sub>Watch parties with synced playback, voice and cameras</sub></td>
-<td width="50%" align="center"><img src="docs/screenshots/app-seats.webp" alt="Seats"><br><sub>A seat for everyone in the house, with PINs and kids seats</sub></td>
 </tr>
 <tr>
-<td width="50%" align="center"><img src="docs/screenshots/app-split-screen.webp" alt="Split Screen playing three Blender open movies"><br><sub>Split Screen: up to four streams, the sound follows your pick</sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/app-seats.webp" alt="Seats"><br><sub>A seat for everyone in the house, with PINs and kids seats</sub></td>
 <td width="50%" align="center"><img src="site/shots/tv.webp" alt="MKCinema on a TV"><br><sub>On a TV, built for the remote</sub></td>
 </tr>
 <tr>
-<td width="50%" align="center"><img src="site/shots/sensory.webp" alt="Sensory-friendly mode in the player"><br><sub>Sensory-friendly mode: softer bangs, dimmed flashes</sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/app-split-screen.webp" alt="Split Screen playing three Blender open movies"><br><sub>Split Screen: up to four streams, the sound follows your pick</sub></td>
 <td width="50%" align="center"><img src="site/shots/anime-home.webp" alt="Home in the Anime look"><br><sub>The Anime look</sub></td>
 </tr>
 </table>
 
 <table>
 <tr>
+<td width="25%" align="center"><img src="docs/screenshots/app-phone-top10.webp" alt="Top 10 on a phone"><br><sub>Top 10 on your phone</sub></td>
+<td width="25%" align="center"><img src="docs/screenshots/app-phone-miko.webp" alt="Miko answering who directed Dune"><br><sub>Ask Miko anything</sub></td>
 <td width="25%" align="center"><img src="docs/screenshots/app-remote.webp" alt="The phone remote"><br><sub>Phone remote</sub></td>
 <td width="25%" align="center"><img src="site/shots/phone-title.webp" alt="A film's details on the phone"><br><sub>Details on your phone</sub></td>
-<td width="25%" align="center"><img src="site/shots/phone-ask.webp" alt="Miko, the remote's assistant"><br><sub>Miko</sub></td>
-<td width="25%" align="center"><img src="site/shots/phone-glasses.webp" alt="Subtitles going to smart glasses"><br><sub>Subtitles on glasses</sub></td>
 </tr>
 </table>
 
@@ -146,10 +150,11 @@ We've looked, and we haven't found these in other apps. Every one is live today.
 <details open>
 <summary><b>Watching</b></summary>
 
-- **Smart Play** starts the best ready source, following your quality and language rules, and **automatic failover** switches if one stalls or has no picture.
+- **Smart Play** checks the best few copies first and starts one whose picture and sound really play on your device, following your quality and language rules. It passes over camera recordings, samples and waiting clips, and **automatic failover** switches if one stalls.
 - **Every source side by side** with the same labels for quality, HDR, sound and size. Duplicates fold into one, and Source Check hides fakes, samples and wrong episodes.
 - **The player:** Playback, Picture, Audio and More tabs; volume to 200 %; Clear voices and Night sound; audio delay; picture adjustments; sharp upscaling on the GPU; phone gestures; sleep timer that waits for a pause in the dialogue; A-B repeat; still frames; bookmarks; playback stats.
-- **Skip intro, recap and credits**, anime included, and the next episode found a few minutes early.
+- **Intros, recaps and credits skip themselves** when the times are known, anime included, with a Watch button in case you wanted to see it. Or keep a Skip button, or turn it off.
+- **AI captions** for films with no subtitles, written on your device a minute or two ahead, with foreign films translated into English.
 - **X-Ray and cast pages.** Pause to see who's in the scene, then open anyone's photo, story and filmography.
 - **Which cut is this?** and **Shape of the film**, a curve of how much is said across the film, drawn from the subtitles.
 - **Subtitles:** styled anime subtitles (ASS/SSA), subtitles inside MKV files, one list from every source without repeats, automatic sync plus a drag strip, translation when none exist, Signs & Songs with dubs, second subtitles.
@@ -157,6 +162,7 @@ We've looked, and we haven't found these in other apps. Every one is live today.
 - **Sound from another source.** Keep one release's picture and play another's dub, kept in step.
 - **Sensory-friendly mode** softens sudden bangs and dims flashing light as it happens.
 - **Subtitles on smart glasses:** Even Realities G1 and G2 and Brilliant Labs Frame over Bluetooth, and Meta Ray-Ban Display through the Meta AI app.
+- **Your audio language first** on multi-language files, everywhere the device lets MKCinema choose.
 - **The in-browser engine** plays MKV, MP4 and TS, converts Dolby, DTS and TrueHD sound, shows PGS subtitles and decodes HEVC on computers, so an outside player is rarely needed.
 - **Hand off to any player** your device supports, such as VLC, mpv, Infuse or MX Player, for the rare file that still needs one. Picture-in-picture, lock-screen controls, and Send to TV (Chromecast).
 - **Spoiler Guard**, **Never miss a line** after a pause, and **Last time…** to remind you where you were.
@@ -166,6 +172,9 @@ We've looked, and we haven't found these in other apps. Every one is live today.
 <details>
 <summary><b>Discover</b></summary>
 
+- **Top 10 for every taste:** worldwide or in your country, on one network, in one category, or from one year or decade, for films and for series.
+- **Films and Series homes** open with their own Top 10 and networks, with a **Year menu** beside every catalog and genre.
+- **Miko on every screen.** Say or type "play Dune", "films with Zendaya" or "something funny for tonight", and she finds it, opens it or plays it.
 - **Home:** Continue watching, your watchlist, Top 10 films today, Networks, 142 Universes in order, Your Picks, Hidden gems, Award winners, Under 90 minutes, and rows from every addon, loading more as you scroll.
 - **Arrange Home.** Hide, move or rename any row. Each seat keeps its own.
 - **Your Picks** is worked out on your device. Ask in plain words, like "a cosy mystery for tonight".
@@ -174,7 +183,7 @@ We've looked, and we haven't found these in other apps. Every one is live today.
 - **Peak Cinema.** Surf 90-second scenes by mood, then keep watching from that second.
 - **MK Channel.** Switch on and something is already playing: up next, your watchlist, films on the clock, a series marathon.
 - **Anime tab** with trending, airing now and top rated, plus AniList and MyAnimeList sync.
-- **Live TV & guide** from your own M3U playlist or Xtream login with an XMLTV guide, **sports**, and **Split Screen**.
+- **Live TV & guide** from your own M3U playlist or Xtream login with an XMLTV guide. Xtream logins show your account, channels by category, catch-up, and the service's films and series, **sports**, and **Split Screen**.
 - **Official trailers**, and **MDBList** rows with your own key.
 
 </details>
@@ -182,6 +191,9 @@ We've looked, and we haven't found these in other apps. Every one is live today.
 <details>
 <summary><b>Together</b></summary>
 
+- **Friends.** Choose a username and the name friends see, add friends by username, and see who's online and, if they share it, what they're watching. Requests need their OK, and Remove, Block and Report are one tap away.
+- **Messages and party invites** inside MKCinema. Nothing pops up over a film: the Friends button shows a count instead.
+- **Calls that wait for the credits.** Voice or camera calls are off until you turn them on, and "When I'm not watching" never rings during a film.
 - **Watch party.** Six-letter rooms with play, pause and seek in sync, chat, reactions and push-to-talk voice. The film dips while people talk, and the host can hand over.
 - **Party cameras.** See each other while you watch. On a TV, your phone is the camera, with a face light for dark rooms.
 - **Catch up to the room** when you join late, and **ask to pause** as a guest.
@@ -218,7 +230,7 @@ We've looked, and we haven't found these in other apps. Every one is live today.
 <summary><b>Library and sync</b></summary>
 
 - **Library** with watchlist, in progress, watched and your own lists, plus an **airing calendar** and **new-episode alerts** checked on your device.
-- **Sync everywhere** with an optional email account: library, progress, addons, settings and Home layout.
+- **Sync everywhere** with an optional email account: library, progress, addons, settings and Home layout. A change on your phone shows on your TV almost at once, and offline changes go up the moment you're back.
 - **Trakt and Simkl** scrobbling, **AniList and MyAnimeList** progress, and **Import from Stremio** in one step.
 - **Downloads** on phones, tablets, Windows and TVs, and a **backup code** that carries everything in one line.
 
@@ -252,8 +264,8 @@ We've looked, and we haven't found these in other apps. Every one is live today.
 |---|---|---|
 | Web | [app.mkcinema.app](https://app.mkcinema.app) | Chrome, Edge, Firefox and Safari. Installable as an app. Every app below loads it, so all platforms update together |
 | iPhone, iPad | [app.mkcinema.app](https://app.mkcinema.app) in Safari | Share › Add to Home Screen. Opens full screen, and most MKV files play right in the browser. iOS 17.1 or later |
-| Android | [MKCinema.apk](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.apk) (1.9.1) | Phones and tablets, with its own player, picture-in-picture and downloads |
-| Android TV, Google TV, Fire TV | [MKCinema-TV.apk](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema-TV.apk) (1.9.1, same file) | Fire TV: type `tv.mkcinema.app` into Downloader |
+| Android | [MKCinema.apk](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.apk) (1.10.0) | Phones and tablets, with its own player, picture-in-picture and downloads |
+| Android TV, Google TV, Fire TV | [MKCinema-TV.apk](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema-TV.apk) (1.10.0, same file) | Fire TV: type `tv.mkcinema.app` or code `6400996` into Downloader |
 | Windows | [MKCinema.exe](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.exe) (1.3.1) | Not code-signed yet: More info › Run anyway |
 | macOS | [ZIP](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema-1.1.1-mac.zip) (1.1.1) | Not notarized yet |
 | Linux | [DEB](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/mkcinema_1.1_amd64.deb) or [tar.gz](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/mkcinema-1.1-linux-x86_64.tar.gz) (1.1) | x86_64, WebKitGTK 4.1 |
