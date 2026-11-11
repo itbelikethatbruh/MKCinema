@@ -44,7 +44,13 @@ jobs:
       - name: Install Chromium for the smoke test
         run: |
           npm install --prefix "$RUNNER_TEMP/pw" --no-audit --no-fund --silent playwright@1.63.0
-          "$RUNNER_TEMP/pw/node_modules/.bin/playwright" install --with-deps chromium
+          # The package mirrors drop out now and then: try three times before failing the check.
+          for attempt in 1 2 3; do
+            "$RUNNER_TEMP/pw/node_modules/.bin/playwright" install --with-deps chromium && exit 0
+            echo "Browser install failed (attempt $attempt of 3), retrying in 30 s"
+            sleep 30
+          done
+          exit 1
       - name: Smoke test, source
         run: NODE_PATH="$RUNNER_TEMP/pw/node_modules" node tools/smoke-web.mjs app
       - name: Smoke test, minified build
