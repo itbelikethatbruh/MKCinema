@@ -161,7 +161,9 @@ const Friends = {
     if (!window.RTCPeerConnection) return [false, 'Calls need a newer browser'];
     return [true, ''];
   },
+  swatches() { return this.staff ? ['diamond', ...this.COLORS] : this.COLORS; },
   av(f, big) {
+    if (f && f.avatar === 'diamond') return `<span class="fr-av fr-c-diamond${big ? ' big' : ''}${f.on ? ' on' : ''}" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6.5 3.5h11l4 5.5L12 21 2.5 9z" fill="#fff" fill-opacity=".92"/><path d="M2.5 9h19M9 3.5 7.5 9 12 21l4.5-12L15 3.5" fill="none" stroke="#4b3a8c" stroke-opacity=".55" stroke-width="1" stroke-linejoin="round"/></svg></span>`;
     const c = this.COLORS.includes(f && f.avatar) ? f.avatar : 'gold', ch = String((f && (f.name || f.username)) || '?').trim().charAt(0).toUpperCase() || '?';
     return `<span class="fr-av fr-c-${c}${big ? ' big' : ''}${f && f.on ? ' on' : ''}" aria-hidden="true">${esc(ch)}</span>`;
   },
@@ -242,7 +244,7 @@ const Friends = {
         <input class="inp" id="frName" maxlength="32" autocomplete="off" placeholder="What friends see, like Sam or The Lees" value="${esc(me && me.name ? me.name : '')}" data-nav>
         <small class="fr-hint">Up to 32 characters. Leave it empty to show your username.</small>
         <div class="fr-lbl">Colour</div>
-        <div class="fr-colors" role="radiogroup" aria-label="Colour">${this.COLORS.map((c, i) => { const on = me ? (me.avatar || 'gold') === c : i === 0; return `<button type="button" class="fr-av fr-c-${c}${on ? ' sel' : ''}" role="radio" aria-checked="${on}" aria-label="${c}" data-nav data-frcol="${c}"></button>`; }).join('')}</div>
+        <div class="fr-colors" role="radiogroup" aria-label="Colour">${this.swatches().map((c, i) => { const on = me ? (me.avatar || 'gold') === c : c === this.swatches()[0]; return `<button type="button" class="fr-av fr-c-${c}${on ? ' sel' : ''}" role="radio" aria-checked="${on}" aria-label="${c}" data-nav data-frcol="${c}"></button>`; }).join('')}</div>
         ${me ? '' : `${sw('frOnline', CFG.frOnline !== false, 'Show friends when I’m online', 'Turn off to appear offline.')}
         ${sw('frWatching', CFG.frWatching === true, 'Show friends what I’m watching', 'Off until you turn it on. Only the title, and only to friends you accepted.')}
         ${sw('frFindable', !!CFG.frFindable, 'Suggest me in search', 'Off: people must type your whole username.')}
@@ -251,7 +253,8 @@ const Friends = {
       <div class="actions"><button class="btn btn-prime" type="button" data-nav id="frSave"><i data-lucide="check"></i>Save</button>${me ? '<button class="btn btn-ghost" type="button" data-nav id="frCancel">Cancel</button>' : ''}</div>`;
     icons();
     const u = $('#frUser', b), nm = $('#frName', b); if (IS_TV) { TvType.guard(u); TvType.guard(nm); }
-    let col = me && this.COLORS.includes(me.avatar) ? me.avatar : this.COLORS[0];
+    let col = me && this.swatches().includes(me.avatar) ? me.avatar : this.swatches()[0];
+    if (this.staff == null && Account.user) { this.staff = false; this.rpc('mkc_am_staff').then((v) => { this.staff = v === true; if (this.staff && b.isConnected && $('#frUser', b)) this.paintSetup(b, edit); }).catch(() => {}); }
     const cx = $('#frCancel', b); if (cx) cx.onclick = () => { this.mode = ''; this.paint(); };
     $$('[data-frcol]', b).forEach((x) => x.addEventListener('click', () => { col = x.dataset.frcol; $$('[data-frcol]', b).forEach((y) => { const on = y === x; y.classList.toggle('sel', on); y.setAttribute('aria-checked', on); }); }));
     $$('[data-frset]', b).forEach((x) => x.addEventListener('click', () => { const v = !x.classList.contains('on'); x.classList.toggle('on', v); x.setAttribute('aria-checked', v); setCfg(x.dataset.frset, v); }));
