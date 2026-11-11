@@ -10,7 +10,7 @@
    History and stats come from one seat only (the main seat unless you pick another), never from the rest of the household,
    and never from a kids seat. Single titles can be hidden from friends. Nothing ever pops up over a film. */
 const Social = {
-  tab: 'friends', view: null, mine: null, feed: [], feedAt: 0, off: false, pubSig: '', pubAt: 0, busy: false, viewCard: null,
+  tab: 'feed', view: null, mine: null, feed: [], feedAt: 0, off: false, pubSig: '', pubAt: 0, busy: false, viewCard: null,
   POSTER_HOSTS: /^https:\/\/(image\.tmdb\.org|images\.metahub\.space|live\.metahub\.space|episodes\.metahub\.space|media\.kitsu\.(app|io)|cdn\.myanimelist\.net|s4\.anilist\.co|assets\.fanart\.tv|m\.media-amazon\.com|artworks\.thetvdb\.com)\//,
   KUDOS: [['taste', 'Great taste', 'sparkles'], ['host', 'Party host', 'popcorn'], ['gem', 'Gem finder', 'gem'], ['binge', 'Binge legend', 'flame'], ['pal', 'Great company', 'heart']],
   TIERS: { b: 'Bronze', s: 'Silver', g: 'Gold', p: 'Platinum' },
@@ -173,23 +173,23 @@ const Social = {
   },
 
   /* ---- the hub ---- */
-  tabs() {
-    const t = [['friends', 'Friends', 'users'], ['activity', 'Activity', 'activity'], ['you', 'You', 'trophy']];
-    return `<div class="segc soc-tabs" role="tablist" aria-label="Social">${t.map(([k, l, i]) => `<button type="button" role="tab" class="${this.tab === k ? 'on' : ''}" aria-selected="${this.tab === k}" data-nav data-soctab="${k}"><i data-lucide="${i}"></i><span>${l}</span></button>`).join('')}</div>`;
-  },
+  /* 2.66: the sections live in the Social Hub header */
+  tabs() { return ''; },
   /* the Friends panel asks this first: true when the hub paints instead of the friends list */
   owns() { return !!(this.view || this.tab !== 'friends'); },
   setTab(t) {
     this.tab = t; this.view = null; this.viewCard = null;
-    const b = X8.body('friendsLayer'); if (!b) return;
     Friends.chat = null; Friends.mode = '';
+    const b = Friends.root(); if (!b) return;
     if (t === 'friends') { b.innerHTML = ''; Friends.paint(); } else this.paint(b);
-    const n = $(`[data-soctab="${t}"]`, b); if (n && IS_TV) Nav.focus(n, true);
+    if (typeof Hub !== 'undefined') Hub.syncNav();
+    const n = $(`[data-soctab="${t}"]`, X8.body('friendsLayer')); if (n && IS_TV) Nav.focus(n, true);
   },
   paint(b) {
-    b = b || X8.body('friendsLayer'); if (!b) return;
+    b = b || Friends.root(); if (!b) return;
     if (!Friends.me) { Friends.paint(); return; }
     if (this.view) { this.paintProfile(b); return; }
+    if (typeof Hub !== 'undefined' && (this.tab === 'feed' || this.tab === 'notes')) { Hub.paintTab(b); return; }
     b.innerHTML = `${this.tabs()}<div class="soc-pane" id="socPane"><p class="fr-dim">Loading…</p></div>`;
     this.bind(b); icons();
     if (this.off) { $('#socPane', b).innerHTML = '<p class="x8-p">Profiles and trophies are not switched on for this server yet. Friends and messages still work.</p>'; return; }
@@ -206,7 +206,7 @@ const Social = {
   bind(b) {
     if (b.dataset.socb) return; b.dataset.socb = '1';
     b.addEventListener('click', (e) => {
-      const x = e.target.closest('[data-soc],[data-soctab]'); if (!x || !b.contains(x)) return;
+      const x = e.target.closest('[data-soc],[data-soctab]'); if (!x || !b.contains(x) || (b.id !== 'hubMain' && x.closest('#hubMain'))) return;
       if (x.dataset.soctab) { this.setTab(x.dataset.soctab); return; }
       const id = x.dataset.id, f = id ? Friends.byId(id) : null;
       switch (x.dataset.soc) {
@@ -317,7 +317,7 @@ const Social = {
       <section class="soc-sec"><h3>Trophies <span class="fr-dim tnum">${nGot}${m ? ` of ${nAll}` : ''}</span></h3>
         <div class="soc-tros">${this.troList(tro, this.showLocked, m) || '<p class="fr-dim">Your first trophy is one finished film away.</p>'}</div>
         ${m ? `<button class="btn btn-ghost btn-sm" type="button" data-nav data-soc="locked"><i data-lucide="${this.showLocked ? 'eye-off' : 'trophy'}"></i>${this.showLocked ? 'Hide the ones to earn' : 'Show the ones to earn'}</button>` : ''}
-        ${CFG.socTrophies === false ? '<p class="fr-dim">Your trophies are hidden from friends (Settings › Friends).</p>' : ''}</section>
+        ${CFG.socTrophies === false ? '<p class="fr-dim">Your trophies are hidden from friends (Settings › Social Hub).</p>' : ''}</section>
       <section class="soc-sec"><h3>Your stats</h3>
         <div class="fr-opt"><div><b>Share what I watch and my stats</b><small>${share ? `Friends you accepted see your last 20 finished titles and these numbers, from the ${esc(this.seatName())} seat.` : 'Off. Only you see this. Friends see your profile and trophies.'}</small></div><button class="switch ${share ? 'on' : ''}" type="button" role="switch" aria-checked="${share}" data-nav data-soc="share" aria-label="Share what I watch and my stats"></button></div>
         ${otherSeat ? `<div class="fr-opt"><div><b>Seat</b><small>Your profile uses the ${esc(this.seatName())} seat. This seat is ${esc((Seats.cur() || {}).name || 'Main')}.</small></div><button class="btn btn-ghost btn-sm" type="button" data-nav data-soc="seat">Use this seat</button></div>` : ''}
@@ -392,16 +392,17 @@ const Social = {
 
   /* a friend's profile, inside the same panel (Back returns to where you were) */
   async profile(f) {
-    const b = X8.body('friendsLayer'); if (!b || !f) return;
+    if (!f) return;
     this.view = f.id; this.viewCard = null; Friends.chat = null; Friends.mode = 'profile';
-    this.paintProfile(b);
+    const b = Friends.root(); if (!b) return;
+    b.classList.remove('fr-chatmode'); this.paintProfile(b);
     let card = null; try { card = await this.rpc('mkc_card', { other: f.id }); } catch (e) { card = { error: e.message }; }
     if (this.view !== f.id) return;
     this.viewCard = card || { gone: true }; this.paintProfile(b);
   },
   closeView() {
     this.view = null; this.viewCard = null; Friends.mode = '';
-    const b = X8.body('friendsLayer'); if (!b) return;
+    const b = Friends.root(); if (!b) return;
     if (this.tab === 'friends') { b.innerHTML = ''; Friends.paint(); } else this.paint(b);
   },
   paintProfile(b) {
@@ -419,6 +420,7 @@ const Social = {
         ${common.length ? `<section class="soc-sec"><h3>You both watched <span class="fr-dim tnum">${common.length}</span></h3><div class="soc-row">${common.slice(0, 12).map((x) => this.posterBtn(x)).join('')}</div></section>` : ''}
         ${(c.favs || []).length ? `<section class="soc-sec"><h3>Favourites</h3><div class="soc-favs">${c.favs.map((x) => this.posterBtn(x)).join('')}</div></section>` : ''}
         <section class="soc-sec"><h3>Trophies</h3>${c.show_trophies === false ? '<p class="fr-dim">Hidden by them.</p>' : `<div class="soc-tros">${this.troList(c.trophies) || '<p class="fr-dim">No trophies yet.</p>'}</div>`}</section>
+        ${typeof Hub !== 'undefined' ? Hub.profileSec(f) : ''}
         <section class="soc-sec"><h3>Kudos</h3><p class="fr-dim">A small thank-you. They see the count, and you can take yours back any time.</p>${this.kudosHtml(c, true)}</section>
         ${c.share ? `<section class="soc-sec"><h3>Stats</h3>${this.statsHtml(c.stats, false) || '<p class="fr-dim">Nothing counted yet.</p>'}</section>
           ${(c.recent || []).length ? `<section class="soc-sec"><h3>Lately</h3><div class="soc-row">${c.recent.map((x) => this.posterBtn(x, [x.ep, x.at ? this.ago(x.at) : ''].filter(Boolean).join(' · '))).join('')}</div></section>` : ''}`
@@ -441,14 +443,14 @@ const Social = {
     x.disabled = true;
     try {
       const card = await this.rpc('mkc_kudos_give', { other: id, p_kind: k, p_on: on });
-      if (this.view === id && card) { this.viewCard = card; this.paintProfile(X8.body('friendsLayer')); }
+      if (this.view === id && card) { this.viewCard = card; this.paintProfile(Friends.root()); }
       if (on) Friends.poke(id, { t: 'k' });
     } catch (e) { toast(e.message || String(e), 'err', 4000); if (x.isConnected) x.disabled = false; }
   },
 
   settingsRows() {
     return [
-      { key: 'socShare', label: 'Share what I watch and my stats', help: 'Off until you turn it on. Friends you accepted see your last 20 finished titles and your stats, from one seat only. Hide single titles in Friends › You.', type: 'toggle', get: () => CFG.socShare === true, set: (v) => { this.setShare(v); } },
+      { key: 'socShare', label: 'Share what I watch and my stats', help: 'Off until you turn it on. Friends you accepted see your last 20 finished titles and your stats, from one seat only. Hide single titles in Social Hub › You.', type: 'toggle', get: () => CFG.socShare === true, set: (v) => { this.setShare(v); } },
       { key: 'socTrophies', label: 'Show my trophies and kudos', help: 'Friends see the trophies you earned on your profile. Off hides them.', type: 'toggle', get: () => CFG.socTrophies !== false, set: (v) => { setCfg('socTrophies', v); this.publish(true).catch((e) => toast(e.message, 'err')); } },
     ];
   },
@@ -457,6 +459,7 @@ const Social = {
     X8.backHook.friendsLayer = () => {
       if (this.view) { this.closeView(); return true; }
       if (Friends.chat) { Friends.closeChat(); return true; }
+      if (typeof Hub !== 'undefined' && Hub.back()) return true;
       return false;
     };
     // the hub again on a schedule, never while a film plays, and only when something changed
@@ -464,7 +467,7 @@ const Social = {
     // app.mkcinema.app/#social opens the hub (the QR code on TVs and computers points here)
     const deep = () => {
       if (!/^#(social|friends)$/.test(location.hash)) return;
-      const t = location.hash === '#social' ? 'activity' : 'friends';
+      const t = location.hash === '#social' ? 'feed' : 'friends';
       history.replaceState(null, '', location.pathname + location.search);
       setTimeout(() => { if (Friends.kids()) return; this.tab = t; Friends.open(); }, 600);
     };
