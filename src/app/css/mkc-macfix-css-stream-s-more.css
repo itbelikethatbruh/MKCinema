@@ -1,0 +1,7 @@
+
+.stream .s-more{display:inline-flex;align-items:center;justify-content:center;flex:none;width:36px;height:36px;margin-left:6px;border-radius:50%;border:1px solid var(--line-hi,rgba(255,255,255,.14));color:var(--mute,#9a9aa0);background:rgba(255,255,255,.03);transition:background .16s,color .16s,transform .16s;cursor:pointer}
+.stream .s-more svg{width:16px;height:16px}
+.stream .s-more:hover,.stream .s-more:focus-visible{color:var(--ink,#fff);background:rgba(255,255,255,.09);outline:none}
+.stream .s-more:active{transform:scale(.92)}
+html.tv .stream .s-more{display:none}
+#pMsg .mk-pick-note{flex-basis:100%;margin:0 0 6px;font-size:calc(13px * var(--ts,1));line-height:1.4;color:var(--mute,#9a9aa0)}

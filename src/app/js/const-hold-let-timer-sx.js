@@ -22,6 +22,7 @@
     const first = link ? add('link', 'Copy stream link', () => copyText(link, 'Stream link copied')) : null;
     if (!link) { const n = document.createElement('div'); n.className = 'lp-h'; n.textContent = 'This source has no link to copy'; m.appendChild(n); }
     if (name) add('copy', 'Copy file name', () => copyText(name, 'File name copied'));
+    if (window.MkLpExtra) try { window.MkLpExtra(st, add, link, row); } catch (e) { /* extras are optional */ }
     document.body.appendChild(m); if (typeof icons === 'function') icons();
     const r = m.getBoundingClientRect(), vw = innerWidth, vh = innerHeight;
     m.style.left = Math.max(8, Math.min(x - r.width / 2, vw - r.width - 8)) + 'px';
@@ -30,6 +31,7 @@
     if (first) first.focus({ preventScroll: true });
     if (navigator.vibrate) try { navigator.vibrate(12); } catch (e) { /* ignore */ }
   };
+  window.MkLpOpen = open;
   const cancel = () => { clearTimeout(timer); timer = 0; if (el) el.classList.remove('lp-hold'); el = null; };
   document.addEventListener('pointerdown', (e) => {
     if (menu && !menu.contains(e.target)) close();

@@ -7,6 +7,13 @@
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
+  { v: '2.66.1', date: '2026-11-11', items: [
+    ['new', 'Copy a source’s link in one tap', 'Every source now has a link button: copy the stream link or file name, or send it to VLC.'],
+    ['new', 'VLC on Mac', 'Pick VLC as your player on a Mac: MKCinema copies the link, then press ⌘N in VLC and paste. Set it in Settings › Playback.'],
+    ['better', 'Links follow your pick', 'When your source fails and MKCinema tries backups, the copy and player buttons on the last screen use the source you picked.'],
+    ['better', 'Sharper Smart Play picks', 'More 1080p sources are checked before Smart Play settles, so it starts in 720p less often.'],
+    ['better', 'Your audio language more often', 'In browsers that can’t switch tracks inside a file, Smart Play prefers copies with only your audio language.'],
+  ] },
   { v: '2.66.0', date: '2026-11-11', items: [
     ['new', 'The Social Hub', 'Friends is now the Social Hub: a live feed, your friends, their activity and your profile in one place, with who is online right beside it on bigger screens.'],
     ['new', 'Posts, reactions and replies', 'Share what you are watching or how a film made you feel, attach a title, react with 🔥 😂 😭 😮 ❤️ 👍 and reply under any post.'],
