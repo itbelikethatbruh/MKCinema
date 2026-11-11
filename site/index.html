@@ -597,6 +597,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 @media(min-width:900px){.ss-g{grid-template-columns:minmax(0,6fr) minmax(0,5fr);gap:clamp(48px,7vw,96px)}}
 @media(max-width:380px){.ss-scores{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.ss-card{transition:none}}
+/*ss-gold*/.ss-card{position:relative;isolation:isolate;border-color:transparent}.ss-card::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:2px;pointer-events:none;background:linear-gradient(135deg,#f6e3b4,#c9a35c 28%,#7a5a26 50%,#d8b46a 72%,#fff1c9);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}.ss-card::after{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;pointer-events:none;box-shadow:0 0 0 1px rgba(240,208,140,.5),0 0 30px 3px rgba(222,180,96,.55),0 0 90px 10px rgba(216,174,92,.22);opacity:.75;animation:ssGlow 4.5s ease-in-out infinite}.ss-card:hover::after,.ss-card:focus-visible::after{opacity:1;animation:none}@keyframes ssGlow{50%{opacity:1}}@media(prefers-reduced-motion:reduce){.ss-card::after{animation:none;opacity:.85}}
 </style>
 </head>
 <body>
