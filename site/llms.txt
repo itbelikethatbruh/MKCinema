@@ -1,0 +1,37 @@
+# MKCinema
+
+> MKCinema is a free, open-source home cinema for the whole family. It is a film player for Stremio-compatible addons, with a seat (profile) for everyone in the house, watch parties with voice and cameras, and a phone that works as a remote. It runs on Android, Android TV and Fire TV, Windows, Mac, Linux, iPhone and iPad (as a Home Screen web app), smart TVs, and any modern browser. Every feature is free forever: no ads, no paid tier, open source under GPL-3.0.
+
+Key facts:
+
+- Price: free. There is no paid plan and nothing is locked. Donations through Ko-fi are optional and unlock nothing.
+- Content: MKCinema hosts no films, shows or channels. Catalogues, subtitles and streams come from addons that each user installs. The only built-in video is official trailers.
+- Debrid: works with the major debrid services using the user's own key. MKCinema does not recommend one service over another.
+- Accounts: optional. Sign in with email and password to sync library, progress, addons and settings across devices.
+- Languages: the app and website are available in English plus 30 other languages.
+- Made by: Dee Lavish, an independent developer. Source code on GitHub.
+- Not affiliated with Stremio. Stremio is a trademark of its owner.
+
+## Guides
+
+- [All guides](https://mkcinema.app/guides/): every MKCinema guide in one place
+- [Stremio addons](https://mkcinema.app/stremio-addons/): use your Stremio-compatible addons in MKCinema, and move over from Stremio
+- [Addon health check](https://mkcinema.app/addon-check/): free tool that finds a slow, broken or blocked addon, in the browser
+- [Fire TV and Android TV](https://mkcinema.app/fire-tv/): install MKCinema on a TV with the Downloader app
+- [iPhone and iPad](https://mkcinema.app/iphone-ipad/): add the web app to the Home Screen from Safari
+- [MKV in the browser](https://mkcinema.app/mkv-in-browser/): how MKV files and Dolby or DTS audio play in a browser
+- [Skip intro and credits](https://mkcinema.app/skip-intro/): where skip times come from and how to turn skipping on
+
+## Product
+
+- [Home page](https://mkcinema.app/): features, downloads and frequently asked questions
+- [Downloads](https://mkcinema.app/#download): Android, Windows, Mac, Linux, TV and web
+- [Frequently asked questions](https://mkcinema.app/#faq)
+- [Open the web app](https://app.mkcinema.app/)
+
+## Project
+
+- [Source code (GitHub)](https://github.com/itbelikethatbruh/MKCinema)
+- [Changelog](https://github.com/itbelikethatbruh/MKCinema/blob/main/CHANGELOG.md)
+- [Privacy](https://app.mkcinema.app/privacy.html)
+- [Terms](https://app.mkcinema.app/terms.html)
