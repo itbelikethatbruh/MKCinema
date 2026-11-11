@@ -328,7 +328,17 @@ const Miko = {
   enabled() { return !IS_TV && CFG.miko !== false; },
   kids() { try { return typeof Seats !== 'undefined' && Seats.kids(); } catch (e) { return false; } },
   // the phone remote keeps its key under rm.ai on this same site, so one key serves both on a phone
-  cfg() { if (this.kids()) return null; const c = Store.raw.get('rm.ai', null); return c && typeof c === 'object' && c.p && typeof c.key === 'string' && c.key.length > 8 ? c : null; },
+  cfg() {
+    if (this.kids()) return null; const c = Store.raw.get('rm.ai', null);
+    if (c && typeof c === 'object' && c.p && typeof c.key === 'string' && c.key.length > 8) return c;
+    return c && c.p === 'off' ? null : this.shared();
+  },
+  // built-in AI: shared relay. Everyone gets it with no key; the key sits only on MKCinema's server (function miko-ai),
+  // which caps each visitor per minute and per day. When it says no, Miko quietly answers on this device instead.
+  shared() {
+    if (this.sharedOff && Date.now() < this.sharedOff) return null;
+    try { return SUPABASE_PROJECT && SUPABASE_PROJECT.url ? { p: 'mkc', key: '', model: 'openai/gpt-oss-120b', base: `${SUPABASE_PROJECT.url}/functions/v1/miko-ai` } : null; } catch (e) { return null; }
+  },
   hm(s) { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60); return h ? `${h} hour${h > 1 ? 's' : ''}${m ? ` ${m} min` : ''}` : `${Math.max(1, m)} minute${m <= 1 ? '' : 's'}`; },
   norm: (s) => String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/&/g, ' and ').replace(/[^a-z0-9 ]+/g, ' ').replace(/^(the|a|an) /, '').replace(/\s+/g, ' ').trim(),
   // phones (and short landscape screens), where the chat fills the screen
@@ -383,8 +393,8 @@ const Miko = {
         <form class="mk-field" id="mikoForm" autocomplete="off"><input class="inp" id="mikoQ" type="text" enterkeyhint="send" autocapitalize="sentences" spellcheck="false" maxlength="300" placeholder="Ask Miko or tell her what to do" aria-label="Ask Miko">
           <button class="ibtn" type="button" id="mikoMic" aria-label="Speak" title="Speak"><i data-lucide="mic"></i></button><button class="ibtn mk-go" type="submit" aria-label="Send" title="Send"><i data-lucide="send"></i></button></form></div>
       <div class="mk-set" id="mikoSet" hidden><div class="mk-set-h"><b>Smarter answers</b><button class="ibtn" type="button" id="mikoSetX" aria-label="Close Miko settings"><i data-lucide="arrow-left"></i></button></div>
-        <p class="mk-p">Miko already works without this. Add a free Groq or Gemini key (or any AI key you have) and you can say anything in your own words, like “that space film where Matt Damon grows potatoes” or “something funny under two hours”.</p>
-        <div class="segc mk-pv" id="mikoPv" role="radiogroup" aria-label="AI service"><button type="button" role="radio" data-p="">Off</button><button type="button" role="radio" data-p="groq">Groq · free</button><button type="button" role="radio" data-p="gemini">Gemini · free</button><button type="button" role="radio" data-p="anthropic">Claude</button><button type="button" role="radio" data-p="openai">OpenAI</button><button type="button" role="radio" data-p="other">Other</button></div>
+        <p class="mk-p">Miko has a built-in AI, free for everyone, so you can say anything in your own words, like “that space film where Matt Damon grows potatoes” or “something funny under two hours”. It has a daily limit. For more, add your own free Groq or Gemini key (or any AI key you have).</p>
+        <div class="segc mk-pv" id="mikoPv" role="radiogroup" aria-label="AI service"><button type="button" role="radio" data-p="mkc">Built in · free</button><button type="button" role="radio" data-p="">Off</button><button type="button" role="radio" data-p="groq">Groq · free</button><button type="button" role="radio" data-p="gemini">Gemini · free</button><button type="button" role="radio" data-p="anthropic">Claude</button><button type="button" role="radio" data-p="openai">OpenAI</button><button type="button" role="radio" data-p="other">Other</button></div>
         <div id="mikoCfg">
           <p class="mk-fine" id="mikoHow" hidden></p>
           <label class="mk-l" id="mikoBaseL"><span>Address</span><input class="inp" id="mikoBase" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://example.com/v1"></label>
@@ -394,7 +404,7 @@ const Miko = {
           <div class="mk-acts"><button class="btn btn-prime btn-sm" type="button" id="mikoSave">Save and check</button><button class="btn btn-ghost btn-sm" type="button" id="mikoDel">Remove key</button></div>
           <p class="mk-fine" id="mikoMsg" role="status"></p>
         </div>
-        <p class="mk-fine">Your key stays in this browser only. It goes straight to the service you picked and never to MKCinema, and it is never synced. That service may bill you for what you use. MKCinema itself never charges for anything.</p>
+        <p class="mk-fine">Built in: your questions go through MKCinema’s server to Groq and are not kept. Your own key stays in this browser only. It goes straight to the service you picked and never to MKCinema, and it is never synced. That service may bill you for what you use. MKCinema itself never charges for anything.</p>
         <div class="mk-row" id="mikoSpeakRow"><span>Read answers aloud</span><button class="switch" type="button" role="switch" id="mikoSpeak" aria-label="Read answers aloud"></button></div>
         <div class="mk-row" id="mikoNatRow" hidden><span>Natural voice</span><button class="switch" type="button" role="switch" id="mikoNat" aria-label="Natural voice"></button></div>
         <p class="mk-fine" id="mikoNatS" hidden></p>
@@ -413,7 +423,7 @@ const Miko = {
     $('#mikoLog').addEventListener('error', (e) => { if (e.target.tagName === 'IMG') e.target.remove(); }, true);
     $$('#mikoPv button').forEach((b) => { b.onclick = () => this.pick(b.dataset.p); });
     $('#mikoSave').onclick = () => this.save();
-    $('#mikoDel').onclick = () => { Store.raw.set('rm.ai', null); this.hist = []; $('#mikoKey').value = ''; this.pick(''); this.msg('Removed from this browser.'); };
+    $('#mikoDel').onclick = () => { Store.raw.set('rm.ai', null); this.hist = []; $('#mikoKey').value = ''; this.pick('mkc'); };
     $('#mikoSpeak').onclick = () => { const v = !Store.raw.get('rm.akSpeak', false); Store.raw.set('rm.akSpeak', v); this.paintSpeak(); if (!v) { MikoSoul.Natural.stop(); try { speechSynthesis.cancel(); } catch (e) { /* none */ } } };
     $('#mikoShow').onclick = () => { setCfg('miko', false); toast('Miko is hidden. Turn her back on in Settings › Appearance.', 'info', 4200, 'miko'); };
     if (!('speechSynthesis' in window)) $('#mikoSpeakRow').hidden = true;
@@ -530,7 +540,7 @@ const Miko = {
     let local = this.parse(text);
     if (!local) { const f = MikoSoul.fix(text); if (f !== text) local = this.parse(f); }
     if (local) { const r = await local(); if (r !== 'defer') return; }
-    if (this.cfg()) return this.agent(text);
+    if (this.cfg() && (await this.agent(text)) !== 'fallback') return;
     if (this.nano === undefined) await this.nanoUp();
     if (this.nano) {
       try { const c = await this.nano.clone(); const out = String(await c.prompt(text)).trim().split('\n')[0].replace(/^["'“]|["'”]$/g, ''); try { c.destroy(); } catch (e) { /* gone */ } const f = out && !/^unknown/i.test(out) ? this.parse(out) : null; if (f) { const r = await f(); if (r !== 'defer') return; } } catch (e) { /* fall through to a search */ }
@@ -564,7 +574,7 @@ const Miko = {
     }
     if (list && (m = t.match(/^(?:play |watch |open )?(?:the )?((?:19|20)\d\d)(?: one| version| film| movie| show)?$/))) { const x = list.find((y) => String(y.year || '').startsWith(m[1])); if (x) { this.mark(x); return () => this.act(/^open/.test(t) ? 'open' : 'play', x); } }
     if (list && list.length === 1 && /^(yes|yeah|yep|sure|that one|this one|that's it|thats it|play that|play it)$/.test(t) && !this.here()) { const x = list[0]; this.mark(x); return () => this.act('play', x); }
-    if (/^(yes|yeah|yep|yup|sure)$/.test(t)) return async () => this.say(MikoSoul.line('yes_nothing'));
+    if (/^(yes|yeah|yep|yup|sure)$/.test(t)) return this.cfg() && this.hist.length && Date.now() - (this.aiAt || 0) < 600000 ? async () => { if ((await this.agent(text)) === 'fallback') this.say(MikoSoul.line('yes_nothing')); } : async () => this.say(MikoSoul.line('yes_nothing'));
     return null;
   },
   resumeLast() {
@@ -715,7 +725,7 @@ const Miko = {
   async picks(text, over) {
     if (typeof Recs === 'undefined' || typeof showAsk !== 'function') { this.say('Your Picks isn’t available here.'); return; }
     // with an AI key, she reads the whole ask herself ("properly creeped out") and uses the same film knowledge as a tool
-    if (this.cfg() && !over) return this.agent(text);
+    if (this.cfg() && !over && (await this.agent(text)) !== 'fallback') return;
     let r = null; try { r = await Recs.ask(text, over); } catch (e) { r = null; }
     const all = ((r && r.list) || []).filter((m) => m && m.id && this.kidOk(m));
     if (!all.length) { this.say(MikoSoul.line('picks_none')); return; }
@@ -857,6 +867,7 @@ const Miko = {
     gemini: { ...MikoSoul.FREE.gemini, free: true },
     openai: { name: 'OpenAI', base: 'https://api.openai.com/v1', models: [], def: '' },
     other: { name: 'your AI service', models: [], def: '' },
+    mkc: { name: 'Miko’s built-in AI', models: [], def: 'openai/gpt-oss-120b', free: true },
   },
   settings(open) {
     const box = $('#mikoSet'); if (!box) return;
@@ -866,7 +877,7 @@ const Miko = {
     if (kid) { this.msg(''); $('#mikoNano').textContent = 'On a kids seat Miko only takes everyday asks.'; this.paintSpeak(); return; }
     const c = Store.raw.get('rm.ai', null) || {};
     $('#mikoKey').value = c.key || ''; $('#mikoModel').value = c.model || ''; $('#mikoBase').value = c.base || ''; this.msg('');
-    this.pick(c.p || '', true); this.paintSpeak();
+    this.pick(c.p === 'off' ? '' : c.p && c.key ? c.p : 'mkc', true); this.paintSpeak();
     if (this.nano === undefined) this.nanoUp().then(() => this.paintNano()); else this.paintNano();
     setTimeout(() => { const b = $('#mikoSetX'); if (b && !matchMedia('(pointer:coarse)').matches) b.focus(); }, 30);
   },
@@ -891,7 +902,9 @@ const Miko = {
     if (this.sel != null && this.sel !== p) $('#mikoModel').value = '';
     this.sel = p;
     $$('#mikoPv button').forEach((b) => { b.classList.toggle('on', b.dataset.p === p); b.setAttribute('aria-checked', String(b.dataset.p === p)); });
-    $('#mikoCfg').hidden = !p; if (!p) { if (!quiet && this.cfg()) { Store.raw.set('rm.ai', null); this.hist = []; this.mode(); } return; }
+    $('#mikoCfg').hidden = !p || p === 'mkc';
+    if (p === 'mkc') { if (!quiet) { Store.raw.set('rm.ai', null); this.sharedOff = 0; this.hist = []; this.mode(); } return; }
+    if (!p) { if (!quiet) { Store.raw.set('rm.ai', { p: 'off' }); this.hist = []; this.mode(); } return; }
     const P = this.PROV[p];
     $('#mikoBaseL').hidden = p !== 'other';
     $('#mikoModel').placeholder = P.def ? P.def : 'The model name from your service';
@@ -920,7 +933,7 @@ const Miko = {
     Store.raw.set('rm.ai', c); this.hist = []; this.mode();
   },
   hdrA(c) { return { 'content-type': 'application/json', 'x-api-key': c.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }; },
-  SYS: `You are Miko, the assistant inside MKCinema, a free app for watching films and shows. The person types or talks to you in a small chat in the corner of the app; you open things in the app with the tools and answer questions about films, shows and people.
+  SYS: `Each message from the person starts with a note in square brackets about the app (screen, open title, local time). It is background for you only: never repeat, quote or mention it, and never start an answer with brackets. You are Miko, the assistant inside MKCinema, a free app for watching films and shows. The person types or talks to you in a small chat in the corner of the app; you open things in the app with the tools and answer questions about films, shows and people.
 Rules:
 - Act with tools, then reply in one or two short spoken-style sentences. Plain text only, no markdown, no lists, no emoji.
 - Never say you did something unless the tool said it worked. If a tool reports a problem, say so simply.
@@ -1012,9 +1025,13 @@ Rules:
     const P = this.PROV[c.p] || this.PROV.other, line = `${this.stateLine()}\n\n${text}`, who = P.name === 'your AI service' ? 'Your AI service' : P.name;
     this.pending = ''; this.after = null; let said = '';
     try { said = c.p === 'anthropic' ? await this.loopA(c, line) : await this.loopO(c, line); } catch (e) {
+      // the built-in AI is resting (its limit, or the server): answer this one on the device, and leave it alone until it's back
+      if (c.p === 'mkc') { this.sharedOff = Date.now() + Math.min(12 * 3600, Math.max(60, (e && e.wait) || 60)) * 1000; this.pending = ''; this.after = null; return 'fallback'; }
       this.say(e && e.status === 401 ? `${who} turned the key down. Check it in Miko’s settings.` : e && e.status === 429 ? (P.free ? MikoSoul.line('free_limit', { p: P.name }) : `${who} says it’s busy or the account is out of credit. Try again in a moment.`) : e && e.status ? `${who} said no: ${String(e.message || e.status).slice(0, 160)}` : `I couldn’t reach ${P.name}. Check your connection.`);
       return;
     }
+    said = String(said || '').replace(/\[(?:[^\]]*?(?:screen:|local time|open title page)[^\]]*)\]\s*/gi, '').trim(); // mkc-273-state
+    this.aiAt = Date.now();
     if (said || this.pending) this.say(said || 'Here you go.', { html: this.pending });
     const a = this.after; this.after = null; if (!a) return;
     if (a.x) await this.act(a.act, a.x);
@@ -1028,7 +1045,7 @@ Rules:
     const j = await r.json().catch(() => null);
     // a free plan's per-minute limit: wait the few seconds it asks for and try once more, instead of failing
     if (r.status === 429 && !again) { const w = Number(r.headers.get('retry-after')) || 0; if (w > 0 && w <= 20) { await new Promise((ok) => setTimeout(ok, w * 1000 + 300)); return this.post(url, headers, body, true); } }
-    if (!r.ok) { const e = new Error((j && j.error && (j.error.message || j.error.type)) || `error ${r.status}`); e.status = r.status; throw e; }
+    if (!r.ok) { const e = new Error((j && j.error && (j.error.message || j.error.type)) || `error ${r.status}`); e.status = r.status; e.wait = Number(r.headers.get('retry-after')) || 0; throw e; }
     return j;
   },
   trim(h) {
@@ -1068,7 +1085,7 @@ Rules:
     const h = this.hist.slice(); h.push({ role: 'user', content: line });
     let out = '';
     for (let step = 0; step < rounds; step++) {
-      const j = await this.post(`${c.base || this.PROV.openai.base}/chat/completions`, { 'content-type': 'application/json', authorization: `Bearer ${c.key}` }, { model: c.model, messages: [{ role: 'system', content: `${this.SYS}\n\n${MikoSoul.PERSONA}` }, ...h], tools, tool_choice: 'auto' });
+      const sh = c.p === 'mkc', j = await this.post(sh ? c.base : `${c.base || this.PROV.openai.base}/chat/completions`, sh ? { 'content-type': 'application/json', apikey: SUPABASE_PROJECT.anonKey } : { 'content-type': 'application/json', authorization: `Bearer ${c.key}` }, { model: c.model, messages: [{ role: 'system', content: `${this.SYS}\n\n${MikoSoul.PERSONA}` }, ...h], tools, tool_choice: 'auto' });
       const ch = j && j.choices && j.choices[0], msg = ch && ch.message; if (!msg) break;
       const keep = { role: 'assistant', content: msg.content || '' }; if (msg.tool_calls && msg.tool_calls.length) keep.tool_calls = msg.tool_calls;
       h.push(keep); if (msg.content) out = String(msg.content).trim();
