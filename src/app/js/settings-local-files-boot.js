@@ -318,11 +318,9 @@ const SECTIONS = [
     { key: 'hlTrakt', label: 'Trakt Watchlist and Collection rows', help: 'Off by default: they repeat My watchlist and are often empty. Empty rows never show on Home.', type: 'toggle', get: () => Layout.get().traktLists, set: (v) => Layout.set({ traktLists: v }) },
     ...HOME_ROWS.map(([k, l]) => ({ key: `hl-${k}`, label: l, type: 'toggle', get: () => Layout.shows(k), set: (v) => { const h = Layout.get().hidden.filter((x) => x !== k); if (!v) h.push(k); Layout.set({ hidden: h }); } })),
   ] },
-  { id: 'sound', icon: 'volume-2', label: 'Intro & sound', intro: IS_TV ? 'On a TV, MKCinema opens straight to Home with no intro, so the remote is ready right away. The interface makes no sounds.' : 'The boot sequence and its soundtrack. The interface itself makes no sounds.', rows: () => IS_TV ? [] : [
-    { key: 'introMode', label: 'Play the intro', type: 'select', options: [['always', 'Every launch'], ['daily', 'Once a day'], ['never', 'Never']] },
-    { key: 'sound', label: 'Intro sound', type: 'toggle', get: () => !sfx.muted, set: (v) => { if (v === sfx.muted) toggleMute(); } },
-    { key: 'sfxVolume', label: 'Intro volume', type: 'range', min: 0, max: 100, step: 5, fmt: pct, live: true },
-    { key: 'replay', label: 'Intro', type: 'button', text: 'Replay intro', icon: 'rotate-ccw', run: () => { closeLayer('settings'); replayIntro(); } },
+  { id: 'sound', icon: 'volume-2', label: 'Sound', intro: IS_TV ? 'On a TV, MKCinema opens straight to Home, so the remote is ready right away. The interface makes no sounds.' : 'MKCinema opens straight to Home. Sound here covers the welcome tour and Interface sounds only.', rows: () => IS_TV ? [] : [
+    { key: 'sound', label: 'Sound', type: 'toggle', get: () => !sfx.muted, set: (v) => { if (v === sfx.muted) toggleMute(); } },
+    { key: 'sfxVolume', label: 'Volume', type: 'range', min: 0, max: 100, step: 5, fmt: pct, live: true },
   ] },
   { id: 'keys', icon: 'keyboard', label: 'Shortcuts', intro: 'Player keys follow VLC where it makes sense. A gamepad works too: D-pad moves, A selects, B goes back, Y opens sources or search, LB/RB switch tabs or skip 30 s.', rows: () => [{ html: () => `<div class="kbd-grid">${[
     ['Ctrl/⌘ K or /', 'Search titles, addons and commands'], ['Arrows', 'Move between items (seek and volume in the player)'], ['Enter', 'Open or play'], ['Esc / Backspace', 'Back'],

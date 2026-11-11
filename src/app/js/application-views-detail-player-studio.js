@@ -1560,7 +1560,7 @@ const COMMANDS = [
   { label: 'Import from Stremio', icon: 'download', run: () => openStremioImport() },
   { label: 'Replay the walkthrough', icon: 'map', run: () => openTour(0) },
   ...(TOUCH_UI ? [] : [{ label: 'Toggle curved IMAX wall', icon: 'gallery-horizontal', run: () => setWall(!S.wall) }]),
-  ...(IS_TV ? [] : [{ label: 'Replay intro', icon: 'rotate-ccw', run: () => replayIntro() }, { label: 'Toggle sound', icon: 'volume-2', run: () => toggleMute() }]),
+  ...(IS_TV ? [] : [{ label: 'Toggle sound', icon: 'volume-2', run: () => toggleMute() }]),
 ];
 /* Search: titles appear instantly from everything MKCinema has already loaded, then each addon's results
    stream in as soon as that addon answers (no waiting for the slowest one). Results are ranked by how well the
@@ -2059,8 +2059,8 @@ async function boot() {
   icons();
   setWall(S.wall && !TOUCH_UI); setMuteIcon();
   const start = (location.hash || '').replace('#', '');
-  const skip = CFG.introMode === 'never' || (CFG.introMode === 'daily' && Store.get('lastIntro', '') === new Date().toDateString());
-  if (skip || IS_TV) { layoutWord(); revealApp(true); finishIntro(); } else runIntro();
+  // 2.64.2: no intro splash; the boot cover is the only opening screen
+  layoutWord(); revealApp(true); finishIntro();
   await loadAddons();
   icons();
   S.booted = true;
