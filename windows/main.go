@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	version     = "1.3.2"
+	version     = "1.4.0"
 	home        = "https://mkcinema.pages.dev/" // origins.Hosts[0]: the saved sign-in and settings live on this origin
 	title       = "MKCinema"
 	runtimeLink = "https://go.microsoft.com/fwlink/p/?LinkId=2124703"

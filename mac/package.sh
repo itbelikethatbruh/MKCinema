@@ -1,9 +1,9 @@
 #!/bin/sh
-# Builds MKCinema-1.1.1-mac.zip, plus MKCinema-1.1.1.dmg when the dmg tools are present: mkfs.hfsplus (hfsprogs) and
+# Builds MKCinema-1.2.0-mac.zip, plus MKCinema-1.2.0.dmg when the dmg tools are present: mkfs.hfsplus (hfsprogs) and
 # the dmg and hfsplus tools from mozilla/libdmg-hfsplus ($DMGTOOLS). Needs Go 1.24+ and python3 for the torrent
 # engine, which is built from the Windows app's p2p code as one universal (Apple silicon + Intel) program.
 set -e
-cd "$(dirname "$0")"; SRC=$PWD; OUT=${OUT:-$SRC/build}; T=${DMGTOOLS:-}; V=1.1.1
+cd "$(dirname "$0")"; SRC=$PWD; OUT=${OUT:-$SRC/build}; T=${DMGTOOLS:-}; V=1.2.0
 GOSRC=${GOSRC:-$(cd "$SRC/.." && if [ -d mkcinema-windows ]; then echo "$PWD/mkcinema-windows"; else echo "$PWD/windows"; fi)}
 rm -rf "$OUT"; mkdir -p "$OUT/stage/MKCinema.app/Contents/MacOS" "$OUT/stage/MKCinema.app/Contents/Resources"
 A=$OUT/stage/MKCinema.app/Contents

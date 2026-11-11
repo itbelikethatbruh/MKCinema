@@ -571,6 +571,32 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 .iph-txt{max-width:1040px;margin:0 auto}
 .iph-txt h2{margin-top:16px}.iph-txt .lead{margin-top:20px;max-width:62ch}.iph-txt .iph-steps li{align-content:start}
 @media(min-width:900px){.iph-txt .iph-steps{grid-template-columns:repeat(3,1fr);column-gap:36px}.iph-txt .iph-steps li{grid-template-columns:1fr;row-gap:8px}.iph-txt .iph-steps li::before{grid-row:auto}.iph-txt .iph-steps span{grid-column:1}}
+
+.ss-g{display:grid;gap:44px;align-items:center}
+.ss-copy h2{font-size:clamp(28px,4vw,48px);line-height:1.08;margin-top:16px}
+.ss-copy .lead{margin-top:20px;max-width:58ch}
+.ss-card{display:block;text-decoration:none;color:var(--ink);background:linear-gradient(180deg,#101010,#080808);border:1px solid var(--line2);border-radius:22px;padding:26px;box-shadow:0 50px 90px -50px #000;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;transition:transform .35s cubic-bezier(.2,.7,.2,1),border-color .35s}
+.ss-card:hover,.ss-card:focus-visible{transform:translateY(-4px);border-color:rgba(216,194,154,.45)}
+.ss-top{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--mute);letter-spacing:.04em}
+.ss-brand{color:var(--ink2)}.ss-brand i{font-style:normal;color:var(--gold);margin-right:7px}
+.ss-name{margin-top:22px;display:grid;gap:4px}
+.ss-name b{font:600 26px/1.1 var(--sans);letter-spacing:-.01em}
+.ss-name span{font-size:13px;color:var(--mute);overflow-wrap:anywhere}
+.ss-scores{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
+.ss-scores>div{border:1px solid var(--line2);border-radius:14px;padding:14px 16px;display:grid;gap:4px}
+.ss-k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.ss-v{font:italic 400 44px/1 var(--serif,Georgia,serif);color:var(--gold)}
+.ss-s{font-size:12px;line-height:1.45;color:var(--ink2)}
+.ss-tags{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.ss-tags li{font-size:12px;padding:6px 11px;border-radius:999px;border:1px solid var(--line2);color:var(--ink2)}
+.ss-tags li::before{content:"// ";color:var(--gold)}
+.ss-stats{margin:18px 0 0;display:grid;gap:0}
+.ss-stats>div{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line2);font-size:13px}
+.ss-stats dt{color:var(--mute)}.ss-stats dd{margin:0;color:var(--ink)}
+.ss-foot{margin-top:14px;font-size:11px;line-height:1.5;color:var(--mute)}
+@media(min-width:900px){.ss-g{grid-template-columns:minmax(0,6fr) minmax(0,5fr);gap:clamp(48px,7vw,96px)}}
+@media(max-width:380px){.ss-scores{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.ss-card{transition:none}}
 </style>
 </head>
 <body>
@@ -852,12 +878,12 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
   <div class="wrap">
     <div class="head rv">
       <span class="eyebrow">Everything inside</span>
-      <h2 id="all-h">121 features. <em>All free.</em></h2>
+      <h2 id="all-h">122 features. <em>All free.</em></h2>
       <p class="lead">The whole list, in one place. Nothing here is locked, and nothing ever will be.</p>
     </div>
-    <details class="allf rv"><summary><span>See all 121 features</span></summary>
+    <details class="allf rv"><summary><span>See all 122 features</span></summary>
     <div class="cats">
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-puzzle"/></svg></span><h3>Addons</h3><span class="cnt">8</span></div><ul><li>Any Stremio addon by link</li><li>Addons start instantly from a saved copy</li><li>Ratings, notices and settings, made better</li><li>Find addons in the app</li><li>Addon Studio</li><li>Manage addons from your phone</li><li>Import from Stremio</li><li>Plex, Jellyfin and Emby as sources</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-puzzle"/></svg></span><h3>Addons</h3><span class="cnt">9</span></div><ul><li>Any Stremio addon by link</li><li>Addons start instantly from a saved copy</li><li>Ratings, notices and settings, made better</li><li>Find addons in the app</li><li>Addon health check</li><li>Addon Studio</li><li>Manage addons from your phone</li><li>Import from Stremio</li><li>Plex, Jellyfin and Emby as sources</li></ul></div>
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-bolt"/></svg></span><h3>Sources</h3><span class="cnt">11</span></div><ul><li>Debrid built in, your own key</li><li>Cloud convert from your own service</li><li>Smart Play</li><li>Automatic failover</li><li>Source Check and source rules</li><li>Duplicate sources folded</li><li>Picks a source your device can play</li><li>Starts on the first try</li><li>Browser only mode</li><li>One tap to VLC, mpv, Infuse and more</li><li>Slow internet mode</li></ul></div>
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-play"/></svg></span><h3>Player</h3><span class="cnt">18</span></div><ul><li>Edge-to-edge player with tabs</li><li>Plays MKV with Dolby and DTS sound</li><li>HEVC video on computers, no extra install</li><li>Volume to 200 %</li><li>Clear voices and Night sound modes</li><li>Audio delay and language pick</li><li>Picture adjustments</li><li>Sharp upscaling on the GPU</li><li>Gestures, sleep timer, A-B repeat</li><li>Stats, still frames, bookmarks</li><li>Send to TV (Chromecast)</li><li>Spoiler Guard</li><li>Sensory-friendly mode</li><li>Skip intro, recap and credits</li><li>X-Ray and cast pages</li><li>Next episode, found early</li><li>Learn mode for languages</li><li>Sound from another source</li></ul></div>
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-cc"/></svg></span><h3>Subtitles</h3><span class="cnt">8</span></div><ul><li>Styled anime subtitles</li><li>Subtitles inside MKV files</li><li>Captions for films that have none</li><li>Subtitles that line up by themselves</li><li>Translated when none exist</li><li>Signs & Songs with dubs</li><li>Second subtitles, fonts and size</li><li>Subtitles on smart glasses</li></ul></div>
@@ -1106,6 +1132,29 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
     </div>
   </div>
 </section>
+<section class="sec ss" id="silentstars" aria-labelledby="ss-h">
+  <div class="wrap">
+    <div class="ss-g">
+      <div class="ss-copy rv">
+        <span class="eyebrow">Out in the open</span>
+        <h2 id="ss-h">Listed on SilentStars, <em>where the work counts more than the hype.</em></h2>
+        <p class="lead">SilentStars is an independent directory of open-source projects that ship steadily without a big launch. It scores each one every night on the work itself: commits, releases and issues closed. This is how MKCinema reads there.</p>
+        <div class="ab-links"><a class="btn btn-plat" href="https://silentstars.dev/projects/itbelikethatbruh--mkcinema/" rel="noopener"><svg aria-hidden="true"><use href="#i-ext"/></svg>See the listing</a><a class="btn btn-ghost" href="https://github.com/itbelikethatbruh/MKCinema"><svg aria-hidden="true"><use href="#i-ext"/></svg>The code on GitHub</a></div>
+      </div>
+      <a class="ss-card rv" href="https://silentstars.dev/projects/itbelikethatbruh--mkcinema/" rel="noopener" aria-label="MKCinema on SilentStars: health 100, undervalued score 53, tagged hidden gem, funded and release machine">
+        <div class="ss-top"><span class="ss-brand"><i aria-hidden="true">★</i>SilentStars</span><span class="ss-path">silentstars.dev</span></div>
+        <div class="ss-name"><b>MKCinema</b><span>itbelikethatbruh/MKCinema</span></div>
+        <div class="ss-scores">
+          <div><span class="ss-k">Health</span><span class="ss-v">100</span><span class="ss-s">Healthy</span></div>
+          <div><span class="ss-k">Undervalued score</span><span class="ss-v">53</span><span class="ss-s">Above 50: the work is ahead of its audience</span></div>
+        </div>
+        <ul class="ss-tags" aria-label="Tags"><li>hidden gem</li><li>release machine</li><li>funded</li></ul>
+        <dl class="ss-stats"><div><dt>Releases, last 90 days</dt><dd>10</dd></div><div><dt>Open issues</dt><dd>0</dd></div><div><dt>Last commit</dt><dd>today</dd></div></dl>
+        <p class="ss-foot">As listed on 11 November 2026. SilentStars recomputes its scores nightly.</p>
+      </a>
+    </div>
+  </div>
+</section>
 
 <hr class="hr">
 
@@ -1154,7 +1203,7 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
       </div>
       <nav class="ft-cols" aria-label="Footer">
         <div><h4>Product</h4><a href="#features">Features</a><a href="#social">Social Hub</a><a href="#different">Only here</a><a href="#everything">All features</a><a href="#download">Download</a><a href="https://app.mkcinema.app/">Open the app</a></div>
-        <div><h4>Guides</h4><a href="/stremio-addons/">Stremio addons</a><a href="/fire-tv/">Fire TV</a><a href="/iphone-ipad/">iPhone and iPad</a><a href="/mkv-in-browser/">MKV playback</a><a href="/skip-intro/">Skip intro</a><a href="#faq">FAQ</a></div>
+        <div><h4>Guides</h4><a href="/addon-check/">Addon health check</a><a href="/stremio-addons/">Stremio addons</a><a href="/fire-tv/">Fire TV</a><a href="/iphone-ipad/">iPhone and iPad</a><a href="/mkv-in-browser/">MKV playback</a><a href="/skip-intro/">Skip intro</a><a href="#faq">FAQ</a></div>
         <div><h4>Project</h4><a href="#about">About the dev</a><a href="https://github.com/itbelikethatbruh/MKCinema">GitHub</a><a href="https://github.com/itbelikethatbruh/MKCinema/blob/main/CHANGELOG.md">Changelog</a><a href="https://github.com/itbelikethatbruh/MKCinema/blob/main/CONTRIBUTING.md">Contributing</a><a href="https://github.com/itbelikethatbruh/MKCinema/blob/main/SECURITY.md">Security policy</a><a href="https://ko-fi.com/mkcinema">Ko-fi (optional)</a></div>
         <div><h4>Legal</h4><a href="https://github.com/itbelikethatbruh/MKCinema/blob/main/LICENSE">Licence (GPL-3.0)</a><a href="https://github.com/itbelikethatbruh/MKCinema/blob/main/NOTICE">Third-party notices</a><a href="https://app.mkcinema.app/privacy.html">Privacy</a><a href="https://app.mkcinema.app/terms.html">Terms</a></div>
       </nav>

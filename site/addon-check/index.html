@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Free addon health checker: find the slow or broken addon · MKCinema</title>
+<meta name="description" content="Paste a Stremio-compatible addon link and see if it is slow, broken, blocked or has a key problem, with plain fixes. Runs in your browser; your link is never sent to us.">
+<link rel="canonical" href="https://mkcinema.app/addon-check/">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#050505">
+<meta name="color-scheme" content="dark">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Free addon health checker · MKCinema">
+<meta property="og:description" content="Find the addon that makes everything slow. Speed, catalogs, sources, subtitles and key problems, checked in your own browser.">
+<meta property="og:image" content="https://mkcinema.app/og.jpg">
+<meta property="og:url" content="https://mkcinema.app/addon-check/">
+<meta property="og:site_name" content="MKCinema">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/fonts/fraunces-v1.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/onest-v1.woff2" as="font" type="font/woff2" crossorigin>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"MKCinema addon health checker","url":"https://mkcinema.app/addon-check/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Dee Lavish"}}</script>
+<style>
+
+@font-face{font-family:"Fraunces";font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/fraunces-v1.woff2) format("woff2")}
+@font-face{font-family:"Fraunces";font-style:italic;font-weight:400 600;font-display:swap;src:url(/fonts/fraunces-italic-v1.woff2) format("woff2")}
+@font-face{font-family:"Onest";font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/onest-v1.woff2) format("woff2")}
+:root{--bg:#050505;--card:#0f0f0f;--ink:#f3f0e9;--ink2:#c9c5bc;--mute:#8f8b84;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);--gold:#d8c29a;--serif:"Fraunces",Georgia,serif;--sans:"Onest",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.65 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--gold)}img{display:block;max-width:100%;height:auto}
+.wrap{max-width:860px;margin:0 auto;padding:0 clamp(16px,4vw,32px)}
+.skip{position:absolute;left:12px;top:-60px;padding:10px 16px;border-radius:10px;background:var(--ink);color:#0a0a0a;font-weight:600;text-decoration:none}.skip:focus{top:12px}
+header.bar{border-bottom:1px solid var(--line)}
+.bar-in{display:flex;align-items:center;gap:18px;height:68px;max-width:1180px;margin:0 auto;padding:0 clamp(16px,4vw,32px)}
+.brand{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font:500 18px/1 var(--serif);letter-spacing:.02em}
+.brand img{width:34px;height:34px}.brand b{font-weight:600}.brand i{font-style:normal;color:var(--ink2)}
+.bar nav{margin-left:auto;display:flex;align-items:center;gap:20px}.bar nav a.t{color:var(--ink2);text-decoration:none;font-size:14px}.bar nav a.t:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 22px;border-radius:999px;font:600 15px/1 var(--sans);text-decoration:none;white-space:nowrap}
+.btn.plat{color:#0a0a0a;background:linear-gradient(180deg,#fbf9f4,#d9d5cc);box-shadow:inset 0 1px 0 #fff,0 10px 30px -10px rgba(216,194,154,.5)}
+.btn.ghost{color:var(--ink);border:1px solid var(--line2);background:rgba(255,255,255,.03)}
+.crumbs{font-size:13px;color:var(--mute);margin:40px 0 0}.crumbs a{color:var(--ink2);text-decoration:none}.crumbs a:hover{color:var(--ink)}
+.eyebrow{margin-top:28px;font:600 11.5px/1 var(--sans);letter-spacing:.24em;text-transform:uppercase;color:var(--gold)}
+h1,h2,h3{font-family:var(--serif);font-weight:400;letter-spacing:-.02em;margin:0}
+h1{font-size:clamp(38px,6.4vw,66px);line-height:1.02;margin-top:14px}h1 em,h2 em{font-style:italic;color:var(--gold)}
+h2{font-size:clamp(26px,3.6vw,36px);line-height:1.1;margin-top:56px}
+h3{font-size:20px;margin-top:28px}
+.lead{font-size:clamp(17px,1.8vw,20px);color:var(--ink2);margin-top:22px;max-width:62ch}
+p{margin:16px 0 0;color:var(--ink2)}
+ol,ul{margin:16px 0 0;padding-left:22px;color:var(--ink2);display:grid;gap:10px}
+li b,p b{color:var(--ink);font-weight:600}
+code{font:500 13.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;background:rgba(255,255,255,.07);padding:3px 7px;border-radius:6px;color:var(--ink)}
+.shot{margin:34px 0 0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--card)}
+.shot figcaption{padding:12px 18px;font-size:13px;color:var(--mute);border-top:1px solid var(--line)}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.note{margin-top:22px;padding:16px 20px;border:1px solid var(--line);border-radius:14px;background:var(--card);font-size:14.5px;color:var(--ink2)}
+details{border:1px solid var(--line);border-radius:14px;background:#0a0a0a;margin-top:10px}
+summary{cursor:pointer;list-style:none;padding:18px 22px;font-weight:500;color:var(--ink)}summary::-webkit-details-marker{display:none}
+summary::after{content:"+";float:right;color:var(--gold);font-size:20px;line-height:1}details[open] summary::after{content:"\2212"}
+.det{padding:0 22px 20px;color:var(--ink2);font-size:15px}.det p{margin-top:0}
+.more{display:grid;gap:10px;margin-top:18px}.more a{display:block;padding:16px 20px;border:1px solid var(--line);border-radius:14px;background:var(--card);text-decoration:none;color:var(--ink)}
+.more a span{display:block;font-size:14px;color:var(--mute);margin-top:4px}.more a:hover{border-color:rgba(216,194,154,.5)}
+footer{border-top:1px solid var(--line);margin-top:80px;padding:40px 0 calc(40px + env(safe-area-inset-bottom));font-size:13.5px;color:var(--mute)}
+.foot{display:flex;flex-wrap:wrap;gap:8px 22px}.foot a{color:var(--ink2);text-decoration:none}.foot a:hover{color:var(--ink)}
+.legal{margin-top:22px;font-size:12.5px;line-height:1.6;color:var(--mute)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:6px}
+@media(max-width:560px){.bar nav a.t{display:none}}
+
+.box{margin-top:30px;padding:22px;border:1px solid var(--line2);border-radius:20px;background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.012))}
+.box label{display:block;font-weight:600;color:var(--ink);font-size:15px}
+.box small{display:block;color:var(--mute);font-size:13.5px;margin-top:4px}
+textarea{display:block;width:100%;margin-top:14px;min-height:96px;resize:vertical;padding:14px 16px;border-radius:14px;border:1px solid var(--line2);background:#0a0a0a;color:var(--ink);font:500 14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+textarea:focus{outline:none;border-color:rgba(216,194,154,.6)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
+button.btn{border:0;cursor:pointer}button.btn.ghost{border:1px solid var(--line2)}
+button.btn:disabled{opacity:.5;cursor:default}
+.priv{display:flex;gap:10px;align-items:flex-start;margin-top:16px;font-size:13.5px;color:var(--mute)}
+.priv svg{flex:none;margin-top:2px;color:var(--gold)}
+#out{margin-top:26px;display:grid;gap:12px}
+.st{margin:0;color:var(--ink2);font-size:14.5px}
+.sum{display:flex;gap:14px;align-items:center;padding:18px 20px;border-radius:18px;border:1px solid var(--line2);background:var(--card)}
+.sum b{display:block;color:var(--ink);font:500 22px/1.2 var(--serif)}.sum span{display:block;color:var(--mute);font-size:14px;margin-top:4px}
+.sum i{flex:none;width:14px;height:14px;border-radius:50%}
+.v-good i.d,.sum.good i{background:#3ddc84}.v-slow i.d,.v-warn i.d,.sum.slow i{background:#ffb84d}.v-bad i.d,.v-setup i.d,.sum.bad i{background:#ff5470}.v-blocked i.d{background:#8caaff}
+.card{border:1px solid var(--line);border-radius:18px;background:var(--card);overflow:hidden;opacity:0;transform:translateY(6px);animation:rise .35s ease forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.card{animation:none;opacity:1;transform:none}}
+.ch{display:flex;align-items:center;gap:12px;padding:16px 18px}
+.ch .lg{flex:none;width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.07);display:grid;place-items:center;font-weight:600;color:var(--ink);object-fit:cover}
+.ch .nm{flex:1;min-width:0}.ch .nm b{display:block;color:var(--ink);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ch .nm span{display:block;color:var(--mute);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill{flex:none;display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;background:rgba(255,255,255,.07);color:var(--ink)}
+.pill i.d{width:8px;height:8px;border-radius:50%}
+.cb{padding:0 18px 18px}
+.tests{list-style:none;padding:0;margin:0;display:grid;gap:6px;grid-template-columns:minmax(0,1fr)}
+.tests li{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:var(--ink2);border-bottom:1px solid var(--line);padding:6px 0}
+.tests li span:last-child{color:var(--mute);text-align:right;white-space:nowrap}.tests li.bad span:first-child{color:#ff9fb0}
+.fx{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+.fx li{padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:#0a0a0a;font-size:14.5px;color:var(--ink)}
+.fx li.bad{border-color:rgba(255,84,112,.32)}.fx li.warn{border-color:rgba(255,180,60,.3)}.fx li.info{color:var(--ink2)}
+.fx li small{display:block;margin-top:5px;color:var(--mute);font-size:13.5px}
+.fx li a{display:inline-block;margin-top:8px;font-size:13.5px}
+.good-t{margin:10px 0 0;color:#8ff0b8;font-size:14px}
+.all{border:1px solid rgba(216,194,154,.3);border-radius:18px;padding:16px 18px;background:rgba(216,194,154,.04)}
+.all h3{margin:0;font-size:18px}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="bar"><div class="bar-in">
+  <a class="brand" href="/" aria-label="MKCinema home"><img src="/icon-192.png" width="34" height="34" alt=""><span><b>MK</b><i>Cinema</i></span></a>
+  <nav aria-label="Main"><a class="t" href="/#download">Download</a><a class="t" href="/#faq">FAQ</a><a class="btn plat" href="https://app.mkcinema.app/">Open MKCinema</a></nav>
+</div></header>
+<main id="main" class="wrap">
+  <p class="crumbs"><a href="/">MKCinema</a> › Addon health check</p>
+  <div class="eyebrow">Free tool</div>
+  <h1>Which addon is <em>slowing you down?</em></h1>
+  <p class="lead">Paste your addon links and get a straight answer: how fast each one answers, whether its catalogs, sources and subtitles actually work, and whether its key or setup has a problem. Then what to do about it.</p>
+
+  <form class="box" id="f" autocomplete="off">
+    <label for="links">Addon links</label>
+    <small>One per line. Links ending in <code>manifest.json</code> or starting with <code>stremio://</code> both work.</small>
+    <textarea id="links" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="https://example-addon.com/manifest.json"></textarea>
+    <div class="row"><button class="btn plat" type="submit" id="go">Check</button><button class="btn ghost" type="button" id="cp" hidden>Copy report</button></div>
+    <p class="priv"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>The check runs in your browser and talks only to the addons you paste. Your links, and any keys inside them, are never sent to MKCinema, saved, or put in this page’s address. The copied report leaves links out.</span></p>
+  </form>
+  <div id="out" aria-live="polite"></div>
+
+  <h2>What it <em>checks</em></h2>
+  <ul>
+    <li><b>Can it be reached?</b> Down, moved, refusing requests, or blocking web pages (a browser can’t test those, and the tool says so instead of guessing).</li>
+    <li><b>Speed.</b> How long the manifest, a catalog, sources and subtitles take, tested with famous titles like Inception and Breaking Bad. Slow addons are asked twice, to see if only the first lookup is slow.</li>
+    <li><b>Key and setup problems.</b> Addons that answer with “invalid key”, “expired” or “please configure” instead of sources, or that say they still need to be set up.</li>
+    <li><b>Heavy answers.</b> Hundreds of sources per title or huge catalogs that make phones and TVs crawl.</li>
+    <li><b>Your whole setup.</b> Paste all your links to find the same addon installed twice, too many source addons, several addons on one overloaded server, and the single slowest addon everything waits for.</li>
+  </ul>
+  <div class="note">Results can change from hour to hour as addon servers get busy. A slow result once is normal; slow every time is the addon.</div>
+
+  <h2>Built into <em>MKCinema</em></h2>
+  <p>In the app, open <b>Addons › Check my addons</b>. It checks every addon you have at once, shows a result on each one, and fixes things in one press: turn off the slow one, move it down, or keep one copy of a duplicate. MKCinema is free forever, with no ads.</p>
+  <div class="cta"><a class="btn plat" href="https://app.mkcinema.app/">Open MKCinema</a><a class="btn ghost" href="/#download">Download the app</a></div>
+
+  <h2>Questions, <em>answered.</em></h2>
+  <details><summary>Is my addon link safe to paste here?</summary><div class="det"><p>Yes. The page has no server part: the check runs in your browser and only contacts the addon’s own server, the same way your player does. Nothing is stored or sent to MKCinema.</p></div></details>
+  <details><summary>Why does it say “Can’t test here”?</summary><div class="det"><p>Some addon servers only answer apps, not web pages (they send no CORS permission). A browser is not allowed to read their answers, so the tool can’t judge them. That is not the same as broken: native apps can still use them.</p></div></details>
+  <details><summary>It says my key has a problem. What now?</summary><div class="det"><p>Open the addon’s setup page, paste your current key from your service’s account page, and install the new link it gives you. Then remove the old link from your player.</p></div></details>
+  <details><summary>Does it work with any player?</summary><div class="det"><p>It checks the addon itself, so the results apply whichever app you use it in.</p></div></details>
+</main>
+<footer><div class="wrap">
+  <div class="foot"><a href="/">Home</a><a href="/addon-check/">Addon health check</a><a href="/stremio-addons/">Stremio addons</a><a href="/fire-tv/">Fire TV and Android TV</a><a href="/iphone-ipad/">iPhone and iPad</a><a href="/mkv-in-browser/">MKV in the browser</a><a href="/skip-intro/">Skip intro and credits</a><a href="/#download">Download</a><a href="https://github.com/itbelikethatbruh/MKCinema">GitHub</a><a href="https://ko-fi.com/mkcinema">Ko-fi</a></div>
+  <p class="legal">MKCinema does not host, provide or link to any copyrighted content. This tool only reads what an addon serves publicly and reports nothing back to it. Stremio is a trademark of its owner; MKCinema is an independent project, not affiliated with or endorsed by Stremio. © 2026 MKCinema · Made by Dee Lavish · Free forever · Open source under GPL-3.0</p>
+</div></footer>
+<script>
+/* 2.67 Addon health check, the part shared by the app and the public checker page on mkcinema.app.
+   Everything runs in the viewer's own browser. An addon link can carry a private key, so the check sends a link only to
+   that addon's own server, never to MKCinema, and never logs or stores it. It only reads what an addon serves to anyone
+   (its manifest, a catalog, sources and subtitles for a few very well-known titles); it reports nothing back to the addon. */
+const AddonCheck = (() => {
+  const T = { manifestOk: 1500, manifestSlow: 4000, catOk: 2500, catSlow: 6000, metaSlow: 3000, streamOk: 3000, streamSlow: 8000, ceiling: 25000 };
+  // well-known titles almost every catalog, source and subtitle addon covers, one per id scheme
+  const SAMPLES = {
+    tt: { movie: ['tt1375666', 'Inception'], series: ['tt0903747:1:1', 'Breaking Bad, episode 1'] },
+    tmdb: { movie: ['tmdb:27205', 'Inception'], series: ['tmdb:1396:1:1', 'Breaking Bad, episode 1'] },
+    kitsu: { movie: ['kitsu:1', 'Cowboy Bebop'], series: ['kitsu:1:1', 'Cowboy Bebop, episode 1'], anime: ['kitsu:1:1', 'Cowboy Bebop, episode 1'] },
+    mal: { movie: ['mal:1', 'Cowboy Bebop'], series: ['mal:1:1', 'Cowboy Bebop, episode 1'], anime: ['mal:1:1', 'Cowboy Bebop, episode 1'] },
+    anilist: { movie: ['anilist:1', 'Cowboy Bebop'], series: ['anilist:1:1', 'Cowboy Bebop, episode 1'], anime: ['anilist:1:1', 'Cowboy Bebop, episode 1'] },
+  };
+  // words an addon puts in a fake "source" when your service key or account has a problem
+  const KEY_RX = /(invalid|wrong|expired|missing|bad|incorrect|revoked)[^\n]{0,14}(api[\s_-]?)?(key|token|credentials?)|api[\s_-]?key[^\n]{0,20}(invalid|expired|missing|required|wrong)|unauthori[sz]ed|\b401\b|not (logged|signed) in|log ?in (again|required|failed)|(subscription|premium|membership|plan)[^\n]{0,14}(expired|ended|required|inactive)|account[^\n]{0,14}(expired|suspended|locked|banned|not premium)|(re-?)?configure (the |this |your )?addon|setup required|configuration required/i;
+  const ERR_RX = /\berror\b|\bfailed\b|unavailable|rate[\s-]?limit|too many requests|\b429\b|temporarily|blocked|forbidden|maintenance|service (down|unavailable)/i;
+
+  const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const host = (u) => { try { return new URL(u).host; } catch (e) { return ''; } };
+  const sec = (ms) => `${Math.max(0.1, ms / 1000).toFixed(ms < 10000 ? 1 : 0)} s`;
+  const size = (n) => (n >= 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
+  const plural = (n, a, b) => `${n} ${n === 1 ? a : (b || `${a}s`)}`;
+  const enc = encodeURIComponent;
+
+  /* stremio:// and https:// links, with or without /manifest.json; returns the base the routes hang off */
+  function base(input) {
+    let u = String(input || '').trim();
+    if (!u) throw new Error('Paste an addon link first.');
+    if (/^stremio:\/\//i.test(u)) u = u.replace(/^stremio:\/\//i, 'https://');
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(u)) u = `https://${u}`;
+    let p; try { p = new URL(u); } catch (e) { throw new Error('That does not look like an addon link.'); }
+    if (!/^https?:$/.test(p.protocol)) throw new Error('An addon link starts with https:// or stremio://');
+    return (p.origin + p.pathname).replace(/\/manifest\.json$/i, '').replace(/\/+$/, '');
+  }
+  function resources(m) {
+    return (Array.isArray(m.resources) ? m.resources : []).filter(Boolean).map((r) => (typeof r === 'string'
+      ? { name: r, types: m.types || [], idPrefixes: m.idPrefixes || null }
+      : { name: r.name, types: r.types || m.types || [], idPrefixes: r.idPrefixes || m.idPrefixes || null }));
+  }
+  function extras(c) {
+    if (Array.isArray(c.extra)) return c.extra.map((e) => (typeof e === 'string' ? { name: e } : e || {}));
+    const sup = c.extraSupported || [], req = c.extraRequired || [];
+    return sup.map((n) => ({ name: n, isRequired: req.includes(n) }));
+  }
+
+  /* one request, timed; never throws */
+  async function get(url, ms, signal) {
+    const r = { ms: 0, ok: false, status: 0, bytes: 0, json: null, kind: '', redirected: false };
+    const ctl = new AbortController(), t0 = now(), tm = setTimeout(() => ctl.abort(), ms);
+    const stop = () => ctl.abort(); if (signal) signal.addEventListener('abort', stop);
+    try {
+      const res = await fetch(url, { signal: ctl.signal, cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer', headers: { Accept: 'application/json' } });
+      r.status = res.status; r.redirected = res.redirected;
+      const text = await res.text(); r.ms = Math.round(now() - t0); r.bytes = text.length;
+      if (!res.ok) { r.kind = res.status === 429 ? 'rate' : res.status >= 500 ? 'server' : res.status === 404 ? 'missing' : res.status === 401 || res.status === 403 ? 'denied' : 'http'; return r; }
+      try { r.json = JSON.parse(text.replace(/^﻿/, '')); r.ok = r.json && typeof r.json === 'object'; if (!r.ok) r.kind = 'notjson'; } catch (e) { r.kind = /^\s*</.test(text) ? 'html' : 'notjson'; }
+    } catch (e) {
+      r.ms = Math.round(now() - t0);
+      r.kind = signal && signal.aborted ? 'cancel' : e && e.name === 'AbortError' ? 'timeout' : 'network';
+    } finally { clearTimeout(tm); if (signal) signal.removeEventListener('abort', stop); }
+    return r;
+  }
+  /* a request the browser hides from the page tells whether the server is up at all, which separates "blocks
+     cross-site requests" from "down" */
+  async function reachable(url) {
+    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 8000);
+    try { await fetch(url, { mode: 'no-cors', cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer', signal: ctl.signal }); return true; } catch (e) { return false; } finally { clearTimeout(tm); }
+  }
+  function failText(r, what) {
+    switch (r.kind) {
+      case 'timeout': return `${what} did not answer within ${sec(r.ms)}`;
+      case 'rate': return `${what} answered “too many requests” (HTTP 429): the server is limiting how often it can be asked`;
+      case 'server': return `${what} had a server error (HTTP ${r.status})`;
+      case 'missing': return `${what} answered “not found” (HTTP 404)`;
+      case 'denied': return `${what} refused the request (HTTP ${r.status}), which usually means the key or login in the link is no longer accepted`;
+      case 'html': return `${what} sent a web page instead of addon data, often a login, error or “site moved” page`;
+      case 'notjson': return `${what} sent something that is not addon data`;
+      case 'http': return `${what} answered HTTP ${r.status}`;
+      default: return `${what} did not answer`;
+    }
+  }
+  /* picks a test title the addon says it covers */
+  function sample(res, type, fallbackId) {
+    const pre = res.idPrefixes && res.idPrefixes.length ? res.idPrefixes : null;
+    for (const k of ['tt', 'tmdb', 'kitsu', 'mal', 'anilist']) {
+      if (pre && !pre.some((p) => String(p).toLowerCase().startsWith(k))) continue;
+      const s = SAMPLES[k][type]; if (s) return { id: s[0], label: s[1] };
+    }
+    return fallbackId ? { id: fallbackId, label: 'a title from its own catalog' } : null;
+  }
+
+  /* Reads the sources an addon returned for a famous title. `parse` (optional, the app's own reader) marks cached files. */
+  function readStreams(list, parse) {
+    const o = { n: list.length, playable: 0, p2p: 0, ext: 0, headers: 0, notWeb: 0, cached: 0, uncached: 0, key: '', err: '' };
+    for (const s of list) {
+      if (!s || typeof s !== 'object') continue;
+      const text = [s.name, s.title, s.description].filter((x) => typeof x === 'string').join(' • ').replace(/\s+/g, ' ').trim();
+      const bh = s.behaviorHints || {};
+      const fake = !s.url && !s.infoHash && !s.ytId && !s.externalUrl;
+      if (s.url) o.playable++; else if (s.infoHash) o.p2p++; else if (s.externalUrl) o.ext++;
+      if (bh.proxyHeaders && (bh.proxyHeaders.request || bh.proxyHeaders.response)) o.headers++;
+      if (bh.notWebReady) o.notWeb++;
+      // an addon that reports a problem does it with a short list, often one entry and often with a link to a notice video
+      if (!o.key && KEY_RX.test(text) && (fake || list.length <= 3)) o.key = text.slice(0, 140);
+      else if (!o.err && ERR_RX.test(text) && (fake || list.length <= 2)) o.err = text.slice(0, 140);
+      let c;
+      if (parse) { try { c = parse(s).cached; } catch (e) { c = undefined; } }
+      else { const tag = /\[(RD|TB|AD|PM|DL|OC|ED|PD|PR|EN|DLS)\b[^\]]*\]/i.exec(s.name || ''); if (tag) c = /download|⬇|⏳/i.test(tag[0]) ? false : (/\+|⚡/.test(tag[0]) || /⚡/.test(s.name || '')) ? true : undefined; }
+      if (c === true) o.cached++; else if (c === false) o.uncached++;
+    }
+    return o;
+  }
+
+  /* Checks one addon. opts: { timeout (the app's addon timeout in s), parse, signal, onStep(text) }
+     Returns { base, host, name, logo, version, verdict, ms, tests: [...], findings: [...], manifest, kinds } */
+  async function one(input, opts = {}) {
+    const b = base(input), hostName = host(b), out = { base: b, host: hostName, name: hostName, logo: '', version: '', verdict: 'good', tests: [], findings: [], manifest: null, kinds: [], stream: null };
+    const step = (t) => { if (opts.onStep) try { opts.onStep(t); } catch (e) { /* display only */ } };
+    const tags = new Set(), add = (level, text, fix, act, slow, tag) => { if (tag) { if (tags.has(tag)) return; tags.add(tag); } out.findings.push({ level, text, fix: fix || '', act: act || '', slow: !!slow }); };
+    const test = (label, r, extra) => { const x = { label, ms: r ? r.ms : 0, ok: !!(r && r.ok), note: '', ...extra }; out.tests.push(x); return x; };
+    const W = (app, site) => (opts.site ? site : app);
+    const limit = (opts.timeout || 15) * 1000, cap = Math.max(T.ceiling, limit + 5000);
+
+    if (typeof location !== 'undefined' && location.protocol === 'https:' && /^http:/i.test(b)) {
+      out.verdict = 'bad';
+      add('bad', 'This link starts with http://, and browsers block plain http addons inside a secure (https) page.', 'Use the https:// version of the link if the addon has one. The Android and desktop apps can also use http addons on your home network.');
+      return out;
+    }
+    step('Reading its manifest');
+    const mr = await get(`${b}/manifest.json`, 15000, opts.signal);
+    if (mr.kind === 'cancel') { out.verdict = 'cancel'; return out; }
+    test('Manifest', mr);
+    if (!mr.ok) {
+      if (mr.kind === 'network') {
+        if (typeof navigator !== 'undefined' && navigator.onLine === false) { out.verdict = 'blocked'; add('warn', 'This device is offline, so nothing could be checked.', 'Connect to the internet and run the check again.'); return out; }
+        step('Checking whether the server is up');
+        const up = await reachable(`${b}/manifest.json`);
+        if (up) {
+          out.verdict = 'blocked';
+          add('warn', `The server is up, but it does not allow requests from web pages (no CORS permission), so a browser cannot test it${W(', or use it in the web app', '')}.`, `This is a setting on the addon’s server, not something wrong on your side. ${W('The Android, Windows and TV apps are not limited by it.', 'Native apps are not limited by it, but web players are.')} If the addon has an official https link, try that one.`);
+        } else {
+          out.verdict = 'bad';
+          add('bad', 'The server did not answer at all. The addon may be down, moved to a new address, or blocked on this network.', 'Try again in a few minutes. If it stays down, check the addon’s own page for a new link, and remove this one.', 'remove');
+        }
+        return out;
+      }
+      out.verdict = 'bad';
+      add('bad', `${failText(mr, 'The addon')} when asked for its manifest, so nothing it offers can load.`, mr.kind === 'denied' ? 'Open the addon’s setup page, sign in or paste your key again, and install the new link it gives you.' : mr.kind === 'timeout' ? 'The server is overloaded or down. Try again later, or remove it if it keeps happening.' : 'The link may be old. Get a fresh link from the addon’s own page.', mr.kind === 'denied' ? 'setup' : 'remove');
+      return out;
+    }
+    const m = mr.json; out.manifest = m;
+    out.name = typeof m.name === 'string' && m.name.trim() ? m.name.trim().slice(0, 80) : hostName;
+    out.logo = typeof m.logo === 'string' && /^https:\/\//i.test(m.logo) ? m.logo : '';
+    out.version = typeof m.version === 'string' ? m.version.slice(0, 20) : '';
+    const res = resources(m), bh = m.behaviorHints || {};
+    out.kinds = [...new Set(res.map((r) => r.name).filter((n) => typeof n === 'string'))];
+    const configurable = !!(bh.configurable || bh.configurationRequired);
+    if (!m.id || !m.name || !res.length) {
+      out.verdict = 'bad';
+      add('bad', `Its manifest is incomplete (${[!m.id && 'no id', !m.name && 'no name', !res.length && 'lists nothing it offers'].filter(Boolean).join(', ')}).`, 'Get a fresh link from the addon’s own page.', 'remove');
+      return out;
+    }
+    if (bh.configurationRequired) {
+      add('bad', 'The addon says it still needs to be set up before it can work.', 'Open its setup page, choose your options, and install the link it gives you.', 'setup');
+    }
+    if (mr.ms > T.manifestSlow) add('warn', `Its manifest took ${sec(mr.ms)} to arrive. ${W('MKCinema keeps a saved copy so start-up does not wait, but a', 'A')} slow manifest usually means a busy server.`, '', '', true);
+    if (mr.bytes > 256 * 1024) add('warn', `Its manifest is large (${size(mr.bytes)}), ${W('too big for MKCinema to keep a saved copy, so start-up waits for it every time', 'which slows start-up in most players')}.`, 'If the addon has a setup page, turn off catalogs you do not use there.', configurable ? 'setup' : '');
+    if (mr.redirected) add('info', 'Its link redirects to another address. It works, but each request takes an extra trip.', 'Get the current link from the addon’s own page and install that one.');
+    const cats = Array.isArray(m.catalogs) ? m.catalogs.filter((c) => c && c.type && c.id) : [];
+    if (cats.length > 25) add('info', `It adds ${cats.length} catalogs. Each catalog shown on Home is one more request when Home loads.`, 'Hide the rows you never use, or turn catalogs off on the addon’s setup page.', configurable ? 'setup' : '');
+
+    // catalog: the first one that needs nothing extra
+    let fromCat = null;
+    const cat = cats.find((c) => !extras(c).some((e) => e.isRequired));
+    if (out.kinds.includes('catalog') && cat) {
+      step('Loading a catalog');
+      const cr = await get(`${b}/catalog/${enc(cat.type)}/${enc(cat.id)}.json`, cap, opts.signal);
+      if (cr.kind === 'cancel') { out.verdict = 'cancel'; return out; }
+      const metas = cr.ok && Array.isArray(cr.json.metas) ? cr.json.metas.filter((x) => x && (typeof x.id === 'string' || typeof x.id === 'number')) : null;
+      const t = test(`Catalog “${String(cat.name || cat.id).slice(0, 40)}”`, cr, { ok: !!(metas && metas.length) });
+      if (metas) { fromCat = metas[0] ? { id: String(metas[0].id), type: metas[0].type || cat.type } : null; t.note = plural(metas.length, 'title'); }
+      if (!cr.ok) add('bad', `${failText(cr, 'Its catalog')}. Rows from this addon stay empty or keep loading.`, cr.kind === 'denied' ? 'Open the addon’s setup page and install a fresh link.' : '', cr.kind === 'denied' ? 'setup' : '');
+      else if (!metas || !metas.length) add('warn', `Its catalog “${String(cat.name || cat.id).slice(0, 40)}” came back empty.`, configurable ? 'Its setup page may need a key or options before it lists anything.' : '', configurable ? 'setup' : '');
+      else if (cr.ms > T.catSlow) add('warn', `Its catalog took ${sec(cr.ms)}. Rows from this addon appear late on Home.`, '', '', true);
+      if (cr.ok && cr.bytes > 1.5 * 1024 * 1024) add('warn', `One page of its catalog is ${size(cr.bytes)}, heavy for phones and TVs.`);
+    } else if (out.kinds.includes('catalog') && cats.length) {
+      test('Catalog', null, { ok: true, skip: true, note: 'only search or filtered catalogs' });
+    }
+
+    // sources: a famous film, then a famous episode, as the addon covers them
+    const sres = res.find((r) => r.name === 'stream');
+    if (sres) {
+      if (!sres.idPrefixes || !sres.idPrefixes.length) add('info', 'It does not say which kinds of titles it covers, so it is asked for sources on every title, including channels and titles it can never have.');
+      const types = (sres.types || []).filter((x) => typeof x === 'string');
+      const order = ['movie', 'series', 'anime'].filter((x) => types.includes(x));
+      const tries = [];
+      for (const ty of order.length ? order : types.slice(0, 1)) {
+        const smp = sample(sres, ty, fromCat && fromCat.type === ty ? fromCat.id : null);
+        if (smp && !tries.some((x) => x.id === smp.id)) tries.push({ type: ty, ...smp });
+        if (tries.length >= 2) break;
+      }
+      if (!tries.length && fromCat) tries.push({ type: fromCat.type, id: fromCat.id, label: 'a title from its own catalog' });
+      if (!tries.length) test('Sources', null, { ok: true, skip: true, note: 'no test title for what it covers' });
+      let first = null;
+      for (const s of tries) {
+        step(`Asking for sources: ${s.label}`);
+        const url = `${b}/stream/${enc(s.type)}/${enc(s.id)}.json`;
+        const r = await get(url, cap, opts.signal);
+        if (r.kind === 'cancel') { out.verdict = 'cancel'; return out; }
+        const list = r.ok && Array.isArray(r.json.streams) ? r.json.streams : null;
+        const t = test(`Sources for ${s.label}`, r, { ok: !!list });
+        if (!list) {
+          if (!first && r.kind === 'timeout') out.stream = { ms: r.ms, n: 0, timeout: true };
+          add('bad', `${failText(r, `Asking for sources (${s.label})`)}.${r.kind === 'timeout' ? W(' Smart Play and the source list wait for it every time you press Play.', ' Your player waits for it every time you press Play.') : ''}`,
+            r.kind === 'denied' ? 'Open the addon’s setup page and install a fresh link with your key.' : r.kind === 'rate' ? 'Wait a while before using it again, and avoid installing several copies of the same addon.' : r.kind === 'timeout' ? 'Turn it off for now and try again later. If it keeps timing out, remove it.' : 'Try again later. If it keeps failing, remove it or get a fresh link.',
+            r.kind === 'denied' ? 'setup' : r.kind === 'timeout' ? 'off' : '', false, `sf:${r.kind}`);
+          continue;
+        }
+        const rd = readStreams(list, opts.parse); t.note = plural(rd.n, 'source');
+        if (!first) { first = { r, rd, s, url }; out.stream = { ms: r.ms, n: rd.n }; }
+        if (rd.key) add('bad', `It returned a warning instead of sources: “${rd.key}”. Your service key or account in this addon’s link is probably wrong, expired or out of credit.`, 'Open the addon’s setup page, paste your current key, and install the new link it gives you. Then remove the old one.', 'setup', false, 'key');
+        else if (rd.err) add('warn', `It returned an error message instead of sources: “${rd.err}”.`, 'This is a problem on the addon’s server or with your service. Try again later.', '', false, 'err');
+        else if (!rd.n) add('warn', `It found no sources for ${s.label}, one of the most widely available titles.`, configurable ? 'Its setup page may have filters or a missing key that hide everything.' : 'It may only cover other kinds of titles, or its sources are offline.', configurable ? 'setup' : '');
+      }
+      if (first) {
+        const { r, rd } = first;
+        const limitHit = r.ms > limit;
+        if (limitHit) add('bad', W(`It takes ${sec(r.ms)} to find sources, longer than the ${opts.timeout || 15} s addon timeout, so MKCinema gives up on it every time.`, `It takes ${sec(r.ms)} to find sources, longer than most players wait (about 15 s), so its sources are usually skipped.`), W('Turn it off, or raise Settings › Your addons › Addon timeout if you really want its sources.', 'Turn it off, or remove it if it is always this slow.'), 'off', true);
+        else if (r.ms > T.streamSlow) add('warn', `It takes ${sec(r.ms)} to find sources. ${W('Smart Play and the source list wait', 'Your player waits')} for it on every title.`, 'Turn it off if you do not need it.', 'off', true);
+        else if (r.ms > T.streamOk) add('info', `It takes ${sec(r.ms)} to find sources, a little slow.`);
+        if (r.ms > T.streamOk && !opts.signal?.aborted) {
+          step('Asking again to see if it gets faster');
+          const again = await get(first.url, cap, opts.signal);
+          if (again.ok) {
+            test('Same sources, asked again', again);
+            if (again.ms < r.ms * 0.45) out.findings.push({ level: 'info', text: `Asked a second time it answered in ${sec(again.ms)}. It looks titles up live the first time and remembers them after, so new titles are slow and repeat titles are quick.`, fix: '', act: '' });
+            else if (again.ms > T.streamSlow) out.findings.push({ level: 'info', text: `Asked a second time it was still slow (${sec(again.ms)}), so the server itself is slow or overloaded, not just the first lookup.`, fix: '', act: '' });
+          }
+        }
+        if (rd.n > 300 || r.bytes > 1.5 * 1024 * 1024) add('warn', `It sends ${rd.n} sources (${size(r.bytes)}) for one title. Long lists make ${W('the source list and Smart Play', 'source lists and auto-play')} slower, mostly on TVs and phones.`, configurable ? 'Most addons like this have a setting to limit results per quality. Open its setup page.' : '', configurable ? 'setup' : '');
+        if (rd.n && rd.p2p === rd.n && !opts.p2pOk) add('info', W('All of its sources are peer-to-peer links. A web browser cannot play those on its own; they need a debrid service connected in Settings, or the Android or TV app.', 'All of its sources are peer-to-peer links. Web players cannot play those on their own; they need a debrid service or an app with a built-in torrent engine.'));
+        if (rd.headers && rd.headers >= rd.n / 2) add('info', `${plural(rd.headers, 'source')} ask for special request headers, which a web page cannot add by itself. ${W('They play through the MKCinema server, or are skipped in the web app', 'Web players skip them unless they run a local helper')}.`);
+        if (rd.uncached && !rd.cached && rd.uncached === rd.n) add('info', 'None of its sources for the test title are ready on your debrid service yet, so they would start with a “downloading” notice.');
+      }
+    }
+
+    // subtitles
+    const subr = res.find((r) => r.name === 'subtitles');
+    if (subr) {
+      const ty = (subr.types || []).includes('movie') ? 'movie' : (subr.types || [])[0] || 'movie';
+      const smp = sample(subr, ty, null);
+      if (smp) {
+        step('Asking for subtitles');
+        const r = await get(`${b}/subtitles/${enc(ty)}/${enc(smp.id)}.json`, cap, opts.signal);
+        if (r.kind === 'cancel') { out.verdict = 'cancel'; return out; }
+        const list = r.ok && Array.isArray(r.json.subtitles) ? r.json.subtitles : null;
+        const t = test(`Subtitles for ${smp.label}`, r, { ok: !!list }); if (list) t.note = plural(list.length, 'subtitle');
+        if (!list) add('warn', `${failText(r, 'Asking for subtitles')}. Subtitle lists wait for it when a film starts.`, '', r.kind === 'timeout' ? 'off' : '');
+        else if (r.ms > T.streamSlow) add('warn', `It takes ${sec(r.ms)} to list subtitles.`, '', '', true);
+      }
+    }
+
+    // meta: details for a title from its own catalog
+    const metr = res.find((r) => r.name === 'meta');
+    if (metr && fromCat) {
+      step('Opening a title page');
+      const r = await get(`${b}/meta/${enc(fromCat.type)}/${enc(fromCat.id)}.json`, cap, opts.signal);
+      if (r.kind === 'cancel') { out.verdict = 'cancel'; return out; }
+      const ok = r.ok && r.json.meta && typeof r.json.meta === 'object';
+      test('Title details', r, { ok });
+      if (!ok) add('warn', `${failText(r, 'Asking for title details')}. Its titles may open with missing details.`);
+      else if (r.ms > T.metaSlow) add('warn', `Title details take ${sec(r.ms)}, so title pages that use this addon open slowly.`, '', '', true);
+    }
+
+    out.ms = out.tests.reduce((a, x) => Math.max(a, x.ms || 0), 0);
+    const bad = out.findings.filter((f) => f.level === 'bad'), warn = out.findings.filter((f) => f.level === 'warn');
+    out.verdict = bad.some((f) => f.act !== 'setup' && !f.slow) ? 'bad' : bad.some((f) => f.act === 'setup') ? 'setup' : bad.length || warn.some((f) => f.slow) ? 'slow' : warn.length ? 'warn' : 'good';
+    return out;
+  }
+
+  /* Looks across all addons together: copies, overlap, order and how many sources Smart Play waits for.
+     addons: [{ base, name, id, enabled, order, kinds, metaFirst }] in the app's order; reports from one(). */
+  function together(reports, opts = {}) {
+    const f = [], add = (level, text, fix, act, who) => f.push({ level, text, fix: fix || '', act: act || '', who: who || null });
+    const ok = reports.filter((r) => r.manifest);
+    // the same addon installed twice (often an old and a new link)
+    const byId = new Map();
+    ok.forEach((r) => { const k = r.manifest.id; if (!byId.has(k)) byId.set(k, []); byId.get(k).push(r); });
+    for (const [, list] of byId) if (list.length > 1) add('warn', `${list[0].name} is installed ${list.length} times, usually an old link and a new one. Every title asks each copy, which doubles the wait and can hit the server’s limits.`, 'Keep the newest copy and remove the others.', 'dupe', list.map((r) => r.base));
+    const names = new Map();
+    ok.forEach((r) => { const k = r.name.toLowerCase(); if (!names.has(k)) names.set(k, []); names.get(k).push(r); });
+    for (const [, list] of names) if (list.length > 1 && new Set(list.map((r) => r.manifest.id)).size > 1) add('info', `${list.length} addons are called “${list[0].name}”. They may be different copies of the same service.`, '', '', list.map((r) => r.base));
+    // sources: everything that answers "stream" is asked on every Play, and Smart Play waits for all of them
+    const src = ok.filter((r) => r.kinds.includes('stream'));
+    const timed = src.filter((r) => r.stream).sort((a, b) => b.stream.ms - a.stream.ms);
+    if (timed.length >= 2 && timed[0].stream.ms > 3000) add(timed[0].stream.ms > (opts.timeout || 15) * 1000 ? 'bad' : 'warn', `${opts.site ? 'Players ask every source addon and wait for the answers' : 'Smart Play waits for every source addon before it chooses'}. ${timed[0].name} is the slowest at ${sec(timed[0].stream.ms)}, so every Play waits about that long${timed[1] ? `; without it the wait would be about ${sec(timed[1].stream.ms)}` : ''}.`, 'Turn it off, or remove it if you rarely use its sources.', 'off', [timed[0].base]);
+    if (src.length >= 7) add('warn', `${src.length} addons look for sources on every title. Each one is another request to wait for, and they often find the same files.`, 'Keep the 3 to 5 you get the best sources from and turn off the rest.');
+    else if (src.length >= 5) add('info', `${src.length} addons look for sources. That works, but each one adds to the wait when you press Play.`);
+    const hosts = new Map();
+    src.forEach((r) => { hosts.set(r.host, (hosts.get(r.host) || 0) + 1); });
+    for (const [h, n] of hosts) if (n >= 3) add('info', `${n} of your source addons run on the same server (${h}). Asked all at once, that server may slow down or start refusing requests.`);
+    // title pages ask meta addons in order and take the first answer
+    if (opts.metaOrder && opts.metaOrder.length > 1) {
+      const slowFirst = [];
+      for (const r of opts.metaOrder) { if (r.slow) slowFirst.push(r); else break; }
+      if (slowFirst.length) add('warn', `Title pages ask ${slowFirst.map((r) => r.name).join(' and ')} for details first, and ${slowFirst.length === 1 ? 'it is' : 'they are'} slow or failing, so every title page waits before the next addon is asked.`, 'Move it down the list, below an addon that answers quickly.', 'down', slowFirst.map((r) => r.base));
+    }
+    return f;
+  }
+
+  /* plain text for sharing: names and verdicts, never links */
+  function text(reports, extra = []) {
+    const V = { good: 'Healthy', slow: 'Slow', warn: 'Has warnings', bad: 'Not working', setup: 'Needs setup', blocked: 'Cannot be tested in a browser', cancel: 'Stopped' };
+    const lines = [`Addon health check, ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`];
+    extra.forEach((x) => lines.push(`* ${x.text}`));
+    reports.forEach((r) => {
+      lines.push('', `${r.name}${r.version ? ` v${r.version}` : ''}: ${V[r.verdict] || r.verdict}`);
+      r.tests.forEach((t) => lines.push(`  - ${t.label}: ${t.skip ? 'skipped' : t.ok ? 'OK' : 'failed'}${t.ms ? `, ${sec(t.ms)}` : ''}${t.note ? `, ${t.note}` : ''}`));
+      r.findings.forEach((x) => lines.push(`  ! ${x.text}`));
+    });
+    // a key can sit in the path of a link; links are never added, and a host name is the most a line ever carries
+    return lines.join('\n');
+  }
+
+  return { one, together, text, base, resources, sec, T, readStreams };
+})();
+
+(() => {
+  const $ = (q) => document.querySelector(q);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const V = { good: 'Healthy', slow: 'Slow', warn: 'Check', bad: 'Not working', setup: 'Needs setup', blocked: 'Can’t test here', cancel: 'Stopped' };
+  const RANK = { bad: 0, setup: 1, slow: 2, warn: 3, blocked: 4, good: 5, cancel: 6 };
+  let last = null, busy = false;
+  const out = $('#out'), go = $('#go'), cp = $('#cp');
+  function card(r) {
+    const bh = (r.manifest && r.manifest.behaviorHints) || {};
+    const setup = (bh.configurable || bh.configurationRequired) && r.findings.some((f) => f.act === 'setup');
+    const fx = r.findings.slice().sort((a, b) => ['bad', 'warn', 'info'].indexOf(a.level) - ['bad', 'warn', 'info'].indexOf(b.level));
+    return `<article class="card v-${r.verdict}"><div class="ch">${r.logo ? `<img class="lg" src="${esc(r.logo)}" alt="" referrerpolicy="no-referrer" width="38" height="38">` : `<span class="lg">${esc((r.name || '?').slice(0, 2).toUpperCase())}</span>`}
+      <div class="nm"><b>${esc(r.name)}</b><span>${esc([r.version && `v${r.version}`, r.kinds && r.kinds.join(', '), r.host].filter(Boolean).join(' · '))}</span></div>
+      <span class="pill"><i class="d"></i>${esc(V[r.verdict] || r.verdict)}</span></div>
+      <div class="cb">${r.tests.length ? `<ul class="tests">${r.tests.map((t) => `<li class="${t.skip ? '' : t.ok ? 'ok' : 'bad'}"><span>${esc(t.label)}</span><span>${t.skip ? esc(t.note || 'skipped') : `${t.ms ? AddonCheck.sec(t.ms) : ''}${t.note ? ` · ${esc(t.note)}` : ''}${t.ok ? '' : ' · failed'}`}</span></li>`).join('')}</ul>` : ''}
+      ${fx.length ? `<ul class="fx">${fx.map((f) => `<li class="${f.level}">${esc(f.text)}${f.fix ? `<small>${esc(f.fix)}</small>` : ''}${setup && f.act === 'setup' ? `<a href="${esc(r.base)}/configure" target="_blank" rel="noopener noreferrer">Open its setup page ›</a>` : ''}</li>`).join('')}</ul>` : r.verdict === 'good' ? '<p class="good-t">Fast, and everything it offers answered.</p>' : ''}</div></article>`;
+  }
+  function summary(reports, extra) {
+    const n = (v) => reports.filter((r) => r.verdict === v).length, issues = n('bad') + n('setup') + n('slow');
+    const tone = n('bad') || n('setup') ? 'bad' : issues || extra.some((f) => f.level !== 'info') ? 'slow' : 'good';
+    const parts = [['bad', 'not working'], ['setup', 'need setup'], ['slow', 'slow'], ['warn', 'with warnings'], ['blocked', 'can’t be tested in a browser'], ['good', 'healthy']].map(([k, l]) => n(k) && `${n(k)} ${l}`).filter(Boolean);
+    const all = reports.length;
+    const title = tone === 'good' ? (all === 1 ? 'This addon is healthy' : `All ${all} addons are healthy`) : issues ? `${issues} of ${all} need${issues === 1 ? 's' : ''} attention` : 'Works, but your setup slows things down';
+    return `<div class="sum ${tone}"><i></i><div><b>${esc(title)}</b><span>${esc(parts.join(' · '))}</span></div></div>
+      ${extra.length ? `<div class="all"><h3>Your setup as a whole</h3><ul class="fx">${extra.map((f) => `<li class="${f.level}">${esc(f.text)}${f.fix ? `<small>${esc(f.fix)}</small>` : ''}</li>`).join('')}</ul></div>` : ''}`;
+  }
+  $('#f').addEventListener('submit', async (e) => {
+    e.preventDefault(); if (busy) return;
+    const raw = $('#links').value.split(/[\n,]+|\s+(?=(?:https?|stremio):\/\/)/).map((x) => x.trim()).filter(Boolean);
+    const seen = new Set(), links = [], bad = [];
+    for (const x of raw) { let b; try { b = AddonCheck.base(x); if (/\s/.test(x) || !/[.:]/.test(new URL(b).host)) throw new Error('not a link'); } catch (er) { bad.push(x); continue; } if (!seen.has(b)) { seen.add(b); links.push(b); } }
+    if (!links.length) { out.innerHTML = `<p class="st">${bad.length ? 'That does not look like an addon link. It should end in manifest.json or start with stremio://.' : 'Paste at least one addon link first.'}</p>`; return; }
+    if (links.length > 30) links.length = 30;
+    busy = true; go.disabled = true; go.textContent = 'Checking…'; cp.hidden = true;
+    out.innerHTML = `<p class="st" id="st">Checking ${links.length} addon${links.length === 1 ? '' : 's'}. A slow one can take up to 25 seconds.</p><div id="cards" style="display:grid;gap:12px"></div>`;
+    const reports = [], q = links.slice(), st = $('#st'), cards = $('#cards');
+    const worker = async () => { for (let b; (b = q.shift());) { const r = await AddonCheck.one(b, { site: true, timeout: 15, onStep: links.length === 1 ? (t) => { st.textContent = `${t}…`; } : null }); reports.push(r); cards.insertAdjacentHTML('beforeend', card(r)); st.textContent = `Checked ${reports.length} of ${links.length}…`; } };
+    try { await Promise.all([worker(), worker(), worker()]); } catch (er) { st.textContent = 'The check stopped unexpectedly. Please try again.'; }
+    reports.sort((a, b) => RANK[a.verdict] - RANK[b.verdict]);
+    const extra = AddonCheck.together(reports, { site: true, timeout: 15 });
+    last = { reports, extra };
+    out.innerHTML = summary(reports, extra) + reports.map(card).join('') + (bad.length ? `<p class="st">${bad.length} line${bad.length === 1 ? ' was' : 's were'} not an addon link and ${bad.length === 1 ? 'was' : 'were'} skipped.</p>` : '');
+    busy = false; go.disabled = false; go.textContent = 'Check again'; cp.hidden = false;
+  });
+  cp.addEventListener('click', async () => {
+    if (!last) return;
+    try { await navigator.clipboard.writeText(AddonCheck.text(last.reports, last.extra)); cp.textContent = 'Copied, without links'; } catch (e) { cp.textContent = 'Copy blocked by the browser'; }
+    setTimeout(() => { cp.textContent = 'Copy report'; }, 2500);
+  });
+})();
+</script>
+</body>
+</html>

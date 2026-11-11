@@ -562,6 +562,19 @@ function bindEpisodes(root, meta, onPick) {
 /* Browser only mode (Settings › Playback, off by default): for people who cannot install VLC or another player.
    Only sources this browser can play with picture and sound are listed. It reads the release name, so a badly
    labelled file can still slip through; the automatic source switch then moves on to the next one. */
+/* 2.66.2 Dolby Vision as HDR10: profiles 7, 8.1 and 8.4 carry an HDR10 or HLG picture that any HEVC decoder shows.
+   Profile 5 (most "DV" only web releases) has no such layer, so only devices that decode Dolby Vision get it. */
+const DvBase = {
+  native() { return BrowserPlay.can('video/mp4; codecs="dvh1.05.06"') || BrowserPlay.can('video/mp4; codecs="dvh1.08.06"'); },
+  layer(T) {
+    const rest = String(T || '').toLowerCase().replace(/dolby[\s.-]?vision|\bdovi\b|\bdv\b/g, ' ');
+    return /\bhdr(10)?\+?|\bhdr10plus\b|\bhlg\b/.test(rest) || /\b(remux|bd-?remux|blu-?ray|uhd[\s.-]?bd|bd50|bd66|bd100)\b/.test(rest);
+  },
+  ok(T) {
+    if (this.native()) return true;
+    return this.layer(T) && (BrowserPlay.can('video/mp4; codecs="hvc1.2.4.L153.B0"') || BrowserPlay.can('video/mp4; codecs="hvc1.2.4.L120.90"'));
+  },
+};
 const BrowserPlay = {
   cache: {},
   can(type) {
@@ -582,7 +595,7 @@ const BrowserPlay = {
     const T = [s.name, s.title, s.description, bh.filename].filter(Boolean).join(' ').toLowerCase();
     if (t.codec === 'HEVC' && !this.can('video/mp4; codecs="hvc1.1.6.L120.90"')) return false;
     if (t.codec === 'AV1' && !this.can('video/mp4; codecs="av01.0.08M.08"')) return false;
-    if (t.hdr === 'Dolby Vision') return false;
+    if (t.hdr === 'Dolby Vision' && !DvBase.ok(T)) return false;
     if (t.codec !== 'HEVC' && t.codec !== 'AV1' && /\b(10[\s.-]?bit|hi10p?)\b/.test(T)) return false;
     const dolby = /\b(e-?ac-?3|ddp\d?|dd\+|ac-?3|dd[\s.]?[257][\s.]?[01]|dolby digital)\b/.test(T) || /atmos/.test(T);
     const hard = /truehd|\bdts/.test(T) || (dolby && !this.can('audio/mp4; codecs="ec-3"'));
@@ -1445,6 +1458,7 @@ function renderAddons() {
   $$('#addonList [data-copyurl]').forEach((b) => b.addEventListener('click', () => copyText(b.dataset.copyurl)));
   $$('#addonList [data-retry]').forEach((b) => b.addEventListener('click', () => installAddon(b.dataset.retry, true)));
   $('#proxyUrl').value = S.proxy;
+  if (typeof AddonHealth !== 'undefined') AddonHealth.draw();
 }
 async function installAddon(url, retry) {
   try {
