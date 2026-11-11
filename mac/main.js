@@ -69,20 +69,16 @@ function engineStop() {
   eng = null; engIn = null; engBase = '';
 }
 
-function engineStart() {
-  if (engBase && eng && eng.running) return engBase;
-  engineStop();
-  const cache = $.NSHomeDirectory().js + '/Library/Caches/MKCinema';
-  fm.createDirectoryAtPathWithIntermediateDirectoriesAttributesError(cache, true, $(), null);
+// Starts mkp2p with these arguments and returns [task, input pipe, the address it printed].
+function spawnHelper(args) {
   const t = $.NSTask.alloc.init;
   t.launchPath = engineBin;
-  t.arguments = $(['-dir', cache, '-keep', '2', '-reserve-mb', '1024', '-conns', '50']);
+  t.arguments = $(args);
   const pin = $.NSPipe.pipe, pout = $.NSPipe.pipe;
   t.standardInput = pin;
   t.standardOutput = pout;
   t.launch;
-  eng = t; engIn = pin;
-  // the engine prints its address (or "error: ...") as its first line, within a second
+  // the helper prints its address (or "error: ...") as its first line, within a second
   const rd = pout.fileHandleForReading;
   let out = '';
   while (out.indexOf('\n') < 0) {
@@ -91,16 +87,44 @@ function engineStart() {
     out += $.NSString.alloc.initWithDataEncoding(d, $.NSUTF8StringEncoding).js;
   }
   const line = out.split('\n')[0].trim();
-  if (line.indexOf('http://127.0.0.1:') !== 0) { engineStop(); throw new Error(line.replace(/^error:\s*/, '') || 'the engine closed'); }
-  engBase = line;
+  if (line.indexOf('http://127.0.0.1:') !== 0) {
+    try { pin.fileHandleForWriting.closeFile; } catch (e) { /* already closed */ }
+    throw new Error(line.replace(/^error:\s*/, '') || 'the helper closed');
+  }
+  return [t, pin, line];
+}
+
+function engineStart() {
+  if (engBase && eng && eng.running) return engBase;
+  engineStop();
+  const cache = $.NSHomeDirectory().js + '/Library/Caches/MKCinema';
+  fm.createDirectoryAtPathWithIntermediateDirectoriesAttributesError(cache, true, $(), null);
+  [eng, engIn, engBase] = spawnHelper(['-dir', cache, '-keep', '2', '-reserve-mb', '1024', '-conns', '50']);
   return engBase;
+}
+
+// ---- Pass server (window.MKDesktop.pass) ----
+// The same mkp2p program with -pass: a 127.0.0.1 server with a random token that lets MKCinema's own page read
+// video hosts that send no CORS header, and open the person's own TV service when it is on plain http:// (browsers
+// refuse http:// inside an https page, but may talk to 127.0.0.1). Public hosts only, nothing stored. It is
+// started the first time the page asks and stops when the app quits.
+let pas = null, pasIn = null, pasBase = '';
+function passStop() {
+  if (pasIn) { try { pasIn.fileHandleForWriting.closeFile; } catch (e) { /* already closed */ } }
+  pas = null; pasIn = null; pasBase = '';
+}
+function passStart() {
+  if (pasBase && pas && pas.running) return pasBase;
+  passStop();
+  [pas, pasIn, pasBase] = spawnHelper(['-pass']);
+  return pasBase;
 }
 
 const bridgeJs = "(function(){if(location.protocol!=='https:'||" + JSON.stringify(HOSTS) + ".indexOf(location.hostname)<0)return;var h=window.webkit.messageHandlers.mkd,n=0,w={};"
   + "Object.defineProperty(window,'__mkdDone',{value:function(i,e,v){var p=w[i];delete w[i];if(p){if(e)p[1](new Error(e));else p[0](v)}}});"
   + "function call(c){return new Promise(function(a,b){var i=++n;w[i]=[a,b];h.postMessage({id:i,cmd:c})})}"
   + "var d={platform:'mac',version:'" + VERSION + "'};"
-  + (hasEngine ? "d.p2p={start:function(){return call('p2p-start')},stop:function(){return call('p2p-stop')}};" : '')
+  + (hasEngine ? "d.p2p={start:function(){return call('p2p-start')},stop:function(){return call('p2p-stop')}};d.pass={start:function(){return call('pass-start')}};" : '')
   + "window.MKDesktop=d;" + (SELFTEST ? "setTimeout(function(){call('ping')},1500);" : '') + "})();";
 
 // Only MKCinema's own top-level page may use the bridge: not frames inside it (trailers and their ads), not other
@@ -130,6 +154,7 @@ function bridge(msg) {
       if (SELFTEST) { logLine('selftest: quitting'); app.performSelectorWithObjectAfterDelay('terminate:', $(), 1.0); }
     } else if (cmd === 'p2p-start') val = engineStart();
     else if (cmd === 'p2p-stop') engineStop();
+    else if (cmd === 'pass-start') val = passStart();
   } catch (e) { err = String(e && e.message || e) || 'the engine did not start'; }
   msg.webView.evaluateJavaScriptCompletionHandler('window.__mkdDone&&window.__mkdDone(' + JSON.stringify(id) + ',' + JSON.stringify(err) + ',' + JSON.stringify(val) + ')', null);
 }
@@ -164,7 +189,7 @@ ObjC.registerSubclass({
     },
     'applicationWillTerminate:': {
       types: ['void', ['id']],
-      implementation: function () { engineStop(); }
+      implementation: function () { engineStop(); passStop(); }
     },
     // Links that open a new window: MKCinema pages load here, everything else opens in the default browser.
     'webView:createWebViewWithConfiguration:forNavigationAction:windowFeatures:': {
