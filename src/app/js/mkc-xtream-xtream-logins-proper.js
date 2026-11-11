@@ -16,15 +16,17 @@
 
   /* ---------- the app fetches the person's own TV servers ---------- */
   C.nat = () => { try { return !!(window.MKAndroid && typeof MKAndroid.iptvHosts === 'function'); } catch (e) { return false; } };
+  // the saved playlists, plus the one being added or edited right now (Channels.submit)
+  const mineAll = () => (C._draft ? [...C.lists(), C._draft] : C.lists());
   C.allow = function () {
     if (!this.nat()) return;
     const urls = [];
-    this.lists().forEach((l) => { [l.server, l.url, l.epg].forEach((u) => { if (/^https?:\/\//i.test(String(u || ''))) urls.push(String(u).trim()); }); });
+    mineAll().forEach((l) => { [l.server, l.url, l.epg].forEach((u) => { if (/^https?:\/\//i.test(String(u || ''))) urls.push(String(u).trim()); }); });
     const key = JSON.stringify(urls);
     if (key === this._allowed) return;
     try { if (MKAndroid.iptvHosts(key) >= 0) this._allowed = key; } catch (e) { /* older app */ }
   };
-  const hostIn = (url) => { try { const h = new URL(url).hostname.toLowerCase(); return C.lists().some((l) => [l.server, l.url, l.epg].some((u) => { try { return new URL(u).hostname.toLowerCase() === h; } catch (e) { return false; } })); } catch (e) { return false; } };
+  const hostIn = (url) => { try { const h = new URL(url).hostname.toLowerCase(); return mineAll().some((l) => [l.server, l.url, l.epg].some((u) => { try { return new URL(u).hostname.toLowerCase() === h; } catch (e) { return false; } })); } catch (e) { return false; } };
   const save0 = C.save.bind(C);
   C.save = function (d) { save0(d); this.allow(); };
 

@@ -1759,10 +1759,15 @@ const Nav = {
     if (cur && (dir === 'left' || dir === 'right')) { const n = this.step(cur, dir); if (n) { this.focus(n, fast); return; } }
     const list = this.items(root); if (!list.length) return;
     if (!cur) { if (IS_TV) this.restore(fast); else this.focus(list[0]); return; }
-    const a = cur.getBoundingClientRect(), ax = a.left + a.width / 2, ay = a.top + a.height / 2;
+    // 2.67.1 tv-playback: a lane (a film's cast and crew names) is one stop going up or down; Left and Right walk its names
+    const lane = cur.closest('[data-nav-lane]'), vert = dir === 'up' || dir === 'down';
+    if (lane && !vert) { const m = list.filter((x) => lane.contains(x)), n = m[m.indexOf(cur) + (dir === 'right' ? 1 : -1)]; if (n) { this.rects.clear(); this.focus(n, fast); return; } }
+    // leaving a lane up or down starts from its left edge, so the row below gets its first item, not the one under a name
+    const a = cur.getBoundingClientRect(), ax = lane && vert ? Math.min(a.left + a.width / 2, lane.getBoundingClientRect().left + 40) : a.left + a.width / 2, ay = a.top + a.height / 2;
     let best = null, bestScore = Infinity;
     for (const el of list) {
       if (el === cur || el.contains(cur) || cur.contains(el)) continue;
+      if (lane && vert && lane.contains(el)) continue;
       const b = this.rects.get(el) || el.getBoundingClientRect(), bx = b.left + b.width / 2, by = b.top + b.height / 2;
       const dx = bx - ax, dy = by - ay;
       let main, cross, overlap;
@@ -1849,7 +1854,15 @@ function handleKey(e) {
     if (k === 'Enter' && document.activeElement === document.body) { togglePlay(); return; }
   }
   const dirs = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
-  if (dirs[k]) { e.preventDefault(); Nav.move(dirs[k], e.repeat); return; }
+  if (dirs[k]) {
+    e.preventDefault();
+    // 2.67.1 tv-playback: a held arrow repeats faster than a slow TV box draws; a repeat that comes before the last move
+    // reached the screen is dropped, so the highlight never runs ahead of what you see and OK opens what is shown
+    if (IS_TV && e.repeat && Nav.drawing) return;
+    Nav.move(dirs[k], e.repeat);
+    if (IS_TV) { Nav.drawing = true; requestAnimationFrame(() => setTimeout(() => { Nav.drawing = false; }, 0)); }
+    return;
+  }
   if (IS_TV && k === 'Enter' && !playerOpen && (document.activeElement === document.body || !document.activeElement)) { e.preventDefault(); Nav.restore(true); return; }
   if (k === 'Backspace') { e.preventDefault(); back(); }
   if (k === '/' && $('#palette').hidden) { e.preventDefault(); openPalette(); }

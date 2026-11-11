@@ -347,6 +347,9 @@ const Channels = {
     if (l.kind === 'xtream' && (!/^https?:\/\//i.test(l.server || '') || !l.user || !l.pass)) return say('Fill in the server address (with http:// or https://), the user name and the password.', true);
     l.id = l.id || `p${Date.now().toString(36)}`; l.name = l.name || (l.kind === 'xtream' ? (l.server || '').replace(/^https?:\/\//, '').split(/[:/]/)[0] : 'My channels');
     say('Reading the playlist…');
+    // 2.67.1 tv-playback: the playlist being added counts as one of yours while it is read, so the Android app may fetch
+    // its server (before, only saved playlists did, and a new plain-http or no-CORS service could never be added)
+    this._draft = { ...l };
     try {
       if (l.kind === 'file') {
         const f = $('#chFile', b).files[0];
@@ -360,7 +363,7 @@ const Channels = {
       const all = this.get(); all.lists = [...all.lists.filter((x) => x.id !== l.id), { ...l }]; this.save(all);
       X8.close('chAdd'); S.tvFilter = `iptv:${l.id}`; go('tv'); renderTV();
       toast(`${d.channels.length} channels added`, 'ok');
-    } catch (e) { say(e.message, true); }
+    } catch (e) { say(e.message, true); } finally { this._draft = null; if (this.allow) this.allow(); }
   },
 
   /* ---- Live TV guide ---- */
@@ -2923,6 +2926,19 @@ const TvPlayer = {
     try { const { langs, multi } = AudioPref.langs(stream); return multi || langs.size > 1; } catch (e) { return false; }
   },
   cur: null,
+  /* 2.67.1 tv-playback: the next source for the TV player after one would not open: best score first, one it plays,
+     cached on the debrid service, never a copy of a file that already failed */
+  next(ctx, tried) {
+    const key = (x) => String(x._infoHash || x.infoHash || (x.behaviorHints || {}).filename || x.url || '').toLowerCase();
+    const bad = new Set(tried.map(key).filter(Boolean));
+    let list = ctx.streams || [];
+    try { list = visibleStreams(list); } catch (e) { /* the full list */ }
+    return list.slice().sort((a, b) => ((b._tel && b._tel.score) || 0) - ((a._tel && a._tel.score) || 0)).find((x) => {
+      const t = x && x._tel;
+      if (!t || tried.includes(x) || bad.has(key(x)) || x.ytId || t.isTrailer || !t.webReady || t.cached === false || t.fits === false) return false;
+      return !(t.kind === 'p2p' && !t.debrid) && t.kind !== 'ext' && t.kind !== 'none';
+    }) || null;
+  },
   async subUrl(ctx) {
     if (CFG.subAuto === false || !CFG.subLang || CFG.subLang === 'off') return '';
     const id = ctx.video ? (ctx.video.id || videoIdFor(ctx.meta, ctx.video)) : ctx.meta.id;
@@ -2966,9 +2982,18 @@ const TvPlayer = {
           TvPlayer.save(pos, dur); TvPlayer.cur = null; c.stream._noNative = true; lu(c.stream, pos > 0 ? pos / 1000 : c.startAt); return;
         }
         if (err && !(pos > 0)) {
-          // the TV player could not open it: the in-app player tries the same source
-          TvPlayer.cur = null; c.stream._noNative = true; toast('Playing in the MKCinema player instead', 'info', 3000); lu(c.stream, c.startAt); return;
+          // 2.67.1: the TV player could not open it: up to three more sources go to the TV player, and only then does the
+          // in-app player try (on a TV box it decodes less and runs slower than the TV player)
+          TvPlayer.cur = null;
+          try { if (window.MkLinkHealth) MkLinkHealth.fail(c.stream, `could not open (${err})`); } catch (e) { /* no link memory */ }
+          const tried = c.ctx._tvTried || (c.ctx._tvTried = []); if (!tried.includes(c.stream)) tried.push(c.stream);
+          const nx = tried.length < 4 ? TvPlayer.next(c.ctx, tried) : null;
+          if (nx) { toast('That source would not open. Trying the next one…', 'info', 3000, 'tvnext'); playStream(c.ctx, nx); return; }
+          // from here on this film stays in the in-app player (its own source switching must not hand sources back)
+          (c.ctx.streams || []).forEach((x) => { if (x) x._noNative = true; });
+          c.stream._noNative = true; toast('Playing in the MKCinema player instead', 'info', 3000); lu(c.stream, c.startAt); return;
         }
+        c.ctx._tvTried = null;
         TvPlayer.save(pos, dur);
         TvPlayer.cur = null;
         const hasNext = c.ctx.video && nextVideo(c.ctx.meta, c.ctx.video);
@@ -3320,6 +3345,21 @@ const SideNav = {
   },
   lastContent: null,
   toRail(from, fast) { this.lastContent = from; const t = $('#tabs .tab.on') || $('#tabs .tab'); if (t) Nav.focus(t, fast); },
+  /* 2.67.1 tv-playback: TV, a page picked in the side menu: the remote goes to that page's first item once it is drawn
+     (the menu stayed open over the page until Right was pressed) */
+  enter() {
+    if (!IS_TV || !this.side()) return;
+    const t0 = Date.now(), app = $('#app');
+    const tryIt = () => {
+      const a = document.activeElement;
+      if (!a || !a.closest('.dock-wrap') || Nav.root() !== app) return;   // the remote moved on, or a panel opened
+      const list = Nav.items(app).filter((x) => !x.closest('.dock-wrap')); Nav.rects.clear();
+      const el = list.length ? Nav.start(app, list) : null;
+      if (el && !el.closest('.dock-wrap')) { this.lastContent = null; Nav.focus(el, true); return; }
+      if (Date.now() - t0 < 5000) setTimeout(tryIt, 150);
+    };
+    setTimeout(tryIt, 80);
+  },
   /* ---- phone drawer ---- */
   items() {
     const tabs = $$('#tabs .tab').filter((t) => getComputedStyle(t).display !== 'none' || !IS_TV).map((t) => ({ view: t.dataset.view, icon: (t.querySelector('[data-lucide]') || {}).dataset ? t.querySelector('[data-lucide]').dataset.lucide : 'circle', label: ((t.querySelector('.lbl') || t).textContent || t.title).trim() }));
@@ -3404,6 +3444,7 @@ const SideNav = {
     addEventListener('resize', () => { if (this.side()) document.documentElement.classList.toggle('side-mini', IS_TV || innerWidth < 1200); });
     // TV: a remote leaving the open rail to the right closes it at once
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.close(); });
+    const tabs = $('#tabs'); if (tabs) tabs.addEventListener('click', (e) => { if (e.target.closest('.tab')) this.enter(); });
     this.apply(); icons();
     this.ask();
   },

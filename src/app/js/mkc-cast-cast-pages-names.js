@@ -229,6 +229,7 @@ const People = {
   ROWS: { Director: ['director', 'Directors', 3, 'Director'], Writers: ['writer', 'Writers', 3, 'Writer'], Cast: ['cast', 'Cast', 8, 'cast'] },
   wire() {
     const m = D.meta, panel = document.getElementById('detailPanel'); if (!m || !panel) return;
+    $$('.credits', panel).forEach((c) => { c.dataset.navLane = '1'; });   // 2.67.1: one remote stop (Nav.move)
     $$('.credits > b', panel).forEach((b) => {
       const label = (window.i18nEn ? i18nEn(b) : b.textContent).trim(), row = this.ROWS[label], span = b.nextElementSibling;
       if (!row || !span || span.tagName !== 'SPAN' || span.dataset.cp) return;
