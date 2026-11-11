@@ -797,7 +797,7 @@ const Account = {
   },
   /* delete account: everything that came from the account leaves this device */
   wipeAll() {
-    const drop = ['watchlist', 'progress', 'watched', 'taste', 'studio', 'homeLayout', 'homeArrange', 'vault', 'keys', 'avatar', 'channels', 'lists', 'seats', 'ownerSeatName', 'ownerPin', 'ownerAv', 'addons', 'disabled', 'order', 'syncAt', 'syncMeta', 'syncExtra', 'syncOwner', 'syncKeyRaw', 'seat', 'seatChosen', 'trakt', 'simkl', 'anilist', 'mal', 'malAuth', 'kitsuMal'];
+    const drop = ['watchlist', 'progress', 'watched', 'taste', 'studio', 'homeLayout', 'homeArrange', 'vault', 'keys', 'avatar', 'channels', 'lists', 'seats', 'ownerSeatName', 'ownerPin', 'ownerAv', 'addons', 'disabled', 'order', 'mfc', 'syncAt', 'syncMeta', 'syncExtra', 'syncOwner', 'syncKeyRaw', 'seat', 'seatChosen', 'trakt', 'simkl', 'anilist', 'mal', 'malAuth', 'kitsuMal'];
     this.applying = true;
     try {
       const ks = []; for (let i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i));

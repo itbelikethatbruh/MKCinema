@@ -48,3 +48,10 @@ Subtitles are saved next to the film as .srt or .vtt, so VLC picks them up.
 
 `go vet ./...` and `go test ./...` run on Linux too (the Windows-only files are build-tagged; `origins/`, `p2p/`,
 `dl/` and the Discord status parsing have tests).
+
+## 1.3.2
+
+- Pass server (`pass/`): for hosts that do not let web pages read their files, the in-app engine asks a small local
+  server (127.0.0.1, random token, public hosts only, GET and HEAD with Range only, answers readable only by
+  MKCinema's own pages) to make the Range requests. Dolby, DTS and TrueHD sound is converted to AAC and HEVC decoded
+  on those hosts too, so they play in the app without VLC.

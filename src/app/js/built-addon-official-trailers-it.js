@@ -33,6 +33,117 @@ function trailersAddon(engine) {
   };
 }
 
+
+/* =====================================================================
+   Built-in addon: MKCinema Meta. A stand-in for Cinemeta, from TMDB.
+   Cinemeta is run by Stremio. If it ever stops answering, Home rows, search and title pages keep working from TMDB.
+   While Cinemeta answers, this addon only fills a title page when every other addon came back empty; its catalogs and
+   search are added only while Cinemeta is unreachable. With the viewer's own TMDB key it asks TMDB directly, otherwise
+   MKCinema's tmdb-person function (fixed lookups `titles` and `title`, v4). Ids stay IMDb ids, so stream addons work as before.
+   ===================================================================== */
+const MetaBackup = {
+  ID: 'org.mkcinema.meta', IMG: 'https://image.tmdb.org/t/p/', mode: null,
+  GENRES: { 28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy', 80: 'Crime', 99: 'Documentary', 18: 'Drama', 10751: 'Family', 14: 'Fantasy', 36: 'History', 27: 'Horror', 10402: 'Music', 9648: 'Mystery', 10749: 'Romance', 878: 'Science Fiction', 53: 'Thriller', 10752: 'War', 37: 'Western', 10759: 'Action & Adventure', 10762: 'Kids', 10763: 'News', 10764: 'Reality', 10765: 'Sci-Fi & Fantasy', 10766: 'Soap', 10767: 'Talk', 10768: 'War & Politics', 10770: 'TV Movie' },
+  manifest(full) {
+    const cats = [];
+    if (full) for (const type of ['movie', 'series']) cats.push(
+      { type, id: 'mkc.popular', name: 'Popular', extra: [{ name: 'skip' }] },
+      { type, id: 'mkc.top', name: 'Top rated', extra: [{ name: 'skip' }] },
+      { type, id: 'mkc.search', name: 'Search', extra: [{ name: 'search', isRequired: true }] });
+    return {
+      id: this.ID, version: '1.0.0', name: 'MKCinema Meta',
+      description: full ? 'Cinemeta is not answering, so films and shows come from TMDB for now.' : 'Fills in a title page from TMDB when no other addon knows it, and takes over if Cinemeta stops answering.',
+      resources: full ? ['catalog', 'meta'] : ['meta'], types: ['movie', 'series'], idPrefixes: ['tt'], catalogs: cats,
+    };
+  },
+  /* mounts the addon: full (catalogs + search, first in line) while Cinemeta is unreachable, else title pages only, last in line */
+  sync() {
+    const full = !!engine.offline; if (this.mode === full) return; this.mode = full;
+    const base = `mkc-virtual://${this.ID}`, was = engine.addons.find((a) => a.baseUrl === base);
+    engine.addons = engine.addons.filter((a) => a.baseUrl !== base);
+    const a = engine.mountVirtual(this.manifest(full), this.handlers(), { builtin: true, position: full ? 0 : undefined });
+    if (was) a.enabled = was.enabled;
+  },
+  lang() { try { return People.lang(); } catch (e) { return 'en-US'; } },
+  /* data: the viewer's own TMDB key first, then MKCinema's function */
+  async relay(a, params) {
+    const c = (typeof Account !== 'undefined' && Account.config && Account.config()) || {};
+    if (!c.url) return null;
+    const q = new URLSearchParams({ a, ...params, lang: this.lang() });
+    const r = await netFetch(`${String(c.url).replace(/\/+$/, '')}/functions/v1/tmdb-person?${q}`, { headers: { apikey: c.anonKey || '', accept: 'application/json' } }, 15000);
+    if (!r.ok) throw new Error(`TMDB lookup ${r.status}`);
+    return r.json();
+  },
+  find: async (tt) => { const f = await TMDB.find(tt); return f && ((f.movie_results || [])[0] ? ['movie', f.movie_results[0]] : (f.tv_results || [])[0] ? ['tv', f.tv_results[0]] : null); },
+  async titles(kind, list, page, q) {
+    if (!TMDB.key()) { const j = await this.relay('titles', { kind, list, page: String(page), ...(q ? { q } : {}) }); return (j && j.results) || []; }
+    const lang = this.lang();
+    const j = list === 'search' ? await TMDB.get(`search/${kind}`, { query: q, include_adult: 'false', language: lang, page }) : await TMDB.get(`${kind}/${list}`, { language: lang, page });
+    const rows = ((j && j.results) || []).filter((x) => x && !x.adult).slice(0, 20);
+    const ids = await Promise.all(rows.map((x) => TMDB.get(`${kind}/${x.id}/external_ids`).catch(() => null)));
+    return rows.map((x, i) => ({ ...x, imdb_id: (ids[i] && ids[i].imdb_id) || '' }));
+  },
+  async title(tt) {
+    if (!TMDB.key()) { const j = await this.relay('title', { tt }); return j && j.title; }
+    const lang = this.lang(), hit = await this.find(tt); if (!hit) return null;
+    const [k, x] = hit, d = await TMDB.get(`${k}/${x.id}`, { language: lang, append_to_response: 'credits,videos' }); if (!d) return null;
+    const eps = [];
+    if (k === 'tv') {
+      const ns = (d.seasons || []).map((v) => v.season_number).filter((n) => Number.isInteger(n) && n >= 0).slice(0, 60);
+      for (let i = 0; i < ns.length; i += 20) {
+        const part = ns.slice(i, i + 20), sx = await TMDB.get(`tv/${x.id}`, { language: lang, append_to_response: part.map((n) => `season/${n}`).join(',') });
+        part.forEach((n) => { const v = sx && sx[`season/${n}`]; if (v) eps.push(v); });
+      }
+    }
+    return { ...d, kind: k, eps };
+  },
+  img(p, size) { return p ? `${this.IMG}${size}${p}` : undefined; },
+  yr: (v) => String(v || '').slice(0, 4),
+  preview(x, type) {
+    return { id: x.imdb_id, type, name: x.title || x.name || '', poster: this.img(x.poster_path, 'w342'), background: this.img(x.backdrop_path, 'w1280'),
+      releaseInfo: this.yr(x.release_date || x.first_air_date), description: x.overview || '', genres: (x.genre_ids || []).map((g) => this.GENRES[g]).filter(Boolean) };
+  },
+  toMeta(d, tt, type) {
+    const tv = d.kind === 'tv', crew = ((d.credits || {}).crew) || [];
+    const ended = /^(Ended|Canceled)$/.test(d.status || '');
+    const m = {
+      id: tt, type: tv ? 'series' : (type || 'movie'), name: d.title || d.name || '', description: d.overview || '',
+      poster: this.img(d.poster_path, 'w500'), background: this.img(d.backdrop_path, 'w1280'),
+      releaseInfo: tv ? `${this.yr(d.first_air_date)}–${ended ? this.yr(d.last_air_date) : ''}` : this.yr(d.release_date),
+      released: (d.release_date || d.first_air_date) ? new Date(d.release_date || d.first_air_date).toISOString() : undefined,
+      runtime: (d.runtime || (d.episode_run_time || [])[0]) ? `${d.runtime || d.episode_run_time[0]} min` : undefined,
+      genres: (d.genres || []).map((g) => g && g.name).filter(Boolean),
+      cast: (((d.credits || {}).cast) || []).slice(0, 8).map((c) => c.name).filter(Boolean),
+      director: crew.filter((c) => c.job === 'Director').map((c) => c.name).slice(0, 3),
+      writer: [...(d.created_by || []).map((c) => c.name), ...crew.filter((c) => /^(Screenplay|Writer)$/.test(c.job)).map((c) => c.name)].filter(Boolean).slice(0, 4),
+      trailers: (((d.videos || {}).results) || []).filter((v) => v.site === 'YouTube' && /^(Trailer|Teaser)$/.test(v.type) && /^[\w-]{11}$/.test(v.key)).slice(0, 3).map((v) => ({ source: v.key, type: v.type })),
+    };
+    if (tv) m.videos = (d.eps || []).flatMap((s) => (s.episodes || []).map((e) => ({
+      id: `${tt}:${e.season_number != null ? e.season_number : s.season_number}:${e.episode_number}`, season: e.season_number != null ? e.season_number : s.season_number, episode: e.episode_number,
+      title: e.name || `Episode ${e.episode_number}`, name: e.name || `Episode ${e.episode_number}`, overview: e.overview || '', thumbnail: this.img(e.still_path, 'w300'),
+      released: e.air_date ? new Date(e.air_date).toISOString() : undefined,
+    })));
+    return m;
+  },
+  handlers() {
+    return {
+      catalog: async ({ type, id, extra }) => {
+        const kind = type === 'series' ? 'tv' : 'movie', page = 1 + Math.floor((Number(extra.skip) || 0) / 20);
+        if (page > 20) return { metas: [] };
+        const list = id === 'mkc.search' ? 'search' : id === 'mkc.top' ? 'top_rated' : 'popular';
+        if (list === 'search' && !String(extra.search || '').trim()) return { metas: [] };
+        const rows = await this.titles(kind, list, page, extra.search);
+        return { metas: rows.filter((x) => /^tt\d+$/.test(x.imdb_id || '')).map((x) => this.preview(x, type)) };
+      },
+      meta: async ({ type, id }) => {
+        const tt = String(id).split(':')[0]; if (!/^tt\d+$/.test(tt)) return { meta: null };
+        const d = await this.title(tt);
+        return { meta: d ? this.toMeta(d, tt, type) : null };
+      },
+    };
+  },
+};
+
 /* =====================================================================
    Addon Studio model: manifest + handlers + Node.js code generator
    ===================================================================== */

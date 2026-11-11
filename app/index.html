@@ -2993,6 +2993,40 @@ const Telemetry = {
   },
 };
 
+/* 2.64 addon shield */
+/* The last manifest each addon sent, kept on this device only (never synced, wiped with the account). Boot draws addons
+   from it at once and asks their servers again in the background, so a slow or briefly down addon server no longer
+   holds Home or drops the addon for the session. Entries are keyed by a hash of the link, so a link that carries a key is
+   not written down a second time, and entries for addons no longer installed are dropped on the next save. */
+const ManifestMemo = {
+  K: 'mkc:mfc', MAX_ONE: 256 * 1024, MAX_ALL: 1536 * 1024,
+  h(s) {
+    let a = 0x811c9dc5, b = 0x9747b28c; s = String(s);
+    for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); a = Math.imul(a ^ c, 16777619); b = Math.imul(b ^ c, 2246822507); }
+    return (a >>> 0).toString(36) + '.' + (b >>> 0).toString(36);
+  },
+  all() { try { const v = JSON.parse(localStorage.getItem(this.K) || '{}'); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; } catch (e) { return {}; } },
+  get(base) { const e = this.all()[this.h(base)]; return e && e.m && typeof e.m === 'object' ? e : null; },
+  put(base, m) {
+    let txt; try { txt = JSON.stringify(m); } catch (e) { return; }
+    const all = this.all(), k = this.h(base);
+    if (txt.length > this.MAX_ONE) { if (all[k]) { delete all[k]; this.save(all); } return; }
+    if (all[k] && JSON.stringify(all[k].m) === txt) return;
+    all[k] = { t: Date.now(), m }; this.save(all);
+  },
+  keep(bases) {
+    const want = new Set(bases.map((b) => this.h(b))), all = this.all(); let ch = false;
+    for (const k of Object.keys(all)) if (!want.has(k)) { delete all[k]; ch = true; }
+    if (ch) this.save(all);
+  },
+  save(all) {
+    const ks = Object.keys(all).sort((x, y) => (all[x].t || 0) - (all[y].t || 0));
+    let txt = JSON.stringify(all);
+    while (txt.length > this.MAX_ALL && ks.length > 1) { delete all[ks.shift()]; txt = JSON.stringify(all); }
+    try { localStorage.setItem(this.K, txt); } catch (e) { /* storage full or blocked: run without it */ }
+  },
+};
+
 /* =====================================================================
    StremioEngine: protocol client for live addons + in-browser virtual addons
    ===================================================================== */
@@ -3055,30 +3089,35 @@ class StremioEngine {
   }
   static seriesId(imdbId, season, episode) { return `${imdbId}:${season}:${episode}`; }
 
-  async http(url, opts = {}) {
-    const ttl = opts.ttl == null ? 10 * 60 * 1000 : opts.ttl;
+  /* One request per address at a time (two rows asking for the same catalog share it), a capped cache, and one quiet
+     retry when the connection drops or the addon's host answers 502/503/504 for a moment. A timeout is never retried. */
+  http(url, { timeout = (CFG.timeout || 15) * 1000, ttl = 10 * 60 * 1000 } = {}) {
     const hit = this.cache.get(url);
-    if (hit && Date.now() - hit.t < ttl) return hit.v;
-    // 2.64: an address already being downloaded is not downloaded again; every caller gets the same answer
-    if (ttl <= 0) return this.httpGet(url, opts);
-    const fly = this.inflight || (this.inflight = new Map());
-    if (fly.has(url)) return fly.get(url);
-    const p = this.httpGet(url, opts).finally(() => { if (fly.get(url) === p) fly.delete(url); });
-    fly.set(url, p);
+    if (hit && Date.now() - hit.t < ttl) return Promise.resolve(hit.v);
+    if (!this.flight) this.flight = new Map();
+    if (this.flight.has(url)) return this.flight.get(url);
+    const p = this.fetchJson(url, timeout).then((v) => {
+      this.cache.delete(url); this.cache.set(url, { t: Date.now(), v });
+      while (this.cache.size > 400) this.cache.delete(this.cache.keys().next().value);
+      return v;
+    }).finally(() => { if (this.flight.get(url) === p) this.flight.delete(url); });
+    this.flight.set(url, p);
     return p;
   }
-  async httpGet(url, { timeout = (CFG.timeout || 15) * 1000 } = {}) {
-    const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), timeout);
-    try {
-      const res = await fetch(url, { signal: ctl.signal, headers: { Accept: 'application/json' } });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const v = await res.json();
-      this.cache.set(url, { t: Date.now(), v });
-      return v;
-    } catch (e) {
-      if (e.name === 'AbortError') throw new Error('Timed out');
-      throw e;
-    } finally { clearTimeout(timer); }
+  async fetchJson(url, timeout, tries = 2) {
+    for (let i = 0; ; i++) {
+      const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), timeout);
+      try {
+        const res = await fetch(url, { signal: ctl.signal, headers: { Accept: 'application/json' } });
+        if (!res.ok) { const e = new Error(`HTTP ${res.status}`); e.again = res.status === 502 || res.status === 503 || res.status === 504; throw e; }
+        const text = await res.text();
+        try { return JSON.parse(text.replace(/^﻿/, '')); } catch (e) { throw new Error('The addon did not answer with JSON'); }
+      } catch (e) {
+        if (e && e.name === 'AbortError') throw new Error('Timed out');
+        if (i + 1 < tries && (e instanceof TypeError || e.again)) { await new Promise((r) => setTimeout(r, 700)); continue; }
+        throw e;
+      } finally { clearTimeout(timer); }
+    }
   }
   async call(addon, resource, type, id, extra) {
     if (addon.virtual) return (await addon.handlers[resource]?.({ type, id, extra: extra || {} })) || {};
@@ -3114,10 +3153,38 @@ class StremioEngine {
     const baseUrl = StremioEngine.normalize(input);
     const existing = this.addons.find((a) => a.baseUrl === baseUrl);
     const manifest = this.validate(await this.http(`${baseUrl}/manifest.json`, { ttl: 0, timeout: 12000 }));
-    const addon = { id: manifest.id, baseUrl, manifest, enabled, builtin, virtual: false, error: null };
+    ManifestMemo.put(baseUrl, manifest);
+    return this.mount(baseUrl, manifest, { builtin, enabled, silent, position });
+  }
+  /* puts an addon in the list from a manifest in hand (fresh, or the saved copy at boot) */
+  mount(baseUrl, manifest, { builtin = false, enabled = true, silent = false, position, stale = null } = {}) {
+    const existing = this.addons.find((a) => a.baseUrl === baseUrl);
+    const addon = { id: manifest.id, baseUrl, manifest, enabled, builtin, virtual: false, error: null, stale };
     if (existing) Object.assign(existing, addon, { enabled: existing.enabled });
     else if (position != null) this.addons.splice(position, 0, addon); else this.addons.push(addon);
     this.persist(); if (!silent) this.emit('addons'); return existing || addon;
+  }
+  /* Asks addons drawn from saved manifests for a fresh one, four at a time, after Home is up. A changed manifest redraws
+     once at the end; an addon whose server does not answer keeps working from the saved copy and is marked stale. */
+  async refresh(bases) {
+    const q = bases.slice(); let changed = false;
+    const one = async () => {
+      for (let base; (base = q.shift());) {
+        const a = this.addons.find((x) => x.baseUrl === base && !x.virtual); if (!a) continue;
+        try {
+          const m = this.validate(await this.http(`${base}/manifest.json`, { ttl: 0, timeout: 12000 }));
+          ManifestMemo.put(base, m); a.stale = null; a.error = null;
+          if (JSON.stringify(m) !== JSON.stringify(a.manifest)) { a.manifest = m; a.id = m.id; changed = true; }
+          if (base.includes('v3-cinemeta')) this.offline = false;
+        } catch (e) {
+          a.stale = (e && e.message) || String(e);
+          if (base.includes('v3-cinemeta')) this.offline = true;
+        }
+      }
+    };
+    await Promise.all([one(), one(), one(), one()]);
+    if (changed) { this.clearCache(); this.persist(); this.emit('addons'); }
+    return changed;
   }
   placeholder(baseUrl, name, error, builtin, enabled = true) {
     const ex = this.addons.find((a) => a.baseUrl === baseUrl);
@@ -3141,6 +3208,7 @@ class StremioEngine {
   clearCache() { for (const k of [...this.cache.keys()]) if (!k.endsWith('/manifest.json')) this.cache.delete(k); }
   persist() {
     if (this.booting) return; // never save the half-loaded list during boot
+    ManifestMemo.keep(this.addons.filter((a) => !a.virtual).map((a) => a.baseUrl));
     Store.set('addons', this.addons.filter((a) => !a.virtual && !a.builtin).map((a) => a.baseUrl));
     Store.set('order', this.addons.map((a) => a.baseUrl));
     Store.set('disabled', this.addons.filter((a) => !a.enabled).map((a) => a.baseUrl));
@@ -3169,7 +3237,9 @@ class StremioEngine {
   }
   async fetchCatalog(cat, extra = {}) {
     const r = await this.call(cat.addon, 'catalog', cat.type, cat.id, extra);
-    return (r.metas || []).filter((m) => m && m.id).map((m) => ({ ...m, type: m.type || cat.type, _addon: cat.addon.manifest.name }));
+    // an addon may send nulls, numbers as ids or no list at all: keep what is usable instead of failing the row
+    return (Array.isArray(r && r.metas) ? r.metas : []).filter((m) => m && typeof m === 'object' && (typeof m.id === 'string' || typeof m.id === 'number') && String(m.id))
+      .map((m) => ({ ...m, id: String(m.id), type: m.type || cat.type, _addon: cat.addon.manifest.name }));
   }
   async search(q) {
     const cats = this.catalogs({ needs: 'search', includeRequired: true });
@@ -3182,7 +3252,7 @@ class StremioEngine {
     const cands = this.addons.filter((a) => this.supports(a, 'meta', type, id));
     let lastErr, answered = false;
     for (const a of cands) {
-      try { const r = await this.call(a, 'meta', type, id); if (r && r.meta) return { ...r.meta, type: r.meta.type || type, _addon: a.manifest.name }; answered = true; }
+      try { const r = await this.call(a, 'meta', type, id); if (r && r.meta && typeof r.meta === 'object' && !Array.isArray(r.meta)) return { ...r.meta, type: r.meta.type || type, _addon: a.manifest.name }; answered = true; }
       catch (e) { lastErr = e; }
     }
     // an addon that answered "not mine" counts; throw only when every addon failed
@@ -3197,7 +3267,7 @@ class StremioEngine {
     await Promise.allSettled(cands.map(async (a) => {
       try {
         const r = await this.call(a, 'stream', type, id);
-        const list = (r.streams || []).map((s) => ({ ...s, _addon: a.manifest.name, _addonId: a.manifest.id, _tel: Telemetry.parse(s) }));
+        const list = (Array.isArray(r && r.streams) ? r.streams : []).filter((s) => s && typeof s === 'object').map((s) => ({ ...s, _addon: a.manifest.name, _addonId: a.manifest.id, _tel: Telemetry.parse(s) }));
         all.push(...list); onPartial && onPartial(all.slice(), { addon: a, ok: true, count: list.length });
       } catch (e) { errors.push({ addon: a, error: e.message || String(e) }); onPartial && onPartial(all.slice(), { addon: a, ok: false, error: e.message }); }
     }));
@@ -3218,7 +3288,7 @@ class StremioEngine {
   /* ---------- Subtitles ---------- */
   async fetchSubtitles(type, id, extra) {
     const cands = this.addons.filter((a) => this.supports(a, 'subtitles', type, id));
-    const res = await Promise.allSettled(cands.map(async (a) => ((await this.call(a, 'subtitles', type, id, extra)).subtitles || []).map((s) => ({ ...s, _addon: a.manifest.name }))));
+    const res = await Promise.allSettled(cands.map(async (a) => { const r = await this.call(a, 'subtitles', type, id, extra); return (Array.isArray(r && r.subtitles) ? r.subtitles : []).filter((s) => s && typeof s === 'object' && typeof s.url === 'string').map((s) => ({ ...s, _addon: a.manifest.name })); }));
     return res.filter((r) => r.status === 'fulfilled').flatMap((r) => r.value);
   }
   /* Any supported subtitle text -> WebVTT: SRT, VTT, ASS/SSA, MicroDVD .sub */
@@ -3333,6 +3403,117 @@ function trailersAddon(engine) {
     },
   };
 }
+
+
+/* =====================================================================
+   Built-in addon: MKCinema Meta. A stand-in for Cinemeta, from TMDB.
+   Cinemeta is run by Stremio. If it ever stops answering, Home rows, search and title pages keep working from TMDB.
+   While Cinemeta answers, this addon only fills a title page when every other addon came back empty; its catalogs and
+   search are added only while Cinemeta is unreachable. With the viewer's own TMDB key it asks TMDB directly, otherwise
+   MKCinema's tmdb-person function (fixed lookups `titles` and `title`, v4). Ids stay IMDb ids, so stream addons work as before.
+   ===================================================================== */
+const MetaBackup = {
+  ID: 'org.mkcinema.meta', IMG: 'https://image.tmdb.org/t/p/', mode: null,
+  GENRES: { 28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy', 80: 'Crime', 99: 'Documentary', 18: 'Drama', 10751: 'Family', 14: 'Fantasy', 36: 'History', 27: 'Horror', 10402: 'Music', 9648: 'Mystery', 10749: 'Romance', 878: 'Science Fiction', 53: 'Thriller', 10752: 'War', 37: 'Western', 10759: 'Action & Adventure', 10762: 'Kids', 10763: 'News', 10764: 'Reality', 10765: 'Sci-Fi & Fantasy', 10766: 'Soap', 10767: 'Talk', 10768: 'War & Politics', 10770: 'TV Movie' },
+  manifest(full) {
+    const cats = [];
+    if (full) for (const type of ['movie', 'series']) cats.push(
+      { type, id: 'mkc.popular', name: 'Popular', extra: [{ name: 'skip' }] },
+      { type, id: 'mkc.top', name: 'Top rated', extra: [{ name: 'skip' }] },
+      { type, id: 'mkc.search', name: 'Search', extra: [{ name: 'search', isRequired: true }] });
+    return {
+      id: this.ID, version: '1.0.0', name: 'MKCinema Meta',
+      description: full ? 'Cinemeta is not answering, so films and shows come from TMDB for now.' : 'Fills in a title page from TMDB when no other addon knows it, and takes over if Cinemeta stops answering.',
+      resources: full ? ['catalog', 'meta'] : ['meta'], types: ['movie', 'series'], idPrefixes: ['tt'], catalogs: cats,
+    };
+  },
+  /* mounts the addon: full (catalogs + search, first in line) while Cinemeta is unreachable, else title pages only, last in line */
+  sync() {
+    const full = !!engine.offline; if (this.mode === full) return; this.mode = full;
+    const base = `mkc-virtual://${this.ID}`, was = engine.addons.find((a) => a.baseUrl === base);
+    engine.addons = engine.addons.filter((a) => a.baseUrl !== base);
+    const a = engine.mountVirtual(this.manifest(full), this.handlers(), { builtin: true, position: full ? 0 : undefined });
+    if (was) a.enabled = was.enabled;
+  },
+  lang() { try { return People.lang(); } catch (e) { return 'en-US'; } },
+  /* data: the viewer's own TMDB key first, then MKCinema's function */
+  async relay(a, params) {
+    const c = (typeof Account !== 'undefined' && Account.config && Account.config()) || {};
+    if (!c.url) return null;
+    const q = new URLSearchParams({ a, ...params, lang: this.lang() });
+    const r = await netFetch(`${String(c.url).replace(/\/+$/, '')}/functions/v1/tmdb-person?${q}`, { headers: { apikey: c.anonKey || '', accept: 'application/json' } }, 15000);
+    if (!r.ok) throw new Error(`TMDB lookup ${r.status}`);
+    return r.json();
+  },
+  find: async (tt) => { const f = await TMDB.find(tt); return f && ((f.movie_results || [])[0] ? ['movie', f.movie_results[0]] : (f.tv_results || [])[0] ? ['tv', f.tv_results[0]] : null); },
+  async titles(kind, list, page, q) {
+    if (!TMDB.key()) { const j = await this.relay('titles', { kind, list, page: String(page), ...(q ? { q } : {}) }); return (j && j.results) || []; }
+    const lang = this.lang();
+    const j = list === 'search' ? await TMDB.get(`search/${kind}`, { query: q, include_adult: 'false', language: lang, page }) : await TMDB.get(`${kind}/${list}`, { language: lang, page });
+    const rows = ((j && j.results) || []).filter((x) => x && !x.adult).slice(0, 20);
+    const ids = await Promise.all(rows.map((x) => TMDB.get(`${kind}/${x.id}/external_ids`).catch(() => null)));
+    return rows.map((x, i) => ({ ...x, imdb_id: (ids[i] && ids[i].imdb_id) || '' }));
+  },
+  async title(tt) {
+    if (!TMDB.key()) { const j = await this.relay('title', { tt }); return j && j.title; }
+    const lang = this.lang(), hit = await this.find(tt); if (!hit) return null;
+    const [k, x] = hit, d = await TMDB.get(`${k}/${x.id}`, { language: lang, append_to_response: 'credits,videos' }); if (!d) return null;
+    const eps = [];
+    if (k === 'tv') {
+      const ns = (d.seasons || []).map((v) => v.season_number).filter((n) => Number.isInteger(n) && n >= 0).slice(0, 60);
+      for (let i = 0; i < ns.length; i += 20) {
+        const part = ns.slice(i, i + 20), sx = await TMDB.get(`tv/${x.id}`, { language: lang, append_to_response: part.map((n) => `season/${n}`).join(',') });
+        part.forEach((n) => { const v = sx && sx[`season/${n}`]; if (v) eps.push(v); });
+      }
+    }
+    return { ...d, kind: k, eps };
+  },
+  img(p, size) { return p ? `${this.IMG}${size}${p}` : undefined; },
+  yr: (v) => String(v || '').slice(0, 4),
+  preview(x, type) {
+    return { id: x.imdb_id, type, name: x.title || x.name || '', poster: this.img(x.poster_path, 'w342'), background: this.img(x.backdrop_path, 'w1280'),
+      releaseInfo: this.yr(x.release_date || x.first_air_date), description: x.overview || '', genres: (x.genre_ids || []).map((g) => this.GENRES[g]).filter(Boolean) };
+  },
+  toMeta(d, tt, type) {
+    const tv = d.kind === 'tv', crew = ((d.credits || {}).crew) || [];
+    const ended = /^(Ended|Canceled)$/.test(d.status || '');
+    const m = {
+      id: tt, type: tv ? 'series' : (type || 'movie'), name: d.title || d.name || '', description: d.overview || '',
+      poster: this.img(d.poster_path, 'w500'), background: this.img(d.backdrop_path, 'w1280'),
+      releaseInfo: tv ? `${this.yr(d.first_air_date)}–${ended ? this.yr(d.last_air_date) : ''}` : this.yr(d.release_date),
+      released: (d.release_date || d.first_air_date) ? new Date(d.release_date || d.first_air_date).toISOString() : undefined,
+      runtime: (d.runtime || (d.episode_run_time || [])[0]) ? `${d.runtime || d.episode_run_time[0]} min` : undefined,
+      genres: (d.genres || []).map((g) => g && g.name).filter(Boolean),
+      cast: (((d.credits || {}).cast) || []).slice(0, 8).map((c) => c.name).filter(Boolean),
+      director: crew.filter((c) => c.job === 'Director').map((c) => c.name).slice(0, 3),
+      writer: [...(d.created_by || []).map((c) => c.name), ...crew.filter((c) => /^(Screenplay|Writer)$/.test(c.job)).map((c) => c.name)].filter(Boolean).slice(0, 4),
+      trailers: (((d.videos || {}).results) || []).filter((v) => v.site === 'YouTube' && /^(Trailer|Teaser)$/.test(v.type) && /^[\w-]{11}$/.test(v.key)).slice(0, 3).map((v) => ({ source: v.key, type: v.type })),
+    };
+    if (tv) m.videos = (d.eps || []).flatMap((s) => (s.episodes || []).map((e) => ({
+      id: `${tt}:${e.season_number != null ? e.season_number : s.season_number}:${e.episode_number}`, season: e.season_number != null ? e.season_number : s.season_number, episode: e.episode_number,
+      title: e.name || `Episode ${e.episode_number}`, name: e.name || `Episode ${e.episode_number}`, overview: e.overview || '', thumbnail: this.img(e.still_path, 'w300'),
+      released: e.air_date ? new Date(e.air_date).toISOString() : undefined,
+    })));
+    return m;
+  },
+  handlers() {
+    return {
+      catalog: async ({ type, id, extra }) => {
+        const kind = type === 'series' ? 'tv' : 'movie', page = 1 + Math.floor((Number(extra.skip) || 0) / 20);
+        if (page > 20) return { metas: [] };
+        const list = id === 'mkc.search' ? 'search' : id === 'mkc.top' ? 'top_rated' : 'popular';
+        if (list === 'search' && !String(extra.search || '').trim()) return { metas: [] };
+        const rows = await this.titles(kind, list, page, extra.search);
+        return { metas: rows.filter((x) => /^tt\d+$/.test(x.imdb_id || '')).map((x) => this.preview(x, type)) };
+      },
+      meta: async ({ type, id }) => {
+        const tt = String(id).split(':')[0]; if (!/^tt\d+$/.test(tt)) return { meta: null };
+        const d = await this.title(tt);
+        return { meta: d ? this.toMeta(d, tt, type) : null };
+      },
+    };
+  },
+};
 
 /* =====================================================================
    Addon Studio model: manifest + handlers + Node.js code generator
@@ -4895,14 +5076,14 @@ function renderAddons() {
     return `<div class="addon ${a.enabled ? '' : 'off'}">
       ${m.logo ? `<img class="logo" src="${esc(m.logo)}" alt="" data-nofb="1" referrerpolicy="no-referrer"><div class="logo" data-logo-alt hidden>${esc((m.name || '?').slice(0, 2).toUpperCase())}</div>` : `<div class="logo">${esc((m.name || '?').slice(0, 2).toUpperCase())}</div>`}
       <div style="min-width:0">
-        <h4>${esc(m.name)} <span class="tag-s">v${esc(m.version || '?')}</span>${a.builtin ? '<span class="tag-s c">built-in</span>' : ''}${a.virtual ? '<span class="tag-s v">in-browser</span>' : ''}${a.studio ? '<span class="tag-s g">studio</span>' : ''}${a.error ? '<span class="tag-s r">unreachable</span>' : ''}</h4>
-        <p>${esc(a.error ? `Could not load the manifest: ${a.error}` : m.description || '')}</p>
+        <h4>${esc(m.name)} <span class="tag-s">v${esc(m.version || '?')}</span>${a.builtin ? '<span class="tag-s c">built-in</span>' : ''}${a.virtual ? '<span class="tag-s v">in-browser</span>' : ''}${a.studio ? '<span class="tag-s g">studio</span>' : ''}${a.error ? '<span class="tag-s r">unreachable</span>' : a.stale ? '<span class="tag-s">saved copy</span>' : ''}</h4>
+        <p>${esc(a.error ? `Could not load the manifest: ${a.error}` : a.stale ? `Its server did not answer (${a.stale}), so MKCinema is using the copy it saved last time. Retry to check again.` : m.description || '')}</p>
         <div class="tele" style="margin-bottom:6px">${res.map((r) => `<span class="tag-s ${r.name === 'stream' ? 'g' : r.name === 'catalog' ? 'c' : 'v'}">${esc(r.name)}${r.types && r.types.length ? ` · ${esc(r.types.join('/'))}` : ''}${r.idPrefixes && r.idPrefixes.length ? ` · ${esc(r.idPrefixes.slice(0, 3).join(' '))}` : ''}</span>`).join('')}${(m.catalogs || []).length ? `<span class="tag-s">${m.catalogs.length} catalog${m.catalogs.length === 1 ? '' : 's'}</span>` : ''}${m.behaviorHints && m.behaviorHints.epgProvider ? `<span class="tag-s c">EPG</span>` : ''}</div>
         <div class="url">${esc(a.virtual ? `${a.baseUrl} (runs inside MKCinema)` : `${a.baseUrl}/manifest.json`)}</div>
       </div>
       <div class="addon-tools">
         <button class="ibtn" type="button" data-up="${i}" aria-label="Move up" title="Higher priority"><i data-lucide="chevron-up"></i></button>
-        ${a.error ? `<button class="ibtn" type="button" data-retry="${esc(a.baseUrl)}" aria-label="Retry" title="Retry"><i data-lucide="refresh-cw"></i></button>` : ''}
+        ${a.error || a.stale ? `<button class="ibtn" type="button" data-retry="${esc(a.baseUrl)}" aria-label="Retry" title="Retry"><i data-lucide="refresh-cw"></i></button>` : ''}
         ${a.virtual ? '' : `<button class="ibtn" type="button" data-copyurl="${esc(a.baseUrl)}/manifest.json" aria-label="Copy link" title="Copy manifest link"><i data-lucide="link"></i></button>`}
         ${a.builtin ? '' : `<button class="ibtn" type="button" data-rm="${esc(a.baseUrl)}" aria-label="Remove" title="Remove"><i data-lucide="trash-2"></i></button>`}
         <button class="switch ${a.enabled ? 'on' : ''}" type="button" data-toggle="${esc(a.baseUrl)}" aria-label="${a.enabled ? 'Disable' : 'Enable'} ${esc(m.name)}" role="switch" aria-checked="${a.enabled}"></button>
@@ -4919,7 +5100,7 @@ function renderAddons() {
 async function installAddon(url, retry) {
   try {
     const a = await engine.install(url, { builtin: url.startsWith('https://v3-cinemeta') || url.startsWith(OPENSUBS.replace('/manifest.json', '')) });
-    if (a.baseUrl.includes('v3-cinemeta')) { engine.offline = false; $('#offlineNotice').hidden = true; }
+    if (a.baseUrl.includes('v3-cinemeta')) { engine.offline = false; $('#offlineNotice').hidden = true; MetaBackup.sync(); }
     toast(`${retry ? 'Reconnected' : 'Installed'} ${a.manifest.name}`, 'ok'); $('#addonUrl').value = '';
     return a;
   } catch (e) {
@@ -5498,8 +5679,15 @@ async function loadAddons() {
   // read the saved lists before any install, and save once at the end
   const saved = { addons: Store.get('addons', []), order: Store.get('order', []), disabled: Store.get('disabled', []) };
   engine.booting = true;
+  // an addon with a saved manifest is drawn from it at once; only addons new to this device wait for their server
+  const recheck = [];
+  const open = async (u, opt = {}) => {
+    const base = StremioEngine.normalize(u), c = ManifestMemo.get(base);
+    if (c) { engine.mount(base, c.m, { ...opt, silent: true }); recheck.push(base); return; }
+    await engine.install(u, { ...opt, silent: true });
+  };
   try {
-  const [cm, os] = await Promise.allSettled([engine.install(CINEMETA, { builtin: true, silent: true }), engine.install(OPENSUBS, { builtin: true, silent: true })]);
+  const [cm, os] = await Promise.allSettled([open(CINEMETA, { builtin: true }), open(OPENSUBS, { builtin: true })]);
   if (cm.status === 'fulfilled') engine.offline = false; else { engine.offline = true; engine.placeholder(StremioEngine.normalize(CINEMETA), 'Cinemeta', cm.reason.message, true); }
   if (os.status === 'rejected') engine.placeholder(StremioEngine.normalize(OPENSUBS), 'OpenSubtitles v3', os.reason.message, true);
   // keep Cinemeta first, OpenSubtitles second
@@ -5507,13 +5695,16 @@ async function loadAddons() {
   const tr = trailersAddon(engine); engine.mountVirtual(tr.manifest, tr.handlers, { builtin: true });
   if (Store.get('studioMounted', false)) mountStudio(true);
   const stored = (Array.isArray(saved.addons) ? saved.addons : []).filter((u) => typeof u === 'string' && u && !u.includes('v3-cinemeta') && !u.includes('opensubtitles-v3.strem.io'));
-  await Promise.allSettled(stored.map((u) => engine.install(u, { silent: true }).catch((e) => engine.placeholder(u, u.replace(/^https?:\/\//, ''), e.message, false))));
+  await Promise.allSettled(stored.map((u) => open(u).catch((e) => engine.placeholder(u, u.replace(/^https?:\/\//, ''), e.message, false))));
   const disabled = Array.isArray(saved.disabled) ? saved.disabled : []; engine.addons.forEach((a) => { if (disabled.includes(a.baseUrl)) a.enabled = false; });
   if (Array.isArray(saved.order) && saved.order.length) Store.set('order', saved.order);
   engine.applyOrder();
   } finally { engine.booting = false; }
   engine.persist();
   $('#offlineNotice').hidden = !engine.offline;
+  MetaBackup.sync();
+  // saved manifests are checked once Home is up; nothing waits for it
+  if (recheck.length) setTimeout(() => engine.refresh(recheck).then(() => { $('#offlineNotice').hidden = !engine.offline; MetaBackup.sync(); if (!$('#addons').hidden) renderAddons(); }), 1500);
 }
 async function boot() {
   icons();
@@ -6332,7 +6523,7 @@ const Account = {
   },
   /* delete account: everything that came from the account leaves this device */
   wipeAll() {
-    const drop = ['watchlist', 'progress', 'watched', 'taste', 'studio', 'homeLayout', 'homeArrange', 'vault', 'keys', 'avatar', 'channels', 'lists', 'seats', 'ownerSeatName', 'ownerPin', 'ownerAv', 'addons', 'disabled', 'order', 'syncAt', 'syncMeta', 'syncExtra', 'syncOwner', 'syncKeyRaw', 'seat', 'seatChosen', 'trakt', 'simkl', 'anilist', 'mal', 'malAuth', 'kitsuMal'];
+    const drop = ['watchlist', 'progress', 'watched', 'taste', 'studio', 'homeLayout', 'homeArrange', 'vault', 'keys', 'avatar', 'channels', 'lists', 'seats', 'ownerSeatName', 'ownerPin', 'ownerAv', 'addons', 'disabled', 'order', 'mfc', 'syncAt', 'syncMeta', 'syncExtra', 'syncOwner', 'syncKeyRaw', 'seat', 'seatChosen', 'trakt', 'simkl', 'anilist', 'mal', 'malAuth', 'kitsuMal'];
     this.applying = true;
     try {
       const ks = []; for (let i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i));
@@ -10041,7 +10232,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.64.0';
+const APP_VERSION = '2.64.1';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -21766,6 +21957,9 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
+  { v: '2.64.1', date: '2026-11-11', items: [
+    ['better', 'Addons start instantly', 'Addons start instantly from a saved copy and keep working if their server blinks. If Cinemeta ever stops answering, Home, search and title pages carry on from TMDB.'],
+  ] },
   { v: '2.64.0', date: '2026-11-10', items: [
     ['fix', 'TV remote in Settings and X-Ray', 'On TVs, Settings pages open at the top and the remote walks every row, and the remote can now move into X-Ray: press Left from the player controls, then OK on an actor. Back returns.'],
     ['better', 'Fewer interruptions mid-film', 'When the connection to a source drops or freezes, the player now reconnects to the same copy at the same second, and waits for your network to come back, before it tries another copy. Your audio language and subtitles stay as they were.'],

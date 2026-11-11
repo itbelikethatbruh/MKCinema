@@ -419,6 +419,40 @@ const Telemetry = {
   },
 };
 
+/* 2.64 addon shield */
+/* The last manifest each addon sent, kept on this device only (never synced, wiped with the account). Boot draws addons
+   from it at once and asks their servers again in the background, so a slow or briefly down addon server no longer
+   holds Home or drops the addon for the session. Entries are keyed by a hash of the link, so a link that carries a key is
+   not written down a second time, and entries for addons no longer installed are dropped on the next save. */
+const ManifestMemo = {
+  K: 'mkc:mfc', MAX_ONE: 256 * 1024, MAX_ALL: 1536 * 1024,
+  h(s) {
+    let a = 0x811c9dc5, b = 0x9747b28c; s = String(s);
+    for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); a = Math.imul(a ^ c, 16777619); b = Math.imul(b ^ c, 2246822507); }
+    return (a >>> 0).toString(36) + '.' + (b >>> 0).toString(36);
+  },
+  all() { try { const v = JSON.parse(localStorage.getItem(this.K) || '{}'); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; } catch (e) { return {}; } },
+  get(base) { const e = this.all()[this.h(base)]; return e && e.m && typeof e.m === 'object' ? e : null; },
+  put(base, m) {
+    let txt; try { txt = JSON.stringify(m); } catch (e) { return; }
+    const all = this.all(), k = this.h(base);
+    if (txt.length > this.MAX_ONE) { if (all[k]) { delete all[k]; this.save(all); } return; }
+    if (all[k] && JSON.stringify(all[k].m) === txt) return;
+    all[k] = { t: Date.now(), m }; this.save(all);
+  },
+  keep(bases) {
+    const want = new Set(bases.map((b) => this.h(b))), all = this.all(); let ch = false;
+    for (const k of Object.keys(all)) if (!want.has(k)) { delete all[k]; ch = true; }
+    if (ch) this.save(all);
+  },
+  save(all) {
+    const ks = Object.keys(all).sort((x, y) => (all[x].t || 0) - (all[y].t || 0));
+    let txt = JSON.stringify(all);
+    while (txt.length > this.MAX_ALL && ks.length > 1) { delete all[ks.shift()]; txt = JSON.stringify(all); }
+    try { localStorage.setItem(this.K, txt); } catch (e) { /* storage full or blocked: run without it */ }
+  },
+};
+
 /* =====================================================================
    StremioEngine: protocol client for live addons + in-browser virtual addons
    ===================================================================== */
@@ -481,30 +515,35 @@ class StremioEngine {
   }
   static seriesId(imdbId, season, episode) { return `${imdbId}:${season}:${episode}`; }
 
-  async http(url, opts = {}) {
-    const ttl = opts.ttl == null ? 10 * 60 * 1000 : opts.ttl;
+  /* One request per address at a time (two rows asking for the same catalog share it), a capped cache, and one quiet
+     retry when the connection drops or the addon's host answers 502/503/504 for a moment. A timeout is never retried. */
+  http(url, { timeout = (CFG.timeout || 15) * 1000, ttl = 10 * 60 * 1000 } = {}) {
     const hit = this.cache.get(url);
-    if (hit && Date.now() - hit.t < ttl) return hit.v;
-    // 2.64: an address already being downloaded is not downloaded again; every caller gets the same answer
-    if (ttl <= 0) return this.httpGet(url, opts);
-    const fly = this.inflight || (this.inflight = new Map());
-    if (fly.has(url)) return fly.get(url);
-    const p = this.httpGet(url, opts).finally(() => { if (fly.get(url) === p) fly.delete(url); });
-    fly.set(url, p);
+    if (hit && Date.now() - hit.t < ttl) return Promise.resolve(hit.v);
+    if (!this.flight) this.flight = new Map();
+    if (this.flight.has(url)) return this.flight.get(url);
+    const p = this.fetchJson(url, timeout).then((v) => {
+      this.cache.delete(url); this.cache.set(url, { t: Date.now(), v });
+      while (this.cache.size > 400) this.cache.delete(this.cache.keys().next().value);
+      return v;
+    }).finally(() => { if (this.flight.get(url) === p) this.flight.delete(url); });
+    this.flight.set(url, p);
     return p;
   }
-  async httpGet(url, { timeout = (CFG.timeout || 15) * 1000 } = {}) {
-    const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), timeout);
-    try {
-      const res = await fetch(url, { signal: ctl.signal, headers: { Accept: 'application/json' } });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const v = await res.json();
-      this.cache.set(url, { t: Date.now(), v });
-      return v;
-    } catch (e) {
-      if (e.name === 'AbortError') throw new Error('Timed out');
-      throw e;
-    } finally { clearTimeout(timer); }
+  async fetchJson(url, timeout, tries = 2) {
+    for (let i = 0; ; i++) {
+      const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), timeout);
+      try {
+        const res = await fetch(url, { signal: ctl.signal, headers: { Accept: 'application/json' } });
+        if (!res.ok) { const e = new Error(`HTTP ${res.status}`); e.again = res.status === 502 || res.status === 503 || res.status === 504; throw e; }
+        const text = await res.text();
+        try { return JSON.parse(text.replace(/^﻿/, '')); } catch (e) { throw new Error('The addon did not answer with JSON'); }
+      } catch (e) {
+        if (e && e.name === 'AbortError') throw new Error('Timed out');
+        if (i + 1 < tries && (e instanceof TypeError || e.again)) { await new Promise((r) => setTimeout(r, 700)); continue; }
+        throw e;
+      } finally { clearTimeout(timer); }
+    }
   }
   async call(addon, resource, type, id, extra) {
     if (addon.virtual) return (await addon.handlers[resource]?.({ type, id, extra: extra || {} })) || {};
@@ -540,10 +579,38 @@ class StremioEngine {
     const baseUrl = StremioEngine.normalize(input);
     const existing = this.addons.find((a) => a.baseUrl === baseUrl);
     const manifest = this.validate(await this.http(`${baseUrl}/manifest.json`, { ttl: 0, timeout: 12000 }));
-    const addon = { id: manifest.id, baseUrl, manifest, enabled, builtin, virtual: false, error: null };
+    ManifestMemo.put(baseUrl, manifest);
+    return this.mount(baseUrl, manifest, { builtin, enabled, silent, position });
+  }
+  /* puts an addon in the list from a manifest in hand (fresh, or the saved copy at boot) */
+  mount(baseUrl, manifest, { builtin = false, enabled = true, silent = false, position, stale = null } = {}) {
+    const existing = this.addons.find((a) => a.baseUrl === baseUrl);
+    const addon = { id: manifest.id, baseUrl, manifest, enabled, builtin, virtual: false, error: null, stale };
     if (existing) Object.assign(existing, addon, { enabled: existing.enabled });
     else if (position != null) this.addons.splice(position, 0, addon); else this.addons.push(addon);
     this.persist(); if (!silent) this.emit('addons'); return existing || addon;
+  }
+  /* Asks addons drawn from saved manifests for a fresh one, four at a time, after Home is up. A changed manifest redraws
+     once at the end; an addon whose server does not answer keeps working from the saved copy and is marked stale. */
+  async refresh(bases) {
+    const q = bases.slice(); let changed = false;
+    const one = async () => {
+      for (let base; (base = q.shift());) {
+        const a = this.addons.find((x) => x.baseUrl === base && !x.virtual); if (!a) continue;
+        try {
+          const m = this.validate(await this.http(`${base}/manifest.json`, { ttl: 0, timeout: 12000 }));
+          ManifestMemo.put(base, m); a.stale = null; a.error = null;
+          if (JSON.stringify(m) !== JSON.stringify(a.manifest)) { a.manifest = m; a.id = m.id; changed = true; }
+          if (base.includes('v3-cinemeta')) this.offline = false;
+        } catch (e) {
+          a.stale = (e && e.message) || String(e);
+          if (base.includes('v3-cinemeta')) this.offline = true;
+        }
+      }
+    };
+    await Promise.all([one(), one(), one(), one()]);
+    if (changed) { this.clearCache(); this.persist(); this.emit('addons'); }
+    return changed;
   }
   placeholder(baseUrl, name, error, builtin, enabled = true) {
     const ex = this.addons.find((a) => a.baseUrl === baseUrl);
@@ -567,6 +634,7 @@ class StremioEngine {
   clearCache() { for (const k of [...this.cache.keys()]) if (!k.endsWith('/manifest.json')) this.cache.delete(k); }
   persist() {
     if (this.booting) return; // never save the half-loaded list during boot
+    ManifestMemo.keep(this.addons.filter((a) => !a.virtual).map((a) => a.baseUrl));
     Store.set('addons', this.addons.filter((a) => !a.virtual && !a.builtin).map((a) => a.baseUrl));
     Store.set('order', this.addons.map((a) => a.baseUrl));
     Store.set('disabled', this.addons.filter((a) => !a.enabled).map((a) => a.baseUrl));
@@ -595,7 +663,9 @@ class StremioEngine {
   }
   async fetchCatalog(cat, extra = {}) {
     const r = await this.call(cat.addon, 'catalog', cat.type, cat.id, extra);
-    return (r.metas || []).filter((m) => m && m.id).map((m) => ({ ...m, type: m.type || cat.type, _addon: cat.addon.manifest.name }));
+    // an addon may send nulls, numbers as ids or no list at all: keep what is usable instead of failing the row
+    return (Array.isArray(r && r.metas) ? r.metas : []).filter((m) => m && typeof m === 'object' && (typeof m.id === 'string' || typeof m.id === 'number') && String(m.id))
+      .map((m) => ({ ...m, id: String(m.id), type: m.type || cat.type, _addon: cat.addon.manifest.name }));
   }
   async search(q) {
     const cats = this.catalogs({ needs: 'search', includeRequired: true });
@@ -608,7 +678,7 @@ class StremioEngine {
     const cands = this.addons.filter((a) => this.supports(a, 'meta', type, id));
     let lastErr, answered = false;
     for (const a of cands) {
-      try { const r = await this.call(a, 'meta', type, id); if (r && r.meta) return { ...r.meta, type: r.meta.type || type, _addon: a.manifest.name }; answered = true; }
+      try { const r = await this.call(a, 'meta', type, id); if (r && r.meta && typeof r.meta === 'object' && !Array.isArray(r.meta)) return { ...r.meta, type: r.meta.type || type, _addon: a.manifest.name }; answered = true; }
       catch (e) { lastErr = e; }
     }
     // an addon that answered "not mine" counts; throw only when every addon failed
@@ -623,7 +693,7 @@ class StremioEngine {
     await Promise.allSettled(cands.map(async (a) => {
       try {
         const r = await this.call(a, 'stream', type, id);
-        const list = (r.streams || []).map((s) => ({ ...s, _addon: a.manifest.name, _addonId: a.manifest.id, _tel: Telemetry.parse(s) }));
+        const list = (Array.isArray(r && r.streams) ? r.streams : []).filter((s) => s && typeof s === 'object').map((s) => ({ ...s, _addon: a.manifest.name, _addonId: a.manifest.id, _tel: Telemetry.parse(s) }));
         all.push(...list); onPartial && onPartial(all.slice(), { addon: a, ok: true, count: list.length });
       } catch (e) { errors.push({ addon: a, error: e.message || String(e) }); onPartial && onPartial(all.slice(), { addon: a, ok: false, error: e.message }); }
     }));
@@ -644,7 +714,7 @@ class StremioEngine {
   /* ---------- Subtitles ---------- */
   async fetchSubtitles(type, id, extra) {
     const cands = this.addons.filter((a) => this.supports(a, 'subtitles', type, id));
-    const res = await Promise.allSettled(cands.map(async (a) => ((await this.call(a, 'subtitles', type, id, extra)).subtitles || []).map((s) => ({ ...s, _addon: a.manifest.name }))));
+    const res = await Promise.allSettled(cands.map(async (a) => { const r = await this.call(a, 'subtitles', type, id, extra); return (Array.isArray(r && r.subtitles) ? r.subtitles : []).filter((s) => s && typeof s === 'object' && typeof s.url === 'string').map((s) => ({ ...s, _addon: a.manifest.name })); }));
     return res.filter((r) => r.status === 'fulfilled').flatMap((r) => r.value);
   }
   /* Any supported subtitle text -> WebVTT: SRT, VTT, ASS/SSA, MicroDVD .sub */
