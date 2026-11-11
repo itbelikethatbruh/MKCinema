@@ -8,10 +8,13 @@
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
   { v: '2.67.0', date: '2026-11-11', items: [
+    ['new', '30 languages', 'MKCinema now speaks 30 languages besides English, including 中文, العربية, Русский, 日本語, 한국어, Bahasa Indonesia, Türkçe and Kiswahili, and every menu, setting and message is translated. Pick one in Settings › Appearance › Language.'],
+    ['new', 'Record live TV', 'Record the channel you’re watching (for 30 minutes, an hour, until the programme ends, or until you stop), or pick a programme later in the guide and it records when it starts. Xtream catch-up programmes save to a file in one press. Find them all in Live TV › Recordings.'],
+    ['better', 'Recording in the Android app', 'The Android and Android TV app records any channel from your TV service, keeps going in the background, and plays your recordings from Library › Downloads.'],
+    ['new', 'Any TV service on your computer', 'In the MKCinema app for Windows and Mac, TV services on plain http:// now work: your playlist, Xtream login, guide, catch-up, films and series all load and play.'],
     ['new', 'Addon health check', 'Addons › Check my addons tests every addon: how fast it answers, whether its catalogs, sources and subtitles work, and whether its key or setup has a problem. Then it tells you in plain words what to fix.'],
     ['new', 'One-press fixes', 'Turn off the addon that slows every Play, move a slow one down, keep one copy of an addon installed twice, or open its setup page to renew a key.'],
     ['better', 'See the slow one at a glance', 'After a check, each addon in your list shows Healthy, Slow, Needs setup or Not working, with how long it takes to find sources.'],
-    ['new', 'Any TV service on your computer', 'In the MKCinema app for Windows and Mac, TV services on plain http:// now work: your playlist, Xtream login, guide, catch-up, films and series all load and play.'],
   ] },
   { v: '2.66.2', date: '2026-11-11', items: [
     ['better', 'Dolby Vision plays in more browsers', 'Dolby Vision films that carry an HDR10 picture now play in browsers that decode HEVC, shown in HDR10. Films without one still go to a player that can show them.'],
