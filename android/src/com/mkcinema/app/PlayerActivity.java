@@ -191,6 +191,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
 
     void togglePlay() {
         if (!prepared || eng == null) return;
+        modeHold = false;
         if (eng.playing()) { eng.pause(); show(Long.MAX_VALUE / 4); } else { eng.play(); show(2500); }
     }
 
@@ -317,10 +318,38 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
                 if (Math.round(ratio) >= 1 && err < 0.01f && (best == null || err < bestErr || (err == bestErr && m.getRefreshRate() < best.getRefreshRate()))) { best = m; bestErr = err; }
             }
             if (best != null && best.getModeId() != cur.getModeId()) {
+                holdForMode(best.getModeId());
                 WindowManager.LayoutParams lp = getWindow().getAttributes(); lp.preferredDisplayModeId = best.getModeId(); getWindow().setAttributes(lp);
                 note.setText(String.format(java.util.Locale.US, "%.3f Hz", best.getRefreshRate())); h.postDelayed(() -> { if ("".equals(note.getText().toString()) || note.getText().toString().endsWith("Hz")) note.setText(""); }, 3000);
             }
         });
+    }
+
+    /** 1.11.1: while the TV switches its refresh rate the HDMI link restarts (picture and sound drop for 1 to 5 s on
+        most TVs and receivers). Sound sent in that gap can be lost for good on some boxes, so the film waits, paused,
+        until the new mode is on (or 5 s), then 1 s more for the sound link, and plays on. */
+    android.hardware.display.DisplayManager.DisplayListener modeL; boolean modeHold;
+    void holdForMode(int modeId) {
+        if (eng == null || !eng.playing()) return;
+        modeHold = true; eng.pause();
+        final Runnable go = () -> { unwatchMode(); h.postDelayed(() -> { if (modeHold && eng != null && !isFinishing()) { modeHold = false; eng.play(); } }, 1000); };
+        try {
+            android.hardware.display.DisplayManager dm = (android.hardware.display.DisplayManager) getSystemService(DISPLAY_SERVICE);
+            modeL = new android.hardware.display.DisplayManager.DisplayListener() {
+                @Override public void onDisplayAdded(int id) { }
+                @Override public void onDisplayRemoved(int id) { }
+                @Override public void onDisplayChanged(int id) {
+                    try { if (getWindowManager().getDefaultDisplay().getMode().getModeId() == modeId) { h.removeCallbacks(go); go.run(); } } catch (Exception ignored) { }
+                }
+            };
+            dm.registerDisplayListener(modeL, h);
+        } catch (Exception ignored) { }
+        h.postDelayed(go, 5000);
+    }
+    void unwatchMode() {
+        if (modeL == null) return;
+        try { ((android.hardware.display.DisplayManager) getSystemService(DISPLAY_SERVICE)).unregisterDisplayListener(modeL); } catch (Exception ignored) { }
+        modeL = null;
     }
 
     /** Subtitles: SRT is used as is, WebVTT is turned into SRT, then handed to the player's timed-text track. */
@@ -488,7 +517,16 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
 
     // the crash flag is only up while the libass layer draws on screen, so Android closing a paused player in the
     // background never counts as a crash
-    @Override protected void onPause() { super.onPause(); if (eng != null && prepared && eng.playing()) eng.pause(); if (assView != null) liveAss(false); }
+    @Override protected void onPause() { super.onPause(); modeHold = false; if (eng != null && prepared && eng.playing()) eng.pause(); if (assView != null) liveAss(false); }
     @Override protected void onResume() { super.onResume(); if (assView != null) liveAss(true); }
-    @Override protected void onDestroy() { super.onDestroy(); h.removeCallbacksAndMessages(null); if (eng != null) { eng.release(); eng = null; } liveAss(false); }
+    @Override protected void onDestroy() { super.onDestroy(); stopPlayer(); liveAss(false); }
+
+    /** 1.11.1: the player (its decoders and its audio output) is let go the moment this screen closes. Android runs
+        onDestroy only once the screen behind is idle, which on a slow TV box can be seconds later: a film started again
+        in that time opened a second player while the first still held the audio output, and played with no sound. */
+    @Override public void finish() { stopPlayer(); super.finish(); }
+    void stopPlayer() {
+        h.removeCallbacksAndMessages(null); unwatchMode();
+        if (eng != null) { Engine e = eng; eng = null; prepared = false; try { e.release(); } catch (Throwable ignored) { } }
+    }
 }
