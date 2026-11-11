@@ -70,7 +70,7 @@ public class MainActivity extends Activity {
     static final String[] APP_HOSTS = { HOST, "app.mkcinema.app" };
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6;
-    static final String VER = "1.10.0";
+    static final String VER = "1.11.0";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -507,6 +507,15 @@ public class MainActivity extends Activity {
             if (!ok(k) || json == null || json.length() > 20000) return -1;
             return Iptv.set(getApplicationContext(), json);
         }
+        /** 1.11.0 live TV recording (RecService): {url, headers, name, channel, stopAt, catchup, meta} → id or "error: ..." */
+        @JavascriptInterface public String recStart(String k, String json) {
+            if (!ok(k) || json == null || json.length() > 20000) return "error: not allowed here";
+            return RecService.start(getApplicationContext(), json);
+        }
+        @JavascriptInterface public boolean recStop(String k, String id) { return ok(k) && id != null && RecService.stop(id); }
+        /** a programme from the guide: {id, url, headers, name, channel, logo, start, end}; an exact alarm starts it, app open or not */
+        @JavascriptInterface public boolean recPlan(String k, String json) { return ok(k) && json != null && json.length() < 20000 && RecService.plan(getApplicationContext(), json); }
+        @JavascriptInterface public boolean recUnplan(String k, String id) { return ok(k) && id != null && RecService.unplan(getApplicationContext(), id); }
         @JavascriptInterface public boolean play(String k, String json) {
             if (!ok(k)) return false;
             try {
@@ -564,7 +573,7 @@ public class MainActivity extends Activity {
     /** Every MKAndroid method, for BRIDGE_JS */
     static final String[] BRIDGE_METHODS = { "voice", "voiceStop", "version", "fps", "watchNext", "watchNextRemove", "p2pStart", "p2pStop",
         "p2pAvailable", "dlStart", "dlSpace", "setSlow", "epEnable", "epOn", "epSync", "dlList", "dlRemove", "dlPlay", "pipState", "pip", "play",
-        "setEngine", "update", "youtube", "exit", "iptvHosts" };
+        "setEngine", "update", "youtube", "exit", "iptvHosts", "recStart", "recStop", "recPlan", "recUnplan" };
 
     static String newKey() {
         byte[] b = new byte[24]; new SecureRandom().nextBytes(b);
