@@ -6,10 +6,12 @@
 // Only fixed lookups are offered, never a free path: ping, search (a person by name), cast (a title's people,
 // by IMDb or TMDB id), person (bio and combined credits), ids (a film's or show's IMDb id) and art (the best backdrop
 // without the title printed on it, plus a logo, for the Home banner and title pages), watch (where a title streams in a
-// region, for Where to watch) and providers (the region's streaming services, for the Your apps picker). Answers are trimmed to
+// region, for Where to watch), providers (the region's streaming services, for the Your apps picker), and (v4) titles
+// (a page of popular, top rated or searched films or shows, with IMDb ids) and title (a film's or show's page with its
+// episodes), which MKCinema Meta uses if Cinemeta stops answering. Answers are trimmed to
 // the fields the person page draws. Calls must carry the project's publishable key in `apikey` and come from the live
 // sites (the same rule as debrid-relay). Nothing is stored and nothing is logged: this file has no console calls on purpose.
-const VERSION = 3;
+const VERSION = 4;
 const ORIGINS = [/^https:\/\/(mkcinema|mkctv)\.pages\.dev$/, /^https:\/\/((app|tv)\.)?mkcinema\.app$/];
 const RATE = { limit: 90, windowMs: 60_000 }; // per client IP, per isolate (best effort)
 const API = 'https://api.themoviedb.org/3';
@@ -159,6 +161,58 @@ async function answer(a: string, p: URLSearchParams): Promise<[number, unknown, 
     const out: Record<string, unknown> = { link: str(r.link, 300) };
     for (const k of ['flatrate', 'free', 'ads', 'rent', 'buy']) if (Array.isArray(r[k])) out[k] = r[k].slice(0, 20).map(prov);
     return [200, { result: out }, 86400];
+  }
+  if (a === 'titles') {
+    const list = p.get('list') || '', page = Math.min(20, Math.max(1, Math.floor(Number(p.get('page'))) || 1));
+    let j: any;
+    if (list === 'search') {
+      const q = (p.get('q') || '').trim();
+      if (!q || q.length > 100) return [400, { error: 'bad search' }, 0];
+      j = await tmdb(`search/${kind}`, { query: q, include_adult: 'false', language: lang, page: String(page) });
+    } else if (list === 'popular' || list === 'top_rated') j = await tmdb(`${kind}/${list}`, { language: lang, page: String(page) });
+    else return [400, { error: 'bad list' }, 0];
+    const rows = ((j && j.results) || []).filter((x: any) => x && !x.adult).slice(0, 20);
+    const ids = await Promise.all(rows.map((x: any) => tmdb(`${kind}/${num(x.id)}/external_ids`).catch(() => null)));
+    const results = rows.map((x: any, i: number) => ({
+      id: num(x.id), imdb_id: str(ids[i] && ids[i].imdb_id, 12), title: str(x.title, 200), name: str(x.name, 200), overview: str(x.overview, 1200),
+      release_date: str(x.release_date, 10), first_air_date: str(x.first_air_date, 10), poster_path: str(x.poster_path, 80), backdrop_path: str(x.backdrop_path, 80),
+      genre_ids: Array.isArray(x.genre_ids) ? x.genre_ids.filter((g: unknown) => typeof g === 'number').slice(0, 6) : [],
+    })).filter((x: any) => /^tt\d{5,10}$/.test(x.imdb_id));
+    return [200, { results }, list === 'search' ? 3600 : 6 * 3600];
+  }
+  if (a === 'title') {
+    const tt = p.get('tt') || '';
+    if (!/^tt\d{5,10}$/.test(tt)) return [400, { error: 'bad title id' }, 0];
+    const f = await tmdb(`find/${tt}`, { external_source: 'imdb_id' });
+    const hit = f && ((f.movie_results || [])[0] ? { k: 'movie', x: f.movie_results[0] } : (f.tv_results || [])[0] ? { k: 'tv', x: f.tv_results[0] } : null);
+    if (!hit) return [200, { title: null }, 86400];
+    const tid = num(hit.x.id), d = await tmdb(`${hit.k}/${tid}`, { language: lang, append_to_response: 'credits,videos' });
+    if (!d) return [200, { title: null }, 86400];
+    const eps: any[] = [];
+    if (hit.k === 'tv') {
+      const ns = (d.seasons || []).map((v: any) => v && v.season_number).filter((n: unknown) => Number.isInteger(n) && (n as number) >= 0).slice(0, 60) as number[];
+      for (let i = 0; i < ns.length; i += 20) {
+        const part = ns.slice(i, i + 20), sx = await tmdb(`tv/${tid}`, { language: lang, append_to_response: part.map((n) => `season/${n}`).join(',') });
+        for (const n of part) {
+          const v = sx && sx[`season/${n}`]; if (!v) continue;
+          eps.push({ season_number: n, episodes: (v.episodes || []).slice(0, 400).map((e: any) => ({
+            season_number: num(e.season_number), episode_number: num(e.episode_number), name: str(e.name, 200), overview: str(e.overview, 1200),
+            air_date: str(e.air_date, 10), still_path: str(e.still_path, 80),
+          })) });
+        }
+      }
+    }
+    const crew = ((d.credits && d.credits.crew) || []).filter((c: any) => /^(Director|Screenplay|Writer)$/.test(c && c.job)).slice(0, 12).map((c: any) => ({ name: str(c.name, 120), job: str(c.job, 40) }));
+    return [200, { title: {
+      kind: hit.k, id: tid, title: str(d.title, 200), name: str(d.name, 200), overview: str(d.overview, 3000), status: str(d.status, 40),
+      release_date: str(d.release_date, 10), first_air_date: str(d.first_air_date, 10), last_air_date: str(d.last_air_date, 10),
+      runtime: num(d.runtime), episode_run_time: Array.isArray(d.episode_run_time) ? d.episode_run_time.filter((n: unknown) => typeof n === 'number').slice(0, 1) : [],
+      genres: (d.genres || []).slice(0, 8).map((g: any) => ({ name: str(g && g.name, 60) })), poster_path: str(d.poster_path, 80), backdrop_path: str(d.backdrop_path, 80),
+      created_by: (d.created_by || []).slice(0, 4).map((c: any) => ({ name: str(c && c.name, 120) })),
+      credits: { cast: ((d.credits && d.credits.cast) || []).slice(0, 12).map((c: any) => ({ name: str(c.name, 120), character: str(c.character, 160) })), crew },
+      videos: { results: ((d.videos && d.videos.results) || []).filter((v: any) => v && v.site === 'YouTube' && /^(Trailer|Teaser)$/.test(v.type)).slice(0, 6).map((v: any) => ({ key: str(v.key, 20), site: 'YouTube', type: str(v.type, 20), name: str(v.name, 120) })) },
+      eps,
+    } }, 86400];
   }
   return [400, { error: 'unknown lookup' }, 0];
 }

@@ -1425,14 +1425,14 @@ function renderAddons() {
     return `<div class="addon ${a.enabled ? '' : 'off'}">
       ${m.logo ? `<img class="logo" src="${esc(m.logo)}" alt="" data-nofb="1" referrerpolicy="no-referrer"><div class="logo" data-logo-alt hidden>${esc((m.name || '?').slice(0, 2).toUpperCase())}</div>` : `<div class="logo">${esc((m.name || '?').slice(0, 2).toUpperCase())}</div>`}
       <div style="min-width:0">
-        <h4>${esc(m.name)} <span class="tag-s">v${esc(m.version || '?')}</span>${a.builtin ? '<span class="tag-s c">built-in</span>' : ''}${a.virtual ? '<span class="tag-s v">in-browser</span>' : ''}${a.studio ? '<span class="tag-s g">studio</span>' : ''}${a.error ? '<span class="tag-s r">unreachable</span>' : ''}</h4>
-        <p>${esc(a.error ? `Could not load the manifest: ${a.error}` : m.description || '')}</p>
+        <h4>${esc(m.name)} <span class="tag-s">v${esc(m.version || '?')}</span>${a.builtin ? '<span class="tag-s c">built-in</span>' : ''}${a.virtual ? '<span class="tag-s v">in-browser</span>' : ''}${a.studio ? '<span class="tag-s g">studio</span>' : ''}${a.error ? '<span class="tag-s r">unreachable</span>' : a.stale ? '<span class="tag-s">saved copy</span>' : ''}</h4>
+        <p>${esc(a.error ? `Could not load the manifest: ${a.error}` : a.stale ? `Its server did not answer (${a.stale}), so MKCinema is using the copy it saved last time. Retry to check again.` : m.description || '')}</p>
         <div class="tele" style="margin-bottom:6px">${res.map((r) => `<span class="tag-s ${r.name === 'stream' ? 'g' : r.name === 'catalog' ? 'c' : 'v'}">${esc(r.name)}${r.types && r.types.length ? ` · ${esc(r.types.join('/'))}` : ''}${r.idPrefixes && r.idPrefixes.length ? ` · ${esc(r.idPrefixes.slice(0, 3).join(' '))}` : ''}</span>`).join('')}${(m.catalogs || []).length ? `<span class="tag-s">${m.catalogs.length} catalog${m.catalogs.length === 1 ? '' : 's'}</span>` : ''}${m.behaviorHints && m.behaviorHints.epgProvider ? `<span class="tag-s c">EPG</span>` : ''}</div>
         <div class="url">${esc(a.virtual ? `${a.baseUrl} (runs inside MKCinema)` : `${a.baseUrl}/manifest.json`)}</div>
       </div>
       <div class="addon-tools">
         <button class="ibtn" type="button" data-up="${i}" aria-label="Move up" title="Higher priority"><i data-lucide="chevron-up"></i></button>
-        ${a.error ? `<button class="ibtn" type="button" data-retry="${esc(a.baseUrl)}" aria-label="Retry" title="Retry"><i data-lucide="refresh-cw"></i></button>` : ''}
+        ${a.error || a.stale ? `<button class="ibtn" type="button" data-retry="${esc(a.baseUrl)}" aria-label="Retry" title="Retry"><i data-lucide="refresh-cw"></i></button>` : ''}
         ${a.virtual ? '' : `<button class="ibtn" type="button" data-copyurl="${esc(a.baseUrl)}/manifest.json" aria-label="Copy link" title="Copy manifest link"><i data-lucide="link"></i></button>`}
         ${a.builtin ? '' : `<button class="ibtn" type="button" data-rm="${esc(a.baseUrl)}" aria-label="Remove" title="Remove"><i data-lucide="trash-2"></i></button>`}
         <button class="switch ${a.enabled ? 'on' : ''}" type="button" data-toggle="${esc(a.baseUrl)}" aria-label="${a.enabled ? 'Disable' : 'Enable'} ${esc(m.name)}" role="switch" aria-checked="${a.enabled}"></button>
@@ -1449,7 +1449,7 @@ function renderAddons() {
 async function installAddon(url, retry) {
   try {
     const a = await engine.install(url, { builtin: url.startsWith('https://v3-cinemeta') || url.startsWith(OPENSUBS.replace('/manifest.json', '')) });
-    if (a.baseUrl.includes('v3-cinemeta')) { engine.offline = false; $('#offlineNotice').hidden = true; }
+    if (a.baseUrl.includes('v3-cinemeta')) { engine.offline = false; $('#offlineNotice').hidden = true; MetaBackup.sync(); }
     toast(`${retry ? 'Reconnected' : 'Installed'} ${a.manifest.name}`, 'ok'); $('#addonUrl').value = '';
     return a;
   } catch (e) {
@@ -2028,8 +2028,15 @@ async function loadAddons() {
   // read the saved lists before any install, and save once at the end
   const saved = { addons: Store.get('addons', []), order: Store.get('order', []), disabled: Store.get('disabled', []) };
   engine.booting = true;
+  // an addon with a saved manifest is drawn from it at once; only addons new to this device wait for their server
+  const recheck = [];
+  const open = async (u, opt = {}) => {
+    const base = StremioEngine.normalize(u), c = ManifestMemo.get(base);
+    if (c) { engine.mount(base, c.m, { ...opt, silent: true }); recheck.push(base); return; }
+    await engine.install(u, { ...opt, silent: true });
+  };
   try {
-  const [cm, os] = await Promise.allSettled([engine.install(CINEMETA, { builtin: true, silent: true }), engine.install(OPENSUBS, { builtin: true, silent: true })]);
+  const [cm, os] = await Promise.allSettled([open(CINEMETA, { builtin: true }), open(OPENSUBS, { builtin: true })]);
   if (cm.status === 'fulfilled') engine.offline = false; else { engine.offline = true; engine.placeholder(StremioEngine.normalize(CINEMETA), 'Cinemeta', cm.reason.message, true); }
   if (os.status === 'rejected') engine.placeholder(StremioEngine.normalize(OPENSUBS), 'OpenSubtitles v3', os.reason.message, true);
   // keep Cinemeta first, OpenSubtitles second
@@ -2037,13 +2044,16 @@ async function loadAddons() {
   const tr = trailersAddon(engine); engine.mountVirtual(tr.manifest, tr.handlers, { builtin: true });
   if (Store.get('studioMounted', false)) mountStudio(true);
   const stored = (Array.isArray(saved.addons) ? saved.addons : []).filter((u) => typeof u === 'string' && u && !u.includes('v3-cinemeta') && !u.includes('opensubtitles-v3.strem.io'));
-  await Promise.allSettled(stored.map((u) => engine.install(u, { silent: true }).catch((e) => engine.placeholder(u, u.replace(/^https?:\/\//, ''), e.message, false))));
+  await Promise.allSettled(stored.map((u) => open(u).catch((e) => engine.placeholder(u, u.replace(/^https?:\/\//, ''), e.message, false))));
   const disabled = Array.isArray(saved.disabled) ? saved.disabled : []; engine.addons.forEach((a) => { if (disabled.includes(a.baseUrl)) a.enabled = false; });
   if (Array.isArray(saved.order) && saved.order.length) Store.set('order', saved.order);
   engine.applyOrder();
   } finally { engine.booting = false; }
   engine.persist();
   $('#offlineNotice').hidden = !engine.offline;
+  MetaBackup.sync();
+  // saved manifests are checked once Home is up; nothing waits for it
+  if (recheck.length) setTimeout(() => engine.refresh(recheck).then(() => { $('#offlineNotice').hidden = !engine.offline; MetaBackup.sync(); if (!$('#addons').hidden) renderAddons(); }), 1500);
 }
 async function boot() {
   icons();

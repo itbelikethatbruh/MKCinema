@@ -7,6 +7,9 @@
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
+  { v: '2.64.1', date: '2026-11-11', items: [
+    ['better', 'Addons start instantly', 'Addons start instantly from a saved copy and keep working if their server blinks. If Cinemeta ever stops answering, Home, search and title pages carry on from TMDB.'],
+  ] },
   { v: '2.64.0', date: '2026-11-10', items: [
     ['fix', 'TV remote in Settings and X-Ray', 'On TVs, Settings pages open at the top and the remote walks every row, and the remote can now move into X-Ray: press Left from the player controls, then OK on an actor. Back returns.'],
     ['better', 'Fewer interruptions mid-film', 'When the connection to a source drops or freezes, the player now reconnects to the same copy at the same second, and waits for your network to come back, before it tries another copy. Your audio language and subtitles stay as they were.'],
