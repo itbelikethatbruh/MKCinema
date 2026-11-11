@@ -7,6 +7,10 @@
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
+  { v: '2.64.3', date: '2026-11-11', items: [
+    ['better', 'Tidier phone menus', 'On phones, the top bar buttons now fit inside the bar, and the side menu is a slimmer panel with rounded corners.'],
+    ['fix', 'Friends setup fits the screen', 'The username box and colour choices no longer get cut off at the edges.'],
+  ] },
   { v: '2.64.2', date: '2026-11-11', items: [
     ['better', 'Opens straight to Home', 'The web app no longer plays an opening animation. The MKCinema loading screen shows while Home gets ready, then you are in.'],
   ] },
