@@ -1,6 +1,6 @@
 # MKCinema
 
-> MKCinema is a free, open-source home cinema for the whole family. It is a film player for Stremio-compatible addons, with a seat (profile) for everyone in the house, watch parties with voice and cameras, and a phone that works as a remote. It runs on Android, Android TV and Fire TV, Windows, Mac, Linux, iPhone and iPad (as a Home Screen web app), smart TVs, and any modern browser. Every feature is free forever: no ads, no paid tier, open source under GPL-3.0.
+> MKCinema is a free, open-source home cinema for the whole family. Tomorrow’s cinema, for the whole house: it works with Stremio-compatible addons and gives a seat (profile) for everyone in the house, watch parties with voice and cameras, and a phone that works as a remote. It runs on Android, Android TV and Fire TV, Windows, Mac, Linux, iPhone and iPad (as a Home Screen web app), smart TVs, and any modern browser. Every feature is free forever: no ads, no paid tier, open source under GPL-3.0.
 
 Key facts:
 
