@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.67.2', date: '2026-11-11', items: [
+    ['new', 'Miko’s built-in AI', 'Miko now has a built-in AI, free for everyone. Say anything in your own words, no key needed. Your own Groq or Gemini key still works in Miko’s settings.'],
+  ] },
   { v: '2.67.1', date: '2026-11-11', items: [
     ['better', 'Your TV service adds first time', 'In the Android and Android TV app, a TV service on plain http:// (or one that doesn’t allow web pages) now adds straight from Live TV › Add playlist.'],
     ['better', 'Sharper picks on Android TV', 'Smart Play on Android TV now picks for the TV player, which plays MKV, HEVC and HDR on the box’s own hardware, so it no longer settles for a lower quality file. When a source won’t open, the next one goes straight to the TV player.'],
