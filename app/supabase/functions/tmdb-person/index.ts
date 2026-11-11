@@ -6,12 +6,12 @@
 // Only fixed lookups are offered, never a free path: ping, search (a person by name), cast (a title's people,
 // by IMDb or TMDB id), person (bio and combined credits), ids (a film's or show's IMDb id) and art (the best backdrop
 // without the title printed on it, plus a logo, for the Home banner and title pages), watch (where a title streams in a
-// region, for Where to watch), providers (the region's streaming services, for the Your apps picker), and (v4) titles
+// region, for Where to watch), stills (a season's episode pictures), providers (the region's streaming services, for the Your apps picker), and (v4) titles
 // (a page of popular, top rated or searched films or shows, with IMDb ids) and title (a film's or show's page with its
 // episodes), which MKCinema Meta uses if Cinemeta stops answering. Answers are trimmed to
 // the fields the person page draws. Calls must carry the project's publishable key in `apikey` and come from the live
 // sites (the same rule as debrid-relay). Nothing is stored and nothing is logged: this file has no console calls on purpose.
-const VERSION = 4;
+const VERSION = 5;
 const ORIGINS = [/^https:\/\/(mkcinema|mkctv)\.pages\.dev$/, /^https:\/\/((app|tv)\.)?mkcinema\.app$/];
 const RATE = { limit: 90, windowMs: 60_000 }; // per client IP, per isolate (best effort)
 const API = 'https://api.themoviedb.org/3';
@@ -161,6 +161,17 @@ async function answer(a: string, p: URLSearchParams): Promise<[number, unknown, 
     const out: Record<string, unknown> = { link: str(r.link, 300) };
     for (const k of ['flatrate', 'free', 'ads', 'rent', 'buy']) if (Array.isArray(r[k])) out[k] = r[k].slice(0, 20).map(prov);
     return [200, { result: out }, 86400];
+  }
+  // a season's episode stills, for the episode list (the shared catalog pictures can be out of step with TMDB)
+  if (a === 'stills') {
+    const tt = p.get('tt') || '', season = p.get('season') || '';
+    if (!/^tt\d{5,10}$/.test(tt) || !/^\d{1,3}$/.test(season)) return [400, { error: 'bad title or season' }, 0];
+    const f = await tmdb(`find/${tt}`, { external_source: 'imdb_id' });
+    const tv = f && (f.tv_results || [])[0];
+    if (!tv) return [200, { eps: [] }, 86400];
+    const j = await tmdb(`tv/${num(tv.id)}/season/${Number(season)}`);
+    const eps = ((j && j.episodes) || []).slice(0, 400).map((e: any) => ({ e: num(e.episode_number), n: str(e.name, 160), d: str(e.air_date, 10), s: str(e.still_path, 80) }));
+    return [200, { eps }, 86400];
   }
   if (a === 'titles') {
     const list = p.get('list') || '', page = Math.min(20, Math.max(1, Math.floor(Number(p.get('page'))) || 1));
