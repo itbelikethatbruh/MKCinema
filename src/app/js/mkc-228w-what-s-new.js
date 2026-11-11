@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.67.3', date: '2026-11-11', items: [
+    ['better', 'Miko follows the conversation', 'Answer Miko’s question with a simple “yes” and she does what she offered, and her answers read cleaner.'],
+  ] },
   { v: '2.67.2', date: '2026-11-11', items: [
     ['new', 'Miko’s built-in AI', 'Miko now has a built-in AI, free for everyone. Say anything in your own words, no key needed. Your own Groq or Gemini key still works in Miko’s settings.'],
   ] },

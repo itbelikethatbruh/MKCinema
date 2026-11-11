@@ -574,7 +574,7 @@ const Miko = {
     }
     if (list && (m = t.match(/^(?:play |watch |open )?(?:the )?((?:19|20)\d\d)(?: one| version| film| movie| show)?$/))) { const x = list.find((y) => String(y.year || '').startsWith(m[1])); if (x) { this.mark(x); return () => this.act(/^open/.test(t) ? 'open' : 'play', x); } }
     if (list && list.length === 1 && /^(yes|yeah|yep|sure|that one|this one|that's it|thats it|play that|play it)$/.test(t) && !this.here()) { const x = list[0]; this.mark(x); return () => this.act('play', x); }
-    if (/^(yes|yeah|yep|yup|sure)$/.test(t)) return async () => this.say(MikoSoul.line('yes_nothing'));
+    if (/^(yes|yeah|yep|yup|sure)$/.test(t)) return this.cfg() && this.hist.length && Date.now() - (this.aiAt || 0) < 600000 ? async () => { if ((await this.agent(text)) === 'fallback') this.say(MikoSoul.line('yes_nothing')); } : async () => this.say(MikoSoul.line('yes_nothing'));
     return null;
   },
   resumeLast() {
@@ -933,7 +933,7 @@ const Miko = {
     Store.raw.set('rm.ai', c); this.hist = []; this.mode();
   },
   hdrA(c) { return { 'content-type': 'application/json', 'x-api-key': c.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }; },
-  SYS: `You are Miko, the assistant inside MKCinema, a free app for watching films and shows. The person types or talks to you in a small chat in the corner of the app; you open things in the app with the tools and answer questions about films, shows and people.
+  SYS: `Each message from the person starts with a note in square brackets about the app (screen, open title, local time). It is background for you only: never repeat, quote or mention it, and never start an answer with brackets. You are Miko, the assistant inside MKCinema, a free app for watching films and shows. The person types or talks to you in a small chat in the corner of the app; you open things in the app with the tools and answer questions about films, shows and people.
 Rules:
 - Act with tools, then reply in one or two short spoken-style sentences. Plain text only, no markdown, no lists, no emoji.
 - Never say you did something unless the tool said it worked. If a tool reports a problem, say so simply.
@@ -1030,6 +1030,8 @@ Rules:
       this.say(e && e.status === 401 ? `${who} turned the key down. Check it in Miko’s settings.` : e && e.status === 429 ? (P.free ? MikoSoul.line('free_limit', { p: P.name }) : `${who} says it’s busy or the account is out of credit. Try again in a moment.`) : e && e.status ? `${who} said no: ${String(e.message || e.status).slice(0, 160)}` : `I couldn’t reach ${P.name}. Check your connection.`);
       return;
     }
+    said = String(said || '').replace(/\[(?:[^\]]*?(?:screen:|local time|open title page)[^\]]*)\]\s*/gi, '').trim(); // mkc-273-state
+    this.aiAt = Date.now();
     if (said || this.pending) this.say(said || 'Here you go.', { html: this.pending });
     const a = this.after; this.after = null; if (!a) return;
     if (a.x) await this.act(a.act, a.x);
