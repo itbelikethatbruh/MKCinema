@@ -17,6 +17,8 @@ const Friends = {
   kids() { try { return typeof Seats !== 'undefined' && Seats.kids(); } catch (e) { return false; } },
   playerOpen() { const p = $('#player'); return !!(p && !p.hidden); },
   layerOpen() { const l = $('#friendsLayer'); return !!(l && !l.hidden); },
+  /* where the panel paints: the Social Hub's main column once you have a username, the bare panel before that */
+  root() { const h = typeof Hub !== 'undefined' ? Hub.slot() : null; if (h) return h; const b = X8.body('friendsLayer'); if (b) b.classList.remove('hub-on'); return b; },
   async rpc(fn, args) {
     if (!Account.client) throw new Error('Sign in first');
     const { data, error } = await Account.client.rpc(fn, args || {});
@@ -52,7 +54,7 @@ const Friends = {
       } catch (e) { this.ch = null; }
     }
     try { this.me = await this.rpc('mkc_me'); this.ready = true; } catch (e) { this.me = null; this.ready = /not switched on/.test(e.message) ? 'off' : true; }
-    if (this.me) { this.syncCfg(); await this.refresh(); this.beat(true); if (typeof Social !== 'undefined') Social.start(); }
+    if (this.me) { this.syncCfg(); await this.refresh(); this.beat(true); if (typeof Social !== 'undefined') Social.start(); if (typeof Hub !== 'undefined') Hub.start(); }
     clearInterval(this.beatT); this.beatT = setInterval(() => this.beat(), 60000);
     clearInterval(this.listT); this.listT = setInterval(() => { if (this.me && (this.layerOpen() || document.visibilityState === 'visible')) this.refresh(); }, 45000);
     this.paint();
@@ -60,7 +62,7 @@ const Friends = {
   drop() { const c = this.ch; this.ch = null; this.chKey = ''; if (c) { try { Account.client.removeChannel(c); } catch (e) { /* gone */ } } },
   stop() {
     if (this.me) this.here(false).catch(() => {});
-    this.drop(); clearInterval(this.beatT); clearInterval(this.listT); this.me = null; this.list = []; this.chat = null; if (typeof Social !== 'undefined') Social.stop(); this.badge(); this.paint();
+    this.drop(); clearInterval(this.beatT); clearInterval(this.listT); this.me = null; this.list = []; this.chat = null; if (typeof Social !== 'undefined') Social.stop(); if (typeof Hub !== 'undefined') Hub.stop(); this.badge(); this.paint();
     if (typeof FCall !== 'undefined') FCall.end('gone', true);
   },
   /* settings that live on the server too (search and calls), kept in CFG so they sync like every other setting */
@@ -109,11 +111,12 @@ const Friends = {
   byId(id) { return this.list.find((f) => f.id === id) || null; },
   counts() { let req = 0, unread = 0; this.list.forEach((f) => { if (f.state === 'in') req++; if (f.state === 'friend') unread += f.unread || 0; }); return { req, unread }; },
   badge() {
+    if (typeof Hub !== 'undefined') Hub.sync();
     const b = $('#openFriends'); if (!b) return;
-    const { req, unread } = this.me ? this.counts() : { req: 0, unread: 0 }, n = req + unread;
+    const { req, unread } = this.me ? this.counts() : { req: 0, unread: 0 }, n = req + unread + (this.me && typeof Hub !== 'undefined' ? Hub.unseen : 0);
     let d = $('.fr-dot', b); if (!d) { d = document.createElement('span'); d.className = 'fr-dot tnum'; b.appendChild(d); }
     d.hidden = !n; d.textContent = n > 9 ? '9+' : String(n || '');
-    b.setAttribute('aria-label', n ? `Friends, ${n} new` : 'Friends');
+    b.setAttribute('aria-label', n ? `Social Hub, ${n} new` : 'Social Hub');
   },
   inbox(p) {
     if (!p || typeof p !== 'object' || !this.me) return;
@@ -127,6 +130,7 @@ const Friends = {
         break;
       case 'ring': case 'ok': case 'cx': case 'busy': if (typeof FCall !== 'undefined') FCall.inbox(p, from); break;
       case 'k': { const f = this.byId(from); if (f && f.state === 'friend') this.note(`${this.label(f)} gave you kudos`); break; }
+      case 'post': case 'n': case 'st': if (typeof Hub !== 'undefined') Hub.inbox(p, from); break;
       default: break;
     }
   },
@@ -163,16 +167,16 @@ const Friends = {
   },
   swatches() { return this.staff ? ['diamond', ...this.COLORS] : this.COLORS; },
   av(f, big) {
-    if (f && f.avatar === 'diamond') return `<span class="fr-av fr-c-diamond${big ? ' big' : ''}${f.on ? ' on' : ''}" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6.5 3.5h11l4 5.5L12 21 2.5 9z" fill="#fff" fill-opacity=".92"/><path d="M2.5 9h19M9 3.5 7.5 9 12 21l4.5-12L15 3.5" fill="none" stroke="#4b3a8c" stroke-opacity=".55" stroke-width="1" stroke-linejoin="round"/></svg></span>`;
+    if (f && f.avatar === 'diamond') return `<span class="fr-av fr-c-diamond${big ? ' big' : ''}${f.on ? ' on' : ''}" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6.5 3.5h11l4 5.5L12 21 2.5 9z" fill="#fff" fill-opacity=".92"/><path d="M2.5 9h19M9 3.5 7.5 9 12 21l4.5-12L15 3.5" fill="none" stroke="#4b3a8c" stroke-opacity=".55" stroke-width="1" stroke-linejoin="round"/></svg>${this.me && typeof Hub !== 'undefined' ? Hub.moodDot(f) : ''}</span>`;
     const c = this.COLORS.includes(f && f.avatar) ? f.avatar : 'gold', ch = String((f && (f.name || f.username)) || '?').trim().charAt(0).toUpperCase() || '?';
-    return `<span class="fr-av fr-c-${c}${big ? ' big' : ''}${f && f.on ? ' on' : ''}" aria-hidden="true">${esc(ch)}</span>`;
+    return `<span class="fr-av fr-c-${c}${big ? ' big' : ''}${f && f.on ? ' on' : ''}" aria-hidden="true">${esc(ch)}${this.me && typeof Hub !== 'undefined' ? Hub.moodDot(f) : ''}</span>`;
   },
 
   /* ---- the Friends panel ---- */
   edit() { this.open(); if (this.me) { this.mode = 'edit'; this.paint(); } },
   open(withId) {
     if (this.kids()) { toast('Not on the kids seat', 'err', 2200, 'kids'); return; }
-    X8.layer('friendsLayer', { label: 'Friends', icon: 'users', eyebrow: 'Friends', wide: true });
+    X8.layer('friendsLayer', { label: 'Social Hub', icon: 'users', wide: true });
     X8.onClose.friendsLayer = () => { this.chat = null; if (typeof Social !== 'undefined') { Social.view = null; Social.viewCard = null; } };
     if ((withId || this.pendingChat) && typeof Social !== 'undefined') Social.tab = 'friends';
     X8.open('friendsLayer');
@@ -183,15 +187,16 @@ const Friends = {
     else if (this.me) this.refresh();
   },
   paint() {
-    const b = X8.body('friendsLayer'); if (!b || !this.layerOpen()) { this.badge(); return; }
+    if (!this.layerOpen()) { this.badge(); return; }
+    const b = this.root(); if (!b) return;
     if (this.chat) return; // the chat paints itself
-    if (this.kids()) { b.innerHTML = '<p class="x8-p">Friends are not on the kids seat.</p>'; return; }
+    if (this.kids()) { b.innerHTML = '<p class="x8-p">The Social Hub is not on the kids seat.</p>'; return; }
     if (!Account.user) {
-      b.innerHTML = `<h3 class="x8-h">Friends</h3><p class="x8-p">Add friends by their username, see who is online and what they are watching, send messages and start a watch party together. Sign in to begin.</p>
+      b.innerHTML = `<h3 class="x8-h">Social Hub</h3><p class="x8-p">Post updates and how you feel, tag friends, react and reply. Add friends by their username, see who is online and what they are watching, message them and start a watch party together. Sign in to begin.</p>
         <div class="actions"><button class="btn btn-prime" type="button" data-nav data-fr="signin"><i data-lucide="log-in"></i>Sign in</button></div>`;
       this.bindCommon(b); icons(); this.focusFirst(b); return;
     }
-    if (this.ready === 'off') { b.innerHTML = '<h3 class="x8-h">Friends</h3><p class="x8-p">Friends are not switched on for this server yet. Please try again later.</p>'; return; }
+    if (this.ready === 'off') { b.innerHTML = '<h3 class="x8-h">Social Hub</h3><p class="x8-p">Friends are not switched on for this server yet. Please try again later.</p>'; return; }
     if (!this.ready) { b.innerHTML = '<p class="x8-p">Loading…</p>'; return; }
     if (!this.me) { this.paintSetup(b); return; }
     if (this.mode === 'edit') { this.paintSetup(b, true); return; }
@@ -203,7 +208,7 @@ const Friends = {
   bindCommon(root) {
     if (root.dataset.frb) return; root.dataset.frb = '1'; // once per panel: every repaint used to add another listener
     root.addEventListener('click', (e) => {
-      const x = e.target.closest('[data-fr]'); if (!x || !root.contains(x)) return;
+      const x = e.target.closest('[data-fr]'); if (!x || !root.contains(x) || (root.id !== 'hubMain' && x.closest('#hubMain'))) return;
       const id = x.dataset.id, f = id ? this.byId(id) : null;
       switch (x.dataset.fr) {
         case 'signin': X8.close('friendsLayer'); openSettings('account'); break;
@@ -248,7 +253,7 @@ const Friends = {
         ${me ? '' : `${sw('frOnline', CFG.frOnline !== false, 'Show friends when I’m online', 'Turn off to appear offline.')}
         ${sw('frWatching', CFG.frWatching === true, 'Show friends what I’m watching', 'Off until you turn it on. Only the title, and only to friends you accepted.')}
         ${sw('frFindable', !!CFG.frFindable, 'Suggest me in search', 'Off: people must type your whole username.')}
-        <p class="tour-note">Calls are off until you turn them on in Settings › Friends. You can change everything there later.</p>`}
+        <p class="tour-note">Calls are off until you turn them on in Settings › Social Hub. You can change everything there later.</p>`}
       </div>
       <div class="actions"><button class="btn btn-prime" type="button" data-nav id="frSave"><i data-lucide="check"></i>Save</button>${me ? '<button class="btn btn-ghost" type="button" data-nav id="frCancel">Cancel</button>' : ''}</div>`;
     icons();
@@ -360,8 +365,8 @@ const Friends = {
 
   /* ---- messages ---- */
   openChat(f) {
-    const b = X8.body('friendsLayer'); if (!b) return;
-    this.chat = f; this.msgs = []; this.mode = 'chat';
+    const b = this.root(); if (!b) return;
+    this.chat = f; this.msgs = []; this.mode = 'chat'; b.classList.add('fr-chatmode');
     b.innerHTML = `<div class="fr-chathead"><button class="ibtn sm" type="button" data-nav id="frBack" aria-label="Back to friends"><i data-lucide="arrow-left"></i></button><div id="frChatWho" class="fr-chatwho"></div>
         <div class="fr-acts"><button class="btn btn-ghost btn-sm" type="button" data-nav id="frParty"><i data-lucide="popcorn"></i><span>Watch together</span></button><button class="ibtn sm" type="button" data-nav id="frCallBtn" aria-label="Call"><i data-lucide="phone"></i></button></div></div>
       <div id="frCallBox"></div>
@@ -381,7 +386,7 @@ const Friends = {
     this.paintChatHead(); this.paintCall(); this.loadChat();
     if (IS_TV) Nav.focus(t, true); else if (!TOUCH_UI) t.focus({ preventScroll: true });
   },
-  closeChat() { this.chat = null; this.mode = ''; const b = X8.body('friendsLayer'); if (b) { b.innerHTML = ''; this.paint(); } },
+  closeChat() { this.chat = null; this.mode = ''; const b = this.root(); if (b) { b.classList.remove('fr-chatmode'); b.innerHTML = ''; this.paint(); } },
   paintChatHead() {
     const f = this.chat, w = $('#frChatWho'); if (!f || !w) return;
     w.innerHTML = `${this.av(f)}<div class="fr-who"><b>${esc(f.name || f.username)}</b><small class="${f.on ? 'fr-live' : ''}">${esc(this.status(f))}</small></div>`;
@@ -435,13 +440,13 @@ const Friends = {
     // the Friends button sits next to Watch party, so it shows wherever the menu does (top bar, side rail, phone More)
     const party = $('#openParty');
     if (party && !$('#openFriends')) {
-      party.insertAdjacentHTML('beforebegin', '<button class="ibtn" id="openFriends" data-nav type="button" title="Friends" aria-label="Friends"><i data-lucide="message-circle"></i></button>');
+      party.insertAdjacentHTML('beforebegin', '<button class="ibtn" id="openFriends" data-nav type="button" title="Social Hub" aria-label="Social Hub"><i data-lucide="message-circle"></i></button>');
       $('#openFriends').onclick = () => this.open();
     }
     const items = SideNav.items;
-    SideNav.items = function () { const r = items.apply(this, arguments); if ($('#openFriends') && !Friends.kids() && !r.tools.some((t) => t[0] === 'openFriends')) { const i = r.tools.findIndex((t) => t[0] === 'openParty'); r.tools.splice(i < 0 ? r.tools.length : i, 0, ['openFriends', 'message-circle', 'Friends']); } return r; };
+    SideNav.items = function () { const r = items.apply(this, arguments); if ($('#openFriends') && !Friends.kids() && !r.tools.some((t) => t[0] === 'openFriends')) { const i = r.tools.findIndex((t) => t[0] === 'openParty'); r.tools.splice(i < 0 ? r.tools.length : i, 0, ['openFriends', 'message-circle', 'Social Hub']); } return r; };
     if (this.kids()) { const b = $('#openFriends'); if (b) b.hidden = true; return; }
-    COMMANDS.push({ label: 'Friends', icon: 'message-circle', run: () => this.open() });
+    COMMANDS.push({ label: 'Social Hub', icon: 'message-circle', run: () => this.open() });
     // follow sign-in and sign-out
     const su = Account.setUser;
     Account.setUser = function (user) { const before = this.user && this.user.id, r = su.apply(this, arguments); const now = this.user && this.user.id; if (now !== before) setTimeout(() => (now ? Friends.start() : Friends.stop()), 0); return r; };
@@ -454,7 +459,7 @@ const Friends = {
     const pn = Party.name; Party.name = function () { if (!CFG.partyName && Friends.me) return Friends.me.name || Friends.me.username; return pn.apply(this, arguments); };
     // Settings › Friends
     if (!secById('friends')) {
-      SECTIONS.push({ id: 'friends', icon: 'message-circle', label: 'Friends', intro: 'Who can see you, find you and call you. Only friends you accepted ever see your status.', rows: () => this.settingsRows(), bind: () => { const x = $('#set-frOpen'); if (x) x.onclick = () => { closeLayer('settings'); Friends.edit(); }; } });
+      SECTIONS.push({ id: 'friends', icon: 'message-circle', label: 'Social Hub', intro: 'Who can see you, find you and call you. Only friends you accepted ever see your status.', rows: () => this.settingsRows(), bind: () => { const x = $('#set-frOpen'); if (x) x.onclick = () => { closeLayer('settings'); Friends.edit(); }; } });
       const g = SET_GROUPS.find((x) => x[0] === 'Connected'); if (g) g[1].splice(0, 0, 'friends');
     }
   },

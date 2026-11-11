@@ -51,9 +51,9 @@
       ]
     },
     {
-      "name": "Friends",
-      "short_name": "Friends",
-      "description": "Your friends, their activity and your trophies",
+      "name": "Social Hub",
+      "short_name": "Social Hub",
+      "description": "Your friends’ posts, activity and your trophies",
       "url": "./#social",
       "icons": [
         {

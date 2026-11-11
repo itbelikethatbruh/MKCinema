@@ -7,6 +7,13 @@
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
+  { v: '2.66.0', date: '2026-11-11', items: [
+    ['new', 'The Social Hub', 'Friends is now the Social Hub: a live feed, your friends, their activity and your profile in one place, with who is online right beside it on bigger screens.'],
+    ['new', 'Posts, reactions and replies', 'Share what you are watching or how a film made you feel, attach a title, react with 🔥 😂 😭 😮 ❤️ 👍 and reply under any post.'],
+    ['new', 'Tag your friends', 'Type @ and a friend’s name to tag them in a post or reply. They get a notification in the hub.'],
+    ['new', 'How I’m feeling', 'Set a mood and a short status that friends see next to your name. It clears itself after a few hours, or stays until you change it.'],
+    ['better', 'Made for phones', 'On phones the hub fills the screen, every screen scrolls, and nothing gets cut off at the edges.'],
+  ] },
   { v: '2.65.1', date: '2026-11-11', items: [
     ['better', 'Friends colours fit on phones', 'Profile colours in Friends setup now show in full on narrow screens, including the selected ring.'],
   ] },

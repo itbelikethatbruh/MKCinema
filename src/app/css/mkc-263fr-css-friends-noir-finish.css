@@ -6,7 +6,7 @@
 #friendsLayer .x8-modal{width:min(640px,calc(100vw - 32px))}
 #friendsLayer .x8-body{display:flex;flex-direction:column;gap:14px;max-height:min(74vh,720px)}
 .fr-av{flex:none;display:inline-grid;place-items:center;width:40px;height:40px;border-radius:50%;font-weight:600;font-size:calc(16px * var(--ts,1));color:#111;position:relative;border:0;padding:0}
-.fr-av.big{width:56px;height:56px;font-size:calc(22px * var(--ts,1))}
+.fr-av.big{width:56px;height:56px;font-size:calc(20px * var(--ts,1))}
 .fr-av.on::after{content:'';position:absolute;right:0;bottom:0;width:11px;height:11px;border-radius:50%;background:#46d483;box-shadow:0 0 0 2px var(--surface-1,#111)}
 .fr-c-gold{background:#d8b46a}.fr-c-ember{background:#e08a52}.fr-c-rose{background:#e48aa6}.fr-c-violet{background:#a993e8}
 .fr-c-sky{background:#7fb6ee}.fr-c-teal{background:#5fc7b5}.fr-c-lime{background:#b4d66a}.fr-c-silver{background:#c9ccd3}
@@ -52,8 +52,8 @@
 .fr-day{align-self:center;font-size:calc(11px * var(--ts,1));color:var(--text-3,rgba(255,255,255,.45));margin:8px 0 2px}
 .fr-msg-r{display:flex}
 .fr-msg-r.me{justify-content:flex-end}
-.fr-bub{max-width:78%;padding:8px 12px;border-radius:16px 16px 16px 4px;background:rgba(255,255,255,.07);line-height:1.4;word-wrap:break-word;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-.fr-msg-r.me .fr-bub{border-radius:16px 16px 4px 16px;background:rgba(216,180,106,.18)}
+.fr-bub{max-width:78%;padding:8px 12px;border-radius:calc(var(--r-l) * 0.8889) calc(var(--r-l) * 0.8889) calc(var(--r-l) * 0.8889) calc(var(--r-s) * 0.5);background:rgba(255,255,255,.07);line-height:1.4;word-wrap:break-word;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.fr-msg-r.me .fr-bub{border-radius:calc(var(--r-l) * 0.8889) calc(var(--r-l) * 0.8889) calc(var(--r-s) * 0.5) calc(var(--r-l) * 0.8889);background:rgba(216,180,106,.18)}
 .fr-msg-r.sys .fr-bub{background:none;border:1px solid var(--border,rgba(255,255,255,.12))}
 .fr-bub small{font-size:calc(10px * var(--ts,1));color:var(--text-3,rgba(255,255,255,.45));margin-left:auto}
 .fr-callnote{display:inline-flex;align-items:center;gap:6px}
