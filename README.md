@@ -264,10 +264,10 @@ We've looked, and we haven't found these in other apps. Every one is live today.
 |---|---|---|
 | Web | [app.mkcinema.app](https://app.mkcinema.app) | Chrome, Edge, Firefox and Safari. Installable as an app. Every app below loads it, so all platforms update together |
 | iPhone, iPad | [app.mkcinema.app](https://app.mkcinema.app) in Safari | Share › Add to Home Screen. Opens full screen, and most MKV files play right in the browser. iOS 17.1 or later |
-| Android | [MKCinema.apk](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.apk) (1.10.0) | Phones and tablets, with its own player, picture-in-picture and downloads |
-| Android TV, Google TV, Fire TV | [MKCinema-TV.apk](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema-TV.apk) (1.10.0, same file) | Fire TV: type `tv.mkcinema.app` or code `6400996` into Downloader |
-| Windows | [MKCinema.exe](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.exe) (1.3.1) | Not code-signed yet: More info › Run anyway |
-| macOS | [ZIP](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema-1.1.1-mac.zip) (1.1.1) | Not notarized yet |
+| Android | [MKCinema.apk](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.apk) (1.11.0) | Phones and tablets, with its own player, picture-in-picture and downloads |
+| Android TV, Google TV, Fire TV | [MKCinema-TV.apk](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema-TV.apk) (1.11.0, same file) | Fire TV: type `tv.mkcinema.app` or code `6400996` into Downloader |
+| Windows | [MKCinema.exe](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.exe) (1.4.0) | Not code-signed yet: More info › Run anyway |
+| macOS | [ZIP](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema-1.2.0-mac.zip) (1.2.0) | Not notarized yet |
 | Linux | [DEB](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/mkcinema_1.1_amd64.deb) or [tar.gz](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/mkcinema-1.1-linux-x86_64.tar.gz) (1.1) | x86_64, WebKitGTK 4.1 |
 | LG webOS | [IPK](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/com.mkcinema.app_1.1.0_all.ipk) (1.1.0) | Beta, needs Developer Mode |
 | Samsung Tizen | [TizenBrew module](tizen/README.md) | Beta, 2023 models and later |
