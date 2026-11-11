@@ -24,3 +24,7 @@
 # The Addon looks showcase is a public Stremio addon: any app may read it
 /addons/showcase/*
   Access-Control-Allow-Origin: *
+
+# Miko's natural voice: exact-version files that never change
+/vendor/kokoro-1.2.1/*
+  Cache-Control: public, max-age=31536000, immutable

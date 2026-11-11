@@ -23,3 +23,6 @@ site/download/*
 !site/download/mkcinema-webos-icon.png
 !site/download/SHA256SUMS
 .lighthouseci/
+
+# Miko natural voice engine (pinned third-party files, deployed from the shared folder)
+app/vendor/kokoro-1.2.1/

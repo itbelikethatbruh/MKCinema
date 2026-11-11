@@ -280,19 +280,19 @@
       hls: null, v: null, of: null, bad: null, ready: false, want: null, t: -1, pend: 0,
       ok() { return CFG.seekPreview !== false && !NO_HOVER.matches && !IS_TV && !!P.hls && !!P.stream && !P.remux && !!window.Hls && this.bad !== P.hls && !!P.hls.url; },
       ensure() {
-        if (this.hls && this.of === P.hls) { if (this.v.parentNode !== box) { box.innerHTML = ''; box.appendChild(this.v); } return; }
+        if (this.hls && this.of === P.hls) { if (this.v.parentNode !== box) { box.querySelectorAll('video').forEach((x) => x.remove()); box.insertBefore(this.v, box.firstChild); } return; }
         this.drop();
         const v = this.v = document.createElement('video'); v.className = 'mk-hprev'; v.muted = true; v.playsInline = true; v.preload = 'auto';
         const h = this.hls = new Hls({ enableWorker: true, autoStartLoad: false, startLevel: 0, maxBufferLength: 2, maxMaxBufferLength: 4, backBufferLength: 0, maxBufferSize: 8e6 });
         this.of = P.hls; this.ready = false; this.t = -1;
         h.on(Hls.Events.MANIFEST_PARSED, () => { h.autoLevelCapping = 0; this.ready = true; if (this.want != null) { const t = this.want; this.want = null; h.startLoad(t); this.started = true; } });
         h.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) { this.bad = this.of; this.drop(); box.hidden = true; } });
-        v.addEventListener('seeked', () => box.classList.add('ok'));
+        v.addEventListener('seeked', () => { Tools.keepFrame(v, `hls:${P.hls && P.hls.url}`, v.currentTime); box.classList.remove('cached'); box.classList.add('ok'); });
         this.started = false; h.loadSource(P.hls.url); h.attachMedia(v);
         box.innerHTML = ''; box.appendChild(v);
       },
       seek(t) {
-        if (!this.hls || Math.abs(t - this.t) < 1) return; this.t = t; box.classList.remove('ok');
+        if (!this.hls || Math.abs(t - this.t) < 1) return; this.t = t; if (!box.querySelector('canvas.sp-c')) box.classList.remove('ok');
         if (!this.ready) { this.want = t; return; }
         if (!this.started) { this.started = true; this.hls.startLoad(t); return; }
         try { this.v.currentTime = t; } catch (e) { /* not seekable yet */ }
@@ -310,7 +310,8 @@
       HP.ensure();
       const r = seek.getBoundingClientRect(), p = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
       box.hidden = false; box.style.left = `${Math.min(92, Math.max(8, p * 100))}%`;
-      clearTimeout(HP.pend); HP.pend = setTimeout(() => HP.seek(p * d), 220);
+      Tools.showNear(box, `hls:${P.hls.url}`, p * d, d);
+      clearTimeout(HP.pend); HP.pend = setTimeout(() => HP.seek(p * d), 80);
     });
     const dp = Tools.dropPreview.bind(Tools);
     Tools.dropPreview = function () { HP.drop(); return dp(); };

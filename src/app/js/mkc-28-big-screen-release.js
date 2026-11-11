@@ -699,10 +699,90 @@ const Tools = {
     const r = $('#kReset'); if (r) r.onclick = () => { setCfg('keymap', {}); renderSettingsBody(); toast('Your keys are cleared'); };
   },
 
-  /* ---- seek previews ---- */
+  /* ---- seek previews ---- */ /* mk-2644-fast-previews */
   prev: null, prevT: 0, prevSrc: '',
-  previewable() {
-    if (CFG.seekPreview === false || NO_HOVER.matches || IS_TV || !P.stream || P.hls || P.remux) return '';
+  // pictures already seen, as small canvases. A canvas can show a frame from any host (nothing is read back from it).
+  frames: { key: '', list: [], max: 120, W: 192, H: 108 },
+  keepFrame(v, key, t) {
+    if (!v || !v.videoWidth || !(t >= 0)) return;
+    const F = this.frames; if (F.key !== key) { F.key = key; F.list = []; }
+    const old = F.list.findIndex((x) => Math.abs(x.t - t) < 0.75); if (old >= 0) F.list.splice(old, 1);
+    const c = document.createElement('canvas'); c.width = F.W; c.height = F.H;
+    try { c.getContext('2d').drawImage(v, 0, 0, F.W, F.H); } catch (e) { return; }
+    F.list.push({ t, c }); F.list.sort((a, b) => a.t - b.t);
+    if (F.list.length > F.max) {
+      // drop the picture whose neighbours are closest together, so the kept ones stay spread over the film
+      let w = 1, gap = Infinity;
+      for (let i = 1; i < F.list.length - 1; i++) { const g = F.list[i + 1].t - F.list[i - 1].t; if (g < gap) { gap = g; w = i; } }
+      F.list.splice(w, 1);
+    }
+  },
+  nearFrame(key, t, d) {
+    const F = this.frames; if (F.key !== key || !F.list.length) return null;
+    let best = null; for (const x of F.list) if (!best || Math.abs(x.t - t) < Math.abs(best.t - t)) best = x;
+    return best && Math.abs(best.t - t) <= Math.max(10, (d || 0) / 60) ? best : null;
+  },
+  // shows the nearest kept picture straight away (or keeps the last one up) while the exact one is fetched
+  showNear(box, key, t, d) {
+    const fr = this.nearFrame(key, t, d);
+    if (!fr) return false;
+    let c = box.querySelector('canvas.sp-c');
+    if (!c) { c = document.createElement('canvas'); c.className = 'sp-c'; c.width = this.frames.W; c.height = this.frames.H; box.appendChild(c); }
+    try { c.getContext('2d').drawImage(fr.c, 0, 0); } catch (e) { return false; }
+    box.classList.add('cached', 'ok');
+    return true;
+  },
+  // one seek at a time on the preview player: while one runs, only the newest spot waits
+  prevSeek(v, t, box) {
+    if (!v) return;
+    // a quiet fill seek gives way at once to a spot someone is pointing at
+    if (v.readyState < 1 || (v.seeking && !(box && v._mkFill))) { v._mkWant = t; return; }
+    v._mkWant = null; v._mkAsk = t; v._mkFill = !box;
+    try { if (typeof v.fastSeek === 'function' && !v._mkExact) v.fastSeek(t); else v.currentTime = t; } catch (e) { v._mkWant = t; }
+  },
+  prevVideo(u, box) {
+    if (this.prev && this.prevSrc === u) { if (box && this.prev.parentNode !== box) { box.innerHTML = ''; box.appendChild(this.prev); } return this.prev; }
+    this.dropPreview();
+    const v = this.prev = document.createElement('video'); v.muted = true; v.preload = 'metadata'; v.playsInline = true; v.src = u; this.prevSrc = u;
+    v.addEventListener('loadedmetadata', () => { if (v._mkWant != null) { const t = v._mkWant; this.prevSeek(v, t, box); } else this.fill(v, u); });
+    v.addEventListener('seeked', () => {
+      const t = v.currentTime; this.keepFrame(v, u, t);
+      if (v._mkFill) { v._mkFill = false; } else if (box) { box.classList.remove('cached'); box.classList.add('ok'); }
+      if (v._mkWant != null) { const w = v._mkWant; v._mkWant = null; if (Math.abs(w - t) > 1) this.prevSeek(v, w, box); return; }
+      this.fill(v, u);
+    });
+    v.addEventListener('error', () => { if (box) box.hidden = true; this.prevSrc = 'x'; clearTimeout(this.fillT); });
+    if (box) { box.innerHTML = ''; box.appendChild(v); }
+    return v;
+  },
+  // a few spots along the film, filled in one by one, only while the film has plenty buffered and nobody is hovering
+  fill(v, u) {
+    clearTimeout(this.fillT);
+    this.fillT = setTimeout(() => {
+      if (v !== this.prev || this.prevSrc !== u || v.seeking || v._mkWant != null || $('#player').hidden || this.hovering) return;
+      const d = isFinite(v.duration) ? v.duration : pDur(); if (!(d > 60)) return;
+      const c = navigator.connection; if (c && (c.saveData || /(^|-)2g$/.test(c.effectiveType || ''))) return;
+      let ahead = 0; const now = video.currentTime;
+      for (let i = 0; i < video.buffered.length; i++) if (video.buffered.start(i) <= now + 0.5 && video.buffered.end(i) > now) ahead = video.buffered.end(i) - now;
+      if (ahead < 20 && !video.paused) { this.fill(v, u); return; }
+      const F = this.frames, have = F.key === u ? F.list : [];
+      const spots = []; for (let n = 1; n < 36; n++) spots.push(d * n / 36);
+      const next = spots.find((s) => !have.some((x) => Math.abs(x.t - s) < d / 72));
+      if (next == null) return;
+      this.prevSeek(v, next, null);
+    }, v.readyState < 1 ? 1500 : 1200);
+  },
+  // the preview player opens a few seconds into the film, so the first hover only waits for one seek
+  warm() {
+    clearTimeout(this.warmT);
+    this.warmT = setTimeout(() => {
+      if ($('#player').hidden || video.paused) return;
+      const u = this.previewable(true); if (!u) return;
+      const box = $('#seek .sp-prev'); this.prevVideo(u, box);
+    }, 4000);
+  },
+  previewable(any) {
+    if (CFG.seekPreview === false || (NO_HOVER.matches && !any) || IS_TV || !P.stream || P.hls || P.remux) return '';
     const u = video.currentSrc || ''; if (!u || u.startsWith('blob:') && !P.stream._local) return '';
     return u;
   },
@@ -713,20 +793,20 @@ const Tools = {
     let pend = 0;
     seek.addEventListener('pointermove', (e) => {
       if (e.pointerType !== 'mouse') return; const u = this.previewable(), d = pDur(); if (!u || !isFinite(d)) { box.hidden = true; return; }
-      if (!this.prev || this.prevSrc !== u) {
-        if (this.prev) { this.prev.removeAttribute('src'); this.prev.load(); }
-        this.prev = document.createElement('video'); this.prev.muted = true; this.prev.preload = 'metadata'; this.prev.playsInline = true; this.prev.src = u; this.prevSrc = u;
-        this.prev.addEventListener('seeked', () => box.classList.add('ok')); this.prev.addEventListener('error', () => { box.hidden = true; this.prevSrc = 'x'; });
-        box.innerHTML = ''; box.appendChild(this.prev);
-      }
+      this.hovering = true; const v = this.prevVideo(u, box);
       const p = at(e); box.hidden = false; box.style.left = `${clamp(p * 100, 8, 92)}%`;
       const t = p * d; clearTimeout(pend);
-      pend = setTimeout(() => { if (Math.abs(t - this.prevT) > 1) { this.prevT = t; box.classList.remove('ok'); try { this.prev.currentTime = t; } catch (x) { /* not seekable yet */ } } }, 90);
+      if (!this.showNear(box, u, t, d) && Math.abs(t - this.prevT) > 1 && !box.querySelector('canvas.sp-c')) box.classList.remove('ok');
+      pend = setTimeout(() => { if (Math.abs(t - this.prevT) > 1) { this.prevT = t; v._mkExact = false; this.prevSeek(v, t, box); } }, 40);
       void tip;
     });
-    seek.addEventListener('pointerleave', () => { box.hidden = true; });
+    seek.addEventListener('pointerleave', () => { box.hidden = true; this.hovering = false; if (this.prev) this.fill(this.prev, this.prevSrc); });
   },
-  dropPreview() { if (this.prev) { this.prev.removeAttribute('src'); this.prev.load(); this.prev = null; this.prevSrc = ''; } },
+  dropPreview() {
+    clearTimeout(this.fillT); clearTimeout(this.warmT); this.hovering = false;
+    if (this.prev) { this.prev.removeAttribute('src'); this.prev.load(); this.prev = null; this.prevSrc = ''; }
+    const c = document.querySelector('#seek .sp-prev canvas.sp-c'); if (c) c.remove();
+  },
 
   init() {
     // tick four times a second only while the player shows (it used to run all day on a TV)
@@ -737,6 +817,13 @@ const Tools = {
     const close = closePlayer;
     closePlayer = async function () { Tools.reset(); Tools.dropPreview(); return close.apply(this, arguments); };
     video.addEventListener('loadedmetadata', () => this.paintMarks());
+    video.addEventListener('playing', () => { if (!this.prev || this.prevSrc !== this.previewable(true)) this.warm(); });
+    // the film itself leaves a picture every 15 s as it plays (no extra download), so scrubbing back is instant
+    let lastKeep = -99;
+    video.addEventListener('timeupdate', () => {
+      const t = video.currentTime; if (Math.abs(t - lastKeep) < 15 || video.paused || video.seeking) return;
+      const u = this.previewable(true); if (!u) return; lastKeep = t; this.keepFrame(video, u, t);
+    });
     // the options menu gets a Tools part
     const base = renderOptMenu;
     renderOptMenu = function () {
