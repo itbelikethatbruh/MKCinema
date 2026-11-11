@@ -18,7 +18,7 @@ const S = {
   view: 'home',
   wall: Store.get('wall', false),
   proxy: Store.get('proxy', 'http://127.0.0.1:7000'),
-  watchlist: Store.get('watchlist', []),
+  watchlist: Store.get('watchlist', []).filter((m) => m && typeof m === 'object' && m.id),
   progress: Store.get('progress', {}),
   studio: (() => { const st = Store.get('studio', null); return st && !(st.items || []).some((i) => /^studio:(night-relay|harbor-lights)$/.test(i.id)) ? st : STUDIO_DEFAULT(); })(),
   metas: new Map(),
@@ -396,7 +396,7 @@ const EpSheet = {
         <h3>${esc(v.name || v.title || `Episode ${v.episode}`)}</h3>
         ${hide ? '<p class="es-hidden">Synopsis hidden by Spoiler Guard</p>' : (v.overview || v.description) ? `<p>${esc(v.overview || v.description)}</p>` : ''}
         <div class="es-acts">
-          <button class="btn btn-bolt" type="button" id="esPlay" data-nav><i data-lucide="play"></i><span class="sp-l">${resumeAt ? `Resume ${fmtTime(resumeAt)}` : 'Play'}<small>Best source</small></span></button>
+          <button class="btn btn-bolt cta" type="button" id="esPlay" data-nav><span class="cta-ring" aria-hidden="true"></span><i data-lucide="play"></i><span class="sp-l">${resumeAt ? `Resume ${fmtTime(resumeAt)}` : 'Play'}<small>Best source</small></span></button>
           <button class="ibtn es-step" type="button" id="esPrev" data-nav aria-label="Previous episode" ${prev ? '' : 'disabled'}><i data-lucide="chevron-left"></i></button>
           <button class="ibtn es-step" type="button" id="esNext" data-nav aria-label="Next episode" ${next ? '' : 'disabled'}><i data-lucide="chevron-right"></i></button>
         </div>
@@ -505,7 +505,7 @@ function renderDetail(loading) {
         <div class="logo3d pop${logo ? ' has-logo' : ''}" style="--t0:${t0}s${logo ? `;--logo:url(&quot;${esc(logo)}&quot;)` : ''}">${logo ? imgTag(logo, m.name, m.id, { nofb: true, cls: 'hero-logo', lazy: false }) : ''}<h1 class="hero-title" data-logo-alt ${logo ? 'hidden' : ''}>${esc(m.name)}</h1>${logo ? '<span class="lg-sheen" aria-hidden="true"><i></i></span>' : ''}</div>
         <div class="metaline${loading ? ' ml-wait' : ''}">${[m.imdbRating ? `<span class="imdb ${rateTier(m.imdbRating)}"><b>IMDb</b>${esc(m.imdbRating)}</span>` : '', yearOf(m) ? `<span>${esc(yearOf(m))}</span>` : '', m.runtime ? `<span>${esc(m.runtime)}</span>` : '', genresOf(m).slice(0, 4).map(esc).join(' · '), `<span class="tag-s">${esc(m.type)}</span>`, m._addon ? `<span class="tag-s v">${esc(m._addon)}</span>` : ''].filter(Boolean).join('')}</div>
         <div class="actions">
-          <button class="btn btn-bolt" type="button" id="dSmart" data-nav><i data-lucide="play"></i><span class="sp-l">Smart Play<small>Best stream, picked for you</small></span></button>
+          <button class="btn btn-bolt cta" type="button" id="dSmart" data-nav><span class="cta-ring" aria-hidden="true"></span><i data-lucide="play"></i><span class="sp-l">Smart Play<small>Best stream, picked for you</small></span></button>
           <button class="btn btn-ghost" type="button" id="dTrailer" data-nav><i data-lucide="clapperboard"></i>Trailer</button>
           <button class="btn btn-ghost" type="button" id="dList" data-nav>${inWatchlist(m.id) ? '<i data-lucide="check"></i>In watchlist' : '<i data-lucide="plus"></i>Watchlist'}</button>
           ${m.imdb_id || String(m.id).startsWith('tt') ? `<a class="btn btn-ghost" data-nav href="https://www.imdb.com/title/${esc(m.imdb_id || String(m.id).split(':')[0])}/" target="_blank" rel="noopener"><i data-lucide="external-link"></i>IMDb</a>` : ''}
@@ -1047,7 +1047,10 @@ video.addEventListener('error', () => { if (P.stream && !P.hls && P.stream.url) 
 function playbackFailed(stream, reason) {
   if (!$('#player').hidden && P.stream === stream) {
     Loader.hide();
+    const cc = typeof CloudConvert !== 'undefined' ? CloudConvert : null;
+    if (cc && stream._cloud && cc.nextUrl(stream)) return;
     if (Failover.onError(stream, reason)) return;
+    if (cc && cc.onFail(stream, reason, P.mkReal ? pNow() : (P.mkWant || P.startAt || 0))) return;
     if (DSP.attached && !stream._local && stream._cors === 'none') { DSP.blockedMsg(stream); return; }
     const proxied = stream.behaviorHints && stream.behaviorHints.proxyHeaders;
     const body = `${esc(reason)}. ${proxied ? 'This stream is routed through your MKCinema proxy at <span class="mono">' + esc(S.proxy) + '</span>. Make sure mkcinema-server.js is running.' : stream._tel.mkv ? 'MKV files often use audio or video codecs browsers cannot decode. VLC is recommended: it plays them all, and MKCinema can hand the stream to it in one tap.' : 'The host may block browser playback (CORS or an unsupported codec).'} You can try another source or hand it to an external player.`;
@@ -1660,7 +1663,8 @@ const Nav = {
   root() {
     for (const id of ['castLayer', 'partyLayer']) if (!$(`#${id}`).hidden) return $(`#${id}`);
     // TV: the Home-layout question and the donation prompt float over the page, so the remote goes to them first
-    if (IS_TV && $('#player').hidden && !document.body.classList.contains('layer-open')) { const ask = $('.focus-ask, .sup-ask'); if (ask) return ask; }
+    if (IS_TV && $('#player').hidden && !document.body.classList.contains('layer-open')) { const fa = document.getElementsByClassName('focus-ask')[0], sa = document.getElementsByClassName('sup-ask')[0], ask = fa && sa ? (fa.compareDocumentPosition(sa) & 4 ? fa : sa) : fa || sa; if (ask) return ask; }
+    if (!$('#player').hidden && !$('#xray').hidden && $('#xray').contains(document.activeElement)) return $('#xray');
     if (!$('#player').hidden) { const d = $('.drawer.open', $('#player')); return d || (!$('#subMenu').hidden ? $('#subMenu') : !$('#optMenu').hidden ? $('#optMenu') : !$('#dspPop').hidden ? $('#dspPop') : (!$('#pMsg').hidden ? $('#pMsg') : $('#hud'))); }
     for (const id of ['tour', 'stremioImport', 'palette', 'settings', 'tastePick', 'addons', 'epSheet', 'detail', 'askLayer']) if (!$(`#${id}`).hidden) return $(`#${id}`);
     return $('#app');
@@ -1714,6 +1718,7 @@ const Nav = {
   start(root, list) {
     if (root.id === 'hud') return list.find((el) => el.id === 'pPlay') || list[0];
     if (root.id === 'app') return list.find((el) => el.id === 'heroPlay') || list.find((el) => el.matches('.card')) || list.find((el) => !el.closest('.dock-wrap')) || list[0];
+    if (root.id === 'settings') return list.find((el) => el.matches('#setNav .on')) || list.find((el) => el.closest('#setNav [data-sec]')) || list[0];
     return list.find((el) => el.matches('.btn-prime')) || list.find((el) => !/close|back/i.test(`${el.getAttribute('aria-label') || ''} ${el.className}`)) || list[0];
   },
   restore(fast = true) {
@@ -1749,6 +1754,7 @@ const Nav = {
       if (dir === 'left' || dir === 'right') { main = dir === 'right' ? dx : -dx; cross = Math.abs(dy); overlap = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 0; }
       else { main = dir === 'down' ? dy : -dy; cross = Math.abs(dx); overlap = Math.min(a.right, b.right) - Math.max(a.left, b.left) > 0; }
       if (main <= 4) continue;
+      if (root.id === 'xray' && (dir === 'left' || dir === 'right') && !overlap) continue;
       const score = main + cross * (overlap ? .6 : 2.6);
       // TV: the dock floats over the page, so from the page it is only picked when nothing else lies that way
       if (IS_TV && root.id === 'app' && el.closest('.dock-wrap') && !cur.closest('.dock-wrap')) { if (1e6 + score < bestScore) { bestScore = 1e6 + score; best = el; } continue; }
@@ -1760,6 +1766,9 @@ const Nav = {
       if (last && last.isConnected && this.rects.has(last)) { const r = this.rects.get(last); if (r.right > 0 && r.left < innerWidth) best = last; }
     }
     if (best) this.focus(best, fast);
+    // TV, X-Ray open: Left from the player controls goes into the panel, Right out of it goes back to them
+    else if (IS_TV && dir === 'left' && root.id === 'hud' && !$('#xray').hidden) { const l = this.items($('#xray')); if (l.length) this.focus(l.find((x) => x.matches('.xr2-p, .xr2-n')) || l[0], fast); }
+    else if (IS_TV && dir === 'right' && root.id === 'xray') { const h = $('#hud'), l = this.items(h), t = this.mem.get(h); if (l.length) this.focus(t && t.isConnected && l.includes(t) ? t : this.start(h, l), fast); }
     this.rects.clear();
   },
 };
@@ -1813,7 +1822,7 @@ function handleKey(e) {
   const playerOpen = !$('#player').hidden, drawer = $('#player .drawer.open') || !$('#dspPop').hidden || !$('#subMenu').hidden || !$('#optMenu').hidden || !$('#pMsg').hidden;
   if (playerOpen && !drawer && IS_TV) {
     // TV remote in the player: Up/Down reach the controls, Left/Right seek unless a control has focus, OK plays/pauses
-    const hud = $('#hud'), idle = hud.classList.contains('idle'), a = document.activeElement, onCtl = !idle && a && a !== document.body && hud.contains(a);
+    const hud = $('#hud'), idle = hud.classList.contains('idle'), a = document.activeElement, xr = $('#xray'), onCtl = !!a && a !== document.body && ((!idle && hud.contains(a)) || (!xr.hidden && xr.contains(a)));
     if (k === 'ArrowUp' || k === 'ArrowDown') { e.preventDefault(); if (idle || !onCtl) { wakeHud(); Nav.restore(true); } else { Nav.move(k === 'ArrowUp' ? 'up' : 'down', e.repeat); wakeHud(); } return; }
     if ((k === 'ArrowLeft' || k === 'ArrowRight') && onCtl) { e.preventDefault(); Nav.move(k === 'ArrowLeft' ? 'left' : 'right', e.repeat); wakeHud(); return; }
     if (k === 'Enter' && !onCtl && !Skip.visible()) { e.preventDefault(); if (a && a !== document.body) a.blur(); togglePlay(); wakeHud(); return; }
@@ -2027,7 +2036,7 @@ async function loadAddons() {
   engine.addons.sort((a, b) => (b.baseUrl.includes('v3-cinemeta') - a.baseUrl.includes('v3-cinemeta')) || (b.baseUrl.includes('opensubtitles') - a.baseUrl.includes('opensubtitles')));
   const tr = trailersAddon(engine); engine.mountVirtual(tr.manifest, tr.handlers, { builtin: true });
   if (Store.get('studioMounted', false)) mountStudio(true);
-  const stored = (Array.isArray(saved.addons) ? saved.addons : []).filter((u) => !u.includes('v3-cinemeta') && !u.includes('opensubtitles-v3.strem.io'));
+  const stored = (Array.isArray(saved.addons) ? saved.addons : []).filter((u) => typeof u === 'string' && u && !u.includes('v3-cinemeta') && !u.includes('opensubtitles-v3.strem.io'));
   await Promise.allSettled(stored.map((u) => engine.install(u, { silent: true }).catch((e) => engine.placeholder(u, u.replace(/^https?:\/\//, ''), e.message, false))));
   const disabled = Array.isArray(saved.disabled) ? saved.disabled : []; engine.addons.forEach((a) => { if (disabled.includes(a.baseUrl)) a.enabled = false; });
   if (Array.isArray(saved.order) && saved.order.length) Store.set('order', saved.order);

@@ -29,7 +29,7 @@ const SET_GROUPS = [
   ['You', ['account', 'picks', 'home']],
   ['Look and feel', ['appearance', 'performance']],
   ['Watching', ['playback', 'subtitles', 'streams', 'debrid']],
-  ['Connected', ['sync', 'devices']],
+  ['Connected', ['together', 'sync', 'devices']],
   ['More', ['sound', 'keys', 'data', 'support', 'about']],
 ];
 const SET_BLURB = {
@@ -42,6 +42,126 @@ const SET_BLURB = {
 const SET_PHONE = matchMedia('(max-width: 760px)');
 let setPhoneHome = false;
 const secById = (id) => SECTIONS.find((x) => x.id === id);
+/* 2.64-settidy:start */
+/* 2.64 Settings, less stacked: long pages are split into short named groups, and the watch-party, film-night and
+   keepsake rows have their own page (Watch together) instead of the end of Playback. Modules keep adding rows to a
+   section's rows() as before; secRows(sec) is what every reader of a section (the page, search, the layout pass)
+   asks for, and it only reorders and labels. A row this plan does not know (a later feature) stays right after the
+   row it followed, or under its own group name at the end, so nothing is ever lost. */
+const SetTidy = {
+  PLAN: {
+    playback: [
+      ['The player', ['extPlayer', 'engine', 'swHevc', 'pxUp', 'resume', 'speed', 'seekStep', 'rememberVolume', 'seekPreview']],
+      ['Choosing a source', ['srSlow', 'maxQuality', 'preferFormat', 'audioOnly', 'browserOnly', 'failover']],
+      ['Episodes and skips', ['autoNext', 'upNextAt', 'skipAuto', 'introDb', 'addonSkips', 'contentSkips', 'contentSkipLevel']],
+      ['On screen', ['xray', 'spoilerGuard', 'ambilight', 'ambIntensity', 'sensory']],
+      ['Trailers', ['trailerMode', 'trailerSource']],
+      ['Sleep and channels', ['sleepSmart', 'mkChannelBtn']],
+      ['Addons as they are', ['infoRows', 'addonNotice']],
+      ['Your connection', ['lineCheck']],
+    ],
+    together: [
+      ['Watch party', ['catchUpAsk', 'partyCams', 'camSelf', 'stubFace']],
+      ['Watch-along', ['waDuck']],
+      ['Film night', ['filmNightBtn']],
+      ['Keepsakes', ['stubs', 'stubsBtn', 'watchStatsBtn']],
+    ],
+    subtitles: [
+      ['Turning them on', ['subAuto', 'subLang', 'subAutoTranslate', 'subAutoSync', 'subDubSigns']],
+      ['How they look', ['subSize', 'subColor', 'subBg', 'subFont', 'subOutline', 'subPos']],
+      ['While watching', ['lineSnap', 'lastTime', 'margins', 'phoneSubs']],
+      ['Anime and styled subtitles', ['assMode', 'mkvSubs']],
+      ['Learn and replay', ['replayCC', 'learnWordsBtn']],
+    ],
+    home: [
+      ['Start', ['hlStart', 'hlFocus']],
+      ['Rows on Home', ['arrHome', 'hlTrakt', 'animeRow']],
+      ['Show these rows', ['hl-*']],
+      ['Ambient Mode', ['saverNow', 'saverAfter', 'tmdbKey', 'fanartKey']],
+      ['Where to watch', ['region']],
+      ['MDBList lists', ['mdbKey']],
+      ['Your apps and your server', ['yaPickBtn', 'homeServers', 'noAddonCard']],
+    ],
+    streams: [
+      ['Your addons', ['manage', 'timeout']],
+      ['Tidy the list', ['sourceCheck', 'dedupeStreams', 'hideP2P', 'showTrailers']],
+      ['Proxy', ['proxy', 'alwaysProxy']],
+    ],
+    rules: [
+      ['Quality', ['srMinRes', 'srHdr', 'srNoCam']],
+      ['File size', ['srMaxGB', 'srMinGB']],
+      ['Language and words', ['srAudio', 'srWords']],
+    ],
+  },
+  // a page that shows rows another section's modules add
+  FROM: { together: 'playback' },
+  find(plan, key) {
+    for (let g = 0; g < plan.length; g++) {
+      const keys = plan[g][1];
+      for (let k = 0; k < keys.length; k++) { const p = keys[k]; if (p === key || (p.endsWith('*') && key.startsWith(p.slice(0, -1)))) return [g, k]; }
+    }
+    return null;
+  },
+  // rows in, the same rows out in named groups; the old group labels are dropped and set again
+  arrange(id, rows) {
+    const plan = this.PLAN[id]; if (!plan || !Array.isArray(rows)) return rows;
+    const away = new Set(); for (const [to, from] of Object.entries(this.FROM)) if (from === id) this.PLAN[to].forEach(([, k]) => k.forEach((x) => away.add(x)));
+    const only = !!this.FROM[id];
+    // a unit is a row with a key plus the rows without one right after it (a note, the VLC buttons, a list)
+    const head = [], units = []; let cur = null, label = '';
+    for (const d of rows) {
+      if (!d) continue;
+      if (d.group) { label = d.group; cur = null; continue; }
+      if (d.key) { cur = { key: d.key, rows: [d], label }; units.push(cur); continue; }
+      if (cur) cur.rows.push(d);
+      else if (!units.length && !label) head.push(d);
+      else { cur = { key: '', rows: [d], label }; units.push(cur); }
+    }
+    const labels = new Set(plan.map(([g]) => g)), buckets = plan.map(() => []), tail = new Map(), lead = [];
+    let prev = null;
+    for (const u of units) {
+      if (u.key && away.has(u.key)) continue;
+      const at = u.key ? this.find(plan, u.key) : null;
+      if (at) { buckets[at[0]].push([at[1], u]); prev = u; continue; }
+      if (only) continue;
+      if (u.label && !labels.has(u.label)) { if (!tail.has(u.label)) tail.set(u.label, []); tail.get(u.label).push(u); }
+      else if (prev) (prev.after || (prev.after = [])).push(u);
+      else lead.push(u);
+    }
+    const flat = (u) => [...u.rows, ...(u.after || []).flatMap(flat)];
+    const out = [...head];
+    let first = true;
+    buckets.forEach((b, g) => {
+      if (!b.length && !(first && lead.length)) return;
+      b.sort((x, y) => x[0] - y[0]);
+      out.push({ group: plan[g][0] }, ...(first ? lead.flatMap(flat) : []), ...b.flatMap(([, u]) => flat(u)));
+      first = false;
+    });
+    tail.forEach((list, g) => out.push({ group: g }, ...list.flatMap(flat)));
+    return out;
+  },
+  // after a page is drawn: notes under the row they explain, phone menus beside a label that has no explanation,
+  // two-column switch lists
+  polish() {
+    const body = $('#setBody'); if (!body) return;
+    $$('.set-card', body).forEach((card) => {
+      const rows = $$(':scope > .set-row', card);
+      rows.forEach((row) => {
+        const txt = row.querySelector(':scope > div:first-child');
+        if (txt && !txt.querySelector('b') && txt.querySelector('small') && !row.querySelector(':scope > .set-ctl > *')) {
+          row.classList.add('sr-note'); const p = row.previousElementSibling; if (p && p.classList.contains('set-row')) p.classList.add('sr-noted');
+        }
+        const c = row.querySelector(':scope > .set-ctl');
+        if (c && c.children.length === 1 && c.firstElementChild.matches('select.sel') && !(txt && txt.querySelector('small'))) row.classList.add('sr-sel');
+      });
+      card.classList.toggle('sc-grid', rows.length >= 4 && rows.length === card.children.length && rows.every((r) => r.classList.contains('sr-sw') && !r.querySelector(':scope > div:first-child > small')));
+    });
+  },
+};
+const secRows = (sec) => SetTidy.arrange(sec.id, sec.rows());
+SET_BLURB.together = 'Watch party, film night, ticket stubs';
+SECTIONS.push({ id: 'together', icon: 'users', label: 'Watch together', intro: 'Watch parties, film nights and the keepsakes you collect along the way.', rows: () => { const pb = secById('playback'); return pb ? pb.rows() : []; } });
+/* 2.64-settidy:end */
 renderSettingsNav = function () {
   const used = new Set(SET_GROUPS.flatMap(([, ids]) => ids));
   const groups = SET_GROUPS.map(([g, ids]) => [g, ids.map(secById).filter(Boolean)]);
@@ -60,7 +180,7 @@ markSettingsNav = function () {
   if (SET_PHONE.matches && setPhoneHome) $('#setNav').scrollTop = 0;
 };
 renderSettingsBody = function () {
-  const sec = secById(setSection) || SECTIONS[0], rows = sec.rows();
+  const sec = secById(setSection) || SECTIONS[0], rows = secRows(sec);
   // rows become rounded groups; a group label closes one group and starts the next
   let html = '', open = false;
   const start = () => { if (!open) { html += '<div class="set-card">'; open = true; } };
@@ -94,7 +214,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.63.2';
+const APP_VERSION = '2.64.0';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [

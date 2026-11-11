@@ -125,6 +125,7 @@ const Preflight = {
   /* The plain ending when nothing plays: no endless loop */
   giveUp(stream, reason) {
     if (!P.ctx || $('#player').hidden) return;
+    if (stream && typeof CloudConvert !== 'undefined' && CloudConvert.onFail(stream, reason, P.mkReal ? pNow() : (P.mkWant || P.startAt || 0))) return;
     this.tok++; Loader.hide(); clearTimeout(Failover.t); clearTimeout(Failover.stallT);
     const ctx = P.ctx;
     teardown(); P.stream = stream;

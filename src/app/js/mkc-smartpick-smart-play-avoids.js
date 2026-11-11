@@ -191,7 +191,7 @@ window.MkLinkHealth = LinkHealth;
       clearTimeout(quickT);
       const r = await ps.apply(this, arguments);
       try {
-        if (!stream || stream._local || stream._handoff || stream.ytId || !CFG.failover) return r;
+        if (!stream || stream._local || stream._handoff || stream._cloud || stream.ytId || !CFG.failover) return r;
         if (typeof Preflight === 'undefined' || !Preflight.on() || P.stream !== stream) return r;
         const t0 = performance.now();
         const look = () => {

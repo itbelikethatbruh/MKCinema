@@ -27,7 +27,7 @@
       const key = P.ctx ? (P.ctx.video ? P.ctx.video.id : P.ctx.meta.id) : '';
       if (key !== this.key) Start.allSlow = true; // a new title: the bookkeeping below starts over too
       arm(stream);
-      if (!CFG.failover || stream._local || stream._handoff || stream._audioTry) return;
+      if (!CFG.failover || stream._local || stream._handoff || stream._audioTry || stream._cloud) return;
       clearTimeout(this.t);
       const t0 = performance.now(); Start.lastProg = 0;
       const check = () => {

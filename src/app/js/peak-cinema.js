@@ -66,7 +66,7 @@ const Peak = {
           <h3>How Peak Cinema picks scenes</h3>
           <p>MKCinema has no database of famous scenes, and none is pretended. Each scene starts at a point between about a third and three quarters of the way into the film, past the opening and well before the credits.</p>
           <p>What you skip and what you keep watching teaches it, on this device only: genres you keep come up more, and the window moves toward the moments you stayed for.</p>
-          <p>Only sources your debrid service already has cached, in formats this device can play, are used. MKCinema looks up one film at a time and buffers only the next scene, so your addons and your debrid account are never flooded.</p>
+          <p>Only sources your debrid service already has cached, in formats this device can play, and in your audio language (Settings › Audio language), are used. MKCinema looks up one film at a time and buffers only the next scene, so your addons and your debrid account are never flooded.</p>
           <div class="pk-how-acts"><button class="btn btn-ghost" id="pkForget" type="button" data-nav><i data-lucide="eraser"></i>Forget what it learned</button><button class="btn btn-prime" id="pkHowOk" type="button" data-nav>Got it</button></div>
         </div>
       </div>`;
@@ -181,15 +181,58 @@ const Peak = {
 
   /* Which of a film's sources can open straight on a scene here: cached on your debrid service, a plain file (not HLS),
      a format this device decodes. 1080p goes first, since many 4K HEVC remuxes will not decode in browsers or TV apps. */
-  choose(streams) {
-    const ok = visibleStreams(streams).filter((s) => {
+  /* 2.63.3 Peak Cinema plays your audio language only (Settings > Audio language, or Source rules > Preferred audio
+     language). A release that names your language alone is used first. A release that names no language is taken to be
+     in the film's own language (from the catalog's country), so an Italian film with no tag is skipped when you chose
+     English. MULTi and dual-audio files are used only where the browser lets MKCinema pick the track (video.audioTracks,
+     e.g. Safari); elsewhere the file's first track would play, which may be the wrong one. */
+  COUNTRY: { 'united states': 'eng', usa: 'eng', 'united kingdom': 'eng', uk: 'eng', australia: 'eng', 'new zealand': 'eng', ireland: 'eng', canada: 'eng',
+    france: 'fre', belgium: 'fre', italy: 'ita', spain: 'spa', mexico: 'spa', argentina: 'spa', colombia: 'spa', chile: 'spa', germany: 'ger', austria: 'ger',
+    japan: 'jpn', 'south korea': 'kor', korea: 'kor', china: 'chi', 'hong kong': 'chi', taiwan: 'chi', india: 'hin', russia: 'rus', brazil: 'por', portugal: 'por',
+    netherlands: 'dut', poland: 'pol', turkey: 'tur', sweden: 'swe', denmark: 'dan', norway: 'nor', finland: 'fin', greece: 'gre', israel: 'heb', thailand: 'tha',
+    'czech republic': 'cze', czechia: 'cze', hungary: 'hun', romania: 'rum', iran: 'per', egypt: 'ara', 'saudi arabia': 'ara', indonesia: 'ind', vietnam: 'vie', ukraine: 'ukr' },
+  want() { return typeof MkAudioWant === 'function' ? MkAudioWant() : (CFG.audioOnly && CFG.audioOnly !== 'any' ? CFG.audioOnly : ''); },
+  canSwitch() { return !!(this.vids && this.vids[0] && this.vids[0].audioTracks); },
+  /* 2 = names your language only, 1 = names none but the film is in your language, or several with a track switch here; 0 = not used */
+  langFit(s, meta, w) {
+    if (!w || s._tel.isTrailer) return 2;
+    const bh = s.behaviorHints || {}, title = String((meta && meta.name) || '').toLowerCase().split(/[^a-z0-9]+/).filter((x) => x.length > 2);
+    const strip = (t) => { const left = new Set(title); return String(t).toLowerCase().replace(/[._\-\[\]()+/|]/g, ' ').split(/\s+/).filter((x) => !left.delete(x)).join(' '); };
+    const raw = [s.name, s.title, s.description, bh.filename].filter(Boolean).join(' '), T = [s.name, s.title, s.description, bh.filename].filter(Boolean).map(strip).join(' ');
+    const langs = new Set();
+    for (const m of raw.matchAll(/([\u{1F1E6}-\u{1F1FF}])([\u{1F1E6}-\u{1F1FF}])/gu)) { const cc = String.fromCharCode(m[1].codePointAt(0) - 0x1F1E6 + 65, m[2].codePointAt(0) - 0x1F1E6 + 65); langs.add(AudioPref.FLAG[cc] || cc.toLowerCase()); }
+    AudioPref.WORD.forEach(([re, l]) => { if (re.test(T)) langs.add(l); });
+    const multi = /\b(multi|multi audio|dual|dual audio)\b/.test(T) || langs.size > 1;
+    if (multi) return langs.size && !langs.has(w) ? 0 : this.canSwitch() ? 1 : 0;
+    if (langs.size) return langs.has(w) ? 2 : 0;
+    const cs = String((meta && meta.country) || '').toLowerCase().split(',').map((x) => x.trim()).filter(Boolean);
+    if (!cs.length) return w === 'eng' ? 1 : 0;
+    const own = cs.map((c) => this.COUNTRY[c] || '');
+    return (w === 'eng' ? own.includes('eng') : own[0] === w) ? 1 : 0;
+  },
+  /* where the browser lists a file's audio tracks (Safari, the Mac app), your language is switched on, and a file without it is left out */
+  audioOk(v) {
+    const w = this.want(), at = v.audioTracks;
+    if (!w || !at || !at.length || typeof MkAudioMatch !== 'function') return true;
+    let i = -1; for (let k = 0; k < at.length; k++) if (MkAudioMatch(at[k].language, at[k].label, w)) { i = k; break; }
+    if (i < 0) return !(at.length > 1 || Array.from(at).some((t) => t.language && !/^(und|unk|mis|zxx)$/i.test(t.language)));
+    for (let k = 0; k < at.length; k++) at[k].enabled = k === i;
+    return true;
+  },
+  choose(streams, meta) {
+    const w = this.want();
+    // the general audio filter reads the open title's name to skip its own words ("The Italian Job" is not a dub): give it this film
+    const dm = typeof D === 'object' && D ? D.meta : undefined; let vis;
+    try { if (meta && dm !== undefined) D.meta = meta; vis = visibleStreams(streams); } finally { if (meta && dm !== undefined) D.meta = dm; }
+    const ok = vis.filter((s) => {
       const t = s._tel, bh = s.behaviorHints || {};
       if (t.cached !== true || t.isTrailer || bh.proxyHeaders || bh.notWebReady) return false;
       if (!(t.kind === 'http' || (t.kind === 'p2p' && t.debrid))) return false;
       return BrowserPlay.ok(s);
     });
     const rank = (s) => { const t = s._tel, gb = (t.sizeBytes || 0) / 1073741824; return ({ '1080p': 60, '720p': 40, '4K UHD': 30, '1440p': 45, SD: 5 }[t.res] || 25) + (t.codec === 'H.264' ? 15 : 0) - (t.mkv ? 10 : 0) - (gb > 25 ? 15 : 0); };
-    return ok.sort((a, b) => rank(b) - rank(a));
+    ok.forEach((s) => { s._pkLang = this.langFit(s, meta, w); });
+    return ok.filter((s) => s._pkLang > 0).sort((a, b) => (b._pkLang - a._pkLang) * 1000 + rank(b) - rank(a));
   },
   /* one film looked up: its addons are asked once, then the debrid cache check is waited for (no second request) */
   async stage(tok) {
@@ -203,7 +246,7 @@ const Peak = {
       const hashes = streams.filter((s) => s.infoHash && !s.url);
       for (let i = 0; i < 12 && hashes.length && Vault.service() && hashes.some((s) => !Vault.cached.has(String(s.infoHash).toLowerCase())); i++) await sleep(250);
       hashes.forEach((s) => { s._tel = Telemetry.parse(s); });
-      const list = this.choose(streams);
+      const list = this.choose(streams, meta);
       if (list.length) { this.miss = 0; return { meta: remember(meta), streams, list }; }
       this.miss++;
       if (this.miss >= this.MAX_MISS) return null;
@@ -240,7 +283,7 @@ const Peak = {
       v.muted = true; v.preload = 'auto'; v.src = url;
       v.addEventListener('loadedmetadata', () => {
         const d = v.duration;
-        if (tok !== this.tok || !isFinite(d) || d < 1200) { end(false); return; }
+        if (tok !== this.tok || !isFinite(d) || d < 1200 || !this.audioOk(v)) { end(false); return; }
         const [lo, hi] = this.band(), credits = Math.max(480, d * .1);
         const a = Math.max(600, d * lo), b = Math.min(d * hi, d - credits - this.CLIP);
         if (b <= a) { end(false); return; }

@@ -1,0 +1,45 @@
+
+/* 2.64 Ideas & thanks: Noir finish, transform/opacity only */
+#notesLayer .x8-modal{width:min(600px,calc(100vw - 32px))}
+#notesLayer .x8-body,#notesInbox .x8-body{display:flex;flex-direction:column;gap:12px;max-height:min(80vh,820px);overflow:auto}
+#notesInbox .x8-modal{width:min(820px,calc(100vw - 32px))}
+.nt-kind{align-self:flex-start}
+.nt-kind button{display:inline-flex;align-items:center;gap:8px}
+.nt-kind button svg{width:16px;height:16px}
+.nt-field{margin:0}
+.nt-field textarea{min-height:120px}
+.nt-count{align-self:flex-end;min-height:1em;color:var(--mute)}
+.nt-sign input{max-width:320px}
+.nt-fine{margin:0;font-size:calc(12.5px * var(--ts,1));color:var(--mute);line-height:1.5}
+.nt-fine .linkish{font-size:inherit}
+.nt-head{display:flex;align-items:center;gap:16px}
+.nt-head .sub{flex:1;margin:0}
+.nt-qr{flex:none;display:flex;align-items:center;gap:10px;max-width:260px}
+.nt-qr svg{width:84px;height:84px;flex:none;background:#fff;border-radius:8px;padding:5px}
+.nt-qr small{color:var(--mute);font-size:calc(12px * var(--ts,1));line-height:1.4}
+.nt-out{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-m,12px);background:rgba(255,255,255,.035);animation:nt-in .32s ease both}
+.nt-out[hidden]{display:none}
+.nt-out>svg{flex:none;width:20px;height:20px;margin-top:2px;color:var(--plat,#d9d4c7)}
+.nt-out div{display:flex;flex-direction:column;gap:2px}
+.nt-out small{color:var(--mute)}
+@keyframes nt-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.nt-mine{display:flex;flex-direction:column;gap:8px;padding-top:6px;border-top:1px solid var(--line)}
+.nt-mine[hidden]{display:none}
+.nt-mine h4{margin:6px 0 0;font-size:calc(12px * var(--ts,1));letter-spacing:.08em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.nt-box{display:flex;flex-direction:column;gap:8px}
+.nt-item{padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-m,12px);background:rgba(255,255,255,.025)}
+.nt-item.is-new{border-color:rgba(217,212,199,.45)}
+.nt-item header{display:flex;align-items:center;gap:10px;min-width:0;font-size:calc(12.5px * var(--ts,1));color:var(--mute)}
+.nt-item header>svg{flex:none;width:16px;height:16px}
+.nt-item header>span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nt-item p{margin:8px 0 0;white-space:pre-wrap;word-break:break-word;color:var(--ink);line-height:1.55}
+.nt-item blockquote{margin:10px 0 0;padding:8px 12px;border-left:2px solid var(--plat,#d9d4c7);white-space:pre-wrap;word-break:break-word;color:var(--ink)}
+.nt-item blockquote small{display:block;color:var(--mute);margin-bottom:2px}
+.nt-st{flex:none;font-weight:600;font-size:calc(11.5px * var(--ts,1));letter-spacing:.04em;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--ink)}
+.nt-st-planned{border-color:rgba(127,182,238,.5)}.nt-st-done{border-color:rgba(70,212,131,.5)}.nt-st-declined{opacity:.7}
+.nt-sel{flex:none;width:auto;height:32px;padding:0 8px;font-size:calc(12.5px * var(--ts,1))}
+.nt-reply{display:flex;gap:8px;align-items:flex-end;margin-top:10px}
+.nt-reply textarea{flex:1;min-height:44px;resize:vertical;font:inherit}
+@media (max-width:560px){.nt-kind{align-self:stretch}.nt-kind button{flex:1;justify-content:center}.nt-reply{flex-direction:column;align-items:stretch}}
+@media (prefers-reduced-motion:reduce){.nt-out{animation:none}}
+.nt-armed{color:#ff8a8a!important;box-shadow:0 0 0 1px rgba(255,138,138,.6)}

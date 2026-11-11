@@ -1182,14 +1182,17 @@ const UiSound = {
   },
   play(kind) {
     if (!this.ok()) return; const now = performance.now();
-    if (kind === 'move') { if (now - this.last < 75) return; this.last = now; this.tone(1750, 1500, 28, 0.03); return; }
-    this.last = now;
+    // one sound per action: the focus tick that follows an open/back, a second open in the same moment, and focus moves
+    // the app makes by itself (start-up, a redraw) stay quiet; a tick answers a key or touch from the last moment only
+    if (kind === 'move') { if (now - this.last < 75 || now - (this.big || 0) < 260 || now - (this.input || -1e9) > 700) return; this.last = now; this.tone(1750, 1500, 28, 0.03); return; }
+    if (now - (this.big || 0) < 260) return;
+    this.last = now; this.big = now;
     const anime = AnimeLook.on();
     if (kind === 'enter') { this.tone(anime ? 880 : 740, anime ? 1320 : 990, 70, 0.045); }
     if (kind === 'back') { this.tone(anime ? 1180 : 990, anime ? 780 : 660, 70, 0.04); }
   },
   init() {
-    const unlock = () => { if (CFG.uiSounds !== false) this.ensure(); };
+    const unlock = () => { this.input = performance.now(); if (CFG.uiSounds !== false) this.ensure(); };
     addEventListener('pointerdown', unlock, { capture: true, passive: true }); addEventListener('keydown', unlock, { capture: true });
     const nf = Nav.focus.bind(Nav); Nav.focus = function (el) { const a = document.activeElement; const r = nf.apply(this, arguments); if (el && el !== a) UiSound.play('move'); return r; };
     const ol = openLayer; openLayer = function (id) { if (id !== 'player') UiSound.play('enter'); return ol.apply(this, arguments); };

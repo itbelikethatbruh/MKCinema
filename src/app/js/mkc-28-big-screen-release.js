@@ -1251,7 +1251,7 @@ const Seats = {
     $$('[data-seat]', b).forEach((x) => x.addEventListener('click', () => (this.managing ? this.editFromPicker(x.dataset.seat) : this.enter(x.dataset.seat))));
     $('#seatManage').onclick = () => { this.managing = !this.managing; this.pick({ force: true }); if (IS_TV) Nav.focus($('#seatManage'), true); };
     $('#seatAdd').onclick = () => this.guard(() => this.edit(null));
-    X8.open('seatPick');
+    if ($('#seatPick').hidden) X8.open('seatPick'); // a redraw (account loaded, Manage seats) keeps the open layer: no second sound
     if (IS_TV && !m) { const c = $(`[data-seat="${SEAT}"]`, b); if (c) Nav.focus(c, true); }
   },
   /* editing from the picker: a kids seat needs the grown-up PIN, and someone else's locked seat needs its own PIN */
@@ -2269,7 +2269,7 @@ QuickStart.init();
 
 const NewEps = {
   EVERY: 3 * 3600e3, WINDOW: 7 * 86400e3,
-  list() { return (Store.get('newEps', []) || []).filter((e) => !isWatched(e.vid) && !S.progress[e.vid] && Date.now() - e.at < this.WINDOW); },
+  list() { return (Store.get('newEps', []) || []).filter((e) => e && typeof e.vid === 'string' && !isWatched(e.vid) && !S.progress[e.vid] && Date.now() - e.at < this.WINDOW); },
   async check(force) {
     if (!force && Date.now() - (Store.get('newEpsAt', 0) || 0) < this.EVERY) return;
     const shows = Calendar.shows(); if (!shows.length) return;
@@ -2709,7 +2709,7 @@ Updater.init();
    and travel with your account like the watchlist. */
 const Library = {
   st: { tab: 'watchlist', type: 'all', sort: 'added', hide: false, q: '' },
-  lists() { return Store.get('lists', []) || []; },
+  lists() { return Store.get('lists', []).filter((x) => x && typeof x === 'object' && x.id).map((x) => (Array.isArray(x.items) ? x : Object.assign(x, { items: [] }))); },
   saveLists(l) { Store.set('lists', l); if (Account.user) Account.schedule(); },
   items() {
     const t = this.st.tab;

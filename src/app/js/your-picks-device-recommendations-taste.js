@@ -7,7 +7,7 @@
    ===================================================================== */
 const PICK_GENRES = ['Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary', 'Drama', 'Family', 'Fantasy', 'History', 'Horror', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller', 'War'];
 const Taste = {
-  get() { return Store.get('taste', null) || { picks: [], genres: [] }; },
+  get() { const t = Store.get('taste', null); return t && typeof t === 'object' ? { ...t, picks: Array.isArray(t.picks) ? t.picks : [], genres: Array.isArray(t.genres) ? t.genres : [] } : { picks: [], genres: [] }; },
   set(t) { Store.set('taste', { ...t, at: Date.now() }); },
   ready() { const t = this.get(); return t.picks.length + t.genres.length >= 3; },
   clear() { Store.set('taste', null); },

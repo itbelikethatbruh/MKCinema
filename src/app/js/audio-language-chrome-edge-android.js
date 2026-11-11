@@ -127,6 +127,106 @@ const AudioLang = {
     return false;
   },
 };
+/* mk-264-player-cloud */
+/* ---------------- Cloud convert: your own debrid service makes a copy this device can play ----------------
+   No MKCinema server. Real-Debrid (streaming/transcode) and TorBox (stream/createstream) already make H.264 + AAC
+   versions of the files in your account. When a debrid file will not play in this browser (its format, no sound,
+   Safari and MKV) and no other copy is left, MKCinema asks your own service for that version once and plays it in the
+   built-in player. The API calls use your key and go to the service (or through the debrid relay when the browser
+   blocks them); the video itself goes from the service to this device, never through MKCinema.
+   Real-Debrid's versions are HLS (seekable), MP4 and WebM; they are tried in that order where this browser plays HLS. */
+const CloudConvert = {
+  RD: 'https://api.real-debrid.com/rest/1.0',
+  tried: new WeakSet(), tok: 0, startT: 0,
+  on() { return CFG.cloudConvert !== false; },
+  label(svc) { return svc === 'rd' ? 'Real-Debrid' : 'TorBox'; },
+  // which service can convert this stream, and the user's own key for it
+  who(s) {
+    const own = Vault.cfg() || {}, u = String(s._audioBase || s.url || '');
+    if (s._debrid === 'rd' || s._rd || /real-?debrid/i.test(u)) {
+      const m = u.match(/\/resolve\/realdebrid\/([^/]+)\//i);
+      let key = own.rd || '';
+      if (!key && m) { try { key = decodeURIComponent(m[1]); } catch (e) { key = ''; } }
+      if (key && !/[\s/?#]/.test(key)) return { svc: 'rd', key };
+    }
+    if (s._debrid === 'tb' || s._tb || /torbox/i.test(u)) return { svc: 'tb' };
+    return null;
+  },
+  // Real-Debrid's file id: from MKCinema's own resolve, a download address (/d/ID/), or the account's recent downloads
+  async rdId(s, key) {
+    if (s._rd) return s._rd;
+    const u = String(s.url || ''), d = u.match(/^https?:\/\/[^/?#]*real-debrid\.com\/d\/([A-Za-z0-9]+)(?:[/?#]|$)/i);
+    if (d) return d[1];
+    let last = ''; try { last = decodeURIComponent(new URL(u).pathname.split('/').pop() || ''); } catch (e) { /* not a URL */ }
+    const names = [(s.behaviorHints || {}).filename, last].filter((n) => n && /\.[a-z0-9]{2,4}$/i.test(n)).map((n) => String(n).toLowerCase());
+    if (!names.length) return null;
+    const list = await Vault.call(`${this.RD}/downloads?limit=50`, { headers: { Authorization: `Bearer ${key}` } });
+    const hit = (Array.isArray(list) ? list : []).find((x) => x && names.includes(String(x.filename || '').toLowerCase()));
+    return hit && hit.id ? String(hit.id) : null;
+  },
+  rdPick(j) {
+    const one = (o) => (o && typeof o === 'object' ? (typeof o.full === 'string' ? o.full : Object.values(o).find((v) => typeof v === 'string')) : null);
+    const hls = one(j.apple), mp4 = one(j.liveMP4), webm = one(j.h264WebM);
+    const hlsOk = !!video.canPlayType('application/vnd.apple.mpegurl') || !!(window.MediaSource || window.ManagedMediaSource);
+    return [...new Set([hlsOk && hls, mp4, webm, !hlsOk && hls])].filter((x) => typeof x === 'string' && /^https:\/\//i.test(x));
+  },
+  async urls(s, w) {
+    if (w.svc === 'rd') {
+      const id = await this.rdId(s, w.key); if (!id) throw new Error('this file is not in your Real-Debrid downloads');
+      const j = await Vault.call(`${this.RD}/streaming/transcode/${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${w.key}` } });
+      return this.rdPick(j || {});
+    }
+    const ref = await AudioLang.within(25000, AudioLang.tbRef(s)); if (!ref) throw new Error('this file is not in your TorBox list');
+    const r = await AudioLang.within(30000, AudioLang.tbStream(ref, 0));
+    return r && r.hls ? [r.hls] : [];
+  },
+  log(m) { try { MKLog.add('play', `cloud convert: ${m}`); } catch (e) { /* no log */ } },
+  /* where a debrid file would otherwise end in "won't play here": true when a converted copy is on its way */
+  onFail(s, reason, at) {
+    if (!s || s._cloud || s._local || P.stream !== s || $('#player').hidden || !this.on() || this.tried.has(s)) return false;
+    const w = this.who(s); if (!w) return false;
+    this.tried.add(s);
+    const tok = ++this.tok, ctx = P.ctx, t = at > 0 ? at : 0;
+    clearTimeout(Failover.t); clearTimeout(Failover.stallT); try { video.pause(); } catch (e) { /* none */ }
+    try { $('#pMsg').hidden = true; $('#rescueBar').hidden = true; } catch (e) { /* none */ }
+    Loader.show(ctx && ctx.meta);
+    toast(`This file won’t play here as it is. Asking your ${this.label(w.svc)} for a version this device can play…`, 'info', 5000, 'cloudconv');
+    this.log(`${w.svc} for "${reason}"`);
+    (async () => {
+      let list = [];
+      try { list = await Vault.within(this.urls(s, w), 45000); } catch (e) { this.log(e.message); }
+      if (tok !== this.tok || P.stream !== s || $('#player').hidden) return;
+      if (!list.length) { toast(`Your ${this.label(w.svc)} has no converted version of this file`, 'info', 4500, 'cloudconv'); playbackFailed(s, reason); return; }
+      const bh = { ...(s.behaviorHints || {}) }; delete bh.notWebReady; delete bh.proxyHeaders;
+      const c = { ...s, url: list[0], behaviorHints: bh, _cloud: { svc: w.svc, rest: list.slice(1), of: s, at: t } };
+      ['_tel', '_audioBase', '_audioTry', '_audio', '_mkHeal', '_cors'].forEach((k) => delete c[k]);
+      this.go(c, t);
+    })();
+    return true;
+  },
+  go(c, t) {
+    clearTimeout(this.startT);
+    c._tel = Telemetry.parse(c); c._tel.webReady = true; c._tel.mkv = false;
+    const tag = `Converted by your ${this.label(c._cloud.svc)}`;
+    if (!String(c._tel.source || '').includes(tag)) c._tel.source = tag;
+    P.force = true;
+    playStream(P.ctx, c, { startAt: t });
+    toast(`Playing the version your ${this.label(c._cloud.svc)} converted for this device`, 'ok', 3500, 'cloudconv');
+    // a conversion can take several seconds to begin; one that never starts falls through to the next version
+    this.startT = setTimeout(() => { if (P.stream === c && video.readyState < 1 && !$('#player').hidden) playbackFailed(c, 'the converted version did not start'); }, 25000);
+  },
+  // the converted version failed: its next version, or (none left) the usual message with the original file
+  nextUrl(c) {
+    clearTimeout(this.startT);
+    const cc = c._cloud; if (!cc) return false;
+    if (cc.rest.length && P.stream === c && !$('#player').hidden) {
+      c.url = cc.rest.shift(); this.log(`next version ${c.url.split('?')[0].split('/').pop()}`);
+      this.go(c, P.mkReal ? pNow() : cc.at); return true;
+    }
+    c.url = cc.of.url; c._tel = cc.of._tel || Telemetry.parse(cc.of);
+    return false;
+  },
+};
 {
   const base = renderOptMenu;
   renderOptMenu = function () {

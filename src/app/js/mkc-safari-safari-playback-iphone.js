@@ -42,7 +42,7 @@
     /* Replaces the 3.5 s start limit: 10 s, extended while bytes are still arriving (up to 25 s). */
     arm(stream) {
       clearTimeout(Failover.t);
-      if (!CFG.failover || stream._local || stream._handoff || stream._audioTry) return;
+      if (!CFG.failover || stream._local || stream._handoff || stream._audioTry || stream._cloud) return;
       const t0 = performance.now();
       const check = () => {
         if (P.stream !== stream || $('#player').hidden || video.readyState >= 1 || !$('#pMsg').hidden) return;
@@ -61,6 +61,7 @@
     explain(stream, why) {
       if (P.stream !== stream || $('#player').hidden) return;
       clearTimeout(Failover.t); Loader.hide();
+      if (typeof CloudConvert !== 'undefined' && CloudConvert.onFail(stream, why === 'format' ? 'format not supported' : 'did not start', P.startAt || 0)) return;
       const t = stream._tel || {}, fmt = t._wkBad;
       const title = why === 'format' ? 'Safari can’t play this file' : 'These sources won’t play in Safari';
       const lead = why === 'format'

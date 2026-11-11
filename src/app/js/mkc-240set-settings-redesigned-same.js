@@ -36,7 +36,7 @@ const SetX = {
     for (const sec of SECTIONS) {
       const sl = sec.label, blurb = SET_BLURB[sec.id] || '';
       out.push({ sec: sec.id, key: '', icon: sec.icon, label: sl, where: this.groupOf(sec.id) || 'Settings', hay: [sl, this.tr(sl), blurb, this.tr(blurb), sec.intro, this.tr(sec.intro)].join(' ').toLowerCase() });
-      let rows = []; try { rows = sec.rows() || []; } catch { rows = []; }
+      let rows = []; try { rows = secRows(sec) || []; } catch { rows = []; }
       for (const d of rows) {
         if (!d || !d.key || !d.label || d.html) continue;
         const help = this.plain(d.help);
@@ -115,6 +115,7 @@ const SetX = {
       const f = () => { const lo = Number(r.min) || 0, hi = Number(r.max) || 100; r.style.setProperty('--p', ((Number(r.value) - lo) / ((hi - lo) || 1)).toFixed(3)); };
       f(); r.addEventListener('input', f);
     });
+    SetTidy.polish();
     this.showHit();
   },
   init() {
@@ -142,7 +143,7 @@ const SetX = {
     const prevBody = renderSettingsBody;
     renderSettingsBody = function () {
       const r = prevBody.apply(this, arguments);
-      try { const sec = secById(setSection) || SECTIONS[0]; SetX.enhance(sec, sec.rows()); } catch (e) { console.warn('settings layout', e); }
+      try { const sec = secById(setSection) || SECTIONS[0]; SetX.enhance(sec, secRows(sec)); } catch (e) { console.warn('settings layout', e); }
       return r;
     };
   },

@@ -199,7 +199,7 @@ const AddonScenes = {
         v.muted = true; v.preload = 'auto'; v.src = url;
         v.addEventListener('loadedmetadata', async () => {
           const d = v.duration;
-          if (tok !== this.tok || !isFinite(d) || d < 1200) { end(false); return; }
+          if (tok !== this.tok || !isFinite(d) || d < 1200 || !this.audioOk(v)) { end(false); return; }
           const peaks = (await peaksP).filter((g) => g.s >= 30 && g.s < d - 60);
           if (tok !== this.tok) { end(false); return; }
           if (peaks.length) {

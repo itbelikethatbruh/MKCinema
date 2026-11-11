@@ -123,6 +123,9 @@ a.btn{color:var(--ink);text-decoration:none}
 
 /* ---------- Rows & rails ---------- */
 .row{margin-bottom:34px}
+/* 2.64.1: a Home row far off screen is not styled, laid out or painted until it comes near; the clip margin keeps
+   focus rings and hover lifts that reach past the row visible, and auto keeps each row's drawn height */
+@supports (overflow-clip-margin:1px) and (content-visibility:auto){#homeRows>section.row{content-visibility:auto;contain-intrinsic-size:auto 320px;overflow-clip-margin:32px}}
 .row-head{display:flex;justify-content:space-between;gap:12px;}
 .row-title{font-size:calc(clamp(16px,1.7vw,21px) * var(--ts,1));margin:0;display:flex;min-width:0}
 .row-title small{font-family:var(--f-mono);font-weight:400;text-transform:uppercase}
@@ -956,6 +959,22 @@ body.touch-ui.layer-open #app{visibility:hidden}
 .btn-bolt::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.85) 50%,transparent 65%);transform:translateX(-120%);transition:transform .8s var(--ease)}
 @media (hover:hover){.btn-bolt:hover::after{transform:translateX(120%)}}
 .btn-bolt:active{transform:scale(.97)}
+/* 2.63.3 Play is the call to action: a gold light runs round its edge, a sheen crosses it now and then and the play
+   mark breathes. Transform and opacity only, on High graphics; TVs, Low graphics and Reduce motion keep it still. */
+.cta-ring{display:none}
+body.fx .cta-ring{display:block;position:absolute;inset:0;z-index:-1;border-radius:inherit;overflow:hidden;pointer-events:none;background:#17120a}
+body.fx .cta-ring::before{content:"";position:absolute;left:50%;top:50%;width:max(220%,340px);aspect-ratio:1;background:conic-gradient(from 0deg,transparent 0 40%,rgba(216,178,90,.35) 55%,var(--gold,#d8b25a) 72%,#fff6dc 80%,var(--gold,#d8b25a) 86%,transparent 96%);transform:translate(-50%,-50%) rotate(0);animation:ctaRun 3.2s linear infinite;will-change:transform}
+body.fx .cta-ring::after{content:"";position:absolute;inset:3px;border-radius:inherit;background:var(--plat,#eceae5)}
+@media (hover:hover){body.fx .btn-bolt.cta:hover .cta-ring::after{background:linear-gradient(180deg,#fff,var(--nd9d9dd,#d9d9dd))}}
+body.fx .btn-bolt.cta{box-shadow:0 0 0 1px rgba(216,178,90,.35),0 12px 36px -8px rgba(216,178,90,.55)}
+body.fx .btn-bolt.cta::after{animation:ctaSheen 6s var(--ease) 1.4s infinite}
+body.fx .btn-bolt.cta>svg.lucide{animation:ctaBeat 2.8s ease-in-out infinite}
+@keyframes ctaRun{to{transform:translate(-50%,-50%) rotate(1turn)}}
+@keyframes ctaSheen{0%{transform:translateX(-120%)}18%,100%{transform:translateX(120%)}}
+@keyframes ctaBeat{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+html.tv .cta-ring,body.reduce-motion .cta-ring{display:none!important}
+html.tv .btn-bolt.cta>svg.lucide,body.reduce-motion .btn-bolt.cta>svg.lucide,body.reduce-motion .btn-bolt.cta::after{animation:none!important}
+@media (prefers-reduced-motion:reduce){.cta-ring{display:none!important}.btn-bolt.cta>svg.lucide,.btn-bolt.cta::after{animation:none!important}}
 .hero .actions .btn-ghost,.d-hero .actions .btn-ghost{height:52px;border-radius:999px;padding-inline:20px;background:rgba(var(--n000000-c,0,0,0),.35)}
 @media (max-width:560px){
   .hero .actions{display:grid;grid-template-columns:1fr 1fr;width:100%}
@@ -1727,6 +1746,85 @@ a.xr-credit:hover{color:#fff}
   .xr-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:8px 6px}
 }
 @media (max-height:520px){.xray{top:10px;bottom:auto;left:max(10px,env(safe-area-inset-left,0px));right:auto;width:min(300px,42vw);max-height:calc(100% - 128px)}}
+/* 2.64-xrcss:start */
+/* ---------- 2.64 X-Ray: one calm panel ---------- */
+#xray.xr2{padding:16px 18px 18px;width:min(360px,calc(100vw - 32px));background:rgba(var(--n080809-c,8,8,9),.82);border:1px solid rgba(255,255,255,.08);scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent}
+@media (hover:hover) and (pointer:fine){#xray.xr2{background:rgba(var(--n080809-c,8,8,9),.7)}}
+#xray.xr2 p,#xray.xr2 b,#xray.xr2 small,#xray.xr2 dt,#xray.xr2 dd{text-shadow:none}
+.xr2-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.xr2-eb{display:inline-flex;align-items:center;gap:7px;font-size:calc(var(--fs-caption) * var(--ts,1));font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--champ,#d9d4c7)}
+.xr2-eb .lucide{width:14px;height:14px}
+.xr2-x{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;border:0;background:rgba(255,255,255,.07);color:var(--nd4d4da,#d4d4da)}
+.xr2-x .lucide{width:16px;height:16px}
+.xr2-x:hover,.xr2-x:focus-visible{background:rgba(255,255,255,.14);color:#fff}
+#xray .xr2-title{margin:10px 0 2px;font-size:calc(var(--fs-title) * var(--ts,1));font-weight:600;line-height:1.2;letter-spacing:-.01em}
+.xr2-meta{margin:0;font-size:calc(var(--fs-label) * var(--ts,1));color:var(--n9a9aa2,#9a9aa2)}
+.xr2-meta:empty{display:none}
+.xr2-sec{padding:14px 0 0;margin-top:14px;border-top:1px solid rgba(255,255,255,.07)}
+#xray .xr2-sec h5{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 8px;font-size:calc(var(--fs-caption) * var(--ts,1));letter-spacing:.14em;text-transform:uppercase;color:var(--n9a9aa2,#9a9aa2)}
+#xray .xr2-sec h5 .tnum{letter-spacing:.02em;text-transform:none;color:var(--nd4d4da,#d4d4da)}
+/* cast: a list of faces */
+.xr2-cast{display:grid;gap:2px}
+.xr2-p{display:grid;grid-template-columns:40px minmax(0,1fr) 16px;align-items:center;gap:12px;padding:6px 8px;margin:0 -8px;width:calc(100% + 16px);border-radius:var(--r-m);text-align:left;background:none;border:0;color:inherit}
+.xr2-p:hover,.xr2-p:focus-visible{background:rgba(255,255,255,.06)}
+.xr2-p>.lucide{width:16px;height:16px;color:var(--n7a7a82,#7a7a82);opacity:0;transition:opacity .15s}
+.xr2-p:hover>.lucide,.xr2-p:focus-visible>.lucide{opacity:1}
+.xr2-av{position:relative;display:block;width:40px;height:40px;border-radius:50%;overflow:hidden;background:linear-gradient(160deg,var(--n1c1c1f,#1c1c1f),var(--n0d0d0e,#0d0d0e));box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.xr2-av::before{content:attr(data-ini);position:absolute;inset:0;display:grid;place-items:center;font-size:calc(var(--fs-label) * var(--ts,1));font-weight:600;letter-spacing:.04em;color:var(--n9a9aa2,#9a9aa2)}
+.xr2-av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 20%;animation:fadeIn .35s var(--ease)}
+.xr2-pt{display:grid;min-width:0}
+.xr2-pt b{font-size:calc(var(--fs-small) * var(--ts,1));font-weight:600;color:var(--nf1f1f3,#f1f1f3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xr2-pt small{font-size:calc(var(--fs-label) * var(--ts,1));color:var(--n9a9aa2,#9a9aa2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xr2-more{margin-top:6px;padding:4px 0;border:0;background:none;font-size:calc(var(--fs-label) * var(--ts,1));font-weight:600;color:var(--champ,#d9d4c7)}
+.xr2-more:hover{text-decoration:underline;text-underline-offset:3px}
+/* who made it: one line per role */
+.xr2-crew{display:grid;gap:4px;font-size:calc(var(--fs-small) * var(--ts,1));color:var(--nd4d4da,#d4d4da)}
+.xr2-cr small{color:var(--n9a9aa2,#9a9aa2);font-size:inherit}
+.xr2-n{padding:0;border:0;background:none;color:var(--nf1f1f3,#f1f1f3);font:inherit;font-weight:600}
+.xr2-n:hover,.xr2-n:focus-visible{text-decoration:underline;text-underline-offset:3px}
+.xr2-none{margin:12px 0 0;font-size:calc(var(--fs-small) * var(--ts,1));color:var(--n9a9aa2,#9a9aa2)}
+/* the story: four lines, tap for the rest */
+.xr2-story{margin:0;font-size:calc(var(--fs-small) * var(--ts,1));line-height:1.6;color:var(--nd4d4da,#d4d4da);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}
+.xr2-story.long{cursor:pointer}
+.xr2-story.open{display:block;-webkit-line-clamp:unset}
+.xr2-wait{color:var(--n7a7a82,#7a7a82)}
+.xr2-src{display:inline-block;margin-top:6px;font-size:calc(var(--fs-caption) * var(--ts,1));color:var(--n7a7a82,#7a7a82);text-decoration:none}
+.xr2-src:hover{color:var(--nd4d4da,#d4d4da)}
+.xr2-facts{display:grid;grid-template-columns:auto minmax(0,1fr);gap:5px 14px;margin:10px 0 0;font-size:calc(var(--fs-label) * var(--ts,1))}
+.xr2-facts:empty{display:none}
+.xr2-facts dt{color:var(--n8d8d95,#8d8d95)}.xr2-facts dd{margin:0;color:var(--nececee,#ececee)}
+/* this moment: four quiet buttons in a row */
+.xr2-acts{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:6px}
+.xr2-acts>button{display:grid;justify-items:center;gap:5px;padding:10px 4px 8px;border-radius:var(--r-m);border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);color:var(--nececee,#ececee);font-size:calc(var(--fs-caption) * var(--ts,1));font-weight:600}
+.xr2-acts>button .lucide{width:18px;height:18px}
+.xr2-acts>button:hover,.xr2-acts>button:focus-visible{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.16)}
+.xr2-acts.xr2-edit{display:flex;gap:8px}.xr2-acts.xr2-edit .inp{flex:1 1 auto;height:36px;min-width:0}
+.xr2-acts .xr-ok{grid-column:1/-1}
+/* picture and sound: folded into one line */
+.xr2-tbtn{display:grid;grid-template-columns:16px auto minmax(0,1fr) 16px;align-items:center;gap:8px;width:100%;padding:4px 0;border:0;background:none;color:var(--nd4d4da,#d4d4da);text-align:left;font-size:calc(var(--fs-label) * var(--ts,1));font-weight:600}
+.xr2-tbtn .lucide{width:16px;height:16px;color:var(--n9a9aa2,#9a9aa2)}
+.xr2-tbtn small{font-weight:500;color:var(--n8d8d95,#8d8d95);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right;font-size:inherit}
+.xr2-tbtn .xr2-chev{transition:transform .2s var(--ease)}
+.xr2-tbtn[aria-expanded="true"] .xr2-chev{transform:rotate(180deg)}
+.xr2-tbtn:focus-visible{outline:2px solid rgba(217,212,199,.5);outline-offset:3px;border-radius:var(--r-s)}
+.xr2-tech{display:grid;grid-template-columns:auto minmax(0,1fr);gap:5px 14px;margin:10px 0 0;font-size:calc(var(--fs-label) * var(--ts,1))}
+.xr2-tech dt{color:var(--n8d8d95,#8d8d95)}.xr2-tech dd{margin:0;text-align:right;font-family:var(--f-mono)}
+/* phones: a sheet above the controls that never covers the big play button */
+@media (max-width:760px){
+  #xray.xr2{left:10px;right:10px;width:auto;max-height:min(calc(50% - 140px),360px);padding:12px 14px 14px;background:rgba(var(--n080809-c,8,8,9),.9)}
+  #xray .xr2-title{margin-top:6px;font-size:calc(var(--fs-ui) * var(--ts,1))}
+  .xr2-sec{margin-top:10px;padding-top:10px}
+}
+@media (max-height:520px){#xray.xr2{width:min(320px,44vw);max-height:calc(100% - 128px);background:rgba(var(--n080809-c,8,8,9),.96)}}
+/* TVs: larger type for the sofa, a clear focus ring, everything shown */
+html.tv #xray.xr2{width:440px;padding:22px 24px 24px;background:rgba(var(--n080809-c,8,8,9),.92)}
+html.tv #xray .xr2-title{font-size:calc(var(--fs-h3) * var(--ts,1))}
+html.tv .xr2-pt b{font-size:calc(var(--fs-ui) * var(--ts,1))}
+html.tv .xr2-pt small,html.tv .xr2-story,html.tv .xr2-crew{font-size:calc(var(--fs-body) * var(--ts,1))}
+html.tv .xr2-av{width:48px;height:48px}
+html.tv .xr2-p{grid-template-columns:48px minmax(0,1fr) 16px}
+html.tv .xr2-p:focus,html.tv .xr2-acts>button:focus,html.tv .xr2-tbtn:focus,html.tv .xr2-more:focus,html.tv .xr2-n:focus,html.tv .xr2-x:focus{outline:2px solid var(--champ,#d9d4c7);outline-offset:2px}
+/* 2.64-xrcss:end */
 @keyframes plBreath{0%,100%{opacity:.4}50%{opacity:1}}
 @media (prefers-reduced-motion:reduce){.p-load .pl-art{animation:plBreath 2.4s ease-in-out infinite!important;transform:none}}
 body.reduce-motion .p-load .pl-art{animation:plBreath 2.4s ease-in-out infinite!important;transform:none}
