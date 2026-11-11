@@ -120,7 +120,11 @@ func main() {
 	}
 
 	// Trailers and previews may start with sound, like in a desktop media app.
-	os.Setenv("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--autoplay-policy=no-user-gesture-required")
+	// The page talks to this app's own 127.0.0.1 helpers (torrents, downloads, pass and TV over http). Newer WebView2
+	// releases may start asking before a web page reaches 127.0.0.1 (Local Network Access) with no prompt to answer it,
+	// which would cut those helpers off; this keeps today's behaviour. The helpers still accept only MKCinema's own
+	// pages and a random token. (Owner's choice, 2026-11-11.)
+	os.Setenv("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--autoplay-policy=no-user-gesture-required --disable-features=LocalNetworkAccessChecks")
 
 	width, height, minW, minH, maximize := defaultSize()
 	webview2.OnClose = savePlacement
