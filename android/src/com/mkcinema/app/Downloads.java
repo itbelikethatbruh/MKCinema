@@ -181,12 +181,21 @@ final class Downloads {
             try {
                 JSONObject o = new JSONObject();
                 o.put("id", rec.optString("id")).put("meta", rec.optJSONObject("meta")).put("file", rec.optString("file")).put("created", rec.optLong("created")).put("vol", rec.optInt("vol", 0));
+                // 1.11.0: a live TV recording (RecService)
+                if (rec.optBoolean("rec")) o.put("rec", true).put("url", rec.optString("url")).put("stopAt", rec.optLong("stopAt")).put("note", rec.optString("note"));
                 File f = new File(rec.optString("path"));
                 String state; long got = 0, size = rec.optLong("size", -1); String err = "";
                 if (rec.optBoolean("done")) {
                     state = f.exists() ? "done" : "failed"; got = size;
                     if (!f.exists()) err = "the file was deleted outside MKCinema";
                     if (!f.exists() && rec.optInt("vol", 0) > 0 && (f.getParentFile() == null || !f.getParentFile().exists())) { state = "paused"; err = "On the USB drive: connect it to play"; }
+                } else if (rec.optBoolean("rec")) {
+                    got = f.exists() ? f.length() : 0;
+                    RecService.Job j = RecService.jobs.get(rec.optString("id"));
+                    if (j != null) { state = "running"; got = Math.max(got, j.bytes); }
+                    else if (rec.optBoolean("dead")) { state = "failed"; err = rec.optString("err", "the recording stopped"); }
+                    else if (got > 0) { state = "done"; size = got; rec.put("done", true).put("size", got).put("note", "the app was closed while it recorded"); changed = true; }
+                    else { state = "failed"; err = "the app was closed before anything was recorded"; }
                 } else if (rec.optBoolean("own")) {
                     // 1.8.0: a USB drive download run by DlService
                     got = f.exists() ? f.length() : 0;
@@ -231,7 +240,8 @@ final class Downloads {
             if (rec == null) continue;
             if (!id.equals(rec.optString("id"))) { keep.put(rec); continue; }
             hit = true;
-            if (rec.optBoolean("own")) DlService.cancel(id);
+            if (rec.optBoolean("rec")) RecService.stop(id);
+            else if (rec.optBoolean("own")) DlService.cancel(id);
             else try { ((DownloadManager) c.getSystemService(Context.DOWNLOAD_SERVICE)).remove(Long.parseLong(id)); } catch (Exception ignored) { }
             new File(rec.optString("path")).delete();
             if (rec.has("sub")) new File(rec.optString("sub")).delete();

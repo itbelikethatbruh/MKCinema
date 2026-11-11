@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mkcinema.app" android:versionCode="23" android:versionName="1.10.0">
+    package="com.mkcinema.app" android:versionCode="24" android:versionName="1.11.0">
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -11,6 +11,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+    <!-- 1.11.0: a programme picked in the guide starts recording on time, with the app closed (RecService.Alarm) -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32"/>
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
     <!-- 1.5.0 new-episode notifications: post them (Android 13+ asks), and keep the twice-daily check after a reboot -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
@@ -78,6 +81,11 @@
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|uiMode|density"/>
         <!-- 1.5.0: twice-daily check for new episodes of the series you follow (no server; see EpisodeAlerts.java) -->
         <service android:name=".DlService" android:exported="false" android:foregroundServiceType="dataSync"/>
+        <!-- 1.11.0: live TV recording, and the alarm that starts a planned one (re-armed after a restart) -->
+        <service android:name=".RecService" android:exported="false" android:foregroundServiceType="dataSync"/>
+        <receiver android:name=".RecService$Alarm" android:exported="false">
+            <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED"/></intent-filter>
+        </receiver>
         <!-- 1.8.1: the checked update APK, handed to the system installer (see UpdateFiles.java) -->
         <provider android:name=".UpdateFiles" android:authorities="com.mkcinema.app.update" android:exported="false" android:grantUriPermissions="true"/>
         <service android:name=".EpisodeAlerts" android:exported="false" android:permission="android.permission.BIND_JOB_SERVICE"/>

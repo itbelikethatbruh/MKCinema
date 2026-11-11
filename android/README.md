@@ -29,6 +29,17 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.11.0 (versionCode 24): live TV recording
+
+`RecService.java`: the page asks with `MKAndroid.recStart` and the app records the channel itself, so every TV service
+the person added works, plain `http://` included. It follows a live HLS channel (best variant with its own sound,
+AES-128 pieces decrypted), saves a catch-up programme from start to end, or keeps a plain MPEG-TS stream (joined again
+after a drop). It runs in a foreground service with a Stop button in the notification, and stops at the time the page
+asked for, after 8 hours, or when less than 300 MB is free. Files are the channel's own `.ts` in the app's Movies folder,
+listed with the downloads (`"rec": true`), so they play from Library › Downloads. A programme picked in the guide
+(`MKAndroid.recPlan`/`recUnplan`) starts from an exact alarm (`RecService.Alarm`), with the app closed too, and the
+alarms are set again after a restart. Nothing is re-encoded and nothing leaves the device. Needs web 2.67 (mk-record).
+
 ## 1.10.0 (versionCode 23): your own TV service in the app
 
 `Iptv.java`: the TV services the person adds in Live TV › Add playlist (Xtream login or playlist link) load directly in
