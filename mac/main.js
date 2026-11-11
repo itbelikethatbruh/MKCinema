@@ -26,7 +26,7 @@ function logLine(text) {
   } catch (e) { /* logging never stops the app */ }
 }
 logLine('started ' + VERSION + ' on macOS ' + $.NSProcessInfo.processInfo.operatingSystemVersionString.js);
-// The launch test (.github/workflows/mac-smoke.yml) sets this flag: load the page, ping the bridge once, then quit.
+// The launch test (.github/workflows/mac-smoke.yml) sets this flag: once the page has loaded, ping the bridge, then quit.
 const SELFTEST = $.NSFileManager.defaultManager.fileExistsAtPath($.NSHomeDirectory().js + '/Library/Caches/MKCinema/selftest');
 const app = $.NSApplication.sharedApplication;
 app.setActivationPolicy($.NSApplicationActivationPolicyRegular);
@@ -125,7 +125,7 @@ const bridgeJs = "(function(){if(location.protocol!=='https:'||" + JSON.stringif
   + "function call(c){return new Promise(function(a,b){var i=++n;w[i]=[a,b];h.postMessage({id:i,cmd:c})})}"
   + "var d={platform:'mac',version:'" + VERSION + "'};"
   + (hasEngine ? "d.p2p={start:function(){return call('p2p-start')},stop:function(){return call('p2p-stop')}};d.pass={start:function(){return call('pass-start')}};" : '')
-  + "window.MKDesktop=d;" + (SELFTEST ? "setTimeout(function(){call('ping')},1500);" : '') + "})();";
+  + "window.MKDesktop=d;" + (SELFTEST ? "var pg=function(){setTimeout(function(){call('ping')},1500)};if(document.readyState==='complete')pg();else addEventListener('load',pg,{once:true});" : '') + "})();";
 
 // Only MKCinema's own top-level page may use the bridge: not frames inside it (trailers and their ads), not other
 // sites.
