@@ -668,21 +668,17 @@ AnimeHub.init();
       const u = video.currentSrc || ''; return !u || (u.startsWith('blob:') && !P.stream._local) ? '' : u;
     };
     seek.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'mouse') down = true; }, true);
-    const end = () => { if (!down) return; down = false; box.hidden = true; box.classList.remove('touch'); };
+    const end = () => { if (!down) return; down = false; box.hidden = true; box.classList.remove('touch'); Tools.hovering = false; };
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((ev) => seek.addEventListener(ev, end, true));
     seek.addEventListener('pointermove', (e) => {
       if (!down || e.pointerType === 'mouse') return;
       const u = src(), d = pDur(); if (!u || !isFinite(d)) return;
-      if (!Tools.prev || Tools.prevSrc !== u) {
-        Tools.dropPreview();
-        const v = Tools.prev = document.createElement('video'); v.muted = true; v.preload = 'metadata'; v.playsInline = true; v.src = u; Tools.prevSrc = u;
-        v.addEventListener('seeked', () => box.classList.add('ok')); v.addEventListener('error', () => { box.hidden = true; Tools.prevSrc = 'x'; });
-        box.innerHTML = ''; box.appendChild(v);
-      }
+      Tools.hovering = true; const v = Tools.prevVideo(u, box);
       const r = seek.getBoundingClientRect(), p = clamp((e.clientX - r.left) / r.width, 0, 1), t = p * d;
       box.hidden = false; box.classList.add('touch'); box.style.left = `${clamp(p * 100, 14, 86)}%`;
       clearTimeout(pend);
-      pend = setTimeout(() => { if (Math.abs(t - Tools.prevT) > 1) { Tools.prevT = t; box.classList.remove('ok'); try { Tools.prev.currentTime = t; } catch (x) { /* not seekable yet */ } } }, 120);
+      if (!Tools.showNear(box, u, t, d) && Math.abs(t - Tools.prevT) > 1 && !box.querySelector('canvas.sp-c')) box.classList.remove('ok');
+      pend = setTimeout(() => { if (Math.abs(t - Tools.prevT) > 1) { Tools.prevT = t; Tools.prevSeek(v, t, box); } }, 50);
     }, true);
   }
 }

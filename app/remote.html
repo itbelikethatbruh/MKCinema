@@ -3167,6 +3167,12 @@ const MikoSoul = (() => {
   const part = () => { const h = new Date().getHours(); return h < 5 ? 'late' : h < 12 ? 'morning' : h < 17 ? 'afternoon' : h < 22 ? 'evening' : 'late'; };
 
   const LINES = {
+    picks_like: ['People who loved {t} tend to love these next.', 'If {t} hit the spot, these are what its fans watch next.', 'Fans of {t} rate these. Any take your fancy?'],
+    picks: ['Here’s what I’d pick: {d}.', 'Try these. I went for {d}.', 'Okay! Some {d} for you.'],
+    picks_any: ['Here are a few I think you’ll like.', 'Going by what you watch, try these.', 'A few I’d put on for you.'],
+    picks_more: ['A few more.', 'Here’s another handful.', 'Sure, more coming up.'],
+    picks_none: ['I couldn’t find anything that fits all of that. Try fewer details, or name a film you liked.', 'Nothing matched that one, sorry. Try it a little looser, like “something like Arrival”.'],
+    free_limit: ['{p}’s free plan needs a breather. Give it a minute and ask again. I can still play, find and open things without it.', 'I’ve hit {p}’s free limit for the moment. Try again in a minute; everyday asks still work.'],
     hi_morning: ['Morning{c}! What are we watching today?', 'Good morning{c}. Coffee and a film? Tell me what you’re after.', 'Morning{c}. I’m here whenever you’re ready.'],
     hi_afternoon: ['Hey{c}! What can I put on for you?', 'Afternoon{c}. Looking for something to watch?', 'Hi{c}. Tell me what you feel like, or just name a film.'],
     hi_evening: ['Evening{c}! What are we in the mood for tonight?', 'Hey{c}, good timing. Want me to find tonight’s film?', 'Evening{c}. Tell me what to put on, or ask me anything about a film or show.'],
@@ -3326,7 +3332,7 @@ const MikoSoul = (() => {
   };
   // text for the ear: no quotes or symbols read out, short breaths between sentences
   const spoken = (t) => String(t || '').replace(/[“”"«»]/g, '').replace(/\bS(\d+) · E(\d+)\b/g, 'season $1, episode $2').replace(/·/g, ',').replace(/…/g, '.').replace(/\s+/g, ' ').trim();
-  const speak = (t) => {
+  const sysSpeak = (t) => {
     try {
       if (!window.speechSynthesis || typeof SpeechSynthesisUtterance === 'undefined') return;
       speechSynthesis.cancel();
@@ -3341,6 +3347,95 @@ const MikoSoul = (() => {
     } catch (e) { /* no voice */ }
   };
 
+  /* ---- 2.65 her natural voice: a real neural voice (Kokoro, Apache-2.0) running on this device ----
+     Off until the person turns it on (about 90 MB, downloaded once from Hugging Face, then cached by the browser).
+     It runs in a worker so the app never stutters, speaks sentence by sentence so the first words come quickly, and
+     falls back to the device's own voice for other languages, on any error, or when this device turns out too slow. */
+  const Natural = {
+    URL: 'vendor/kokoro-1.2.1/miko-voice.js', w: null, seq: 0, gen: 0, cbs: new Map(), ctx: null, srcs: [], at: 0, state: '', pct: 0, slow: 0, listeners: new Set(),
+    can() {
+      try { return typeof Worker !== 'undefined' && typeof WebAssembly === 'object' && !!(window.AudioContext || window.webkitAudioContext) && /^en\b/i.test(lang()); } catch (e) { return false; }
+    },
+    wanted() { return !!ls.get('natural', false); },
+    on() { return this.wanted() && this.can() && this.state !== 'failed' && this.slow < 2; },
+    emit() { this.listeners.forEach((f) => { try { f(this.state, this.pct); } catch (e) { /* gone */ } }); },
+    voice() { return /^en-(gb|ie|au|nz)\b/i.test(lang()) ? 'bf_emma' : 'af_heart'; },
+    worker() {
+      if (this.w) return this.w;
+      this.w = new Worker(this.URL, { type: 'module' });
+      this.w.onmessage = (e) => {
+        const d = e.data || {};
+        if (d.t === 'progress') { this.pct = Math.max(this.pct, Math.min(99, d.pct | 0)); if (this.state !== 'ready') { this.state = 'loading'; this.emit(); } return; }
+        const cb = this.cbs.get(d.id); if (!cb) return; this.cbs.delete(d.id);
+        if (d.t === 'error') cb.no(new Error(d.msg || 'voice error')); else cb.ok(d);
+      };
+      this.w.onerror = () => { this.state = 'failed'; this.emit(); this.cbs.forEach((cb) => cb.no(new Error('voice worker failed'))); this.cbs.clear(); try { this.w.terminate(); } catch (e) { /* gone */ } this.w = null; };
+      return this.w;
+    },
+    call(cmd, data = {}) { return new Promise((ok, no) => { const id = ++this.seq; this.cbs.set(id, { ok, no }); this.worker().postMessage({ id, cmd, ...data }); }); },
+    load() {
+      if (this.state === 'ready') return Promise.resolve();
+      if (!this.loadP) {
+        this.state = 'loading'; this.emit();
+        this.loadP = this.call('load').then(() => { this.state = 'ready'; this.pct = 100; this.emit(); }).catch((e) => { this.state = 'failed'; this.loadP = null; this.emit(); throw e; });
+      }
+      return this.loadP;
+    },
+    // a tap or Enter opens the audio, so the reply can play when it's ready (browsers block sound that isn't asked for)
+    unlock() { try { const C = window.AudioContext || window.webkitAudioContext; if (!this.ctx && C) this.ctx = new C(); if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); } catch (e) { /* no audio */ } },
+    stop() { this.gen++; try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) { /* none */ } this.srcs.forEach((s) => { try { s.stop(); } catch (e) { /* done */ } }); this.srcs = []; this.at = 0; },
+    play(pcm, rate) {
+      this.unlock(); const ctx = this.ctx; if (!ctx) return;
+      const buf = ctx.createBuffer(1, pcm.length, rate); buf.copyToChannel ? buf.copyToChannel(pcm, 0) : buf.getChannelData(0).set(pcm);
+      const src = ctx.createBufferSource(); src.buffer = buf; src.connect(ctx.destination);
+      const start = Math.max(ctx.currentTime + 0.02, this.at); src.start(start); this.at = start + buf.duration + 0.12; // a small breath between sentences
+      this.srcs.push(src); src.onended = () => { this.srcs = this.srcs.filter((x) => x !== src); };
+    },
+    async speak(text) {
+      this.stop(); const my = this.gen;
+      await this.load();
+      // short first piece, so she starts talking fast; long sentences split at a comma
+      const parts = []; (spoken(text).match(/[^.!?]+[.!?]*/g) || []).forEach((s) => { s = s.trim(); if (!s) return; if (s.length > 160) s.split(/(?<=,)\s+/).forEach((x) => x.trim() && parts.push(x.trim())); else parts.push(s); });
+      for (const s of parts.slice(0, 8)) {
+        if (my !== this.gen) return;
+        const t0 = performance.now(), d = await this.call('say', { text: s, voice: this.voice(), speed: 1 });
+        if (my !== this.gen) return;
+        const secs = d.pcm.length / (d.rate || 24000), took = (performance.now() - t0) / 1000;
+        // this device can't keep up (more than 2.5 s of work per second of speech, twice): use its own voice instead
+        if (secs > 0.8 && took / secs > 2.5) { this.slow++; if (this.slow >= 2) this.emit(); }
+        this.play(d.pcm, d.rate || 24000);
+      }
+    },
+    async set(on) {
+      ls.set('natural', on ? true : null);
+      if (!on) { this.stop(); this.emit(); return; }
+      this.slow = 0; if (this.state === 'failed') this.state = '';
+      try { await this.load(); } catch (e) { /* state says failed */ }
+    },
+  };
+  const speak = (t) => {
+    if (Natural.on()) { Natural.speak(t).catch(() => sysSpeak(t)); return; }
+    if (Natural.srcs.length) Natural.stop(); sysSpeak(t);
+  };
+
+  /* ---- 2.65 free AI keys: services that give anyone a free key, no card ----
+     The key is the person's own and stays in their browser; MKCinema never pays for or sees any of it. */
+  const FREE = {
+    groq: { name: 'Groq', base: 'https://api.groq.com/openai/v1', def: 'openai/gpt-oss-120b', models: [['openai/gpt-oss-120b', 'GPT-OSS 120B', 'smartest'], ['openai/gpt-oss-20b', 'GPT-OSS 20B', 'fastest']],
+      get: 'https://console.groq.com/keys', how: 'Free, no card: sign in at console.groq.com, open API Keys, create a key and paste it here. The free plan has a daily limit, which is plenty for chatting with Miko.' },
+    gemini: { name: 'Gemini', base: 'https://generativelanguage.googleapis.com/v1beta/openai', def: '', models: [],
+      get: 'https://aistudio.google.com/apikey', how: 'Free, no card: sign in at aistudio.google.com, choose Get API key, create one and paste it here. On Google’s free plan your chats may be used to improve Google’s models, so keep private things out of them.' },
+  };
+  // the best chat model a free key's own model list offers (Gemini renames its models often, so it's read, not guessed)
+  const bestModel = (p, j) => {
+    const ids = ((j && j.data) || []).map((m) => String((m && m.id) || '').replace(/^models\//, '')).filter(Boolean);
+    if (p === 'gemini') {
+      const fl = ids.filter((x) => /^gemini-[\d.]+-flash$/.test(x)).sort((a, b) => parseFloat(b.slice(7)) - parseFloat(a.slice(7)));
+      return fl[0] || ids.find((x) => /^gemini-.*flash/.test(x) && !/lite|image|tts|live|audio|exp/.test(x)) || ids.find((x) => /^gemini-/.test(x)) || '';
+    }
+    return ids[0] || '';
+  };
+
   /* ---- for an AI key: who Miko is ---- */
   const PERSONA = `Who you are: Miko, a warm, quick, slightly playful young woman (she/her) who knows films and TV inside out, like the friend everyone asks what to watch.
 How you talk: like a real person, never like a help desk. Use contractions and a natural rhythm, vary your wording, and keep it short (one to three sentences). The odd light joke or bit of enthusiasm when it fits, never forced. If the state line gives the person's name, use it now and then, not every time.
@@ -3348,7 +3443,7 @@ Opinions: when asked what's good, have a view and give the reason in a few words
 Honesty: if someone sincerely asks whether you're a person, say you're an AI. Never claim you watched, felt or did something you didn't.
 Care: if someone seems down, be kind first. If someone mentions harming themselves, gently urge them to reach out to someone they trust or a local crisis line, right away.`;
 
-  return { ls, line, hello, chat, fix, speak, female, pickVoice, name, setName, PERSONA, norm, dist };
+  return { ls, line, hello, chat, fix, speak, sysSpeak, female, pickVoice, name, setName, PERSONA, norm, dist, Natural, FREE, bestModel };
 })();
 /* ---------- 2.56 Miko, the AI assistant ----------
    Talk or type to the remote. Everyday asks are understood right here on the phone, free and with no account: pause,
@@ -3378,9 +3473,10 @@ const Ask = {
         <form class="field ak-field" id="akForm" autocomplete="off"><input id="akQ" type="text" enterkeyhint="send" autocapitalize="sentences" spellcheck="false" maxlength="300" placeholder="Say or type a command" aria-label="Ask Miko"><button class="iconbtn" type="button" id="akMic" aria-label="Speak"><svg class="i"><use href="#i-mic"/></svg></button><button class="iconbtn ak-go" type="submit" aria-label="Send"><svg class="i"><use href="#i-send"/></svg></button></form></div>
       <div class="ak-set" id="akSetBox" aria-hidden="true"><div class="ak-sheet">
         <div class="ak-h"><h2>Smarter answers</h2><button class="iconbtn" type="button" id="akSetX" aria-label="Close settings"><svg class="i"><use href="#i-x"/></svg></button></div>
-        <p class="ak-p">Miko already works without this. Add your own AI key and you can say anything in your own words, like “that space film where Matt Damon grows potatoes” or “something funny under two hours”.</p>
-        <div class="mseg ak-pv" role="radiogroup" aria-label="AI service" id="akPv"><button type="button" role="radio" data-p="">Off</button><button type="button" role="radio" data-p="anthropic">Claude</button><button type="button" role="radio" data-p="openai">OpenAI</button><button type="button" role="radio" data-p="other">Other</button></div>
+        <p class="ak-p">Miko already works without this. Add a free Groq or Gemini key (or any AI key you have) and you can say anything in your own words, like “that space film where Matt Damon grows potatoes” or “something funny under two hours”.</p>
+        <div class="mseg ak-pv" role="radiogroup" aria-label="AI service" id="akPv"><button type="button" role="radio" data-p="">Off</button><button type="button" role="radio" data-p="groq">Groq · free</button><button type="button" role="radio" data-p="gemini">Gemini · free</button><button type="button" role="radio" data-p="anthropic">Claude</button><button type="button" role="radio" data-p="openai">OpenAI</button><button type="button" role="radio" data-p="other">Other</button></div>
         <div id="akCfg">
+          <p class="ak-fine" id="akHow" hidden></p>
           <label class="ak-l" id="akBaseL"><span>Address</span><input id="akBase" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://example.com/v1"></label>
           <label class="ak-l"><span>Key</span><input id="akKey" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your key"></label>
           <label class="ak-l"><span>Model</span><input id="akModel" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
@@ -3390,6 +3486,8 @@ const Ask = {
         </div>
         <p class="ak-fine">Your key stays on this phone only. It goes straight to the service you picked and never to MKCinema. That service may bill you for what you use. MKCinema itself never charges for anything.</p>
         <div class="ak-row"><span class="grow">Read answers aloud</span><button class="sw" type="button" role="switch" id="akSpeak" aria-label="Read answers aloud"></button></div>
+        <div class="ak-row" id="akNatRow" hidden><span class="grow">Natural voice</span><button class="sw" type="button" role="switch" id="akNat" aria-label="Natural voice"></button></div>
+        <p class="ak-fine" id="akNatS" hidden></p>
         <p class="ak-fine" id="akNano"></p>
       </div></div></div>`);
     $('#akClose').onclick = () => this.close();
@@ -3400,8 +3498,10 @@ const Ask = {
     $('#akLog').addEventListener('error', (e) => { if (e.target.tagName === 'IMG') e.target.remove(); }, true);
     $$('#akPv button').forEach((b) => { b.onclick = () => { this.pick(b.dataset.p); buzz(6); }; });
     $('#akSave').onclick = () => this.save(); $('#akDel').onclick = () => { Store.set('ai', null); this.hist = []; $('#akKey').value = ''; this.pick(''); this.msg('Removed from this phone.'); this.mode(); };
-    $('#akSpeak').onclick = () => { const v = !Store.get('akSpeak', false); Store.set('akSpeak', v); this.paintSpeak(); buzz(6); if (!v) try { speechSynthesis.cancel(); } catch (e) { /* none */ } };
+    $('#akSpeak').onclick = () => { const v = !Store.get('akSpeak', false); Store.set('akSpeak', v); this.paintSpeak(); buzz(6); if (!v) { MikoSoul.Natural.stop(); try { speechSynthesis.cancel(); } catch (e) { /* none */ } } };
     if (!('speechSynthesis' in window)) $('#akSpeak').closest('.ak-row').hidden = true;
+    $('#akNat').onclick = async () => { const N = MikoSoul.Natural, v = !N.wanted(); N.unlock(); buzz(6); const go = N.set(v); this.paintNat(); await go; this.paintNat(); if (v && N.state === 'ready') MikoSoul.speak('Hi! This is my natural voice. Better, right?'); };
+    MikoSoul.Natural.listeners.add(() => this.paintNat());
     if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) $('#akMic').hidden = true;
     addEventListener('online', () => this.mode()); addEventListener('offline', () => this.mode());
     addEventListener('popstate', () => { if (this.on && !Info.on) { this.pushed = false; this.close(true); } });
@@ -3432,7 +3532,7 @@ const Ask = {
     const el = $('#akMode'); if (!el) return;
     const off = navigator.onLine === false, st = off ? 'Offline' : this.rec ? 'Listening…' : this.busy ? 'Thinking…' : 'Online';
     $('#akStat').textContent = st; $('#akView').classList.toggle('offline', off);
-    const c = this.cfg(); el.title = c ? `Smarter answers with ${c.p === 'anthropic' ? 'Claude' : c.p === 'openai' ? 'OpenAI' : 'your AI'}` : '';
+    const c = this.cfg(); el.title = c ? `Smarter answers with ${(this.PROV[c.p] || this.PROV.other).name}` : '';
   },
   hello() {
     const n = R.st && R.st.title && this.playing() ? `“${R.st.title}” is on. ` : '';
@@ -3474,6 +3574,7 @@ const Ask = {
   async ask(text) {
     text = String(text || '').trim().slice(0, 300); if (!text || this.busy) return;
     this.stopMic(); this.me(text); this.busy = true; this.mode(); const w = this.think(); $('#akView').classList.add('busy');
+    if (Store.get('akSpeak', false) && MikoSoul.Natural.on()) MikoSoul.Natural.unlock();
     try { await this.run(text); } catch (e) { this.say(e && e.message ? e.message : 'Something went wrong. Try again.'); }
     w.remove(); this.busy = false; $('#akView').classList.remove('busy'); this.chips(); this.mode();
   },
@@ -3753,6 +3854,8 @@ const Ask = {
   /* ---- bring your own AI ---- */
   PROV: {
     anthropic: { name: 'Claude', models: [['claude-opus-5-5', 'Opus 5.5', 'smartest'], ['claude-sonnet-5-5', 'Sonnet 5.5', 'balanced'], ['claude-haiku-5-5', 'Haiku 5.5', 'fastest']], def: 'claude-opus-5-5' },
+    groq: { ...MikoSoul.FREE.groq, free: true },
+    gemini: { ...MikoSoul.FREE.gemini, free: true },
     openai: { name: 'OpenAI', base: 'https://api.openai.com/v1', models: [], def: '' },
     other: { name: 'your AI service', models: [], def: '' },
   },
@@ -3766,8 +3869,17 @@ const Ask = {
     if (this.nano === undefined) this.nanoUp().then(() => this.paintNano()); else this.paintNano();
   },
   paintNano() { const el = $('#akNano'); if (el) el.textContent = this.nano ? 'This phone has its own built-in AI, so Miko also uses it, on the phone, for wording it doesn’t know.' : ''; },
-  paintSpeak() { const b = $('#akSpeak'); if (b) { const v = !!Store.get('akSpeak', false); b.classList.toggle('on', v); b.setAttribute('aria-checked', String(v)); } },
+  paintSpeak() { const b = $('#akSpeak'); if (b) { const v = !!Store.get('akSpeak', false); b.classList.toggle('on', v); b.setAttribute('aria-checked', String(v)); } this.paintNat(); },
+  paintNat() {
+    const N = MikoSoul.Natural, row = $('#akNatRow'), s = $('#akNatS'), b = $('#akNat'); if (!row) return;
+    const show = !!Store.get('akSpeak', false) && N.can(); row.hidden = !show; s.hidden = !show; if (!show) return;
+    const v = N.wanted(); b.classList.toggle('on', v); b.setAttribute('aria-checked', String(v));
+    s.textContent = !v ? 'A lifelike voice that runs on this phone, free. About 90 MB, downloaded once. English only for now.'
+      : N.state === 'loading' ? `Getting her voice ready… ${N.pct}%` : N.state === 'failed' ? 'Her natural voice couldn’t load here, so she’s using the phone’s voice.'
+        : N.slow >= 2 ? 'This phone is a little slow for her natural voice, so she’s using its own.' : N.state === 'ready' ? 'Her natural voice is on. It runs on this phone.' : 'Her natural voice loads the first time she speaks.';
+  },
   pick(p) {
+    if (this.sel != null && this.sel !== p) $('#akModel').value = '';
     this.sel = p;
     $$('#akPv button').forEach((b) => { b.classList.toggle('on', b.dataset.p === p); b.setAttribute('aria-checked', String(b.dataset.p === p)); });
     $('#akCfg').hidden = !p; if (!p) { if (this.cfg()) { Store.set('ai', null); this.hist = []; this.mode(); } return; }
@@ -3775,7 +3887,9 @@ const Ask = {
     $('#akBaseL').hidden = p !== 'other';
     $('#akModel').placeholder = P.def ? P.def : 'The model name from your service';
     $('#akMods').innerHTML = P.models.map(([id, nm, d]) => `<button type="button" class="ak-chip${($('#akModel').value || P.def) === id ? ' on' : ''}" data-model="${id}">${nm}<small>${d}</small></button>`).join('');
-    $('#akKey').placeholder = p === 'anthropic' ? 'sk-ant-…' : p === 'openai' ? 'sk-…' : 'Paste your key';
+    $('#akKey').placeholder = p === 'anthropic' ? 'sk-ant-…' : p === 'openai' ? 'sk-…' : p === 'groq' ? 'gsk_…' : p === 'gemini' ? 'AIza…' : 'Paste your key';
+    { const how = $('#akHow'); if (how) { how.hidden = !P.free; how.innerHTML = P.free ? `${this.E ? this.E(P.how) : P.how} <a href="${P.get}" target="_blank" rel="noopener noreferrer">Get a free key</a>` : ''; } }
+    if (p === 'gemini') $('#akModel').placeholder = 'Picked for you when you save';
   },
   msg(t, bad) { const el = $('#akMsg'); if (el) { el.textContent = t; el.classList.toggle('bad', !!bad); } },
   async save() {
@@ -3783,7 +3897,7 @@ const Ask = {
     const key = $('#akKey').value.trim(), model = $('#akModel').value.trim() || P.def;
     let base = p === 'other' ? $('#akBase').value.trim().replace(/\/+$/, '') : P.base || '';
     if (key.length < 10) { this.msg('Paste the whole key.', true); return; }
-    if (!model) { this.msg('Type the model name your service gave you.', true); return; }
+    if (!model && !P.free) { this.msg('Type the model name your service gave you.', true); return; }
     if (p === 'other') { try { if (new URL(base).protocol !== 'https:') throw 0; } catch (e) { this.msg('The address must start with https://', true); return; } }
     const c = { p, key, model, base }; this.msg('Checking the key…');
     try {
@@ -3791,8 +3905,10 @@ const Ask = {
         ? await fetch('https://api.anthropic.com/v1/models?limit=1', { headers: this.hdrA(c), signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined })
         : await fetch(`${base}/models`, { headers: { authorization: `Bearer ${key}` }, signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined });
       if (r.status === 401 || r.status === 403) { this.msg(`${P.name === 'your AI service' ? 'The service' : P.name} turned that key down. Check it and try again.`, true); return; }
+      if (r.ok && !c.model) { try { c.model = MikoSoul.bestModel(p, await r.json()); } catch (e) { /* no list */ } }
       this.msg(r.ok ? 'Saved. Ask Miko anything.' : 'Saved. The service didn’t confirm the key, so it’s checked on your first question.');
     } catch (e) { this.msg('Saved. I couldn’t reach the service to check the key, so it’s checked on your first question.'); }
+    if (!c.model) { this.msg('I couldn’t get the model list just now. Try Save again in a moment.', true); return; }
     Store.set('ai', c); this.hist = []; this.mode(); buzz(10);
   },
   hdrA(c) { return { 'content-type': 'application/json', 'x-api-key': c.key, 'anthropic-version': '2026-10-21', 'anthropic-dangerous-direct-browser-access': 'true' }; },
@@ -3892,7 +4008,7 @@ Rules:
       if (c.p === 'anthropic') said = await this.loopA(c, line); else said = await this.loopO(c, line);
     } catch (e) {
       const why = e && e.status === 401 ? `${P.name === 'your AI service' ? 'Your AI service' : P.name} turned the key down. Check it in Miko’s settings.`
-        : e && e.status === 429 ? `${P.name === 'your AI service' ? 'Your AI service' : P.name} says it’s busy or the account is out of credit. Try again in a moment.`
+        : e && e.status === 429 ? (P.free ? MikoSoul.line('free_limit', { p: P.name }) : `${P.name === 'your AI service' ? 'Your AI service' : P.name} says it’s busy or the account is out of credit. Try again in a moment.`)
           : e && e.status ? `${P.name === 'your AI service' ? 'Your AI service' : P.name} said no: ${String(e.message || e.status).slice(0, 160)}`
             : `I couldn’t reach ${P.name}. Check the phone’s connection.`;
       this.say(why); return;
@@ -3900,9 +4016,11 @@ Rules:
     if (said || this.pending) this.say(said || 'Here you go.', { html: this.pending });
     if (this.after) { const a = this.after; this.after = null; setTimeout(() => this.toInfo(a), said ? 700 : 0); }
   },
-  async post(url, headers, body) {
+  async post(url, headers, body, again) {
     const r = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body), signal: AbortSignal.timeout ? AbortSignal.timeout(60000) : undefined });
     const j = await r.json().catch(() => null);
+    // a free plan's per-minute limit: wait the few seconds it asks for and try once more, instead of failing
+    if (r.status === 429 && !again) { const w = Number(r.headers.get('retry-after')) || 0; if (w > 0 && w <= 20) { await new Promise((ok) => setTimeout(ok, w * 1000 + 300)); return this.post(url, headers, body, true); } }
     if (!r.ok) { const e = new Error((j && j.error && (j.error.message || j.error.type)) || `error ${r.status}`); e.status = r.status; throw e; }
     return j;
   },
@@ -3941,10 +4059,12 @@ Rules:
     this.hist = this.trim(h); return out;
   },
   async loopO(c, line) {
-    const tools = this.TOOLS.map(([name, description, p, req]) => ({ type: 'function', function: { name, description, parameters: this.schema(p, req) } }));
+    // Gemini's OpenAI-style door turns down additionalProperties; a free plan gets fewer rounds and a shorter memory
+    const free = !!(this.PROV[c.p] && this.PROV[c.p].free), gem = c.p === 'gemini', rounds = free ? 4 : 6, cap = free ? 12 : 24;
+    const tools = this.TOOLS.map(([name, description, p, req]) => { const sc = this.schema(p, req); if (gem) delete sc.additionalProperties; return { type: 'function', function: { name, description, parameters: sc } }; });
     const h = this.hist.slice(); h.push({ role: 'user', content: line });
     let out = '';
-    for (let step = 0; step < 6; step++) {
+    for (let step = 0; step < rounds; step++) {
       const j = await this.post(`${c.base || this.PROV.openai.base}/chat/completions`, { 'content-type': 'application/json', authorization: `Bearer ${c.key}` }, { model: c.model, messages: [{ role: 'system', content: (this.SYS + '\n\n' + MikoSoul.PERSONA) }, ...h], tools, tool_choice: 'auto' });
       const ch = j && j.choices && j.choices[0], msg = ch && ch.message; if (!msg) break;
       const keep = { role: 'assistant', content: msg.content || '' }; if (msg.tool_calls && msg.tool_calls.length) keep.tool_calls = msg.tool_calls;
@@ -3953,7 +4073,7 @@ Rules:
       for (const tc of keep.tool_calls) { let a = {}; try { a = JSON.parse((tc.function && tc.function.arguments) || '{}'); } catch (e) { /* bad arguments */ } let r; try { r = await this.tool(tc.function && tc.function.name, a); } catch (e) { r = { error: 'failed' }; } h.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(r) }); }
     }
     // OpenAI-style history: drop from the front until it starts at a plain question
-    while (h.length > 24) { h.splice(0, 1); while (h.length && !(h[0].role === 'user')) h.splice(0, 1); }
+    while (h.length > cap) { h.splice(0, 1); while (h.length && !(h[0].role === 'user')) h.splice(0, 1); }
     this.hist = h; return out;
   },
 

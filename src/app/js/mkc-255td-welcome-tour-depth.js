@@ -116,7 +116,7 @@ const TourDeep = {
         where: 'Phone remote › Details' },
       { id: 'ask', ch: 'together', t: 'Meet Miko, your assistant', art: 'ask', when: () => has('RmInfo'),
         lede: 'Tap Miko in the bottom-right corner of any screen, or on the phone remote, then say or type what you want: “play Dune”, “who’s in this?”, “films with Zendaya”, “pause”, “subtitles off”. Free, with no account.',
-        pts: [['mic', 'Talk or type', 'Everyday commands are understood right on your phone, with no account.'], ['play', 'Play anything', 'Ask for a film, an episode, a trailer or anyone’s films, and it opens on the TV.'], ['key', 'Your own AI, if you like', 'Add your own AI key in Miko’s settings to say anything in your own words. It stays on your phone.']],
+        pts: [['mic', 'Talk or type', 'Everyday commands are understood right on your phone, with no account.'], ['play', 'Play anything', 'Ask for a film, an episode, a trailer or anyone’s films, and it opens on the TV.'], ['key', 'Free AI, if you like', 'Ask for “something like…” and she picks fitting titles. Add a free Groq or Gemini key in her settings to talk in your own words, and turn on her natural voice.']],
         logos: [['claude', 'Claude'], ['openai', 'OpenAI']],
         where: 'The bottom-right corner, or Phone remote › Miko' },
       { id: 'couch', ch: 'together', t: 'Couch match and Film night', art: 'couch',

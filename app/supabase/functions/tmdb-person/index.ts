@@ -8,10 +8,13 @@
 // without the title printed on it, plus a logo, for the Home banner and title pages), watch (where a title streams in a
 // region, for Where to watch), stills (a season's episode pictures), providers (the region's streaming services, for the Your apps picker), and (v4) titles
 // (a page of popular, top rated or searched films or shows, with IMDb ids) and title (a film's or show's page with its
-// episodes), which MKCinema Meta uses if Cinemeta stops answering. Answers are trimmed to
+// episodes), which MKCinema Meta uses if Cinemeta stops answering, and (v6) recs (what people who loved a title watch
+// next) and discover (films or shows by genre, theme, era, length, language and person), which Your Picks and Miko use
+// to suggest real, relevant titles. Only ids, numbers and fixed sort names are accepted, never free text into a TMDB path,
+// and no taste, history or account is ever sent here: just the one ask. Answers are trimmed to
 // the fields the person page draws. Calls must carry the project's publishable key in `apikey` and come from the live
 // sites (the same rule as debrid-relay). Nothing is stored and nothing is logged: this file has no console calls on purpose.
-const VERSION = 5;
+const VERSION = 6;
 const ORIGINS = [/^https:\/\/(mkcinema|mkctv)\.pages\.dev$/, /^https:\/\/((app|tv)\.)?mkcinema\.app$/];
 const RATE = { limit: 90, windowMs: 60_000 }; // per client IP, per isolate (best effort)
 const API = 'https://api.themoviedb.org/3';
@@ -78,6 +81,22 @@ function pickArt(hit: any, im: any) {
   const bg = (main || clean[0] || null);
   return { bg: str(bg && bg.file_path, 80), titled: bg ? '' : str(titled && titled.file_path, 80), logo: str(logo && logo.file_path, 80) };
 }
+
+// a film's or show's row for Your Picks and Miko: IMDb id (so every addon finds it), names, year, art, genres, score
+async function rowsWithIds(rows: any[], fallbackKind: string, n: number) {
+  const list = rows.filter((x: any) => x && !x.adult && num(x.id)).slice(0, n);
+  const kinds = list.map((x: any) => (x.media_type === 'tv' ? 'tv' : x.media_type === 'movie' ? 'movie' : fallbackKind));
+  const ids = await Promise.all(list.map((x: any, i: number) => tmdb(`${kinds[i]}/${num(x.id)}/external_ids`).catch(() => null)));
+  return list.map((x: any, i: number) => ({
+    id: num(x.id), kind: kinds[i], imdb_id: str(ids[i] && ids[i].imdb_id, 12), title: str(x.title, 200), name: str(x.name, 200), overview: str(x.overview, 600),
+    release_date: str(x.release_date, 10), first_air_date: str(x.first_air_date, 10), poster_path: str(x.poster_path, 80), backdrop_path: str(x.backdrop_path, 80),
+    genre_ids: Array.isArray(x.genre_ids) ? x.genre_ids.filter((g: unknown) => typeof g === 'number').slice(0, 6) : [],
+    vote_average: Math.round(num(x.vote_average) * 10) / 10, vote_count: num(x.vote_count), original_language: str(x.original_language, 5),
+  })).filter((x: any) => /^tt\d{5,10}$/.test(x.imdb_id));
+}
+// keywords that say nothing about the story
+const GENERIC_KW = new Set([818, 9663, 9675, 15285, 9714, 245230, 9717, 13141, 41645, 246466, 156866, 10181, 179430, 179431, 187056, 314698, 381726, 12999, 281237, 263548, 210024, 6054, 9673]);
+const idList = (v: string | null, max: number, sep = ',') => String(v || '').split(sep).map((x) => x.trim()).filter((x) => /^\d{1,9}$/.test(x)).slice(0, max);
 
 async function answer(a: string, p: URLSearchParams): Promise<[number, unknown, number]> {
   const lang = LANG.test(p.get('lang') || '') ? p.get('lang')! : 'en-US';
@@ -224,6 +243,73 @@ async function answer(a: string, p: URLSearchParams): Promise<[number, unknown, 
       videos: { results: ((d.videos && d.videos.results) || []).filter((v: any) => v && v.site === 'YouTube' && /^(Trailer|Teaser)$/.test(v.type)).slice(0, 6).map((v: any) => ({ key: str(v.key, 20), site: 'YouTube', type: str(v.type, 20), name: str(v.name, 120) })) },
       eps,
     } }, 86400];
+  }
+  if (a === 'recs') {
+    const tt = p.get('tt') || '', n = Math.min(20, Math.max(4, Math.floor(Number(p.get('n'))) || 16));
+    if (!/^tt\d{5,10}$/.test(tt)) return [400, { error: 'bad title id' }, 0];
+    const f = await tmdb(`find/${tt}`, { external_source: 'imdb_id' });
+    const hit = f && ((f.movie_results || [])[0] ? { k: 'movie', x: f.movie_results[0] } : (f.tv_results || [])[0] ? { k: 'tv', x: f.tv_results[0] } : null);
+    if (!hit) return [200, { anchor: null, results: [] }, 86400];
+    const tid = num(hit.x.id);
+    // what fans of a title watch next, ranked for relevance: TMDB's "viewers also liked" (two pages) plus the best-known
+    // titles sharing its story keywords, each scored by shared keywords, shared genres, quality and how many people
+    // rated it. (TMDB's own order alone puts mediocre titles first; its "similar" list is mostly noise.)
+    const kwOf = async (k: string, id: number) => { const j = await tmdb(`${k}/${id}/keywords`).catch(() => null); return ((j && (j.keywords || j.results)) || []).map((x: any) => num(x.id)).filter((x: number) => x && !GENERIC_KW.has(x)); };
+    const [r1, r2, akw] = await Promise.all([tmdb(`${hit.k}/${tid}/recommendations`, { language: lang, page: '1' }).catch(() => null), tmdb(`${hit.k}/${tid}/recommendations`, { language: lang, page: '2' }).catch(() => null), kwOf(hit.k, tid)]);
+    const pool = new Map<number, any>();
+    [...((r1 && r1.results) || []), ...((r2 && r2.results) || [])].forEach((x: any, i: number) => { if (x && num(x.vote_count) >= 80 && !pool.has(num(x.id))) pool.set(num(x.id), { x, pos: i }); });
+    if (akw.length) {
+      const q: Record<string, string> = { language: lang, include_adult: 'false', page: '1', with_keywords: akw.slice(0, 12).join('|'), sort_by: 'vote_count.desc', 'vote_count.gte': hit.k === 'tv' ? '150' : '400' };
+      const g0 = num((hit.x.genre_ids || [])[0]); if (g0) q.with_genres = String(g0);
+      const d = await tmdb(`discover/${hit.k}`, q).catch(() => null);
+      ((d && d.results) || []).forEach((x: any) => { if (x && num(x.id) !== tid && !pool.has(num(x.id))) pool.set(num(x.id), { x, pos: 60 }); });
+    }
+    pool.delete(tid);
+    const cands = [...pool.values()].slice(0, 48), aset = new Set(akw), ag = new Set((hit.x.genre_ids || []).map(num));
+    const kws = await Promise.all(cands.map((c) => kwOf(c.x.media_type === 'tv' || (!c.x.media_type && hit.k === 'tv') ? 'tv' : c.x.media_type === 'movie' ? 'movie' : hit.k, num(c.x.id))));
+    const scored = cands.map((c, i) => {
+      const shared = kws[i].filter((k: number) => aset.has(k)).length, gs = (c.x.genre_ids || []).filter((g: number) => ag.has(num(g))).length;
+      const s = Math.min(4, shared) * 2.6 + gs * 1.1 + (num(c.x.vote_average) - 6.5) * 1.4 + Math.log10(num(c.x.vote_count) + 1) * 0.6 + (c.pos < 60 ? (1 - c.pos / 40) * 1.5 : 0) + ((c.x.media_type || hit.k) === hit.k ? 0 : -2);
+      return { x: c.x, s };
+    }).sort((a, b) => b.s - a.s);
+    const rows = scored.map((y) => y.x);
+    const results = await rowsWithIds(rows.map((x: any) => ({ ...x, media_type: x.media_type || hit.k })), hit.k, n);
+    return [200, { anchor: { kind: hit.k, id: tid, name: str(hit.x.title || hit.x.name, 200), genre_ids: (hit.x.genre_ids || []).slice(0, 6) }, results }, 86400];
+  }
+  if (a === 'discover') {
+    const n = Math.min(20, Math.max(4, Math.floor(Number(p.get('n'))) || 16)), today = new Date().toISOString().slice(0, 10);
+    const q: Record<string, string> = { language: lang, include_adult: 'false', page: '1' };
+    const g = idList(p.get('g'), 4), ng = idList(p.get('ng'), 6), kw = idList(p.get('kw'), 4, '|'), yf = p.get('yf') || '', yt = p.get('yt') || '';
+    if (g.length) q.with_genres = g.join(',');
+    // talk, news, soap, reality and kids' TV crowd out real shows unless asked for
+    const ngAll = kind === 'tv' ? [...new Set([...ng, ...['10767', '10763', '10766', '10764', '10762'].filter((x) => !g.includes(x))])] : ng;
+    if (ngAll.length) q.without_genres = ngAll.join(',');
+    if (kw.length) q.with_keywords = kw.join('|');
+    const dk = kind === 'tv' ? 'first_air_date' : 'primary_release_date';
+    if (/^(19|20)\d\d$/.test(yf)) q[`${dk}.gte`] = `${yf}-01-01`;
+    if (/^(19|20)\d\d$/.test(yt)) q[`${dk}.lte`] = `${yt}-12-31`;
+    const rt = Math.floor(Number(p.get('rt'))); if (rt >= 20 && rt <= 400) q['with_runtime.lte'] = String(rt);
+    const ol = p.get('ol') || ''; if (/^[a-z]{2}$/.test(ol)) q.with_original_language = ol;
+    if (p.get('fam') === '1' && kind === 'movie') { q.certification_country = 'US'; q['certification.lte'] = 'PG'; }
+    const pp = (p.get('pp') || '').trim();
+    if (pp) {
+      if (pp.length > 80) return [400, { error: 'bad name' }, 0];
+      if (kind === 'tv') return [200, { results: [] }, 21600]; // TMDB can't filter shows by person
+      const sp = await tmdb('search/person', { query: pp, include_adult: 'false' });
+      const who = ((sp && sp.results) || []).filter((x: any) => !x.adult).sort((x: any, y: any) => num(y.popularity) - num(x.popularity))[0];
+      if (!who) return [200, { results: [], person: null }, 3600];
+      q.with_people = String(num(who.id));
+    }
+    const sort = p.get('sort') || 'pop';
+    // a broad ask (no theme, person, language or two genres) needs a higher vote floor, or brand-new and niche titles top it
+    const broad = !q.with_keywords && !q.with_people && !q.with_original_language && g.length < 2;
+    if (sort === 'top') { q.sort_by = 'vote_average.desc'; q['vote_count.gte'] = kind === 'tv' ? (broad ? '700' : '200') : (broad ? '2000' : '600'); }
+    else if (sort === 'gem') { if (!g.includes('16') && ol !== 'ja') q.without_genres = [...new Set([...(q.without_genres ? q.without_genres.split(',') : []), '16'])].join(','); q.sort_by = 'vote_average.desc'; q['vote_count.gte'] = kind === 'tv' ? '120' : '300'; q['vote_count.lte'] = kind === 'tv' ? '1500' : '4000'; q['vote_average.gte'] = '7.0'; }
+    else if (sort === 'new') { q.sort_by = `${dk}.desc`; q[`${dk}.lte`] = today; q['vote_count.gte'] = kind === 'tv' ? '60' : '150'; if (!q[`${dk}.gte`]) q[`${dk}.gte`] = `${Number(today.slice(0, 4)) - 3}-01-01`; }
+    else { q.sort_by = 'popularity.desc'; q['vote_count.gte'] = q.with_people ? '20' : '150'; }
+    const j = await tmdb(`discover/${kind}`, q);
+    const results = await rowsWithIds((j && j.results) || [], kind, n);
+    return [200, { results }, 6 * 3600];
   }
   return [400, { error: 'unknown lookup' }, 0];
 }

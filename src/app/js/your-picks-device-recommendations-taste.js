@@ -76,37 +76,167 @@ const Recs = {
     Documentary: /\b(documentar|docu|real story|true story)/, Fantasy: /\b(fantasy|magic|dragon|wizard|myth)/, Drama: /\b(drama|emotional|moving|tearjerker)/,
     History: /\b(histor|period piece|ancient|medieval)/, War: /\b(war|military|soldier|ww(1|2|i|ii))/, Adventure: /\b(adventure|quest|journey|epic)/,
   },
-  parse(q) {
-    const s = ` ${q.toLowerCase()} `, genres = [];
-    for (const [g, re] of Object.entries(this.WORDS)) if (re.test(s)) genres.push(g);
-    const type = /\b(show|series|tv|episodes?|season)/.test(s) ? 'series' : /\b(movie|film)/.test(s) ? 'movie' : null;
-    const dec = s.match(/\b(19[2-9]0|20[0-2]0)s\b|\b([2-9]0)s\b/); let from = null, to = null;
-    if (dec) { const d = dec[1] ? Number(dec[1]) : 1900 + Number(dec[2]); from = d; to = d + 9; }
-    if (/\b(new|recent|latest|this year)\b/.test(s)) { from = new Date().getFullYear() - 3; to = null; }
-    if (/\b(classic|old)\b/.test(s)) { to = 1995; }
-    const like = (q.match(/\blike\s+(.+?)(?:\s+but\b|[,.!?]|$)/i) || [])[1];
-    return { genres, type, from, to, like: like && like.trim(), best: /\b(best|top|highly rated|acclaimed|masterpiece)/.test(s) };
+  /* 2.65: Your Picks knows films, not just genres. Asks are understood here on the device (themes, mood, era, length,
+     language, people, "like X but funnier"). The answer then comes from real film knowledge: TMDB, asked through
+     MKCinema's own tmdb-person function (the one cast pages use), which knows what people who loved a title watch
+     next and can find films by theme, era, length, language and person. Only the one ask goes out. Your taste,
+     history and watchlist never leave the device: they re-rank the answer here. With no answer (offline, a self-hosted
+     server), the old way runs: your addons' catalogs, matched by genre. */
+  KW: [[/\bheists?\b|\brobbery\b/, 10051, 'heists'], [/time ?travel/, 4379, 'time travel'], [/true stor(y|ies)|based on (a )?(true|real)|real events/, 9672, 'true stories'], [/\bzombies?\b/, 12377, 'zombies'],
+    [/serial killer/, 10714, 'serial killers'], [/dystop/, 4565, 'dystopias'], [/super ?hero/, 9715, 'superheroes'], [/vampire/, 3133, 'vampires'], [/coming of age|growing up/, 10683, 'coming of age'],
+    [/road trip/, 7312, 'road trips'], [/\bsurviv(al|e|ing)\b/, 10349, 'survival'], [/revenge|vengeance/, 9748, 'revenge'], [/court ?room|lawyers?\b/, 33519, 'courtrooms'], [/high school/, 6270, 'high school'],
+    [/\b(a\.?i\.?|artificial intelligence|robots?)\b/, 310, 'AI'], [/post.?apocalyp|end of the world|apocalypse/, 4458, 'the apocalypse'], [/\baliens?\b|first contact|extraterrestrial/, 9951, 'aliens'],
+    [/found footage/, 163053, 'found footage'], [/christmas|xmas/, 207317, 'Christmas'], [/\bspy\b|\bspies\b|espionage/, 470, 'spies'], [/psychological/, 12565, 'psychological'], [/dark comedy|black comedy/, 10123, 'dark comedy'],
+    [/slasher/, 12339, 'slashers'], [/haunted/, 3358, 'hauntings'], [/conspirac/, 10410, 'conspiracies'], [/cyberpunk/, 12190, 'cyberpunk'], [/martial arts|kung fu|karate/, 779, 'martial arts'],
+    [/\bsports?\b|football|basketball|boxing|baseball|soccer/, 6075, 'sport'], [/biopic|biograph/, 5565, 'biopics'], [/\bmusicals?\b/, 4344, 'musicals'], [/outer space|\bspace\b|astronaut|spaceship/, 9882, 'space']],
+  LANGS: { korean: 'ko', 'k-drama': 'ko', kdrama: 'ko', japanese: 'ja', french: 'fr', spanish: 'es', mexican: 'es', italian: 'it', german: 'de', hindi: 'hi', bollywood: 'hi', indian: 'hi', chinese: 'zh', cantonese: 'cn', danish: 'da', swedish: 'sv', norwegian: 'no', turkish: 'tr', thai: 'th', portuguese: 'pt', brazilian: 'pt', russian: 'ru', polish: 'pl', irish: 'en', nigerian: 'en', nollywood: 'en' },
+  LANG_NAME: { ko: 'Korean', ja: 'Japanese', fr: 'French', es: 'Spanish', it: 'Italian', de: 'German', hi: 'Hindi', zh: 'Chinese', cn: 'Cantonese', da: 'Danish', sv: 'Swedish', no: 'Norwegian', tr: 'Turkish', th: 'Thai', pt: 'Portuguese', ru: 'Russian', pl: 'Polish' },
+  TG: {
+    movie: { Action: 28, Adventure: 12, Animation: 16, Comedy: 35, Crime: 80, Documentary: 99, Drama: 18, Family: 10751, Fantasy: 14, History: 36, Horror: 27, Mystery: 9648, Romance: 10749, 'Sci-Fi': 878, Thriller: 53, War: 10752 },
+    tv: { Action: 10759, Adventure: 10759, Animation: 16, Comedy: 35, Crime: 80, Documentary: 99, Drama: 18, Family: 10751, Fantasy: 10765, Mystery: 9648, 'Sci-Fi': 10765, War: 10768 },
   },
-  async ask(q) {
-    const p = this.parse(q); let anchor = null;
-    if (p.like) {
-      const res = await engine.search(p.like); const hits = res.flatMap((r) => r.metas);
-      anchor = hits.find((m) => m.name && m.name.toLowerCase() === p.like.toLowerCase()) || hits[0] || null;
-      if (anchor) genresOf(anchor).forEach((g) => { if (!p.genres.includes(g)) p.genres.push(g); });
+  GN: { 28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy', 80: 'Crime', 99: 'Documentary', 18: 'Drama', 10751: 'Family', 14: 'Fantasy', 36: 'History', 27: 'Horror', 10402: 'Music', 9648: 'Mystery', 10749: 'Romance', 878: 'Sci-Fi', 53: 'Thriller', 10752: 'War', 37: 'Western', 10759: 'Action', 10765: 'Sci-Fi', 10768: 'War', 10762: 'Kids', 10764: 'Reality', 10767: 'Talk', 10766: 'Soap', 10763: 'News' },
+  parse(q) {
+    let s = ` ${String(q || '').toLowerCase().replace(/[’‘]/g, "'")} `;
+    const p = { genres: [], not: [], kw: [], type: null, from: null, to: null, like: '', best: false, sort: '', rt: 0, lang: '', person: '', fam: false };
+    const like = (String(q || '').match(/\b(?:like|similar to|in the vein of|as good as)\s+(.+?)(?:\s+but\b|\s+only\b|[,.!?]|$)/i) || [])[1];
+    if (like) { p.like = like.trim().replace(/^(the (film|movie|show|series) )/i, ''); s = s.replace(like.toLowerCase(), ' '); }
+    // people: "with Tom Hanks", "starring Zendaya", "directed by Greta Gerwig"
+    const who = s.match(/\b(?:directed by|by director|from director|starring|featuring|with actor|with actress|with)\s+([a-z][a-z.'-]+(?:\s+[a-z][a-z.'-]+){0,3}?)(?=\s+(?:in it|from|set|that|which|and|but|under|over|before|after|in the)\b|\s*$)/);
+    if (who && !/^(my|the|a|an|friends?|family|kids?|children|wife|husband|girlfriend|boyfriend|partner|mum|mom|dad|parents|subtitles?|no|some|lots|a twist|twists)\b/.test(who[1])) { p.person = who[1].replace(/\b\w/g, (c) => c.toUpperCase()); s = s.replace(who[0], ' '); }
+    // negatives first: "nothing scary", "no horror", "not too sad"
+    s = s.replace(/\b(?:no|not|nothing|without|isn't|not too|nothing too)\s+(?:too\s+)?(scary|horror|gore|gory|violent|sad|romance|romantic|animated|cartoons?|anime)\b/g, (m0, w) => { p.not.push(/gor|violent/.test(w) ? 'Gore' : /scar|horror/.test(w) ? 'Horror' : /sad/.test(w) ? 'Drama' : /roman/.test(w) ? 'Romance' : /anim|cartoon|anime/.test(w) ? 'Animation' : 'Horror'); return ' '; });
+    // themes are matched before genres, so "heist" asks for heists, not every action film
+    for (const k of this.KW) if (k[0].test(s)) { p.kw.push(k); s = s.replace(k[0], ' '); }
+    p.kw = p.kw.slice(0, 2);
+    s = s.replace(/funnier/g, 'funny').replace(/scarier/g, 'scary').replace(/sadder/g, 'emotional').replace(/darker/g, 'thriller').replace(/lighter|happier/g, 'feel-good');
+    for (const [g, re] of Object.entries(this.WORDS)) if (re.test(s) && !p.not.includes(g)) p.genres.push(g);
+    if (/\b(rom-?com)\b/.test(s)) ['Romance', 'Comedy'].forEach((g) => { if (!p.genres.includes(g)) p.genres.push(g); });
+    p.type = /\b(show|series|tv|episodes?|seasons?|binge|k-?drama|anime series)\b/.test(s) ? 'series' : /\b(movie|film|flick)s?\b/.test(s) ? 'movie' : null;
+    const dec = s.match(/\b(19[2-9]0|20[0-2]0)s\b|\b([2-9]0)s\b/);
+    if (dec) { const d = dec[1] ? Number(dec[1]) : 1900 + Number(dec[2]); p.from = d; p.to = d + 9; }
+    const yr = s.match(/\b(?:from|in|since|after)\s+((?:19|20)\d\d)\b/); if (yr && !dec) { p.from = Number(yr[1]); if (/\bin\s/.test(yr[0])) p.to = p.from; }
+    if (/\b(new|recent|latest|this year|just came out|newest|fresh)\b/.test(s)) { p.sort = 'new'; p.from = p.from || new Date().getFullYear() - 2; }
+    if (/\b(classic|old|oldie|golden age)\b/.test(s)) { p.to = p.to || 1995; p.best = true; }
+    if (/\b(hidden gems?|underrated|under the radar|lesser.known|nobody('s| has) (seen|heard)|obscure)\b/.test(s)) p.sort = 'gem';
+    else if (/\b(best|top|highly rated|acclaimed|masterpiece|greatest|award|oscar)\b/.test(s)) { p.best = true; p.sort = p.sort || 'top'; }
+    else if (/\b(popular|trending|everyone('s| is) watching|hyped|blockbuster)\b/.test(s)) p.sort = 'pop';
+    let m;
+    if ((m = s.match(/\b(?:under|less than|shorter than|max|no more than)\s+(\d{2,3})\s*(?:min|mins|minutes)\b/))) p.rt = Number(m[1]);
+    else if ((m = s.match(/\b(?:under|less than|shorter than|max|no more than)\s+(an?|one|1|two|2|three|3|1\.5|one and a half)\s*hours?\b/))) p.rt = ({ a: 60, an: 60, one: 60, 1: 60, two: 120, 2: 120, three: 180, 3: 180, '1.5': 90, 'one and a half': 90 })[m[1]] || 120;
+    else if (/\b(short|quick|not too long|not long)\b/.test(s)) p.rt = 105;
+    for (const [w, c] of Object.entries(this.LANGS)) if (new RegExp(`\\b${w}\\b`).test(s)) { p.lang = c; break; }
+    if (/\banime\b/.test(s)) { p.lang = 'ja'; if (!p.genres.includes('Animation')) p.genres.unshift('Animation'); }
+    if (/\b(kids?|children|family|for the whole family|little ones|toddler)\b/.test(s)) p.fam = true;
+    return p;
+  },
+  /* a short plain description of what was understood, for Miko and the Your Picks header */
+  describe(p, anchor) {
+    if (!p || (p.open && !anchor)) return '';
+    const adj = { Comedy: 'funny', Horror: 'scary', Romance: 'romantic', Thriller: 'tense', Mystery: 'mystery', Action: 'action', 'Sci-Fi': 'sci-fi', Fantasy: 'fantasy', Drama: 'drama', Crime: 'crime', Animation: 'animated', Family: 'family', Documentary: 'documentary', War: 'war', History: 'historical', Adventure: 'adventure' };
+    const gs = p.genres.slice(0, 2).map((g) => adj[g] || g.toLowerCase());
+    const noun = p.type === 'series' ? 'shows' : p.type === 'movie' ? 'films' : 'films and shows';
+    const bits = [p.sort === 'gem' ? 'hidden-gem' : p.sort === 'new' ? 'new' : p.best ? 'top-rated' : '', p.lang ? this.LANG_NAME[p.lang] || '' : '', ...gs, noun].filter(Boolean).join(' ');
+    const tail = [p.kw.length ? `about ${p.kw.map((k) => k[2]).join(' and ')}` : '', p.person ? `with ${p.person}` : '', p.rt ? `under ${p.rt % 60 ? `${p.rt} minutes` : `${p.rt / 60} hour${p.rt > 60 ? 's' : ''}`}` : '',
+      p.from && p.to && p.to - p.from === 9 ? `from the ${p.from}s` : p.from && p.to === p.from ? `from ${p.from}` : p.from && !p.to && p.sort !== 'new' ? `since ${p.from}` : !p.from && p.to ? `before ${p.to}` : '', p.not.length ? `nothing ${p.not.includes('Horror') ? 'scary' : p.not.includes('Gore') ? 'gory' : p.not[0].toLowerCase()}` : ''].filter(Boolean);
+    return `${anchor ? `like ${anchor.name}: ` : ''}${bits}${tail.length ? ` ${tail.join(', ')}` : ''}`.trim();
+  },
+  async relay(a, params) { try { return typeof MetaBackup !== 'undefined' && MetaBackup.relay ? await MetaBackup.relay(a, params) : null; } catch (e) { return null; } },
+  fromTmdb(x) {
+    const ser = x.kind === 'tv', img = 'https://image.tmdb.org/t/p/';
+    return { id: x.imdb_id, type: ser ? 'series' : 'movie', name: x.title || x.name || '', poster: x.poster_path ? `${img}w342${x.poster_path}` : '', background: x.backdrop_path ? `${img}w1280${x.backdrop_path}` : '',
+      releaseInfo: String(x.release_date || x.first_air_date || '').slice(0, 4), year: String(x.release_date || x.first_air_date || '').slice(0, 4), description: x.overview || '',
+      genres: [...new Set((x.genre_ids || []).map((g) => this.GN[g]).filter(Boolean))], _score: Number(x.vote_average) || 0, _votes: Number(x.vote_count) || 0 };
+  },
+  async smart(p, anchor, types) {
+    if (anchor && /^tt\d{5,10}/.test(String(anchor.id || ''))) {
+      const j = await this.relay('recs', { tt: String(anchor.id).split(':')[0], n: '20' });
+      let list = ((j && j.results) || []).map((x) => this.fromTmdb(x)).filter((m) => m.id);
+      // "like Dune but scarier": when few of its fans' picks are scary, add the best scary films in Dune's own genre
+      if (list.length >= 4 && p.genres.length) {
+        const fits = (m) => p.genres.some((g) => m.genres.includes(g)), have = list.filter(fits);
+        const k = j.anchor && j.anchor.kind === 'tv' ? 'tv' : 'movie', G = this.TG[k], agl = ((j.anchor && j.anchor.genre_ids) || []).map((x) => this.GN[x]).filter((x) => x && !p.genres.includes(x)), ag = agl.find((x) => x !== 'Drama') || agl[0]; // Drama says little
+        if (have.length < 6) {
+          const g = [...new Set([p.genres[0], ag].map((x) => G[x]).filter(Boolean))];
+          const q = { kind: k, n: '12', ...(g.length ? { g: g.join(',') } : {}), ...(p.fam ? { fam: '1' } : {}) };
+          // the best-loved and what's popular now, taken in turns, so it's neither all old nor all new
+          const [d1, d2] = await Promise.all([this.relay('discover', { ...q, sort: 'top' }), this.relay('discover', { ...q, sort: 'pop' })]);
+          const ids = new Set(list.map((m) => m.id)), a1 = ((d1 && d1.results) || []), a2 = ((d2 && d2.results) || []), mix = [];
+          for (let i = 0; i < 12; i++) [a1[i], a2[i]].forEach((x) => { if (x) mix.push(x); });
+          const extra = mix.map((x) => this.fromTmdb(x)).filter((m) => m.id && !ids.has(m.id) && m.id !== String(anchor.id).split(':')[0] && m._score >= 6.4 && (ids.add(m.id), true));
+          list = [...have, ...extra, ...list.filter((m) => !fits(m))];
+        }
+      }
+      if (list.length >= 4) return { list, mode: 'like' };
     }
-    const w = {}; p.genres.forEach((g, i) => { w[g] = 4 - Math.min(i, 2); });
-    if (!p.genres.length) Object.assign(w, this.profile());
-    const types = p.type ? [p.type] : anchor ? [anchor.type] : ['movie', 'series'];
+    const kinds = (types || ['movie', 'series']).map((t) => (t === 'series' ? 'tv' : 'movie'));
+    const one = (k, loose) => {
+      const G = this.TG[k], q = { kind: k, n: kinds.length > 1 ? '12' : '20', sort: p.sort || (p.best ? 'top' : 'pop') };
+      // a title TMDB doesn't know by IMDb id (some anime) still lends its genres
+      const want = p.genres.length || !anchor ? p.genres : genresOf(anchor);
+      const g = [...new Set(want.map((x) => G[x]).filter(Boolean))].slice(0, loose ? 1 : 2); if (g.length) q.g = g.join(',');
+      const ng = [...new Set(p.not.map((x) => G[x]).filter(Boolean))]; if (ng.length) q.ng = ng.join(',');
+      if (p.kw.length && !loose) q.kw = p.kw.map((x) => x[1]).join('|');
+      if (p.from) q.yf = String(p.from); if (p.to) q.yt = String(p.to); if (p.rt) q.rt = String(p.rt);
+      if (p.lang) q.ol = p.lang; if (p.fam) q.fam = '1'; if (p.person) q.pp = p.person;
+      return this.relay('discover', q).then((j) => ((j && j.results) || []).map((x) => this.fromTmdb(x)).filter((m) => m.id));
+    };
+    let lists = await Promise.all(kinds.map((k) => one(k, false)));
+    // too narrow (two genres and a theme): ask again a little looser before giving up
+    if (lists.reduce((a, l) => a + l.length, 0) < 4 && (p.kw.length || p.genres.length > 1)) lists = await Promise.all(kinds.map((k) => one(k, true)));
+    const out = []; for (let i = 0; i < 20; i++) lists.forEach((l) => { if (l[i]) out.push(l[i]); });
+    return out.length ? { list: out, mode: 'discover' } : null;
+  },
+  memo: null,
+  async ask(q, over) {
+    const key = JSON.stringify([q, over || null]);
+    if (this.memo && this.memo.key === key && Date.now() - this.memo.at < 180000) return this.memo.res;
+    const p = { ...this.parse(q), ...(over || {}) }; let anchor = null;
+    if (p.likeId) anchor = { id: p.likeId, name: p.likeName || p.like || '', type: p.likeType || 'movie', genres: (S.metas.get(p.likeId) && genresOf(S.metas.get(p.likeId))) || [] };
+    else if (p.like) {
+      const res = await engine.search(p.like); const hits = res.flatMap((r) => r.metas).filter((m) => m && (m.type === 'movie' || m.type === 'series'));
+      const n = (x) => String(x || '').toLowerCase().replace(/^(the|a|an) /, '').replace(/[^a-z0-9]+/g, ' ').trim();
+      anchor = hits.find((m) => n(m.name) === n(p.like)) || hits[0] || null;
+    }
+    // nothing to go on ("what should I watch?"): the best of the last few years, then your taste re-ranks it
+    if (!anchor && !p.genres.length && !p.kw.length && !p.lang && !p.person && !p.from && !p.to && !p.sort && !p.rt && !p.not.length && !p.fam) { p.open = true; p.sort = 'pop'; p.best = true; p.from = new Date().getFullYear() - 3; }
+    const asked = p.genres.slice(); // what the words asked for, before the anchor adds its own
+    const types = p.type ? [p.type] : anchor && !p.likeAny ? [anchor.type] : p.person ? ['movie'] : ['movie', 'series']; // TMDB finds people's work in films only
     const seen = this.seen(); if (anchor) seen.add(anchor.id);
-    let list = (await this.candidates(this.topGenres(w, 3), types)).filter((m) => !seen.has(m.id));
+    const kids = (() => { try { return typeof Seats !== 'undefined' && Seats.kids(); } catch (e) { return false; } })();
+    if (kids) p.fam = true;
+    const okKid = (m) => { try { return !kids || Seats.kidSafe(m); } catch (e) { return true; } };
     const yr = (m) => parseInt(String(m.releaseInfo || m.year || ''), 10);
-    if (p.from) list = list.filter((m) => yr(m) >= p.from); if (p.to) list = list.filter((m) => yr(m) <= p.to);
-    const need = p.genres.slice(0, 2);
-    list = list.map((m) => { const gs = genresOf(m); const all = need.every((g) => gs.includes(g)); return { m, s: this.score(m, w) + (all ? 3 : 0) + (p.best ? (Number(m.imdbRating) || 0) : 0) }; })
-      .sort((a, b) => b.s - a.s).slice(0, 24).map((x) => x.m);
-    const why = (m) => { const shared = anchor ? genresOf(m).filter((g) => genresOf(anchor).includes(g)).slice(0, 2) : []; return shared.length ? `Shares ${shared.join(' · ')} with ${anchor.name}` : whyGenres(m); };
-    const whyGenres = (m) => [genresOf(m).filter((g) => p.genres.includes(g)).slice(0, 2).join(' · '), yearOf(m), m.imdbRating ? `IMDb ${m.imdbRating}` : ''].filter(Boolean).join(' · ');
-    return { list, why, parsed: p, anchor };
+    const w = this.profile();
+    let sm = null; try { sm = await this.smart(p, anchor, types); } catch (e) { sm = null; }
+    let list, mode = 'local';
+    if (sm && sm.list.length >= 4) {
+      mode = sm.mode;
+      list = sm.list.filter((m) => !seen.has(m.id) && (!p.type || m.type === p.type) && okKid(m));
+      if (mode === 'like') { if (p.from) list = list.filter((m) => !yr(m) || yr(m) >= p.from); if (p.to) list = list.filter((m) => !yr(m) || yr(m) <= p.to); }
+      // TMDB's order is the backbone; your taste and the words ("but funnier") nudge it, on this device
+      const n = list.length;
+      list = list.map((m, i) => { const gs = genresOf(m); const fit = asked.length ? asked.filter((g) => gs.includes(g)).length : 0;
+        return { m, s: (n - i) * 1.0 + Math.max(-2, Math.min(4, this.score(m, w))) * 0.5 + fit * (mode === 'like' ? 12 : 1.5) + (p.best || p.sort === 'top' ? (m._score || 0) * 0.8 : 0) - (m._votes && m._votes < 60 ? 3 : 0) }; })
+        .sort((a, b) => b.s - a.s).map((x) => x.m).slice(0, 24);
+      list = list.map((m) => remember({ ...(S.metas.get(m.id) || {}), ...m, poster: (S.metas.get(m.id) || {}).poster || m.poster }));
+    } else {
+      if (anchor) genresOf(anchor).forEach((g) => { if (!p.genres.includes(g)) p.genres.push(g); });
+      const wl = {}; p.genres.forEach((g, i) => { wl[g] = 4 - Math.min(i, 2); });
+      if (!p.genres.length) Object.assign(wl, w);
+      list = (await this.candidates(this.topGenres(wl, 3), types)).filter((m) => !seen.has(m.id) && okKid(m) && !genresOf(m).some((g) => p.not.includes(g)));
+      if (p.from) list = list.filter((m) => yr(m) >= p.from); if (p.to) list = list.filter((m) => yr(m) <= p.to);
+      const need = p.genres.slice(0, 2);
+      list = list.map((m) => { const gs = genresOf(m); const all = need.every((g) => gs.includes(g)); return { m, s: this.score(m, wl) + (all ? 3 : 0) + (p.best ? (Number(m.imdbRating) || 0) : 0) }; })
+        .sort((a, b) => b.s - a.s).slice(0, 24).map((x) => x.m);
+    }
+    const rating = (m) => (m.imdbRating ? `IMDb ${m.imdbRating}` : m._score ? `★ ${m._score.toFixed(1)}` : '');
+    const whyGenres = (m) => [genresOf(m).filter((g) => asked.includes(g)).slice(0, 2).join(' · ') || genresOf(m).slice(0, 2).join(' · '), yearOf(m), rating(m)].filter(Boolean).join(' · ');
+    const why = (m) => (mode === 'like' && anchor ? [`Loved by fans of ${anchor.name}`, yearOf(m)].filter(Boolean).join(' · ') : anchor ? (() => { const shared = genresOf(m).filter((g) => genresOf(anchor).includes(g)).slice(0, 2); return shared.length ? `Shares ${shared.join(' · ')} with ${anchor.name}` : whyGenres(m); })() : whyGenres(m));
+    p.genres = asked.length || !anchor ? p.genres : asked;
+    const res = { list, why, parsed: p, anchor, mode };
+    this.memo = { key, at: Date.now(), res };
+    return res;
   },
 };
 const looksLikeAsk = (q) => /\b(recommend|suggest|something|anything|like|similar|in the mood|want to watch|what should|give me|funny|scary)\b/i.test(q) && q.trim().split(/\s+/).length >= 3;
@@ -185,13 +315,13 @@ function openQuickPick() {
 }
 
 /* ---------------- Ask results ---------------- */
-async function showAsk(q) {
+async function showAsk(q, over) {
   const el = openLayer('askLayer');
   $('#askTitle').textContent = `“${q}”`; $('#askSub').textContent = 'Finding picks…'; $('#askGrid').innerHTML = skeletons(10);
   try {
-    const { list, why, parsed, anchor } = await Recs.ask(q);
-    const bits = [anchor ? `like ${anchor.name}` : '', parsed.genres.slice(0, 3).join(', '), parsed.type === 'series' ? 'series' : parsed.type === 'movie' ? 'movies' : '', parsed.from ? `${parsed.from}${parsed.to ? `–${parsed.to}` : '+'}` : parsed.to ? `before ${parsed.to}` : ''].filter(Boolean);
-    $('#askSub').textContent = list.length ? `Your Picks understood: ${bits.join(' · ') || 'your taste'}` : 'Nothing matched. Try different words, or name a title you like ("something like Arrival").';
+    const { list, why, parsed, anchor, mode } = await Recs.ask(q, over);
+    const said = Recs.describe(parsed, mode === 'like' ? null : anchor);
+    $('#askSub').textContent = list.length ? (mode === 'like' && anchor ? `What fans of ${anchor.name} watch next${parsed.genres.length ? ` · ${said}` : ''}` : `Your Picks understood: ${said || 'your taste'}`) : 'Nothing matched. Try different words, or name a title you like ("something like Arrival").';
     $('#askGrid').innerHTML = list.map((m) => cardHTML(m, { sub: why(m) })).join(''); icons();
   } catch (e) { $('#askSub').textContent = `Could not search right now (${e.message}).`; $('#askGrid').innerHTML = ''; }
   el.scrollTop = 0;

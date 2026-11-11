@@ -94,6 +94,8 @@ body.tvc-on #video{opacity:.18}
 .sp-prev.ok{opacity:1}
 .sp-prev[hidden]{display:none}
 .sp-prev video{width:100%;height:100%;object-fit:cover;display:block}
+.sp-prev canvas.sp-c{position:absolute;inset:0;width:100%;height:100%;display:none}
+.sp-prev.cached canvas.sp-c{display:block}
 .x8-keygrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px;padding:4px 0}
 .x8-key{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-radius:var(--r-s);border:1px solid var(--line);background:none;color:var(--ink);font-size:calc(13px * var(--ts,1));cursor:pointer;text-align:left}
 .x8-key:hover,.x8-key.nav-focus{border-color:var(--line-hi)}
