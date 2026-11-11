@@ -129,7 +129,7 @@ gl_FragColor=vec4(tone(col)*a*uFade*uAlpha,a*uFade*uAlpha);}`;
       const push = ss(.62, .92, p);
       const fade = ss(0, .1, p) * (1 - ss(.9, .97, p));
       // model: tumble in, open, then turn round to the wearer's side (you); a slow float while idle
-      const fl = opts.calm ? 0 : Math.sin(S.t * .8) * .02 * (1 - push), tilt = (1 - push);
+      const fl = Math.sin(S.t * .8) * .02 * (1 - push), tilt = (1 - push);
       const M = rot(mix(.55, -.04, face) + S.my * .06 * tilt + fl, mix(-1.05, Math.PI, face) + S.mx * .12 * tilt + (1 - enter) * -.5, mix(.18, 0, face));
       const sc = mix(.82, 1, enter);
       for (let i = 0; i < 12; i++) M[i] *= sc;
@@ -141,7 +141,7 @@ gl_FragColor=vec4(tone(col)*a*uFade*uAlpha,a*uFade*uAlpha);}`;
       const lens = pt(M, [lensC[0], lensC[1], -.03]);
       const k = push * push * (3 - 2 * push);
       // stop at the wearer's eye: the lens just fills the view and the display line stays a readable size
-      const near = opts.calm ? D * .5 : Math.min(D * .8, (bx1 - bx0) / (2 * Math.tan(fov / 2) * asp * .7)), dist = D * Math.pow(near / D, k);
+      const near = Math.min(D * .8, (bx1 - bx0) / (2 * Math.tan(fov / 2) * asp * .7)), dist = D * Math.pow(near / D, k);
       const kt = 1 - Math.pow(1 - k, 3); // aim at the lens before the dolly gets close
       const tgt = [lens[0] * kt, mix(yOff * D * .4, lens[1], kt), lens[2] * kt];
       const eye = [tgt[0], tgt[1], tgt[2] + dist];
@@ -149,7 +149,7 @@ gl_FragColor=vec4(tone(col)*a*uFade*uAlpha,a*uFade*uAlpha);}`;
       gl.uniformMatrix4fv(U.uM, false, M); gl.uniformMatrix4fv(U.uV, false, look(eye, tgt)); gl.uniformMatrix4fv(U.uP, false, persp(fov, asp, .01, 50));
       gl.uniform3fv(U.uEye, eye);
       gl.uniform2f(U.uFold, mix(1.48, 0, open), mix(1.38, 0, open));
-      gl.uniform1f(U.uSweep, mix(-1.4, 1.1, ss(0, .5, p)) + (opts.calm ? 0 : Math.sin(S.t * .35) * .08));
+      gl.uniform1f(U.uSweep, mix(-1.4, 1.1, ss(0, .5, p)) + Math.sin(S.t * .35) * .08);
       // after the first line has typed in, cycle languages while the lens line is showing
       const li = sub > .99 && type > .99 ? 1 + Math.floor(S.t / 1.8) : 0;
       if (li !== lang) { lang = li; gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, subT); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, subCanvas(li)); }

@@ -29,11 +29,19 @@
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="preload" as="image" href="shots/home.webp" imagesrcset="shots/home-960.webp 960w, shots/home.webp 1600w" imagesizes="(max-width: 1100px) 92vw, 1100px" fetchpriority="high">
+<link rel="preload" as="image" href="shots/home.webp?v=1111" imagesrcset="shots/home-960.webp?v=1111 960w, shots/home.webp?v=1111 1600w" imagesizes="(max-width: 1100px) 92vw, 1100px" fetchpriority="high">
 <link rel="preload" href="/fonts/fraunces-v1.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/onest-v1.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/fraunces-italic-v1.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+.tvon{position:fixed;inset:0;z-index:99999;pointer-events:none}
+.tvon i{position:absolute;left:0;right:0;height:50.2%;background:#000;animation:tvshut .9s cubic-bezier(.7,0,.2,1) both}
+.tvon i:first-child{top:0;transform-origin:50% 0}.tvon i+i{bottom:0;transform-origin:50% 100%}
+.tvon b{position:absolute;left:0;right:0;top:50%;height:3px;margin-top:-1.5px;background:#fff;box-shadow:0 0 30px 8px rgba(255,255,255,.75),0 0 90px 30px rgba(216,194,154,.35);animation:tvline .9s cubic-bezier(.3,.8,.3,1) both}
+@keyframes tvshut{0%,26%{transform:scaleY(1)}100%{transform:scaleY(0)}}
+@keyframes tvline{0%{transform:scaleX(0);opacity:1}24%{transform:scaleX(1);opacity:1}60%{transform:scaleX(1) scaleY(18);opacity:.25}100%{transform:scaleX(1) scaleY(60);opacity:0}}
+@media(prefers-reduced-motion:reduce){.tvon{display:none}}
+
 @font-face{font-family:"Fraunces";font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/fraunces-v1.woff2) format("woff2")}
 @font-face{font-family:"Fraunces";font-style:italic;font-weight:400 600;font-display:swap;src:url(/fonts/fraunces-italic-v1.woff2) format("woff2")}
 @font-face{font-family:"Onest";font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/onest-v1.woff2) format("woff2")}
@@ -409,9 +417,168 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 @media (max-width:700px){.gal-hint{height:42px;padding:0 14px 0 12px}}
 @media (prefers-reduced-motion:reduce){.gal-hint svg{animation:none}.gal-hint{transition:none}}
 /* /realdemo */
+
+/* refresh 1111: showcase blocks */
+.fx-strip{margin-top:36px}
+.fxs{display:grid;gap:clamp(64px,9vw,120px);margin-top:clamp(56px,8vw,96px)}
+.fx{display:grid;grid-template-columns:1fr;gap:28px;align-items:center}
+.fx .n{font:500 13px/1 var(--sans);letter-spacing:.2em;color:var(--gold)}
+.fx h3{margin-top:16px;font-size:clamp(30px,3.6vw,46px);line-height:1.06}
+.fx h3 em{font-style:italic;color:var(--gold)}
+.fx-copy>p{margin:16px 0 0;color:var(--ink2);max-width:52ch}
+.fx ul{list-style:none;margin:22px 0 0;padding:0;display:grid;gap:12px}
+.fx li{display:flex;gap:12px;font-size:15px;line-height:1.5;color:var(--ink2)}
+.fx li svg{width:18px;height:18px;margin-top:3px;color:var(--gold);stroke-width:1.6}
+.fx li b{color:var(--ink);font-weight:600}
+.fx-media{margin:0;border-radius:16px;overflow:hidden;border:1px solid var(--line2);background:#0a0a0a;box-shadow:0 40px 80px -40px rgba(0,0,0,.9),0 0 0 1px rgba(216,194,154,.05);transform:perspective(1400px) rotateX(8deg) scale(.97);transform-origin:50% 100%;transition:transform 1.2s var(--ease)}
+.fx.in .fx-media{transform:none}
+.fx-media img{width:100%}
+.fx-media:not(.tall) img{aspect-ratio:16/10;object-fit:cover}
+.fx-media.w169 img{aspect-ratio:16/9}
+.fx-media:not(.tall) .clipw>video{object-fit:cover}
+.fx-media.tall{width:min(270px,64vw);margin:0 auto;border-radius:30px;border:6px solid #161616;outline:1px solid var(--line2)}
+.fx-media .clipw>video{border-radius:0}
+@media (min-width:900px){
+  .fx{grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(40px,6vw,88px)}
+  .fx:nth-child(even) .fx-copy{order:2}
+  .fx-media.tall{width:min(290px,100%)}
+}
+.tk-all{margin-top:44px}
+.tickets .devnote{margin-top:28px;max-width:78ch}
+.allf{margin-top:36px;border:0;background:none;border-radius:0}
+.allf>summary{display:inline-flex;width:auto;align-items:center;gap:10px;height:52px;padding:0 24px;border-radius:999px;border:1px solid var(--line2);font:600 15px/1 var(--sans);cursor:pointer;list-style:none;transition:background-color .3s,border-color .3s}
+.allf>summary::-webkit-details-marker{display:none}
+.allf>summary:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.24)}
+.allf>summary::after{margin-left:6px}
+.allf .cats{margin-top:32px}
+@media (max-width:600px){
+  .tk-all{grid-template-columns:1fr;gap:10px}
+  .tk-all .tk{padding:16px 18px;display:grid;grid-template-columns:auto 1fr;column-gap:14px;align-items:start}
+  .tk-all .tk .ic{grid-row:1/3;margin:0}
+  .tk-all .tk h4{font-size:19px}
+  .tk-all .tk p{margin-top:4px;font-size:14px}
+}
+@media (prefers-reduced-motion:reduce){.fx-media{transform:none;transition:none}}
+
+/* refresh 1111 round 2: curtain */
+.cur{position:relative;background:#040303}
+.cur-stage{position:sticky;top:0;height:100vh;height:100svh;margin-bottom:-100vh;margin-bottom:-100svh;z-index:3;pointer-events:none;overflow:hidden;--o:0;--l:.6}
+.cur-half{position:absolute;top:0;bottom:0;width:50.5%;will-change:transform;box-shadow:0 0 60px 10px rgba(0,0,0,.8)}
+.cur-half img{width:100%;height:100%;object-fit:fill}
+.cur-half.l{left:0;transform-origin:0 50%;transform:scaleX(calc(1 - var(--o)*var(--gather,.84)))}
+.cur-half.r{right:0;transform-origin:100% 50%;transform:scaleX(calc(1 - var(--o)*var(--gather,.84)))}
+.cur-half.r img{transform:scaleX(-1)}
+.cur-val{position:absolute;left:0;right:0;top:0;height:clamp(54px,9vh,96px);background:url(stage/valance.webp) center/auto 100% repeat-x;box-shadow:0 14px 30px rgba(0,0,0,.75)}
+.cur-cord{position:absolute;top:52%;width:clamp(34px,8.2vw,120px);opacity:calc((var(--o) - .7)*3.4);transform:translateY(calc((1 - var(--o))*-14px))}
+.cur-cord.l{left:0}.cur-cord.r{right:0;transform:translateY(calc((1 - var(--o))*-14px)) scaleX(-1)}
+.cur-cord svg{width:100%;height:auto;stroke:none;filter:drop-shadow(0 6px 8px rgba(0,0,0,.6))}
+.cur-lamp{position:absolute;top:18%;width:clamp(24px,4.2vw,60px);opacity:calc(.35 + var(--o)*.65)}
+.cur-lamp.l{left:clamp(6px,2.2vw,36px)}.cur-lamp.r{right:clamp(6px,2.2vw,36px)}
+.cur-lamp svg{width:100%;height:auto;stroke:none;filter:drop-shadow(0 0 calc(6px + var(--l)*22px) rgba(255,214,140,calc(.35 + var(--l)*.6)))}
+.cur-glow{position:absolute;top:0;bottom:0;width:46%;opacity:calc(var(--o)*(.25 + var(--l)*.75));transition:opacity .25s linear}
+.cur-glow.l{left:0;background:radial-gradient(60% 46% at 4% 22%,rgba(255,206,130,.6),rgba(255,170,90,.16) 46%,transparent 72%)}
+.cur-glow.r{right:0;background:radial-gradient(60% 46% at 96% 22%,rgba(255,206,130,.6),rgba(255,170,90,.16) 46%,transparent 72%)}
+.cur-body{position:relative;z-index:1;max-width:1040px;margin:0 auto;padding:104vh max(var(--g),11.5vw) clamp(110px,16vh,180px);background:radial-gradient(70% 520px at 50% 104vh,rgba(216,194,154,.09),transparent 70%)}
+.cur-head{text-align:center;max-width:760px;margin:0 auto}
+.cur-head .eyebrow{justify-content:center}.cur-head h2{margin-top:18px}.cur-head .lead{margin:20px auto 0}
+.cur-act{margin:clamp(56px,9vh,96px) 0 0;text-align:center;font-size:clamp(24px,3vw,34px)}
+.cur-act span{display:block;margin-bottom:12px;font:600 11.5px/1 var(--sans);letter-spacing:.3em;text-transform:uppercase;color:var(--gold)}
+.bills{list-style:none;margin:30px 0 0;padding:0;display:grid;grid-template-columns:1fr;column-gap:56px}
+.bill{display:flex;gap:20px;padding:22px 0;border-top:1px solid var(--line)}
+.bill-n{flex:none;width:2.2em;font:400 30px/1 var(--serif);font-style:italic;color:var(--gold);font-variation-settings:"opsz" 72}
+.bill h3{font-size:23px;line-height:1.15}
+.bill p{margin:8px 0 0;font-size:15px;line-height:1.55;color:var(--ink2)}
+.cur .devnote{margin-top:36px;text-align:center}
+@media (min-width:860px){.bills{grid-template-columns:1fr 1fr}}
+@media (max-width:700px){.cur-stage{--gather:.86}.cur-body{padding-left:max(var(--g),10vw);padding-right:max(var(--g),10vw)}.bill{gap:14px}.bill-n{font-size:24px}}
+@media (prefers-reduced-motion:reduce){.cur-glow{transition:none}}
+/* glasses: a film on a TV */
+.lx-shot{background:radial-gradient(90% 60% at 50% 50%,#101216,#020203 70%)}
+.lx-tv{position:absolute;left:50%;top:50%;width:min(96vw,150vh);transform:translate(-50%,-50%);border-radius:10px;padding:clamp(5px,.6vw,9px);background:linear-gradient(180deg,#1b1c1f,#0a0a0b);box-shadow:0 0 0 1px rgba(255,255,255,.08),0 0 120px 20px rgba(120,150,190,.20),0 60px 120px rgba(0,0,0,.8)}
+.lx-tv video{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;border-radius:4px;background:#000}
+@media (orientation:portrait){.lx-tv{width:122vw;top:56%}}
+
+.hub .head{margin:0 auto;text-align:center}.hub .head .eyebrow{justify-content:center}.hub .head .lead{margin:22px auto 0}
+.hub-stage{position:relative;margin:clamp(48px,7vw,88px) auto 0;max-width:1040px;display:flex;justify-content:center;gap:14px}
+.hub-stage figure{margin:0;overflow:hidden;border:1px solid var(--line2);background:#0a0a0a;box-shadow:0 40px 80px -40px rgba(0,0,0,.9),0 0 0 1px rgba(216,194,154,.05)}
+.hub-stage img{display:block;width:100%;height:auto}
+.hub-desk{display:none;border-radius:16px}
+.hub-ph{width:min(46%,250px);border-radius:22px}
+.hub-list{list-style:none;margin:clamp(48px,7vw,80px) 0 0;padding:0;display:grid;grid-template-columns:1fr;gap:0}
+.hub-list li{display:flex;gap:16px;align-items:flex-start;padding:22px 0;border-top:1px solid var(--line2)}
+.hub-list svg{flex:none;width:22px;height:22px;margin-top:3px;color:var(--gold);fill:none;stroke:currentColor;stroke-width:1.6}
+.hub-list h3{font:600 17px/1.3 var(--sans);letter-spacing:0;margin:0;color:var(--ink)}
+.hub-list p{margin:6px 0 0;color:var(--ink2);font-size:15px;line-height:1.55}
+@media(min-width:700px){.hub-list{grid-template-columns:1fr 1fr;column-gap:48px}}
+@media(min-width:1000px){.hub-list{grid-template-columns:repeat(3,1fr)}
+.hub-stage{display:block;padding:0 0 40px}.hub-stage .hub-desk{display:block;width:60%;margin:0 auto}
+.hub-ph{position:absolute;bottom:0;width:21.5%;z-index:2}.hub-l{left:0}.hub-r{right:0}}
+@media(min-width:1000px) and (prefers-reduced-motion:no-preference){.hub-l{animation:hubf 7s ease-in-out infinite alternate}.hub-r{animation:hubf 7s ease-in-out -3.5s infinite alternate}}
+@keyframes hubf{from{transform:translateY(0)}to{transform:translateY(-14px)}}
+
+.cur-pin{position:absolute;inset:0;z-index:3;pointer-events:none}
+.cur .cur-stage{margin-bottom:0;z-index:auto}
+.cur-cv{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 0 26px rgba(0,0,0,.85))}
+.cur .cur-cord{top:51%;width:calc(var(--tw,7vw) + 14px);max-width:none;opacity:calc((var(--o) - .78)*4.6)}
+.cur .cur-lamp{top:16%}
+.cur .cur-lamp.l{left:clamp(4px,1.6vw,30px)}.cur .cur-lamp.r{right:clamp(4px,1.6vw,30px)}
+.cur .cur-body{padding-left:max(var(--g),15vw);padding-right:max(var(--g),15vw)}
+@media(max-width:699px){.cur .cur-body{padding-left:14vw;padding-right:14vw}.cur .cur-lamp{width:22px}.cur-head .eyebrow{letter-spacing:.16em;font-size:10.5px}}
+
+.mk-stage{position:relative;width:min(100%,460px);height:clamp(560px,150vw,680px);margin:0 auto;perspective:1100px;--m:0}
+.mk-phone{position:absolute;left:50%;bottom:0;width:min(250px,58%);margin-left:calc(min(250px,58%)/-2);border-radius:30px;border:6px solid #161616;outline:1px solid var(--line2);overflow:hidden;background:#0a0a0a;transform-origin:50% 100%;transform:rotateX(calc(var(--m)*58deg)) scale(calc(1 - var(--m)*.06));box-shadow:0 40px 80px -30px rgba(0,0,0,.9),0 0 calc(var(--m)*70px) rgba(255,120,110,calc(var(--m)*.35));will-change:transform}
+.mk-phone img{display:block;width:100%;height:auto}
+.mk-beam{position:absolute;left:50%;bottom:16%;width:78%;height:66%;margin-left:-39%;opacity:calc(var(--m)*.9);background:radial-gradient(50% 100% at 50% 100%,rgba(255,196,170,.34),rgba(255,120,110,.12) 45%,transparent 72%);clip-path:polygon(30% 100%,70% 100%,100% 0,0 0);filter:blur(6px);pointer-events:none}
+.mk-pad{position:absolute;left:50%;bottom:19%;width:56%;height:54px;margin-left:-28%;border-radius:50%;opacity:calc(var(--m)*1.2 - .2);background:radial-gradient(closest-side,rgba(255,226,190,.75),rgba(255,130,110,.28) 55%,transparent);animation:mkpad 3.8s ease-in-out infinite;pointer-events:none}
+.mk-rise{position:absolute;left:50%;bottom:20%;width:min(400px,92%);margin-left:calc(min(400px,92%)/-2);transform-origin:50% 100%;transform:translateY(calc((1 - var(--m))*34%)) scale(calc(.22 + var(--m)*.78));opacity:calc(var(--m)*2.2 - .25);will-change:transform,opacity;pointer-events:none}
+.mk-bob{animation:mkbob 5.3s ease-in-out infinite alternate;transform-origin:50% 85%}
+.mk-girl{display:block;width:100%;height:auto;-webkit-mask-image:linear-gradient(#000 62%,transparent 97%);mask-image:linear-gradient(#000 62%,transparent 97%);filter:drop-shadow(0 0 22px rgba(255,150,130,.35)) drop-shadow(0 30px 30px rgba(0,0,0,.6))}
+.mk-sparks{position:absolute;inset:0;opacity:var(--m);pointer-events:none}
+.mk-sparks i{position:absolute;left:var(--x);bottom:22%;width:4px;height:4px;border-radius:50%;background:#ffd9a8;box-shadow:0 0 10px 2px rgba(255,170,120,.7);opacity:0;animation:mkspark var(--t) linear var(--d) infinite}
+@keyframes mkbob{from{transform:translateY(6px) rotate(-1.4deg)}to{transform:translateY(-14px) rotate(1.4deg)}}
+@keyframes mkpad{0%,100%{transform:scale(.92)}50%{transform:scale(1.08)}}
+@keyframes mkspark{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:.9}100%{transform:translateY(-360px) scale(1.1);opacity:0}}
+@media(prefers-reduced-motion:reduce){.mk-bob,.mk-pad,.mk-sparks i{animation:none}.mk-sparks{display:none}}
+
+.ab{display:grid;gap:36px;align-items:start}
+.ab-pic{margin:0;width:min(220px,56vw)}
+.ab-pic img{display:block;width:100%;height:auto;border-radius:24px;border:1px solid var(--line2);box-shadow:0 40px 80px -40px rgba(0,0,0,.9),0 0 0 6px rgba(216,194,154,.06)}
+.ab-pic figcaption{margin-top:16px;display:grid;gap:3px}.ab-pic b{font:600 17px/1.2 var(--sans);color:var(--ink)}.ab-pic span{font-size:13.5px;color:var(--mute)}
+.ab-copy h2{font-size:clamp(28px,4vw,48px);line-height:1.08}
+.ab-copy p{margin-top:20px;color:var(--ink2);font-size:clamp(16px,1.5vw,18px);line-height:1.65;max-width:62ch}
+.ab-copy .ab-sig{font-family:var(--serif,Georgia,serif);font-style:italic;font-size:26px;color:var(--gold);margin-top:26px}
+.ab-links{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.ab-links svg{width:18px;height:18px}
+@media(min-width:860px){.ab{grid-template-columns:260px minmax(0,1fr);gap:clamp(48px,7vw,96px)}.ab-pic{width:100%;position:sticky;top:110px}}
+.ft{display:grid;gap:40px}
+.ft-brand p{margin-top:14px;color:var(--ink2);font-size:15px}
+.ft-badges{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0;padding:0}
+.ft-badges li{padding:6px 12px;border:1px solid var(--line2);border-radius:999px;font-size:12px;letter-spacing:.02em;color:var(--ink2)}
+.ft-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px 24px}
+.ft-cols h4{font:600 11.5px/1 var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin:0 0 14px}
+.ft-cols a{display:block;padding:5px 0;text-decoration:none;color:var(--ink2);font-size:14px}.ft-cols a:hover{color:var(--ink)}
+@media(min-width:760px){.ft-cols{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(min-width:1040px){.ft{grid-template-columns:minmax(0,4fr) minmax(0,8fr);gap:64px}}
+
+.iph-g{display:grid;gap:44px;align-items:center}
+.iph-copy h2{font-size:clamp(32px,4.6vw,58px)}
+.iph-steps{list-style:none;counter-reset:s;margin:30px 0 0;padding:0;display:grid;gap:0}
+.iph-steps li{counter-increment:s;display:grid;grid-template-columns:44px 1fr;column-gap:16px;padding:18px 0;border-top:1px solid var(--line2)}
+.iph-steps li::before{content:counter(s,decimal-leading-zero);grid-row:span 2;font-family:var(--serif);font-style:italic;font-size:26px;color:var(--gold);line-height:1.1}
+.iph-steps b{font:600 17px/1.3 var(--sans);color:var(--ink)}
+.iph-steps span{grid-column:2;margin-top:4px;color:var(--ink2);font-size:15px;line-height:1.55}
+.iph-note{margin-top:20px;color:var(--mute);font-size:14px;line-height:1.6;max-width:56ch}
+.iph-txt{max-width:1040px;margin:0 auto}
+.iph-txt h2{margin-top:16px}.iph-txt .lead{margin-top:20px;max-width:62ch}.iph-txt .iph-steps li{align-content:start}
+@media(min-width:900px){.iph-txt .iph-steps{grid-template-columns:repeat(3,1fr);column-gap:36px}.iph-txt .iph-steps li{grid-template-columns:1fr;row-gap:8px}.iph-txt .iph-steps li::before{grid-row:auto}.iph-txt .iph-steps span{grid-column:1}}
 </style>
 </head>
 <body>
+<div class="tvon" id="tvon" aria-hidden="true"><i></i><i></i><b></b></div>
+<script>(()=>{const t=document.getElementById('tvon');let seen=0;try{seen=sessionStorage.getItem('tvon');sessionStorage.setItem('tvon','1')}catch(e){}
+if(seen||matchMedia('(prefers-reduced-motion: reduce)').matches){t.remove();return}
+const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',done);setTimeout(done,1500)})();</script>
+<noscript><style>.tvon{display:none}</style></noscript>
 <a class="skip" href="#main">Skip to content</a>
 <svg class="sprite" aria-hidden="true" focusable="false">
   <defs>
@@ -462,12 +629,13 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
     <a class="brand" href="#top" aria-label="MKCinema home"><svg aria-hidden="true"><use href="#logo"/></svg><span><b>MK</b><i>Cinema</i></span></a>
     <button class="menu" type="button" aria-label="Sections" aria-expanded="false" aria-controls="links"><svg aria-hidden="true"><use href="#i-menu"/></svg></button>
     <nav class="links" id="links" aria-label="Sections">
-      <a href="#house">The house</a>
-      <a href="#tour">Tour</a>
-      <a href="#different">What's different</a>
+      <a href="#features">Features</a>
+      <a href="#social">Social Hub</a>
+      <a href="#iphone">iPhone &amp; iPad</a>
+      <a href="#different">Only here</a>
       <a href="#everything">All features</a>
       <a href="#download">Download</a>
-            <a href="#faq">FAQ</a>
+      <a href="#faq">FAQ</a>
     </nav>
     <a class="gh" href="https://github.com/itbelikethatbruh/MKCinema" aria-label="MKCinema on GitHub"><svg><use href="#b-github"/></svg></a>
     <a class="btn btn-plat btn-sm" href="https://app.mkcinema.app/">Open MKCinema</a>
@@ -481,7 +649,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
   <div class="wrap">
     <span class="eyebrow fade">Free forever · Open source<span class="hx-wide"> · Every screen</span></span>
     <h1><span class="ln"><span>Tomorrow’s cinema.</span></span><span class="ln"><span><em>For the whole house.</em></span></span></h1>
-    <p class="lead fade d1">MKCinema is the home cinema app for the whole family. Find something everyone likes, watch it on any screen with a player made for films, and share it with the people you love, on the same sofa or across town. Bring your own addons, servers and services. No ads, and no account needed.</p>
+    <p class="lead fade d1">The home cinema app for the whole family, with serious engineering under a calm surface. One tap picks a stream that plays, an assistant finds tonight’s film, and friends watch in sync from anywhere. Bring your own addons, servers and services. No ads, and no account needed.</p>
     <div class="cta fade d2">
       <a class="btn btn-plat" href="https://app.mkcinema.app/"><svg><use href="#i-play"/></svg>Open MKCinema</a>
       <a class="btn btn-ghost" href="#download" id="heroDl"><svg><use href="#i-down"/></svg><span>Download the app</span></a>
@@ -497,220 +665,197 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 
   <div class="room" id="room" aria-hidden="true">
     <div class="glow"></div>
-    <div class="screen"><img data-clip="clips/hero.mp4?v=2" data-clip-sm="clips/hero-960.mp4?v=1" src="shots/home.webp" srcset="shots/home-960.webp 960w, shots/home.webp 1600w" sizes="(max-width: 1100px) 92vw, 1100px" width="1600" height="1000" alt="" fetchpriority="high"></div>
-    <div class="phone"><img data-clip="clips/phone15.mp4?v=2" data-clip-sm="clips/phone15-320.mp4?v=1" src="shots/phone-home.webp" srcset="shots/phone-home-320.webp 320w, shots/phone-home-480.webp 480w, shots/phone-home.webp 600w" sizes="(max-width: 760px) 30vw, 230px" width="600" height="1301" alt="" decoding="async"></div>
+    <div class="screen"><img data-clip="clips/hero.mp4?v=3" data-clip-sm="clips/hero-960.mp4?v=3" src="shots/home.webp?v=1111" srcset="shots/home-960.webp?v=1111 960w, shots/home.webp?v=1111 1600w" sizes="(max-width: 1100px) 92vw, 1100px" width="1600" height="1000" alt="" fetchpriority="high"></div>
+    <div class="phone"><img data-clip="clips/phone15.mp4?v=3" data-clip-sm="clips/phone15-320.mp4?v=3" src="shots/phone-home.webp?v=1111" srcset="shots/phone-home-320.webp?v=1111 320w, shots/phone-home-480.webp?v=1111 480w, shots/phone-home.webp?v=1111 600w" sizes="(max-width: 760px) 30vw, 230px" width="600" height="1301" alt="" decoding="async"></div>
   </div>
   <div class="floor"></div>
 </section>
 
 <hr class="hr">
 
-<section class="sec hx" id="house" aria-labelledby="hx-h">
+<section class="sec" id="features" aria-labelledby="fx-h">
   <div class="wrap">
-    <div class="head center rv">
-      <span class="eyebrow">One house · Every screen<span class="hx-wide"> · Everyone</span></span>
-      <h2 id="hx-h">A cinema that lives <em>in every room.</em></h2>
-      <p class="lead">MKCinema runs the whole evening, from finding something everyone likes to the last line of the credits. Everyone gets their own seat, every screen plays its part, and the phone in your pocket ties it all together.</p>
+    <div class="head rv">
+      <span class="eyebrow">What it does</span>
+      <h2 id="fx-h">Advanced where it counts. <em>Simple where you touch it.</em></h2>
+      <p class="lead">A player that picks and repairs its own sources, an assistant that knows film, and sync that follows the dialogue instead of the clock.</p>
     </div>
-    <div class="hx-plan rv" role="list">
-      <div class="hx-scan" aria-hidden="true"></div>
-      <article class="hx-room hx-a" role="listitem"><span class="hx-tag"><i></i>Living room · TV</span><h3>The big screen</h3><ul><li>Smart Play starts the best source in one press</li><li>HDR and Dolby Vision on Android TV and Fire TV</li><li>Live TV, sports and Split Screen</li></ul></article>
-      <article class="hx-room hx-b" role="listitem"><span class="hx-tag"><i></i>Every phone · Remote</span><h3>The phone in your hand</h3><ul><li>A remote with voice search, no app to install</li><li>Miko, the assistant: “who’s in this?”</li><li>Listen on phone, in your own headphones</li></ul></article>
-      <article class="hx-room hx-c" role="listitem"><span class="hx-tag"><i></i>Kids’ room · Seat</span><h3>A seat for everyone</h3><ul><li>Each seat keeps its own watchlist, picks and stats</li><li>Kids seats by age rating, with a grown-up PIN</li><li>Shows per day that stop at the end of an episode</li></ul></article>
-      <div class="hx-core" aria-hidden="true"><span class="hx-ring"></span><span class="hx-ring r2"></span><svg><use href="#logo"/></svg><b>MKCinema</b><small>House online</small></div>
-      <article class="hx-room hx-d" role="listitem"><span class="hx-tag"><i></i>Across town · Party</span><h3>Friends on other sofas</h3><ul><li>Watch parties with voice and cameras</li><li>Everyone in sync, even on different versions</li><li>Couch match and film night pick the film</li><li>Friends list: who is online, chat and invites</li></ul></article>
-      <article class="hx-room hx-e" role="listitem"><span class="hx-tag"><i></i>Grandparents · Helper</span><h3>Help from anywhere</h3><ul><li>Family Helper fixes the sound from your phone</li><li>Sensory-friendly mode for gentler nights</li><li>Twelve languages, and every seat its own</li></ul></article>
-      <article class="hx-room hx-f" role="listitem"><span class="hx-tag"><i></i>On the move · Downloads</span><h3>Take it with you</h3><ul><li>Downloads on phones, tablets, Windows and TVs</li><li>Leave the sofa and carry on at the same line</li><li>Subtitles on your smart glasses</li></ul></article>
+    <div class="hx-strip fx-strip rv"><span><b>121</b>features, all free</span><span><b>12</b>languages</span><span><b>8</b>platforms</span><span><b>0</b>ads, paywalls or cookies</span></div>
+    <div class="fxs">
+      <article class="fx rv">
+        <div class="fx-copy">
+          <span class="n">01 · SMART PLAY</span>
+          <h3>Press play. <em>It handles the rest.</em></h3>
+          <p>Smart Play picks the best stream for the screen you are on. If a source stalls, the next one takes over on the same line of dialogue.</p>
+          <ul><li><svg><use href="#i-bolt"/></svg><span><b>Starts on the first try.</b> It only picks sources your device can play, and switches by itself when one fails.</span></li><li><svg><use href="#i-film"/></svg><span><b>MKV in the browser.</b> Its own engine plays MKV files with Dolby and DTS sound, right in a web page.</span></li><li><svg><use href="#i-cc"/></svg><span><b>Subtitles line up by themselves.</b> A downloaded subtitle is matched against the film’s own, with a sync strip you can drag.</span></li></ul>
+        </div>
+        <figure class="fx-media"><img data-clip="clips/player.mp4?v=2" src="shots/player-960.webp" width="960" height="600" alt="The MKCinema player with the Audio tab open" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="fx rv">
+        <div class="fx-copy">
+          <span class="n">02 · PEAK CINEMA</span>
+          <h3>Channel-surf <em>the middle of the film.</em></h3>
+          <p>Peak Cinema drops you straight into a scene, 90 seconds at a time. Like it? Keep watching from there or start from the top. Not for you? The next scene is already loaded.</p>
+          <ul><li><svg><use href="#i-film"/></svg><span><b>Pick a mood.</b> Action, sci-fi, thriller, comedy, horror, animation or drama, from the films on your own Home.</span></li><li><svg><use href="#i-spark"/></svg><span><b>It learns what you keep.</b> What you stay for and what you skip shape the next scenes, on your device only.</span></li><li><svg><use href="#i-bolt"/></svg><span><b>No waiting.</b> It only uses sources that are ready to play, and buffers the next scene while you watch this one.</span></li></ul>
+        </div>
+        <figure class="fx-media"><img data-clip="clips/peak.mp4?v=6" src="shots/peak.webp?v=5" width="1280" height="800" alt="Peak Cinema surfing scenes from six films in a row, each one starting the moment Next scene is pressed" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="fx rv">
+        <div class="fx-copy">
+          <span class="n">03 · MIKO</span>
+          <h3>Ask like you’d ask <em>a friend who knows film.</em></h3>
+          <p>Say “something like Arrival but scarier” or “a Korean thriller under 2 hours”. Miko answers with real titles you can play, ranked for your taste on your own device.</p>
+          <ul><li><svg><use href="#i-spark"/></svg><span><b>Free, with no account.</b> Everyday asks are understood on your device.</span></li><li><svg><use href="#i-wave"/></svg><span><b>A natural voice.</b> Turn on Read answers aloud and she speaks.</span></li><li><svg><use href="#i-phone"/></svg><span><b>From the sofa.</b> Type or talk to her on the phone remote while the TV plays.</span></li></ul>
+        </div>
+        <div class="mk-stage" id="mikoStage">
+          <div class="mk-phone"><img src="shots/phone-miko.webp?v=1111" width="480" height="1040" alt="Miko answering a request for a Korean thriller under two hours with four titles" loading="lazy" decoding="async"></div>
+          <div class="mk-beam" aria-hidden="true"></div>
+          <div class="mk-pad" aria-hidden="true"></div>
+          <div class="mk-sparks" aria-hidden="true"><i style="--x:18%;--d:0s;--t:5.2s"></i><i style="--x:34%;--d:1.4s;--t:6.1s"></i><i style="--x:50%;--d:0.6s;--t:4.8s"></i><i style="--x:63%;--d:2.2s;--t:5.6s"></i><i style="--x:78%;--d:1.0s;--t:6.4s"></i><i style="--x:88%;--d:3.1s;--t:5.0s"></i><i style="--x:26%;--d:3.6s;--t:5.8s"></i><i style="--x:70%;--d:4.2s;--t:4.6s"></i></div>
+          <div class="mk-rise"><div class="mk-bob"><img class="mk-girl" src="stage/miko.webp" width="555" height="572" alt="Miko, a fox-eared shrine maiden with a red bow and a gold bell, floating up out of the phone" loading="lazy" decoding="async"></div></div>
+        </div>
+      </article>
+      <article class="fx rv">
+        <div class="fx-copy">
+          <span class="n">04 · TOGETHER</span>
+          <h3>Same scene, <em>different sofas.</em></h3>
+          <p>Start a watch party with a six-letter code. Everyone plays from their own source, and MKCinema lines you all up by the dialogue, even on different versions of the film.</p>
+          <ul><li><svg><use href="#i-users"/></svg><span><b>Voice and cameras.</b> Chat, reactions, push-to-talk and everyone’s face in the lobby.</span></li><li><svg><use href="#i-eye"/></svg><span><b>Find a line.</b> Type words someone says and play from that moment, or share it as a link that opens at the same line.</span></li><li><svg><use href="#i-spark"/></svg><span><b>Invite from the Social Hub.</b> Start a party from a friend’s profile or chat, no code to pass around.</span></li></ul>
+        </div>
+        <figure class="fx-media"><img data-clip="clips/party.mp4?v=2" src="shots/party.webp" width="1000" height="800" alt="A watch party lobby with four friends on camera and a vote on what to watch" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="fx rv">
+        <div class="fx-copy">
+          <span class="n">05 · PHONE</span>
+          <h3>Your phone is <em>the remote.</em></h3>
+          <p>Scan the code on the TV and your phone takes over. There is no app to install.</p>
+          <ul><li><svg><use href="#i-phone"/></svg><span><b>Touchpad, D-pad, keyboard and voice search</b>, with cast and episodes on your phone while the TV plays.</span></li><li><svg><use href="#i-head"/></svg><span><b>Listen on phone.</b> The film plays on the TV and the sound comes out of your headphones.</span></li><li><svg><use href="#i-cc"/></svg><span><b>Subtitles on your phone or smart glasses.</b> Everyone reads their own language, in step with the TV.</span></li></ul>
+        </div>
+        <figure class="fx-media tall"><img data-clip="clips/remote.mp4?v=3" src="shots/remote.webp?v=3" width="600" height="1299" alt="The MKCinema phone remote in use while Sintel plays: the film’s picture under Now playing, skip, pause and play" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="fx rv">
+        <div class="fx-copy">
+          <span class="n">06 · LIVE</span>
+          <h3>Four screens. <em>One sofa.</em></h3>
+          <p>Split Screen plays up to four channels or streams at once, two on TVs and phones. Select a tile and the sound follows it.</p>
+          <ul><li><svg><use href="#i-tv"/></svg><span><b>Live TV and Guide.</b> Your own M3U playlist or Xtream login with an XMLTV guide, plus channels from your addons.</span></li><li><svg><use href="#i-monitor"/></svg><span><b>Sports.</b> Live sports from your own sources, sorted by sport.</span></li><li><svg><use href="#i-layers"/></svg><span><b>From anywhere.</b> Open Split Screen from Live TV or straight from any film page.</span></li></ul>
+        </div>
+        <figure class="fx-media"><img data-clip="clips/split.mp4?v=3" src="shots/split-960.webp?v=3" width="960" height="600" alt="Split Screen playing four open films at once" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="fx rv">
+        <div class="fx-copy">
+          <span class="n">07 · THE WHOLE HOUSE</span>
+          <h3>A seat for everyone, <em>on every screen.</em></h3>
+          <p>Phones, tablets, computers and TVs all get the same cinema, and one account keeps them in step.</p>
+          <ul><li><svg><use href="#i-users"/></svg><span><b>Seats.</b> Each person has their own watchlist, progress and picks, with an optional PIN.</span></li><li><svg><use href="#i-shield"/></svg><span><b>Kids seats by age rating</b>, with a grown-up PIN and a daily limit that stops at the end of an episode.</span></li><li><svg><use href="#i-tv"/></svg><span><b>Made for the remote.</b> Arrows and OK to browse, media keys to play, and Ambient Mode when you step away.</span></li></ul>
+        </div>
+        <figure class="fx-media w169"><img src="shots/tv-home-960.webp?v=1111" width="960" height="540" alt="MKCinema on a TV, with remote focus on the Top 10 row" loading="lazy" decoding="async"></figure>
+      </article>
     </div>
-    <div class="hx-strip rv"><span><b>12</b>languages</span><span><b>8</b>platforms</span><span><b>1</b>account for every screen</span><span><b>0</b>ads, paywalls or cookies</span></div>
   </div>
 </section>
 
 <hr class="hr">
 
-<section class="sec tickets" id="different" aria-labelledby="tk-h">
+<section class="sec hub" id="social" aria-labelledby="hub-h">
   <div class="wrap">
     <div class="head rv">
-      <span class="eyebrow">What makes MKCinema different</span>
+      <span class="eyebrow">Social Hub</span>
+      <h2 id="hub-h">Your friends live <em>inside your cinema.</em></h2>
+      <p class="lead">Friends, messages, calls, a feed, statuses and trophies, built into the same app that plays the film. No second app to open, no group chat to keep in step, and it is free like everything else.</p>
+    </div>
+    <div class="hub-stage rv">
+      <figure class="hub-ph hub-l"><img src="shots/hub-feed.webp" width="480" height="1039" alt="The Social Hub feed on a phone: friends’ statuses, a post box and a post about Severance with reactions and replies" loading="lazy" decoding="async"></figure>
+      <figure class="hub-desk"><img src="shots/hub-desk.webp" width="858" height="808" alt="The Social Hub on a computer: feed with posts, moods, tags and reactions, and a list of friends with their statuses" loading="lazy" decoding="async"></figure>
+      <figure class="hub-ph hub-r"><img src="shots/hub-you.webp" width="480" height="1039" alt="A Social Hub profile with favourite titles and a wall of trophies" loading="lazy" decoding="async"></figure>
+    </div>
+    <ul class="hub-list">
+        <li class="rv"><svg><use href="#i-users"/></svg><div><h3>Friends, by username</h3><p>Add the people you watch with. See who is online and, if they choose to share it, what they are watching right now.</p></div></li>
+        <li class="rv"><svg><use href="#i-phone"/></svg><div><h3>Messages and calls</h3><p>Chat one to one and call with voice or camera. Calls stay off until you allow them, and they never ring over a film.</p></div></li>
+        <li class="rv"><svg><use href="#i-film"/></svg><div><h3>A feed for film talk</h3><p>Post a thought, a mood or the title you just finished. Tag friends, react, reply in threads.</p></div></li>
+        <li class="rv"><svg><use href="#i-wave"/></svg><div><h3>Status on your avatar</h3><p>“Severance finale night.” Pick a mood, write a line, and let it clear itself in four hours or at the end of the day.</p></div></li>
+        <li class="rv"><svg><use href="#i-spark"/></svg><div><h3>29 trophies and kudos</h3><p>Marathon, Binge day, Explorer, Early member. Earn them by watching, show them on your profile, and give friends kudos.</p></div></li>
+        <li class="rv"><svg><use href="#i-shield"/></svg><div><h3>Private by design</h3><p>Only friends you accepted see your posts. What you watch stays hidden until you switch sharing on. Nothing here on kids’ seats.</p></div></li>
+    </ul>
+  </div>
+</section>
+
+<hr class="hr">
+
+<section class="sec iph" id="iphone" aria-labelledby="iph-h">
+  <div class="wrap">
+    <div class="iph-g iph-txt">
+      <div class="iph-copy rv">
+        <span class="eyebrow">iPhone and iPad</span>
+        <h2 id="iph-h">No App Store. <em>No “do you have an app?”</em></h2>
+        <p class="lead">On iPhone and iPad, MKCinema runs in Safari. Go to app.mkcinema.app and you are in. Add it to your Home Screen and it opens full screen with its own icon, like any other app.</p>
+        <ol class="iph-steps">
+          <li><b>Open Safari</b><span>Type app.mkcinema.app. There is nothing to download.</span></li>
+          <li><b>Add it to your Home Screen</b><span>Tap Share, then Add to Home Screen.</span></li>
+          <li><b>Pick a film and press play</b><span>Smart Play chooses the stream. Most MKV files play right in Safari.</span></li>
+        </ol>
+        <p class="iph-note">Works the same on iPhone and iPad. Sign in and your library, progress and addons follow you from your other screens. If Safari can’t decode a file, MKCinema hands it to a player app in one tap.</p>
+        <div class="ab-links"><a class="btn btn-plat" href="https://app.mkcinema.app/"><svg aria-hidden="true"><use href="#i-play"/></svg>Open MKCinema</a><a class="btn btn-ghost" href="/iphone-ipad/"><svg aria-hidden="true"><use href="#i-phone"/></svg>iPhone and iPad guide</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="hr">
+
+<section class="cur" id="different" aria-labelledby="tk-h">
+  <div class="cur-pin" aria-hidden="true"><div class="cur-stage">
+    <div class="cur-glow l"></div><div class="cur-glow r"></div>
+    <canvas class="cur-cv"></canvas>
+    <div class="cur-cord l"><svg viewBox="0 0 60 200" aria-hidden="true"><defs><linearGradient id="cg" x1="0" x2="1"><stop offset="0" stop-color="#7a5a22"/><stop offset=".35" stop-color="#f3d892"/><stop offset=".6" stop-color="#c9a253"/><stop offset="1" stop-color="#6b4d1c"/></linearGradient></defs>
+<path d="M4 18C22 8 40 8 56 18" stroke="url(#cg)" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M4 18C22 8 40 8 56 18" stroke="#3a2a0c" stroke-width="7" fill="none" stroke-dasharray="1.5 5" opacity=".45"/>
+<path d="M30 14v46" stroke="url(#cg)" stroke-width="5"/><ellipse cx="30" cy="66" rx="11" ry="9" fill="url(#cg)"/><rect x="20" y="72" width="20" height="8" rx="3" fill="#b88d3e"/>
+<g stroke="url(#cg)" stroke-width="2.2" stroke-linecap="round"><path d="M21 80v84"/><path d="M24 80v92"/><path d="M27 80v98"/><path d="M30 80v102"/><path d="M33 80v98"/><path d="M36 80v92"/><path d="M39 80v84"/></g></svg></div><div class="cur-cord r"><svg viewBox="0 0 60 200" aria-hidden="true"><defs><linearGradient id="cg2" x1="0" x2="1"><stop offset="0" stop-color="#7a5a22"/><stop offset=".35" stop-color="#f3d892"/><stop offset=".6" stop-color="#c9a253"/><stop offset="1" stop-color="#6b4d1c"/></linearGradient></defs>
+<path d="M4 18C22 8 40 8 56 18" stroke="url(#cg2)" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M4 18C22 8 40 8 56 18" stroke="#3a2a0c" stroke-width="7" fill="none" stroke-dasharray="1.5 5" opacity=".45"/>
+<path d="M30 14v46" stroke="url(#cg2)" stroke-width="5"/><ellipse cx="30" cy="66" rx="11" ry="9" fill="url(#cg2)"/><rect x="20" y="72" width="20" height="8" rx="3" fill="#b88d3e"/>
+<g stroke="url(#cg2)" stroke-width="2.2" stroke-linecap="round"><path d="M21 80v84"/><path d="M24 80v92"/><path d="M27 80v98"/><path d="M30 80v102"/><path d="M33 80v98"/><path d="M36 80v92"/><path d="M39 80v84"/></g></svg></div>
+    <div class="cur-val"></div>
+    <div class="cur-lamp l"><svg viewBox="0 0 60 84" aria-hidden="true"><defs><radialGradient id="lg" cx=".5" cy="1" r="1"><stop offset="0" stop-color="#fffbe8"/><stop offset=".55" stop-color="#ffe2a0"/><stop offset="1" stop-color="#d9a64e"/></radialGradient></defs>
+<path d="M4 46A26 26 0 0 1 56 46Z" fill="url(#lg)"/><path d="M30 46V20M30 46 12 27M30 46 48 27M30 46 6 40M30 46 54 40" stroke="#a97c30" stroke-width="1.1" opacity=".55"/>
+<rect x="2" y="46" width="56" height="6" rx="3" fill="#b58a3c"/><path d="M20 52h20l-4 18H24z" fill="#8a6628"/><rect x="22" y="70" width="16" height="5" rx="2.5" fill="#b58a3c"/></svg></div><div class="cur-lamp r"><svg viewBox="0 0 60 84" aria-hidden="true"><defs><radialGradient id="lg2" cx=".5" cy="1" r="1"><stop offset="0" stop-color="#fffbe8"/><stop offset=".55" stop-color="#ffe2a0"/><stop offset="1" stop-color="#d9a64e"/></radialGradient></defs>
+<path d="M4 46A26 26 0 0 1 56 46Z" fill="url(#lg2)"/><path d="M30 46V20M30 46 12 27M30 46 48 27M30 46 6 40M30 46 54 40" stroke="#a97c30" stroke-width="1.1" opacity=".55"/>
+<rect x="2" y="46" width="56" height="6" rx="3" fill="#b58a3c"/><path d="M20 52h20l-4 18H24z" fill="#8a6628"/><rect x="22" y="70" width="16" height="5" rx="2.5" fill="#b58a3c"/></svg></div>
+  </div></div>
+  <div class="cur-body">
+    <div class="cur-head rv">
+      <span class="eyebrow">Now showing · Only in MKCinema</span>
       <h2 id="tk-h">Things we haven't seen <em>anywhere else.</em></h2>
       <p class="lead">We’ve looked, and we haven’t found these anywhere else. Every one is live in MKCinema today.</p>
     </div>
-
-    <div class="tk-group">
-      <h3 class="rv">Your addons, made better.</h3>
-      <p class="rv">They work better in MKCinema with no changes from the people who make them.</p>
-      <div class="tks">
-        <div class="tk rv"><span class="ic"><svg><use href="#i-spark"/></svg></span><h4>Real ratings</h4><p>Ratings addons that show their scores as rows in the source list become IMDb, TMDB and Rotten Tomatoes ratings on the title line, with a rating next to every episode.</p></div>
-        <div class="tk rv"><span class="ic"><svg><use href="#i-bolt"/></svg></span><h4>No more notice clips</h4><p>When a debrid addon plays a 20 or 30 second notice video instead of the film, MKCinema explains the problem in plain words and moves on to the next source.</p></div>
-        <div class="tk rv"><span class="ic"><svg><use href="#i-layers"/></svg></span><h4>Settings screens</h4><p>Addons built with the Stremio addon SDK that describe their settings get a proper settings form, which works with a TV remote and keeps the addon in place in your list.</p></div>
-      </div>
-    </div>
-
-    <div class="tk-group">
-      <h3 class="rv">It knows the line, not just the second.</h3>
-      <p class="rv">MKCinema follows a film by its dialogue, so it knows where you are in any version of it.</p>
-      <div class="tks sm">
-        <div class="tk rv"><span class="ic"><svg><use href="#i-users"/></svg></span><h4>Watch party on any version</h4><p>Friends can each use their own source, even a different release or frame rate. MKCinema lines everyone up by the dialogue.</p></div>
-        <div class="tk rv"><span class="ic"><svg><use href="#i-eye"/></svg></span><h4>Find a line</h4><p>Type words someone says and play from that moment, in the player or on a film’s page.</p></div>
-        <div class="tk rv"><span class="ic"><svg><use href="#i-phone"/></svg></span><h4>Subtitles on your phone</h4><p>Everyone reads their own language on their own phone, in step with the TV.</p></div>
-        <div class="tk rv"><span class="ic"><svg><use href="#i-sync"/></svg></span><h4>Same line on any source</h4><p>Resume and automatic source switching land on the line you left, even on a different version.</p></div>
-        <div class="tk rv"><span class="ic"><svg><use href="#i-ext"/></svg></span><h4>Share this moment</h4><p>A link that opens your friend’s MKCinema at the same line, on whatever source they have.</p></div>
-        <div class="tk rv"><span class="ic"><svg><use href="#i-film"/></svg></span><h4>Couch match</h4><p>Everyone swipes on their phone, and the first title you all like plays on the TV.</p></div>
-      </div>
-    </div>
-
-    <div class="tk-group">
-      <h3 class="rv">For addon developers who want more.</h3>
-      <p class="rv">One optional, data-only <code>mkcinema</code> field in your manifest. MKCinema draws everything with its own components, addon code never runs, and other apps simply ignore it.</p>
-      <div class="devline rv">
-        <div><b>Addon looks</b><span>Row styles (poster, wide, square, Top 10) and where catalogs appear: Home, Discover or Library.</span></div>
-        <div><b>Badges and panels</b><span>Poster badges, film-page info panels and per-episode ratings on any title.</span></div>
-        <div><b>Library sync</b><span>Your lists as Library tabs, and a copy of the viewer's watchlist if they allow it.</span></div>
-        <div><b>Playback events and skips</b><span>Start, pause and finish events, plus intro, recap and credit times.</span></div>
-      </div>
-      <p class="devnote rv">Specs on GitHub: <a href="https://github.com/itbelikethatbruh/MKCinema/blob/main/docs/addon-looks.md">addon looks</a> and <a href="https://github.com/itbelikethatbruh/MKCinema/blob/main/docs/addon-extras.md">addon extras</a>.</p>
-    </div>
+    <h3 class="cur-act rv"><span>Act one</span>It knows the line, not just the second.</h3>
+    <ol class="bills">
+        <li class="bill rv"><span class="bill-n">01</span><div><h3>Watch party on any version</h3><p>Friends can each use their own source, even a different release or frame rate. MKCinema lines everyone up by the dialogue.</p></div></li>
+        <li class="bill rv"><span class="bill-n">02</span><div><h3>Find a line</h3><p>Type words someone says and play from that moment, in the player or on a film’s page.</p></div></li>
+        <li class="bill rv"><span class="bill-n">03</span><div><h3>Subtitles on your phone</h3><p>Everyone reads their own language on their own phone, in step with the TV.</p></div></li>
+        <li class="bill rv"><span class="bill-n">04</span><div><h3>Same line on any source</h3><p>Resume and automatic source switching land on the line you left, even on a different version.</p></div></li>
+        <li class="bill rv"><span class="bill-n">05</span><div><h3>Share this moment</h3><p>A link that opens your friend’s MKCinema at the same line, on whatever source they have.</p></div></li>
+        <li class="bill rv"><span class="bill-n">06</span><div><h3>Couch match</h3><p>Everyone swipes on their phone, and the first title you all like plays on the TV.</p></div></li>
+    </ol>
+    <h3 class="cur-act rv"><span>Act two</span>Your addons, made better.</h3>
+    <ol class="bills">
+        <li class="bill rv"><span class="bill-n">07</span><div><h3>Real ratings</h3><p>Ratings addons that show their scores as rows in the source list become IMDb, TMDB and Rotten Tomatoes ratings on the title line, with a rating next to every episode.</p></div></li>
+        <li class="bill rv"><span class="bill-n">08</span><div><h3>No more notice clips</h3><p>When a debrid addon plays a 20 or 30 second notice video instead of the film, MKCinema explains the problem in plain words and moves on to the next source.</p></div></li>
+        <li class="bill rv"><span class="bill-n">09</span><div><h3>Settings screens</h3><p>Addons built with the Stremio addon SDK that describe their settings get a proper settings form, which works with a TV remote and keeps the addon in place in your list.</p></div></li>
+    </ol>
+    <p class="devnote rv">For addon developers: one optional, data-only <code>mkcinema</code> field in your manifest adds row styles, badges, library sync and skip times. Specs on GitHub: <a href="https://github.com/itbelikethatbruh/MKCinema/blob/main/docs/addon-looks.md">addon looks</a> and <a href="https://github.com/itbelikethatbruh/MKCinema/blob/main/docs/addon-extras.md">addon extras</a>.</p>
   </div>
 </section>
 
 <hr class="hr">
 
-
-<section class="sec" id="tour" aria-labelledby="tour-h">
-  <div class="wrap">
-    <div class="head rv">
-      <span class="eyebrow">The tour</span>
-      <h2 id="tour-h">Everything you want <em>from a cinema.</em></h2>
-    </div>
-    <div class="tour">
-      <div class="chs">
-        <article class="ch" data-i="0">
-          <span class="n">01 · LIBRARY</span>
-          <h3>Every addon. One library.</h3>
-          <p>Install any Stremio addon by link and watch results arrive from each one the moment it answers. MKCinema ships no catalogue of its own, so what you watch is always your choice.</p>
-          <ul>
-            <li><svg><use href="#i-bolt"/></svg><span><b>Debrid built in.</b> Bring your own key from whichever service you use. Cached results play straight away.</span></li>
-            <li><svg><use href="#i-spark"/></svg><span><b>Smart Play.</b> One tap picks the best stream. If a source stalls, the next one takes over by itself.</span></li>
-            <li><svg><use href="#i-sync"/></svg><span><b>Sync everywhere.</b> Library, progress, addons and settings follow your account. Scrobble to Trakt or Simkl.</span></li>
-          </ul>
-          <figure class="ch-media"><img data-clip="clips/home.mp4?v=2" src="shots/home-960.webp" width="960" height="600" alt="MKCinema Home with a featured film and the Top 10 row" loading="lazy" decoding="async"></figure>
-        </article>
-        <article class="ch" data-i="1">
-          <span class="n">02 · PLAYER</span>
-          <h3>A screening room, not a video tag.</h3>
-          <p>Edge-to-edge picture and every option one tab away: Playback, Picture, Audio and More.</p>
-          <ul>
-            <li><svg><use href="#i-vol"/></svg><span><b>Volume to 200 %</b> and every audio language the file carries, picked in one tap.</span></li>
-            <li><svg><use href="#i-cc"/></svg><span><b>Subtitles done properly.</b> Styled anime subtitles, subtitles inside MKV files, OpenSubtitles and a sync strip you drag.</span></li>
-            <li><svg><use href="#i-ext"/></svg><span><b>One tap to VLC</b>, mpv, Infuse, MX Player, IINA or PotPlayer. Only players your device supports are listed.</span></li>
-          </ul>
-          <figure class="ch-media"><img data-clip="clips/player.mp4?v=2" src="shots/player-960.webp" width="960" height="600" alt="The MKCinema player with the Audio tab open" loading="lazy" decoding="async"></figure>
-        </article>
-                <article class="ch" data-i="2">
-          <span class="n">03 · LIVE</span>
-          <h3>Four screens. <em>One sofa.</em></h3>
-          <p>Split Screen plays up to four channels or streams at once, two on TVs and phones. Select a tile and the sound follows it.</p>
-          <ul>
-            <li><svg><use href="#i-tv"/></svg><span><b>Live TV &amp; Guide.</b> Your own M3U playlist or Xtream login with an XMLTV guide, plus channels from your addons.</span></li>
-            <li><svg><use href="#i-monitor"/></svg><span><b>Sports.</b> Live sports from your own sources, sorted by sport.</span></li>
-            <li><svg><use href="#i-layers"/></svg><span><b>From anywhere.</b> Open Split Screen from Live TV or straight from any film page.</span></li>
-          </ul>
-          <figure class="ch-media"><img data-clip="clips/split.mp4?v=2" src="shots/split-960.webp" width="960" height="600" alt="Split Screen playing three open films at once" loading="lazy" decoding="async"></figure>
-        </article>
-        <article class="ch" data-i="3">
-          <span class="n">04 · TOGETHER</span>
-          <h3>Same scene, different sofas.</h3>
-          <p>Start a party, share a six-letter code, and everyone watches from their own sources. Drift is corrected quietly, so nobody hears the punchline first.</p>
-          <ul>
-            <li><svg><use href="#i-users"/></svg><span><b>Play, pause and seek in sync</b> with chat, reactions and push-to-talk.</span></li>
-            <li><svg><use href="#i-head"/></svg><span><b>Listen on phone.</b> The film plays on the TV, the sound comes out of your phone. Headphones in, house asleep.</span></li>
-            <li><svg><use href="#i-phone"/></svg><span><b>Your phone as a remote.</b> Scan the code on the TV for a touchpad, D-pad and keyboard. No app to install.</span></li>
-          </ul>
-          <figure class="ch-media"><img data-clip="clips/party.mp4?v=2" src="shots/party.webp" width="1000" height="800" alt="A watch party lobby with four friends on camera and a vote on what to watch" loading="lazy" decoding="async"></figure>
-        </article>
-        <article class="ch" data-i="4">
-          <span class="n">05 · FRIENDS</span>
-          <h3>Your people, <em>one tap away.</em></h3>
-          <p>Add friends by username and see who is online. Each of you gets a profile with a short bio and four favourite titles, and a trophy case that fills up as you watch.</p>
-          <ul>
-            <li><svg><use href="#i-spark"/></svg><span><b>Trophies and kudos.</b> Earn trophies for streaks, marathons and watch parties, and give a friend kudos for great taste.</span></li>
-            <li><svg><use href="#i-users"/></svg><span><b>Activity.</b> See who is watching now and what friends finished lately, then open the same title in one tap.</span></li>
-            <li><svg><use href="#i-shield"/></svg><span><b>Private until you say so.</b> What you watch and your stats stay off until you turn sharing on, and only friends you both accepted see your profile.</span></li>
-          </ul>
-          <figure class="ch-media"><img src="shots/social-profile-960.webp" width="960" height="600" alt="A friend's profile in MKCinema with trophies and kudos" loading="lazy" decoding="async"></figure>
-        </article>
-        <article class="ch" data-i="5">
-          <span class="n">06 · LOOKS</span>
-          <h3>Five looks. Any colour. <em>An Anime mode.</em></h3>
-          <p>Noir, Midnight, Velvet, Sepia and Anime, plus a colour wheel that tints the whole app. Every look stays dark so the poster art leads, and your choice follows your account.</p>
-          <ul>
-            <li><svg><use href="#i-torii"/></svg><span><b>Anime mode.</b> Trending and airing rows, Skip Opening from any addon, and AniList and MyAnimeList progress.</span></li>
-            <li><svg><use href="#i-palette"/></svg><span><b>Custom posters</b> from a poster service you choose, plus plugins and themes from a reviewed, signed gallery.</span></li>
-          </ul>
-          <figure class="ch-media"><img data-clip="clips/anime.mp4?v=2" src="shots/anime-960.webp" width="960" height="600" alt="MKCinema in the Anime look" loading="lazy" decoding="async"></figure>
-        </article>
-        <article class="ch" data-i="6">
-          <span class="n">07 · BIG SCREEN</span>
-          <h3>Made for the sofa.</h3>
-          <p>Browse with your remote's arrows and OK, and play, pause and skip from its media keys. Android TV, Fire TV, LG and Samsung all get the same cinema.</p>
-          <ul>
-            <li><svg><use href="#i-layers"/></svg><span><b>Ambient Mode.</b> When you step away, Home becomes slowly moving film art. OK opens the film.</span></li>
-            <li><svg><use href="#i-skip"/></svg><span><b>Skip Intro and next episode</b> with a countdown while the next sources warm up.</span></li>
-          </ul>
-          <figure class="ch-media"><img data-clip="clips/tv.mp4?v=2" src="shots/tv-home-960.webp" width="960" height="540" alt="MKCinema on a TV, with remote focus on the Top 10 row" loading="lazy" decoding="async"></figure>
-        </article>
-      </div>
-      <div class="deck" id="deck" aria-hidden="true">
-        <div class="deck-in">
-          <div class="card"><img data-clip="clips/hero.mp4?v=2" src="shots/home.webp" srcset="shots/home-960.webp 960w, shots/home.webp 1600w" sizes="(min-width: 1180px) 640px, 56vw" width="1600" height="1000" alt="" loading="lazy" decoding="async"></div>
-          <div class="card"><img data-clip="clips/player.mp4?v=2" src="shots/player.webp" srcset="shots/player-960.webp 960w, shots/player.webp 1600w" sizes="(min-width: 1180px) 640px, 56vw" width="1600" height="1000" alt="" loading="lazy" decoding="async"></div>
-          <div class="card"><img data-clip="clips/split.mp4?v=2" src="shots/split.webp" srcset="shots/split-960.webp 960w, shots/split.webp 1600w" sizes="(min-width: 1180px) 640px, 56vw" width="1600" height="1000" alt="" loading="lazy" decoding="async"></div>
-          <div class="card"><img data-clip="clips/party.mp4?v=2" src="shots/party.webp" width="1000" height="800" alt="" loading="lazy" decoding="async"></div>
-          <div class="card"><img src="shots/social-profile.webp" srcset="shots/social-profile-960.webp 960w, shots/social-profile.webp 1440w" sizes="(min-width: 1180px) 640px, 56vw" width="1440" height="900" alt="" loading="lazy" decoding="async"></div>
-          <div class="card"><img data-clip="clips/anime.mp4?v=2" src="shots/anime.webp" srcset="shots/anime-960.webp 960w, shots/anime.webp 1600w" sizes="(min-width: 1180px) 640px, 56vw" width="1600" height="1000" alt="" loading="lazy" decoding="async"></div>
-          <div class="card"><img data-clip="clips/tv.mp4?v=2" src="shots/tv-home.webp" srcset="shots/tv-home-960.webp 960w, shots/tv-home.webp 1600w" sizes="(min-width: 1180px) 640px, 56vw" width="1600" height="900" alt="" loading="lazy" decoding="async"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="sec" id="gallery" style="padding-top:0" aria-labelledby="gal-h">
-  <div class="wrap">
-    <div class="head rv">
-      <span class="eyebrow">Real screens</span>
-      <h2 id="gal-h">See it <em>for yourself.</em></h2>
-      <p class="lead">Every screen here is the live app, captured as it is today. The films playing are open movies from the Blender Foundation, and the people are real, from Pexels stock footage.</p>
-    </div>
-  </div>
-  <div class="galw">
-  <button class="gal-hint" id="galHint" type="button" aria-label="See more: swipe left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg>Swipe</button>
-  <div class="gal rv" tabindex="0" aria-label="Screenshots, scroll sideways">
-        <figure class="shot" data-rd="hand-home"><img data-clip="clips/hand-home.mp4?v=1" src="shots/hand-home.webp" width="960" height="600" alt="A hand holding a phone with MKCinema open on the home screen" loading="lazy" decoding="async"><figcaption><b>In your hand</b><span>Browse, pick and play from your phone.</span></figcaption></figure>
-        <figure class="shot"><img src="shots/social-activity-960.webp" width="960" height="600" alt="The Activity tab in MKCinema's Friends panel" loading="lazy" decoding="async"><figcaption><b>Friends activity</b><span>Who is watching now, and this month's board.</span></figcaption></figure>
-        <figure class="shot tall"><img src="shots/social-you-phone.webp" width="480" height="977" alt="Your MKCinema profile on a phone, with favourites and trophies" loading="lazy" decoding="async"><figcaption><b>Your profile</b><span>A bio, four favourites and your trophy case.</span></figcaption></figure>
-        <figure class="shot"><img src="shots/social-profile-960.webp" width="960" height="600" alt="A friend's profile in MKCinema" loading="lazy" decoding="async"><figcaption><b>Friend profiles</b><span>Trophies, kudos, message or start a party.</span></figcaption></figure>
-        <figure class="shot"><img data-clip="clips/split.mp4?v=2" src="shots/split-960.webp" width="960" height="600" alt="Split Screen in MKCinema" loading="lazy" decoding="async"><figcaption><b>Split Screen</b><span>Three films at once, sound on the tile you pick.</span></figcaption></figure>
-        <figure class="shot"><img data-clip="clips/film.mp4?v=2" src="shots/film-960.webp" width="960" height="600" alt="Film pages in MKCinema" loading="lazy" decoding="async"><figcaption><b>Film pages</b><span>Smart Play, Find a line, lists and every source in one place.</span></figcaption></figure>
-        <figure class="shot"><img src="shots/more-like-960.webp" width="960" height="600" alt="More like this in MKCinema" loading="lazy" decoding="async"><figcaption><b>More like this</b><span>Every page ends with what to watch next.</span></figcaption></figure>
-        <figure class="shot"><img src="shots/studio-960.webp" width="960" height="600" alt="Addon Studio in MKCinema" loading="lazy" decoding="async"><figcaption><b>Addon Studio</b><span>Design an addon visually and export a ready server.</span></figcaption></figure>
-        <figure class="shot"><img src="shots/appearance-960.webp" width="960" height="600" alt="Appearance in MKCinema" loading="lazy" decoding="async"><figcaption><b>Appearance</b><span>Top or side menu, five looks and a colour wheel.</span></figcaption></figure>
-        <figure class="shot"><img src="shots/seats-960.webp" width="960" height="600" alt="Seats in MKCinema" loading="lazy" decoding="async"><figcaption><b>Seats</b><span>A seat for everyone, with PINs and kids seats.</span></figcaption></figure>
-        <figure class="shot"><img src="shots/plugins-960.webp" width="960" height="600" alt="Plugins & themes in MKCinema" loading="lazy" decoding="async"><figcaption><b>Plugins & themes</b><span>A reviewed, signed gallery you switch on in a tap.</span></figcaption></figure>
-        <figure class="shot"><img data-clip="clips/player.mp4?v=2" src="shots/player-960.webp" width="960" height="600" alt="The player in MKCinema" loading="lazy" decoding="async"><figcaption><b>The player</b><span>Audio tab with 200 % volume and every language.</span></figcaption></figure>
-        <figure class="shot"><img data-clip="clips/anime.mp4?v=2" src="shots/anime-960.webp" width="960" height="600" alt="Anime look in MKCinema" loading="lazy" decoding="async"><figcaption><b>Anime look</b><span>Its own tab, mascot and manga frames.</span></figcaption></figure>
-        <figure class="shot"><img data-clip="clips/tv.mp4?v=2" src="shots/tv-home-960.webp" width="960" height="540" alt="On a TV in MKCinema" loading="lazy" decoding="async"><figcaption><b>On a TV</b><span>Remote-first, with the Top 10 and networks.</span></figcaption></figure>
-        <figure class="shot tall"><img data-clip="clips/remote-cam.mp4?v=1" src="shots/remote-cam.webp" width="480" height="1040" alt="The MKCinema phone remote with Party camera on, showing the face it sends to the party" loading="lazy" decoding="async"><figcaption><b>Phone remote</b><span>Pair with a code, no app. Tap Camera and the party sees you.</span></figcaption></figure><figure class="shot" data-rd="hand-tap"><img data-clip="clips/hand-tap.mp4?v=1" src="shots/hand-tap.webp" width="960" height="600" alt="Someone tapping the MKCinema phone remote" loading="lazy" decoding="async"><figcaption><b>Tap to control</b><span>Your phone is the remote: tap, hold and slide.</span></figcaption></figure><figure class="shot"><img data-clip="clips/party.mp4?v=2" src="shots/party-cams-960.webp" width="960" height="600" alt="Party cameras beside the film in MKCinema" loading="lazy" decoding="async"><figcaption><b>Party cameras</b><span>Friends beside the film; whoever talks gets a ring.</span></figcaption></figure><figure class="shot"><img src="shots/sensory-960.webp" width="960" height="600" alt="Sensory-friendly mode in the MKCinema player" loading="lazy" decoding="async"><figcaption><b>Sensory-friendly</b><span>Softer bangs and dimmed flashes, on your device.</span></figcaption></figure><figure class="shot"><img src="shots/glasses-960.webp" width="960" height="600" alt="Subtitles on smart glasses in the MKCinema player" loading="lazy" decoding="async"><figcaption><b>Smart glasses</b><span>Subtitles on Frame, G1 and G2 glasses.</span></figcaption></figure><figure class="shot tall"><img src="shots/phone-title.webp" width="600" height="1333" alt="A film’s cast and details on the phone remote" loading="lazy" decoding="async"><figcaption><b>Details on your phone</b><span>Cast, episodes and filmographies while the TV plays.</span></figcaption></figure><figure class="shot tall" data-rd="hand-park"><img data-clip="clips/hand-park.mp4?v=1" src="shots/hand-park.webp" width="480" height="1068" alt="A phone held outdoors with MKCinema open" loading="lazy" decoding="async"><figcaption><b>Out and about</b><span>Your list and progress follow you.</span></figcaption></figure><figure class="shot tall"><img src="shots/phone-ask.webp" width="600" height="1333" alt="Miko, the remote’s assistant, on a phone" loading="lazy" decoding="async"><figcaption><b>Miko</b><span>“Back 30 seconds”, “who’s in this”.</span></figcaption></figure>
-  </div></div><!--/galw-->
-</section>
-
-<section class="sec" id="everything" style="padding-top:0" aria-labelledby="all-h">
+<section class="sec" id="everything" aria-labelledby="all-h">
   <div class="wrap">
     <div class="head rv">
       <span class="eyebrow">Everything inside</span>
       <h2 id="all-h">121 features. <em>All free.</em></h2>
       <p class="lead">The whole list, in one place. Nothing here is locked, and nothing ever will be.</p>
     </div>
+    <details class="allf rv"><summary><span>See all 121 features</span></summary>
     <div class="cats">
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-puzzle"/></svg></span><h3>Addons</h3><span class="cnt">8</span></div><ul><li>Any Stremio addon by link</li><li>Addons start instantly from a saved copy</li><li>Ratings, notices and settings, made better</li><li>Find addons in the app</li><li>Addon Studio</li><li>Manage addons from your phone</li><li>Import from Stremio</li><li>Plex, Jellyfin and Emby as sources</li></ul></div>
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-bolt"/></svg></span><h3>Sources</h3><span class="cnt">11</span></div><ul><li>Debrid built in, your own key</li><li>Cloud convert from your own service</li><li>Smart Play</li><li>Automatic failover</li><li>Source Check and source rules</li><li>Duplicate sources folded</li><li>Picks a source your device can play</li><li>Starts on the first try</li><li>Browser only mode</li><li>One tap to VLC, mpv, Infuse and more</li><li>Slow internet mode</li></ul></div>
@@ -728,6 +873,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
     <div class="works rv" aria-label="Works with">
       <span>Stremio addons</span><span>Major debrid services</span><span>VLC</span><span>mpv</span><span>Trakt</span><span>Simkl</span><span>AniList</span><span>MyAnimeList</span><span>Plex</span><span>Jellyfin</span><span>Emby</span>
     </div>
+    </details>
   </div>
 </section>
 
@@ -739,7 +885,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
     <div class="lx-beam" aria-hidden="true"></div>
     <div class="lx-big" aria-hidden="true"><span>Every line, in your eyeline.</span></div>
     <canvas aria-hidden="true"></canvas>
-    <div class="lx-shot" aria-hidden="true"><picture><source media="(orientation: portrait)" srcset="shots/phone-home-480.webp 480w, shots/phone-home.webp 600w" sizes="100vw"><img data-portrait="shots/phone-home.webp" src="shots/home-960.webp" srcset="shots/home-960.webp 960w, shots/home.webp 1600w" sizes="100vw" width="1600" height="1000" alt="" loading="lazy" decoding="async"></picture></div>
+    <div class="lx-shot" aria-hidden="true"><div class="lx-tv"><video muted loop playsinline preload="none" poster="lens/film-poster.webp" data-src="lens/film.mp4" width="960" height="540" tabindex="-1" disablepictureinpicture></video></div></div>
     <div class="lx-veil" aria-hidden="true"></div>
     <div class="lx-b1">
       <span class="eyebrow">New · Subtitles on smart glasses</span>
@@ -943,6 +1089,26 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 
 <hr class="hr">
 
+<section class="sec about" id="about" aria-labelledby="ab-h">
+  <div class="wrap">
+    <div class="ab">
+      <figure class="ab-pic rv"><img src="shots/dev.webp" width="320" height="320" alt="Dee Lavish, the developer of MKCinema" loading="lazy" decoding="async"><figcaption><b>Dee Lavish</b><span>Developer of MKCinema</span></figcaption></figure>
+      <div class="ab-copy rv">
+        <span class="eyebrow">About the dev</span>
+        <h2 id="ab-h">I got tired of bad apps, <em>so I overclocked the browser.</em></h2>
+        <p>Every native cinema app I tried let me down somewhere. One was slow, another broke on my TV, and none of them worked the same on every device. On an iPhone the answer was usually “there is no app for that.”</p>
+        <p>I wanted something efficient that anyone could use, and I saw an opening: the browser. It is already on every phone, tablet, computer and TV. It just is not expected to do the hard parts, like playing MKV files, handling Dolby and DTS sound, or keeping a whole household in step. So I pushed it past what it normally does. MKCinema runs its own playback engine inside the page to do exactly that.</p>
+        <p>That is why it opens from a link on anything with a screen. On an iPhone you open it in Safari, add it to your Home Screen, and it sits there like any other app. Nobody has to ask “do you have an app?” again.</p>
+        <p>Then I kept going: Miko, watch parties that line up by the dialogue, a Social Hub. I had not seen all of that in one free app, so I built it in the open, and it stays free. Claude, the AI from Anthropic, helped me bring it to reality.</p>
+        <p class="ab-sig">Dee Lavish</p>
+        <div class="ab-links"><a class="btn btn-ghost" href="https://github.com/itbelikethatbruh/MKCinema"><svg aria-hidden="true"><use href="#i-ext"/></svg>The code on GitHub</a><a class="btn btn-ghost" href="/iphone-ipad/"><svg aria-hidden="true"><use href="#i-phone"/></svg>MKCinema on iPhone</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="hr">
+
 <section class="sec" id="faq" aria-labelledby="faq-h">
   <div class="wrap">
     <div class="head center rv">
@@ -980,14 +1146,21 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 
 <footer>
   <div class="wrap">
-    <div class="foot">
-      <a class="brand" href="#top"><svg aria-hidden="true"><use href="#logo"/></svg><span><b>MK</b><i>Cinema</i></span></a>
-      <nav aria-label="Footer">
-        <a href="#different">What's different</a><a href="#tour">Features</a><a href="#download">Download</a><a href="#faq">FAQ</a><a href="/stremio-addons/">Stremio addons</a><a href="/fire-tv/">Fire TV</a><a href="/iphone-ipad/">iPhone and iPad</a><a href="/mkv-in-browser/">MKV playback</a><a href="/skip-intro/">Skip intro</a><a href="https://ko-fi.com/mkcinema">Ko-fi</a><a href="https://github.com/itbelikethatbruh/MKCinema">GitHub</a><a href="https://app.mkcinema.app/">Open app</a>
+    <div class="ft">
+      <div class="ft-brand">
+        <a class="brand" href="#top"><svg aria-hidden="true"><use href="#logo"/></svg><span><b>MK</b><i>Cinema</i></span></a>
+        <p>Tomorrow’s cinema. For the whole house.</p>
+        <ul class="ft-badges" aria-label="What MKCinema promises"><li>Free forever</li><li>Open source · GPL-3.0</li><li>No ads</li><li>No tracking cookies</li><li>12 languages</li><li>8 platforms</li></ul>
+      </div>
+      <nav class="ft-cols" aria-label="Footer">
+        <div><h4>Product</h4><a href="#features">Features</a><a href="#social">Social Hub</a><a href="#different">Only here</a><a href="#everything">All features</a><a href="#download">Download</a><a href="https://app.mkcinema.app/">Open the app</a></div>
+        <div><h4>Guides</h4><a href="/stremio-addons/">Stremio addons</a><a href="/fire-tv/">Fire TV</a><a href="/iphone-ipad/">iPhone and iPad</a><a href="/mkv-in-browser/">MKV playback</a><a href="/skip-intro/">Skip intro</a><a href="#faq">FAQ</a></div>
+        <div><h4>Project</h4><a href="#about">About the dev</a><a href="https://github.com/itbelikethatbruh/MKCinema">GitHub</a><a href="https://github.com/itbelikethatbruh/MKCinema/blob/main/CHANGELOG.md">Changelog</a><a href="https://github.com/itbelikethatbruh/MKCinema/blob/main/CONTRIBUTING.md">Contributing</a><a href="https://github.com/itbelikethatbruh/MKCinema/blob/main/SECURITY.md">Security policy</a><a href="https://ko-fi.com/mkcinema">Ko-fi (optional)</a></div>
+        <div><h4>Legal</h4><a href="https://github.com/itbelikethatbruh/MKCinema/blob/main/LICENSE">Licence (GPL-3.0)</a><a href="https://github.com/itbelikethatbruh/MKCinema/blob/main/NOTICE">Third-party notices</a><a href="https://app.mkcinema.app/privacy.html">Privacy</a><a href="https://app.mkcinema.app/terms.html">Terms</a></div>
       </nav>
     </div>
     <p class="legal">MKCinema does not host, provide or link to any copyrighted content. It plays sources from third-party addons that users install themselves. Stremio is a trademark of its owner; MKCinema is an independent project, not affiliated with or endorsed by Stremio. VLC, debrid services and other names belong to their owners.</p>
-    <p class="legal" id="clipcredit">Films in the clips: Big Buck Bunny, Elephants Dream, Sintel and Tears of Steel, © Blender Foundation, licensed CC BY. People in the clips (the watch party, the phone camera and the hands holding phones): Pexels stock footage.</p>
+    <p class="legal" id="clipcredit">Films in the clips: Agent 327: Operation Barbershop, Big Buck Bunny, Cosmos Laundromat, Elephants Dream, Sintel, Sprite Fright and Tears of Steel, © Blender Foundation, licensed CC BY. People in the watch party clip: Pexels stock footage.</p>
     <p class="legal">© <span id="yr">2026</span> MKCinema · Made by Dee Lavish · Free forever · Open source under GPL-3.0</p>
   </div>
 </footer>
@@ -1051,33 +1224,6 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
     t.addEventListener('pointerleave', () => { t.style.setProperty('--rx', '0deg'); t.style.setProperty('--ry', '0deg'); });
   });
 
-  // Tour: a 3D deck that brings each chapter's screen to the front
-  const deck = $('#deck'), cards = $$('.card', deck), chs = $$('.ch');
-  const wide = matchMedia('(min-width: 960px) and (min-aspect-ratio: 5/4)');
-  let active = -1;
-  const show = i => {
-    if (i === active) return; active = i;
-    cards.forEach((c, k) => {
-      const o = k - i;
-      c.style.opacity = o < 0 ? 0 : Math.max(0, 1 - o * .34);
-      c.style.transform = o < 0
-        ? 'perspective(1800px) translate3d(0,-6%,120px) rotateX(-8deg)'
-        : `perspective(1800px) translate3d(0,${o * -7}%,${o * -150}px)`;
-      c.style.zIndex = 10 - Math.abs(o);
-    });
-  };
-  show(0);
-  const cio = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) show(+e.target.dataset.i); }), { rootMargin: '-48% 0px -48% 0px' });
-  chs.forEach(c => cio.observe(c));
-  if (fine && !reduce) {
-    let dx = 0, dy = 0, dr = 0;
-    deck.addEventListener('pointermove', e => {
-      const r = deck.getBoundingClientRect();
-      dx = (e.clientX - r.left) / r.width * 2 - 1; dy = (e.clientY - r.top) / r.height * 2 - 1;
-      if (!dr) dr = requestAnimationFrame(() => { dr = 0; deck.style.setProperty('--mx', dx.toFixed(3)); deck.style.setProperty('--my', dy.toFixed(3)); });
-    }, { passive: true });
-    deck.addEventListener('pointerleave', () => { deck.style.setProperty('--mx', 0); deck.style.setProperty('--my', 0); });
-  }
 })();
 </script>
 <script id="mkc-lens">/* glasses reveal: loads /lens/lens.js only near the section; still poster for TVs, very low-end devices, data saver and no WebGL.
@@ -1143,7 +1289,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 <script id="mkc-clips">(()=>{
   const ua=navigator.userAgent||'',c=navigator.connection||{};
   if(/SMART-TV|SmartTV|Tizen|Web0S|webOS|NetCast|BRAVIA|AFT[A-Z]|Android TV|GoogleTV|CrKey|HbbTV|MKCinemaTV/i.test(ua))return;
-  if(c.saveData||/(^|-)2g$/.test(c.effectiveType||''))return;
+  if(/(^|-)2g$/.test(c.effectiveType||''))return;
   if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
   if((navigator.deviceMemory||4)<2)return;
   if(!('IntersectionObserver' in window))return;
@@ -1169,6 +1315,74 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
   h.addEventListener('click',()=>{const s=g.querySelector('.shot');g.scrollBy({left:(s?s.getBoundingClientRect().width:320)+16,behavior:'smooth'});hide()});
   g.addEventListener('scroll',()=>{if(g.scrollLeft>40)hide()},{passive:true});
   if(g.scrollWidth<=g.clientWidth+8)h.hidden=true;
+})();</script>
+<script id="mkc-stage">(()=>{
+  const sec=document.getElementById('different'),st=sec&&sec.querySelector('.cur-stage'),cv=st&&st.querySelector('.cur-cv');
+  const calm=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(cv){
+    const g=cv.getContext('2d'),tex=new Image();let W=0,H=0,dpr=1,ok=false,vis=false,raf=0,o=0,vel=0,lastY=scrollY,sway=0,lastT=0;
+    tex.onload=()=>{ok=true;kick()};tex.src='stage/drape.webp';
+    const size=()=>{dpr=Math.min(devicePixelRatio||1,innerWidth<700?1.5:1.25);W=st.clientWidth;H=st.clientHeight;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr)};
+    const sm=t=>t*t*(3-2*t);
+    // inner edge of one half at height v (0 top, 1 floor): wide at the rail, pinched at the tie-back, falling free below it
+    const edge=(v,o)=>{const ph=W<700,top=ph?.115:.13,tie=ph?.058:.066,bot=ph?.082:.094,ty=.56;
+      const open=v<ty?top+(tie-top)*sm(Math.pow(v/ty,1.35)):tie+(bot-tie)*sm(Math.min(1,(v-ty)/.3));
+      // the cloth near the floor trails behind the cloth at the rail while it is being drawn
+      const lag=Math.min(1,Math.max(0,o*1.22-.22*v));const e=sm(lag);
+      return W*(.505+(open-.505)*e)};
+    const draw=(now)=>{raf=0;if(!ok||!vis)return;
+      const r=sec.getBoundingClientRect(),vh=innerHeight;
+      o=calm?1:Math.min(1,Math.max(0,(vh*.06-r.top)/(vh*.62)));
+      const dt=Math.min(.05,(now-lastT)/1000||.016);lastT=now;
+      const dy=scrollY-lastY;lastY=scrollY;vel+=(dy*.9-vel)*.25;sway+=((Math.max(-60,Math.min(60,vel)))-sway)*Math.min(1,dt*5);
+      const t=now/1000,tw=tex.naturalWidth,th=tex.naturalHeight,step=Math.max(3,Math.round((W<700?5:4)*dpr));
+      g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,cv.width,cv.height);
+      const hemLift=o*H*.035;
+      for(let side=0;side<2;side++){
+        g.setTransform(side?-dpr:dpr,0,0,dpr,side?cv.width:0,0);
+        for(let py=0;py<cv.height;py+=step){const y=py/dpr,v=y/H,w=edge(v,o);
+          // folds drift a little all the time and swing with the scroll; more toward the floor, where the cloth is free
+          const free=v*v,wob=calm?0:(Math.sin(t*.9+v*5.2+side*1.7)*5+Math.sin(t*1.7+v*11+side)*2.2)*free*(.35+.65*o)+sway*free*.9;
+          const sx=((60+wob+(side?140:0))%tw+tw)%tw, sw=tw*.72*(.55+.45*(w/(W*.505)));
+          const sy=Math.min(th-1,(v*(1+hemLift/H))*th*(H>W?1:.92+.08)),sh=step/dpr/H*th+1;
+          const dw=w+ (calm?0:Math.sin(t*.8+v*4+side*2)*2.5*free);
+          if(sx+sw<=tw)g.drawImage(tex,sx,sy,sw,sh,0,y,dw,step/dpr+.6);
+          else{const a=tw-sx,f=a/sw;g.drawImage(tex,sx,sy,a,sh,0,y,dw*f,step/dpr+.6);g.drawImage(tex,0,sy,sw-a,sh,dw*f-.5,y,dw*(1-f)+.5,step/dpr+.6)}
+        }
+        // shade: the gathered cloth is deeper, and the inner edge throws a soft shadow on the stage
+        const wm=edge(.56,o),sh=g.createLinearGradient(0,0,W*.52,0);sh.addColorStop(0,'rgba(0,0,0,'+(.34*o).toFixed(3)+')');sh.addColorStop(.5,'rgba(0,0,0,0)');
+        g.globalCompositeOperation='source-atop';g.fillStyle=sh;g.fillRect(0,0,W*.52,H);g.globalCompositeOperation='source-over';
+      }
+      g.setTransform(1,0,0,1,0,0);
+      st.style.setProperty('--o',o.toFixed(4));
+      st.style.setProperty('--tw',(edge(.56,o)/W*100).toFixed(2)+'vw');
+      st.style.setProperty('--l',calm?'.7':(.5+.5*Math.sin(scrollY/70)).toFixed(3));
+      // the stage fades as its section ends
+      st.style.opacity=Math.min(1,Math.max(0,(r.bottom-vh*.55)/(vh*.4))).toFixed(3);
+      if(!calm&&vis)raf=requestAnimationFrame(draw);
+    };
+    const kick=()=>{if(vis&&!raf)raf=requestAnimationFrame(draw)};
+    new IntersectionObserver(([e])=>{vis=e.isIntersecting;kick()},{rootMargin:'20% 0px'}).observe(sec);
+    addEventListener('scroll',kick,{passive:true});addEventListener('resize',()=>{size();kick()});size();
+  }
+  const v=document.querySelector('.lx-tv video'),lens=document.getElementById('lens');
+  if(v&&lens&&'IntersectionObserver' in window)new IntersectionObserver(([e])=>{
+    if(e.isIntersecting){if(!v.src)v.src=v.dataset.src;const p=v.play();p&&p.catch(()=>{})}else v.pause();
+  },{rootMargin:'20% 0px'}).observe(lens);
+})();</script>
+<script id="mkc-miko">(()=>{
+  const st=document.getElementById('mikoStage');if(!st)return;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){st.style.setProperty('--m','1');return}
+  let raf=0,vis=false,cur=0;
+  const draw=()=>{raf=0;const r=st.getBoundingClientRect(),vh=innerHeight;
+    // she starts to rise when the phone is a third of the way up the screen, and settles as it reaches the middle
+    const want=Math.min(1,Math.max(0,(vh*.92-r.top-r.height*.45)/(vh*.42)));
+    cur+=(want-cur)*.14;if(Math.abs(want-cur)<.002)cur=want;
+    st.style.setProperty('--m',cur.toFixed(4));
+    if(vis&&cur!==want)raf=requestAnimationFrame(draw)};
+  const on=()=>{if(vis&&!raf)raf=requestAnimationFrame(draw)};
+  new IntersectionObserver(([e])=>{vis=e.isIntersecting;on()},{rootMargin:'10% 0px'}).observe(st);
+  addEventListener('scroll',on,{passive:true});addEventListener('resize',on);
 })();</script>
 </body>
 </html>
