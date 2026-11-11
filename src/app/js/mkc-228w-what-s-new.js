@@ -7,6 +7,9 @@
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
 const RELEASES = [
+  { v: '2.64.2', date: '2026-11-11', items: [
+    ['better', 'Opens straight to Home', 'The web app no longer plays an opening animation. The MKCinema loading screen shows while Home gets ready, then you are in.'],
+  ] },
   { v: '2.64.1', date: '2026-11-11', items: [
     ['better', 'Addons start instantly', 'Addons start instantly from a saved copy and keep working if their server blinks. If Cinemeta ever stops answering, Home, search and title pages carry on from TMDB.'],
   ] },
