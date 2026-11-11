@@ -6,7 +6,14 @@
    It waits until the intro, the walkthrough, any open panel and the player are gone, and never shows on a first visit
    (the walkthrough covers that). Settings › More › What's new keeps the full list, with a switch to stop the card.
    Add each release at the top of RELEASES when its version goes out. */
+/* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.67.1', date: '2026-11-11', items: [
+    ['better', 'Your TV service adds first time', 'In the Android and Android TV app, a TV service on plain http:// (or one that doesn’t allow web pages) now adds straight from Live TV › Add playlist.'],
+    ['better', 'Sharper picks on Android TV', 'Smart Play on Android TV now picks for the TV player, which plays MKV, HEVC and HDR on the box’s own hardware, so it no longer settles for a lower quality file. When a source won’t open, the next one goes straight to the TV player.'],
+    ['better', 'Smoother on smaller TV boxes', 'Held arrows no longer run ahead of the screen, and the side menu folds away as soon as you pick a page.'],
+    ['better', 'Fewer stops on film pages', 'With a remote, the director, writers and cast are now one stop: Left and Right move along the names, Up and Down move past them.'],
+  ] },
   { v: '2.67.0', date: '2026-11-11', items: [
     ['new', '30 languages', 'MKCinema now speaks 30 languages besides English, including 中文, العربية, Русский, 日本語, 한국어, Bahasa Indonesia, Türkçe and Kiswahili, and every menu, setting and message is translated. Pick one in Settings › Appearance › Language.'],
     ['new', 'Record live TV', 'Record the channel you’re watching (for 30 minutes, an hour, until the programme ends, or until you stop), or pick a programme later in the guide and it records when it starts. Xtream catch-up programmes save to a file in one press. Find them all in Live TV › Recordings.'],
