@@ -8,6 +8,12 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.67.5', date: '2026-11-12', items: [
+    ['better', 'Smoother video starts and stops', 'Opening and closing a video on Android is now clean and steady, with no flashes, and the loading logo moves more smoothly on phones.'],
+  ] },
+  { v: '2.67.4', date: '2026-11-11', items: [
+    ['better', 'Miko’s natural voice', 'Miko’s natural voice is now on by default when she reads answers aloud, much faster on newer phones and computers, with smoother, more natural reading.'],
+  ] },
   { v: '2.67.3', date: '2026-11-11', items: [
     ['better', 'Miko follows the conversation', 'Answer Miko’s question with a simple “yes” and she does what she offered, and her answers read cleaner.'],
   ] },

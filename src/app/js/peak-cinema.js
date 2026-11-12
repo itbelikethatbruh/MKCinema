@@ -38,7 +38,7 @@ const Peak = {
     const el = document.createElement('div'); el.id = 'peak'; el.className = 'pk'; el.hidden = true;
     el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Peak Cinema');
     el.innerHTML = `
-      <div class="pk-stage"><video class="pk-v" playsinline preload="auto"></video><video class="pk-v" playsinline preload="auto"></video><div class="pk-shade"></div></div>
+      <div class="pk-stage"><video class="pk-v" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" playsinline preload="auto"></video><video class="pk-v" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" playsinline preload="auto"></video><div class="pk-shade"></div></div>
       <div class="pk-ui">
         <div class="pk-top">
           <div class="pk-brand"><span class="pk-mark">Peak Cinema</span><span class="pk-sub" id="pkCount"></span></div>

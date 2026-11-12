@@ -937,7 +937,7 @@ body.touch-ui.layer-open #app{visibility:hidden}
 .layer-ov.leaving[hidden]{display:flex!important;pointer-events:none;animation:ovOut .22s ease-in forwards}
 .layer-ov.leaving[hidden]>.panel,.layer-ov.leaving[hidden]>.modal,.layer-ov.leaving[hidden]>.tr-box{animation:panelOut .22s ease-in forwards}
 #player:not([hidden]){animation:ovIn .3s ease-out}
-#player.leaving[hidden]{display:flex!important;pointer-events:none;animation:ovOut .22s ease-in forwards}
+#player.leaving[hidden]{display:flex!important;pointer-events:none;animation:ovOut .22s ease-in forwards}/* 2.67.5 smooth-player */#player.leaving[hidden]>*{visibility:hidden!important}
 @keyframes ovOut{to{opacity:0}}
 @keyframes panelOut{to{opacity:0;transform:translateY(10px) scale(.99)}}
 .hero-body.swap>*{animation:heroText .7s var(--ease) backwards}
@@ -1050,7 +1050,7 @@ body.touch-ui .ep.spoil .th img,body.touch-ui .un-th.spoil img{filter:brightness
 .pl-art b{font-family:var(--f-display);font-size:calc(clamp(22px,4vw,40px) * var(--ts,1));font-weight:700;letter-spacing:.02em;text-align:center}
 
 .pl-bar i{display:block;width:40%;height:100%;background:var(--ink);animation:plBar 1.3s ease-in-out infinite}
-.p-load.flat .pl-art{animation-name:plPulseFlat}
+.p-load.flat .pl-art{animation-name:plPulseFlat}body.touch-ui .p-load .pl-art{animation-name:plPulseFlat;transform-style:flat}
 @keyframes plPulse{0%,100%{opacity:.55;transform:rotateY(-14deg) rotateX(4deg) scale(.96)}50%{opacity:1;transform:rotateY(14deg) rotateX(-4deg) scale(1.02)}}
 @keyframes plPulseFlat{0%,100%{opacity:.5;transform:scale(.97)}50%{opacity:1;transform:scale(1.02)}}
 @keyframes plBar{0%{transform:translateX(-110%)}100%{transform:translateX(260%)}}

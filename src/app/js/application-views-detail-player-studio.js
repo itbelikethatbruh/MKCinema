@@ -802,6 +802,16 @@ document.addEventListener('fullscreenchange', () => trIcon('#trFull', document.f
    ===================================================================== */
 const P = { ctx: null, stream: null, hls: null, amb: CFG.ambilight && !IS_TV, subs: [], subDelay: 0, idleT: 0, lastSave: 0, curSub: -1, upNextT: 0, upNextDismissed: false, filter: 'all', retried: false, raf: 0, remux: null, ducking: false };
 const video = $('#video');
+/* 2.67.5 smooth-player: Android draws a large grey play button on any video that has no picture yet (while it loads,
+   after it is emptied on close, between sources). Every video gets a see-through poster there instead. */
+const MK_BLANK_POSTER = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+if (/Android/i.test(navigator.userAgent)) {
+  video.setAttribute('poster', MK_BLANK_POSTER);
+  const mkCe = Document.prototype.createElement;
+  Document.prototype.createElement = function (t) { const el = mkCe.apply(this, arguments); if (typeof t === 'string' && t.length === 5 && t.toLowerCase() === 'video') el.setAttribute('poster', MK_BLANK_POSTER); return el; };
+  // videos written as HTML get one as soon as they start loading
+  document.addEventListener('loadstart', (e) => { const v = e.target; if (v && v.tagName === 'VIDEO' && !v.getAttribute('poster')) v.setAttribute('poster', MK_BLANK_POSTER); }, true);
+}
 /* Player clock. While the audio rescue remux runs, the video element starts at 0 from the point the server began
    converting, so its time is offset and its duration comes from the server's probe. Everything reads time through these. */
 const pNow = () => video.currentTime + (P.remux ? P.remux.offset : 0);

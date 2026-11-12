@@ -1008,7 +1008,7 @@ body.touch-ui.layer-open #app{visibility:hidden}
 .layer-ov.leaving[hidden]{display:flex!important;pointer-events:none;animation:ovOut .22s ease-in forwards}
 .layer-ov.leaving[hidden]>.panel,.layer-ov.leaving[hidden]>.modal,.layer-ov.leaving[hidden]>.tr-box{animation:panelOut .22s ease-in forwards}
 #player:not([hidden]){animation:ovIn .3s ease-out}
-#player.leaving[hidden]{display:flex!important;pointer-events:none;animation:ovOut .22s ease-in forwards}
+#player.leaving[hidden]{display:flex!important;pointer-events:none;animation:ovOut .22s ease-in forwards}/* 2.67.5 smooth-player */#player.leaving[hidden]>*{visibility:hidden!important}
 @keyframes ovOut{to{opacity:0}}
 @keyframes panelOut{to{opacity:0;transform:translateY(10px) scale(.99)}}
 .hero-body.swap>*{animation:heroText .7s var(--ease) backwards}
@@ -1121,7 +1121,7 @@ body.touch-ui .ep.spoil .th img,body.touch-ui .un-th.spoil img{filter:brightness
 .pl-art b{font-family:var(--f-display);font-size:calc(clamp(22px,4vw,40px) * var(--ts,1));font-weight:700;letter-spacing:.02em;text-align:center}
 
 .pl-bar i{display:block;width:40%;height:100%;background:var(--ink);animation:plBar 1.3s ease-in-out infinite}
-.p-load.flat .pl-art{animation-name:plPulseFlat}
+.p-load.flat .pl-art{animation-name:plPulseFlat}body.touch-ui .p-load .pl-art{animation-name:plPulseFlat;transform-style:flat}
 @keyframes plPulse{0%,100%{opacity:.55;transform:rotateY(-14deg) rotateX(4deg) scale(.96)}50%{opacity:1;transform:rotateY(14deg) rotateX(-4deg) scale(1.02)}}
 @keyframes plPulseFlat{0%,100%{opacity:.5;transform:scale(.97)}50%{opacity:1;transform:scale(1.02)}}
 @keyframes plBar{0%{transform:translateX(-110%)}100%{transform:translateX(260%)}}
@@ -4451,6 +4451,16 @@ document.addEventListener('fullscreenchange', () => trIcon('#trFull', document.f
    ===================================================================== */
 const P = { ctx: null, stream: null, hls: null, amb: CFG.ambilight && !IS_TV, subs: [], subDelay: 0, idleT: 0, lastSave: 0, curSub: -1, upNextT: 0, upNextDismissed: false, filter: 'all', retried: false, raf: 0, remux: null, ducking: false };
 const video = $('#video');
+/* 2.67.5 smooth-player: Android draws a large grey play button on any video that has no picture yet (while it loads,
+   after it is emptied on close, between sources). Every video gets a see-through poster there instead. */
+const MK_BLANK_POSTER = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+if (/Android/i.test(navigator.userAgent)) {
+  video.setAttribute('poster', MK_BLANK_POSTER);
+  const mkCe = Document.prototype.createElement;
+  Document.prototype.createElement = function (t) { const el = mkCe.apply(this, arguments); if (typeof t === 'string' && t.length === 5 && t.toLowerCase() === 'video') el.setAttribute('poster', MK_BLANK_POSTER); return el; };
+  // videos written as HTML get one as soon as they start loading
+  document.addEventListener('loadstart', (e) => { const v = e.target; if (v && v.tagName === 'VIDEO' && !v.getAttribute('poster')) v.setAttribute('poster', MK_BLANK_POSTER); }, true);
+}
 /* Player clock. While the audio rescue remux runs, the video element starts at 0 from the point the server began
    converting, so its time is offset and its duration comes from the server's probe. Everything reads time through these. */
 const pNow = () => video.currentTime + (P.remux ? P.remux.offset : 0);
@@ -10386,7 +10396,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.67.3';
+const APP_VERSION = '2.67.5';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -11579,7 +11589,7 @@ const Peak = {
     const el = document.createElement('div'); el.id = 'peak'; el.className = 'pk'; el.hidden = true;
     el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Peak Cinema');
     el.innerHTML = `
-      <div class="pk-stage"><video class="pk-v" playsinline preload="auto"></video><video class="pk-v" playsinline preload="auto"></video><div class="pk-shade"></div></div>
+      <div class="pk-stage"><video class="pk-v" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" playsinline preload="auto"></video><video class="pk-v" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" playsinline preload="auto"></video><div class="pk-shade"></div></div>
       <div class="pk-ui">
         <div class="pk-top">
           <div class="pk-brand"><span class="pk-mark">Peak Cinema</span><span class="pk-sub" id="pkCount"></span></div>
@@ -17982,7 +17992,7 @@ const AppleTrailer = {
   play(hit, meta, fallback) {
     closeTrailer(true); TR.id = `apple:${hit.u}`; openLayer('trailer'); trMsg('');
     clearTimeout(TR.hideT); TR.hideT = setTimeout(() => { if (!$('#trailer').hidden) document.body.classList.add('tr-on'); }, 300);
-    $('#trSlot').innerHTML = `<video class="apl-v" playsinline autoplay preload="auto" src="${esc(hit.u)}"></video>${hit.page ? `<a class="apl-src" href="${esc(safeHref(hit.page) || '#')}" target="_blank" rel="noopener" data-nav>Trailer · Apple TV</a>` : '<span class="apl-src">Trailer · Apple TV</span>'}`;
+    $('#trSlot').innerHTML = `<video class="apl-v" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" playsinline autoplay preload="auto" src="${esc(hit.u)}"></video>${hit.page ? `<a class="apl-src" href="${esc(safeHref(hit.page) || '#')}" target="_blank" rel="noopener" data-nav>Trailer · Apple TV</a>` : '<span class="apl-src">Trailer · Apple TV</span>'}`;
     const v = $('#trSlot video');
     TR.yt = {
       getDuration: () => (isFinite(v.duration) ? v.duration : 0), getCurrentTime: () => v.currentTime || 0,
@@ -22280,6 +22290,12 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.67.5', date: '2026-11-12', items: [
+    ['better', 'Smoother video starts and stops', 'Opening and closing a video on Android is now clean and steady, with no flashes, and the loading logo moves more smoothly on phones.'],
+  ] },
+  { v: '2.67.4', date: '2026-11-11', items: [
+    ['better', 'Miko’s natural voice', 'Miko’s natural voice is now on by default when she reads answers aloud, much faster on newer phones and computers, with smoother, more natural reading.'],
+  ] },
   { v: '2.67.3', date: '2026-11-11', items: [
     ['better', 'Miko follows the conversation', 'Answer Miko’s question with a simple “yes” and she does what she offered, and her answers read cleaner.'],
   ] },
@@ -32806,7 +32822,7 @@ const Cams = {
     [...grid.children].forEach((f) => { if (!want.some(([id]) => id === f.dataset.pid)) f.remove(); });
     want.forEach(([id, t]) => {
       let f = $(`[data-pid="${CSS.escape(id)}"]`, grid);
-      if (!f) { f = document.createElement('figure'); f.className = `cam-t${t.classList.contains('self') ? ' self' : ''}`; f.dataset.pid = id; f.innerHTML = '<video autoplay playsinline muted></video><figcaption></figcaption>'; grid.appendChild(f); }
+      if (!f) { f = document.createElement('figure'); f.className = `cam-t${t.classList.contains('self') ? ' self' : ''}`; f.dataset.pid = id; f.innerHTML = '<video poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" autoplay playsinline muted></video><figcaption></figcaption>'; grid.appendChild(f); }
       const v = f.firstChild, src = t.firstChild.srcObject; if (v.srcObject !== src) { v.srcObject = src; v.play().catch(() => {}); }
       f.lastChild.textContent = t.lastChild.textContent; f.classList.toggle('talk', t.classList.contains('talk'));
     });
@@ -32831,7 +32847,7 @@ const Cams = {
     let t = this.tiles.get(id);
     if (!t) {
       t = document.createElement('figure'); t.className = `cam-t${self ? ' self' : ''}`; t.dataset.pid = id;
-      t.innerHTML = '<video autoplay playsinline muted></video><figcaption></figcaption>';
+      t.innerHTML = '<video poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" autoplay playsinline muted></video><figcaption></figcaption>';
       this.box().appendChild(t); this.tiles.set(id, t);
     }
     const v = t.firstChild; if (v.srcObject !== stream) { v.srcObject = stream; v.play().catch(() => {}); }
@@ -35798,7 +35814,7 @@ const MikoSoul = (() => {
     return female()[0] || null;
   };
   // text for the ear: no quotes or symbols read out, short breaths between sentences
-  const spoken = (t) => String(t || '').replace(/[“”"«»]/g, '').replace(/\bS(\d+) · E(\d+)\b/g, 'season $1, episode $2').replace(/·/g, ',').replace(/…/g, '.').replace(/\s+/g, ' ').trim();
+  const spoken = (t) => String(t || '').replace(/\[[^\]]{0,240}\]/g, ' ').replace(/https?:\/\/\S+?(?=[.,!?;:]?(?:\s|$))/g, ' ').replace(/[*_`#~]+/g, '').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, '').replace(/\s&\s/g, ' and ').replace(/[“”"«»]/g, '').replace(/\bS(\d+) · E(\d+)\b/g, 'season $1, episode $2').replace(/·/g, ',').replace(/…/g, '.').replace(/\s+/g, ' ').trim();
   const sysSpeak = (t) => {
     try {
       if (!window.speechSynthesis || typeof SpeechSynthesisUtterance === 'undefined') return;
@@ -35819,11 +35835,11 @@ const MikoSoul = (() => {
      It runs in a worker so the app never stutters, speaks sentence by sentence so the first words come quickly, and
      falls back to the device's own voice for other languages, on any error, or when this device turns out too slow. */
   const Natural = {
-    URL: 'vendor/kokoro-1.2.1/miko-voice.js', w: null, seq: 0, gen: 0, cbs: new Map(), ctx: null, srcs: [], at: 0, state: '', pct: 0, slow: 0, listeners: new Set(),
+    URL: 'vendor/kokoro-1.2.1/miko-voice-2.js', w: null, seq: 0, gen: 0, cbs: new Map(), ctx: null, srcs: [], at: 0, state: '', pct: 0, slow: 0, listeners: new Set(),
     can() {
       try { return typeof Worker !== 'undefined' && typeof WebAssembly === 'object' && !!(window.AudioContext || window.webkitAudioContext) && /^en\b/i.test(lang()); } catch (e) { return false; }
     },
-    wanted() { return !!ls.get('natural', false); },
+    wanted() { const v = ls.get('natural', null); if (v != null) return !!v; try { return !(navigator.connection && navigator.connection.saveData); } catch (e) { return true; } },
     on() { return this.wanted() && this.can() && this.state !== 'failed' && this.slow < 2; },
     emit() { this.listeners.forEach((f) => { try { f(this.state, this.pct); } catch (e) { /* gone */ } }); },
     voice() { return /^en-(gb|ie|au|nz)\b/i.test(lang()) ? 'bf_emma' : 'af_heart'; },
@@ -35844,7 +35860,7 @@ const MikoSoul = (() => {
       if (this.state === 'ready') return Promise.resolve();
       if (!this.loadP) {
         this.state = 'loading'; this.emit();
-        this.loadP = this.call('load').then(() => { this.state = 'ready'; this.pct = 100; this.emit(); }).catch((e) => { this.state = 'failed'; this.loadP = null; this.emit(); throw e; });
+        this.loadP = this.call('load').then((d) => { this.mode = (d && d.mode) || ''; this.state = 'ready'; this.pct = 100; this.emit(); }).catch((e) => { this.state = 'failed'; this.loadP = null; this.emit(); throw e; });
       }
       return this.loadP;
     },
@@ -35861,27 +35877,30 @@ const MikoSoul = (() => {
     async speak(text) {
       this.stop(); const my = this.gen;
       await this.load();
-      // short first piece, so she starts talking fast; long sentences split at a comma
-      const parts = []; (spoken(text).match(/[^.!?]+[.!?]*/g) || []).forEach((s) => { s = s.trim(); if (!s) return; if (s.length > 160) s.split(/(?<=,)\s+/).forEach((x) => x.trim() && parts.push(x.trim())); else parts.push(s); });
-      for (const s of parts.slice(0, 8)) {
+      // her first sentence on its own, so she starts talking fast; then fuller phrases, so she reads with a person's flow
+      const sents = []; (spoken(text).match(/[^.!?]+[.!?]*/g) || []).forEach((s) => { s = s.trim(); if (!s) return; if (s.length > 220) s.split(/(?<=[,;:])\s+/).forEach((x) => x.trim() && sents.push(x.trim())); else sents.push(s); });
+      const parts = []; sents.forEach((s, i) => { const L = parts.length; if (i > 0 && L > 1 && (parts[L - 1] + ' ' + s).length <= 220) parts[L - 1] += ' ' + s; else parts.push(s); });
+      for (const s of parts.slice(0, 6)) {
         if (my !== this.gen) return;
         const t0 = performance.now(), d = await this.call('say', { text: s, voice: this.voice(), speed: 1 });
         if (my !== this.gen) return;
+        if (d.mode) this.mode = d.mode;
         const secs = d.pcm.length / (d.rate || 24000), took = (performance.now() - t0) / 1000;
         // this device can't keep up (more than 2.5 s of work per second of speech, twice): use its own voice instead
-        if (secs > 0.8 && took / secs > 2.5) { this.slow++; if (this.slow >= 2) this.emit(); }
+        if (this.warm && secs > 0.8 && took / secs > 2.5) { this.slow++; if (this.slow >= 2) this.emit(); }
+        this.warm = true;
         this.play(d.pcm, d.rate || 24000);
       }
     },
     async set(on) {
-      ls.set('natural', on ? true : null);
+      ls.set('natural', !!on);
       if (!on) { this.stop(); this.emit(); return; }
       this.slow = 0; if (this.state === 'failed') this.state = '';
       try { await this.load(); } catch (e) { /* state says failed */ }
     },
   };
   const speak = (t) => {
-    if (Natural.on()) { Natural.speak(t).catch(() => sysSpeak(t)); return; }
+    if (Natural.on()) { if (Natural.state === 'ready') { Natural.speak(t).catch(() => sysSpeak(t)); return; } Natural.load().catch(() => { /* state says failed */ }); }
     if (Natural.srcs.length) Natural.stop(); sysSpeak(t);
   };
 
@@ -36485,7 +36504,7 @@ const Miko = {
     const N = MikoSoul.Natural, row = $('#mikoNatRow'), s = $('#mikoNatS'), b = $('#mikoNat'); if (!row) return;
     const show = !!Store.raw.get('rm.akSpeak', false) && N.can(); row.hidden = !show; s.hidden = !show; if (!show) return;
     const v = N.wanted(); b.classList.toggle('on', v); b.setAttribute('aria-checked', String(v));
-    s.textContent = !v ? 'A lifelike voice that runs on this device, free. About 90 MB, downloaded once. English only for now.'
+    s.textContent = !v ? 'A lifelike voice that runs on this device, free. Downloaded once: about 90 MB, or 300 MB on devices with a strong graphics chip. English only for now.'
       : N.state === 'loading' ? `Getting her voice ready… ${N.pct}%` : N.state === 'failed' ? 'Her natural voice couldn’t load here, so she’s using this device’s voice.'
         : N.slow >= 2 ? 'This device is a little slow for her natural voice, so she’s using its own.' : N.state === 'ready' ? 'Her natural voice is on. It runs on this device.' : 'Her natural voice loads the first time she speaks.';
   },
@@ -38450,7 +38469,7 @@ const FCall = {
       document.body.appendChild(b);
     }
     const showV = !!(s.rv && s.rv.getVideoTracks().some((t) => t.readyState === 'live' && !t.muted));
-    b.innerHTML = `${showV ? '<video class="fc-them" autoplay playsinline muted></video>' : ''}${s.cam && s.camStream ? '<video class="fc-me" autoplay playsinline muted></video>' : ''}
+    b.innerHTML = `${showV ? '<video class="fc-them" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" autoplay playsinline muted></video>' : ''}${s.cam && s.camStream ? '<video class="fc-me" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" autoplay playsinline muted></video>' : ''}
       <div class="fc-row"><button class="fc-who" type="button" data-fc="open" data-nav>${Friends.av(s.peer)}<span><b>${esc(Friends.label(s.peer))}</b><small class="fc-line tnum">${esc(this.line())}</small></span></button>
       ${s.state === 'ringing-out' ? '' : `<button class="ibtn sm" type="button" data-fc="mute" data-nav aria-label="${s.muted ? 'Unmute' : 'Mute'}" ${s.mic ? '' : 'disabled'}><i data-lucide="${s.muted ? 'mic-off' : 'mic'}"></i></button>
       <button class="ibtn sm" type="button" data-fc="cam" data-nav aria-label="${s.cam ? 'Camera off' : 'Camera on'}"><i data-lucide="${s.cam ? 'video' : 'video-off'}"></i></button>`}

@@ -437,7 +437,7 @@ const AppleTrailer = {
   play(hit, meta, fallback) {
     closeTrailer(true); TR.id = `apple:${hit.u}`; openLayer('trailer'); trMsg('');
     clearTimeout(TR.hideT); TR.hideT = setTimeout(() => { if (!$('#trailer').hidden) document.body.classList.add('tr-on'); }, 300);
-    $('#trSlot').innerHTML = `<video class="apl-v" playsinline autoplay preload="auto" src="${esc(hit.u)}"></video>${hit.page ? `<a class="apl-src" href="${esc(safeHref(hit.page) || '#')}" target="_blank" rel="noopener" data-nav>Trailer · Apple TV</a>` : '<span class="apl-src">Trailer · Apple TV</span>'}`;
+    $('#trSlot').innerHTML = `<video class="apl-v" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" playsinline autoplay preload="auto" src="${esc(hit.u)}"></video>${hit.page ? `<a class="apl-src" href="${esc(safeHref(hit.page) || '#')}" target="_blank" rel="noopener" data-nav>Trailer · Apple TV</a>` : '<span class="apl-src">Trailer · Apple TV</span>'}`;
     const v = $('#trSlot video');
     TR.yt = {
       getDuration: () => (isFinite(v.duration) ? v.duration : 0), getCurrentTime: () => v.currentTime || 0,

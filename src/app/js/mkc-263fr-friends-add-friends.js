@@ -628,7 +628,7 @@ const FCall = {
       document.body.appendChild(b);
     }
     const showV = !!(s.rv && s.rv.getVideoTracks().some((t) => t.readyState === 'live' && !t.muted));
-    b.innerHTML = `${showV ? '<video class="fc-them" autoplay playsinline muted></video>' : ''}${s.cam && s.camStream ? '<video class="fc-me" autoplay playsinline muted></video>' : ''}
+    b.innerHTML = `${showV ? '<video class="fc-them" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" autoplay playsinline muted></video>' : ''}${s.cam && s.camStream ? '<video class="fc-me" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" autoplay playsinline muted></video>' : ''}
       <div class="fc-row"><button class="fc-who" type="button" data-fc="open" data-nav>${Friends.av(s.peer)}<span><b>${esc(Friends.label(s.peer))}</b><small class="fc-line tnum">${esc(this.line())}</small></span></button>
       ${s.state === 'ringing-out' ? '' : `<button class="ibtn sm" type="button" data-fc="mute" data-nav aria-label="${s.muted ? 'Unmute' : 'Mute'}" ${s.mic ? '' : 'disabled'}><i data-lucide="${s.muted ? 'mic-off' : 'mic'}"></i></button>
       <button class="ibtn sm" type="button" data-fc="cam" data-nav aria-label="${s.cam ? 'Camera off' : 'Camera on'}"><i data-lucide="${s.cam ? 'video' : 'video-off'}"></i></button>`}
