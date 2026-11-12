@@ -162,8 +162,8 @@ const AddonScenes = {
     else {
       const got = [];
       got.push(...this.peaks(this.list(meta), meta._addon || 'Addon'));
-      for (const r of await this.metaFrom('movie', id)) got.push(...this.peaks(this.list(r.meta), r.from));
-      const sk = engine.addons.filter((a) => !a.virtual && AddonX.live(a) && engine.supports(a, 'skips', 'movie', id));
+      if (meta.type !== 'series') for (const r of await this.metaFrom('movie', id)) got.push(...this.peaks(this.list(r.meta), r.from));
+      const sk = meta.type === 'series' ? [] : engine.addons.filter((a) => !a.virtual && AddonX.live(a) && engine.supports(a, 'skips', 'movie', id));
       await Promise.all(sk.map((a) => engine.call(a, 'skips', 'movie', id).then((r) => got.push(...this.peaks(Array.isArray(r && r.skips) ? r.skips : [], a.manifest.name))).catch(() => {})));
       this.peaksBy.set(id, got); out.push(...got);
     }

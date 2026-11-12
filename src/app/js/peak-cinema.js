@@ -154,14 +154,15 @@ const Peak = {
   /* Films come from the catalogs on your Home and your watchlist; a mood uses the catalogs' own genre filter when they have one */
   async buildPool(tok) {
     const mood = this.MOODS.find((m) => m[0] === this.mood), re = mood[2];
-    const cats = engine.catalogs({ type: 'movie' }).filter((c) => !c.required.length).slice(0, 8);
+    /* 2.68.1 peak-series: films and series alike */
+    const cats = [...engine.catalogs({ type: 'movie' }).filter((c) => !c.required.length).slice(0, 6), ...engine.catalogs({ type: 'series' }).filter((c) => !c.required.length).slice(0, 4)];
     const lists = await Promise.allSettled(cats.map((c) => {
       const g = re && c.genres.find((x) => re.test(x));
       return engine.fetchCatalog(c, g ? { genre: g } : {});
     }));
     if (tok !== this.tok) return;
     const seen = new Set(), out = [];
-    const add = (m) => { if (!m || !m.id || seen.has(m.id) || (m.type && m.type !== 'movie') || !/^tt\d/.test(m.id)) return; if (re && genresOf(m).length && !genresOf(m).some((g) => re.test(g))) return; seen.add(m.id); out.push(m); };
+    const add = (m) => { if (!m || !m.id || seen.has(m.id) || (m.type && m.type !== 'movie' && m.type !== 'series') || !/^tt\d/.test(m.id)) return; if (re && genresOf(m).length && !genresOf(m).some((g) => re.test(g))) return; seen.add(m.id); out.push(m); };
     lists.forEach((r) => { if (r.status === 'fulfilled') r.value.forEach(add); });
     (S.watchlist || []).forEach(add);
     this.pool = out;
@@ -191,7 +192,15 @@ const Peak = {
     japan: 'jpn', 'south korea': 'kor', korea: 'kor', china: 'chi', 'hong kong': 'chi', taiwan: 'chi', india: 'hin', russia: 'rus', brazil: 'por', portugal: 'por',
     netherlands: 'dut', poland: 'pol', turkey: 'tur', sweden: 'swe', denmark: 'dan', norway: 'nor', finland: 'fin', greece: 'gre', israel: 'heb', thailand: 'tha',
     'czech republic': 'cze', czechia: 'cze', hungary: 'hun', romania: 'rum', iran: 'per', egypt: 'ara', 'saudi arabia': 'ara', indonesia: 'ind', vietnam: 'vie', ukraine: 'ukr' },
-  want() { return typeof MkAudioWant === 'function' ? MkAudioWant() : (CFG.audioOnly && CFG.audioOnly !== 'any' ? CFG.audioOnly : ''); },
+  want() {
+    const w = typeof MkAudioWant === 'function' ? MkAudioWant() : (CFG.audioOnly && CFG.audioOnly !== 'any' ? CFG.audioOnly : '');
+    if (w) return w;
+    // nothing set: the app's language (Peak Cinema never plays a dub in a language you did not choose)
+    let ui = 'en'; try { ui = I18N.code || String(navigator.language || 'en').slice(0, 2); } catch (e) { /* early */ }
+    return { en: 'eng', es: 'spa', pt: 'por', fr: 'fre', de: 'ger', it: 'ita', hi: 'hin', ta: 'tam', te: 'tel', bn: 'ben', ml: 'mal', sm: 'smo', zh: 'chi', ar: 'ara',
+      ru: 'rus', ur: 'urd', id: 'ind', ja: 'jpn', mr: 'mar', tr: 'tur', vi: 'vie', ko: 'kor', fa: 'per', tl: 'tgl', sw: 'swa', pa: 'pan', gu: 'guj', th: 'tha', pl: 'pol',
+      kn: 'kan', ha: 'hau' }[ui] || 'eng';
+  },
   canSwitch() { return !!(this.vids && this.vids[0] && this.vids[0].audioTracks); },
   /* 2 = names your language only, 1 = names none but the film is in your language, or several with a track switch here; 0 = not used */
   langFit(s, meta, w) {
@@ -234,20 +243,30 @@ const Peak = {
     ok.forEach((s) => { s._pkLang = this.langFit(s, meta, w); });
     return ok.filter((s) => s._pkLang > 0).sort((a, b) => (b._pkLang - a._pkLang) * 1000 + rank(b) - rank(a));
   },
+  /* a series: one released episode from season 1 on, picked at random (its meta is asked once, from your addons) */
+  async episode(meta) {
+    let full = null; try { full = await engine.fetchMeta('series', meta.id); } catch (e) { return null; }
+    const now = Date.now(), eps = ((full && full.videos) || []).filter((v) => v && v.id && Number(v.season) > 0 && (!v.released || Date.parse(v.released) < now));
+    if (!eps.length) return null;
+    if (full.country && !meta.country) meta.country = full.country;
+    const v = eps[Math.floor(Math.random() * eps.length)];
+    return { id: v.id, season: Number(v.season), episode: Number(v.episode || v.number) || 0, title: v.title || v.name || '' };
+  },
   /* one film looked up: its addons are asked once, then the debrid cache check is waited for (no second request) */
   async stage(tok) {
     for (let tries = 0; tries < 3 && tok === this.tok; tries++) {
       const meta = this.pick(); if (!meta) return null;
       this.used.add(meta.id);
       await this.gate('lookAt', this.GAP); if (tok !== this.tok) return null;
-      let streams = [];
-      try { streams = (await engine.fetchStreams('movie', (meta.behaviorHints && meta.behaviorHints.defaultVideoId) || meta.id)).streams; } catch (e) { /* counted as a miss */ }
+      let streams = [], video = null;
+      if (meta.type === 'series') { video = await this.episode(meta); if (tok !== this.tok) return null; if (!video) { this.miss++; if (this.miss >= this.MAX_MISS) return null; continue; } }
+      try { streams = (await engine.fetchStreams(video ? 'series' : 'movie', video ? video.id : (meta.behaviorHints && meta.behaviorHints.defaultVideoId) || meta.id)).streams; } catch (e) { /* counted as a miss */ }
       if (tok !== this.tok) return null;
       const hashes = streams.filter((s) => s.infoHash && !s.url);
       for (let i = 0; i < 12 && hashes.length && Vault.service() && hashes.some((s) => !Vault.cached.has(String(s.infoHash).toLowerCase())); i++) await sleep(250);
       hashes.forEach((s) => { s._tel = Telemetry.parse(s); });
       const list = this.choose(streams, meta);
-      if (list.length) { this.miss = 0; return { meta: remember(meta), streams, list }; }
+      if (list.length) { this.miss = 0; return { meta: remember(meta), video, streams, list }; }
       this.miss++;
       if (this.miss >= this.MAX_MISS) return null;
     }
@@ -261,12 +280,12 @@ const Peak = {
       let url = s.url;
       if (!url && s.infoHash) {
         await this.gate('linkAt', 2000); if (tok !== this.tok) return null;
-        try { url = await Vault.resolve(s, { meta: st.meta, video: null }); s._infoHash = s.infoHash; delete s.infoHash; s.url = url; s._debrid = s._tel.debrid; s._tel = Telemetry.parse(s); } catch (e) { continue; }
+        try { url = await Vault.resolve(s, { meta: st.meta, video: st.video || null }); s._infoHash = s.infoHash; delete s.infoHash; s.url = url; s._debrid = s._tel.debrid; s._tel = Telemetry.parse(s); } catch (e) { continue; }
         if (tok !== this.tok) return null;
       }
       // TV: the other candidate travels with it, so a copy that will not open falls back to the film's next source
-      if (IS_TV && this.cur) return { meta: st.meta, stream: s, streams: st.streams, v: null, url, lazy: true, offset: 0, d: 0, alt: { ...st, list: list.slice(i + 1) } };
-      const clip = { meta: st.meta, stream: s, streams: st.streams, v, offset: 0, d: 0 };
+      if (IS_TV && this.cur) return { meta: st.meta, video: st.video || null, stream: s, streams: st.streams, v: null, url, lazy: true, offset: 0, d: 0, alt: { ...st, list: list.slice(i + 1) } };
+      const clip = { meta: st.meta, video: st.video || null, stream: s, streams: st.streams, v, offset: 0, d: 0 };
       v._clip = clip;
       const ok = await this.seekTo(v, url, clip, tok);
       if (tok !== this.tok) { if (v._clip === clip) this.unload(v); return null; }
@@ -381,7 +400,7 @@ const Peak = {
     const c = this.cur, m = c.meta, logo = metaLogo(m);
     $('#pkCount').textContent = `Scene ${this.n}`;
     $('#pkInfo').innerHTML = `
-      <div class="pk-eye">${esc(fmtTime(c.offset))} of ${esc(fmtTime(c.d))} · ${esc([c.stream._tel.res, c.stream._addon].filter(Boolean).join(' · '))}</div>
+      <div class="pk-eye">${c.video ? `<b>S${c.video.season} · E${c.video.episode}</b> · ` : ''}${esc(fmtTime(c.offset))} of ${esc(fmtTime(c.d))} · ${esc([c.stream._tel.res, c.stream._addon].filter(Boolean).join(' · '))}</div>
       <div class="pk-logo">${logo ? imgTag(logo, m.name, m.id, { nofb: true, cls: 'hero-logo', lazy: false }) : ''}<h2 class="pk-title" data-logo-alt ${logo ? 'hidden' : ''}>${esc(m.name)}</h2></div>
       <div class="metaline">${[m.imdbRating ? `<span class="imdb ${rateTier(m.imdbRating)}"><b>IMDb</b>${esc(m.imdbRating)}</span>` : '', yearOf(m) ? `<span>${esc(yearOf(m))}</span>` : '', genresOf(m).slice(0, 3).map(esc).join(' · ')].filter(Boolean).join('')}</div>`;
     $('#pkFrom').textContent = `From ${fmtTime(c.offset)}`;
@@ -395,8 +414,8 @@ const Peak = {
   blocked(why) {
     const msg = {
       none: ['Peak Cinema needs a stream addon', 'It plays scenes from sources your debrid service already has cached. Add a stream addon, and your debrid key in Settings › Debrid.'],
-      miss: ['No cached copies turned up', `The last ${this.MAX_MISS} films had no cached source in a format this device can play. Try another mood, or check your debrid key in Settings › Debrid.`],
-      empty: ['That is every film for now', 'Your catalogs have no more films for this mood. Try another one.'],
+      miss: ['No cached copies turned up', `The last ${this.MAX_MISS} titles had no cached source in your language, in a format this device can play. Try another mood, or check Settings › Debrid and Settings › Audio language.`],
+      empty: ['That is everything for now', 'Your catalogs have no more films or series for this mood. Try another one.'],
     }[why];
     const s = $('#pkStatus'); s.hidden = false; this.el.classList.add('pk-empty');
     s.innerHTML = `<div class="pk-block"><h3>${esc(msg[0])}</h3><p>${esc(msg[1])}</p><div class="pk-how-acts">${why === 'none' ? '<button class="btn btn-prime" type="button" data-nav data-pk="addons"><i data-lucide="puzzle"></i>Open addons</button>' : '<button class="btn btn-prime" type="button" data-nav data-pk="again"><i data-lucide="refresh-cw"></i>Keep looking</button>'}<button class="btn btn-ghost" type="button" data-nav data-pk="close">Close</button></div></div>`;
@@ -416,7 +435,7 @@ const Peak = {
     this.feedback(c, 'keep');
     const at = fromStart ? 0 : Math.floor(c.v.currentTime), streams = [c.stream, ...c.streams.filter((s) => s !== c.stream)];
     this.close();
-    playStream({ meta: c.meta, video: null, streams }, c.stream, { startAt: at });
+    playStream({ meta: c.meta, video: c.video || null, streams }, c.stream, { startAt: at });
   },
   wake(stay) {
     if (!this.el) return; this.el.classList.remove('idle'); clearTimeout(this.idleT);
