@@ -2036,6 +2036,66 @@ html.tv .foot>span:last-child{display:none}
 @media (max-width:640px){.mkd-row{grid-template-columns:38px minmax(0,1fr);gap:12px;padding:12px}.mkd-logo{width:38px;height:38px;border-radius:var(--r-m)}.mkd-act{grid-column:2;flex-direction:row;align-items:center;justify-content:flex-start;gap:14px}.mkd-setup .inrow{flex-direction:column;align-items:stretch}.mkd-find{padding:14px}}
 html.tv .mkd-row{background:transparent}
 </style>
+<style id="mk-calm-css">/* 2.68.2 calm-panels */
+/* 1. Opening any panel locks the page (overflow:hidden). On Windows and Linux screens with a mouse that took the scrollbar
+      away, so the whole page got 15 px wider under the panel and narrower again on close. While locked, the page keeps a
+      matching right edge (set by mk-calm-js only when a scrollbar was really there). scrollbar-gutter can't do this:
+      Chrome drops the gutter on a locked page. */
+html.mk-sbw body{padding-right:var(--mk-sbw)!important}
+html.mk-sbw:not(.nav-side) .dock-wrap{right:var(--mk-sbw)}
+html.mk-sbw #mikoFab{margin-right:var(--mk-sbw)}
+/* 2. Every panel is opaque, yet each one also blurred the whole screen behind it on every frame of its slide-in. The blur
+      could not be seen, cost the most GPU time of the open, and popped in when the backdrop fade ended (Chrome only lets a
+      blur see the page once the fading parent reaches full opacity). */
+.layer-ov>.modal.glass-solid,.layer-ov>.panel.glass-solid,.layer-ov>.modal .glass-solid{-webkit-backdrop-filter:none;backdrop-filter:none}
+</style>
+<script id="mk-calm-js">/* 2.68.2 calm-panels. 3: cards that open by themselves (What's new, the tour, the menu and player questions) wait until
+   the app has finished starting: the page has loaded, the start cover is gone, Home has stopped redrawing for a moment and
+   no long task has just run. Before this, on slower devices they slid in while the rest of the app was still being read
+   and set up, so the slide-in stuttered and parts of the page changed under it. Never waits more than 15 s. */
+(function () {
+  var d = document, de = d.documentElement, t0 = Date.now(), loadAt = 0, lastMut = 0, lastLong = 0;
+  addEventListener('load', function () { loadAt = Date.now(); });
+  try { new PerformanceObserver(function (l) { l.getEntries().forEach(function (e) { if (e.duration > 80) lastLong = Date.now(); }); }).observe({ type: 'longtask' }); } catch (e) { /* not in this browser */ }
+  d.addEventListener('DOMContentLoaded', function () {
+    var app = d.getElementById('app'); if (!app || !window.MutationObserver) return;
+    new MutationObserver(function (ms) {
+      for (var i = 0; i < ms.length; i++) { var a = ms[i].addedNodes; for (var j = 0; j < a.length; j++) if (a[j].nodeType === 1) { lastMut = Date.now(); return; } }
+    }).observe(app, { childList: true, subtree: true });
+  });
+  window.MKCalm = {
+    ok: function () {
+      var n = Date.now();
+      if (n - t0 > 15000) return true;
+      if (d.readyState !== 'complete' || !loadAt || n - loadAt < 500) return false;
+      if (de.classList.contains('booting') || d.getElementById('bootCover')) return false;
+      return n - lastMut > 900 && n - lastLong > 500;
+    },
+    busy: function () { return d.body.classList.contains('intro-on') || !this.ok(); }
+  };
+  /* the page width while a panel locks scrolling (see mk-calm-css 1). A MutationObserver answers before the next frame
+     is drawn, so the scrollbar and the matching edge swap in the same frame. */
+  var sbw = -1, comp = false;
+  function barWidth() {
+    if (sbw < 0) { var p = d.createElement('div'); p.style.cssText = 'position:absolute;top:-999px;left:0;width:100px;height:100px;overflow:scroll;visibility:hidden'; d.body.appendChild(p); sbw = p.offsetWidth - p.clientWidth; p.remove(); }
+    return sbw;
+  }
+  function edge() {
+    var b = d.body; if (!b) return;
+    var locked = (b.classList.contains('locked') || de.classList.contains('t4-open')) && !de.classList.contains('booting') && !de.classList.contains('tv');
+    var need = locked && barWidth() > 0 && de.scrollHeight > innerHeight + 1;
+    if (need === comp) return; comp = need;
+    if (need) { de.style.setProperty('--mk-sbw', sbw + 'px'); de.classList.add('mk-sbw'); } else de.classList.remove('mk-sbw');
+  }
+  d.addEventListener('DOMContentLoaded', function () {
+    if (!window.MutationObserver) return;
+    var mo = new MutationObserver(edge);
+    mo.observe(d.body, { attributes: true, attributeFilter: ['class'] }); mo.observe(de, { attributes: true, attributeFilter: ['class'] });
+    addEventListener('resize', function () { sbw = -1; comp = null; edge(); });
+    edge();
+  });
+})();
+</script>
 </head>
 <body class="locked">
 <div id="bootCover" aria-hidden="true"><svg class="bc-mark" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" fill="none" stroke="url(#mkRing)" stroke-width=".9"/><circle cx="60" cy="60" r="52.5" fill="none" stroke="url(#mkRing)" stroke-width=".35"/><use href="#mkLetters" fill="url(#mkPlat)" transform="translate(60 60) scale(.84)"/></svg><div class="bc-word">MKCINEMA</div><div class="bc-bar"><i id="bcFill"></i></div></div>
@@ -7172,7 +7232,7 @@ $('#askAgain').onclick = () => { closeLayer('askLayer'); openPalette('', { ask: 
 function maybeTour() {
   if (Store.get('toured', false)) return;
   let n = 0;
-  const wait = () => (document.body.classList.contains('intro-on') ? setTimeout(wait, 400) : setTimeout(() => {
+  const wait = () => ((window.MKCalm ? MKCalm.busy() : document.body.classList.contains('intro-on')) ? setTimeout(wait, 400) : setTimeout(() => {
     if (Store.get('toured', false) || !$('#tour').hidden) return;
     if ([...MENU_LAYERS, 'player'].every((x) => $(`#${x}`).hidden)) openTour(0); else if (n++ < 90) wait();
   }, 700));
@@ -8405,7 +8465,7 @@ const Remote = {
   hint() {
     if (!IS_TV || this.hintEl || this.peers.size || Store.get('rmPaired', false)) return;
     // never over the welcome tour or an open panel: wait for the home screen
-    if (this.layerOpen() || document.body.classList.contains('intro-on')) { clearTimeout(this.hintT); this.hintT = setTimeout(() => this.hint(), 3000); return; }
+    if (this.layerOpen() || (window.MKCalm ? MKCalm.busy() : document.body.classList.contains('intro-on'))) { clearTimeout(this.hintT); this.hintT = setTimeout(() => this.hint(), 3000); return; }
     const n = Store.get('rmHint', 0), link = this.link(this.code); if (n >= 3 || !link) return; Store.set('rmHint', n + 1);
     const el = this.hintEl = document.createElement('div'); el.className = 'rm-hint'; el.setAttribute('role', 'status');
     el.innerHTML = `<div class="qr-wrap">${QR.svg(link, { margin: 2 })}</div><div class="rm-hint-t"><small>Phone remote</small><b>Use your phone as a remote</b><span>Scan with your phone camera, or open ${esc(this.link().replace(/^https?:\/\//, ''))} and type <b class="mono">${esc(this.code)}</b></span></div>`;
@@ -9726,7 +9786,7 @@ const Layout = {
   ask() {
     if (Store.get('askedFocus', false) || Store.get('homeLayout', null)) return;
     // wait for the intro, the walkthrough and any open panel to be gone
-    if (document.body.classList.contains('intro-on') || document.body.classList.contains('locked') || document.body.classList.contains('layer-open') || !Store.get('toured', false) || $('.sup-ask')) { setTimeout(() => this.ask(), 2000); return; }
+    if ((window.MKCalm ? MKCalm.busy() : document.body.classList.contains('intro-on')) || document.body.classList.contains('locked') || document.body.classList.contains('layer-open') || !Store.get('toured', false) || $('.sup-ask')) { setTimeout(() => this.ask(), 2000); return; }
     Store.set('askedFocus', true);
     const t = document.createElement('div'); t.className = 'focus-ask glass-solid'; t.setAttribute('role', 'dialog'); t.setAttribute('aria-label', 'Home layout');
     t.innerHTML = `<b>What do you watch most?</b><small>Home puts it first. Change it any time in Settings › Home.</small><div class="inrow">${[['movies-first', 'Movies'], ['series-first', 'Series'], ['both', 'Both']].map(([v, l]) => `<button class="btn btn-ghost btn-sm" type="button" data-focus="${v}">${l}</button>`).join('')}</div>`;
@@ -10447,7 +10507,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.68.1';
+const APP_VERSION = '2.68.2';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -16087,7 +16147,7 @@ const AddonLink = {
       const m = location.hash.match(/[#&]install=([^&]+)/); if (!m) return;
       let u = ''; try { u = decodeURIComponent(m[1]); } catch (e) { u = m[1]; }
       history.replaceState(null, '', location.pathname + location.search);
-      setTimeout(() => this.ask(u), document.body.classList.contains('intro-on') ? 2500 : 300);
+      setTimeout(() => this.ask(u), (window.MKCalm ? MKCalm.busy() : document.body.classList.contains('intro-on')) ? 2500 : 300);
     };
     fromHash(); addEventListener('hashchange', fromHash);
     // a setup page opened from MKCinema: remember it, and offer the copied link on return
@@ -16176,7 +16236,7 @@ const SideNav = {
   ask() {
     if (Store.raw.get('navAsked', false)) return;
     const fresh = !Store.get('toured', false); this.fresh = fresh;
-    const busy = () => (fresh && !Store.get('toured', false) && n < 120) || document.body.classList.contains('intro-on') || !$('#tour').hidden || document.body.classList.contains('layer-open') || !$('#player').hidden || $$('.x8-layer:not([hidden]), .layer-ov:not([hidden])').length;
+    const busy = () => (fresh && !Store.get('toured', false) && n < 120) || (window.MKCalm ? MKCalm.busy() : document.body.classList.contains('intro-on')) || !$('#tour').hidden || document.body.classList.contains('layer-open') || !$('#player').hidden || $$('.x8-layer:not([hidden]), .layer-ov:not([hidden])').length;
     let n = 0;
     const wait = () => { if (Store.raw.get('navAsked', false)) return; if (busy() && n++ < 240) { setTimeout(wait, 1000); return; } if (!busy()) this.chooser(); };
     setTimeout(wait, 2500);
@@ -21551,7 +21611,7 @@ const PlayerAsk = {
     const wait = () => setTimeout(() => {
       if (Store.get(this.KEY, false)) return;
       if (this.chosen()) { Store.set(this.KEY, true); return; }
-      const free = !document.body.classList.contains('intro-on') && [...MENU_LAYERS, 'player', 'tour'].every((x) => !$(`#${x}`) || $(`#${x}`).hidden) && !$('.sup-ask'); // the Home-layout card hides itself under an open layer
+      const free = !(window.MKCalm ? MKCalm.busy() : document.body.classList.contains('intro-on')) && [...MENU_LAYERS, 'player', 'tour'].every((x) => !$(`#${x}`) || $(`#${x}`).hidden) && !$('.sup-ask'); // the Home-layout card hides itself under an open layer
       if (free) this.openSolo(); else if (n++ < 120) wait();
     }, n ? 1000 : ms);
     wait();
@@ -22394,6 +22454,9 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.68.2', date: '2026-11-12', items: [
+    ['better', 'Smoother panels', 'Panels open smoothly: no more jumps or flicker behind them, and the update card waits until the app has finished starting.'],
+  ] },
   { v: '2.68.1', date: '2026-11-12', items: [
     ['better', 'Peak Cinema with series', 'Peak Cinema now surfs series too, and only plays scenes in your language.'],
   ] },
@@ -22892,7 +22955,7 @@ const WhatsNew = {
   later(prev) {
     let n = 0;
     const wait = () => setTimeout(() => {
-      const busy = document.body.classList.contains('intro-on') || document.body.classList.contains('layer-open') || !$('#player').hidden || [...MENU_LAYERS, 'tour'].some((x) => $(`#${x}`) && !$(`#${x}`).hidden) || $('.focus-ask, .sup-ask');
+      const busy = (window.MKCalm ? MKCalm.busy() : document.body.classList.contains('intro-on')) || document.body.classList.contains('layer-open') || !$('#player').hidden || [...MENU_LAYERS, 'tour'].some((x) => $(`#${x}`) && !$(`#${x}`).hidden) || $('.focus-ask, .sup-ask');
       if (!busy) this.open(prev); else if (n++ < 120) wait();
     }, n ? 1500 : 2500);
     wait();

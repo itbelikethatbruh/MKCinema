@@ -430,7 +430,7 @@ const Remote = {
   hint() {
     if (!IS_TV || this.hintEl || this.peers.size || Store.get('rmPaired', false)) return;
     // never over the welcome tour or an open panel: wait for the home screen
-    if (this.layerOpen() || document.body.classList.contains('intro-on')) { clearTimeout(this.hintT); this.hintT = setTimeout(() => this.hint(), 3000); return; }
+    if (this.layerOpen() || (window.MKCalm ? MKCalm.busy() : document.body.classList.contains('intro-on'))) { clearTimeout(this.hintT); this.hintT = setTimeout(() => this.hint(), 3000); return; }
     const n = Store.get('rmHint', 0), link = this.link(this.code); if (n >= 3 || !link) return; Store.set('rmHint', n + 1);
     const el = this.hintEl = document.createElement('div'); el.className = 'rm-hint'; el.setAttribute('role', 'status');
     el.innerHTML = `<div class="qr-wrap">${QR.svg(link, { margin: 2 })}</div><div class="rm-hint-t"><small>Phone remote</small><b>Use your phone as a remote</b><span>Scan with your phone camera, or open ${esc(this.link().replace(/^https?:\/\//, ''))} and type <b class="mono">${esc(this.code)}</b></span></div>`;

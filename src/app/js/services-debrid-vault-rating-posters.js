@@ -591,7 +591,7 @@ const Layout = {
   ask() {
     if (Store.get('askedFocus', false) || Store.get('homeLayout', null)) return;
     // wait for the intro, the walkthrough and any open panel to be gone
-    if (document.body.classList.contains('intro-on') || document.body.classList.contains('locked') || document.body.classList.contains('layer-open') || !Store.get('toured', false) || $('.sup-ask')) { setTimeout(() => this.ask(), 2000); return; }
+    if ((window.MKCalm ? MKCalm.busy() : document.body.classList.contains('intro-on')) || document.body.classList.contains('locked') || document.body.classList.contains('layer-open') || !Store.get('toured', false) || $('.sup-ask')) { setTimeout(() => this.ask(), 2000); return; }
     Store.set('askedFocus', true);
     const t = document.createElement('div'); t.className = 'focus-ask glass-solid'; t.setAttribute('role', 'dialog'); t.setAttribute('aria-label', 'Home layout');
     t.innerHTML = `<b>What do you watch most?</b><small>Home puts it first. Change it any time in Settings › Home.</small><div class="inrow">${[['movies-first', 'Movies'], ['series-first', 'Series'], ['both', 'Both']].map(([v, l]) => `<button class="btn btn-ghost btn-sm" type="button" data-focus="${v}">${l}</button>`).join('')}</div>`;

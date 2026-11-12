@@ -89,7 +89,7 @@ const PlayerAsk = {
     const wait = () => setTimeout(() => {
       if (Store.get(this.KEY, false)) return;
       if (this.chosen()) { Store.set(this.KEY, true); return; }
-      const free = !document.body.classList.contains('intro-on') && [...MENU_LAYERS, 'player', 'tour'].every((x) => !$(`#${x}`) || $(`#${x}`).hidden) && !$('.sup-ask'); // the Home-layout card hides itself under an open layer
+      const free = !(window.MKCalm ? MKCalm.busy() : document.body.classList.contains('intro-on')) && [...MENU_LAYERS, 'player', 'tour'].every((x) => !$(`#${x}`) || $(`#${x}`).hidden) && !$('.sup-ask'); // the Home-layout card hides itself under an open layer
       if (free) this.openSolo(); else if (n++ < 120) wait();
     }, n ? 1000 : ms);
     wait();

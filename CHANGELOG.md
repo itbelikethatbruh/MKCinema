@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.68.2 (smoother panels)
+
+- **Panels open smoothly:** no more jumps or flicker behind them, and the update card waits until the app has finished starting.
+
 ## Web app 2.68.1 (Peak Cinema with series)
 
 - **Peak Cinema now surfs series too**, and only plays scenes in your language.

@@ -433,7 +433,7 @@ $('#askAgain').onclick = () => { closeLayer('askLayer'); openPalette('', { ask: 
 function maybeTour() {
   if (Store.get('toured', false)) return;
   let n = 0;
-  const wait = () => (document.body.classList.contains('intro-on') ? setTimeout(wait, 400) : setTimeout(() => {
+  const wait = () => ((window.MKCalm ? MKCalm.busy() : document.body.classList.contains('intro-on')) ? setTimeout(wait, 400) : setTimeout(() => {
     if (Store.get('toured', false) || !$('#tour').hidden) return;
     if ([...MENU_LAYERS, 'player'].every((x) => $(`#${x}`).hidden)) openTour(0); else if (n++ < 90) wait();
   }, 700));
