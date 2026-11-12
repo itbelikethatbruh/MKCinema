@@ -18,6 +18,9 @@
 .pk-sub{font-size:calc(12px * var(--ts,1));color:var(--n9a9aa2,#9a9aa2);min-height:15px}
 .pk-moods{flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:6px 4px;justify-content:center}
 .pk-moods::-webkit-scrollbar{display:none}
+.pk-kinds{display:flex;gap:6px;flex:0 0 auto}
+.pk-kind.on{background:var(--a1,#d9d4c7);color:var(--n000000,#000)}
+.pk-sep{flex:0 0 1px;align-self:stretch;margin:4px 4px;background:rgba(255,255,255,.18)}
 .pk .chip{background:rgba(var(--n141417-c,20,20,23),.78);color:var(--nc9c9cf,#c9c9cf);border-color:rgba(255,255,255,.1)}
 .pk .chip.on,body.hc .pk .chip.on{background:var(--nececee,#ececee);color:var(--n0a0a0b,#0a0a0b);border-color:var(--nececee,#ececee)}
 .pk-tools{display:flex;gap:6px;flex:none}
