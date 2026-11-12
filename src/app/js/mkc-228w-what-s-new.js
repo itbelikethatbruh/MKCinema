@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.68.1', date: '2026-11-12', items: [
+    ['better', 'Peak Cinema with series', 'Peak Cinema now surfs series too, and only plays scenes in your language.'],
+  ] },
   { v: '2.68.0', date: '2026-11-12', items: [
     ['new', 'Your cloud', 'Browse and play the films and episodes already in your debrid account, from Library or Settings › Debrid.'],
     ['new', 'Setup links', 'Pass your whole addon setup to another screen or a friend in one press. It always asks before adding anything.'],

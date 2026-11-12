@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.68.1 (Peak Cinema with series)
+
+- **Peak Cinema now surfs series too**, and only plays scenes in your language.
+
 ## Web app 2.68.0 (your cloud, setup links and a faster Home)
 
 - **Your cloud.** Browse and play what is already in your debrid account.
