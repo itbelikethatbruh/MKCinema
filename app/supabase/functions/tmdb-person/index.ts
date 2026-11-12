@@ -10,11 +10,13 @@
 // (a page of popular, top rated or searched films or shows, with IMDb ids) and title (a film's or show's page with its
 // episodes), which MKCinema Meta uses if Cinemeta stops answering, and (v6) recs (what people who loved a title watch
 // next) and discover (films or shows by genre, theme, era, length, language and person), which Your Picks and Miko use
-// to suggest real, relevant titles, and (v7) local (a title's logo and trailer in the viewer's language). Only ids, numbers and fixed sort names are accepted, never free text into a TMDB path,
+// to suggest real, relevant titles, (v7) local (a title's logo and trailer in the viewer's language), and (v8) trending
+// (this week's or today's most talked-about films and shows) and fresh (films that came out to watch at home in the
+// viewer's region lately, or shows that started lately), which the Discover page uses. Only ids, numbers and fixed sort names are accepted, never free text into a TMDB path,
 // and no taste, history or account is ever sent here: just the one ask. Answers are trimmed to
 // the fields the person page draws. Calls must carry the project's publishable key in `apikey` and come from the live
 // sites (the same rule as debrid-relay). Nothing is stored and nothing is logged: this file has no console calls on purpose.
-const VERSION = 7;
+const VERSION = 8;
 const ORIGINS = [/^https:\/\/(mkcinema|mkctv)\.pages\.dev$/, /^https:\/\/((app|tv)\.)?mkcinema\.app$/];
 const RATE = { limit: 90, windowMs: 60_000 }; // per client IP, per isolate (best effort)
 const API = 'https://api.themoviedb.org/3';
@@ -320,6 +322,36 @@ async function answer(a: string, p: URLSearchParams): Promise<[number, unknown, 
     else if (sort === 'gem') { if (!g.includes('16') && ol !== 'ja') q.without_genres = [...new Set([...(q.without_genres ? q.without_genres.split(',') : []), '16'])].join(','); q.sort_by = 'vote_average.desc'; q['vote_count.gte'] = kind === 'tv' ? '120' : '300'; q['vote_count.lte'] = kind === 'tv' ? '1500' : '4000'; q['vote_average.gte'] = '7.0'; }
     else if (sort === 'new') { q.sort_by = `${dk}.desc`; q[`${dk}.lte`] = today; q['vote_count.gte'] = kind === 'tv' ? '60' : '150'; if (!q[`${dk}.gte`]) q[`${dk}.gte`] = `${Number(today.slice(0, 4)) - 3}-01-01`; }
     else { q.sort_by = 'popularity.desc'; q['vote_count.gte'] = q.with_people ? '20' : '150'; }
+    const j = await tmdb(`discover/${kind}`, q);
+    const results = await rowsWithIds((j && j.results) || [], kind, n);
+    return [200, { results }, 6 * 3600];
+  }
+  if (a === 'trending') {
+    const k = p.get('kind'), mk = k === 'tv' ? 'tv' : k === 'movie' ? 'movie' : 'all', w = p.get('w') === 'day' ? 'day' : 'week';
+    const page = Math.min(3, Math.max(1, Math.floor(Number(p.get('page'))) || 1)), n = Math.min(20, Math.max(4, Math.floor(Number(p.get('n'))) || 20));
+    const j = await tmdb(`trending/${mk}/${w}`, { language: lang, page: String(page) });
+    // talk, news, soap and reality shows trend every week but are not what people come to discover
+    const skip = new Set([10767, 10763, 10766, 10764]);
+    const rows = ((j && j.results) || []).filter((x: any) => x && (x.media_type === 'movie' || x.media_type === 'tv') && !(x.genre_ids || []).some((g: number) => skip.has(g)));
+    const results = await rowsWithIds(rows, mk === 'tv' ? 'tv' : 'movie', n);
+    return [200, { results }, 3 * 3600];
+  }
+  if (a === 'fresh') {
+    // films: a digital or disc release in the viewer's region lately, most popular first (so they can be watched at home);
+    // shows: first aired lately, most popular first
+    const n = Math.min(20, Math.max(4, Math.floor(Number(p.get('n'))) || 20)), page = Math.min(3, Math.max(1, Math.floor(Number(p.get('page'))) || 1));
+    const days = Math.min(365, Math.max(30, Math.floor(Number(p.get('days'))) || 120)), region = /^[A-Z]{2}$/.test(p.get('region') || '') ? p.get('region')! : 'US';
+    const now = Date.now(), today = new Date(now).toISOString().slice(0, 10), from = new Date(now - days * 86400_000).toISOString().slice(0, 10);
+    const g = idList(p.get('g'), 4);
+    const q: Record<string, string> = { language: lang, include_adult: 'false', page: String(page), sort_by: 'popularity.desc' };
+    if (g.length) q.with_genres = g.join(',');
+    if (kind === 'tv') {
+      Object.assign(q, { 'first_air_date.gte': from, 'first_air_date.lte': today, 'vote_count.gte': g.length ? '3' : '10' });
+      q.without_genres = ['10767', '10763', '10766', '10764', '10762'].filter((x) => !g.includes(x)).join(',');
+    } else {
+      Object.assign(q, { 'release_date.gte': from, 'release_date.lte': today, with_release_type: '4|5', region, 'vote_count.gte': '25', without_genres: '10770' });
+      if (p.get('fam') === '1') { q.certification_country = 'US'; q['certification.lte'] = 'PG'; }
+    }
     const j = await tmdb(`discover/${kind}`, q);
     const results = await rowsWithIds((j && j.results) || [], kind, n);
     return [200, { results }, 6 * 3600];
