@@ -91,7 +91,7 @@ const Peak = {
           <h3>How Peak Cinema picks scenes</h3>
           <p>MKCinema has no database of famous scenes, and none is pretended. Each scene starts at a point between about a third and three quarters of the way into the film, past the opening and well before the credits.</p>
           <p>What you skip and what you keep watching teaches it, on this device only: genres you keep come up more, and the window moves toward the moments you stayed for.</p>
-          <p>Only sources your debrid service already has cached, in formats this device can play, and in your audio language (Settings › Audio language), are used. MKCinema looks up one film at a time and buffers only the next scene, so your addons and your debrid account are never flooded.</p>
+          <p>Only sources your debrid service already has cached, in formats this device can play, and whose own audio track is tagged with your language (Settings › Audio language, or the app's language), are used. A file that does not say which language it speaks is skipped. MKCinema looks up one film at a time and buffers only the next scene, so your addons and your debrid account are never flooded.</p>
           <div class="pk-how-acts"><button class="btn btn-ghost" id="pkForget" type="button" data-nav><i data-lucide="eraser"></i>Forget what it learned</button><button class="btn btn-prime" id="pkHowOk" type="button" data-nav>Got it</button></div>
         </div>
       </div>`;
@@ -254,7 +254,7 @@ const Peak = {
     const w = this.want(), at = v.audioTracks;
     if (!w || !at || !at.length || typeof MkAudioMatch !== 'function') return true;
     let i = -1; for (let k = 0; k < at.length; k++) if (MkAudioMatch(at[k].language, at[k].label, w)) { i = k; break; }
-    if (i < 0) return !(at.length > 1 || Array.from(at).some((t) => t.language && !/^(und|unk|mis|zxx)$/i.test(t.language)));
+    if (i < 0) return false;
     for (let k = 0; k < at.length; k++) at[k].enabled = k === i;
     return true;
   },
@@ -305,9 +305,98 @@ const Peak = {
     return 'retry';
   },
   /* the next scene: its debrid link is requested now (only for this one), and the browser seeks straight to the scene */
+  /* 2.68.4 peak-strict-language: a scene plays only when the file itself says its audio is in your language.
+     Before a scene is used, the start of the file is read (one range request, about 256 KB, plus the track list
+     when it sits further in) and its audio tracks are checked:
+     - the track that plays (the default one, and the first one, when they differ) must be in your language;
+     - a track tagged "und", a track named for another language, a file whose tracks cannot be read (no byte ranges,
+       a host that blocks reading, an unknown container) are all skipped: unknown is never taken as yours.
+     Matroska leaves the language out when it is English (the format's own default), so a missing tag reads as English.
+     Where the browser lists the audio tracks (Safari, the Mac app), the playing track is checked again once it loads. */
+  LANG_B: { fra: 'fre', deu: 'ger', zho: 'chi', ces: 'cze', nld: 'dut', ron: 'rum', ell: 'gre', fas: 'per', slk: 'slo', isl: 'ice', mkd: 'mac', msa: 'may',
+    sqi: 'alb', hye: 'arm', eus: 'baq', kat: 'geo', mya: 'bur', bod: 'tib', cym: 'wel', mri: 'mao', fil: 'tgl', pob: 'por' },
+  LANG_1: { en: 'eng', es: 'spa', pt: 'por', fr: 'fre', de: 'ger', it: 'ita', hi: 'hin', ta: 'tam', te: 'tel', bn: 'ben', ml: 'mal', sm: 'smo', zh: 'chi', ar: 'ara',
+    ru: 'rus', ur: 'urd', id: 'ind', ja: 'jpn', mr: 'mar', tr: 'tur', vi: 'vie', ko: 'kor', fa: 'per', tl: 'tgl', sw: 'swa', pa: 'pan', gu: 'guj', th: 'tha', pl: 'pol',
+    kn: 'kan', ha: 'hau', nl: 'dut', sv: 'swe', no: 'nor', nb: 'nor', da: 'dan', fi: 'fin', el: 'gre', he: 'heb', cs: 'cze', hu: 'hun', ro: 'rum', uk: 'ukr', bg: 'bul',
+    hr: 'hrv', sr: 'srp', sk: 'slo', ms: 'may', ca: 'cat' },
+  lcode(l) {
+    const x = String(l || '').toLowerCase().trim().split(/[-_\s]/)[0];
+    if (!x || /^(und|unk|mis|zxx|mul|qaa)$/.test(x)) return '';
+    return x.length === 2 ? this.LANG_1[x] || x : this.LANG_B[x] || x;
+  },
+  // a track counts as language w when its tag says w and its name does not name another language
+  trackIs(t, w) {
+    const c = this.lcode(t.lang); if (!c || c !== this.lcode(w)) return false;
+    const n = String(t.name || '').toLowerCase(); if (!n) return true;
+    const other = AudioPref.WORD.filter(([re, l]) => l !== c && re.test(n));
+    return !other.length || AudioPref.WORD.some(([re, l]) => l === c && re.test(n));
+  },
+  async rangeOf(url, a, b) {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 8000);
+    try {
+      const r = await fetch(url, { headers: { Range: `bytes=${a}-${b}` }, signal: ctl.signal, credentials: 'omit', referrerPolicy: 'no-referrer', cache: 'no-store' });
+      if (r.status !== 206) { try { ctl.abort(); } catch (e) { /* gone */ } throw new Error(r.status === 200 ? 'no byte ranges' : `HTTP ${r.status}`); }
+      const total = Number(String(r.headers.get('content-range') || '').split('/')[1]) || 0;
+      const buf = new Uint8Array(await r.arrayBuffer()); return { buf: buf.length > b - a + 1 ? buf.subarray(0, b - a + 1) : buf, total };
+    } finally { clearTimeout(t); }
+  },
+  // MP4 / MOV: the audio tracks and their languages from the movie box (at the start of the file, or right after the media data)
+  async mp4Tracks(url, head, total) {
+    const u32 = (b, p) => ((b[p] << 24) >>> 0) + (b[p + 1] << 16) + (b[p + 2] << 8) + b[p + 3];
+    const typ = (b, p) => String.fromCharCode(b[p], b[p + 1], b[p + 2], b[p + 3]);
+    const boxes = (b, from, to) => { const out = []; let p = from; while (p + 8 <= to) { let sz = u32(b, p), hl = 8; if (sz === 1) { sz = u32(b, p + 8) * 4294967296 + u32(b, p + 12); hl = 16; } else if (sz === 0) sz = to - p; if (sz < hl) break; out.push({ t: typ(b, p + 4), s: p, d: p + hl, e: p + sz }); p += sz; } return out; };
+    let moov = null, mb = head, p = 0;
+    for (let i = 0; i < 8 && (!total || p < total); i++) {
+      const hb = p + 16 <= head.length ? head.subarray(p, p + 16) : (await this.rangeOf(url, p, p + 15)).buf; if (hb.length < 8) return null;
+      let sz = u32(hb, 0), hl = 8; const t = typ(hb, 4);
+      if (sz === 1) { sz = u32(hb, 8) * 4294967296 + u32(hb, 12); hl = 16; } else if (sz === 0) sz = (total || head.length) - p;
+      if (sz < 8) return null;
+      if (t === 'moov') { if (sz > 8e6) return null; mb = p + sz <= head.length ? head.subarray(p, p + sz) : (await this.rangeOf(url, p, p + sz - 1)).buf; moov = { d: hl, e: mb.length }; break; }
+      p += sz;
+    }
+    if (!moov) return null;
+    const out = [];
+    for (const tk of boxes(mb, moov.d, moov.e).filter((x) => x.t === 'trak')) {
+      const kids = boxes(mb, tk.d, tk.e), tkhd = kids.find((x) => x.t === 'tkhd'), mdia = kids.find((x) => x.t === 'mdia'); if (!mdia) continue;
+      const mk = boxes(mb, mdia.d, mdia.e), hdlr = mk.find((x) => x.t === 'hdlr'), mdhd = mk.find((x) => x.t === 'mdhd'), elng = mk.find((x) => x.t === 'elng');
+      if (!hdlr || typ(mb, hdlr.d + 8) !== 'soun') continue;
+      let lang = '';
+      if (elng) lang = new TextDecoder().decode(mb.subarray(elng.d + 4, elng.e)).replace(/\0+$/, '');
+      if (!lang && mdhd) { const off = mdhd.d + (mb[mdhd.d] === 1 ? 32 : 20), v = (mb[off] << 8) | mb[off + 1]; lang = String.fromCharCode(((v >> 10) & 31) + 0x60, ((v >> 5) & 31) + 0x60, (v & 31) + 0x60); }
+      const enabled = tkhd ? !!(mb[tkhd.d + 3] & 1) : true;
+      out.push({ lang, name: '', def: enabled });
+    }
+    return out;
+  },
+  // the audio tracks of the file behind url: [{ lang, name, def }], or null when they cannot be read
+  async audioTracks(url) {
+    if (this.atCache.has(url)) return this.atCache.get(url);
+    let res = null;
+    try {
+      const { buf, total } = await this.rangeOf(url, 0, 262143);
+      if (buf[0] === 0x1A && buf[1] === 0x45 && buf[2] === 0xDF && buf[3] === 0xA3) {
+        const f = await Mkv.parse(async (a, b) => (a === 0 && b <= buf.length - 1 ? buf.subarray(0, b + 1) : (await this.rangeOf(url, a, b)).buf), { tracksOnly: true });
+        res = f.tracks.filter((t) => t.type === 2).map((t) => ({ lang: t.ietf || (t.langSet ? t.lang : ''), name: t.name, def: t.def }));
+      } else if (String.fromCharCode(buf[4], buf[5], buf[6], buf[7]) === 'ftyp') res = await this.mp4Tracks(url, buf, total);
+    } catch (e) { res = null; }
+    this.atCache.set(url, res); if (this.atCache.size > 40) this.atCache.delete(this.atCache.keys().next().value);
+    return res;
+  },
+  atCache: new Map(),
+  // true only when the track this device will play is in your language
+  async langOk(url, s) {
+    const w = this.want(); if (!w || (s && s._tel && s._tel.isTrailer)) return true;
+    const tr = await this.audioTracks(url);
+    const why = (m) => { try { MKLog.add('info', `Peak Cinema skipped a copy: ${m}`); } catch (e) { /* no log */ } return false; };
+    if (!tr) return why('its audio tracks could not be read');
+    if (!tr.length) return why('no audio track');
+    const first = tr[0], def = tr.find((t) => t.def) || first;
+    if (this.canSwitch()) return tr.some((t) => this.trackIs(t, w)) || why(`no ${w} audio track`);
+    return (this.trackIs(first, w) && this.trackIs(def, w)) || why(`the playing track is ${first.lang || 'untagged'}${first.name ? ` (${first.name})` : ''}`);
+  },
   async load(st, tok) {
     const lazy = IS_TV && this.cur, v = lazy ? null : this.vids.find((x) => !x._clip && (!this.cur || this.cur.v !== x)); if (!v && !lazy) return null;
-    const list = st.list.slice(0, 2);
+    const list = st.list.slice(0, 3);
     for (const [i, s] of list.entries()) {
       let url = s.url;
       if (!url && s.infoHash) {
@@ -315,6 +404,9 @@ const Peak = {
         try { url = await Vault.resolve(s, { meta: st.meta, video: st.video || null }); s._infoHash = s.infoHash; delete s.infoHash; s.url = url; s._debrid = s._tel.debrid; s._tel = Telemetry.parse(s); } catch (e) { continue; }
         if (tok !== this.tok) return null;
       }
+      // 2.68.4: the file's own audio track must be in your language, or this copy is not used
+      if (!url || !(await this.langOk(url, s))) { if (tok !== this.tok) return null; continue; }
+      if (tok !== this.tok) return null;
       // TV: the other candidate travels with it, so a copy that will not open falls back to the film's next source
       if (IS_TV && this.cur) return { meta: st.meta, video: st.video || null, stream: s, streams: st.streams, v: null, url, lazy: true, offset: 0, d: 0, alt: { ...st, list: list.slice(i + 1) } };
       const clip = { meta: st.meta, video: st.video || null, stream: s, streams: st.streams, v, offset: 0, d: 0 };
