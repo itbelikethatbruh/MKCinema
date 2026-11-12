@@ -139,7 +139,7 @@ const MikoSoul = (() => {
     if (/^(lol|lmao|haha+|hehe+|rofl|that's funny|thats funny|funny)$/.test(t)) return { say: line('laugh') };
     if (/^(tell me a joke|(say|tell me) something funny|joke|make me laugh|know any jokes)$/.test(t)) return { say: line('joke') };
     if (/^(what's|whats|what is) your fav(ou?rite)? (film|movie|show|series)$|^do you have a fav(ou?rite)? (film|movie|show)$/.test(t)) return { say: line('fav') };
-    if (/^(what time is it|what's the time|whats the time|time)$/.test(t)) { const h = new Date().getHours(); return { say: line('time', { t: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), late: h >= 23 || h < 5 ? '. Bit late for a three-hour epic, maybe' : '' }) }; }
+    if (/^(what time is it|what's the time|whats the time|time)$/.test(t)) { const h = new Date().getHours(); return { say: line('time', { t: new Date().toLocaleTimeString(appLocale(), { hour: 'numeric', minute: '2-digit' }), late: h >= 23 || h < 5 ? '. Bit late for a three-hour epic, maybe' : '' }) }; }
     if ((m = t.match(/^(?:my name is|my name's|call me|you can call me|i'm called|im called|it's me|its me)\s+([\p{L}][\p{L}'-]{0,23}(?: [\p{L}][\p{L}'-]{0,23})?)$/u))) {
       const n = m[1].replace(/(^|[\s-])\p{L}/gu, (c) => c.toUpperCase());
       if (/^(miko|bored|tired|sad|back|here|done|good|fine|ok|okay)$/i.test(n)) return null;
@@ -964,7 +964,7 @@ Rules:
     if (h) bits.push(`open title page: "${h.name}" (id ${h.id}, ${h.type})`);
     if (this.kids()) bits.push('kids seat');
     const pn = MikoSoul.name(); if (pn) bits.push(`the person's name: ${pn}`);
-    bits.push(`local time ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`);
+    bits.push(`local time ${new Date().toLocaleTimeString(appLocale(), { hour: 'numeric', minute: '2-digit' })}`);
     return `[${bits.join('; ')}]`;
   },
   async tool(name, a) {

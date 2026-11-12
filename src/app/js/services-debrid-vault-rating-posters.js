@@ -252,7 +252,7 @@ const Vault = {
     if (k === 'rd') { const u = await this.call('https://api.real-debrid.com/rest/1.0/user', { headers: { Authorization: `Bearer ${key}` } }); return `${u.username} · ${u.type}${u.expiration ? ` until ${fmtDate(u.expiration)}` : ''}`; }
     if (k === 'tb') { const u = await this.call('https://api.torbox.app/v1/api/user/me', { headers: { Authorization: `Bearer ${key}` } }); return `${(u.data || {}).email || 'Account'} · plan ${(u.data || {}).plan ?? '?'}`; }
     if (k === 'ad') { const u = await this.call(`https://api.alldebrid.com/v4/user?agent=mkcinema&apikey=${encodeURIComponent(key)}`), us = (u.data || {}).user || {}; return `${us.username || 'Account'}${us.isPremium ? ' · premium' : ''}`; }
-    const u = await this.call(`https://www.premiumize.me/api/account/info?apikey=${encodeURIComponent(key)}`); if (u.status !== 'success') throw new Error(u.message || 'Rejected'); return `Customer ${u.customer_id} · premium until ${new Date(u.premium_until * 1000).toLocaleDateString()}`;
+    const u = await this.call(`https://www.premiumize.me/api/account/info?apikey=${encodeURIComponent(key)}`); if (u.status !== 'success') throw new Error(u.message || 'Rejected'); return `Customer ${u.customer_id} · premium until ${new Date(u.premium_until * 1000).toLocaleDateString(appLocale())}`;
   },
 };
 {
@@ -317,7 +317,7 @@ const Vault = {
 /* ---------------- Ratings: IMDb star, quality tag, RPDB rating posters, and critic scores with your OMDb key ---------------- */
 /* custom-poster-2.31.0 */
 /* Custom poster URL: a link template from a poster service (Pictorium, or any service that serves one image per title).
-   MKCinema fills {type}, {imdb_id}, {tmdb_id}, {tmdb_id|imdb_id} (Nuvio style: tmdb:<n> when known, else the IMDb id) and
+   MKCinema fills {type}, {imdb_id}, {tmdb_id}, {tmdb_id|imdb_id} (tmdb:<n> when known, else the IMDb id) and
    {shape} (poster, or landscape on wide cards). A title with no usable id, or an image that fails, falls back to the normal art. */
 const CustomPoster = {
   tpl() { const t = String(Keys.get().posterUrl || '').trim(); return /^https?:\/\/[^\s"'<>]+$/i.test(t) ? t : ''; },
@@ -494,7 +494,7 @@ const Calendar = {
     eps.sort((a, b) => a.at - b.at);
     $('#calNote').textContent = `${eps.length} episode${eps.length === 1 ? '' : 's'} · ${shows.length} series`;
     if (!eps.length) { body.innerHTML = `<div class="empty">Nothing airing in the next ${this.days} days for your series.</div>`; return; }
-    const day = (t) => { const d = new Date(t), today = new Date(); today.setHours(0, 0, 0, 0); const diff = Math.round((new Date(d).setHours(0, 0, 0, 0) - today) / 86400e3); return diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff === -1 ? 'Yesterday' : d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }); };
+    const day = (t) => { const d = new Date(t), today = new Date(); today.setHours(0, 0, 0, 0); const diff = Math.round((new Date(d).setHours(0, 0, 0, 0) - today) / 86400e3); return diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff === -1 ? 'Yesterday' : d.toLocaleDateString(appLocale(), { weekday: 'long', month: 'short', day: 'numeric' }); };
     const groups = []; eps.forEach((e) => { const k = day(e.at); const g = groups[groups.length - 1]; if (g && g.k === k) g.list.push(e); else groups.push({ k, list: [e] }); });
     body.innerHTML = groups.map((g) => `<section class="cal-day"><h3>${esc(g.k)}</h3>${g.list.map((e) => {
       const id = videoIdFor(e.meta, e.v), aired = e.at <= now;

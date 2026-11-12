@@ -14,7 +14,7 @@
    stays where its module put it. */
 const Arrange = {
   KEY: 'homeArrange',
-  get() { const a = Store.get(this.KEY, null) || {}; return { order: Array.isArray(a.order) ? a.order : [], hide: Array.isArray(a.hide) ? a.hide : [], names: a.names && typeof a.names === 'object' ? a.names : {}, titles: a.titles && typeof a.titles === 'object' ? a.titles : {} }; },
+  get() { const a = Store.get(this.KEY, null) || {}; return { order: Array.isArray(a.order) ? a.order : [], hide: Array.isArray(a.hide) ? a.hide : [], names: a.names && typeof a.names === 'object' ? a.names : {}, titles: a.titles && typeof a.titles === 'object' ? a.titles : {}, folders: a.folders && typeof a.folders === 'object' && !Array.isArray(a.folders) ? a.folders : {} }; },
   save(a) { Store.set(this.KEY, a); if (typeof Account !== 'undefined') Account.schedule(); this.apply(true); },
   head(sec) { return sec.querySelector('.row-title'); },
   /* the row's own title, without its small subtitle and before any rename */
@@ -50,6 +50,7 @@ const Arrange = {
         if (!sec.dataset.arrT) sec.dataset.arrT = this.title(sec);
         if (!sec.dataset.arrK) sec.dataset.arrK = k;
         sec.classList.toggle('arr-off', a.hide.includes(k));
+        sec.classList.toggle('arr-fold', Object.values(a.folders).some((f) => (f.keys || []).includes(k)));
         const h = this.head(sec), tn = h && [...h.childNodes].find((n) => n.nodeType === 3);
         const want = a.names[k] || sec.dataset.arrT;
         if (tn && tn.textContent.trim() !== want) tn.textContent = `${want}${tn.nextSibling ? ' ' : ''}`;
@@ -68,6 +69,7 @@ const Arrange = {
           if (keep && keep !== document.activeElement && keep.isConnected) try { keep.focus({ preventScroll: true }); } catch (e) { /* fine */ }
         }
       }
+      if (window.MkFolders) MkFolders.paint();
     } finally { this.obs && this.obs.takeRecords(); this.busy = false; }
   },
   watch() {
@@ -105,11 +107,12 @@ const Arrange = {
         const off = a.hide.includes(it.k), name = a.names[it.k];
         return `<li class="arr-item${off ? ' off' : ''}" data-k="${esc(it.k)}">
           <span class="arr-n tnum">${i + 1}</span>
-          <div class="arr-t"><b${name ? ' translate="no"' : ''}>${esc(name || it.t)}</b>${name ? `<small>${esc(it.t)}</small>` : off ? '<small>Hidden</small>' : it.gone ? '<small>Not on Home right now</small>' : ''}</div>
+          <div class="arr-t"><b${name ? ' translate="no"' : ''}>${esc(name || it.t)}</b>${name ? `<small>${esc(it.t)}</small>` : off ? '<small>Hidden</small>' : it.gone ? '<small>Not on Home right now</small>' : ''}${it.k !== 'folders' && a.folders && Object.keys(a.folders).find((f) => (a.folders[f].keys || []).includes(it.k)) ? `<small class="arr-fold-tag"><i data-lucide="folder"></i><span translate="no">${esc(a.folders[Object.keys(a.folders).find((f) => (a.folders[f].keys || []).includes(it.k))].name)}</span></small>` : ''}</div>
           <div class="arr-acts">
             <button class="ibtn" type="button" data-nav data-arr-act="up" aria-label="Move up" title="Move up"${i ? '' : ' disabled'}><i data-lucide="chevron-up"></i></button>
             <button class="ibtn" type="button" data-nav data-arr-act="down" aria-label="Move down" title="Move down"${i < items.length - 1 ? '' : ' disabled'}><i data-lucide="chevron-down"></i></button>
             <button class="ibtn" type="button" data-nav data-arr-act="name" aria-label="Rename" title="Rename"><i data-lucide="pencil"></i></button>
+            ${it.k !== 'folders' ? '<button class="ibtn" type="button" data-nav data-arr-act="folder" aria-label="Put in a folder" title="Put in a folder"><i data-lucide="folder-plus"></i></button>' : ''}
             <button class="ibtn" type="button" data-nav data-arr-act="hide" aria-label="${off ? 'Show' : 'Hide'}" title="${off ? 'Show' : 'Hide'}" aria-pressed="${off}"><i data-lucide="${off ? 'eye-off' : 'eye'}"></i></button>
           </div></li>`;
       }).join('')}</ol>` : '<p class="tour-note">Home has no rows yet. Install an addon with catalogs, then come back.</p>'}
@@ -140,6 +143,20 @@ const Arrange = {
       this.save(a); this.render(k, what); return;
     }
     if (what === 'name') this.rename(k);
+    if (what === 'folder') this.folder(k);
+  },
+  /* 2.68 household-plus: put a row in a folder (a new one or one you made), take it out, or copy the folder's code */
+  folder(k) {
+    const b = X8.body('arrangeHome'), li = b && [...$$('.arr-item', b)].find((x) => x.dataset.k === k); if (!li || !window.MkFolders) return;
+    const f = MkFolders.get(), cur = MkFolders.of(k), box = $('.arr-t', li);
+    box.insertAdjacentHTML('beforeend', `<form class="arr-fold-form"><select class="inp" aria-label="Folder"><option value="">Not in a folder</option>${Object.keys(f).map((id) => `<option value="${esc(id)}"${id === cur ? ' selected' : ''}>${esc(f[id].name)}</option>`).join('')}<option value="new">New folder…</option></select><input class="inp" maxlength="30" placeholder="Folder name" aria-label="Folder name" hidden><button class="btn btn-prime btn-sm" type="submit" data-nav>Save</button>${cur ? '<button class="btn btn-ghost btn-sm" type="button" data-nav data-fcode>Copy folder code</button>' : ''}</form>`);
+    const form = $('.arr-fold-form', box), sel = $('select', form), inp = $('input', form);
+    const sync = () => { inp.hidden = sel.value !== 'new'; if (!inp.hidden) inp.focus(); };
+    sel.addEventListener('change', sync); if (!Object.keys(f).length) { sel.value = 'new'; sync(); }
+    inp.addEventListener('keydown', (e) => e.stopPropagation());
+    form.addEventListener('submit', (e) => { e.preventDefault(); if (sel.value === 'new' && !inp.value.trim()) { inp.focus(); return; } MkFolders.put(k, sel.value, inp.value.trim()); this.render(k, 'folder'); });
+    const fc = $('[data-fcode]', form); if (fc) fc.onclick = () => copyText(MkFolders.code(cur), 'Folder code copied. Others paste it in Settings › Home › Add a shared folder');
+    if (IS_TV) { if (typeof TvType !== 'undefined') TvType.guard(inp); Nav.focus(sel, true); } else sel.focus();
   },
   rename(k) {
     const b = X8.body('arrangeHome'), li = b && [...$$('.arr-item', b)].find((x) => x.dataset.k === k); if (!li) return;

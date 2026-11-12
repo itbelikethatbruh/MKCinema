@@ -19,7 +19,7 @@
     const img = $('#heroBg') && $('#heroBg').lastElementChild;
     if (!img || img.tagName !== 'IMG') { if (first) { first = false; okWarm(); } return r; }
     const src = img.getAttribute('src') || '';
-    if (TOUCH_UI && /^https:\/\/image\.tmdb\.org\/t\/p\/original\//.test(src)) img.src = src.replace('/t/p/original/', '/t/p/w1280/');
+    if ((TOUCH_UI || (IS_TV && navigator.deviceMemory && navigator.deviceMemory <= 2)) && /^https:\/\/image\.tmdb\.org\/t\/p\/original\//.test(src)) img.src = src.replace('/t/p/original/', '/t/p/w1280/');
     if (first) {
       first = false;
       const m = MH.exec(img.getAttribute('src') || '');

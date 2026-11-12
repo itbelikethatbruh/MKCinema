@@ -524,7 +524,7 @@ const RmSec = {
   },
   rows() {
     const l = this.phones(); if (!l.length) return [];
-    return l.map((p, i) => ({ key: `rmPhone${i}`, label: p.name || 'Phone', help: `Allowed phone, since ${new Date(p.at || Date.now()).toLocaleDateString()}. It can control this screen.`, type: 'button', text: 'Remove', icon: 'trash-2', run: () => { this.remove(p.id); renderSettingsBody(); } }));
+    return l.map((p, i) => ({ key: `rmPhone${i}`, label: p.name || 'Phone', help: `Allowed phone, since ${new Date(p.at || Date.now()).toLocaleDateString(appLocale())}. It can control this screen.`, type: 'button', text: 'Remove', icon: 'trash-2', run: () => { this.remove(p.id); renderSettingsBody(); } }));
   },
   /* ---- one tab hosts the remote (a second tab of the same browser would answer the same phones twice) ---- */
   claim(auto) {

@@ -8,6 +8,17 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.68.0', date: '2026-11-12', items: [
+    ['new', 'Your cloud', 'Browse and play the films and episodes already in your debrid account, from Library or Settings › Debrid.'],
+    ['new', 'Setup links', 'Pass your whole addon setup to another screen or a friend in one press. It always asks before adding anything.'],
+    ['new', 'Folders on Home', 'Put any row into a folder from Arrange Home, and share a folder with a short code.'],
+    ['better', 'A faster Home', 'Home opens instantly with your last rows, then refreshes quietly, and keeps your place when you come back.'],
+    ['new', 'Shuffle, chapters and remembered subtitles', 'Shuffle a series, jump by chapter in the player, and your subtitle choice is remembered for each title.'],
+    ['new', 'More subtitle choices', 'Forced subtitles for foreign-language scenes, an option to hide SDH, and an option to wait for your language at the start.'],
+    ['new', 'Trakt reviews', 'Reviews on film and series pages, with spoilers covered until you open them.'],
+    ['better', 'Clearer details', 'More detail in the audio menu, dates in your language, logos and trailers in your language, and Search again on the source list.'],
+    ['better', 'Smoother on TVs', 'Calmer artwork while you scroll, live TV that rides out short outages, and a source speed test in Settings › Help.'],
+  ] },
   { v: '2.67.5', date: '2026-11-12', items: [
     ['better', 'Smoother video starts and stops', 'Opening and closing a video on Android is now clean and steady, with no flashes, and the loading logo moves more smoothly on phones.'],
   ] },
@@ -467,7 +478,7 @@ const WhatsNew = {
   newer: (a, b) => (typeof Updater !== 'undefined' ? Updater.newer(a, b) : String(a) > String(b)),
   KINDS: { new: ['sparkles', 'New'], better: ['trending-up', 'Improved'], fixed: ['wrench', 'Fixed'] },
   since(prev) { return RELEASES.filter((r) => this.newer(r.v, prev) && !this.newer(r.v, APP_VERSION)); },
-  when(d) { try { return new Date(`${d}T12:00:00Z`).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return d; } },
+  when(d) { try { return new Date(`${d}T12:00:00Z`).toLocaleDateString(appLocale(), { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return d; } },
   list(rels) {
     return rels.map((r) => `<section class="wn-rel"><div class="wn-v"><b>${esc(r.v)}</b><small>${esc(this.when(r.date))}</small></div><ul class="wn-items">${r.items.map(([k, t, d]) => {
       const [ic, label] = this.KINDS[k] || this.KINDS.new;

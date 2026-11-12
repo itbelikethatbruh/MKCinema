@@ -435,7 +435,7 @@ const AddonHealth = {
     L.reports.forEach((r) => r.findings.forEach((f) => { if (f.level !== 'info') fixes.push({ ...f, name: r.name, who: [r.base], r }); }));
     fixes.sort((a, b) => (a.level === 'bad' ? 0 : a.level === 'warn' ? 1 : 2) - (b.level === 'bad' ? 0 : b.level === 'warn' ? 1 : 2));
     const sorted = L.reports.slice().sort((a, b) => this.RANK[a.verdict] - this.RANK[b.verdict]);
-    const when = new Date(L.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    const when = new Date(L.at).toLocaleTimeString(appLocale(), { hour: 'numeric', minute: '2-digit' });
     return `<div class="hc-sum hc-t-${h.tone}"><i data-lucide="${h.tone === 'good' ? 'check-circle-2' : h.tone === 'bad' ? 'alert-octagon' : 'alert-triangle'}"></i><div><b>${esc(h.title)}</b><small>${esc(h.sub)} · checked at ${esc(when)}</small></div></div>
       ${fixes.length ? `<h4 class="dg-h">What to fix first</h4><ul class="hc-fix">${fixes.slice(0, 12).map((f, i) => `<li class="hc-l-${f.level}"><i class="hc-dot"></i><div><p>${f.name ? `<b>${esc(f.name)}:</b> ` : ''}${esc(f.text)}</p>${f.fix ? `<small>${esc(f.fix)}</small>` : ''}${this.button(f, `f${i}`)}</div></li>`).join('')}</ul>` : ''}
       <h4 class="dg-h">Each addon</h4>

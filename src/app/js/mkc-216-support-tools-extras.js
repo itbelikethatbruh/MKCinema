@@ -311,7 +311,7 @@ const Diagnostic = {
     ];
     const slow = (r.addons || []).filter((a) => !a.ok || a.ms > 3000);
     const rec = old ? [] : r.recommend || [];
-    return `${old ? `<p class="sub">Last run ${esc(new Date(r.at).toLocaleString())}.</p>` : ''}
+    return `${old ? `<p class="sub">Last run ${esc(new Date(r.at).toLocaleString(appLocale()))}.</p>` : ''}
       <div class="dg-grid">${rows.map(([a, v]) => `<div><span>${esc(a)}</span><b class="${/^no|not smooth/.test(v) ? 'dg-no' : ''}">${esc(v)}</b></div>`).join('')}</div>
       ${slow.length ? `<p class="dg-warn"><b>Slow or unreachable addons:</b> ${slow.map((a) => esc(`${a.name}${a.ms ? ` (${(a.ms / 1000).toFixed(1)} s)` : ''}`)).join(', ')}. They slow down every source list; consider removing them in Addons.</p>` : ''}
       ${c.hevc && !c.hevc.ok && !IS_TV ? `<p class="dg-warn">This ${TOUCH_UI ? 'device' : 'browser'} cannot decode HEVC (x265). Those sources play in VLC (Settings › Playback › Play streams in), or turn on Only sources that play here to hide them.</p>` : ''}
@@ -335,9 +335,10 @@ const Diagnostic = {
 /* ---------------- Skip: TheIntroDB, MKV chapters, recaps ---------------- */
 const Marks = {
   ch: null, idb: null, tok: -1,
-  reset() { this.ch = null; this.idb = null; this.tok = Skip.token; },
+  reset() { this.ch = null; this.idb = null; this.all = null; this.tok = Skip.token; },
   live() { if (this.tok !== Skip.token) this.reset(); return this; },
   fromChapters(list) {
+    this.live().all = (list || []).map((c) => ({ s: Number(c.s) || 0, e: Number(c.e) || 0, name: String(c.name || '') }));
     const m = {};
     for (const c of list) {
       const n = c.name.toLowerCase().trim();
@@ -636,7 +637,7 @@ AnimeHub.init();
 {
   const help = {
     id: 'help', icon: 'activity', label: 'Help', intro: 'Tools for when something does not play right. Run the Diagnostic first, then send a log if it still goes wrong.', rows: () => [
-      { key: 'diagRun', label: 'Diagnostic', help: (() => { const d = Diagnostic.saved(); return `About a minute of checks: decoders, smoothness, speed and addons. It suggests settings for this ${IS_TV ? 'TV' : 'device'} only.${d ? ` Last run ${esc(new Date(d.at).toLocaleDateString())}.` : ''}`; })(), type: 'button', text: 'Run Diagnostic', icon: 'activity', run: () => Diagnostic.open() },
+      { key: 'diagRun', label: 'Diagnostic', help: (() => { const d = Diagnostic.saved(); return `About a minute of checks: decoders, smoothness, speed and addons. It suggests settings for this ${IS_TV ? 'TV' : 'device'} only.${d ? ` Last run ${esc(new Date(d.at).toLocaleDateString(appLocale()))}.` : ''}`; })(), type: 'button', text: 'Run Diagnostic', icon: 'activity', run: () => Diagnostic.open() },
       { key: 'sendLog', label: 'Send log', help: `Sends recent errors and this device’s details to the developer, and gives you a 6-character code for your bug report. No keys or links.${SendLog.last() ? ` Last code: <b class="mono">${esc(SendLog.last().code)}</b>.` : ''}`, type: 'button', text: 'Send log', icon: 'send', run: () => SendLog.open() },
       { key: 'speedRun', label: 'Speed test', help: typeof LineCheck !== 'undefined' && LineCheck.last ? `Last test: <b>${Math.round(LineCheck.last.mbps)} Mbps</b>.` : 'Downloads up to 40 MB once and tells you the highest quality that plays without pauses.', type: 'button', text: 'Test my connection', icon: 'gauge', run: (b) => LineCheck.run(b) },
       ...(IS_TV ? [] : [{ key: 'bugForm', label: 'Report a bug', help: 'Opens the bug form on GitHub. It asks for your log code, so send a log first.', type: 'button', text: 'Open bug form', icon: 'bug', run: () => window.open(SendLog.issueUrl((SendLog.last() || {}).code), '_blank', 'noopener') }]),
@@ -938,12 +939,15 @@ const MkvSubs = {
   },
   /* the file's own subtitles are timed to this exact release, so they win over a downloaded one of the same language */
   autoPick() {
-    if (!CFG.subAuto || P.subUserChoice || !CFG.subLang || CFG.subLang === 'off') return;
-    const cur = P.subs[P.curSub]; if (cur && cur.kind === 'mkv') return;
+    if (P.subUserChoice) return;
+    if (typeof SubMem !== 'undefined' && SubMem.get()) { SubMem.apply(); return; }
+    if (!CFG.subAuto || !CFG.subLang || CFG.subLang === 'off') { if (typeof SubForced !== 'undefined') SubForced.pick(); return; }
+    const cur = P.subs[P.curSub]; if (cur && cur.kind === 'mkv' && !(cur._mkv && cur._mkv.forced)) return;
     const want = langName(CFG.subLang);
-    const c = P.subs.map((s, i) => [s, i]).filter(([s]) => s.kind === 'mkv' && langName(s.lang) === want && !s._mkv.forced);
+    const sdh = typeof SubSdh !== 'undefined' && SubSdh.hide();
+    const c = P.subs.map((s, i) => [s, i]).filter(([s]) => s.kind === 'mkv' && langName(s.lang) === want && !s._mkv.forced && !(sdh && SubSdh.is(s)));
     c.sort((a, b) => (/sign|song/i.test(a[0]._mkv.name) - /sign|song/i.test(b[0]._mkv.name)) || (b[0]._mkv.def - a[0]._mkv.def) || (b[0]._mkv.ass - a[0]._mkv.ass));
-    if (c.length) selectSub(c[0][1], { auto: true });
+    if (c.length) selectSub(c[0][1], { auto: true }); else if (typeof SubForced !== 'undefined' && P.curSub < 0) SubForced.pick();
   },
   stop() { if (this.ctl) { this.ctl.abort(); this.ctl = null; } },
   tt: new Map(),

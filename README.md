@@ -166,6 +166,8 @@ We've looked, and we haven't found these in other apps. Every one is live today.
 - **The in-browser engine** plays MKV, MP4 and TS, converts Dolby, DTS and TrueHD sound, shows PGS subtitles and decodes HEVC on computers, so an outside player is rarely needed.
 - **Hand off to any player** your device supports, such as VLC, mpv, Infuse or MX Player, for the rare file that still needs one. Picture-in-picture, lock-screen controls, and Send to TV (Chromecast).
 - **Spoiler Guard**, **Never miss a line** after a pause, and **Last time…** to remind you where you were.
+- **Chapters** in Player › Options › More, **Shuffle a series**, and your **subtitle choice remembered for each title**, with forced subtitles for foreign-language scenes, an option to hide SDH, and an option to wait for your language at the start.
+- **Your cloud.** Browse and play the films and episodes already in your debrid account, from Library or Settings › Debrid.
 
 </details>
 
@@ -292,6 +294,18 @@ MKCinema is an independent project, designed, built and maintained by one develo
 <summary><b>Addon developers</b></summary>
 
 Addons work in MKCinema as they are. If you want more, one optional, data-only `mkcinema` field in your manifest adds row styles, poster badges, film-page panels, Library tabs, playback events and skip times. MKCinema draws everything with its own components, addon code never runs, and other apps simply ignore the field. Specs: [addon looks](docs/addon-looks.md) and [addon extras](docs/addon-extras.md).
+
+</details>
+
+<details>
+<summary><b>Setup links</b></summary>
+
+One link adds a whole addon setup on another screen or for a friend. MKCinema always asks before adding anything, setup links are blocked on the kids seat, and addons that hold someone's own key are never put in a link.
+
+- `https://app.mkcinema.app/#setup=<base64url JSON>` where the JSON is `{"v":1,"name":"My setup","addons":["https://…/manifest.json"]}`
+- `https://app.mkcinema.app/#setup-url=https://…/setup.json` to load the same JSON from a URL
+
+At most 40 addons per link.
 
 </details>
 

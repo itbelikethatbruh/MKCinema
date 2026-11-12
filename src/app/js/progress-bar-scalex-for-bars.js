@@ -108,7 +108,8 @@
     hls(hls, stream, src) {
       const st = { net: 0, media: 0, mediaAt: 0, timer: 0, on: null };
       const alive = () => P.hls === hls && P.stream === stream && !$('#player').hidden;
-      const ok = () => { st.net = 0; };
+      const ok = () => { st.net = 0; st.liveAt = 0; };
+      const isLive = () => { try { const l = hls.levels && hls.levels[Math.max(0, hls.currentLevel)]; return !isFinite(video.duration) || !!(l && l.details && l.details.live); } catch (e) { return false; } };
       const stop = () => { clearTimeout(st.timer); if (st.on) { removeEventListener('online', st.on); st.on = null; } };
       [Hls.Events.MANIFEST_LOADED, Hls.Events.LEVEL_LOADED, Hls.Events.FRAG_LOADED].forEach((ev) => hls.on(ev, ok));
       hls.on(Hls.Events.DESTROYING, stop);
@@ -118,6 +119,10 @@
         if (d.type === Hls.ErrorTypes.NETWORK_ERROR && !/parsing/i.test(why)) {
           // a missing or refused file (4xx) gets one more try; a dropped connection gets three, spaced out
           const cap = code >= 400 && code < 500 && code !== 408 && code !== 429 ? 1 : 3;
+          if (st.net >= cap && isLive() && navigator.onLine !== false) {
+            if (!st.liveAt) st.liveAt = Date.now();
+            if (Date.now() - st.liveAt < 15000) { stop(); st.timer = setTimeout(() => { if (alive()) { if (/manifest/i.test(why)) hls.loadSource(src); else hls.startLoad(); } }, 1500); return; }
+          }
           if (st.net >= cap) { playbackFailed(stream, why); return; }
           const wait = 700 * 2 ** st.net++;
           const go = () => { st.on = null; if (!alive()) return; if (/manifest/i.test(why)) hls.loadSource(src); else hls.startLoad(); };

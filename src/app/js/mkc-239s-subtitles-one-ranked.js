@@ -124,7 +124,8 @@ const SubRank = {
   },
   /* the best real subtitle in your language (then the same language from another region), or -1 */
   pick(list) {
-    const best = this.order(list).find(([s]) => this.tier(s) <= 1 && !(s._mkv && s._mkv.forced));
+    const sdh = typeof SubSdh !== 'undefined' && SubSdh.hide();
+    const best = this.order(list).find(([s]) => this.tier(s) <= 1 && !(s._mkv && s._mkv.forced) && !(sdh && SubSdh.is(s)));
     return best ? best[1] : -1;
   },
 };

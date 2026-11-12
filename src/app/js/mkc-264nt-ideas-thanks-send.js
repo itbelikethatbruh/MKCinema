@@ -45,7 +45,7 @@ const Notes = {
     throw new Error(j.message || `MKCinema’s server answered ${r.status}`);
   },
   platform() { return `${typeof PLATFORM !== 'undefined' ? PLATFORM : 'web'}${IS_TV ? '-tv' : ''}`.slice(0, 32); },
-  date(s) { try { return new Date(s).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) { return ''; } },
+  date(s) { try { return new Date(s).toLocaleDateString(appLocale(), { day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) { return ''; } },
   draftKey: (k) => `noteDraft:${k}`,
   // delete needs a second press within 4 s (no browser confirm box, which TVs handle badly)
   twice(btn, fn) {

@@ -26,7 +26,7 @@ const Hub = {
     if (!isFinite(s)) return '';
     if (s < 45) return 'just now';
     if (s < 7 * 86400) return Friends.ago(at);
-    return new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+    return new Date(t).toLocaleDateString(appLocale(), { day: 'numeric', month: 'short' });
   },
 
   /* ---- with the account ---- */

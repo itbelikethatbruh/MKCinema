@@ -29,7 +29,7 @@ const S = {
 const remember = (m) => { if (m && m.id) S.metas.set(m.id, { ...(S.metas.get(m.id) || {}), ...m }); return m; };
 const metaPoster = (m) => m.poster || (String(m.id).startsWith('tt') ? `https://images.metahub.space/poster/medium/${m.id}/img` : null);
 const metaBg = (m) => m.background || (String(m.id).startsWith('tt') ? `https://images.metahub.space/background/medium/${m.id}/img` : null);
-const metaLogo = (m) => m.logo || (String(m.id).startsWith('tt') ? `https://images.metahub.space/logo/medium/${m.id}/img` : null);
+const metaLogo = (m) => (window.MkLangArt && MkLangArt.logo(m)) || m.logo || (String(m.id).startsWith('tt') ? `https://images.metahub.space/logo/medium/${m.id}/img` : null);
 const yearOf = (m) => String(m.releaseInfo || m.year || '').slice(0, 9);
 const genresOf = (m) => (m.genres || m.genre || []).filter(Boolean);
 
@@ -179,7 +179,7 @@ function showHero(i, dir = 1) {
   const logo = metaLogo(m);
   $('#heroLogoWrap').innerHTML = `${logo ? imgTag(logo, m.name, m.id, { nofb: true, cls: 'hero-logo', lazy: false }) : ''}<h1 class="hero-title" data-logo-alt ${logo ? 'hidden' : ''}>${esc(m.name)}</h1>`;
   $('#heroMeta').innerHTML = [m.imdbRating ? `<span class="imdb ${rateTier(m.imdbRating)}"><b>IMDb</b>${esc(m.imdbRating)}</span>` : '', yearOf(m) ? `<span>${esc(yearOf(m))}</span>` : '', m.runtime ? `<span>${esc(m.runtime)}</span>` : '', (genresOf(m).length ? `<span class="hm-gs">${genresOf(m).slice(0, 3).map((g, i) => `<span class="hm-g${i}">${i ? ' · ' : ''}${esc(g)}</span>`).join('')}</span>` : ''), `<span class="tag-s">${esc(m.type)}</span>`].filter(Boolean).join('');
-  $('#heroDesc').textContent = m.description || '';
+  $('#heroDesc').textContent = m.description || ''; if (window.MkHeroText) MkHeroText.set();
   { const hb = $('#hero .hero-body'); hb.classList.remove('swap'); requestAnimationFrame(() => hb.classList.add('swap')); }
   $('#heroEyebrow').innerHTML = `<i data-lucide="flame"></i>Featured · ${esc(m._addon || 'Catalog')}`;
   $$('#heroDots button').forEach((b, k) => b.classList.toggle('on', k === S.heroIdx));
@@ -221,6 +221,8 @@ function saveProgress(force) {
    Navigation between views
    ===================================================================== */
 function go(view, opts = {}) {
+  if (S.view === 'home' && view !== 'home' && window.MkHomePlace) MkHomePlace.leave();
+  const backHome = view === 'home' && S.view !== 'home';
   S.view = view;
   $$('#tabs .tab, #mtabs [data-view]').forEach((t) => t.classList.toggle('on', t.dataset.view === view));
   const id = view === 'movie' || view === 'series' ? 'discover' : view;
@@ -231,7 +233,7 @@ function go(view, opts = {}) {
   if (view === 'library') renderLibrary();
   if (view === 'studio') renderStudio();
   if (view === 'calendar') Calendar.render();
-  if (view === 'home') queueWall();
+  if (view === 'home') { queueWall(); if (backHome && window.MkHomePlace) MkHomePlace.back(); }
   try { history.replaceState(null, '', `#${view}`); } catch (e) { /* sandboxed */ }
 }
 function openCatalog(cat) { go(cat.type === 'series' ? 'series' : 'movie', { catalog: cat }); }
@@ -300,13 +302,13 @@ async function renderTV() {
   channels = await Promise.all(channels.map(async (ch) => { if (ch.videos) return remember(ch); try { return remember((await engine.fetchMeta(ch.type, ch.id)) || ch); } catch (e) { return remember(ch); } }));
   const PX = 8, now = Date.now(), t0 = Math.floor((now - 30 * 60000) / (30 * 60000)) * 30 * 60000, span = 180, t1 = t0 + span * 60000;
   const x = (t) => ((t - t0) / 60000) * PX;
-  const times = Array.from({ length: span / 30 }, (_, i) => `<span style="width:${30 * PX}px">${new Date(t0 + i * 30 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`).join('');
+  const times = Array.from({ length: span / 30 }, (_, i) => `<span style="width:${30 * PX}px">${new Date(t0 + i * 30 * 60000).toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' })}</span>`).join('');
   const rows = channels.map((ch) => {
     const progs = (ch.videos || []).map((v, i, arr) => ({ title: v.title || v.name, start: +new Date(v.released), end: v._end ? +new Date(v._end) : arr[i + 1] ? +new Date(arr[i + 1].released) : +new Date(v.released) + 3600000 }))
       .filter((p) => p.end > t0 && p.start < t1);
     const blocks = (progs.length ? progs : [{ title: `Live · ${ch.name}`, start: t0, end: t1 }]).map((p) => {
       const l = Math.max(0, x(p.start)), w = Math.min(x(p.end), span * PX) - l; const on = p.start <= now && now < p.end;
-      return `<button class="epg-prog ${on ? 'now' : ''}" type="button" data-nav data-ch="${esc(ch.id)}" style="left:${l}px;width:${Math.max(30, w - 4)}px"><b>${esc(p.title)}</b><small>${new Date(p.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}–${new Date(p.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small></button>`;
+      return `<button class="epg-prog ${on ? 'now' : ''}" type="button" data-nav data-ch="${esc(ch.id)}" style="left:${l}px;width:${Math.max(30, w - 4)}px"><b>${esc(p.title)}</b><small>${new Date(p.start).toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' })}–${new Date(p.end).toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' })}</small></button>`;
     }).join('');
     return `<div class="epg-row"><button class="epg-ch" type="button" data-nav data-ch="${esc(ch.id)}">${imgTag(ch.logo || ch.poster, ch.name, ch.id)}<span><b>${esc(ch.name)}</b><small>${esc(genresOf(ch)[0] || ch._addon || '')}</small></span></button><div class="epg-track">${blocks}</div></div>`;
   }).join('');
@@ -334,7 +336,9 @@ function renderLibrary() {
   if (cw.length) { const b = document.createElement('button'); b.className = 'btn btn-ghost btn-sm'; b.type = 'button'; b.innerHTML = '<i data-lucide="trash-2"></i>Clear progress'; b.style.marginTop = '8px'; b.onclick = () => { S.progress = {}; Store.set('progress', {}); renderLibrary(); }; a.appendChild(b); }
   const w = document.createElement('section'); w.className = 'row';
   w.innerHTML = `<div class="row-head"><h2 class="row-title">My watchlist <small>${S.watchlist.length} saved</small></h2></div><div class="grid">${S.watchlist.map((m) => cardHTML(m)).join('') || '<div class="empty">Use the Watchlist button on any title to save it here.</div>'}</div>`;
-  root.appendChild(w); icons();
+  root.appendChild(w);
+  if (window.MkCloud) MkCloud.libRow(root);
+  icons();
 }
 
 /* =====================================================================
@@ -348,7 +352,7 @@ function seasonsOf(meta) {
   return [...map.entries()].sort((a, b) => (a[0] === 0) - (b[0] === 0) || a[0] - b[0]);
 }
 function orderedEpisodes(meta) { return seasonsOf(meta).filter(([s]) => s !== 0).flatMap(([, l]) => l); }
-function nextVideo(meta, video) { const list = orderedEpisodes(meta); const i = list.findIndex((v) => v.id === video.id); return i >= 0 ? list[i + 1] || null : null; }
+function nextVideo(meta, video) { if (window.MkShuffle && MkShuffle.on(meta)) return MkShuffle.next(meta, video); const list = orderedEpisodes(meta); const i = list.findIndex((v) => v.id === video.id); return i >= 0 ? list[i + 1] || null : null; }
 function videoIdFor(meta, v) { return v.id || StremioEngine.seriesId(meta.id, v.season, v.episode); }
 
 const MENU_LAYERS = ['epSheet', 'detail', 'addons', 'palette', 'settings', 'tastePick', 'askLayer', 'tour', 'stremioImport', 'trailer', 'partyLayer', 'castLayer'];
@@ -507,6 +511,7 @@ function renderDetail(loading) {
         <div class="actions">
           <button class="btn btn-bolt cta" type="button" id="dSmart" data-nav><span class="cta-ring" aria-hidden="true"></span><i data-lucide="play"></i><span class="sp-l">Smart Play<small>Best stream, picked for you</small></span></button>
           <button class="btn btn-ghost" type="button" id="dTrailer" data-nav><i data-lucide="clapperboard"></i>Trailer</button>
+          ${m.type === 'series' && seasons.length ? `<button class="btn btn-ghost" type="button" id="dShuffle" data-nav aria-pressed="${!!(window.MkShuffle && MkShuffle.on(m))}"><i data-lucide="shuffle"></i>Shuffle</button>` : ''}
           <button class="btn btn-ghost" type="button" id="dList" data-nav>${inWatchlist(m.id) ? '<i data-lucide="check"></i>In watchlist' : '<i data-lucide="plus"></i>Watchlist'}</button>
           ${m.imdb_id || String(m.id).startsWith('tt') ? `<a class="btn btn-ghost" data-nav href="https://www.imdb.com/title/${esc(m.imdb_id || String(m.id).split(':')[0])}/" target="_blank" rel="noopener"><i data-lucide="external-link"></i>IMDb</a>` : ''}
         </div>
@@ -535,6 +540,9 @@ function renderDetail(loading) {
   const sg = $('#dSpoil'); if (sg) sg.onclick = () => { setCfg('spoilerGuard', !CFG.spoilerGuard); renderDetail(false); $$('#toasts .toast').forEach((t) => { if (/^Spoiler Guard/.test(t.dataset.msg || '')) t.remove(); }); toast(CFG.spoilerGuard ? 'Spoiler Guard on: unwatched episodes are hidden' : 'Spoiler Guard off', 'info', 2200); };
   Ratings.critics(m);
   $('#dTrailer').onclick = () => playTrailer(m);
+  { const sh = $('#dShuffle'); if (sh) sh.onclick = () => MkShuffle.start(m); }
+  if (window.MkLangArt && MkLangArt.wants()) MkLangArt.detail(m);
+  if (window.MkReviews && !loading) MkReviews.place(m);
   $('#dList').onclick = () => { toggleWatchlist(m); renderDetail(false); renderStreamsPanel(); };
   $$('#dSeasons [data-season]').forEach((b) => b.addEventListener('click', () => { D.season = Number(b.dataset.season); renderDetail(false); renderStreamsPanel(); }));
   bindEpisodes($('#dEps'), m, (v) => { D.video = v; D.season = Number(v.season); markEpisodes(); EpSheet.open(); loadDetailStreams(); });
@@ -679,6 +687,7 @@ function renderStreamsPanel() {
     <div class="streams">${list.map((s) => streamRowHTML(s, D.streams.indexOf(s), { best: s === best })).join('') || (st.pending ? skeletons(0) + '<div class="empty">Waiting for addons…</div>' : '<div class="empty">No streams for this filter. Install more stream addons from the addon manager.<button type="button" class="linkish" data-nav data-trouble="nostreams">Why no streams?</button></div>')}</div>`;
   icons();
   $$('[data-filter]', box).forEach((b) => b.addEventListener('click', () => { D.filter = b.dataset.filter; renderStreamsPanel(); }));
+  if (window.MkAgain) MkAgain.mount(box, st);
   $$('[data-si]', box).forEach((b) => b.addEventListener('click', () => { playStream({ meta: D.meta, video: D.video, streams: D.streams }, D.streams[Number(b.dataset.si)]); }));
 }
 async function smartPlayDetail() {
@@ -706,7 +715,8 @@ async function resume(videoId) {
   playStream({ meta, video, streams }, pick, { startAt: p.t });
 }
 async function playTrailer(meta) {
-  const t = (meta.trailerStreams || [])[0] || ((meta.trailers || [])[0] && { ytId: meta.trailers[0].source, title: meta.name });
+  const local = window.MkLangArt ? await MkLangArt.trailer(meta).catch(() => '') : '';
+  const t = local ? { ytId: local } : (meta.trailerStreams || [])[0] || ((meta.trailers || [])[0] && { ytId: meta.trailers[0].source, title: meta.name });
   if (!t || !t.ytId) { toast('No official trailer is listed for this title', 'err'); return; }
   openTrailer(t.ytId);
 }
@@ -993,6 +1003,8 @@ async function playStream(ctx, stream, { startAt } = {}) {
   const wasOpen = !$('#player').hidden;
   if (!wasOpen) { openLayer('player'); }
   const prevCtx = P.ctx; P.ctx = ctx; P.stream = stream; P.retried = false;
+  if (window.MkShuffle && MkShuffle.id && MkShuffle.id !== (ctx.meta && ctx.meta.id)) MkShuffle.stop();
+  if (window.MkSrcSpeed) MkSrcSpeed.note(stream);
   const key = ctx.video ? ctx.video.id : ctx.meta.id;
   if (startAt == null) { const p = CFG.resume && S.progress[key]; startAt = p && p.t > 20 && p.t < p.d * .95 ? p.t : 0; }
   $('#pTitle').textContent = ctx.meta.name || '';
@@ -1054,7 +1066,7 @@ function loadUrl(stream, startAt) {
   Failover.arm(stream);
   const hlsLike = !stream._local && /\.m3u8(\?|$)/i.test(stream.url);
   if (P._onMeta) video.removeEventListener('loadedmetadata', P._onMeta);
-  const onMeta = P._onMeta = () => { P._onMeta = null; if (P.stream && P.stream !== stream) return; if (startAt && isFinite(video.duration) && startAt < video.duration - 5) video.currentTime = startAt; video.playbackRate = CFG.speed || 1; video.play().catch(() => wakeHud(true)); if (!P.hls) setTimeout(addEmbeddedSubs, 300); };
+  const onMeta = P._onMeta = () => { P._onMeta = null; if (P.stream && P.stream !== stream) return; if (startAt && isFinite(video.duration) && startAt < video.duration - 5) video.currentTime = startAt; video.playbackRate = CFG.speed || 1; const go = () => video.play().catch(() => wakeHud(true)); if (window.MkSubWait) MkSubWait.go(go); else go(); if (!P.hls) setTimeout(addEmbeddedSubs, 300); };
   video.addEventListener('loadedmetadata', onMeta, { once: true });
   if (hlsLike && window.Hls && Hls.isSupported()) {
     const hls = P.hls = new Hls({ enableWorker: true, startPosition: startAt || -1, maxBufferLength: 40, backBufferLength: 60, capLevelToPlayerSize: !IS_TV });
@@ -1329,14 +1341,18 @@ function addEmbeddedSubs() {
 }
 function autoPickSub() {
   const cur = P.subs && P.subs[P.curSub];
-  if (!CFG.subAuto || P.subUserChoice || (P.curSub >= 0 && !(cur && cur._tr)) || !CFG.subLang || CFG.subLang === 'off') return;
+  const forcedOn = typeof SubForced !== 'undefined' && SubForced.is(cur);
+  if (P.subUserChoice || (P.curSub >= 0 && !(cur && cur._tr) && !forcedOn)) return;
+  // what you picked for this title last time wins over the house rules
+  if (typeof SubMem !== 'undefined' && SubMem.apply()) return;
+  if (!CFG.subAuto || !CFG.subLang || CFG.subLang === 'off') { if (typeof SubForced !== 'undefined') SubForced.pick(); return; }
   const i = SubRank.pick(P.subs);
-  if (i >= 0) selectSub(i, { auto: true }); else SubAuto.offer();
+  if (i >= 0) selectSub(i, { auto: true }); else { if (typeof SubForced !== 'undefined') SubForced.pick(); SubAuto.offer(); }
 }
 const subLabel = (s) => s._label || `${langName(s.lang)}${s._addon ? ` · ${s._addon}` : ''}`;
 function renderSubMenu() {
   const m = $('#subMenu'); if (!P.subs) return;
-  const byLang = SubRank.order(P.subs);
+  const byLang = SubRank.order(P.subs).filter(([s, i]) => !(typeof SubSdh !== 'undefined' && SubSdh.hide() && SubSdh.is(s)) || i === P.curSub);
   const subAddons = engine.addons.filter((a) => a.enabled && StremioEngine.resources(a.manifest).some((r) => r.name === 'subtitles')).length;
   const hasOS = engine.addons.some((a) => /opensubtitles/i.test(a.baseUrl) && !a.error);
   m.innerHTML = `<h5>Subtitles · ${P.subsLoading ? 'searching…' : `${P.subs.length} found`}</h5>
@@ -1347,7 +1363,7 @@ function renderSubMenu() {
     ${!P.subs.length && !P.subsLoading ? `<p style="color:var(--mute);font-size:calc(12.5px * var(--ts,1));margin:6px 12px 8px;max-width:30ch">${subAddons ? 'Your subtitle addons had nothing for this title.' : 'No subtitle addon is installed or reachable.'}${hasOS ? '' : ' Add OpenSubtitles v3 to search thousands of languages.'}</p>` : ''}
     <button type="button" data-subfile><i data-lucide="file-up"></i>Load subtitle file…</button>
     ${hasOS ? '' : '<button type="button" data-addos><i data-lucide="plus"></i>Add OpenSubtitles v3</button>'}`;
-  $$('[data-sub]', m).forEach((b) => b.addEventListener('click', () => { P.subUserChoice = true; selectSub(Number(b.dataset.sub)); }));
+  $$('[data-sub]', m).forEach((b) => b.addEventListener('click', () => { P.subUserChoice = true; if (typeof SubMem !== 'undefined') SubMem.save(Number(b.dataset.sub)); selectSub(Number(b.dataset.sub)); }));
   $$('[data-ssize]', m).forEach((b) => b.addEventListener('click', () => { const k = Number(b.dataset.ssize); setCfg('subSize', k ? clamp(CFG.subSize + k, 50, 220) : 100); renderSubMenu(); }));
   $$('[data-spos]', m).forEach((b) => b.addEventListener('click', () => { setCfg('subPos', b.dataset.spos); renderSubMenu(); }));
   $$('[data-delay]', m).forEach((b) => b.addEventListener('click', () => setSubDelay(Number(b.dataset.delay) === 0 ? 0 : P.subDelay + Number(b.dataset.delay))));
@@ -1409,7 +1425,7 @@ $('#pSubs').onclick = () => { const m = $('#subMenu'); $('#optMenu').hidden = tr
 function renderOptMenu() {
   const m = $('#optMenu'); const speeds = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
   const levels = P.hls && P.hls.levels ? P.hls.levels : [];
-  const audio = P.hls && P.hls.audioTracks && P.hls.audioTracks.length > 1 ? P.hls.audioTracks.map((t, i) => ({ i, label: t.name || langName(t.lang), on: P.hls.audioTrack === i }))
+  const audio = P.hls && P.hls.audioTracks && P.hls.audioTracks.length > 1 ? P.hls.audioTracks.map((t, i) => ({ i, label: AudioLang.hls(t), on: P.hls.audioTrack === i }))
     : video.audioTracks && video.audioTracks.length > 1 ? Array.from(video.audioTracks).map((t, i) => ({ i, label: t.label || langName(t.language), on: t.enabled })) : [];
   m.innerHTML = `<h5>Speed</h5><div class="seg-row">${speeds.map((v) => `<button type="button" class="${video.playbackRate === v ? 'on' : ''}" data-speed="${v}">${v}×</button>`).join('')}</div>
     ${levels.length > 1 ? `<h5>Quality</h5><div class="seg-row"><button type="button" class="${P.hls.autoLevelEnabled ? 'on' : ''}" data-level="-1">Auto${P.hls.autoLevelEnabled && levels[P.hls.currentLevel] ? ` · ${levels[P.hls.currentLevel].height}p` : ''}</button>${levels.map((l, i) => [l, i]).sort((a, b) => b[0].height - a[0].height).map(([l, i]) => `<button type="button" class="${!P.hls.autoLevelEnabled && P.hls.currentLevel === i ? 'on' : ''}" data-level="${i}">${l.height ? `${l.height}p` : `${Math.round(l.bitrate / 1000)}k`}</button>`).join('')}</div>` : ''}

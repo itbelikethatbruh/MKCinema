@@ -397,8 +397,8 @@ const Channels = {
     let list = d.channels.filter((c) => (this.st.group === '★' ? favs.has(this.key(c)) : !this.st.group || c.group === this.st.group) && (!q || normTitle(c.name).includes(q)));
     const total = list.length, per = IS_TV ? 40 : 80; list = list.slice(0, per * this.st.page);
     const PX = IS_TV ? 7 : 8, now = Date.now(), t0 = Math.floor((now - 30 * 60000) / (30 * 60000)) * 30 * 60000, span = 180, t1 = t0 + span * 60000, x = (t) => ((t - t0) / 60000) * PX;
-    const times = Array.from({ length: span / 30 }, (_, i) => `<span style="width:${30 * PX}px">${new Date(t0 + i * 30 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`).join('');
-    const hm = (t) => new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const times = Array.from({ length: span / 30 }, (_, i) => `<span style="width:${30 * PX}px">${new Date(t0 + i * 30 * 60000).toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' })}</span>`).join('');
+    const hm = (t) => new Date(t).toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' });
     const fut = [];   // programmes that start later: a press offers to record them
     const rows = list.map((c, i) => {
       const k = this.key(c), progs = (d.epg.get(k) || []).filter((p) => p.end > t0 && p.start < t1);
@@ -1315,6 +1315,7 @@ const Seats = {
   artOf(s) {
     const av = s.av || '', photo = s.id === '' && Store.get('avatar', null);
     if (av === 'letter') return 'letter';
+    if (/^url:https:\/\/[^\s"'<>]+$/i.test(av)) return av;
     if (av === 'photo') return photo ? 'photo' : 'letter';
     if (typeof SeatArt !== 'undefined' && SeatArt.valid(av)) return av;
     if (photo) return 'photo';
@@ -1325,6 +1326,7 @@ const Seats = {
   avatar(s, lg, force) {
     const a = force || this.artOf(s), cls = `seat-av${lg ? ' lg' : ''}${s.kids ? ' kids' : ''}`;
     if (a === 'photo') return `<span class="${cls} img"><img src="${esc(Store.get('avatar', ''))}" alt=""></span>`;
+    if (String(a).startsWith('url:')) return `<span class="${cls} img"><img src="${esc(a.slice(4))}" alt="" referrerpolicy="no-referrer" loading="lazy"></span>`;
     if (a !== 'letter') return `<span class="${cls} art">${SeatArt.svg(a)}</span>`;
     return `<span class="${cls}" style="--sc:${esc(s.color || '#d9d4c7')}">${esc((s.name || '?').trim()[0] || '?').toUpperCase()}</span>`;
   },
@@ -1419,9 +1421,10 @@ const Seats = {
   },
   edit(id) {
     const isNew = id == null, s = isNew ? { id: `s${Date.now().toString(36)}`, name: '', color: this.COLORS[(this.list().length + 1) % this.COLORS.length], kids: false, pin: '', av: this.freshArt() } : { ...this.all().find((x) => x.id === id) };
-    if (!s.av || !(s.av === 'letter' || s.av === 'photo' || SeatArt.valid(s.av))) s.av = this.artOf(s);
+    if (!s.av || !(s.av === 'letter' || s.av === 'photo' || SeatArt.valid(s.av) || /^url:https:\/\//i.test(s.av))) s.av = this.artOf(s);
     const photo = s.id === '' && Store.get('avatar', null);
-    let rolled = SeatArt.SET.includes(s.av) || s.av === 'photo' || s.av === 'letter' ? '' : s.av;
+    let rolled = SeatArt.SET.includes(s.av) || s.av === 'photo' || s.av === 'letter' || /^url:/.test(s.av) ? '' : s.av;
+    let linked = /^url:/.test(s.av) ? s.av : '';
     if (isNew && this.list().length >= 7) { toast('Seven extra seats is the most', 'err'); return; }
     X8.layer('seatEdit', { label: 'Seat', icon: 'users', eyebrow: 'Seats' });
     const b = X8.body('seatEdit');
@@ -1429,13 +1432,15 @@ const Seats = {
       <div class="x8-form"><div class="se-top"><span id="seFace">${this.avatar(s, true, s.av)}</span><label>Name<input class="inp" id="seName" maxlength="20" value="${esc(s.name)}" placeholder="Name" autocomplete="off"></label></div>
       <div class="se-avh"><b>Picture</b><button class="btn btn-ghost btn-sm" type="button" data-nav id="seRoll"><i data-lucide="wand-sparkles"></i>Surprise me</button></div>
       <div class="seat-avs" role="radiogroup" aria-label="Picture" id="seAvs"></div>
+      <label>Picture from a link (optional)<input class="inp" id="seUrl" inputmode="url" maxlength="400" placeholder="https://…" value="${esc(linked ? linked.slice(4) : '')}" autocomplete="off"></label>
+      ${isNew && this.all().length > 0 ? `<label>Copy choices from<select class="inp" id="seCopy"><option value="">Nobody, start fresh</option>${this.all().map((x) => `<option value="${esc(x.id || '@main')}">${esc(x.name)}</option>`).join('')}</select><small class="se-hint">Languages, Home layout, favourites and subtitle choices.</small></label>` : ''}
       <div class="seat-colors" role="radiogroup" aria-label="Colour" id="seCols"${s.av === 'letter' ? '' : ' hidden'}>${this.COLORS.map((c) => `<button type="button" data-nav data-col="${c}" class="${c === s.color ? 'on' : ''}" style="--sc:${c}" aria-label="Colour ${c}"></button>`).join('')}</div>
       ${s.id !== '' ? `<div class="set-row"><div><b>Kids seat</b><small>Only Animation and Family titles, no Live TV, and the grown-up PIN for Settings and Addons.</small></div><div class="set-ctl"><button class="switch ${s.kids ? 'on' : ''}" type="button" id="seKids" role="switch" aria-checked="${!!s.kids}" aria-label="Kids seat"></button></div></div>` : ''}
       ${s.id !== '' && !this.owner().pin ? '<label id="seGrownL">Grown-up PIN (4 digits). A kids seat needs one, so only a grown-up can leave it or open Settings<input class="inp mono" id="seGrown" inputmode="numeric" maxlength="4" placeholder="Set a grown-up PIN" autocomplete="off"></label>' : ''}
       <label>${s.id === '' ? 'Grown-up PIN (4 digits, guards kids seats too)' : 'PIN (4 digits, optional)'}<input class="inp mono" id="sePin" inputmode="numeric" maxlength="4" placeholder="${s.pin ? '•••• (leave empty to keep)' : 'No PIN'}" autocomplete="off"></label>
       ${s.pin ? '<button class="btn btn-ghost btn-sm" type="button" data-nav id="seNoPin"><i data-lucide="lock-open"></i>Remove the PIN</button>' : ''}</div>
       <div class="actions"><button class="btn btn-prime" type="button" data-nav id="seSave"><i data-lucide="check"></i>Save</button>${!isNew && s.id !== '' && s.id !== SEAT ? '<button class="btn btn-ghost danger" type="button" data-nav id="seDel"><i data-lucide="trash-2"></i>Remove seat</button>' : ''}</div>`;
-    const avs = () => [...(photo ? ['photo'] : []), ...(rolled ? [rolled] : []), ...SeatArt.SET, 'letter'];
+    const avs = () => [...(linked ? [linked] : []), ...(photo ? ['photo'] : []), ...(rolled ? [rolled] : []), ...SeatArt.SET, 'letter'];
     const face = () => { $('#seFace', b).innerHTML = this.avatar({ ...s, name: $('#seName', b).value || s.name || '?' }, true, s.av); $('#seCols', b).hidden = s.av !== 'letter'; };
     const paintAvs = () => {
       $('#seAvs', b).innerHTML = avs().map((a) => `<button type="button" data-nav data-av="${esc(a)}" class="${a === s.av ? 'on' : ''}" role="radio" aria-checked="${a === s.av}" aria-label="${a === 'photo' ? 'Your profile photo' : a === 'letter' ? 'First letter of the name' : 'Portrait'}">${this.avatar({ ...s, name: $('#seName', b).value || s.name || '?', kids: false }, false, a)}</button>`).join('');
@@ -1449,6 +1454,7 @@ const Seats = {
     const np = $('#seNoPin', b); if (np) np.onclick = () => { s.pin = ''; np.remove(); toast('PIN will be removed when you save'); };
     $('#sePin', b).addEventListener('keydown', (e) => e.stopPropagation());
     $('#seName', b).addEventListener('keydown', (e) => e.stopPropagation());
+    { const u = $('#seUrl', b); u.addEventListener('keydown', (e) => e.stopPropagation()); u.addEventListener('change', () => { const v = u.value.trim(); if (v && !/^https:\/\/[^\s"'<>]+$/i.test(v)) { toast('Paste the full picture link, starting with https://', 'err'); return; } linked = v ? `url:${v}` : ''; if (linked) s.av = linked; else if (/^url:/.test(s.av)) s.av = this.freshArt(); paintAvs(); face(); }); if (IS_TV && typeof TvType !== 'undefined') TvType.guard(u); }
     const gIn = $('#seGrown', b); if (gIn) gIn.addEventListener('keydown', (e) => e.stopPropagation());
     $('#seSave').onclick = () => this.guard(async () => {
       s.name = $('#seName').value.trim() || (s.id === '' ? 'Main' : 'Guest'); const pin = $('#sePin').value.trim();
@@ -1460,7 +1466,8 @@ const Seats = {
         Store.raw.set('ownerPin', await this.makePin('', grown)); Account.schedule();
       }
       if (s.id === '') { Store.raw.set('ownerSeatName', s.name); Store.raw.set('ownerPin', s.pin || ''); Store.raw.set('ownerAv', s.av || ''); Account.schedule(); }
-      else { const l = this.list(), i = l.findIndex((x) => x.id === s.id), row = { id: s.id, name: s.name, color: s.color, kids: !!s.kids, pin: s.pin || '', av: s.av || '' }; if (i >= 0) l[i] = row; else l.push(row); this.saveList(l); }
+      else { const l = this.list(), i = l.findIndex((x) => x.id === s.id), row = { ...(i >= 0 ? l[i] : {}), id: s.id, name: s.name, color: s.color, kids: !!s.kids, pin: s.pin || '', av: s.av || '' }; if (i >= 0) l[i] = row; else l.push(row); this.saveList(l); }
+      { const cp = $('#seCopy'); if (isNew && cp && cp.value && window.MkSeatCopy) MkSeatCopy.copy(cp.value === '@main' ? '' : cp.value, s.id); }
       X8.close('seatEdit'); this.refresh(); toast(isNew ? `${s.name} has a seat` : 'Seat saved', 'ok');
     });
     const del = $('#seDel'); if (del) del.onclick = () => confirmTwice(del, () => this.guard(() => {

@@ -10,11 +10,11 @@
 // (a page of popular, top rated or searched films or shows, with IMDb ids) and title (a film's or show's page with its
 // episodes), which MKCinema Meta uses if Cinemeta stops answering, and (v6) recs (what people who loved a title watch
 // next) and discover (films or shows by genre, theme, era, length, language and person), which Your Picks and Miko use
-// to suggest real, relevant titles. Only ids, numbers and fixed sort names are accepted, never free text into a TMDB path,
+// to suggest real, relevant titles, and (v7) local (a title's logo and trailer in the viewer's language). Only ids, numbers and fixed sort names are accepted, never free text into a TMDB path,
 // and no taste, history or account is ever sent here: just the one ask. Answers are trimmed to
 // the fields the person page draws. Calls must carry the project's publishable key in `apikey` and come from the live
 // sites (the same rule as debrid-relay). Nothing is stored and nothing is logged: this file has no console calls on purpose.
-const VERSION = 6;
+const VERSION = 7;
 const ORIGINS = [/^https:\/\/(mkcinema|mkctv)\.pages\.dev$/, /^https:\/\/((app|tv)\.)?mkcinema\.app$/];
 const RATE = { limit: 90, windowMs: 60_000 }; // per client IP, per isolate (best effort)
 const API = 'https://api.themoviedb.org/3';
@@ -157,6 +157,19 @@ async function answer(a: string, p: URLSearchParams): Promise<[number, unknown, 
     if (!hit) return [200, { tmdb: null, bg: '', titled: '', logo: '' }, 86400];
     const im = await tmdb(`${hit.k}/${num(hit.x.id)}/images`, { include_image_language: 'en,null' });
     return [200, { tmdb: { kind: hit.k, id: num(hit.x.id) }, ...pickArt(hit.x, im) }, 7 * 86400];
+  }
+  // v7: the title logo and the YouTube trailer in the viewer's language (empty when TMDB has none in it)
+  if (a === 'local') {
+    const tt = p.get('tt') || '', base = lang.split('-')[0];
+    if (!/^tt\d{5,10}$/.test(tt)) return [400, { error: 'bad title id' }, 0];
+    const f = await tmdb(`find/${tt}`, { external_source: 'imdb_id' });
+    const hit = f && ((f.movie_results || [])[0] ? { k: 'movie', x: f.movie_results[0] } : (f.tv_results || [])[0] ? { k: 'tv', x: f.tv_results[0] } : null);
+    if (!hit) return [200, { logo: '', yt: '' }, 86400];
+    const tid = num(hit.x.id);
+    const [im, vids] = await Promise.all([tmdb(`${hit.k}/${tid}/images`, { include_image_language: `${base},null` }).catch(() => null), tmdb(`${hit.k}/${tid}/videos`, { language: base }).catch(() => null)]);
+    const lg = ((im && im.logos) || []).filter((l: any) => l && l.iso_639_1 === base && l.file_path && !/\.svg$/i.test(l.file_path)).sort((x: any, y: any) => num(y.vote_average) - num(x.vote_average))[0];
+    const yt = ((vids && vids.results) || []).filter((v: any) => v && v.site === 'YouTube' && /^(Trailer|Teaser)$/.test(v.type) && /^[\w-]{11}$/.test(v.key || '')).sort((x: any, y: any) => (x.type === 'Trailer' ? 0 : 1) - (y.type === 'Trailer' ? 0 : 1))[0];
+    return [200, { logo: str(lg && lg.file_path, 80), yt: str(yt && yt.key, 11) }, 7 * 86400];
   }
   if (a === 'watch' || a === 'providers') {
     const region = (p.get('region') || '').toUpperCase();

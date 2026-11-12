@@ -179,7 +179,7 @@ const Stubs = {
     words.forEach((w) => { const t = line ? `${line} ${w}` : w; if (g.measureText(t).width > W - 440 && line) { lines.push(line); line = w; } else line = t; }); lines.push(line);
     lines.slice(0, 3).forEach((l) => { g.fillText(l, 90, y); y += 64; });
     g.fillStyle = 'rgba(255,255,255,.7)'; g.font = '500 26px system-ui, sans-serif';
-    const d = new Date(x.at); g.fillText([x.year, d.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })].filter(Boolean).join(' · '), 90, y + 10);
+    const d = new Date(x.at); g.fillText([x.year, d.toLocaleDateString(appLocale(), { day: 'numeric', month: 'long', year: 'numeric' })].filter(Boolean).join(' · '), 90, y + 10);
     if (x.with && x.with.length) g.fillText(`With ${x.with.join(', ')}`, 90, y + 50);
     g.fillStyle = 'rgba(217,212,199,.85)'; g.font = '600 22px system-ui, sans-serif'; g.fillText('SEAT', W - 250, 150); g.fillText('No.', W - 250, 300);
     g.fillStyle = '#fff'; g.font = '700 40px system-ui, sans-serif'; g.fillText(String(x.seat || 'Main').slice(0, 10), W - 250, 200); g.fillText(String(x.n || 1).padStart(4, '0'), W - 250, 350);
@@ -190,7 +190,7 @@ const Stubs = {
     X8.layer('stubs', { label: 'Ticket stubs', icon: 'ticket', eyebrow: 'Ticket stubs', wide: true });
     const body = X8.body('stubs'), l = this.list();
     body.innerHTML = `<h2 class="x8-h">Your ticket stubs</h2><p class="sc-p">One for every film you finish, with the date, the seat and who you watched with. Save one as a picture to share.</p>
-      ${l.length ? `<div class="st-list">${l.slice(0, 120).map((x, i) => `<div class="st-row"><div><b>${esc(x.name)}</b><small>${esc([x.year, new Date(x.at).toLocaleDateString(), x.seat, x.with && x.with.length ? `with ${x.with.join(', ')}` : ''].filter(Boolean).join(' · '))}</small></div><button class="btn btn-ghost btn-sm" type="button" data-nav data-stub="${i}"><i data-lucide="download"></i>Save</button></div>`).join('')}</div>`
+      ${l.length ? `<div class="st-list">${l.slice(0, 120).map((x, i) => `<div class="st-row"><div><b>${esc(x.name)}</b><small>${esc([x.year, new Date(x.at).toLocaleDateString(appLocale()), x.seat, x.with && x.with.length ? `with ${x.with.join(', ')}` : ''].filter(Boolean).join(' · '))}</small></div><button class="btn btn-ghost btn-sm" type="button" data-nav data-stub="${i}"><i data-lucide="download"></i>Save</button></div>`).join('')}</div>`
     : '<p class="sc-p">No stubs yet. Finish a film and its stub appears here.</p>'}`;
     body.onclick = (e) => { const b = e.target.closest('[data-stub]'); if (b) this.save(l[Number(b.dataset.stub)]); };
     icons(); X8.open('stubs');

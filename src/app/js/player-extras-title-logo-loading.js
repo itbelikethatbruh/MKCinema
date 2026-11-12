@@ -493,7 +493,7 @@ const XRay = {
     const roles = new Map();
     crew.forEach((p, i) => { if (!roles.has(p.role)) roles.set(p.role, []); roles.get(p.role).push(`<button type="button" class="xr2-n" data-nav data-person="${cast.length + i}">${esc(p.name)}</button>`); });
     const crewLine = [...roles].map(([r, l]) => `<span><small>${r === 'Director' ? 'Directed by' : r === 'Writer' ? 'Written by' : esc(r)}</small> ${l.join(', ')}</span>`).join('');
-    const facts = [['Released', m.released ? new Date(m.released).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : ''], ['Awards', m.awards], ['Country', m.country], ['Language', m.language]].filter(([, val]) => val);
+    const facts = [['Released', m.released ? new Date(m.released).toLocaleDateString(appLocale(), { year: 'numeric', month: 'long', day: 'numeric' }) : ''], ['Awards', m.awards], ['Country', m.country], ['Language', m.language]].filter(([, val]) => val);
     const now = pNow(), d = pDur();
     const act = (id, icon, label) => `<button type="button" data-nav id="${id}"><i data-lucide="${icon}"></i><span>${label}</span></button>`;
     body.innerHTML = `${cast.length ? `<section class="xr2-sec"><h5>Cast</h5><div class="xr2-cast">${cast.slice(0, open ? cast.length : SHOW).map((p, i) => this.face(p, i)).join('')}</div>${cast.length > SHOW ? `<button type="button" class="xr2-more" id="xrAll" data-nav>${open ? 'Fewer' : `All ${cast.length} cast`}</button>` : ''}<p class="xr2-src" id="xrCred"${[...cast, ...crew].some((p) => p.wiki) ? '' : ' hidden'}>Photos from Wikipedia</p></section>` : ''}
