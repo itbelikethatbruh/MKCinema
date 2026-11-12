@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.68.3', date: '2026-11-12', items: [
+    ['new', 'Peak Cinema your way', 'Peak Cinema: choose Films, Series or Anime, each with its own genres.'],
+  ] },
   { v: '2.68.2', date: '2026-11-12', items: [
     ['better', 'Smoother panels', 'Panels open smoothly: no more jumps or flicker behind them, and the update card waits until the app has finished starting.'],
   ] },

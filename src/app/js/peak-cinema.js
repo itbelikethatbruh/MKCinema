@@ -18,6 +18,30 @@ const Peak = {
     ['thriller', 'Thriller', /thriller|crime|mystery/i], ['comedy', 'Comedy', /comed/i], ['horror', 'Horror', /horror/i],
     ['animation', 'Animation', /animat|family/i], ['drama', 'Drama', /drama|romance|history/i],
   ],
+  /* 2.68.3 peak-kinds: Films, Series or Anime, each with its own genres */
+  KINDS: [['all', 'Everything'], ['movie', 'Films'], ['series', 'Series'], ['anime', 'Anime']],
+  SERIES_MOODS: [
+    ['any', 'Anything', null], ['drama', 'Drama', /drama|romance|history/i], ['comedy', 'Comedy', /comed|sitcom/i], ['crime', 'Crime', /crime|mystery|thriller/i],
+    ['scifi', 'Sci-Fi & Fantasy', /sci-?fi|science fiction|fantasy/i], ['action', 'Action', /action|adventure|war|western/i], ['horror', 'Horror', /horror/i],
+    ['reality', 'Reality & Docs', /reality|documentar|talk/i], ['animation', 'Animation', /animat|family|kids/i],
+  ],
+  ANIME_MOODS: [
+    ['any', 'Anything', null], ['action', 'Action', /^action$/i], ['adventure', 'Adventure', /^adventure$/i], ['comedy', 'Comedy', /^comedy$/i], ['drama', 'Drama', /^drama$/i],
+    ['fantasy', 'Fantasy', /^fantasy$/i], ['romance', 'Romance', /^romance$/i], ['scifi', 'Sci-Fi', /^sci-?fi$/i], ['slice', 'Slice of Life', /^slice of life$/i],
+    ['sports', 'Sports', /^sports$/i], ['horror', 'Horror', /^horror$/i], ['mystery', 'Mystery', /^mystery$/i], ['mecha', 'Mecha', /^mecha$/i],
+  ],
+  kind: 'all',
+  moods() { return this.kind === 'series' ? this.SERIES_MOODS : this.kind === 'anime' ? this.ANIME_MOODS : this.MOODS; },
+  chipsHTML() {
+    return `<span class="pk-kinds" role="group" aria-label="What to surf">${this.KINDS.map(([k, l]) => `<button class="chip pk-kind${k === this.kind ? ' on' : ''}" type="button" data-nav data-kind="${k}" aria-pressed="${k === this.kind}">${l}</button>`).join('')}</span><span class="pk-sep" aria-hidden="true"></span>`
+      + this.moods().map(([k, l]) => `<button class="chip${k === this.mood ? ' on' : ''}" type="button" data-nav data-mood="${k}">${l}</button>`).join('');
+  },
+  setKind(k) {
+    if (!this.KINDS.some((x) => x[0] === k) || k === this.kind) return;
+    this.kind = k; Store.set('peakKind', k); this.mood = 'any';
+    const box = $('#pkMoods'); if (box) { box.innerHTML = this.chipsHTML(); const b = $(`[data-kind="${k}"]`, box); if (b) b.focus({ preventScroll: true }); }
+    this.pool = []; this.setMood('any', true);
+  },
   el: null, on: false, tok: 0, mood: 'any', pool: [], used: new Set(), staged: null, next: null, cur: null, n: 0, miss: 0,
   busy: false, dry: false, lookAt: 0, linkAt: 0, idleT: 0, muted: false,
   learn() { return Object.assign({ g: {}, kept: [], seen: {} }, Store.get('peakLearn', {})); },
@@ -35,6 +59,7 @@ const Peak = {
   },
 
   build() {
+    { const k = Store.get('peakKind', 'all'); this.kind = this.KINDS.some((x) => x[0] === k) ? k : 'all'; }
     const el = document.createElement('div'); el.id = 'peak'; el.className = 'pk'; el.hidden = true;
     el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Peak Cinema');
     el.innerHTML = `
@@ -42,7 +67,7 @@ const Peak = {
       <div class="pk-ui">
         <div class="pk-top">
           <div class="pk-brand"><span class="pk-mark">Peak Cinema</span><span class="pk-sub" id="pkCount"></span></div>
-          <div class="pk-moods chips" id="pkMoods">${this.MOODS.map(([k, l]) => `<button class="chip${k === this.mood ? ' on' : ''}" type="button" data-nav data-mood="${k}">${l}</button>`).join('')}</div>
+          <div class="pk-moods chips" id="pkMoods">${this.chipsHTML()}</div>
           <div class="pk-tools">
             <button class="ibtn" id="pkMute" type="button" data-nav aria-label="Sound"><i data-lucide="volume-2"></i></button>
             <button class="ibtn" id="pkHow" type="button" data-nav aria-label="How scenes are picked"><i data-lucide="info"></i></button>
@@ -93,7 +118,7 @@ const Peak = {
     $('#pkHow', el).onclick = () => this.how(true);
     $('#pkHowOk', el).onclick = () => this.how(false);
     $('#pkForget', el).onclick = () => { Store.set('peakLearn', {}); toast('Peak Cinema starts fresh', 'ok', 2400); this.how(false); };
-    $$('[data-mood]', el).forEach((b) => b.addEventListener('click', () => this.setMood(b.dataset.mood)));
+    $('#pkMoods', el).addEventListener('click', (e) => { const b = e.target.closest('[data-kind],[data-mood]'); if (!b) return; if (b.dataset.kind) this.setKind(b.dataset.kind); else this.setMood(b.dataset.mood); });
     ['pointermove', 'pointerdown'].forEach((t) => el.addEventListener(t, () => this.wake(), { passive: true }));
     // a click on the picture pauses or plays; on touch screens a tap only resumes a paused scene (the first tap shows the controls)
     $('.pk-stage', el).addEventListener('click', () => { const c = this.cur; if (!c) return; if (c.v.paused) c.v.play().catch(() => {}); else if (!TOUCH_UI) c.v.pause(); });
@@ -141,28 +166,32 @@ const Peak = {
     if (this.cur) this.cur.v.muted = m;
     const b = $('#pkMute'); if (b) { b.innerHTML = `<i data-lucide="${m ? 'volume-x' : 'volume-2'}"></i>`; b.setAttribute('aria-label', m ? 'Sound on' : 'Mute'); icons(); }
   },
-  setMood(k) {
-    if (k === this.mood && this.pool.length) return;
+  setMood(k, force) {
+    if (k === this.mood && this.pool.length && !force) return;
     this.mood = k; $$('#pkMoods [data-mood]').forEach((b) => b.classList.toggle('on', b.dataset.mood === k));
     // what is already buffered for the old mood is let go; the scene on screen keeps playing until the new one is ready
     const tok = ++this.tok; this.miss = 0; this.dry = false;
     if (this.next) { if (this.next.v) this.unload(this.next.v); this.next = null; }
     this.staged = null; this.busy = false; $('#pkNext').textContent = '';
-    this.buildPool(tok).then(() => { if (tok === this.tok) { this.fill(); if (this.cur) this.status(`Switching to ${this.MOODS.find((m) => m[0] === k)[1].toLowerCase()} after this scene`, false, 2600); } });
+    this.buildPool(tok).then(() => { if (tok === this.tok) { this.fill(); if (this.cur) { const kl = (this.KINDS.find((x) => x[0] === this.kind) || [0, ''])[1], ml = (this.moods().find((m) => m[0] === k) || [0, ''])[1]; this.status(k === 'any' ? (this.kind === 'all' ? 'Switching to everything after this scene' : `Switching to ${kl} after this scene`) : `Switching to ${this.kind === 'all' ? '' : `${kl} · `}${ml} after this scene`, false, 2600); } } });
   },
 
   /* Films come from the catalogs on your Home and your watchlist; a mood uses the catalogs' own genre filter when they have one */
   async buildPool(tok) {
-    const mood = this.MOODS.find((m) => m[0] === this.mood), re = mood[2];
-    /* 2.68.1 peak-series: films and series alike */
-    const cats = [...engine.catalogs({ type: 'movie' }).filter((c) => !c.required.length).slice(0, 6), ...engine.catalogs({ type: 'series' }).filter((c) => !c.required.length).slice(0, 4)];
-    const lists = await Promise.allSettled(cats.map((c) => {
-      const g = re && c.genres.find((x) => re.test(x));
-      return engine.fetchCatalog(c, g ? { genre: g } : {});
-    }));
+    const mood = this.moods().find((m) => m[0] === this.mood) || this.moods()[0], re = mood[2], kind = this.kind, anime = kind === 'anime';
+    /* 2.68.1 peak-series: films and series alike; 2.68.3 Films, Series or Anime on their own */
+    const cat = (t, n) => engine.catalogs({ type: t }).filter((c) => !c.required.length).slice(0, n);
+    const cats = anime ? [] : kind === 'movie' ? cat('movie', 8) : kind === 'series' ? cat('series', 8) : [...cat('movie', 6), ...cat('series', 4)];
+    const lists = await Promise.allSettled(anime
+      ? AnimeHub.LISTS.map(([id]) => AnimeHub.list(id, (() => { const g = re && id !== 'kitsu-anime-trending' && AnimeHub.GENRES.find((x) => re.test(x)); return g ? { genre: g } : {}; })()).then((l) => l.map((m) => ({ ...m, _pkAnime: true }))))
+      : cats.map((c) => {
+        const g = re && c.genres.find((x) => re.test(x));
+        return engine.fetchCatalog(c, g ? { genre: g } : {});
+      }));
     if (tok !== this.tok) return;
     const seen = new Set(), out = [];
-    const add = (m) => { if (!m || !m.id || seen.has(m.id) || (m.type && m.type !== 'movie' && m.type !== 'series') || !/^tt\d/.test(m.id)) return; if (re && genresOf(m).length && !genresOf(m).some((g) => re.test(g))) return; seen.add(m.id); out.push(m); };
+    const add = (m) => { if (!m || !m.id || seen.has(m.id) || (m.type && m.type !== 'movie' && m.type !== 'series')) return;
+      if (anime ? !/^kitsu:\d+$/.test(m.id) : !/^tt\d/.test(m.id)) return; if (kind === 'movie' && m.type === 'series') return; if (kind === 'series' && m.type !== 'series') return; if (re && genresOf(m).length && !genresOf(m).some((g) => re.test(g))) return; seen.add(m.id); out.push(m); };
     lists.forEach((r) => { if (r.status === 'fulfilled') r.value.forEach(add); });
     (S.watchlist || []).forEach(add);
     this.pool = out;
@@ -215,6 +244,7 @@ const Peak = {
     if (multi) return langs.size && !langs.has(w) ? 0 : this.canSwitch() ? 1 : 0;
     if (langs.size) return langs.has(w) ? 2 : 0;
     const cs = String((meta && meta.country) || '').toLowerCase().split(',').map((x) => x.trim()).filter(Boolean);
+    if (meta && (meta._pkAnime || /^kitsu:/.test(String(meta.id)))) return w === 'jpn' ? 1 : 0;
     if (!cs.length) return w === 'eng' ? 1 : 0;
     const own = cs.map((c) => this.COUNTRY[c] || '');
     return (w === 'eng' ? own.includes('eng') : own[0] === w) ? 1 : 0;
@@ -245,8 +275,10 @@ const Peak = {
   },
   /* a series: one released episode from season 1 on, picked at random (its meta is asked once, from your addons) */
   async episode(meta) {
-    let full = null; try { full = await engine.fetchMeta('series', meta.id); } catch (e) { return null; }
-    const now = Date.now(), eps = ((full && full.videos) || []).filter((v) => v && v.id && Number(v.season) > 0 && (!v.released || Date.parse(v.released) < now));
+    let full = null;
+    try { full = meta._pkAnime || /^kitsu:/.test(meta.id) ? ((await engine.call(AnimeHub.addon(), 'meta', 'series', meta.id)) || {}).meta : await engine.fetchMeta('series', meta.id); } catch (e) { return null; }
+    const now = Date.now(), sea = (v) => (v.season == null ? 1 : Number(v.season));
+    const eps = ((full && full.videos) || []).filter((v) => v && v.id && sea(v) > 0 && (!v.released || Date.parse(v.released) < now)).map((v) => ({ ...v, season: sea(v) }));
     if (!eps.length) return null;
     if (full.country && !meta.country) meta.country = full.country;
     const v = eps[Math.floor(Math.random() * eps.length)];
@@ -415,7 +447,7 @@ const Peak = {
     const msg = {
       none: ['Peak Cinema needs a stream addon', 'It plays scenes from sources your debrid service already has cached. Add a stream addon, and your debrid key in Settings › Debrid.'],
       miss: ['No cached copies turned up', `The last ${this.MAX_MISS} titles had no cached source in your language, in a format this device can play. Try another mood, or check Settings › Debrid and Settings › Audio language.`],
-      empty: ['That is everything for now', 'Your catalogs have no more films or series for this mood. Try another one.'],
+      empty: ['That is everything for now', 'Nothing more for this choice right now. Try another genre, or Films, Series or Anime.'],
     }[why];
     const s = $('#pkStatus'); s.hidden = false; this.el.classList.add('pk-empty');
     s.innerHTML = `<div class="pk-block"><h3>${esc(msg[0])}</h3><p>${esc(msg[1])}</p><div class="pk-how-acts">${why === 'none' ? '<button class="btn btn-prime" type="button" data-nav data-pk="addons"><i data-lucide="puzzle"></i>Open addons</button>' : '<button class="btn btn-prime" type="button" data-nav data-pk="again"><i data-lucide="refresh-cw"></i>Keep looking</button>'}<button class="btn btn-ghost" type="button" data-nav data-pk="close">Close</button></div></div>`;
