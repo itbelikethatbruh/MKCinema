@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.68.4 (Peak Cinema in your language)
+
+- **Peak Cinema:** now checks each file’s own audio track and plays only scenes in your language.
+
 ## Web app 2.68.3 (Peak Cinema your way)
 
 - **Peak Cinema:** choose Films, Series or Anime, each with its own genres.

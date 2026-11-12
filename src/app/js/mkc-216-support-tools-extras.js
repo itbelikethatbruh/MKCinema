@@ -727,7 +727,7 @@ const Ebml = {
 /* One Matroska file, read through `read(from, to)` (inclusive byte offsets) */
 const Mkv = {
   ID: { EBML: 0x1A45DFA3, SEG: 0x18538067, SEEKHEAD: 0x114D9B74, INFO: 0x1549A966, TRACKS: 0x1654AE6B, CHAPTERS: 0x1043A770, ATTACH: 0x1941A469, CUES: 0x1C53BB6B, CLUSTER: 0x1F43B675 },
-  async parse(read) {
+  async parse(read, opt) {
     const head = await read(0, 262143);
     const e = Ebml.head(head, 0); if (!e || e.id !== this.ID.EBML) throw new Error('not a Matroska file');
     const seg = Ebml.head(head, e.end); if (!seg || seg.id !== this.ID.SEG) throw new Error('no Matroska segment');
@@ -753,6 +753,7 @@ const Mkv = {
     if (inf) for (const k of Ebml.kids(inf[0], inf[1].data, inf[1].end)) { if (k.id === 0x2AD7B1) f.scale = Ebml.uint(inf[0], k) || 1e6; if (k.id === 0x4489) f.duration = Ebml.float(inf[0], k); }
     const tr = await get(this.ID.TRACKS, 4e6);
     if (tr) for (const te of Ebml.kids(tr[0], tr[1].data, tr[1].end)) if (te.id === 0xAE) f.tracks.push(this.track(tr[0], te));
+    if (opt && opt.tracksOnly) return f;
     const ch = await get(this.ID.CHAPTERS, 2e6).catch(() => null);
     if (ch) f.chapters = this.chapters(ch[0], ch[1], f);
     // the attachments (fonts) are only noted here; they are fetched when a styled track is shown
@@ -771,8 +772,8 @@ const Mkv = {
         case 0xD7: t.num = Ebml.uint(b, k); break;
         case 0x83: t.type = Ebml.uint(b, k); break;
         case 0x86: t.codec = Ebml.str(b, k); break;
-        case 0x22B59C: t.lang = Ebml.str(b, k) || 'eng'; break;
-        case 0x22B59D: t.ietf = Ebml.str(b, k); break;
+        case 0x22B59C: t.lang = Ebml.str(b, k) || 'eng'; t.langSet = true; break;
+        case 0x22B59D: t.ietf = Ebml.str(b, k); t.langSet = true; break;
         case 0x536E: t.name = Ebml.str(b, k); break;
         case 0x63A2: t.priv = Ebml.bytes(b, k); break;
         case 0x88: t.def = !!Ebml.uint(b, k); break;
