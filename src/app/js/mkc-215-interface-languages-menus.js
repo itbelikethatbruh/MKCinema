@@ -10,7 +10,7 @@ const I18N = {
   langs: { en: 'English', es: 'Español', pt: 'Português (Brasil)', fr: 'Français', de: 'Deutsch', it: 'Italiano', hi: 'हिन्दी', ta: 'தமிழ்', te: 'తెలుగు', bn: 'বাংলা', ml: 'മലയാളം', sm: 'Gagana Samoa', zh: '中文（简体）', ar: 'العربية', ru: 'Русский', ur: 'اردو', id: 'Bahasa Indonesia', ja: '日本語', mr: 'मराठी', tr: 'Türkçe', vi: 'Tiếng Việt', ko: '한국어', fa: 'فارسی', tl: 'Filipino', sw: 'Kiswahili', pa: 'ਪੰਜਾਬੀ', gu: 'ગુજરાતી', th: 'ไทย', pl: 'Polski', kn: 'ಕನ್ನಡ', ha: 'Hausa' },
   RTL: { ar: 1, ur: 1, fa: 1 }, ALIAS: { fil: 'tl', in: 'id', iw: 'he' }, pats: null,
   code: 'en', map: null, done: new WeakMap(), orig: new WeakMap(), attrDone: new WeakMap(),
-  SKIP: '.card-title,.hero-title,.hero-desc,.d-desc,h1,.stream .t1,.stream .t2,.s-meta,#pTitle,#pSub,pre,code,textarea,input,select.inp-raw,[translate="no"],[data-card] .card-sub,.dl-main b,#set-uiLang option,.brand,.sd-brand',
+  SKIP: '.card-title,.hero-title,.hero-desc,.d-desc,h1:not(.page-title),.net-title,.uni-title,#view-universe h1,#view-network h1,.stream .t1,.stream .t2,.s-meta,#pTitle,#pSub,pre,code,textarea,input,select.inp-raw,[translate="no"],[data-card] .card-sub,.dl-main b,#set-uiLang option,.brand,.sd-brand',
   ATTRS: ['placeholder', 'aria-label', 'title'],
   pick() {
     const c = CFG.uiLang || 'auto';

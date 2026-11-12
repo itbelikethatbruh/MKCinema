@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.69.0', date: '2026-11-12', items: [
+    ['new', 'Discover', 'Discover: a new page in the menu with trending films and series, new releases to watch at home, brand-new series and little-known gems.'],
+  ] },
   { v: '2.68.4', date: '2026-11-12', items: [
     ['better', 'Peak Cinema in your language', 'Peak Cinema now checks each file’s own audio track and plays only scenes in your language.'],
   ] },
