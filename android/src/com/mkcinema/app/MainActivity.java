@@ -70,7 +70,7 @@ public class MainActivity extends Activity {
     static final String[] APP_HOSTS = { HOST, "app.mkcinema.app" };
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6;
-    static final String VER = "1.11.1";
+    static final String VER = "1.11.2";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -186,11 +186,17 @@ public class MainActivity extends Activity {
             }
         });
         web.setWebChromeClient(new WebChromeClient() {
+            /* 1.11.2: Android draws a large grey play button on any video that has no picture yet (while it loads, and
+               after it is emptied when the player closes). A see-through picture replaces it. */
+            @Override public android.graphics.Bitmap getDefaultVideoPoster() {
+                android.graphics.Bitmap b = android.graphics.Bitmap.createBitmap(1, 1, android.graphics.Bitmap.Config.ARGB_8888);
+                b.eraseColor(Color.TRANSPARENT); return b;
+            }
             @Override public void onShowCustomView(View view, CustomViewCallback cb) {
                 if (customView != null) { cb.onCustomViewHidden(); return; }
                 customView = view; customCb = cb;
                 root.addView(view, new FrameLayout.LayoutParams(-1, -1));
-                web.setVisibility(View.GONE);
+                web.setVisibility(View.INVISIBLE); // 1.11.2: INVISIBLE keeps the page laid out, so leaving full screen does not jump
                 view.setFocusable(true); view.requestFocus();
                 immersive(true);
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
