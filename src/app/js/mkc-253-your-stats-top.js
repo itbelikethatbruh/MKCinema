@@ -139,7 +139,7 @@ const WatchStats = {
     for (const [v, t] of L) { const n = h / v; if (n >= 2 && n < 100) return `About ${n < 3 ? n.toFixed(1).replace(/\.0$/, '') : Math.round(n)} ${t}.`; }
     return '';
   },
-  label(per) { const n = new Date(); return per === 'all' ? 'All time' : per === 'year' ? `${n.getFullYear()} so far` : `${n.toLocaleDateString(undefined, { month: 'long' })} so far`; },
+  label(per) { const n = new Date(); return per === 'all' ? 'All time' : per === 'year' ? `${n.getFullYear()} so far` : `${n.toLocaleDateString(appLocale(), { month: 'long' })} so far`; },
 
   /* ---- the pop-up ---- */
   open(per) {
@@ -153,14 +153,14 @@ const WatchStats = {
     const body = X8.body('watchStats'); if (!body) return;
     const per = this.period, c = this.compute(per), seat = (Seats.cur() || {}).name || 'Main', me = Seats.all().length > 1 ? `${seat}’s` : 'Your';
     const pers = this.persona(c.hours, c.week), like = this.likeness(c.secs);
-    const since = new Date(c.since).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+    const since = new Date(c.since).toLocaleDateString(appLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
     const row = (x, i, sub) => { const n = this.info(x.id) || { name: '', poster: '' }; return `<button type="button" class="ws-item" data-nav data-wsopen="${esc(x.id)}" style="--i:${i}"><span class="ws-rank tnum">${i + 1}</span>${n.poster ? `<img src="${esc(n.poster)}" alt="" loading="lazy">` : '<span class="ws-ph"></span>'}<span class="ws-it"><b>${esc(n.name || 'Loading…')}</b><small>${esc(sub)}</small></span></button>`; };
     const bars = (arr, labels, cls) => { const mx = Math.max(...arr, 1); return `<div class="ws-bars ${cls}">${arr.map((v, i) => `<span class="ws-b" title="${esc(labels[i])}"><i style="--v:${Math.max(.03, v / mx).toFixed(3)}"></i><em>${labels[i].length <= 3 ? esc(labels[i]) : ''}</em></span>`).join('')}</div>`; };
     const hrs = c.hours.map((_, i) => (i % 6 === 0 ? `${i}` : '')).map((t, i) => t || `${i}:00`);
-    const wkOrder = [1, 2, 3, 4, 5, 6, 0], wkNames = wkOrder.map((d) => new Date(2024, 0, 7 + d).toLocaleDateString(undefined, { weekday: 'short' }));
+    const wkOrder = [1, 2, 3, 4, 5, 6, 0], wkNames = wkOrder.map((d) => new Date(2024, 0, 7 + d).toLocaleDateString(appLocale(), { weekday: 'short' }));
     const tiles = [['Films finished', c.films.toLocaleString()], ['Episodes finished', c.eps.toLocaleString()], ['Shows', c.shows.toLocaleString()], ['Longest streak', `${c.best} day${c.best === 1 ? '' : 's'}`]];
     const facts = [];
-    if (c.busy && c.busy.n > 1) facts.push(['Busiest day', `${c.busy.n} finished on ${new Date(`${c.busy.k}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}`]);
+    if (c.busy && c.busy.n > 1) facts.push(['Busiest day', `${c.busy.n} finished on ${new Date(`${c.busy.k}T12:00:00`).toLocaleDateString(appLocale(), { weekday: 'long', day: 'numeric', month: 'long' })}`]);
     if (c.long) facts.push(['Longest sitting', `${this.hm(c.long.s)}${c.long.n.length ? `, ${c.long.n.join(', ')}` : ''}`]);
     if (per === 'all' && c.cur > 1) facts.push(['Current streak', `${c.cur} days in a row`]);
     if (c.pals.length) facts.push(['Watched with most', c.pals.map(([n, k]) => `${n} (${k})`).join(', ')]);

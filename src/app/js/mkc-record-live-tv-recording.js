@@ -16,8 +16,8 @@
   const C = Channels;
   const MAX_H = 8, PART = 64 << 20, PRE = 60e3, POST = 120e3;
   const now = () => Date.now();
-  const hm = (t) => new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const day = (t) => { const d = new Date(t), t0 = new Date(); t0.setHours(0, 0, 0, 0); const diff = Math.round((new Date(d).setHours(0, 0, 0, 0) - t0) / 864e5); return diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : d.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' }); };
+  const hm = (t) => new Date(t).toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' });
+  const day = (t) => { const d = new Date(t), t0 = new Date(); t0.setHours(0, 0, 0, 0); const diff = Math.round((new Date(d).setHours(0, 0, 0, 0) - t0) / 864e5); return diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : d.toLocaleDateString(appLocale(), { weekday: 'short', day: 'numeric', month: 'short' }); };
   const dur = (ms) => fmtTime(Math.max(0, ms) / 1000);
   const safe = (s) => String(s || '').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 100) || 'Recording';
   const ls = { get(k, d) { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return Array.isArray(v) ? v : d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage full or off */ } } };

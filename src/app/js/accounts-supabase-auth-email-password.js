@@ -872,7 +872,7 @@ const Account = {
     if (!this.client) return `<div class="acct-card"><h4><i data-lucide="loader"></i>Connecting to ${proj}…</h4>${this.error ? `<p class="acct-err">${esc(this.error)}</p><div class="inrow"><button class="btn btn-ghost" type="button" id="acc-forget">Use a different project</button></div>` : ''}</div>`;
     if (this.user) {
       const u = this.user, st = this.sync, prov = (u.app_metadata && u.app_metadata.provider) || 'email';
-      const syncLine = CFG.cloudSync === false ? 'Cloud sync is off.' : st.state === 'syncing' ? 'Syncing…' : st.state === 'error' ? `<span class="acct-err">${esc(st.error)}</span>` : st.at ? `Last synced ${esc(new Date(st.at).toLocaleString())}` : 'Not synced yet.';
+      const syncLine = CFG.cloudSync === false ? 'Cloud sync is off.' : st.state === 'syncing' ? 'Syncing…' : st.state === 'error' ? `<span class="acct-err">${esc(st.error)}</span>` : st.at ? `Last synced ${esc(new Date(st.at).toLocaleString(appLocale()))}` : 'Not synced yet.';
       return `<div class="acct-card">
         <div class="acct-who"><button type="button" class="av-pick" id="acc-avatar" aria-label="Change profile picture">${this.avatarHTML(true)}<span class="av-edit"><i data-lucide="camera"></i></span></button><div><b>${esc(this.name())}</b><small>${esc(u.email || '')} · signed in with ${esc(prov)}</small><span class="av-acts"><button type="button" class="linkish" id="acc-avatar2">${Store.get('avatar', null) ? 'Change photo' : 'Add a profile photo'}</button>${Store.get('avatar', null) ? ' · <button type="button" class="linkish" id="acc-avatar-rm">Remove</button>' : ''}</span></div></div>
         <input type="file" id="acc-avatar-file" accept="image/*" hidden>

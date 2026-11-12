@@ -246,7 +246,7 @@ const Social = {
     const items = [];
     this.feed.forEach((p) => (p.recent || []).forEach((x) => { if (x && x.t) items.push({ x, p }); }));
     items.sort((a, b) => (b.x.at || 0) - (a.x.at || 0));
-    const dayName = (at) => { const d = new Date(at), t = new Date(); const diff = Math.round((new Date(t.toDateString()) - new Date(d.toDateString())) / 864e5); return diff === 0 ? 'Today' : diff === 1 ? 'Yesterday' : d.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' }); };
+    const dayName = (at) => { const d = new Date(at), t = new Date(); const diff = Math.round((new Date(t.toDateString()) - new Date(d.toDateString())) / 864e5); return diff === 0 ? 'Today' : diff === 1 ? 'Yesterday' : d.toLocaleDateString(appLocale(), { weekday: 'long', day: 'numeric', month: 'short' }); };
     let prev = '';
     const feed = items.slice(0, 40).map(({ x, p }) => {
       const f = Friends.byId(p.id) || p, d = x.at ? dayName(x.at) : '', head = d !== prev ? `<h4 class="soc-day">${esc(d)}</h4>` : ''; prev = d;
@@ -280,7 +280,7 @@ const Social = {
     const got = Object.entries(tro || {}).map(([id, at]) => [this.troDef(id), at]).filter(([d]) => d);
     const order = { p: 0, g: 1, s: 2, b: 3 };
     got.sort((a, b) => order[a[0][4]] - order[b[0][4]] || (b[1] || 0) - (a[1] || 0));
-    let html = got.map(([d, at]) => `<div class="soc-tro t-${d[4]}" title="${esc(`${d[1]}: ${d[2]}`)}"><span class="soc-med"><i data-lucide="${d[3]}"></i></span><b>${esc(d[1])}</b><small>${esc(at > 1e11 ? new Date(at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : this.TIERS[d[4]])}</small></div>`).join('');
+    let html = got.map(([d, at]) => `<div class="soc-tro t-${d[4]}" title="${esc(`${d[1]}: ${d[2]}`)}"><span class="soc-med"><i data-lucide="${d[3]}"></i></span><b>${esc(d[1])}</b><small>${esc(at > 1e11 ? new Date(at).toLocaleDateString(appLocale(), { month: 'short', year: 'numeric' }) : this.TIERS[d[4]])}</small></div>`).join('');
     if (withLocked && m) {
       html += this.TRO.filter((d) => d[5] && !tro[d[0]]).map((d) => { const have = Math.min(d[6], Math.floor(m[d[5]] || 0)); return `<div class="soc-tro locked" title="${esc(d[2])}"><span class="soc-med"><i data-lucide="lock"></i></span><b>${esc(d[1])}</b><small>${esc(d[2])}</small><span class="soc-prog" style="--v:${(have / d[6]).toFixed(3)}"><i></i></span><small class="tnum">${have.toLocaleString()} / ${d[6].toLocaleString()}</small></div>`; }).join('');
     }

@@ -87,7 +87,7 @@ const Cams = {
     [...grid.children].forEach((f) => { if (!want.some(([id]) => id === f.dataset.pid)) f.remove(); });
     want.forEach(([id, t]) => {
       let f = $(`[data-pid="${CSS.escape(id)}"]`, grid);
-      if (!f) { f = document.createElement('figure'); f.className = `cam-t${t.classList.contains('self') ? ' self' : ''}`; f.dataset.pid = id; f.innerHTML = '<video autoplay playsinline muted></video><figcaption></figcaption>'; grid.appendChild(f); }
+      if (!f) { f = document.createElement('figure'); f.className = `cam-t${t.classList.contains('self') ? ' self' : ''}`; f.dataset.pid = id; f.innerHTML = '<video poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" autoplay playsinline muted></video><figcaption></figcaption>'; grid.appendChild(f); }
       const v = f.firstChild, src = t.firstChild.srcObject; if (v.srcObject !== src) { v.srcObject = src; v.play().catch(() => {}); }
       f.lastChild.textContent = t.lastChild.textContent; f.classList.toggle('talk', t.classList.contains('talk'));
     });
@@ -112,7 +112,7 @@ const Cams = {
     let t = this.tiles.get(id);
     if (!t) {
       t = document.createElement('figure'); t.className = `cam-t${self ? ' self' : ''}`; t.dataset.pid = id;
-      t.innerHTML = '<video autoplay playsinline muted></video><figcaption></figcaption>';
+      t.innerHTML = '<video poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" autoplay playsinline muted></video><figcaption></figcaption>';
       this.box().appendChild(t); this.tiles.set(id, t);
     }
     const v = t.firstChild; if (v.srcObject !== stream) { v.srcObject = stream; v.play().catch(() => {}); }

@@ -1008,7 +1008,7 @@ body.touch-ui.layer-open #app{visibility:hidden}
 .layer-ov.leaving[hidden]{display:flex!important;pointer-events:none;animation:ovOut .22s ease-in forwards}
 .layer-ov.leaving[hidden]>.panel,.layer-ov.leaving[hidden]>.modal,.layer-ov.leaving[hidden]>.tr-box{animation:panelOut .22s ease-in forwards}
 #player:not([hidden]){animation:ovIn .3s ease-out}
-#player.leaving[hidden]{display:flex!important;pointer-events:none;animation:ovOut .22s ease-in forwards}
+#player.leaving[hidden]{display:flex!important;pointer-events:none;animation:ovOut .22s ease-in forwards}/* 2.67.5 smooth-player */#player.leaving[hidden]>*{visibility:hidden!important}
 @keyframes ovOut{to{opacity:0}}
 @keyframes panelOut{to{opacity:0;transform:translateY(10px) scale(.99)}}
 .hero-body.swap>*{animation:heroText .7s var(--ease) backwards}
@@ -1121,7 +1121,7 @@ body.touch-ui .ep.spoil .th img,body.touch-ui .un-th.spoil img{filter:brightness
 .pl-art b{font-family:var(--f-display);font-size:calc(clamp(22px,4vw,40px) * var(--ts,1));font-weight:700;letter-spacing:.02em;text-align:center}
 
 .pl-bar i{display:block;width:40%;height:100%;background:var(--ink);animation:plBar 1.3s ease-in-out infinite}
-.p-load.flat .pl-art{animation-name:plPulseFlat}
+.p-load.flat .pl-art{animation-name:plPulseFlat}body.touch-ui .p-load .pl-art{animation-name:plPulseFlat;transform-style:flat}
 @keyframes plPulse{0%,100%{opacity:.55;transform:rotateY(-14deg) rotateX(4deg) scale(.96)}50%{opacity:1;transform:rotateY(14deg) rotateX(-4deg) scale(1.02)}}
 @keyframes plPulseFlat{0%,100%{opacity:.5;transform:scale(.97)}50%{opacity:1;transform:scale(1.02)}}
 @keyframes plBar{0%{transform:translateX(-110%)}100%{transform:translateX(260%)}}
@@ -2593,7 +2593,8 @@ const fmtBytes = (b) => {
   while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
   return `${b.toFixed(b >= 10 || i < 2 ? 0 : 1)} ${u[i]}`;
 };
-const fmtDate = (d) => { const x = new Date(d); return isNaN(x) ? '' : x.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); };
+const appLocale = () => { try { const c = I18N.code; if (!c || c === 'en') return undefined; const dev = String(navigator.language || '').toLowerCase(); return dev.split('-')[0] === c ? navigator.language : c === 'pt' ? 'pt-BR' : c; } catch (e) { return undefined; } };
+const fmtDate = (d) => { const x = new Date(d); return isNaN(x) ? '' : x.toLocaleDateString(appLocale(), { year: 'numeric', month: 'short', day: 'numeric' }); };
 /* Icons: lucide's createIcons() rebuilds every icon already on the page on each call (200+ SVGs), which stalled TVs on
    every banner change. Here only new <i data-lucide> placeholders are drawn, each cloned from a cached template. */
 const ICON_TPL = new Map();
@@ -2763,7 +2764,7 @@ document.addEventListener('load', (e) => {
    ~3.8 MB, on the first Home load). Here a row's posters load once the row is within about two screens, and only as
    far as two screen widths past where the row is scrolled to. Same full-size images, just later. */
 const PhoneImgs = {
-  on: TOUCH_UI && !IS_TV,
+  on: TOUCH_UI || IS_TV,
   BLANK: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
   rails: new Set(), io: null, raf: 0,
   show(im) { const u = im.dataset.lsrc; if (!u) return; delete im.dataset.lsrc; im.src = u; },
@@ -2771,11 +2772,13 @@ const PhoneImgs = {
   // with an animation count where they will rest)
   wake(rail) {
     const imgs = rail.querySelectorAll('img[data-lsrc]'); if (!imgs.length || !rail.clientWidth) return;
-    const first = rail.firstElementChild, x0 = first ? first.offsetLeft : 0, lim = rail.scrollLeft + rail.clientWidth * 3;
+    const first = rail.firstElementChild, x0 = first ? first.offsetLeft : 0, lim = rail.scrollLeft + rail.clientWidth * (IS_TV ? 2 : 3);
     for (const im of imgs) { const c = im.closest('.rail > *') || im; if (c.offsetLeft - x0 < lim) this.show(im); else break; }
   },
   // every row within about two screens of the visible part of the page
   sweep() {
+    // 2.68 household-plus: on TVs, image work waits until rows stop sliding, so decoding never competes with the move
+    if (IS_TV && !this.calm) { clearTimeout(this.calmT); this.calmT = setTimeout(() => { this.calm = true; this.sweep(); this.calm = false; }, 140); return; }
     if (this.raf) return;
     this.raf = requestAnimationFrame(() => {
       this.raf = 0; const h = innerHeight;
@@ -3025,6 +3028,23 @@ const ManifestMemo = {
   },
 };
 
+/* 2.68 household-plus: Home rows from the last visit, kept in Cache Storage (card fields only, 60 per row, 3 days).
+   The first request for each plain catalog in a session answers from here and asks the addon in the background. */
+const CatSnap = {
+  C: 'mkc-catsnap-v1', served: new Set(), MAX: 60, TTL: 3 * 86400e3,
+  key(cat) { return `https://mkc.local/snap/${encodeURIComponent(cat.addon.baseUrl)}/${encodeURIComponent(cat.type)}/${encodeURIComponent(cat.id)}`; },
+  slim(m) { const o = {}; for (const k of ['id', 'type', 'name', 'poster', 'background', 'logo', 'releaseInfo', 'year', 'genres', 'imdbRating', 'description', 'posterShape', 'runtime']) if (m[k] != null) o[k] = m[k]; if (typeof o.description === 'string') o.description = o.description.slice(0, 400); return o; },
+  async get(cat) {
+    if (!window.caches) return null;
+    try { const c = await caches.open(this.C), r = await c.match(this.key(cat)); if (!r) return null; const j = await r.json(); return Array.isArray(j.metas) && Date.now() - (j.at || 0) < this.TTL ? j.metas : null; } catch (e) { return null; }
+  },
+  put(cat, metas) {
+    if (!window.caches || !metas || !metas.length) return;
+    const body = JSON.stringify({ at: Date.now(), metas: metas.slice(0, this.MAX).map((m) => this.slim(m)) });
+    caches.open(this.C).then((c) => c.put(this.key(cat), new Response(body, { headers: { 'content-type': 'application/json' } }))).catch(() => {});
+  },
+};
+
 /* =====================================================================
    StremioEngine: protocol client for live addons + in-browser virtual addons
    ===================================================================== */
@@ -3234,10 +3254,25 @@ class StremioEngine {
     return out;
   }
   async fetchCatalog(cat, extra = {}) {
-    const r = await this.call(cat.addon, 'catalog', cat.type, cat.id, extra);
     // an addon may send nulls, numbers as ids or no list at all: keep what is usable instead of failing the row
-    return (Array.isArray(r && r.metas) ? r.metas : []).filter((m) => m && typeof m === 'object' && (typeof m.id === 'string' || typeof m.id === 'number') && String(m.id))
+    const tidy = (r) => (Array.isArray(r && r.metas) ? r.metas : []).filter((m) => m && typeof m === 'object' && (typeof m.id === 'string' || typeof m.id === 'number') && String(m.id))
       .map((m) => ({ ...m, id: String(m.id), type: m.type || cat.type, _addon: cat.addon.manifest.name }));
+    // a plain catalog (no page, genre or search) answers from the last visit first, once per session
+    const plain = !cat.addon.virtual && !Object.values(extra || {}).some((v) => v !== undefined && v !== null && v !== '');
+    if (plain && CFG.instantHome !== false) {
+      const k = CatSnap.key(cat);
+      if (!CatSnap.served.has(k)) {
+        CatSnap.served.add(k);
+        const snap = await CatSnap.get(cat);
+        if (snap && snap.length) {
+          this.call(cat.addon, 'catalog', cat.type, cat.id, extra).then((r) => CatSnap.put(cat, tidy(r))).catch(() => {});
+          return snap.map((m) => ({ ...m, id: String(m.id), type: m.type || cat.type, _addon: cat.addon.manifest.name }));
+        }
+      }
+    }
+    const out = tidy(await this.call(cat.addon, 'catalog', cat.type, cat.id, extra));
+    if (plain) CatSnap.put(cat, out);
+    return out;
   }
   async search(q) {
     const cats = this.catalogs({ needs: 'search', includeRequired: true });
@@ -3678,7 +3713,7 @@ const S = {
 const remember = (m) => { if (m && m.id) S.metas.set(m.id, { ...(S.metas.get(m.id) || {}), ...m }); return m; };
 const metaPoster = (m) => m.poster || (String(m.id).startsWith('tt') ? `https://images.metahub.space/poster/medium/${m.id}/img` : null);
 const metaBg = (m) => m.background || (String(m.id).startsWith('tt') ? `https://images.metahub.space/background/medium/${m.id}/img` : null);
-const metaLogo = (m) => m.logo || (String(m.id).startsWith('tt') ? `https://images.metahub.space/logo/medium/${m.id}/img` : null);
+const metaLogo = (m) => (window.MkLangArt && MkLangArt.logo(m)) || m.logo || (String(m.id).startsWith('tt') ? `https://images.metahub.space/logo/medium/${m.id}/img` : null);
 const yearOf = (m) => String(m.releaseInfo || m.year || '').slice(0, 9);
 const genresOf = (m) => (m.genres || m.genre || []).filter(Boolean);
 
@@ -3828,7 +3863,7 @@ function showHero(i, dir = 1) {
   const logo = metaLogo(m);
   $('#heroLogoWrap').innerHTML = `${logo ? imgTag(logo, m.name, m.id, { nofb: true, cls: 'hero-logo', lazy: false }) : ''}<h1 class="hero-title" data-logo-alt ${logo ? 'hidden' : ''}>${esc(m.name)}</h1>`;
   $('#heroMeta').innerHTML = [m.imdbRating ? `<span class="imdb ${rateTier(m.imdbRating)}"><b>IMDb</b>${esc(m.imdbRating)}</span>` : '', yearOf(m) ? `<span>${esc(yearOf(m))}</span>` : '', m.runtime ? `<span>${esc(m.runtime)}</span>` : '', (genresOf(m).length ? `<span class="hm-gs">${genresOf(m).slice(0, 3).map((g, i) => `<span class="hm-g${i}">${i ? ' · ' : ''}${esc(g)}</span>`).join('')}</span>` : ''), `<span class="tag-s">${esc(m.type)}</span>`].filter(Boolean).join('');
-  $('#heroDesc').textContent = m.description || '';
+  $('#heroDesc').textContent = m.description || ''; if (window.MkHeroText) MkHeroText.set();
   { const hb = $('#hero .hero-body'); hb.classList.remove('swap'); requestAnimationFrame(() => hb.classList.add('swap')); }
   $('#heroEyebrow').innerHTML = `<i data-lucide="flame"></i>Featured · ${esc(m._addon || 'Catalog')}`;
   $$('#heroDots button').forEach((b, k) => b.classList.toggle('on', k === S.heroIdx));
@@ -3870,6 +3905,8 @@ function saveProgress(force) {
    Navigation between views
    ===================================================================== */
 function go(view, opts = {}) {
+  if (S.view === 'home' && view !== 'home' && window.MkHomePlace) MkHomePlace.leave();
+  const backHome = view === 'home' && S.view !== 'home';
   S.view = view;
   $$('#tabs .tab, #mtabs [data-view]').forEach((t) => t.classList.toggle('on', t.dataset.view === view));
   const id = view === 'movie' || view === 'series' ? 'discover' : view;
@@ -3880,7 +3917,7 @@ function go(view, opts = {}) {
   if (view === 'library') renderLibrary();
   if (view === 'studio') renderStudio();
   if (view === 'calendar') Calendar.render();
-  if (view === 'home') queueWall();
+  if (view === 'home') { queueWall(); if (backHome && window.MkHomePlace) MkHomePlace.back(); }
   try { history.replaceState(null, '', `#${view}`); } catch (e) { /* sandboxed */ }
 }
 function openCatalog(cat) { go(cat.type === 'series' ? 'series' : 'movie', { catalog: cat }); }
@@ -3949,13 +3986,13 @@ async function renderTV() {
   channels = await Promise.all(channels.map(async (ch) => { if (ch.videos) return remember(ch); try { return remember((await engine.fetchMeta(ch.type, ch.id)) || ch); } catch (e) { return remember(ch); } }));
   const PX = 8, now = Date.now(), t0 = Math.floor((now - 30 * 60000) / (30 * 60000)) * 30 * 60000, span = 180, t1 = t0 + span * 60000;
   const x = (t) => ((t - t0) / 60000) * PX;
-  const times = Array.from({ length: span / 30 }, (_, i) => `<span style="width:${30 * PX}px">${new Date(t0 + i * 30 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`).join('');
+  const times = Array.from({ length: span / 30 }, (_, i) => `<span style="width:${30 * PX}px">${new Date(t0 + i * 30 * 60000).toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' })}</span>`).join('');
   const rows = channels.map((ch) => {
     const progs = (ch.videos || []).map((v, i, arr) => ({ title: v.title || v.name, start: +new Date(v.released), end: v._end ? +new Date(v._end) : arr[i + 1] ? +new Date(arr[i + 1].released) : +new Date(v.released) + 3600000 }))
       .filter((p) => p.end > t0 && p.start < t1);
     const blocks = (progs.length ? progs : [{ title: `Live · ${ch.name}`, start: t0, end: t1 }]).map((p) => {
       const l = Math.max(0, x(p.start)), w = Math.min(x(p.end), span * PX) - l; const on = p.start <= now && now < p.end;
-      return `<button class="epg-prog ${on ? 'now' : ''}" type="button" data-nav data-ch="${esc(ch.id)}" style="left:${l}px;width:${Math.max(30, w - 4)}px"><b>${esc(p.title)}</b><small>${new Date(p.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}–${new Date(p.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small></button>`;
+      return `<button class="epg-prog ${on ? 'now' : ''}" type="button" data-nav data-ch="${esc(ch.id)}" style="left:${l}px;width:${Math.max(30, w - 4)}px"><b>${esc(p.title)}</b><small>${new Date(p.start).toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' })}–${new Date(p.end).toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' })}</small></button>`;
     }).join('');
     return `<div class="epg-row"><button class="epg-ch" type="button" data-nav data-ch="${esc(ch.id)}">${imgTag(ch.logo || ch.poster, ch.name, ch.id)}<span><b>${esc(ch.name)}</b><small>${esc(genresOf(ch)[0] || ch._addon || '')}</small></span></button><div class="epg-track">${blocks}</div></div>`;
   }).join('');
@@ -3983,7 +4020,9 @@ function renderLibrary() {
   if (cw.length) { const b = document.createElement('button'); b.className = 'btn btn-ghost btn-sm'; b.type = 'button'; b.innerHTML = '<i data-lucide="trash-2"></i>Clear progress'; b.style.marginTop = '8px'; b.onclick = () => { S.progress = {}; Store.set('progress', {}); renderLibrary(); }; a.appendChild(b); }
   const w = document.createElement('section'); w.className = 'row';
   w.innerHTML = `<div class="row-head"><h2 class="row-title">My watchlist <small>${S.watchlist.length} saved</small></h2></div><div class="grid">${S.watchlist.map((m) => cardHTML(m)).join('') || '<div class="empty">Use the Watchlist button on any title to save it here.</div>'}</div>`;
-  root.appendChild(w); icons();
+  root.appendChild(w);
+  if (window.MkCloud) MkCloud.libRow(root);
+  icons();
 }
 
 /* =====================================================================
@@ -3997,7 +4036,7 @@ function seasonsOf(meta) {
   return [...map.entries()].sort((a, b) => (a[0] === 0) - (b[0] === 0) || a[0] - b[0]);
 }
 function orderedEpisodes(meta) { return seasonsOf(meta).filter(([s]) => s !== 0).flatMap(([, l]) => l); }
-function nextVideo(meta, video) { const list = orderedEpisodes(meta); const i = list.findIndex((v) => v.id === video.id); return i >= 0 ? list[i + 1] || null : null; }
+function nextVideo(meta, video) { if (window.MkShuffle && MkShuffle.on(meta)) return MkShuffle.next(meta, video); const list = orderedEpisodes(meta); const i = list.findIndex((v) => v.id === video.id); return i >= 0 ? list[i + 1] || null : null; }
 function videoIdFor(meta, v) { return v.id || StremioEngine.seriesId(meta.id, v.season, v.episode); }
 
 const MENU_LAYERS = ['epSheet', 'detail', 'addons', 'palette', 'settings', 'tastePick', 'askLayer', 'tour', 'stremioImport', 'trailer', 'partyLayer', 'castLayer'];
@@ -4156,6 +4195,7 @@ function renderDetail(loading) {
         <div class="actions">
           <button class="btn btn-bolt cta" type="button" id="dSmart" data-nav><span class="cta-ring" aria-hidden="true"></span><i data-lucide="play"></i><span class="sp-l">Smart Play<small>Best stream, picked for you</small></span></button>
           <button class="btn btn-ghost" type="button" id="dTrailer" data-nav><i data-lucide="clapperboard"></i>Trailer</button>
+          ${m.type === 'series' && seasons.length ? `<button class="btn btn-ghost" type="button" id="dShuffle" data-nav aria-pressed="${!!(window.MkShuffle && MkShuffle.on(m))}"><i data-lucide="shuffle"></i>Shuffle</button>` : ''}
           <button class="btn btn-ghost" type="button" id="dList" data-nav>${inWatchlist(m.id) ? '<i data-lucide="check"></i>In watchlist' : '<i data-lucide="plus"></i>Watchlist'}</button>
           ${m.imdb_id || String(m.id).startsWith('tt') ? `<a class="btn btn-ghost" data-nav href="https://www.imdb.com/title/${esc(m.imdb_id || String(m.id).split(':')[0])}/" target="_blank" rel="noopener"><i data-lucide="external-link"></i>IMDb</a>` : ''}
         </div>
@@ -4184,6 +4224,9 @@ function renderDetail(loading) {
   const sg = $('#dSpoil'); if (sg) sg.onclick = () => { setCfg('spoilerGuard', !CFG.spoilerGuard); renderDetail(false); $$('#toasts .toast').forEach((t) => { if (/^Spoiler Guard/.test(t.dataset.msg || '')) t.remove(); }); toast(CFG.spoilerGuard ? 'Spoiler Guard on: unwatched episodes are hidden' : 'Spoiler Guard off', 'info', 2200); };
   Ratings.critics(m);
   $('#dTrailer').onclick = () => playTrailer(m);
+  { const sh = $('#dShuffle'); if (sh) sh.onclick = () => MkShuffle.start(m); }
+  if (window.MkLangArt && MkLangArt.wants()) MkLangArt.detail(m);
+  if (window.MkReviews && !loading) MkReviews.place(m);
   $('#dList').onclick = () => { toggleWatchlist(m); renderDetail(false); renderStreamsPanel(); };
   $$('#dSeasons [data-season]').forEach((b) => b.addEventListener('click', () => { D.season = Number(b.dataset.season); renderDetail(false); renderStreamsPanel(); }));
   bindEpisodes($('#dEps'), m, (v) => { D.video = v; D.season = Number(v.season); markEpisodes(); EpSheet.open(); loadDetailStreams(); });
@@ -4328,6 +4371,7 @@ function renderStreamsPanel() {
     <div class="streams">${list.map((s) => streamRowHTML(s, D.streams.indexOf(s), { best: s === best })).join('') || (st.pending ? skeletons(0) + '<div class="empty">Waiting for addons…</div>' : '<div class="empty">No streams for this filter. Install more stream addons from the addon manager.<button type="button" class="linkish" data-nav data-trouble="nostreams">Why no streams?</button></div>')}</div>`;
   icons();
   $$('[data-filter]', box).forEach((b) => b.addEventListener('click', () => { D.filter = b.dataset.filter; renderStreamsPanel(); }));
+  if (window.MkAgain) MkAgain.mount(box, st);
   $$('[data-si]', box).forEach((b) => b.addEventListener('click', () => { playStream({ meta: D.meta, video: D.video, streams: D.streams }, D.streams[Number(b.dataset.si)]); }));
 }
 async function smartPlayDetail() {
@@ -4355,7 +4399,8 @@ async function resume(videoId) {
   playStream({ meta, video, streams }, pick, { startAt: p.t });
 }
 async function playTrailer(meta) {
-  const t = (meta.trailerStreams || [])[0] || ((meta.trailers || [])[0] && { ytId: meta.trailers[0].source, title: meta.name });
+  const local = window.MkLangArt ? await MkLangArt.trailer(meta).catch(() => '') : '';
+  const t = local ? { ytId: local } : (meta.trailerStreams || [])[0] || ((meta.trailers || [])[0] && { ytId: meta.trailers[0].source, title: meta.name });
   if (!t || !t.ytId) { toast('No official trailer is listed for this title', 'err'); return; }
   openTrailer(t.ytId);
 }
@@ -4451,6 +4496,16 @@ document.addEventListener('fullscreenchange', () => trIcon('#trFull', document.f
    ===================================================================== */
 const P = { ctx: null, stream: null, hls: null, amb: CFG.ambilight && !IS_TV, subs: [], subDelay: 0, idleT: 0, lastSave: 0, curSub: -1, upNextT: 0, upNextDismissed: false, filter: 'all', retried: false, raf: 0, remux: null, ducking: false };
 const video = $('#video');
+/* 2.67.5 smooth-player: Android draws a large grey play button on any video that has no picture yet (while it loads,
+   after it is emptied on close, between sources). Every video gets a see-through poster there instead. */
+const MK_BLANK_POSTER = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+if (/Android/i.test(navigator.userAgent)) {
+  video.setAttribute('poster', MK_BLANK_POSTER);
+  const mkCe = Document.prototype.createElement;
+  Document.prototype.createElement = function (t) { const el = mkCe.apply(this, arguments); if (typeof t === 'string' && t.length === 5 && t.toLowerCase() === 'video') el.setAttribute('poster', MK_BLANK_POSTER); return el; };
+  // videos written as HTML get one as soon as they start loading
+  document.addEventListener('loadstart', (e) => { const v = e.target; if (v && v.tagName === 'VIDEO' && !v.getAttribute('poster')) v.setAttribute('poster', MK_BLANK_POSTER); }, true);
+}
 /* Player clock. While the audio rescue remux runs, the video element starts at 0 from the point the server began
    converting, so its time is offset and its duration comes from the server's probe. Everything reads time through these. */
 const pNow = () => video.currentTime + (P.remux ? P.remux.offset : 0);
@@ -4632,6 +4687,8 @@ async function playStream(ctx, stream, { startAt } = {}) {
   const wasOpen = !$('#player').hidden;
   if (!wasOpen) { openLayer('player'); }
   const prevCtx = P.ctx; P.ctx = ctx; P.stream = stream; P.retried = false;
+  if (window.MkShuffle && MkShuffle.id && MkShuffle.id !== (ctx.meta && ctx.meta.id)) MkShuffle.stop();
+  if (window.MkSrcSpeed) MkSrcSpeed.note(stream);
   const key = ctx.video ? ctx.video.id : ctx.meta.id;
   if (startAt == null) { const p = CFG.resume && S.progress[key]; startAt = p && p.t > 20 && p.t < p.d * .95 ? p.t : 0; }
   $('#pTitle').textContent = ctx.meta.name || '';
@@ -4693,7 +4750,7 @@ function loadUrl(stream, startAt) {
   Failover.arm(stream);
   const hlsLike = !stream._local && /\.m3u8(\?|$)/i.test(stream.url);
   if (P._onMeta) video.removeEventListener('loadedmetadata', P._onMeta);
-  const onMeta = P._onMeta = () => { P._onMeta = null; if (P.stream && P.stream !== stream) return; if (startAt && isFinite(video.duration) && startAt < video.duration - 5) video.currentTime = startAt; video.playbackRate = CFG.speed || 1; video.play().catch(() => wakeHud(true)); if (!P.hls) setTimeout(addEmbeddedSubs, 300); };
+  const onMeta = P._onMeta = () => { P._onMeta = null; if (P.stream && P.stream !== stream) return; if (startAt && isFinite(video.duration) && startAt < video.duration - 5) video.currentTime = startAt; video.playbackRate = CFG.speed || 1; const go = () => video.play().catch(() => wakeHud(true)); if (window.MkSubWait) MkSubWait.go(go); else go(); if (!P.hls) setTimeout(addEmbeddedSubs, 300); };
   video.addEventListener('loadedmetadata', onMeta, { once: true });
   if (hlsLike && window.Hls && Hls.isSupported()) {
     const hls = P.hls = new Hls({ enableWorker: true, startPosition: startAt || -1, maxBufferLength: 40, backBufferLength: 60, capLevelToPlayerSize: !IS_TV });
@@ -4968,14 +5025,18 @@ function addEmbeddedSubs() {
 }
 function autoPickSub() {
   const cur = P.subs && P.subs[P.curSub];
-  if (!CFG.subAuto || P.subUserChoice || (P.curSub >= 0 && !(cur && cur._tr)) || !CFG.subLang || CFG.subLang === 'off') return;
+  const forcedOn = typeof SubForced !== 'undefined' && SubForced.is(cur);
+  if (P.subUserChoice || (P.curSub >= 0 && !(cur && cur._tr) && !forcedOn)) return;
+  // what you picked for this title last time wins over the house rules
+  if (typeof SubMem !== 'undefined' && SubMem.apply()) return;
+  if (!CFG.subAuto || !CFG.subLang || CFG.subLang === 'off') { if (typeof SubForced !== 'undefined') SubForced.pick(); return; }
   const i = SubRank.pick(P.subs);
-  if (i >= 0) selectSub(i, { auto: true }); else SubAuto.offer();
+  if (i >= 0) selectSub(i, { auto: true }); else { if (typeof SubForced !== 'undefined') SubForced.pick(); SubAuto.offer(); }
 }
 const subLabel = (s) => s._label || `${langName(s.lang)}${s._addon ? ` · ${s._addon}` : ''}`;
 function renderSubMenu() {
   const m = $('#subMenu'); if (!P.subs) return;
-  const byLang = SubRank.order(P.subs);
+  const byLang = SubRank.order(P.subs).filter(([s, i]) => !(typeof SubSdh !== 'undefined' && SubSdh.hide() && SubSdh.is(s)) || i === P.curSub);
   const subAddons = engine.addons.filter((a) => a.enabled && StremioEngine.resources(a.manifest).some((r) => r.name === 'subtitles')).length;
   const hasOS = engine.addons.some((a) => /opensubtitles/i.test(a.baseUrl) && !a.error);
   m.innerHTML = `<h5>Subtitles · ${P.subsLoading ? 'searching…' : `${P.subs.length} found`}</h5>
@@ -4986,7 +5047,7 @@ function renderSubMenu() {
     ${!P.subs.length && !P.subsLoading ? `<p style="color:var(--mute);font-size:calc(12.5px * var(--ts,1));margin:6px 12px 8px;max-width:30ch">${subAddons ? 'Your subtitle addons had nothing for this title.' : 'No subtitle addon is installed or reachable.'}${hasOS ? '' : ' Add OpenSubtitles v3 to search thousands of languages.'}</p>` : ''}
     <button type="button" data-subfile><i data-lucide="file-up"></i>Load subtitle file…</button>
     ${hasOS ? '' : '<button type="button" data-addos><i data-lucide="plus"></i>Add OpenSubtitles v3</button>'}`;
-  $$('[data-sub]', m).forEach((b) => b.addEventListener('click', () => { P.subUserChoice = true; selectSub(Number(b.dataset.sub)); }));
+  $$('[data-sub]', m).forEach((b) => b.addEventListener('click', () => { P.subUserChoice = true; if (typeof SubMem !== 'undefined') SubMem.save(Number(b.dataset.sub)); selectSub(Number(b.dataset.sub)); }));
   $$('[data-ssize]', m).forEach((b) => b.addEventListener('click', () => { const k = Number(b.dataset.ssize); setCfg('subSize', k ? clamp(CFG.subSize + k, 50, 220) : 100); renderSubMenu(); }));
   $$('[data-spos]', m).forEach((b) => b.addEventListener('click', () => { setCfg('subPos', b.dataset.spos); renderSubMenu(); }));
   $$('[data-delay]', m).forEach((b) => b.addEventListener('click', () => setSubDelay(Number(b.dataset.delay) === 0 ? 0 : P.subDelay + Number(b.dataset.delay))));
@@ -5048,7 +5109,7 @@ $('#pSubs').onclick = () => { const m = $('#subMenu'); $('#optMenu').hidden = tr
 function renderOptMenu() {
   const m = $('#optMenu'); const speeds = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
   const levels = P.hls && P.hls.levels ? P.hls.levels : [];
-  const audio = P.hls && P.hls.audioTracks && P.hls.audioTracks.length > 1 ? P.hls.audioTracks.map((t, i) => ({ i, label: t.name || langName(t.lang), on: P.hls.audioTrack === i }))
+  const audio = P.hls && P.hls.audioTracks && P.hls.audioTracks.length > 1 ? P.hls.audioTracks.map((t, i) => ({ i, label: AudioLang.hls(t), on: P.hls.audioTrack === i }))
     : video.audioTracks && video.audioTracks.length > 1 ? Array.from(video.audioTracks).map((t, i) => ({ i, label: t.label || langName(t.language), on: t.enabled })) : [];
   m.innerHTML = `<h5>Speed</h5><div class="seg-row">${speeds.map((v) => `<button type="button" class="${video.playbackRate === v ? 'on' : ''}" data-speed="${v}">${v}×</button>`).join('')}</div>
     ${levels.length > 1 ? `<h5>Quality</h5><div class="seg-row"><button type="button" class="${P.hls.autoLevelEnabled ? 'on' : ''}" data-level="-1">Auto${P.hls.autoLevelEnabled && levels[P.hls.currentLevel] ? ` · ${levels[P.hls.currentLevel].height}p` : ''}</button>${levels.map((l, i) => [l, i]).sort((a, b) => b[0].height - a[0].height).map(([l, i]) => `<button type="button" class="${!P.hls.autoLevelEnabled && P.hls.currentLevel === i ? 'on' : ''}" data-level="${i}">${l.height ? `${l.height}p` : `${Math.round(l.bitrate / 1000)}k`}</button>`).join('')}</div>` : ''}
@@ -6624,7 +6685,7 @@ const Account = {
     if (!this.client) return `<div class="acct-card"><h4><i data-lucide="loader"></i>Connecting to ${proj}…</h4>${this.error ? `<p class="acct-err">${esc(this.error)}</p><div class="inrow"><button class="btn btn-ghost" type="button" id="acc-forget">Use a different project</button></div>` : ''}</div>`;
     if (this.user) {
       const u = this.user, st = this.sync, prov = (u.app_metadata && u.app_metadata.provider) || 'email';
-      const syncLine = CFG.cloudSync === false ? 'Cloud sync is off.' : st.state === 'syncing' ? 'Syncing…' : st.state === 'error' ? `<span class="acct-err">${esc(st.error)}</span>` : st.at ? `Last synced ${esc(new Date(st.at).toLocaleString())}` : 'Not synced yet.';
+      const syncLine = CFG.cloudSync === false ? 'Cloud sync is off.' : st.state === 'syncing' ? 'Syncing…' : st.state === 'error' ? `<span class="acct-err">${esc(st.error)}</span>` : st.at ? `Last synced ${esc(new Date(st.at).toLocaleString(appLocale()))}` : 'Not synced yet.';
       return `<div class="acct-card">
         <div class="acct-who"><button type="button" class="av-pick" id="acc-avatar" aria-label="Change profile picture">${this.avatarHTML(true)}<span class="av-edit"><i data-lucide="camera"></i></span></button><div><b>${esc(this.name())}</b><small>${esc(u.email || '')} · signed in with ${esc(prov)}</small><span class="av-acts"><button type="button" class="linkish" id="acc-avatar2">${Store.get('avatar', null) ? 'Change photo' : 'Add a profile photo'}</button>${Store.get('avatar', null) ? ' · <button type="button" class="linkish" id="acc-avatar-rm">Remove</button>' : ''}</span></div></div>
         <input type="file" id="acc-avatar-file" accept="image/*" hidden>
@@ -7724,7 +7785,7 @@ const XRay = {
     const roles = new Map();
     crew.forEach((p, i) => { if (!roles.has(p.role)) roles.set(p.role, []); roles.get(p.role).push(`<button type="button" class="xr2-n" data-nav data-person="${cast.length + i}">${esc(p.name)}</button>`); });
     const crewLine = [...roles].map(([r, l]) => `<span><small>${r === 'Director' ? 'Directed by' : r === 'Writer' ? 'Written by' : esc(r)}</small> ${l.join(', ')}</span>`).join('');
-    const facts = [['Released', m.released ? new Date(m.released).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : ''], ['Awards', m.awards], ['Country', m.country], ['Language', m.language]].filter(([, val]) => val);
+    const facts = [['Released', m.released ? new Date(m.released).toLocaleDateString(appLocale(), { year: 'numeric', month: 'long', day: 'numeric' }) : ''], ['Awards', m.awards], ['Country', m.country], ['Language', m.language]].filter(([, val]) => val);
     const now = pNow(), d = pDur();
     const act = (id, icon, label) => `<button type="button" data-nav id="${id}"><i data-lucide="${icon}"></i><span>${label}</span></button>`;
     body.innerHTML = `${cast.length ? `<section class="xr2-sec"><h5>Cast</h5><div class="xr2-cast">${cast.slice(0, open ? cast.length : SHOW).map((p, i) => this.face(p, i)).join('')}</div>${cast.length > SHOW ? `<button type="button" class="xr2-more" id="xrAll" data-nav>${open ? 'Fewer' : `All ${cast.length} cast`}</button>` : ''}<p class="xr2-src" id="xrCred"${[...cast, ...crew].some((p) => p.wiki) ? '' : ' hidden'}>Photos from Wikipedia</p></section>` : ''}
@@ -8438,7 +8499,7 @@ const RmSec = {
   },
   rows() {
     const l = this.phones(); if (!l.length) return [];
-    return l.map((p, i) => ({ key: `rmPhone${i}`, label: p.name || 'Phone', help: `Allowed phone, since ${new Date(p.at || Date.now()).toLocaleDateString()}. It can control this screen.`, type: 'button', text: 'Remove', icon: 'trash-2', run: () => { this.remove(p.id); renderSettingsBody(); } }));
+    return l.map((p, i) => ({ key: `rmPhone${i}`, label: p.name || 'Phone', help: `Allowed phone, since ${new Date(p.at || Date.now()).toLocaleDateString(appLocale())}. It can control this screen.`, type: 'button', text: 'Remove', icon: 'trash-2', run: () => { this.remove(p.id); renderSettingsBody(); } }));
   },
   /* ---- one tab hosts the remote (a second tab of the same browser would answer the same phones twice) ---- */
   claim(auto) {
@@ -9326,7 +9387,7 @@ const Vault = {
     if (k === 'rd') { const u = await this.call('https://api.real-debrid.com/rest/1.0/user', { headers: { Authorization: `Bearer ${key}` } }); return `${u.username} · ${u.type}${u.expiration ? ` until ${fmtDate(u.expiration)}` : ''}`; }
     if (k === 'tb') { const u = await this.call('https://api.torbox.app/v1/api/user/me', { headers: { Authorization: `Bearer ${key}` } }); return `${(u.data || {}).email || 'Account'} · plan ${(u.data || {}).plan ?? '?'}`; }
     if (k === 'ad') { const u = await this.call(`https://api.alldebrid.com/v4/user?agent=mkcinema&apikey=${encodeURIComponent(key)}`), us = (u.data || {}).user || {}; return `${us.username || 'Account'}${us.isPremium ? ' · premium' : ''}`; }
-    const u = await this.call(`https://www.premiumize.me/api/account/info?apikey=${encodeURIComponent(key)}`); if (u.status !== 'success') throw new Error(u.message || 'Rejected'); return `Customer ${u.customer_id} · premium until ${new Date(u.premium_until * 1000).toLocaleDateString()}`;
+    const u = await this.call(`https://www.premiumize.me/api/account/info?apikey=${encodeURIComponent(key)}`); if (u.status !== 'success') throw new Error(u.message || 'Rejected'); return `Customer ${u.customer_id} · premium until ${new Date(u.premium_until * 1000).toLocaleDateString(appLocale())}`;
   },
 };
 {
@@ -9391,7 +9452,7 @@ const Vault = {
 /* ---------------- Ratings: IMDb star, quality tag, RPDB rating posters, and critic scores with your OMDb key ---------------- */
 /* custom-poster-2.31.0 */
 /* Custom poster URL: a link template from a poster service (Pictorium, or any service that serves one image per title).
-   MKCinema fills {type}, {imdb_id}, {tmdb_id}, {tmdb_id|imdb_id} (Nuvio style: tmdb:<n> when known, else the IMDb id) and
+   MKCinema fills {type}, {imdb_id}, {tmdb_id}, {tmdb_id|imdb_id} (tmdb:<n> when known, else the IMDb id) and
    {shape} (poster, or landscape on wide cards). A title with no usable id, or an image that fails, falls back to the normal art. */
 const CustomPoster = {
   tpl() { const t = String(Keys.get().posterUrl || '').trim(); return /^https?:\/\/[^\s"'<>]+$/i.test(t) ? t : ''; },
@@ -9568,7 +9629,7 @@ const Calendar = {
     eps.sort((a, b) => a.at - b.at);
     $('#calNote').textContent = `${eps.length} episode${eps.length === 1 ? '' : 's'} · ${shows.length} series`;
     if (!eps.length) { body.innerHTML = `<div class="empty">Nothing airing in the next ${this.days} days for your series.</div>`; return; }
-    const day = (t) => { const d = new Date(t), today = new Date(); today.setHours(0, 0, 0, 0); const diff = Math.round((new Date(d).setHours(0, 0, 0, 0) - today) / 86400e3); return diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff === -1 ? 'Yesterday' : d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }); };
+    const day = (t) => { const d = new Date(t), today = new Date(); today.setHours(0, 0, 0, 0); const diff = Math.round((new Date(d).setHours(0, 0, 0, 0) - today) / 86400e3); return diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff === -1 ? 'Yesterday' : d.toLocaleDateString(appLocale(), { weekday: 'long', month: 'short', day: 'numeric' }); };
     const groups = []; eps.forEach((e) => { const k = day(e.at); const g = groups[groups.length - 1]; if (g && g.k === k) g.list.push(e); else groups.push({ k, list: [e] }); });
     body.innerHTML = groups.map((g) => `<section class="cal-day"><h3>${esc(g.k)}</h3>${g.list.map((e) => {
       const id = videoIdFor(e.meta, e.v), aired = e.at <= now;
@@ -9932,7 +9993,7 @@ const SECTIONS = [
     { key: 'ratingBadges', label: 'IMDb rating on posters', help: 'A small star rating in the corner of each poster.', type: 'toggle', set: (v) => { setCfg('ratingBadges', v); rerender(); } },
     { key: 'rpdb', label: 'Rating posters (RPDB)', help: 'Swaps posters for RatingPosterDB versions with ratings printed on them. Uses the free key unless you add your own. A poster RPDB does not have falls back to the normal one.', type: 'toggle', set: (v) => { setCfg('rpdb', v); rerender(); } },
     { key: 'rpdbKey', label: 'RPDB key (optional)', help: 'From ratingposterdb.com. Syncs with your account when Sync keys is on.', type: 'secret', placeholder: 't0-free-rpdb', get: () => Keys.get().rpdb || '', set: (v) => { Keys.set('rpdb', v); rerender(); } },
-    { key: 'posterUrl', label: 'Custom poster URL', help: 'Paste a poster link from a poster service such as Pictorium (free, pictorium.elfhosted.com), made by Eful97, who suggested this feature. In Pictorium, open Install Hub, pick the Nuvio tab and copy the link. MKCinema fills in {type}, {imdb_id}, {tmdb_id} and {shape}, so wide cards get landscape art too. It takes over from RPDB while set, and any title it has no art for keeps the normal poster. Leave empty to turn it off.', type: 'text', get: () => Keys.get().posterUrl || '', set: (v) => { if (v && !/^https?:\/\/[^\s"'<>]+$/i.test(v)) { toast('Paste the full link, starting with https://', 'err'); return; } Keys.set('posterUrl', v); rerender(); if (v) toast('Custom posters on'); } },
+    { key: 'posterUrl', label: 'Custom poster URL', help: 'Paste a poster link from a poster service such as Pictorium (free, pictorium.elfhosted.com), made by Eful97, who suggested this feature. In Pictorium, open Install Hub, pick the tab whose link has {tmdb_id} in it, and copy that link. MKCinema fills in {type}, {imdb_id}, {tmdb_id} and {shape}, so wide cards get landscape art too. It takes over from RPDB while set, and any title it has no art for keeps the normal poster. Leave empty to turn it off.', type: 'text', get: () => Keys.get().posterUrl || '', set: (v) => { if (v && !/^https?:\/\/[^\s"'<>]+$/i.test(v)) { toast('Paste the full link, starting with https://', 'err'); return; } Keys.set('posterUrl', v); rerender(); if (v) toast('Custom posters on'); } },
     { key: 'omdbKey', label: 'Critic scores (OMDb key)', help: 'Adds Rotten Tomatoes and Metacritic scores to title pages. Get a free key at omdbapi.com. Syncs with your account when Sync keys is on.', type: 'secret', get: () => Keys.get().omdb || '', set: (v) => Keys.set('omdb', v) },
     { key: 'cardInfo', label: 'Poster text', help: 'Posters already carry their own titles. "On hover" keeps them clean until you point at one. Phones and tablets cannot hover, so they show the title below.', type: 'seg', options: [['hover', 'On hover'], ['below', 'Below'], ['full', 'On poster']] },
     ...(TOUCH_UI ? [] : [{ key: 'wall', label: 'Curved IMAX wall', help: 'Bends catalog rows around you instead of flat rails. Desktop only, and heavier while scrolling.', type: 'toggle', get: () => S.wall, set: (v) => setWall(v) }]),
@@ -10386,7 +10447,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.67.3';
+const APP_VERSION = '2.68.0';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -10499,11 +10560,16 @@ const AudioLang = {
   label(t, n) {
     if (typeof t === 'string') t = { language: t };
     const tg = t.tags || {}, lang = t.language || t.lang || t.language_code || tg.language, title = t.title || t.name || t.label || tg.title;
-    const ch = Number(t.channels || t.channel_count), chs = ch === 6 ? '5.1' : ch === 8 ? '7.1' : ch === 2 ? 'Stereo' : ch === 1 ? 'Mono' : '';
+    const ch = Number(t.channels || t.channel_count), chs = t.atmos ? 'Atmos' : ch === 6 ? '5.1' : ch === 8 ? '7.1' : ch === 2 ? 'Stereo' : ch === 1 ? 'Mono' : '';
     const ln = lang && lang !== 'und' ? langName(lang) : '';
-    const parts = [ln || title || `Track ${n + 1}`, title && title !== ln && !new RegExp(`^${String(ln).replace(/\W/g, '.')}$`, 'i').test(title) ? title : '', chs, String(t.codec || t.codec_name || '').toUpperCase()];
+    const parts = [ln || title || `Track ${n + 1}`, title && title !== ln && !new RegExp(`^${String(ln).replace(/\W/g, '.')}$`, 'i').test(title) ? title : '', chs, this.codec(t.codec || t.codec_name)];
     return parts.filter(Boolean).filter((p, i, a) => a.indexOf(p) === i).join(' · ');
   },
+  codec(c) {
+    const k = String(c || '').toLowerCase().replace(/[^a-z0-9]/g, ''); if (!k) return '';
+    return { ec3: 'Dolby Digital Plus', eac3: 'Dolby Digital Plus', ac3: 'Dolby Digital', truehd: 'Dolby TrueHD', mlp: 'Dolby TrueHD', dts: 'DTS', dtshd: 'DTS-HD', dca: 'DTS', aac: 'AAC', mp4a402: 'AAC', mp4a405: 'HE-AAC', opus: 'Opus', flac: 'FLAC', mp3: 'MP3', vorbis: 'Vorbis' }[k] || (/^mp4a/.test(k) ? 'AAC' : /^pcm/.test(k) ? 'PCM' : String(c).toUpperCase());
+  },
+  hls(t) { const a = t.attrs || {}, ch = String(a.CHANNELS || ''); return this.label({ language: t.lang, title: t.name, channels: parseInt(ch, 10) || 0, atmos: /JOC/i.test(ch), codec: t.audioCodec }, 0); },
   tracks(list) { return (Array.isArray(list) ? list : []).map((t, n) => ({ i: n, label: this.label(t || {}, n), def: !!(t && typeof t === 'object' && (t.default || (t.disposition || {}).default)) })); },
   defIndex(tracks) { const d = tracks.find((t) => t.def); return d ? d.i : 0; },
   // a lookup that hangs must not leave the menu saying "Checking" forever
@@ -11083,7 +11149,7 @@ const Saver = {
     if (AmbientGL.ok === null && this.level > 0) AmbientGL.init($('.sv-gl', el));
     requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on')));
     clearTimeout(this.fullT); this.fullT = setTimeout(() => { if (this.isOpen) document.body.classList.add('saver-full'); }, 1200);
-    const clock = $('.sv-clock', el), tickClock = () => { clock.textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); };
+    const clock = $('.sv-clock', el), tickClock = () => { clock.textContent = new Date().toLocaleTimeString(appLocale(), { hour: 'numeric', minute: '2-digit' }); };
     tickClock(); clearInterval(this.clk); this.clk = setInterval(tickClock, 15000);
     this.frames = []; this.slow = 0; this.lastF = 0; cancelAnimationFrame(this.raf); this.raf = requestAnimationFrame((t) => this.frame(t));
     this.go(0, false);
@@ -11579,7 +11645,7 @@ const Peak = {
     const el = document.createElement('div'); el.id = 'peak'; el.className = 'pk'; el.hidden = true;
     el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Peak Cinema');
     el.innerHTML = `
-      <div class="pk-stage"><video class="pk-v" playsinline preload="auto"></video><video class="pk-v" playsinline preload="auto"></video><div class="pk-shade"></div></div>
+      <div class="pk-stage"><video class="pk-v" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" playsinline preload="auto"></video><video class="pk-v" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" playsinline preload="auto"></video><div class="pk-shade"></div></div>
       <div class="pk-ui">
         <div class="pk-top">
           <div class="pk-brand"><span class="pk-mark">Peak Cinema</span><span class="pk-sub" id="pkCount"></span></div>
@@ -13087,8 +13153,8 @@ const Channels = {
     let list = d.channels.filter((c) => (this.st.group === '★' ? favs.has(this.key(c)) : !this.st.group || c.group === this.st.group) && (!q || normTitle(c.name).includes(q)));
     const total = list.length, per = IS_TV ? 40 : 80; list = list.slice(0, per * this.st.page);
     const PX = IS_TV ? 7 : 8, now = Date.now(), t0 = Math.floor((now - 30 * 60000) / (30 * 60000)) * 30 * 60000, span = 180, t1 = t0 + span * 60000, x = (t) => ((t - t0) / 60000) * PX;
-    const times = Array.from({ length: span / 30 }, (_, i) => `<span style="width:${30 * PX}px">${new Date(t0 + i * 30 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`).join('');
-    const hm = (t) => new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const times = Array.from({ length: span / 30 }, (_, i) => `<span style="width:${30 * PX}px">${new Date(t0 + i * 30 * 60000).toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' })}</span>`).join('');
+    const hm = (t) => new Date(t).toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' });
     const fut = [];   // programmes that start later: a press offers to record them
     const rows = list.map((c, i) => {
       const k = this.key(c), progs = (d.epg.get(k) || []).filter((p) => p.end > t0 && p.start < t1);
@@ -14005,6 +14071,7 @@ const Seats = {
   artOf(s) {
     const av = s.av || '', photo = s.id === '' && Store.get('avatar', null);
     if (av === 'letter') return 'letter';
+    if (/^url:https:\/\/[^\s"'<>]+$/i.test(av)) return av;
     if (av === 'photo') return photo ? 'photo' : 'letter';
     if (typeof SeatArt !== 'undefined' && SeatArt.valid(av)) return av;
     if (photo) return 'photo';
@@ -14015,6 +14082,7 @@ const Seats = {
   avatar(s, lg, force) {
     const a = force || this.artOf(s), cls = `seat-av${lg ? ' lg' : ''}${s.kids ? ' kids' : ''}`;
     if (a === 'photo') return `<span class="${cls} img"><img src="${esc(Store.get('avatar', ''))}" alt=""></span>`;
+    if (String(a).startsWith('url:')) return `<span class="${cls} img"><img src="${esc(a.slice(4))}" alt="" referrerpolicy="no-referrer" loading="lazy"></span>`;
     if (a !== 'letter') return `<span class="${cls} art">${SeatArt.svg(a)}</span>`;
     return `<span class="${cls}" style="--sc:${esc(s.color || '#d9d4c7')}">${esc((s.name || '?').trim()[0] || '?').toUpperCase()}</span>`;
   },
@@ -14109,9 +14177,10 @@ const Seats = {
   },
   edit(id) {
     const isNew = id == null, s = isNew ? { id: `s${Date.now().toString(36)}`, name: '', color: this.COLORS[(this.list().length + 1) % this.COLORS.length], kids: false, pin: '', av: this.freshArt() } : { ...this.all().find((x) => x.id === id) };
-    if (!s.av || !(s.av === 'letter' || s.av === 'photo' || SeatArt.valid(s.av))) s.av = this.artOf(s);
+    if (!s.av || !(s.av === 'letter' || s.av === 'photo' || SeatArt.valid(s.av) || /^url:https:\/\//i.test(s.av))) s.av = this.artOf(s);
     const photo = s.id === '' && Store.get('avatar', null);
-    let rolled = SeatArt.SET.includes(s.av) || s.av === 'photo' || s.av === 'letter' ? '' : s.av;
+    let rolled = SeatArt.SET.includes(s.av) || s.av === 'photo' || s.av === 'letter' || /^url:/.test(s.av) ? '' : s.av;
+    let linked = /^url:/.test(s.av) ? s.av : '';
     if (isNew && this.list().length >= 7) { toast('Seven extra seats is the most', 'err'); return; }
     X8.layer('seatEdit', { label: 'Seat', icon: 'users', eyebrow: 'Seats' });
     const b = X8.body('seatEdit');
@@ -14119,13 +14188,15 @@ const Seats = {
       <div class="x8-form"><div class="se-top"><span id="seFace">${this.avatar(s, true, s.av)}</span><label>Name<input class="inp" id="seName" maxlength="20" value="${esc(s.name)}" placeholder="Name" autocomplete="off"></label></div>
       <div class="se-avh"><b>Picture</b><button class="btn btn-ghost btn-sm" type="button" data-nav id="seRoll"><i data-lucide="wand-sparkles"></i>Surprise me</button></div>
       <div class="seat-avs" role="radiogroup" aria-label="Picture" id="seAvs"></div>
+      <label>Picture from a link (optional)<input class="inp" id="seUrl" inputmode="url" maxlength="400" placeholder="https://…" value="${esc(linked ? linked.slice(4) : '')}" autocomplete="off"></label>
+      ${isNew && this.all().length > 0 ? `<label>Copy choices from<select class="inp" id="seCopy"><option value="">Nobody, start fresh</option>${this.all().map((x) => `<option value="${esc(x.id || '@main')}">${esc(x.name)}</option>`).join('')}</select><small class="se-hint">Languages, Home layout, favourites and subtitle choices.</small></label>` : ''}
       <div class="seat-colors" role="radiogroup" aria-label="Colour" id="seCols"${s.av === 'letter' ? '' : ' hidden'}>${this.COLORS.map((c) => `<button type="button" data-nav data-col="${c}" class="${c === s.color ? 'on' : ''}" style="--sc:${c}" aria-label="Colour ${c}"></button>`).join('')}</div>
       ${s.id !== '' ? `<div class="set-row"><div><b>Kids seat</b><small>Only Animation and Family titles, no Live TV, and the grown-up PIN for Settings and Addons.</small></div><div class="set-ctl"><button class="switch ${s.kids ? 'on' : ''}" type="button" id="seKids" role="switch" aria-checked="${!!s.kids}" aria-label="Kids seat"></button></div></div>` : ''}
       ${s.id !== '' && !this.owner().pin ? '<label id="seGrownL">Grown-up PIN (4 digits). A kids seat needs one, so only a grown-up can leave it or open Settings<input class="inp mono" id="seGrown" inputmode="numeric" maxlength="4" placeholder="Set a grown-up PIN" autocomplete="off"></label>' : ''}
       <label>${s.id === '' ? 'Grown-up PIN (4 digits, guards kids seats too)' : 'PIN (4 digits, optional)'}<input class="inp mono" id="sePin" inputmode="numeric" maxlength="4" placeholder="${s.pin ? '•••• (leave empty to keep)' : 'No PIN'}" autocomplete="off"></label>
       ${s.pin ? '<button class="btn btn-ghost btn-sm" type="button" data-nav id="seNoPin"><i data-lucide="lock-open"></i>Remove the PIN</button>' : ''}</div>
       <div class="actions"><button class="btn btn-prime" type="button" data-nav id="seSave"><i data-lucide="check"></i>Save</button>${!isNew && s.id !== '' && s.id !== SEAT ? '<button class="btn btn-ghost danger" type="button" data-nav id="seDel"><i data-lucide="trash-2"></i>Remove seat</button>' : ''}</div>`;
-    const avs = () => [...(photo ? ['photo'] : []), ...(rolled ? [rolled] : []), ...SeatArt.SET, 'letter'];
+    const avs = () => [...(linked ? [linked] : []), ...(photo ? ['photo'] : []), ...(rolled ? [rolled] : []), ...SeatArt.SET, 'letter'];
     const face = () => { $('#seFace', b).innerHTML = this.avatar({ ...s, name: $('#seName', b).value || s.name || '?' }, true, s.av); $('#seCols', b).hidden = s.av !== 'letter'; };
     const paintAvs = () => {
       $('#seAvs', b).innerHTML = avs().map((a) => `<button type="button" data-nav data-av="${esc(a)}" class="${a === s.av ? 'on' : ''}" role="radio" aria-checked="${a === s.av}" aria-label="${a === 'photo' ? 'Your profile photo' : a === 'letter' ? 'First letter of the name' : 'Portrait'}">${this.avatar({ ...s, name: $('#seName', b).value || s.name || '?', kids: false }, false, a)}</button>`).join('');
@@ -14139,6 +14210,7 @@ const Seats = {
     const np = $('#seNoPin', b); if (np) np.onclick = () => { s.pin = ''; np.remove(); toast('PIN will be removed when you save'); };
     $('#sePin', b).addEventListener('keydown', (e) => e.stopPropagation());
     $('#seName', b).addEventListener('keydown', (e) => e.stopPropagation());
+    { const u = $('#seUrl', b); u.addEventListener('keydown', (e) => e.stopPropagation()); u.addEventListener('change', () => { const v = u.value.trim(); if (v && !/^https:\/\/[^\s"'<>]+$/i.test(v)) { toast('Paste the full picture link, starting with https://', 'err'); return; } linked = v ? `url:${v}` : ''; if (linked) s.av = linked; else if (/^url:/.test(s.av)) s.av = this.freshArt(); paintAvs(); face(); }); if (IS_TV && typeof TvType !== 'undefined') TvType.guard(u); }
     const gIn = $('#seGrown', b); if (gIn) gIn.addEventListener('keydown', (e) => e.stopPropagation());
     $('#seSave').onclick = () => this.guard(async () => {
       s.name = $('#seName').value.trim() || (s.id === '' ? 'Main' : 'Guest'); const pin = $('#sePin').value.trim();
@@ -14150,7 +14222,8 @@ const Seats = {
         Store.raw.set('ownerPin', await this.makePin('', grown)); Account.schedule();
       }
       if (s.id === '') { Store.raw.set('ownerSeatName', s.name); Store.raw.set('ownerPin', s.pin || ''); Store.raw.set('ownerAv', s.av || ''); Account.schedule(); }
-      else { const l = this.list(), i = l.findIndex((x) => x.id === s.id), row = { id: s.id, name: s.name, color: s.color, kids: !!s.kids, pin: s.pin || '', av: s.av || '' }; if (i >= 0) l[i] = row; else l.push(row); this.saveList(l); }
+      else { const l = this.list(), i = l.findIndex((x) => x.id === s.id), row = { ...(i >= 0 ? l[i] : {}), id: s.id, name: s.name, color: s.color, kids: !!s.kids, pin: s.pin || '', av: s.av || '' }; if (i >= 0) l[i] = row; else l.push(row); this.saveList(l); }
+      { const cp = $('#seCopy'); if (isNew && cp && cp.value && window.MkSeatCopy) MkSeatCopy.copy(cp.value === '@main' ? '' : cp.value, s.id); }
       X8.close('seatEdit'); this.refresh(); toast(isNew ? `${s.name} has a seat` : 'Seat saved', 'ok');
     });
     const del = $('#seDel'); if (del) del.onclick = () => confirmTwice(del, () => this.guard(() => {
@@ -17856,7 +17929,7 @@ const Diagnostic = {
     ];
     const slow = (r.addons || []).filter((a) => !a.ok || a.ms > 3000);
     const rec = old ? [] : r.recommend || [];
-    return `${old ? `<p class="sub">Last run ${esc(new Date(r.at).toLocaleString())}.</p>` : ''}
+    return `${old ? `<p class="sub">Last run ${esc(new Date(r.at).toLocaleString(appLocale()))}.</p>` : ''}
       <div class="dg-grid">${rows.map(([a, v]) => `<div><span>${esc(a)}</span><b class="${/^no|not smooth/.test(v) ? 'dg-no' : ''}">${esc(v)}</b></div>`).join('')}</div>
       ${slow.length ? `<p class="dg-warn"><b>Slow or unreachable addons:</b> ${slow.map((a) => esc(`${a.name}${a.ms ? ` (${(a.ms / 1000).toFixed(1)} s)` : ''}`)).join(', ')}. They slow down every source list; consider removing them in Addons.</p>` : ''}
       ${c.hevc && !c.hevc.ok && !IS_TV ? `<p class="dg-warn">This ${TOUCH_UI ? 'device' : 'browser'} cannot decode HEVC (x265). Those sources play in VLC (Settings › Playback › Play streams in), or turn on Only sources that play here to hide them.</p>` : ''}
@@ -17880,9 +17953,10 @@ const Diagnostic = {
 /* ---------------- Skip: TheIntroDB, MKV chapters, recaps ---------------- */
 const Marks = {
   ch: null, idb: null, tok: -1,
-  reset() { this.ch = null; this.idb = null; this.tok = Skip.token; },
+  reset() { this.ch = null; this.idb = null; this.all = null; this.tok = Skip.token; },
   live() { if (this.tok !== Skip.token) this.reset(); return this; },
   fromChapters(list) {
+    this.live().all = (list || []).map((c) => ({ s: Number(c.s) || 0, e: Number(c.e) || 0, name: String(c.name || '') }));
     const m = {};
     for (const c of list) {
       const n = c.name.toLowerCase().trim();
@@ -17982,7 +18056,7 @@ const AppleTrailer = {
   play(hit, meta, fallback) {
     closeTrailer(true); TR.id = `apple:${hit.u}`; openLayer('trailer'); trMsg('');
     clearTimeout(TR.hideT); TR.hideT = setTimeout(() => { if (!$('#trailer').hidden) document.body.classList.add('tr-on'); }, 300);
-    $('#trSlot').innerHTML = `<video class="apl-v" playsinline autoplay preload="auto" src="${esc(hit.u)}"></video>${hit.page ? `<a class="apl-src" href="${esc(safeHref(hit.page) || '#')}" target="_blank" rel="noopener" data-nav>Trailer · Apple TV</a>` : '<span class="apl-src">Trailer · Apple TV</span>'}`;
+    $('#trSlot').innerHTML = `<video class="apl-v" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" playsinline autoplay preload="auto" src="${esc(hit.u)}"></video>${hit.page ? `<a class="apl-src" href="${esc(safeHref(hit.page) || '#')}" target="_blank" rel="noopener" data-nav>Trailer · Apple TV</a>` : '<span class="apl-src">Trailer · Apple TV</span>'}`;
     const v = $('#trSlot video');
     TR.yt = {
       getDuration: () => (isFinite(v.duration) ? v.duration : 0), getCurrentTime: () => v.currentTime || 0,
@@ -18181,7 +18255,7 @@ AnimeHub.init();
 {
   const help = {
     id: 'help', icon: 'activity', label: 'Help', intro: 'Tools for when something does not play right. Run the Diagnostic first, then send a log if it still goes wrong.', rows: () => [
-      { key: 'diagRun', label: 'Diagnostic', help: (() => { const d = Diagnostic.saved(); return `About a minute of checks: decoders, smoothness, speed and addons. It suggests settings for this ${IS_TV ? 'TV' : 'device'} only.${d ? ` Last run ${esc(new Date(d.at).toLocaleDateString())}.` : ''}`; })(), type: 'button', text: 'Run Diagnostic', icon: 'activity', run: () => Diagnostic.open() },
+      { key: 'diagRun', label: 'Diagnostic', help: (() => { const d = Diagnostic.saved(); return `About a minute of checks: decoders, smoothness, speed and addons. It suggests settings for this ${IS_TV ? 'TV' : 'device'} only.${d ? ` Last run ${esc(new Date(d.at).toLocaleDateString(appLocale()))}.` : ''}`; })(), type: 'button', text: 'Run Diagnostic', icon: 'activity', run: () => Diagnostic.open() },
       { key: 'sendLog', label: 'Send log', help: `Sends recent errors and this device’s details to the developer, and gives you a 6-character code for your bug report. No keys or links.${SendLog.last() ? ` Last code: <b class="mono">${esc(SendLog.last().code)}</b>.` : ''}`, type: 'button', text: 'Send log', icon: 'send', run: () => SendLog.open() },
       { key: 'speedRun', label: 'Speed test', help: typeof LineCheck !== 'undefined' && LineCheck.last ? `Last test: <b>${Math.round(LineCheck.last.mbps)} Mbps</b>.` : 'Downloads up to 40 MB once and tells you the highest quality that plays without pauses.', type: 'button', text: 'Test my connection', icon: 'gauge', run: (b) => LineCheck.run(b) },
       ...(IS_TV ? [] : [{ key: 'bugForm', label: 'Report a bug', help: 'Opens the bug form on GitHub. It asks for your log code, so send a log first.', type: 'button', text: 'Open bug form', icon: 'bug', run: () => window.open(SendLog.issueUrl((SendLog.last() || {}).code), '_blank', 'noopener') }]),
@@ -18483,12 +18557,15 @@ const MkvSubs = {
   },
   /* the file's own subtitles are timed to this exact release, so they win over a downloaded one of the same language */
   autoPick() {
-    if (!CFG.subAuto || P.subUserChoice || !CFG.subLang || CFG.subLang === 'off') return;
-    const cur = P.subs[P.curSub]; if (cur && cur.kind === 'mkv') return;
+    if (P.subUserChoice) return;
+    if (typeof SubMem !== 'undefined' && SubMem.get()) { SubMem.apply(); return; }
+    if (!CFG.subAuto || !CFG.subLang || CFG.subLang === 'off') { if (typeof SubForced !== 'undefined') SubForced.pick(); return; }
+    const cur = P.subs[P.curSub]; if (cur && cur.kind === 'mkv' && !(cur._mkv && cur._mkv.forced)) return;
     const want = langName(CFG.subLang);
-    const c = P.subs.map((s, i) => [s, i]).filter(([s]) => s.kind === 'mkv' && langName(s.lang) === want && !s._mkv.forced);
+    const sdh = typeof SubSdh !== 'undefined' && SubSdh.hide();
+    const c = P.subs.map((s, i) => [s, i]).filter(([s]) => s.kind === 'mkv' && langName(s.lang) === want && !s._mkv.forced && !(sdh && SubSdh.is(s)));
     c.sort((a, b) => (/sign|song/i.test(a[0]._mkv.name) - /sign|song/i.test(b[0]._mkv.name)) || (b[0]._mkv.def - a[0]._mkv.def) || (b[0]._mkv.ass - a[0]._mkv.ass));
-    if (c.length) selectSub(c[0][1], { auto: true });
+    if (c.length) selectSub(c[0][1], { auto: true }); else if (typeof SubForced !== 'undefined' && P.curSub < 0) SubForced.pick();
   },
   stop() { if (this.ctl) { this.ctl.abort(); this.ctl = null; } },
   tt: new Map(),
@@ -19280,7 +19357,7 @@ html.tv #optMenu .px-tabs button.nav-focus{outline:none;box-shadow:0 0 0 2px #f2
 const PX_TV = IS_TV;
 const PX_TOUCH = () => TOUCH_PLAYER.matches || TOUCH_UI;
 const PxUtil = {
-  fmtClock(d) { try { return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); } catch (e) { return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; } },
+  fmtClock(d) { try { return d.toLocaleTimeString(appLocale(), { hour: 'numeric', minute: '2-digit' }); } catch (e) { return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; } },
   svg(path) { return `<svg class="px-i" viewBox="0 0 24 24" aria-hidden="true">${path}</svg>`; },
 };
 
@@ -19511,9 +19588,10 @@ const PxMore = {
   html() {
     return `<h5>Info</h5>
       <button type="button" data-pxstats><i data-lucide="activity"></i>Playback stats · ${PxStats.on ? 'on' : 'off'}${PX_TV ? '' : ' (I)'}</button>
-      ${PX_TV || PX_TOUCH() ? '' : '<button type="button" data-pxkeys><i data-lucide="keyboard"></i>Keyboard shortcuts (?)</button>'}`;
+      ${PX_TV || PX_TOUCH() ? '' : '<button type="button" data-pxkeys><i data-lucide="keyboard"></i>Keyboard shortcuts (?)</button>'}${typeof Chapters !== 'undefined' ? Chapters.html() : ''}`;
   },
   bind(m) {
+    if (typeof Chapters !== 'undefined') Chapters.bind(m);
     const s = $('[data-pxstats]', m); if (s) s.onclick = () => { PxStats.toggle(); renderOptMenu(); };
     const k = $('[data-pxkeys]', m); if (k) k.onclick = () => { m.hidden = true; PxKeys.toggle(); };
   },
@@ -21893,7 +21971,7 @@ html.kids-seat .arr-home{display:none}
    stays where its module put it. */
 const Arrange = {
   KEY: 'homeArrange',
-  get() { const a = Store.get(this.KEY, null) || {}; return { order: Array.isArray(a.order) ? a.order : [], hide: Array.isArray(a.hide) ? a.hide : [], names: a.names && typeof a.names === 'object' ? a.names : {}, titles: a.titles && typeof a.titles === 'object' ? a.titles : {} }; },
+  get() { const a = Store.get(this.KEY, null) || {}; return { order: Array.isArray(a.order) ? a.order : [], hide: Array.isArray(a.hide) ? a.hide : [], names: a.names && typeof a.names === 'object' ? a.names : {}, titles: a.titles && typeof a.titles === 'object' ? a.titles : {}, folders: a.folders && typeof a.folders === 'object' && !Array.isArray(a.folders) ? a.folders : {} }; },
   save(a) { Store.set(this.KEY, a); if (typeof Account !== 'undefined') Account.schedule(); this.apply(true); },
   head(sec) { return sec.querySelector('.row-title'); },
   /* the row's own title, without its small subtitle and before any rename */
@@ -21929,6 +22007,7 @@ const Arrange = {
         if (!sec.dataset.arrT) sec.dataset.arrT = this.title(sec);
         if (!sec.dataset.arrK) sec.dataset.arrK = k;
         sec.classList.toggle('arr-off', a.hide.includes(k));
+        sec.classList.toggle('arr-fold', Object.values(a.folders).some((f) => (f.keys || []).includes(k)));
         const h = this.head(sec), tn = h && [...h.childNodes].find((n) => n.nodeType === 3);
         const want = a.names[k] || sec.dataset.arrT;
         if (tn && tn.textContent.trim() !== want) tn.textContent = `${want}${tn.nextSibling ? ' ' : ''}`;
@@ -21947,6 +22026,7 @@ const Arrange = {
           if (keep && keep !== document.activeElement && keep.isConnected) try { keep.focus({ preventScroll: true }); } catch (e) { /* fine */ }
         }
       }
+      if (window.MkFolders) MkFolders.paint();
     } finally { this.obs && this.obs.takeRecords(); this.busy = false; }
   },
   watch() {
@@ -21984,11 +22064,12 @@ const Arrange = {
         const off = a.hide.includes(it.k), name = a.names[it.k];
         return `<li class="arr-item${off ? ' off' : ''}" data-k="${esc(it.k)}">
           <span class="arr-n tnum">${i + 1}</span>
-          <div class="arr-t"><b${name ? ' translate="no"' : ''}>${esc(name || it.t)}</b>${name ? `<small>${esc(it.t)}</small>` : off ? '<small>Hidden</small>' : it.gone ? '<small>Not on Home right now</small>' : ''}</div>
+          <div class="arr-t"><b${name ? ' translate="no"' : ''}>${esc(name || it.t)}</b>${name ? `<small>${esc(it.t)}</small>` : off ? '<small>Hidden</small>' : it.gone ? '<small>Not on Home right now</small>' : ''}${it.k !== 'folders' && a.folders && Object.keys(a.folders).find((f) => (a.folders[f].keys || []).includes(it.k)) ? `<small class="arr-fold-tag"><i data-lucide="folder"></i><span translate="no">${esc(a.folders[Object.keys(a.folders).find((f) => (a.folders[f].keys || []).includes(it.k))].name)}</span></small>` : ''}</div>
           <div class="arr-acts">
             <button class="ibtn" type="button" data-nav data-arr-act="up" aria-label="Move up" title="Move up"${i ? '' : ' disabled'}><i data-lucide="chevron-up"></i></button>
             <button class="ibtn" type="button" data-nav data-arr-act="down" aria-label="Move down" title="Move down"${i < items.length - 1 ? '' : ' disabled'}><i data-lucide="chevron-down"></i></button>
             <button class="ibtn" type="button" data-nav data-arr-act="name" aria-label="Rename" title="Rename"><i data-lucide="pencil"></i></button>
+            ${it.k !== 'folders' ? '<button class="ibtn" type="button" data-nav data-arr-act="folder" aria-label="Put in a folder" title="Put in a folder"><i data-lucide="folder-plus"></i></button>' : ''}
             <button class="ibtn" type="button" data-nav data-arr-act="hide" aria-label="${off ? 'Show' : 'Hide'}" title="${off ? 'Show' : 'Hide'}" aria-pressed="${off}"><i data-lucide="${off ? 'eye-off' : 'eye'}"></i></button>
           </div></li>`;
       }).join('')}</ol>` : '<p class="tour-note">Home has no rows yet. Install an addon with catalogs, then come back.</p>'}
@@ -22019,6 +22100,20 @@ const Arrange = {
       this.save(a); this.render(k, what); return;
     }
     if (what === 'name') this.rename(k);
+    if (what === 'folder') this.folder(k);
+  },
+  /* 2.68 household-plus: put a row in a folder (a new one or one you made), take it out, or copy the folder's code */
+  folder(k) {
+    const b = X8.body('arrangeHome'), li = b && [...$$('.arr-item', b)].find((x) => x.dataset.k === k); if (!li || !window.MkFolders) return;
+    const f = MkFolders.get(), cur = MkFolders.of(k), box = $('.arr-t', li);
+    box.insertAdjacentHTML('beforeend', `<form class="arr-fold-form"><select class="inp" aria-label="Folder"><option value="">Not in a folder</option>${Object.keys(f).map((id) => `<option value="${esc(id)}"${id === cur ? ' selected' : ''}>${esc(f[id].name)}</option>`).join('')}<option value="new">New folder…</option></select><input class="inp" maxlength="30" placeholder="Folder name" aria-label="Folder name" hidden><button class="btn btn-prime btn-sm" type="submit" data-nav>Save</button>${cur ? '<button class="btn btn-ghost btn-sm" type="button" data-nav data-fcode>Copy folder code</button>' : ''}</form>`);
+    const form = $('.arr-fold-form', box), sel = $('select', form), inp = $('input', form);
+    const sync = () => { inp.hidden = sel.value !== 'new'; if (!inp.hidden) inp.focus(); };
+    sel.addEventListener('change', sync); if (!Object.keys(f).length) { sel.value = 'new'; sync(); }
+    inp.addEventListener('keydown', (e) => e.stopPropagation());
+    form.addEventListener('submit', (e) => { e.preventDefault(); if (sel.value === 'new' && !inp.value.trim()) { inp.focus(); return; } MkFolders.put(k, sel.value, inp.value.trim()); this.render(k, 'folder'); });
+    const fc = $('[data-fcode]', form); if (fc) fc.onclick = () => copyText(MkFolders.code(cur), 'Folder code copied. Others paste it in Settings › Home › Add a shared folder');
+    if (IS_TV) { if (typeof TvType !== 'undefined') TvType.guard(inp); Nav.focus(sel, true); } else sel.focus();
   },
   rename(k) {
     const b = X8.body('arrangeHome'), li = b && [...$$('.arr-item', b)].find((x) => x.dataset.k === k); if (!li) return;
@@ -22280,6 +22375,23 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.68.0', date: '2026-11-12', items: [
+    ['new', 'Your cloud', 'Browse and play the films and episodes already in your debrid account, from Library or Settings › Debrid.'],
+    ['new', 'Setup links', 'Pass your whole addon setup to another screen or a friend in one press. It always asks before adding anything.'],
+    ['new', 'Folders on Home', 'Put any row into a folder from Arrange Home, and share a folder with a short code.'],
+    ['better', 'A faster Home', 'Home opens instantly with your last rows, then refreshes quietly, and keeps your place when you come back.'],
+    ['new', 'Shuffle, chapters and remembered subtitles', 'Shuffle a series, jump by chapter in the player, and your subtitle choice is remembered for each title.'],
+    ['new', 'More subtitle choices', 'Forced subtitles for foreign-language scenes, an option to hide SDH, and an option to wait for your language at the start.'],
+    ['new', 'Trakt reviews', 'Reviews on film and series pages, with spoilers covered until you open them.'],
+    ['better', 'Clearer details', 'More detail in the audio menu, dates in your language, logos and trailers in your language, and Search again on the source list.'],
+    ['better', 'Smoother on TVs', 'Calmer artwork while you scroll, live TV that rides out short outages, and a source speed test in Settings › Help.'],
+  ] },
+  { v: '2.67.5', date: '2026-11-12', items: [
+    ['better', 'Smoother video starts and stops', 'Opening and closing a video on Android is now clean and steady, with no flashes, and the loading logo moves more smoothly on phones.'],
+  ] },
+  { v: '2.67.4', date: '2026-11-11', items: [
+    ['better', 'Miko’s natural voice', 'Miko’s natural voice is now on by default when she reads answers aloud, much faster on newer phones and computers, with smoother, more natural reading.'],
+  ] },
   { v: '2.67.3', date: '2026-11-11', items: [
     ['better', 'Miko follows the conversation', 'Answer Miko’s question with a simple “yes” and she does what she offered, and her answers read cleaner.'],
   ] },
@@ -22733,7 +22845,7 @@ const WhatsNew = {
   newer: (a, b) => (typeof Updater !== 'undefined' ? Updater.newer(a, b) : String(a) > String(b)),
   KINDS: { new: ['sparkles', 'New'], better: ['trending-up', 'Improved'], fixed: ['wrench', 'Fixed'] },
   since(prev) { return RELEASES.filter((r) => this.newer(r.v, prev) && !this.newer(r.v, APP_VERSION)); },
-  when(d) { try { return new Date(`${d}T12:00:00Z`).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return d; } },
+  when(d) { try { return new Date(`${d}T12:00:00Z`).toLocaleDateString(appLocale(), { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return d; } },
   list(rels) {
     return rels.map((r) => `<section class="wn-rel"><div class="wn-v"><b>${esc(r.v)}</b><small>${esc(this.when(r.date))}</small></div><ul class="wn-items">${r.items.map(([k, t, d]) => {
       const [ic, label] = this.KINDS[k] || this.KINDS.new;
@@ -23340,7 +23452,8 @@ const SubRank = {
   },
   /* the best real subtitle in your language (then the same language from another region), or -1 */
   pick(list) {
-    const best = this.order(list).find(([s]) => this.tier(s) <= 1 && !(s._mkv && s._mkv.forced));
+    const sdh = typeof SubSdh !== 'undefined' && SubSdh.hide();
+    const best = this.order(list).find(([s]) => this.tier(s) <= 1 && !(s._mkv && s._mkv.forced) && !(sdh && SubSdh.is(s)));
     return best ? best[1] : -1;
   },
 };
@@ -28604,7 +28717,7 @@ body.mk-player-on .toast{padding:9px 14px;font-size:calc(13px * var(--ts,1))}
     const img = $('#heroBg') && $('#heroBg').lastElementChild;
     if (!img || img.tagName !== 'IMG') { if (first) { first = false; okWarm(); } return r; }
     const src = img.getAttribute('src') || '';
-    if (TOUCH_UI && /^https:\/\/image\.tmdb\.org\/t\/p\/original\//.test(src)) img.src = src.replace('/t/p/original/', '/t/p/w1280/');
+    if ((TOUCH_UI || (IS_TV && navigator.deviceMemory && navigator.deviceMemory <= 2)) && /^https:\/\/image\.tmdb\.org\/t\/p\/original\//.test(src)) img.src = src.replace('/t/p/original/', '/t/p/w1280/');
     if (first) {
       first = false;
       const m = MH.exec(img.getAttribute('src') || '');
@@ -28940,7 +29053,8 @@ HomeLazy.init();
     hls(hls, stream, src) {
       const st = { net: 0, media: 0, mediaAt: 0, timer: 0, on: null };
       const alive = () => P.hls === hls && P.stream === stream && !$('#player').hidden;
-      const ok = () => { st.net = 0; };
+      const ok = () => { st.net = 0; st.liveAt = 0; };
+      const isLive = () => { try { const l = hls.levels && hls.levels[Math.max(0, hls.currentLevel)]; return !isFinite(video.duration) || !!(l && l.details && l.details.live); } catch (e) { return false; } };
       const stop = () => { clearTimeout(st.timer); if (st.on) { removeEventListener('online', st.on); st.on = null; } };
       [Hls.Events.MANIFEST_LOADED, Hls.Events.LEVEL_LOADED, Hls.Events.FRAG_LOADED].forEach((ev) => hls.on(ev, ok));
       hls.on(Hls.Events.DESTROYING, stop);
@@ -28950,6 +29064,10 @@ HomeLazy.init();
         if (d.type === Hls.ErrorTypes.NETWORK_ERROR && !/parsing/i.test(why)) {
           // a missing or refused file (4xx) gets one more try; a dropped connection gets three, spaced out
           const cap = code >= 400 && code < 500 && code !== 408 && code !== 429 ? 1 : 3;
+          if (st.net >= cap && isLive() && navigator.onLine !== false) {
+            if (!st.liveAt) st.liveAt = Date.now();
+            if (Date.now() - st.liveAt < 15000) { stop(); st.timer = setTimeout(() => { if (alive()) { if (/manifest/i.test(why)) hls.loadSource(src); else hls.startLoad(); } }, 1500); return; }
+          }
           if (st.net >= cap) { playbackFailed(stream, why); return; }
           const wait = 700 * 2 ** st.net++;
           const go = () => { st.on = null; if (!alive()) return; if (/manifest/i.test(why)) hls.loadSource(src); else hls.startLoad(); };
@@ -32066,7 +32184,7 @@ const Stubs = {
     words.forEach((w) => { const t = line ? `${line} ${w}` : w; if (g.measureText(t).width > W - 440 && line) { lines.push(line); line = w; } else line = t; }); lines.push(line);
     lines.slice(0, 3).forEach((l) => { g.fillText(l, 90, y); y += 64; });
     g.fillStyle = 'rgba(255,255,255,.7)'; g.font = '500 26px system-ui, sans-serif';
-    const d = new Date(x.at); g.fillText([x.year, d.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })].filter(Boolean).join(' · '), 90, y + 10);
+    const d = new Date(x.at); g.fillText([x.year, d.toLocaleDateString(appLocale(), { day: 'numeric', month: 'long', year: 'numeric' })].filter(Boolean).join(' · '), 90, y + 10);
     if (x.with && x.with.length) g.fillText(`With ${x.with.join(', ')}`, 90, y + 50);
     g.fillStyle = 'rgba(217,212,199,.85)'; g.font = '600 22px system-ui, sans-serif'; g.fillText('SEAT', W - 250, 150); g.fillText('No.', W - 250, 300);
     g.fillStyle = '#fff'; g.font = '700 40px system-ui, sans-serif'; g.fillText(String(x.seat || 'Main').slice(0, 10), W - 250, 200); g.fillText(String(x.n || 1).padStart(4, '0'), W - 250, 350);
@@ -32077,7 +32195,7 @@ const Stubs = {
     X8.layer('stubs', { label: 'Ticket stubs', icon: 'ticket', eyebrow: 'Ticket stubs', wide: true });
     const body = X8.body('stubs'), l = this.list();
     body.innerHTML = `<h2 class="x8-h">Your ticket stubs</h2><p class="sc-p">One for every film you finish, with the date, the seat and who you watched with. Save one as a picture to share.</p>
-      ${l.length ? `<div class="st-list">${l.slice(0, 120).map((x, i) => `<div class="st-row"><div><b>${esc(x.name)}</b><small>${esc([x.year, new Date(x.at).toLocaleDateString(), x.seat, x.with && x.with.length ? `with ${x.with.join(', ')}` : ''].filter(Boolean).join(' · '))}</small></div><button class="btn btn-ghost btn-sm" type="button" data-nav data-stub="${i}"><i data-lucide="download"></i>Save</button></div>`).join('')}</div>`
+      ${l.length ? `<div class="st-list">${l.slice(0, 120).map((x, i) => `<div class="st-row"><div><b>${esc(x.name)}</b><small>${esc([x.year, new Date(x.at).toLocaleDateString(appLocale()), x.seat, x.with && x.with.length ? `with ${x.with.join(', ')}` : ''].filter(Boolean).join(' · '))}</small></div><button class="btn btn-ghost btn-sm" type="button" data-nav data-stub="${i}"><i data-lucide="download"></i>Save</button></div>`).join('')}</div>`
     : '<p class="sc-p">No stubs yet. Finish a film and its stub appears here.</p>'}`;
     body.onclick = (e) => { const b = e.target.closest('[data-stub]'); if (b) this.save(l[Number(b.dataset.stub)]); };
     icons(); X8.open('stubs');
@@ -32357,7 +32475,7 @@ const WatchStats = {
     for (const [v, t] of L) { const n = h / v; if (n >= 2 && n < 100) return `About ${n < 3 ? n.toFixed(1).replace(/\.0$/, '') : Math.round(n)} ${t}.`; }
     return '';
   },
-  label(per) { const n = new Date(); return per === 'all' ? 'All time' : per === 'year' ? `${n.getFullYear()} so far` : `${n.toLocaleDateString(undefined, { month: 'long' })} so far`; },
+  label(per) { const n = new Date(); return per === 'all' ? 'All time' : per === 'year' ? `${n.getFullYear()} so far` : `${n.toLocaleDateString(appLocale(), { month: 'long' })} so far`; },
 
   /* ---- the pop-up ---- */
   open(per) {
@@ -32371,14 +32489,14 @@ const WatchStats = {
     const body = X8.body('watchStats'); if (!body) return;
     const per = this.period, c = this.compute(per), seat = (Seats.cur() || {}).name || 'Main', me = Seats.all().length > 1 ? `${seat}’s` : 'Your';
     const pers = this.persona(c.hours, c.week), like = this.likeness(c.secs);
-    const since = new Date(c.since).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+    const since = new Date(c.since).toLocaleDateString(appLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
     const row = (x, i, sub) => { const n = this.info(x.id) || { name: '', poster: '' }; return `<button type="button" class="ws-item" data-nav data-wsopen="${esc(x.id)}" style="--i:${i}"><span class="ws-rank tnum">${i + 1}</span>${n.poster ? `<img src="${esc(n.poster)}" alt="" loading="lazy">` : '<span class="ws-ph"></span>'}<span class="ws-it"><b>${esc(n.name || 'Loading…')}</b><small>${esc(sub)}</small></span></button>`; };
     const bars = (arr, labels, cls) => { const mx = Math.max(...arr, 1); return `<div class="ws-bars ${cls}">${arr.map((v, i) => `<span class="ws-b" title="${esc(labels[i])}"><i style="--v:${Math.max(.03, v / mx).toFixed(3)}"></i><em>${labels[i].length <= 3 ? esc(labels[i]) : ''}</em></span>`).join('')}</div>`; };
     const hrs = c.hours.map((_, i) => (i % 6 === 0 ? `${i}` : '')).map((t, i) => t || `${i}:00`);
-    const wkOrder = [1, 2, 3, 4, 5, 6, 0], wkNames = wkOrder.map((d) => new Date(2024, 0, 7 + d).toLocaleDateString(undefined, { weekday: 'short' }));
+    const wkOrder = [1, 2, 3, 4, 5, 6, 0], wkNames = wkOrder.map((d) => new Date(2024, 0, 7 + d).toLocaleDateString(appLocale(), { weekday: 'short' }));
     const tiles = [['Films finished', c.films.toLocaleString()], ['Episodes finished', c.eps.toLocaleString()], ['Shows', c.shows.toLocaleString()], ['Longest streak', `${c.best} day${c.best === 1 ? '' : 's'}`]];
     const facts = [];
-    if (c.busy && c.busy.n > 1) facts.push(['Busiest day', `${c.busy.n} finished on ${new Date(`${c.busy.k}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}`]);
+    if (c.busy && c.busy.n > 1) facts.push(['Busiest day', `${c.busy.n} finished on ${new Date(`${c.busy.k}T12:00:00`).toLocaleDateString(appLocale(), { weekday: 'long', day: 'numeric', month: 'long' })}`]);
     if (c.long) facts.push(['Longest sitting', `${this.hm(c.long.s)}${c.long.n.length ? `, ${c.long.n.join(', ')}` : ''}`]);
     if (per === 'all' && c.cur > 1) facts.push(['Current streak', `${c.cur} days in a row`]);
     if (c.pals.length) facts.push(['Watched with most', c.pals.map(([n, k]) => `${n} (${k})`).join(', ')]);
@@ -32806,7 +32924,7 @@ const Cams = {
     [...grid.children].forEach((f) => { if (!want.some(([id]) => id === f.dataset.pid)) f.remove(); });
     want.forEach(([id, t]) => {
       let f = $(`[data-pid="${CSS.escape(id)}"]`, grid);
-      if (!f) { f = document.createElement('figure'); f.className = `cam-t${t.classList.contains('self') ? ' self' : ''}`; f.dataset.pid = id; f.innerHTML = '<video autoplay playsinline muted></video><figcaption></figcaption>'; grid.appendChild(f); }
+      if (!f) { f = document.createElement('figure'); f.className = `cam-t${t.classList.contains('self') ? ' self' : ''}`; f.dataset.pid = id; f.innerHTML = '<video poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" autoplay playsinline muted></video><figcaption></figcaption>'; grid.appendChild(f); }
       const v = f.firstChild, src = t.firstChild.srcObject; if (v.srcObject !== src) { v.srcObject = src; v.play().catch(() => {}); }
       f.lastChild.textContent = t.lastChild.textContent; f.classList.toggle('talk', t.classList.contains('talk'));
     });
@@ -32831,7 +32949,7 @@ const Cams = {
     let t = this.tiles.get(id);
     if (!t) {
       t = document.createElement('figure'); t.className = `cam-t${self ? ' self' : ''}`; t.dataset.pid = id;
-      t.innerHTML = '<video autoplay playsinline muted></video><figcaption></figcaption>';
+      t.innerHTML = '<video poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" autoplay playsinline muted></video><figcaption></figcaption>';
       this.box().appendChild(t); this.tiles.set(id, t);
     }
     const v = t.firstChild; if (v.srcObject !== stream) { v.srcObject = stream; v.play().catch(() => {}); }
@@ -33672,6 +33790,18 @@ const TourDeep = {
         pts: [['eye', 'Even Realities G1 and G2, Brilliant Labs Frame', 'Pick yours and they connect over Bluetooth, straight from the phone remote.'], ['link', 'Meta Ray-Ban Display', 'Copy a link into the Meta AI app once, and your glasses show the lines.'], ['moon', 'Dark phone', 'The phone goes dark while the glasses read, with size and timing one tap away.']],
         logos: [['rayban', 'Ray-Ban', 1], ['meta', 'Meta'], ['even', 'Even Realities', 1], ['brilliant', 'Brilliant Labs', 1]],
         where: tv ? 'Phone remote › Subtitles on this phone › Glasses' : 'Phone remote › Subtitles on this phone › Glasses · Player › More › Glasses' },
+      { id: 'cloud', ch: 'addons', t: 'Your cloud and setup links', art: 'sources',
+        lede: 'Play what is already in your debrid account, and pass your whole addon setup to another screen or a friend with one link.',
+        pts: [['cloud', 'Your cloud', 'Browse the films and episodes in your account and play them here.'], ['link', 'Setup links', 'One press adds every addon in the link. Nothing you have is removed.'], ['shield-check', 'Your keys stay yours', 'Addons that hold your own key are never put in a shared link.']],
+        where: 'Library › Your cloud, and Settings › Streams & addons' },
+      { id: 'folders', ch: 'discover', t: 'Folders on Home', art: 'home',
+        lede: 'Tuck rows you like into folders, so Home stays short and everything is one press away.',
+        pts: [['folder', 'Make a folder', 'Put any row, addon catalogs included, into a folder from Arrange Home.'], ['share-2', 'Share it', 'A short folder code gives a friend the same folder.'], ['zap', 'Opens instantly', 'Home shows your last rows at once and refreshes them quietly.']],
+        where: 'Home › Arrange Home' },
+      { id: 'subchoices', ch: 'watch', t: 'Chapters and subtitle choices', art: 'subtitles',
+        lede: 'Jump to any chapter of a file, and let MKCinema remember how you like subtitles for each film and series.',
+        pts: [['bookmark', 'Chapters', 'Every chapter of the file, one press away in the player.'], ['captions', 'Remembered per title', 'Your subtitle pick, or off, comes back next time.'], ['shuffle', 'Shuffle a series', 'Random episodes, one after another, for shows you know by heart.']],
+        where: 'Player › Options › More, and Settings › Subtitles' },
       { id: 'home', ch: 'discover', t: 'A Home that’s yours', art: 'home',
         lede: 'Continue watching, your watchlist, a Top 10 you can set by country, network, category or year, Peak Cinema, networks, Universes and rows from every addon.',
         pts: [['rows-3', 'Arrange Home', 'Hide, move or rename any row, addon catalogs included. Each seat keeps its own.'], ['tv', 'Your apps', 'Pick the streaming services you already pay for. Their films get a Watch on button.'], ['film', 'Peak Cinema', 'Can’t decide? Surf ninety-second scenes by mood, then keep watching from that second. Needs a debrid service.']],
@@ -35730,7 +35860,7 @@ const MikoSoul = (() => {
     if (/^(lol|lmao|haha+|hehe+|rofl|that's funny|thats funny|funny)$/.test(t)) return { say: line('laugh') };
     if (/^(tell me a joke|(say|tell me) something funny|joke|make me laugh|know any jokes)$/.test(t)) return { say: line('joke') };
     if (/^(what's|whats|what is) your fav(ou?rite)? (film|movie|show|series)$|^do you have a fav(ou?rite)? (film|movie|show)$/.test(t)) return { say: line('fav') };
-    if (/^(what time is it|what's the time|whats the time|time)$/.test(t)) { const h = new Date().getHours(); return { say: line('time', { t: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), late: h >= 23 || h < 5 ? '. Bit late for a three-hour epic, maybe' : '' }) }; }
+    if (/^(what time is it|what's the time|whats the time|time)$/.test(t)) { const h = new Date().getHours(); return { say: line('time', { t: new Date().toLocaleTimeString(appLocale(), { hour: 'numeric', minute: '2-digit' }), late: h >= 23 || h < 5 ? '. Bit late for a three-hour epic, maybe' : '' }) }; }
     if ((m = t.match(/^(?:my name is|my name's|call me|you can call me|i'm called|im called|it's me|its me)\s+([\p{L}][\p{L}'-]{0,23}(?: [\p{L}][\p{L}'-]{0,23})?)$/u))) {
       const n = m[1].replace(/(^|[\s-])\p{L}/gu, (c) => c.toUpperCase());
       if (/^(miko|bored|tired|sad|back|here|done|good|fine|ok|okay)$/i.test(n)) return null;
@@ -35798,7 +35928,7 @@ const MikoSoul = (() => {
     return female()[0] || null;
   };
   // text for the ear: no quotes or symbols read out, short breaths between sentences
-  const spoken = (t) => String(t || '').replace(/[“”"«»]/g, '').replace(/\bS(\d+) · E(\d+)\b/g, 'season $1, episode $2').replace(/·/g, ',').replace(/…/g, '.').replace(/\s+/g, ' ').trim();
+  const spoken = (t) => String(t || '').replace(/\[[^\]]{0,240}\]/g, ' ').replace(/https?:\/\/\S+?(?=[.,!?;:]?(?:\s|$))/g, ' ').replace(/[*_`#~]+/g, '').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, '').replace(/\s&\s/g, ' and ').replace(/[“”"«»]/g, '').replace(/\bS(\d+) · E(\d+)\b/g, 'season $1, episode $2').replace(/·/g, ',').replace(/…/g, '.').replace(/\s+/g, ' ').trim();
   const sysSpeak = (t) => {
     try {
       if (!window.speechSynthesis || typeof SpeechSynthesisUtterance === 'undefined') return;
@@ -35819,11 +35949,11 @@ const MikoSoul = (() => {
      It runs in a worker so the app never stutters, speaks sentence by sentence so the first words come quickly, and
      falls back to the device's own voice for other languages, on any error, or when this device turns out too slow. */
   const Natural = {
-    URL: 'vendor/kokoro-1.2.1/miko-voice.js', w: null, seq: 0, gen: 0, cbs: new Map(), ctx: null, srcs: [], at: 0, state: '', pct: 0, slow: 0, listeners: new Set(),
+    URL: 'vendor/kokoro-1.2.1/miko-voice-2.js', w: null, seq: 0, gen: 0, cbs: new Map(), ctx: null, srcs: [], at: 0, state: '', pct: 0, slow: 0, listeners: new Set(),
     can() {
       try { return typeof Worker !== 'undefined' && typeof WebAssembly === 'object' && !!(window.AudioContext || window.webkitAudioContext) && /^en\b/i.test(lang()); } catch (e) { return false; }
     },
-    wanted() { return !!ls.get('natural', false); },
+    wanted() { const v = ls.get('natural', null); if (v != null) return !!v; try { return !(navigator.connection && navigator.connection.saveData); } catch (e) { return true; } },
     on() { return this.wanted() && this.can() && this.state !== 'failed' && this.slow < 2; },
     emit() { this.listeners.forEach((f) => { try { f(this.state, this.pct); } catch (e) { /* gone */ } }); },
     voice() { return /^en-(gb|ie|au|nz)\b/i.test(lang()) ? 'bf_emma' : 'af_heart'; },
@@ -35844,7 +35974,7 @@ const MikoSoul = (() => {
       if (this.state === 'ready') return Promise.resolve();
       if (!this.loadP) {
         this.state = 'loading'; this.emit();
-        this.loadP = this.call('load').then(() => { this.state = 'ready'; this.pct = 100; this.emit(); }).catch((e) => { this.state = 'failed'; this.loadP = null; this.emit(); throw e; });
+        this.loadP = this.call('load').then((d) => { this.mode = (d && d.mode) || ''; this.state = 'ready'; this.pct = 100; this.emit(); }).catch((e) => { this.state = 'failed'; this.loadP = null; this.emit(); throw e; });
       }
       return this.loadP;
     },
@@ -35861,27 +35991,30 @@ const MikoSoul = (() => {
     async speak(text) {
       this.stop(); const my = this.gen;
       await this.load();
-      // short first piece, so she starts talking fast; long sentences split at a comma
-      const parts = []; (spoken(text).match(/[^.!?]+[.!?]*/g) || []).forEach((s) => { s = s.trim(); if (!s) return; if (s.length > 160) s.split(/(?<=,)\s+/).forEach((x) => x.trim() && parts.push(x.trim())); else parts.push(s); });
-      for (const s of parts.slice(0, 8)) {
+      // her first sentence on its own, so she starts talking fast; then fuller phrases, so she reads with a person's flow
+      const sents = []; (spoken(text).match(/[^.!?]+[.!?]*/g) || []).forEach((s) => { s = s.trim(); if (!s) return; if (s.length > 220) s.split(/(?<=[,;:])\s+/).forEach((x) => x.trim() && sents.push(x.trim())); else sents.push(s); });
+      const parts = []; sents.forEach((s, i) => { const L = parts.length; if (i > 0 && L > 1 && (parts[L - 1] + ' ' + s).length <= 220) parts[L - 1] += ' ' + s; else parts.push(s); });
+      for (const s of parts.slice(0, 6)) {
         if (my !== this.gen) return;
         const t0 = performance.now(), d = await this.call('say', { text: s, voice: this.voice(), speed: 1 });
         if (my !== this.gen) return;
+        if (d.mode) this.mode = d.mode;
         const secs = d.pcm.length / (d.rate || 24000), took = (performance.now() - t0) / 1000;
         // this device can't keep up (more than 2.5 s of work per second of speech, twice): use its own voice instead
-        if (secs > 0.8 && took / secs > 2.5) { this.slow++; if (this.slow >= 2) this.emit(); }
+        if (this.warm && secs > 0.8 && took / secs > 2.5) { this.slow++; if (this.slow >= 2) this.emit(); }
+        this.warm = true;
         this.play(d.pcm, d.rate || 24000);
       }
     },
     async set(on) {
-      ls.set('natural', on ? true : null);
+      ls.set('natural', !!on);
       if (!on) { this.stop(); this.emit(); return; }
       this.slow = 0; if (this.state === 'failed') this.state = '';
       try { await this.load(); } catch (e) { /* state says failed */ }
     },
   };
   const speak = (t) => {
-    if (Natural.on()) { Natural.speak(t).catch(() => sysSpeak(t)); return; }
+    if (Natural.on()) { if (Natural.state === 'ready') { Natural.speak(t).catch(() => sysSpeak(t)); return; } Natural.load().catch(() => { /* state says failed */ }); }
     if (Natural.srcs.length) Natural.stop(); sysSpeak(t);
   };
 
@@ -36485,7 +36618,7 @@ const Miko = {
     const N = MikoSoul.Natural, row = $('#mikoNatRow'), s = $('#mikoNatS'), b = $('#mikoNat'); if (!row) return;
     const show = !!Store.raw.get('rm.akSpeak', false) && N.can(); row.hidden = !show; s.hidden = !show; if (!show) return;
     const v = N.wanted(); b.classList.toggle('on', v); b.setAttribute('aria-checked', String(v));
-    s.textContent = !v ? 'A lifelike voice that runs on this device, free. About 90 MB, downloaded once. English only for now.'
+    s.textContent = !v ? 'A lifelike voice that runs on this device, free. Downloaded once: about 90 MB, or 300 MB on devices with a strong graphics chip. English only for now.'
       : N.state === 'loading' ? `Getting her voice ready… ${N.pct}%` : N.state === 'failed' ? 'Her natural voice couldn’t load here, so she’s using this device’s voice.'
         : N.slow >= 2 ? 'This device is a little slow for her natural voice, so she’s using its own.' : N.state === 'ready' ? 'Her natural voice is on. It runs on this device.' : 'Her natural voice loads the first time she speaks.';
   },
@@ -36552,7 +36685,7 @@ Rules:
     if (h) bits.push(`open title page: "${h.name}" (id ${h.id}, ${h.type})`);
     if (this.kids()) bits.push('kids seat');
     const pn = MikoSoul.name(); if (pn) bits.push(`the person's name: ${pn}`);
-    bits.push(`local time ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`);
+    bits.push(`local time ${new Date().toLocaleTimeString(appLocale(), { hour: 'numeric', minute: '2-digit' })}`);
     return `[${bits.join('; ')}]`;
   },
   async tool(name, a) {
@@ -37369,7 +37502,7 @@ const PeakUp = {
       const st = String(u.status || '').trim(), bad = st && !/^active$/i.test(st);
       if (st) out.push(`<b>${esc(st)}</b>`);
       const exp = Number(u.exp_date);
-      if (exp > 0) { const d = new Date(exp * 1000); out.push(`${d < new Date() ? 'ended' : 'until'} ${esc(d.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }))}`); }
+      if (exp > 0) { const d = new Date(exp * 1000); out.push(`${d < new Date() ? 'ended' : 'until'} ${esc(d.toLocaleDateString(appLocale(), { day: 'numeric', month: 'short', year: 'numeric' }))}`); }
       else if (u.exp_date === null || u.exp_date === '' || u.exp_date === '0') out.push('no end date');
       const max = Number(u.max_connections);
       if (max > 0) out.push(`${Number(u.active_cons) || 0} of ${max} screen${max === 1 ? '' : 's'} in use`);
@@ -37528,8 +37661,8 @@ const PeakUp = {
       rows = arr(j && j.epg_listings).map((p) => ({ title: b64(p.title) || 'Programme', desc: b64(p.description), start: String(p.start || ''), s: Number(p.start_timestamp), e: Number(p.stop_timestamp || p.end_timestamp), arch: String(p.has_archive) === '1' }))
         .filter((p) => p.s && p.e && p.e <= now && p.s >= from && (p.arch || p.has_archive === undefined)).sort((x, y) => y.s - x.s);
     } catch (e) { b.innerHTML = `<h3 class="x8-h">${esc(c.name)}</h3><p class="sub">${esc(e.message === 'not-xtream' ? 'The service sent no programme list for this channel.' : e.message)}</p>`; return; }
-    const day = (t) => new Date(t * 1000).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
-    const hm = (t) => new Date(t * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const day = (t) => new Date(t * 1000).toLocaleDateString(appLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
+    const hm = (t) => new Date(t * 1000).toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' });
     b.innerHTML = `<h3 class="x8-h">${esc(c.name)}</h3>${rows.length ? `<div class="xt-list">${rows.slice(0, 300).map((p, i) => `<div class="xt-pair"><button class="xt-row" type="button" data-nav data-pi="${i}" title="${esc(p.desc)}"><span><b>${esc(p.title)}</b><small>${esc(day(p.s))} · ${esc(hm(p.s))}–${esc(hm(p.e))}</small></span><span class="xt-when"><i data-lucide="play"></i></span></button>${window.MkRec ? `<button class="ibtn xt-rec" type="button" data-nav data-pr="${i}" title="Save to a file" aria-label="Save ${esc(p.title)} to a file"><i data-lucide="download"></i></button>` : ''}</div>`).join('')}</div>` : '<p class="sub">Nothing to catch up on for this channel yet.</p>'}`;
     icons();
     const pick = (p) => {
@@ -38227,8 +38360,8 @@ const Friends = {
     const me = Account.user.id, day = (t) => new Date(t).toDateString();
     let prev = '';
     box.innerHTML = this.msgs.length ? this.msgs.map((m) => {
-      const mine = m.sender === me, d = day(m.created_at), sep = d !== prev ? `<div class="fr-day">${esc(new Date(m.created_at).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' }))}</div>` : ''; prev = d;
-      const time = new Date(m.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      const mine = m.sender === me, d = day(m.created_at), sep = d !== prev ? `<div class="fr-day">${esc(new Date(m.created_at).toLocaleDateString(appLocale(), { weekday: 'short', day: 'numeric', month: 'short' }))}</div>` : ''; prev = d;
+      const time = new Date(m.created_at).toLocaleTimeString(appLocale(), { hour: 'numeric', minute: '2-digit' });
       let body = esc(m.body);
       if (m.kind === 'party' && /^[A-Z2-9]{6}$/.test(m.body)) body = mine ? `You invited them to watch party <b class="mono">${esc(m.body)}</b>` : `<span>Watch party <b class="mono">${esc(m.body)}</b></span><button class="btn btn-prime btn-sm" type="button" data-nav data-frjoin="${esc(m.body)}"><i data-lucide="popcorn"></i>Join</button>`;
       if (m.kind === 'call') body = `<span class="fr-callnote"><i data-lucide="phone"></i>${esc(m.body)}</span>${mine ? '' : ' <button class="linkish" type="button" data-nav data-frback="1">Call back</button>'}`;
@@ -38450,7 +38583,7 @@ const FCall = {
       document.body.appendChild(b);
     }
     const showV = !!(s.rv && s.rv.getVideoTracks().some((t) => t.readyState === 'live' && !t.muted));
-    b.innerHTML = `${showV ? '<video class="fc-them" autoplay playsinline muted></video>' : ''}${s.cam && s.camStream ? '<video class="fc-me" autoplay playsinline muted></video>' : ''}
+    b.innerHTML = `${showV ? '<video class="fc-them" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" autoplay playsinline muted></video>' : ''}${s.cam && s.camStream ? '<video class="fc-me" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" autoplay playsinline muted></video>' : ''}
       <div class="fc-row"><button class="fc-who" type="button" data-fc="open" data-nav>${Friends.av(s.peer)}<span><b>${esc(Friends.label(s.peer))}</b><small class="fc-line tnum">${esc(this.line())}</small></span></button>
       ${s.state === 'ringing-out' ? '' : `<button class="ibtn sm" type="button" data-fc="mute" data-nav aria-label="${s.muted ? 'Unmute' : 'Mute'}" ${s.mic ? '' : 'disabled'}><i data-lucide="${s.muted ? 'mic-off' : 'mic'}"></i></button>
       <button class="ibtn sm" type="button" data-fc="cam" data-nav aria-label="${s.cam ? 'Camera off' : 'Camera on'}"><i data-lucide="${s.cam ? 'video' : 'video-off'}"></i></button>`}
@@ -38863,7 +38996,7 @@ const Social = {
     const items = [];
     this.feed.forEach((p) => (p.recent || []).forEach((x) => { if (x && x.t) items.push({ x, p }); }));
     items.sort((a, b) => (b.x.at || 0) - (a.x.at || 0));
-    const dayName = (at) => { const d = new Date(at), t = new Date(); const diff = Math.round((new Date(t.toDateString()) - new Date(d.toDateString())) / 864e5); return diff === 0 ? 'Today' : diff === 1 ? 'Yesterday' : d.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' }); };
+    const dayName = (at) => { const d = new Date(at), t = new Date(); const diff = Math.round((new Date(t.toDateString()) - new Date(d.toDateString())) / 864e5); return diff === 0 ? 'Today' : diff === 1 ? 'Yesterday' : d.toLocaleDateString(appLocale(), { weekday: 'long', day: 'numeric', month: 'short' }); };
     let prev = '';
     const feed = items.slice(0, 40).map(({ x, p }) => {
       const f = Friends.byId(p.id) || p, d = x.at ? dayName(x.at) : '', head = d !== prev ? `<h4 class="soc-day">${esc(d)}</h4>` : ''; prev = d;
@@ -38897,7 +39030,7 @@ const Social = {
     const got = Object.entries(tro || {}).map(([id, at]) => [this.troDef(id), at]).filter(([d]) => d);
     const order = { p: 0, g: 1, s: 2, b: 3 };
     got.sort((a, b) => order[a[0][4]] - order[b[0][4]] || (b[1] || 0) - (a[1] || 0));
-    let html = got.map(([d, at]) => `<div class="soc-tro t-${d[4]}" title="${esc(`${d[1]}: ${d[2]}`)}"><span class="soc-med"><i data-lucide="${d[3]}"></i></span><b>${esc(d[1])}</b><small>${esc(at > 1e11 ? new Date(at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : this.TIERS[d[4]])}</small></div>`).join('');
+    let html = got.map(([d, at]) => `<div class="soc-tro t-${d[4]}" title="${esc(`${d[1]}: ${d[2]}`)}"><span class="soc-med"><i data-lucide="${d[3]}"></i></span><b>${esc(d[1])}</b><small>${esc(at > 1e11 ? new Date(at).toLocaleDateString(appLocale(), { month: 'short', year: 'numeric' }) : this.TIERS[d[4]])}</small></div>`).join('');
     if (withLocked && m) {
       html += this.TRO.filter((d) => d[5] && !tro[d[0]]).map((d) => { const have = Math.min(d[6], Math.floor(m[d[5]] || 0)); return `<div class="soc-tro locked" title="${esc(d[2])}"><span class="soc-med"><i data-lucide="lock"></i></span><b>${esc(d[1])}</b><small>${esc(d[2])}</small><span class="soc-prog" style="--v:${(have / d[6]).toFixed(3)}"><i></i></span><small class="tnum">${have.toLocaleString()} / ${d[6].toLocaleString()}</small></div>`; }).join('');
     }
@@ -39318,7 +39451,7 @@ const Hub = {
     if (!isFinite(s)) return '';
     if (s < 45) return 'just now';
     if (s < 7 * 86400) return Friends.ago(at);
-    return new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+    return new Date(t).toLocaleDateString(appLocale(), { day: 'numeric', month: 'short' });
   },
 
   /* ---- with the account ---- */
@@ -39998,7 +40131,7 @@ const Notes = {
     throw new Error(j.message || `MKCinema’s server answered ${r.status}`);
   },
   platform() { return `${typeof PLATFORM !== 'undefined' ? PLATFORM : 'web'}${IS_TV ? '-tv' : ''}`.slice(0, 32); },
-  date(s) { try { return new Date(s).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) { return ''; } },
+  date(s) { try { return new Date(s).toLocaleDateString(appLocale(), { day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) { return ''; } },
   draftKey: (k) => `noteDraft:${k}`,
   // delete needs a second press within 4 s (no browser confirm box, which TVs handle badly)
   twice(btn, fn) {
@@ -41008,7 +41141,7 @@ const AddonHealth = {
     L.reports.forEach((r) => r.findings.forEach((f) => { if (f.level !== 'info') fixes.push({ ...f, name: r.name, who: [r.base], r }); }));
     fixes.sort((a, b) => (a.level === 'bad' ? 0 : a.level === 'warn' ? 1 : 2) - (b.level === 'bad' ? 0 : b.level === 'warn' ? 1 : 2));
     const sorted = L.reports.slice().sort((a, b) => this.RANK[a.verdict] - this.RANK[b.verdict]);
-    const when = new Date(L.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    const when = new Date(L.at).toLocaleTimeString(appLocale(), { hour: 'numeric', minute: '2-digit' });
     return `<div class="hc-sum hc-t-${h.tone}"><i data-lucide="${h.tone === 'good' ? 'check-circle-2' : h.tone === 'bad' ? 'alert-octagon' : 'alert-triangle'}"></i><div><b>${esc(h.title)}</b><small>${esc(h.sub)} · checked at ${esc(when)}</small></div></div>
       ${fixes.length ? `<h4 class="dg-h">What to fix first</h4><ul class="hc-fix">${fixes.slice(0, 12).map((f, i) => `<li class="hc-l-${f.level}"><i class="hc-dot"></i><div><p>${f.name ? `<b>${esc(f.name)}:</b> ` : ''}${esc(f.text)}</p>${f.fix ? `<small>${esc(f.fix)}</small>` : ''}${this.button(f, `f${i}`)}</div></li>`).join('')}</ul>` : ''}
       <h4 class="dg-h">Each addon</h4>
@@ -41117,8 +41250,8 @@ body.mk-player-on .rec-pill,html.tv .rec-pill{bottom:auto;top:calc(14px + env(sa
   const C = Channels;
   const MAX_H = 8, PART = 64 << 20, PRE = 60e3, POST = 120e3;
   const now = () => Date.now();
-  const hm = (t) => new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const day = (t) => { const d = new Date(t), t0 = new Date(); t0.setHours(0, 0, 0, 0); const diff = Math.round((new Date(d).setHours(0, 0, 0, 0) - t0) / 864e5); return diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : d.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' }); };
+  const hm = (t) => new Date(t).toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' });
+  const day = (t) => { const d = new Date(t), t0 = new Date(); t0.setHours(0, 0, 0, 0); const diff = Math.round((new Date(d).setHours(0, 0, 0, 0) - t0) / 864e5); return diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : d.toLocaleDateString(appLocale(), { weekday: 'short', day: 'numeric', month: 'short' }); };
   const dur = (ms) => fmtTime(Math.max(0, ms) / 1000);
   const safe = (s) => String(s || '').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 100) || 'Recording';
   const ls = { get(k, d) { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return Array.isArray(v) ? v : d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage full or off */ } } };
@@ -41958,5 +42091,663 @@ html.tv .ea-badge,html.tv .ea-dot{display:none!important}
 })();
 </script>
 <!-- mk-ds:end -->
+<style id="mkc-268-css">/* 2.68 household-plus */
+/* 2.68 household plus: folders, your cloud, chapters, compact sources. Motion is transform/opacity only. */
+#homeRows>section.row.arr-fold{display:none}
+.mk-fold-row .rail{gap:14px}
+.mk-fold{position:relative;flex:0 0 auto;width:clamp(200px,22vw,300px);aspect-ratio:16/9;border:0;padding:0;background:none;cursor:pointer;text-align:left;color:inherit}
+.mk-fold .card-inner{position:absolute;inset:0;border-radius:var(--r-m,14px);overflow:hidden;background:linear-gradient(135deg,var(--n1a1a1d,#1a1a1d),var(--n0d0d0f,#0d0d0f));box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.mk-fold .l0{position:absolute;inset:0}
+.mk-fold .l0 img{width:100%;height:100%;object-fit:cover;opacity:.42;filter:saturate(.8)}
+.mk-fold-t{position:absolute;left:14px;right:14px;bottom:12px;display:flex;align-items:center;gap:8px;font-size:calc(15px * var(--ts,1))}
+.mk-fold-t b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk-fold-t svg{width:18px;height:18px;flex:0 0 auto;opacity:.85}
+.mk-fold:focus-visible .card-inner,.mk-fold.focus .card-inner{box-shadow:inset 0 0 0 2px var(--a1,#d9d4c7)}
+.mk-fold-ov .x8-modal{width:min(1180px,calc(100vw - 32px));max-height:calc(100vh - 48px);overflow:auto}
+.mk-fold-rows>section.row{margin:0 0 18px}
+.arr-fold-form{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px}
+.arr-fold-form .inp,.arr-fold-form select{min-width:0;flex:1 1 140px}
+.arr-fold-tag{display:inline-flex;align-items:center;gap:4px;margin-left:6px;font-size:calc(11px * var(--ts,1));color:var(--mute)}
+.mk-cl-q{width:100%;margin:6px 0 10px}
+.mk-cl-list{display:flex;flex-direction:column;gap:6px;max-height:min(62vh,640px);overflow:auto;padding-right:2px}
+.mk-cl-it{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:var(--r-s,10px);border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.03);color:inherit;text-align:left;cursor:pointer}
+.mk-cl-it span{display:flex;flex-direction:column;min-width:0}
+.mk-cl-it b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk-cl-it small{color:var(--mute);font-size:calc(12px * var(--ts,1))}
+.mk-cl-it svg{width:18px;height:18px;flex:0 0 auto;opacity:.8}
+.mk-cl-it:hover,.mk-cl-it:focus-visible,.mk-cl-it.focus{background:rgba(255,255,255,.08)}
+.mk-cl-lib{display:flex;justify-content:flex-end;margin:0 0 6px}
+.mk-chaps{display:flex;flex-direction:column;gap:2px;max-height:260px;overflow:auto}
+.mk-chaps button{display:flex;align-items:center;gap:10px;text-align:left}
+.mk-chaps .tnum{color:var(--mute);min-width:52px}
+.mk-chaps b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.src-compact .stream .t2,body.src-compact .stream .s-meta{display:none}
+body.src-compact .stream{padding-top:8px;padding-bottom:8px}
+body.src-nobadge .stream .tele{display:none}
+@media (max-width:640px){.mk-fold{width:min(72vw,260px)}}
+.mk-rv-row .rail{gap:12px}
+.mk-rv{flex:0 0 auto;width:clamp(240px,26vw,340px);min-height:150px;display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:var(--r-m,14px);border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);color:inherit;text-align:left;cursor:pointer}
+.mk-rv:hover,.mk-rv:focus-visible,.mk-rv.focus{background:rgba(255,255,255,.08)}
+.mk-rv-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mk-rv-top b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk-rv-r{display:inline-flex;align-items:center;gap:4px;color:var(--mute);font-size:calc(12px * var(--ts,1))}
+.mk-rv svg{width:14px;height:14px;flex:0 0 auto}
+.mk-rv-t{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;line-height:1.45;font-size:calc(14px * var(--ts,1));color:var(--nc9cfdd,#c9cfdd)}
+.mk-rv-sp{display:flex;align-items:center;gap:8px;flex:1;color:var(--mute)}
+.mk-rv small{display:inline-flex;align-items:center;gap:5px;color:var(--mute);font-size:calc(12px * var(--ts,1));margin-top:auto}
+.mk-rv-full{max-height:min(56vh,560px);overflow:auto;line-height:1.6;white-space:normal;padding-right:4px;margin:6px 0 12px}
+.mk-rv-ov .x8-modal{width:min(760px,calc(100vw - 32px))}
+.mk-again{margin-left:auto}
+.mk-again svg{width:14px;height:14px}
+.hero .hero-desc-slot>.hero-desc.mk-hs{display:block;-webkit-line-clamp:unset;overflow:hidden}
+.mk-hs-in{display:block;will-change:transform}
+@media (max-width:640px){.mk-rv{width:min(80vw,300px)}}
+</style>
+<script id="mkc-268">
+'use strict';
+/* =====================================================================
+   2.68 · Household plus
+   Your cloud (files already in your debrid account), one-press setup links, Home folders, episode shuffle,
+   titles and trailers in your language, chapters, subtitle memory, forced and SDH subtitle rules, a subtitle
+   start choice, a compact source list, seat pictures from a link and copying a seat's choices.
+   Changes to existing behaviour live in the functions they change; this block only holds the new parts.
+   ===================================================================== */
+
+/* ---------------- Subtitles: memory per title, SDH, forced tracks, waiting for your language ---------------- */
+const SubMem = {
+  KEY: 'subMem', MAX: 400,
+  all() { return Store.get(this.KEY, {}); },
+  id() { const c = P.ctx; return c && c.meta && c.meta.id ? String(c.meta.id) : ''; },
+  get() { if (CFG.subMemory === false) return null; const id = this.id(); return id ? this.all()[id] || null : null; },
+  /* the viewer picked a subtitle by hand: remember its language (or "off") for the whole film or series */
+  save(i) {
+    if (CFG.subMemory === false) return; const id = this.id(); if (!id) return;
+    const s = i >= 0 && P.subs ? P.subs[i] : null;
+    if (s && (s._mkv && s._mkv.forced)) return; // a forced track is not a choice of language
+    const all = this.all(); delete all[id];
+    all[id] = s ? { lang: String(s.lang || ''), sdh: SubSdh.is(s), at: Date.now() } : { off: true, at: Date.now() };
+    const ks = Object.keys(all); if (ks.length > this.MAX) ks.slice(0, ks.length - this.MAX).forEach((k) => delete all[k]);
+    Store.set(this.KEY, all);
+  },
+  /* true when the memory says what to do, so the house rules stay out of it */
+  apply() {
+    const m = this.get(); if (!m) return false;
+    if (m.off) { SubForced.pick(); return true; }
+    const want = langName(m.lang);
+    const cand = SubRank.order(P.subs || []).filter(([s]) => langName(s.lang) === want && !(s._mkv && s._mkv.forced) && (m.sdh || !SubSdh.hide() || !SubSdh.is(s)));
+    if (!cand.length) return false;
+    const [s, i] = cand[0]; if (P.curSub === i) return true;
+    const cur = P.subs[P.curSub]; if (cur && cur.kind === 'mkv' && langName(cur.lang) === want && s.kind !== 'mkv') return true;
+    selectSub(i, { auto: true }); return true;
+  },
+};
+const SubSdh = {
+  RE: /\b(sdh|hearing[ -]?impaired|for the deaf|closed captions?|\[cc\]|\bcc\b)\b/i,
+  hide() { return CFG.hideSDH === true; },
+  is(s) {
+    if (!s) return false;
+    if (s.hi === true || s.hearingImpaired === true || s.hearing_impaired === true) return true;
+    const t = [s._label, s.label, s.name, s.title, s.fileName, s.subtitleFileName, s.releaseName, s._mkv && s._mkv.name].filter((x) => typeof x === 'string').join(' ');
+    return this.RE.test(t) || /[._ -]hi[._ -]/i.test(` ${s.fileName || s.subtitleFileName || ''} `);
+  },
+};
+/* Forced tracks only carry the lines in another language (signs, a scene in French). They come on by themselves
+   when no full subtitle is showing, in the language you listen in when the file says which. */
+const SubForced = {
+  on() { return CFG.forcedSubs !== false; },
+  is(s) { return !!(s && ((s._mkv && s._mkv.forced) || s.forced === true || /\bforced\b/i.test(`${s._label || ''} ${s.fileName || ''} ${s.name || ''}`))); },
+  pick() {
+    if (!this.on() || !P.subs || P.subUserChoice) return false;
+    const cur = P.subs[P.curSub]; if (cur && !this.is(cur)) return false;
+    const audio = (() => { try { return String(CFG.audioOnly || '').toLowerCase(); } catch (e) { return ''; } })();
+    const list = P.subs.map((s, i) => [s, i]).filter(([s]) => this.is(s));
+    if (!list.length) return false;
+    const mine = list.find(([s]) => audio && audio !== 'any' && langName(s.lang) === langName(audio)) || list.find(([s]) => s._mkv && s._mkv.def) || list[0];
+    if (P.curSub === mine[1]) return true;
+    selectSub(mine[1], { auto: true }); return true;
+  },
+};
+/* Settings › Subtitles › When a film starts: right away, or wait up to 4 seconds for subtitles in your language */
+const SubWait = {
+  go(start) {
+    if (CFG.subWait !== 'lang' || !CFG.subLang || CFG.subLang === 'off' || !P.subsLoading || (P.stream && P.stream._local)) { start(); return; }
+    const t0 = Date.now(), st = P.stream;
+    Loader.show(P.ctx && P.ctx.meta);
+    const tick = () => {
+      if (P.stream !== st) return;
+      if (!P.subsLoading || Date.now() - t0 > 4000) { Loader.hide(); start(); return; }
+      setTimeout(tick, 150);
+    };
+    tick();
+  },
+};
+window.MkSubWait = SubWait;
+
+/* ---------------- Chapters ---------------- */
+const Chapters = {
+  list() { const m = typeof Marks !== 'undefined' && Marks.live ? Marks.live() : null; const l = m && m.all; return Array.isArray(l) ? l.filter((c) => c && isFinite(c.s)) : []; },
+  html() {
+    const l = this.list(); if (l.length < 2) return '';
+    const t = pNow(); let cur = -1; l.forEach((c, i) => { if (t >= c.s - 0.5) cur = i; });
+    return `<h5>Chapters</h5><div class="mk-chaps">${l.slice(0, 99).map((c, i) => `<button type="button" class="${i === cur ? 'on' : ''}" data-chap="${c.s}"><i data-lucide="bookmark"></i><span class="tnum">${fmtTime(c.s)}</span><b translate="no">${esc(String(c.name || '').trim() || `Chapter ${i + 1}`)}</b></button>`).join('')}</div>`;
+  },
+  bind(m) { $$('[data-chap]', m).forEach((b) => b.addEventListener('click', () => { pSeek(Number(b.dataset.chap), { user: true }); m.hidden = true; toast(b.querySelector('b').textContent, 'info', 1400); })); },
+};
+
+/* ---------------- Episode shuffle ---------------- */
+const Shuffle = {
+  id: '', picks: new Map(),
+  pool(meta) {
+    const now = Date.now();
+    return orderedEpisodes(meta).filter((v) => { const d = Date.parse(v.released || v.firstAired || ''); return !(d > now); });
+  },
+  hist() { return Store.get('shuffleHist', []); },
+  pick(meta, not) {
+    const pool = this.pool(meta); if (!pool.length) return null;
+    const h = new Set(this.hist()), fresh = pool.filter((v) => v.id !== (not && not.id) && !h.has(videoIdFor(meta, v)));
+    const from = fresh.length ? fresh : pool.filter((v) => v.id !== (not && not.id));
+    const v = (from.length ? from : pool)[Math.floor(Math.random() * (from.length || pool.length))];
+    Store.set('shuffleHist', [videoIdFor(meta, v), ...this.hist()].slice(0, Math.max(10, Math.min(200, Math.floor(pool.length * 0.6)))));
+    return v;
+  },
+  /* while shuffle is on for a series, "next episode" is another random one (the same one every time it is asked) */
+  next(meta, video) {
+    if (!video) return null;
+    if (!this.picks.has(video.id)) this.picks.set(video.id, this.pick(meta, video));
+    return this.picks.get(video.id);
+  },
+  on(meta) { return !!(meta && this.id && this.id === meta.id); },
+  async start(meta) {
+    const v = this.pick(meta); if (!v) { toast('This series lists no episodes yet', 'err'); return; }
+    this.id = meta.id; this.picks.clear();
+    D.video = v; D.season = Number(v.season); renderDetail(false);
+    toast(`Shuffle · S${v.season} · E${v.episode}`, 'info', 2200);
+    smartPlayDetail();
+  },
+  stop() { this.id = ''; this.picks.clear(); },
+};
+window.MkShuffle = Shuffle;
+
+/* ---------------- Title logos and trailers in your language ---------------- */
+const LangArt = {
+  mem: new Map(), wait: new Map(), TTL: 7 * 86400e3,
+  base() { try { return String(People.lang() || 'en').split('-')[0].toLowerCase(); } catch (e) { return 'en'; } },
+  wants() { return this.base() !== 'en'; },
+  tt(m) { const id = String((m && (m.imdb_id || m.id)) || '').split(':')[0]; return /^tt\d{5,10}$/.test(id) ? id : null; },
+  store() {
+    if (!this.loaded) { this.loaded = true; const raw = Store.raw.get('langArt', {}), now = Date.now(); Object.entries(raw || {}).forEach(([k, v]) => { if (v && now - v.at < this.TTL) this.mem.set(k, v); }); }
+    return this.mem;
+  },
+  save() { clearTimeout(this.st); this.st = setTimeout(() => { const m = this.store(); while (m.size > 400) m.delete(m.keys().next().value); Store.raw.set('langArt', Object.fromEntries(m)); }, 800); },
+  peek(m) { if (!this.wants()) return null; const tt = this.tt(m); return tt ? this.store().get(`${this.base()}|${tt}`) || null : null; },
+  /* a logo in the interface language, only once it has been looked up (metaLogo stays synchronous) */
+  logo(m) { const v = this.peek(m); return v && v.logo ? `https://image.tmdb.org/t/p/w500${v.logo}` : ''; },
+  async get(m) {
+    if (!this.wants()) return null; const tt = this.tt(m); if (!tt) return null;
+    const k = `${this.base()}|${tt}`, hit = this.store().get(k); if (hit) return hit;
+    if (this.wait.has(k)) return this.wait.get(k);
+    const lang = this.base();
+    const p = (async () => {
+      let out = { logo: '', yt: '', at: Date.now() };
+      if (TMDB.key()) {
+        const f = await TMDB.find(tt); const mv = f && (f.movie_results || [])[0], tv = f && (f.tv_results || [])[0], h = mv || tv;
+        if (h) {
+          const kind = mv ? 'movie' : 'tv';
+          const [im, vids] = await Promise.all([TMDB.get(`${kind}/${h.id}/images`, { include_image_language: `${lang},null` }).catch(() => null), TMDB.get(`${kind}/${h.id}/videos`, { language: lang }).catch(() => null)]);
+          const lg = ((im && im.logos) || []).filter((l) => l.iso_639_1 === lang && !/\.svg$/i.test(l.file_path)).sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))[0];
+          const yt = ((vids && vids.results) || []).filter((v) => v.site === 'YouTube' && /^(Trailer|Teaser)$/.test(v.type) && /^[\w-]{11}$/.test(v.key)).sort((a, b) => (a.type === 'Trailer' ? 0 : 1) - (b.type === 'Trailer' ? 0 : 1))[0];
+          out = { logo: (lg && lg.file_path) || '', yt: (yt && yt.key) || '', at: Date.now() };
+        }
+      } else {
+        const c = (typeof Account !== 'undefined' && Account.config && Account.config()) || {}; if (!c.url) return null;
+        const r = await netFetch(`${String(c.url).replace(/\/+$/, '')}/functions/v1/tmdb-person?a=local&tt=${tt}&lang=${encodeURIComponent(People.lang())}`, { headers: { apikey: c.anonKey || '', accept: 'application/json' } }, 8000);
+        if (!r.ok) return null; // an older relay without this lookup: keep the English art
+        const j = await r.json(); out = { logo: String(j.logo || ''), yt: /^[\w-]{11}$/.test(j.yt || '') ? j.yt : '', at: Date.now() };
+      }
+      this.store().set(k, out); this.save(); return out;
+    })().catch(() => null).finally(() => this.wait.delete(k));
+    this.wait.set(k, p); return p;
+  },
+  /* the open title page swaps its logo when a local one arrives */
+  async detail(m) {
+    const v = await this.get(m); if (!v || !v.logo || !D.meta || D.meta.id !== m.id) return;
+    const url = `https://image.tmdb.org/t/p/w500${v.logo}`, im = $('#detailPanel .hero-logo'); if (!im || im.getAttribute('src') === url) return;
+    const pre = new Image(); pre.referrerPolicy = 'no-referrer'; pre.onload = () => { if (D.meta && D.meta.id === m.id && im.isConnected) { im.src = url; im.dataset.osrc = url; } }; pre.src = url;
+  },
+  async trailer(m) { if (!this.wants()) return ''; const v = await Promise.race([this.get(m), new Promise((r) => setTimeout(() => r(null), 2500))]); return (v && v.yt) || ''; },
+};
+window.MkLangArt = LangArt;
+
+/* ---------------- Keep your place on Home ---------------- */
+const HomePlace = {
+  y: 0, rk: '', id: '',
+  leave() {
+    this.y = scrollY || 0; this.rk = ''; this.id = '';
+    const a = document.activeElement, card = a && a.closest && a.closest('#homeRows [data-card]');
+    if (card) { const sec = card.closest('section.row'); this.rk = sec ? sec.dataset.arrK || sec.dataset.rk || sec.id || '' : ''; this.id = card.dataset.id || ''; }
+  },
+  back() {
+    const y = this.y, rk = this.rk, id = this.id;
+    requestAnimationFrame(() => {
+      if (S.view !== 'home') return;
+      scrollTo({ top: y, behavior: 'instant' in document.documentElement.style ? 'instant' : 'auto' });
+      if (!IS_TV || !id) return;
+      const secs = $$('#homeRows section.row'), sec = secs.find((s) => (s.dataset.arrK || s.dataset.rk || s.id || '') === rk);
+      const card = (sec || document).querySelector(`[data-card][data-id="${CSS.escape(id)}"]`);
+      if (card) try { Nav.focus(card, true); } catch (e) { /* older build */ }
+    });
+  },
+};
+window.MkHomePlace = HomePlace;
+
+/* ---------------- Your cloud: what is already in your debrid account ---------------- */
+const MyCloud = {
+  items: [], svc: '', q: '', busy: false, err: '',
+  H() { return { Authorization: `Bearer ${Vault.cfg()[this.svc]}` }; },
+  key() { return Vault.cfg()[this.svc]; },
+  async list() {
+    const k = this.svc = Vault.service(); if (!k) return [];
+    const key = this.key();
+    if (k === 'rd') {
+      const out = [];
+      for (let page = 1; page <= 3; page++) {
+        const l = await Vault.call(`https://api.real-debrid.com/rest/1.0/torrents?limit=100&page=${page}`, { headers: this.H() }).catch((e) => { if (page === 1) throw e; return []; });
+        const arr = Array.isArray(l) ? l : []; arr.forEach((t) => { if (t.status === 'downloaded') out.push({ id: String(t.id), name: t.filename, size: t.bytes, at: t.added }); });
+        if (arr.length < 100) break;
+      }
+      return out;
+    }
+    if (k === 'tb') {
+      const l = await Vault.call('https://api.torbox.app/v1/api/torrents/mylist?bypass_cache=true', { headers: this.H() });
+      return (Array.isArray(l.data) ? l.data : []).filter((t) => t.download_finished || t.download_present).map((t) => ({ id: String(t.id), name: t.name, size: t.size, at: t.created_at, files: (t.files || []).map((f) => ({ id: f.id, name: f.short_name || f.name, size: f.size })) }));
+    }
+    if (k === 'ad') {
+      const q = `agent=mkcinema&apikey=${encodeURIComponent(key)}`;
+      let st; try { st = await Vault.call(`https://api.alldebrid.com/v4.1/magnet/status?${q}`, { method: 'POST', body: Vault.form({ status: 'ready' }) }); } catch (e) { st = await Vault.call(`https://api.alldebrid.com/v4/magnet/status?${q}&status=ready`); }
+      const mg = (st.data || {}).magnets; const arr = Array.isArray(mg) ? mg : mg ? Object.values(mg) : [];
+      return arr.filter((m) => m.statusCode === 4).map((m) => ({ id: String(m.id), name: m.filename, size: m.size, at: m.completionDate ? new Date(m.completionDate * 1000).toISOString() : '' }));
+    }
+    if (k === 'pm') {
+      const l = await Vault.call(`https://www.premiumize.me/api/item/listall?apikey=${encodeURIComponent(key)}`);
+      return (l.files || []).filter((f) => VIDEO_EXT.test(f.name || '')).map((f) => ({ id: String(f.id), name: f.name, size: f.size, at: f.created_at ? new Date(f.created_at * 1000).toISOString() : '', files: [{ id: f.id, name: f.name, size: f.size, link: f.stream_link && /\.mp4(\?|$)/i.test(f.stream_link) ? f.stream_link : f.link }] }));
+    }
+    return [];
+  },
+  /* the video files inside one item, with what is needed to play each */
+  async files(it) {
+    const k = this.svc, key = this.key();
+    if (it.files && k !== 'tb') return it.files;
+    if (k === 'rd') {
+      const info = await Vault.call(`https://api.real-debrid.com/rest/1.0/torrents/info/${it.id}`, { headers: this.H() });
+      const sel = (info.files || []).filter((f) => f.selected);
+      return sel.map((f, i) => ({ id: f.id, name: String(f.path || '').replace(/^\//, ''), size: f.bytes, link: (info.links || [])[i] })).filter((f) => f.link && VIDEO_EXT.test(f.name));
+    }
+    if (k === 'tb') return (it.files || []).filter((f) => VIDEO_EXT.test(f.name || ''));
+    if (k === 'ad') {
+      const q = `agent=mkcinema&apikey=${encodeURIComponent(key)}`;
+      const r = await Vault.call(`https://api.alldebrid.com/v4/magnet/files?${q}&id[]=${it.id}`);
+      const flat = []; const walk = (arr, p = '') => (arr || []).forEach((x) => { if (x.e) walk(x.e, `${p}${x.n}/`); else flat.push({ name: x.filename || `${p}${x.n}`, size: x.size || x.s, link: x.link || x.l }); });
+      walk((((r.data || {}).magnets || [])[0] || {}).files);
+      return flat.filter((f) => f.link && VIDEO_EXT.test(f.name));
+    }
+    return [];
+  },
+  async url(it, f) {
+    const k = this.svc, key = this.key();
+    if (k === 'rd') { const un = await Vault.call('https://api.real-debrid.com/rest/1.0/unrestrict/link', { method: 'POST', headers: this.H(), body: Vault.form({ link: f.link }) }); return { url: un.download, rd: un.id ? String(un.id) : '' }; }
+    if (k === 'tb') { const dl = await Vault.call(`https://api.torbox.app/v1/api/torrents/requestdl?token=${encodeURIComponent(key)}&torrent_id=${it.id}&file_id=${f.id}&redirect=false`, { headers: this.H() }); return { url: dl.data, tb: { id: it.id, fileId: f.id } }; }
+    if (k === 'ad') { const un = await Vault.call(`https://api.alldebrid.com/v4/link/unlock?agent=mkcinema&apikey=${encodeURIComponent(key)}&link=${encodeURIComponent(f.link)}`); return { url: un.data && un.data.link }; }
+    if (k === 'pm') return { url: f.link };
+    throw new Error('No debrid service is set up');
+  },
+  async play(it, f) {
+    toast('Getting the file from your cloud…', 'info', 2600, 'cloud');
+    try {
+      const u = await Vault.within(this.url(it, f), 30000); if (!u || !u.url) throw new Error('Your service did not give a link');
+      const name = String(f.name || it.name).split('/').pop();
+      const meta = { id: `cloud:${this.svc}:${it.id}:${f.id != null ? f.id : 0}`, type: 'movie', name: name.replace(/\.[^.]+$/, '').replace(/[._]+/g, ' '), description: `${f.size ? fmtBytes(f.size) : ''} · from your ${Vault.label(this.svc)} cloud` };
+      const stream = { name: 'Your cloud', title: `${name}${f.size ? `\n${fmtBytes(f.size)}` : ''}`, url: u.url, _addon: 'Your cloud', behaviorHints: { filename: name, videoSize: f.size || undefined } };
+      if (u.rd) stream._rd = u.rd; if (u.tb) stream._tb = u.tb;
+      stream._tel = Telemetry.parse(stream);
+      X8.close('myCloud');
+      playStream({ meta, video: null, streams: [stream] }, stream, { startAt: 0 });
+    } catch (e) { toast(`Could not play it: ${e.message}`, 'err', 6000); }
+  },
+  async open() {
+    if (!Vault.service()) { toast('Add a debrid key in Settings › Debrid first', 'err', 4200); openSettings('debrid'); return; }
+    X8.layer('myCloud', { label: 'Your cloud', icon: 'cloud', eyebrow: 'Your cloud', wide: true });
+    X8.open('myCloud'); this.q = ''; this.render(true);
+    this.busy = true; this.err = '';
+    try { this.items = (await Vault.within(this.list(), 30000)).sort((a, b) => String(b.at || '').localeCompare(String(a.at || ''))); }
+    catch (e) { this.items = []; this.err = e.message || String(e); }
+    this.busy = false; this.render();
+  },
+  render(loading) {
+    const b = X8.body('myCloud'); if (!b) return;
+    const q = this.q.trim().toLowerCase(), list = this.items.filter((it) => !q || String(it.name || '').toLowerCase().includes(q)).slice(0, 300);
+    b.innerHTML = `<h2 class="x8-h">Your cloud</h2><p class="sub">Films and episodes already in your ${esc(Vault.label() || 'debrid')} account. Pick one to play it here.</p>
+      <input class="inp mk-cl-q" id="mkClQ" type="search" placeholder="Search your cloud" value="${esc(this.q)}" autocomplete="off" aria-label="Search your cloud">
+      <div class="mk-cl-list" id="mkClList">${loading || this.busy ? '<div class="status-line" style="padding:18px"><span class="spin"></span>Reading your cloud…</div>'
+        : this.err ? `<div class="empty-state"><i data-lucide="cloud-off"></i><h3>Your cloud did not open</h3><p>${esc(this.err)}</p></div>`
+        : list.length ? list.map((it, i) => `<button type="button" class="mk-cl-it" data-nav data-cl="${esc(it.id)}"><i data-lucide="film"></i><span><b translate="no">${esc(it.name || 'Untitled')}</b><small>${[it.size ? fmtBytes(it.size) : '', it.at ? fmtDate(it.at) : ''].filter(Boolean).join(' · ')}</small></span></button>`).join('')
+        : `<div class="empty-state"><i data-lucide="cloud"></i><h3>${q ? 'Nothing matches that' : 'Your cloud is empty'}</h3><p>${q ? 'Try another word.' : 'Files you add to your debrid account show up here.'}</p></div>`}</div>`;
+    icons();
+    const inp = $('#mkClQ', b);
+    inp.addEventListener('keydown', (e) => e.stopPropagation());
+    inp.addEventListener('input', () => { this.q = inp.value; clearTimeout(this.qt); this.qt = setTimeout(() => { const pos = inp.selectionStart; this.render(); const n = $('#mkClQ'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) { /* fine */ } } }, 220); });
+    if (typeof TvType !== 'undefined' && IS_TV) TvType.guard(inp);
+    $$('[data-cl]', b).forEach((x) => x.addEventListener('click', () => this.pick(this.items.find((it) => it.id === x.dataset.cl))));
+    if (IS_TV) { const f = $('[data-cl]', b) || inp; Nav.focus(f, true); }
+  },
+  async pick(it) {
+    if (!it) return;
+    let files; try { files = await Vault.within(this.files(it), 20000); } catch (e) { toast(`Could not open it: ${e.message}`, 'err', 5000); return; }
+    if (!files.length) { toast('No video file in that one', 'err'); return; }
+    if (files.length === 1) { this.play(it, files[0]); return; }
+    const b = X8.body('myCloud');
+    const sorted = files.slice().sort((a, c) => String(a.name).localeCompare(String(c.name), undefined, { numeric: true }));
+    $('#mkClList', b).innerHTML = `<button type="button" class="mk-cl-it back" data-nav id="mkClBack"><i data-lucide="chevron-left"></i><span><b>Back to your cloud</b></span></button>${sorted.map((f, i) => `<button type="button" class="mk-cl-it" data-nav data-clf="${i}"><i data-lucide="play"></i><span><b translate="no">${esc(String(f.name).split('/').pop())}</b><small>${f.size ? fmtBytes(f.size) : ''}</small></span></button>`).join('')}`;
+    icons();
+    $('#mkClBack', b).onclick = () => this.render();
+    $$('[data-clf]', b).forEach((x) => x.addEventListener('click', () => this.play(it, sorted[Number(x.dataset.clf)])));
+    if (IS_TV) Nav.focus($('[data-clf]', b), true);
+  },
+  /* Library gets a button while a debrid key is saved */
+  libRow(root) {
+    if (!Vault.service() || !root) return;
+    const w = document.createElement('div'); w.className = 'mk-cl-lib';
+    w.innerHTML = `<button class="btn btn-ghost btn-sm" type="button" data-nav><i data-lucide="cloud"></i>Your cloud</button>`;
+    root.prepend(w); $('button', w).onclick = () => this.open();
+  },
+};
+window.MkCloud = MyCloud;
+
+/* ---------------- Setup links: one press installs a whole setup ----------------
+   https://app.mkcinema.app/#setup=<base64url JSON>  or  #setup-url=<https link to that JSON>
+   { "name": "Weekend setup", "addons": ["https://…/manifest.json", …] }
+   Addons are added, never removed, and nothing changes until the person says yes. Keys and the proxy are never taken. */
+const SetupLink = {
+  MAX: 40,
+  make(addons, name) { return `${PUBLIC_ORIGIN || location.origin}/#setup=${X8.b64e({ v: 1, name: name || '', addons })}`; },
+  async read(h) {
+    if (h.startsWith('setup=')) return X8.b64d(h.slice(6));
+    const u = decodeURIComponent(h.slice(10)); if (!/^https:\/\/[^\s"'<>]+$/i.test(u)) throw new Error('That setup link is not a secure https address');
+    const r = await fetchT(u, { cache: 'no-store' }, 10000); if (!r.ok) throw new Error(`The setup file did not load (HTTP ${r.status})`);
+    return r.json();
+  },
+  clean(d) {
+    const norm = (u) => { try { return StremioEngine.normalize(typeof u === 'string' ? u : (u && (u.url || u.manifest || u.transportUrl)) || ''); } catch (e) { return null; } };
+    const addons = [...new Set((Array.isArray(d && d.addons) ? d.addons : []).map(norm).filter((u) => u && /^https:\/\//i.test(u)))].slice(0, this.MAX);
+    return { name: String((d && d.name) || '').replace(/[<>]/g, '').slice(0, 60), addons };
+  },
+  async handle(h) {
+    history.replaceState(null, '', location.pathname);
+    if (typeof Seats !== 'undefined' && Seats.kids()) { toast('Not on the kids seat', 'err', 2600, 'kids'); return; }
+    let d; try { d = this.clean(await this.read(h)); } catch (e) { toast(`That setup link did not open: ${e.message}`, 'err', 6000); return; }
+    const have = new Set(engine.addons.map((a) => a.baseUrl)), add = d.addons.filter((u) => !have.has(u));
+    if (!d.addons.length) { toast('That setup link has no addons in it', 'err'); return; }
+    if (!add.length) { toast('You already have every addon in that setup', 'ok'); return; }
+    const host = (u) => { try { return new URL(u).host; } catch (e) { return u.slice(0, 50); } };
+    const ok = await Gate.ask({ icon: 'package-plus', eyebrow: 'Setup link', title: d.name ? `Add “${d.name}”?` : `Add ${add.length} addon${add.length === 1 ? '' : 's'}?`, yes: 'Add them', no: 'Not now',
+      html: `A link wants to add ${add.length} addon${add.length === 1 ? '' : 's'}: <b>${add.slice(0, 6).map((u) => esc(host(u))).join(', ')}${add.length > 6 ? '…' : ''}</b>. Nothing you have is removed or changed. Add them only if you trust whoever made the link.` });
+    if (ok !== true) return;
+    let n = 0, bad = 0;
+    for (const u of add) { try { await engine.install(u, { silent: true }); n++; } catch (e) { bad++; } }
+    engine.emit('addons'); try { Account.schedule(); } catch (e) { /* signed out */ }
+    if (S.view === 'home') renderHome();
+    toast(`${n} addon${n === 1 ? '' : 's'} added${bad ? `, ${bad} did not answer` : ''}`, n ? 'ok' : 'err', 5000);
+  },
+  /* Addons › Share my setup: a link with your addon list (links that hold a key are left out) */
+  share() {
+    const list = engine.addons.filter((a) => !a.builtin && !a.virtual && !a.studio && a.enabled).map((a) => a.baseUrl);
+    const safe = list.filter((u) => !(typeof keyedAddon === 'function' && keyedAddon(u)));
+    if (!safe.length) { toast('You have no addons to share yet', 'err'); return; }
+    const left = list.length - safe.length;
+    copyText(this.make(safe.map((u) => `${u}/manifest.json`)), left ? `Setup link copied. ${left} addon${left === 1 ? '' : 's'} with your own key left out` : 'Setup link copied', 6000);
+  },
+};
+window.MkSetupLink = SetupLink;
+
+/* ---------------- Home folders ---------------- */
+const Folders = {
+  get() { const a = Arrange.get(); return a.folders && typeof a.folders === 'object' ? a.folders : {}; },
+  of(k) { const f = this.get(); return Object.keys(f).find((id) => (f[id].keys || []).includes(k)) || ''; },
+  save(folders) { const a = Arrange.get(); a.folders = folders; Arrange.save(a); },
+  put(k, fid, name) {
+    const f = { ...this.get() };
+    Object.keys(f).forEach((id) => { f[id] = { ...f[id], keys: (f[id].keys || []).filter((x) => x !== k) }; });
+    if (fid === 'new') { fid = `f${Date.now().toString(36)}`; f[fid] = { name: String(name || 'Folder').slice(0, 30), keys: [] }; }
+    if (fid && f[fid]) f[fid].keys.push(k);
+    Object.keys(f).forEach((id) => { if (!f[id].keys.length) delete f[id]; });
+    this.save(f);
+  },
+  /* the row of folder tiles at the top of Home; rows inside a folder stay off the page until it is opened */
+  paint() {
+    const rows = $('#homeRows'); if (!rows) return;
+    const f = this.get(), ids = Object.keys(f);
+    let sec = $('#mkFolders');
+    if (!ids.length) { if (sec) sec.remove(); return; }
+    if (!sec) {
+      sec = document.createElement('section'); sec.className = 'row mk-fold-row'; sec.id = 'mkFolders'; sec.dataset.rk = 'folders';
+      sec.innerHTML = '<div class="row-head"><h2 class="row-title">Folders</h2></div><div class="rail"></div>';
+      const cw = $('#cwRow', rows); if (cw) cw.after(sec); else rows.prepend(sec);
+    }
+    const art = (keys) => { for (const k of keys) { const s = $$('#homeRows section.row').find((x) => x.dataset.arrK === k); const im = s && s.querySelector('.card img:not([data-fb="1"])'); if (im) return im.dataset.lsrc || im.getAttribute('src'); } return ''; };
+    const html = ids.map((id) => { const a = art(f[id].keys); return `<button type="button" class="card wide mk-fold" data-nav data-fold="${esc(id)}" aria-label="${esc(f[id].name)}"><div class="card-inner"><div class="layer l0">${a ? `<img src="${esc(a)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ''}</div><div class="mk-fold-t"><i data-lucide="folder"></i><b translate="no">${esc(f[id].name)}</b></div></div></button>`; }).join('');
+    const rail = $('.rail', sec); if (rail.dataset.h !== html) { rail.dataset.h = html; rail.innerHTML = html; icons(); $$('[data-fold]', rail).forEach((b) => { b.onclick = (e) => { e.stopPropagation(); this.open(b.dataset.fold); }; }); }
+  },
+  open(fid) {
+    const f = this.get()[fid]; if (!f) return;
+    const el = X8.layer('mkFold', { label: 'Folder', icon: 'folder', eyebrow: 'Folder', wide: true }); el.classList.add('mk-fold-ov');
+    const b = X8.body('mkFold'); b.innerHTML = `<h2 class="x8-h" translate="no">${esc(f.name)}</h2><div class="mk-fold-rows"></div>`;
+    const box = $('.mk-fold-rows', b), rows = $('#homeRows');
+    const secs = (f.keys || []).map((k) => $$('#homeRows section.row').find((x) => x.dataset.arrK === k)).filter(Boolean);
+    if (!secs.length) box.innerHTML = '<p class="tour-note">These rows have not loaded yet. Try again in a moment.</p>';
+    this.moved = secs.map((s) => { const mark = document.createComment('mk-fold'); s.before(mark); s.classList.add('mk-in-fold-open'); box.appendChild(s); return [s, mark]; });
+    X8.onClose.mkFold = () => { (this.moved || []).forEach(([s, mark]) => { s.classList.remove('mk-in-fold-open'); if (mark.isConnected) { mark.replaceWith(s); } else if (rows) rows.appendChild(s); }); this.moved = []; Arrange.apply(true); };
+    X8.open('mkFold'); icons(); queueWall();
+    if (IS_TV) setTimeout(() => { const c = $('#mkFold [data-card]'); if (c) Nav.focus(c, true); }, 60);
+  },
+  /* a folder travels as a short code: its name and the rows in it */
+  code(fid) { const f = this.get()[fid]; return f ? `mkfold:${X8.b64e({ v: 1, name: f.name, keys: f.keys })}` : ''; },
+  importCode(text) {
+    const m = String(text || '').trim().match(/mkfold:([\w-]+)/); if (!m) { toast('That is not a folder code', 'err'); return false; }
+    let d; try { d = X8.b64d(m[1]); } catch (e) { toast('That folder code is damaged', 'err'); return false; }
+    const keys = (Array.isArray(d.keys) ? d.keys : []).filter((k) => typeof k === 'string' && k.length < 200).slice(0, 40);
+    if (!keys.length) { toast('That folder is empty', 'err'); return false; }
+    const f = { ...this.get() }, id = `f${Date.now().toString(36)}`;
+    Object.keys(f).forEach((x) => { f[x] = { ...f[x], keys: f[x].keys.filter((k) => !keys.includes(k)) }; if (!f[x].keys.length) delete f[x]; });
+    f[id] = { name: String(d.name || 'Folder').replace(/[<>]/g, '').slice(0, 30), keys }; this.save(f);
+    const have = new Set($$('#homeRows section.row').map((s) => s.dataset.arrK)), miss = keys.filter((k) => !have.has(k)).length;
+    toast(`Folder “${f[id].name}” added${miss ? `. ${miss} of its rows need an addon you don’t have` : ''}`, 'ok', 5000);
+    return true;
+  },
+};
+window.MkFolders = Folders;
+
+/* ---------------- Seats: copy another seat's choices ---------------- */
+const SeatCopy = {
+  copy(from, to) {
+    if (from == null || !to) return;
+    const src = Seats.all().find((s) => s.id === from); if (!src) return;
+    const l = Seats.list(), i = l.findIndex((s) => s.id === to); if (i >= 0 && src.lang) { l[i] = { ...l[i], lang: { ...src.lang } }; Seats.saveList(l); }
+    const rd = (k) => { try { return localStorage.getItem(from ? `mkc:seat:${from}:${k}` : `mkc:${k}`); } catch (e) { return null; } };
+    ['taste', 'homeArrange', 'subMem'].forEach((k) => { const v = rd(k); if (v != null) try { localStorage.setItem(`mkc:seat:${to}:${k}`, v); } catch (e) { /* full */ } });
+    try { const m = localStorage.getItem(from ? `mkc:seat:${from}:miko` : 'mkc:miko'); if (m != null) localStorage.setItem(`mkc:seat:${to}:miko`, m); } catch (e) { /* none */ }
+  },
+};
+window.MkSeatCopy = SeatCopy;
+
+/* ---------------- Source list look ---------------- */
+const SrcLook = {
+  apply() { const b = document.body; if (!b) return; b.classList.toggle('src-compact', CFG.srcView === 'compact'); b.classList.toggle('src-nobadge', CFG.srcBadges === false); },
+};
+
+/* ---------------- Trakt reviews on title pages ----------------
+   Needs the Trakt app ID saved in Settings (public reviews, no sign-in needed). Reviews marked as spoilers stay
+   covered until you open them. Not shown on the kids seat. */
+const Reviews = {
+  cache: new Map(),
+  kids() { try { return typeof Seats !== 'undefined' && Seats.kids(); } catch (e) { return false; } },
+  async load(m) {
+    const tt = String(m.id).split(':')[0]; if (!/^tt\d+$/.test(tt)) return [];
+    if (this.cache.has(tt)) return this.cache.get(tt);
+    const kind = m.type === 'series' ? 'shows' : 'movies';
+    const j = await Trakt.api(`/${kind}/${tt}/comments/likes?limit=20`).catch(() => null);
+    const list = (Array.isArray(j) ? j : []).filter((c) => c && typeof c.comment === 'string' && c.comment.trim().length >= 40)
+      .map((c) => ({ id: c.id, who: (c.user && (c.user.name || c.user.username)) || 'Trakt member', text: c.comment.replace(/\[\/?spoiler\]/gi, '').trim(), spoiler: !!c.spoiler || /\[spoiler\]/i.test(c.comment), likes: c.likes || 0, rating: c.user_stats && c.user_stats.rating, at: c.created_at }))
+      .slice(0, 12);
+    this.cache.set(tt, list); if (this.cache.size > 40) this.cache.delete(this.cache.keys().next().value);
+    return list;
+  },
+  place(m) {
+    if (CFG.traktReviews === false || this.kids() || !Trakt.cfg().clientId) return;
+    const id = m.id;
+    this.load(m).then((list) => {
+      const panel = $('#detailPanel'); if (!list.length || !panel || !D.meta || D.meta.id !== id) return;
+      const old = $('#dReviews', panel); if (old) old.remove();
+      const bodies = $$(':scope > .d-body', panel), host = bodies[bodies.length - 1]; if (!host) return;
+      const sec = document.createElement('section'); sec.className = 'row mk-rv-row'; sec.id = 'dReviews';
+      sec.innerHTML = `<div class="row-head"><h2 class="row-title">Reviews on Trakt</h2></div><div class="rail">${list.map((c, i) => `<button type="button" class="mk-rv" data-nav data-rv="${i}">
+        <span class="mk-rv-top"><b translate="no">${esc(c.who)}</b>${c.rating ? `<span class="mk-rv-r"><i data-lucide="star"></i>${esc(String(c.rating))}/10</span>` : ''}</span>
+        ${c.spoiler ? '<span class="mk-rv-sp"><i data-lucide="eye-off"></i><span>Contains spoilers. Press to read.</span></span>' : `<span class="mk-rv-t" translate="no">${esc(c.text)}</span>`}
+        <small><i data-lucide="heart"></i>${c.likes}${c.at ? ` · ${esc(fmtDate(c.at))}` : ''}</small></button>`).join('')}</div>`;
+      const more = $('#dMore', panel); if (more && more.parentElement === host) host.insertBefore(sec, more); else host.appendChild(sec);
+      $$('[data-rv]', sec).forEach((b) => b.addEventListener('click', () => this.read(list, Number(b.dataset.rv))));
+      icons();
+    }).catch(() => {});
+  },
+  read(list, i) {
+    const c = list[i]; if (!c) return;
+    const el = X8.layer('mkReview', { label: 'Review', icon: 'message-square-quote', eyebrow: 'Reviews on Trakt' }); el.classList.add('mk-rv-ov');
+    if (el.hidden) X8.open('mkReview');
+    const b0 = X8.body('mkReview'); if (!b0) return;
+    b0.innerHTML = `<h2 class="x8-h" translate="no">${esc(c.who)}</h2><p class="sub">${c.rating ? `${esc(String(c.rating))}/10 · ` : ''}<i data-lucide="heart"></i> ${c.likes}${c.at ? ` · ${esc(fmtDate(c.at))}` : ''}</p>
+      <div class="mk-rv-full" tabindex="0" data-nav translate="no">${esc(c.text).replace(/\n/g, '<br>')}</div>
+      <div class="actions"><button class="btn btn-ghost" type="button" data-nav data-rvgo="-1"${i ? '' : ' disabled'}><i data-lucide="chevron-left"></i>Previous</button><button class="btn btn-ghost" type="button" data-nav data-rvgo="1"${i < list.length - 1 ? '' : ' disabled'}>Next<i data-lucide="chevron-right"></i></button></div>`;
+    const b = X8.body('mkReview'); if (!b) return;
+    $$('[data-rvgo]', b).forEach((x) => x.addEventListener('click', () => this.read(list, i + Number(x.dataset.rvgo))));
+    icons(); const f = $('.mk-rv-full', b); if (f) f.focus();
+  },
+};
+window.MkReviews = Reviews;
+
+/* ---------------- Search again on the source list ---------------- */
+const Again = {
+  keep: false,
+  mount(box, st) {
+    if (!box || st.pending) { if (this.keep && box) { const b = $('#dAgain', box); if (b) b.focus(); } return; }
+    const line = $('.status-line', box); if (!line || $('#dAgain', box)) return;
+    line.insertAdjacentHTML('beforeend', '<button class="btn btn-ghost btn-sm mk-again" type="button" id="dAgain" data-nav><i data-lucide="refresh-cw"></i>Search again</button>');
+    const b = $('#dAgain', box); b.onclick = () => this.run(); icons();
+    if (this.keep) { this.keep = false; b.focus(); }
+  },
+  run() {
+    const tgt = detailStreamTarget(); if (!tgt) return;
+    engine.addons.forEach((a) => { if (!a.virtual) engine.cache.delete(StremioEngine.streamUrl(a.baseUrl, tgt.type, tgt.id)); });
+    this.keep = document.activeElement && document.activeElement.id === 'dAgain';
+    loadDetailStreams();
+  },
+};
+window.MkAgain = Again;
+
+/* ---------------- Source speed: is it the source or your internet? ----------------
+   Reads up to 12 MB of the last film you played, straight from its server, for at most 10 seconds.
+   The link is kept in memory only, never saved or sent anywhere. */
+const SrcSpeed = {
+  last: null,
+  note(s) { if (s && /^https?:/.test(s.url || '') && !/\.m3u8?(\?|$)/i.test(s.url) && !s.ytId) this.last = { url: s.url, name: (P.ctx && P.ctx.meta && P.ctx.meta.name) || '' }; },
+  async run(btn) {
+    if (this.busy) return; const l = this.last;
+    if (!l) { toast('Play a film first, then test its source here', 'info', 4200); return; }
+    this.busy = true; const lbl = btn && btn.lastChild, t0 = lbl ? lbl.textContent : ''; if (lbl) lbl.textContent = 'Testing…';
+    try {
+      const ctl = new AbortController(), start = performance.now(); let bytes = 0;
+      const stop = setTimeout(() => ctl.abort(), 10000);
+      try {
+        const r = await fetch(l.url, { headers: { Range: 'bytes=0-12582911' }, cache: 'no-store', signal: ctl.signal });
+        if (!r.ok && r.status !== 206) throw new Error(`HTTP ${r.status}`);
+        const rd = r.body.getReader(); for (;;) { const { done, value } = await rd.read(); if (done) break; bytes += value.length; if (bytes >= 12582912) { rd.cancel(); break; } }
+      } catch (e) { if (!bytes) throw e; } finally { clearTimeout(stop); }
+      const mbps = (bytes * 8) / ((performance.now() - start) / 1000) / 1e6, line = typeof LineCheck !== 'undefined' && LineCheck.last ? LineCheck.last.mbps : 0;
+      const verdict = line ? (mbps < line * 0.5 ? 'The source is the slow part, not your internet. Another source may play better.' : 'The source keeps up with your internet.') : 'Run Test my connection too, to compare with your internet.';
+      toast(`Source: ${mbps.toFixed(0)} Mbps${line ? `. Your internet: ${line.toFixed(0)} Mbps` : ''}. ${verdict}`, 'ok', 9000, 'srcspeed');
+    } catch (e) { toast('That source’s server does not allow a speed test from here', 'err', 5000); }
+    if (lbl) lbl.textContent = t0; this.busy = false;
+  },
+};
+window.MkSrcSpeed = SrcSpeed;
+
+/* ---------------- Long Home descriptions scroll instead of being cut ----------------
+   After 3 seconds the text glides up slowly (transform only), rests at the end, then returns. */
+const HeroText = {
+  t: 0, anim: null,
+  set() {
+    clearTimeout(this.t); if (this.anim) { try { this.anim.cancel(); } catch (e) { /* gone */ } this.anim = null; }
+    const p = document.getElementById('heroDesc'); if (!p) return;
+    p.classList.remove('mk-hs');
+    if (CFG.heroScroll === false || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    this.t = setTimeout(() => this.go(p), 3000);
+  },
+  go(p) {
+    if (!p.isConnected || !p.textContent || p.scrollHeight <= p.clientHeight + 4) return;
+    const h = p.clientHeight, txt = p.textContent; p.classList.add('mk-hs'); p.style.height = `${h}px`;
+    p.innerHTML = `<span class="mk-hs-in">${esc(txt)}</span>`;
+    const inner = p.firstChild, dist = inner.offsetHeight - h; if (dist <= 4) { p.classList.remove('mk-hs'); p.style.height = ''; p.textContent = txt; return; }
+    const move = Math.max(4000, dist * 70), total = move * 2 + 4000;
+    this.anim = inner.animate([{ transform: 'translateY(0)', offset: 0 }, { transform: `translateY(-${dist}px)`, offset: move / total }, { transform: `translateY(-${dist}px)`, offset: (move + 3000) / total }, { transform: 'translateY(0)', offset: 1 }], { duration: total, easing: 'linear', iterations: 1 });
+    this.anim.onfinish = () => { this.anim = null; if (p.isConnected && p.firstChild === inner) { p.classList.remove('mk-hs'); p.style.height = ''; p.textContent = txt; } };
+  },
+};
+window.MkHeroText = HeroText;
+
+/* ---------------- Settings, commands and start-up ---------------- */
+(() => {
+  const safe = (n, fn) => { try { fn(); } catch (e) { console.warn(`2.68 ${n}:`, e); } };
+  safe('settings', () => {
+    scAddRows('subtitles', 'subPos', [
+      { group: 'Choices' },
+      { key: 'subWait', label: 'When a film starts', help: 'Right away, or wait up to 4 seconds so subtitles in your language are on from the first line.', type: 'select', options: [['fast', 'Start right away'], ['lang', 'Wait for my language']], get: () => CFG.subWait || 'fast', set: (v) => setCfg('subWait', v) },
+      { key: 'subMemory', label: 'Remember my choice for each title', help: 'The subtitles you pick for a film or series, or turning them off, come back the next time you watch it here.', type: 'toggle', get: () => CFG.subMemory !== false, set: (v) => setCfg('subMemory', v) },
+      { key: 'forcedSubs', label: 'Forced subtitles', help: 'Shows the short lines for foreign-language scenes and signs when no other subtitle is on.', type: 'toggle', get: () => CFG.forcedSubs !== false, set: (v) => setCfg('forcedSubs', v) },
+      { key: 'hideSDH', label: 'Hide SDH subtitles', help: 'Leaves out subtitles made for deaf and hard-of-hearing viewers (with sound descriptions like [door slams]) unless you pick one yourself.', type: 'toggle', get: () => CFG.hideSDH === true, set: (v) => setCfg('hideSDH', v) },
+    ]);
+    scAddRows('streams', 'showTrailers', [
+      { key: 'srcView', label: 'Source list', help: 'Detailed shows every line an addon sends. Compact keeps one line and the badges, so more sources fit.', type: 'select', options: [['detailed', 'Detailed'], ['compact', 'Compact']], get: () => CFG.srcView || 'detailed', set: (v) => { setCfg('srcView', v); SrcLook.apply(); } },
+      { key: 'srcBadges', label: 'Quality badges on sources', help: 'The small 4K, HDR, sound and size tags on each source.', type: 'toggle', get: () => CFG.srcBadges !== false, set: (v) => { setCfg('srcBadges', v); SrcLook.apply(); } },
+      { key: 'shareSetup', label: 'Share my setup', help: 'Copies a link that adds your addons on another device or for a friend in one press. Addons that hold your own key are left out.', type: 'button', text: 'Copy setup link', icon: 'link', run: () => SetupLink.share() },
+    ]);
+    scAddRows('help', 'speedRun', [
+      { key: 'srcSpeed', label: 'Test the last source', help: 'Checks how fast the server of the last film you played sends it, so you know whether a pause is the source or your internet.', type: 'button', text: 'Test the source', icon: 'server', run: (b) => SrcSpeed.run(b) },
+    ]);
+    scAddRows('sync', null, [
+      { key: 'traktReviews', label: 'Reviews on Trakt', help: 'Shows reviews from Trakt on film and series pages when your Trakt app ID is saved. Spoilers stay covered until you open them.', type: 'toggle', get: () => CFG.traktReviews !== false, set: (v) => setCfg('traktReviews', v) },
+    ]);
+    scAddRows('debrid', null, [
+      { key: 'myCloud', label: 'Your cloud', help: 'Browse and play what is already in your debrid account.', type: 'button', text: 'Open your cloud', icon: 'cloud', run: () => { closeLayer('settings'); MyCloud.open(); } },
+    ]);
+    scAddRows('home', 'arrHome', [
+      { key: 'instantHome', label: 'Open Home instantly', help: 'Home shows the rows from your last visit straight away and refreshes them in the background.', type: 'toggle', get: () => CFG.instantHome !== false, set: (v) => setCfg('instantHome', v) },
+      { key: 'heroScroll', label: 'Scroll long descriptions', help: 'The text under the featured title glides slowly to show the rest instead of being cut off.', type: 'toggle', get: () => CFG.heroScroll !== false, set: (v) => { setCfg('heroScroll', v); HeroText.set(); } },
+      { key: 'foldCode', label: 'Add a shared folder', help: 'Paste a folder code someone shared with you.', type: 'text', get: () => '', set: (v) => { if (v) Folders.importCode(v); } },
+    ]);
+  });
+  safe('commands', () => {
+    COMMANDS.push(
+      { label: 'Your cloud (files in your debrid account)', icon: 'cloud', run: () => MyCloud.open() },
+      { label: 'Copy a link to my setup', icon: 'link', run: () => SetupLink.share() },
+    );
+  });
+  safe('look', () => { SrcLook.apply(); CFG_HOOKS.push((k) => { if (k === 'srcView' || k === 'srcBadges') SrcLook.apply(); }); });
+  safe('links', () => {
+    const run = () => { const h = location.hash.replace(/^#/, ''); if (h.startsWith('setup=') || h.startsWith('setup-url=')) SetupLink.handle(h); };
+    addEventListener('hashchange', run); if (document.readyState === 'complete') setTimeout(run, 400); else addEventListener('load', () => setTimeout(run, 400), { once: true });
+  });
+  safe('sync', () => {
+    // the per-title subtitle memory travels with the seat's library
+    if (!SEAT_KEYS.includes(SubMem.KEY)) SEAT_KEYS.push(SubMem.KEY);
+  });
+})();
+</script>
 </body>
 </html>

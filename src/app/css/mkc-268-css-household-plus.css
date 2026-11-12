@@ -1,0 +1,51 @@
+/* 2.68 household-plus */
+/* 2.68 household plus: folders, your cloud, chapters, compact sources. Motion is transform/opacity only. */
+#homeRows>section.row.arr-fold{display:none}
+.mk-fold-row .rail{gap:14px}
+.mk-fold{position:relative;flex:0 0 auto;width:clamp(200px,22vw,300px);aspect-ratio:16/9;border:0;padding:0;background:none;cursor:pointer;text-align:left;color:inherit}
+.mk-fold .card-inner{position:absolute;inset:0;border-radius:var(--r-m,14px);overflow:hidden;background:linear-gradient(135deg,var(--n1a1a1d,#1a1a1d),var(--n0d0d0f,#0d0d0f));box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.mk-fold .l0{position:absolute;inset:0}
+.mk-fold .l0 img{width:100%;height:100%;object-fit:cover;opacity:.42;filter:saturate(.8)}
+.mk-fold-t{position:absolute;left:14px;right:14px;bottom:12px;display:flex;align-items:center;gap:8px;font-size:calc(15px * var(--ts,1))}
+.mk-fold-t b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk-fold-t svg{width:18px;height:18px;flex:0 0 auto;opacity:.85}
+.mk-fold:focus-visible .card-inner,.mk-fold.focus .card-inner{box-shadow:inset 0 0 0 2px var(--a1,#d9d4c7)}
+.mk-fold-ov .x8-modal{width:min(1180px,calc(100vw - 32px));max-height:calc(100vh - 48px);overflow:auto}
+.mk-fold-rows>section.row{margin:0 0 18px}
+.arr-fold-form{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px}
+.arr-fold-form .inp,.arr-fold-form select{min-width:0;flex:1 1 140px}
+.arr-fold-tag{display:inline-flex;align-items:center;gap:4px;margin-left:6px;font-size:calc(11px * var(--ts,1));color:var(--mute)}
+.mk-cl-q{width:100%;margin:6px 0 10px}
+.mk-cl-list{display:flex;flex-direction:column;gap:6px;max-height:min(62vh,640px);overflow:auto;padding-right:2px}
+.mk-cl-it{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:var(--r-s,10px);border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.03);color:inherit;text-align:left;cursor:pointer}
+.mk-cl-it span{display:flex;flex-direction:column;min-width:0}
+.mk-cl-it b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk-cl-it small{color:var(--mute);font-size:calc(12px * var(--ts,1))}
+.mk-cl-it svg{width:18px;height:18px;flex:0 0 auto;opacity:.8}
+.mk-cl-it:hover,.mk-cl-it:focus-visible,.mk-cl-it.focus{background:rgba(255,255,255,.08)}
+.mk-cl-lib{display:flex;justify-content:flex-end;margin:0 0 6px}
+.mk-chaps{display:flex;flex-direction:column;gap:2px;max-height:260px;overflow:auto}
+.mk-chaps button{display:flex;align-items:center;gap:10px;text-align:left}
+.mk-chaps .tnum{color:var(--mute);min-width:52px}
+.mk-chaps b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.src-compact .stream .t2,body.src-compact .stream .s-meta{display:none}
+body.src-compact .stream{padding-top:8px;padding-bottom:8px}
+body.src-nobadge .stream .tele{display:none}
+@media (max-width:640px){.mk-fold{width:min(72vw,260px)}}
+.mk-rv-row .rail{gap:12px}
+.mk-rv{flex:0 0 auto;width:clamp(240px,26vw,340px);min-height:150px;display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:var(--r-m,14px);border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);color:inherit;text-align:left;cursor:pointer}
+.mk-rv:hover,.mk-rv:focus-visible,.mk-rv.focus{background:rgba(255,255,255,.08)}
+.mk-rv-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mk-rv-top b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk-rv-r{display:inline-flex;align-items:center;gap:4px;color:var(--mute);font-size:calc(12px * var(--ts,1))}
+.mk-rv svg{width:14px;height:14px;flex:0 0 auto}
+.mk-rv-t{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;line-height:1.45;font-size:calc(14px * var(--ts,1));color:var(--nc9cfdd,#c9cfdd)}
+.mk-rv-sp{display:flex;align-items:center;gap:8px;flex:1;color:var(--mute)}
+.mk-rv small{display:inline-flex;align-items:center;gap:5px;color:var(--mute);font-size:calc(12px * var(--ts,1));margin-top:auto}
+.mk-rv-full{max-height:min(56vh,560px);overflow:auto;line-height:1.6;white-space:normal;padding-right:4px;margin:6px 0 12px}
+.mk-rv-ov .x8-modal{width:min(760px,calc(100vw - 32px))}
+.mk-again{margin-left:auto}
+.mk-again svg{width:14px;height:14px}
+.hero .hero-desc-slot>.hero-desc.mk-hs{display:block;-webkit-line-clamp:unset;overflow:hidden}
+.mk-hs-in{display:block;will-change:transform}
+@media (max-width:640px){.mk-rv{width:min(80vw,300px)}}

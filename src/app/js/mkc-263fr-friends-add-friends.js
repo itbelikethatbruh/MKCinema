@@ -405,8 +405,8 @@ const Friends = {
     const me = Account.user.id, day = (t) => new Date(t).toDateString();
     let prev = '';
     box.innerHTML = this.msgs.length ? this.msgs.map((m) => {
-      const mine = m.sender === me, d = day(m.created_at), sep = d !== prev ? `<div class="fr-day">${esc(new Date(m.created_at).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' }))}</div>` : ''; prev = d;
-      const time = new Date(m.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      const mine = m.sender === me, d = day(m.created_at), sep = d !== prev ? `<div class="fr-day">${esc(new Date(m.created_at).toLocaleDateString(appLocale(), { weekday: 'short', day: 'numeric', month: 'short' }))}</div>` : ''; prev = d;
+      const time = new Date(m.created_at).toLocaleTimeString(appLocale(), { hour: 'numeric', minute: '2-digit' });
       let body = esc(m.body);
       if (m.kind === 'party' && /^[A-Z2-9]{6}$/.test(m.body)) body = mine ? `You invited them to watch party <b class="mono">${esc(m.body)}</b>` : `<span>Watch party <b class="mono">${esc(m.body)}</b></span><button class="btn btn-prime btn-sm" type="button" data-nav data-frjoin="${esc(m.body)}"><i data-lucide="popcorn"></i>Join</button>`;
       if (m.kind === 'call') body = `<span class="fr-callnote"><i data-lucide="phone"></i>${esc(m.body)}</span>${mine ? '' : ' <button class="linkish" type="button" data-nav data-frback="1">Call back</button>'}`;
@@ -628,7 +628,7 @@ const FCall = {
       document.body.appendChild(b);
     }
     const showV = !!(s.rv && s.rv.getVideoTracks().some((t) => t.readyState === 'live' && !t.muted));
-    b.innerHTML = `${showV ? '<video class="fc-them" autoplay playsinline muted></video>' : ''}${s.cam && s.camStream ? '<video class="fc-me" autoplay playsinline muted></video>' : ''}
+    b.innerHTML = `${showV ? '<video class="fc-them" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" autoplay playsinline muted></video>' : ''}${s.cam && s.camStream ? '<video class="fc-me" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" autoplay playsinline muted></video>' : ''}
       <div class="fc-row"><button class="fc-who" type="button" data-fc="open" data-nav>${Friends.av(s.peer)}<span><b>${esc(Friends.label(s.peer))}</b><small class="fc-line tnum">${esc(this.line())}</small></span></button>
       ${s.state === 'ringing-out' ? '' : `<button class="ibtn sm" type="button" data-fc="mute" data-nav aria-label="${s.muted ? 'Unmute' : 'Mute'}" ${s.mic ? '' : 'disabled'}><i data-lucide="${s.muted ? 'mic-off' : 'mic'}"></i></button>
       <button class="ibtn sm" type="button" data-fc="cam" data-nav aria-label="${s.cam ? 'Camera off' : 'Camera on'}"><i data-lucide="${s.cam ? 'video' : 'video-off'}"></i></button>`}

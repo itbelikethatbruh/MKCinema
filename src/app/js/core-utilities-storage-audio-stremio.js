@@ -21,7 +21,8 @@ const fmtBytes = (b) => {
   while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
   return `${b.toFixed(b >= 10 || i < 2 ? 0 : 1)} ${u[i]}`;
 };
-const fmtDate = (d) => { const x = new Date(d); return isNaN(x) ? '' : x.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); };
+const appLocale = () => { try { const c = I18N.code; if (!c || c === 'en') return undefined; const dev = String(navigator.language || '').toLowerCase(); return dev.split('-')[0] === c ? navigator.language : c === 'pt' ? 'pt-BR' : c; } catch (e) { return undefined; } };
+const fmtDate = (d) => { const x = new Date(d); return isNaN(x) ? '' : x.toLocaleDateString(appLocale(), { year: 'numeric', month: 'short', day: 'numeric' }); };
 /* Icons: lucide's createIcons() rebuilds every icon already on the page on each call (200+ SVGs), which stalled TVs on
    every banner change. Here only new <i data-lucide> placeholders are drawn, each cloned from a cached template. */
 const ICON_TPL = new Map();
@@ -191,7 +192,7 @@ document.addEventListener('load', (e) => {
    ~3.8 MB, on the first Home load). Here a row's posters load once the row is within about two screens, and only as
    far as two screen widths past where the row is scrolled to. Same full-size images, just later. */
 const PhoneImgs = {
-  on: TOUCH_UI && !IS_TV,
+  on: TOUCH_UI || IS_TV,
   BLANK: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
   rails: new Set(), io: null, raf: 0,
   show(im) { const u = im.dataset.lsrc; if (!u) return; delete im.dataset.lsrc; im.src = u; },
@@ -199,11 +200,13 @@ const PhoneImgs = {
   // with an animation count where they will rest)
   wake(rail) {
     const imgs = rail.querySelectorAll('img[data-lsrc]'); if (!imgs.length || !rail.clientWidth) return;
-    const first = rail.firstElementChild, x0 = first ? first.offsetLeft : 0, lim = rail.scrollLeft + rail.clientWidth * 3;
+    const first = rail.firstElementChild, x0 = first ? first.offsetLeft : 0, lim = rail.scrollLeft + rail.clientWidth * (IS_TV ? 2 : 3);
     for (const im of imgs) { const c = im.closest('.rail > *') || im; if (c.offsetLeft - x0 < lim) this.show(im); else break; }
   },
   // every row within about two screens of the visible part of the page
   sweep() {
+    // 2.68 household-plus: on TVs, image work waits until rows stop sliding, so decoding never competes with the move
+    if (IS_TV && !this.calm) { clearTimeout(this.calmT); this.calmT = setTimeout(() => { this.calm = true; this.sweep(); this.calm = false; }, 140); return; }
     if (this.raf) return;
     this.raf = requestAnimationFrame(() => {
       this.raf = 0; const h = innerHeight;
@@ -453,6 +456,23 @@ const ManifestMemo = {
   },
 };
 
+/* 2.68 household-plus: Home rows from the last visit, kept in Cache Storage (card fields only, 60 per row, 3 days).
+   The first request for each plain catalog in a session answers from here and asks the addon in the background. */
+const CatSnap = {
+  C: 'mkc-catsnap-v1', served: new Set(), MAX: 60, TTL: 3 * 86400e3,
+  key(cat) { return `https://mkc.local/snap/${encodeURIComponent(cat.addon.baseUrl)}/${encodeURIComponent(cat.type)}/${encodeURIComponent(cat.id)}`; },
+  slim(m) { const o = {}; for (const k of ['id', 'type', 'name', 'poster', 'background', 'logo', 'releaseInfo', 'year', 'genres', 'imdbRating', 'description', 'posterShape', 'runtime']) if (m[k] != null) o[k] = m[k]; if (typeof o.description === 'string') o.description = o.description.slice(0, 400); return o; },
+  async get(cat) {
+    if (!window.caches) return null;
+    try { const c = await caches.open(this.C), r = await c.match(this.key(cat)); if (!r) return null; const j = await r.json(); return Array.isArray(j.metas) && Date.now() - (j.at || 0) < this.TTL ? j.metas : null; } catch (e) { return null; }
+  },
+  put(cat, metas) {
+    if (!window.caches || !metas || !metas.length) return;
+    const body = JSON.stringify({ at: Date.now(), metas: metas.slice(0, this.MAX).map((m) => this.slim(m)) });
+    caches.open(this.C).then((c) => c.put(this.key(cat), new Response(body, { headers: { 'content-type': 'application/json' } }))).catch(() => {});
+  },
+};
+
 /* =====================================================================
    StremioEngine: protocol client for live addons + in-browser virtual addons
    ===================================================================== */
@@ -662,10 +682,25 @@ class StremioEngine {
     return out;
   }
   async fetchCatalog(cat, extra = {}) {
-    const r = await this.call(cat.addon, 'catalog', cat.type, cat.id, extra);
     // an addon may send nulls, numbers as ids or no list at all: keep what is usable instead of failing the row
-    return (Array.isArray(r && r.metas) ? r.metas : []).filter((m) => m && typeof m === 'object' && (typeof m.id === 'string' || typeof m.id === 'number') && String(m.id))
+    const tidy = (r) => (Array.isArray(r && r.metas) ? r.metas : []).filter((m) => m && typeof m === 'object' && (typeof m.id === 'string' || typeof m.id === 'number') && String(m.id))
       .map((m) => ({ ...m, id: String(m.id), type: m.type || cat.type, _addon: cat.addon.manifest.name }));
+    // a plain catalog (no page, genre or search) answers from the last visit first, once per session
+    const plain = !cat.addon.virtual && !Object.values(extra || {}).some((v) => v !== undefined && v !== null && v !== '');
+    if (plain && CFG.instantHome !== false) {
+      const k = CatSnap.key(cat);
+      if (!CatSnap.served.has(k)) {
+        CatSnap.served.add(k);
+        const snap = await CatSnap.get(cat);
+        if (snap && snap.length) {
+          this.call(cat.addon, 'catalog', cat.type, cat.id, extra).then((r) => CatSnap.put(cat, tidy(r))).catch(() => {});
+          return snap.map((m) => ({ ...m, id: String(m.id), type: m.type || cat.type, _addon: cat.addon.manifest.name }));
+        }
+      }
+    }
+    const out = tidy(await this.call(cat.addon, 'catalog', cat.type, cat.id, extra));
+    if (plain) CatSnap.put(cat, out);
+    return out;
   }
   async search(q) {
     const cats = this.catalogs({ needs: 'search', includeRequired: true });

@@ -21,11 +21,16 @@ const AudioLang = {
   label(t, n) {
     if (typeof t === 'string') t = { language: t };
     const tg = t.tags || {}, lang = t.language || t.lang || t.language_code || tg.language, title = t.title || t.name || t.label || tg.title;
-    const ch = Number(t.channels || t.channel_count), chs = ch === 6 ? '5.1' : ch === 8 ? '7.1' : ch === 2 ? 'Stereo' : ch === 1 ? 'Mono' : '';
+    const ch = Number(t.channels || t.channel_count), chs = t.atmos ? 'Atmos' : ch === 6 ? '5.1' : ch === 8 ? '7.1' : ch === 2 ? 'Stereo' : ch === 1 ? 'Mono' : '';
     const ln = lang && lang !== 'und' ? langName(lang) : '';
-    const parts = [ln || title || `Track ${n + 1}`, title && title !== ln && !new RegExp(`^${String(ln).replace(/\W/g, '.')}$`, 'i').test(title) ? title : '', chs, String(t.codec || t.codec_name || '').toUpperCase()];
+    const parts = [ln || title || `Track ${n + 1}`, title && title !== ln && !new RegExp(`^${String(ln).replace(/\W/g, '.')}$`, 'i').test(title) ? title : '', chs, this.codec(t.codec || t.codec_name)];
     return parts.filter(Boolean).filter((p, i, a) => a.indexOf(p) === i).join(' · ');
   },
+  codec(c) {
+    const k = String(c || '').toLowerCase().replace(/[^a-z0-9]/g, ''); if (!k) return '';
+    return { ec3: 'Dolby Digital Plus', eac3: 'Dolby Digital Plus', ac3: 'Dolby Digital', truehd: 'Dolby TrueHD', mlp: 'Dolby TrueHD', dts: 'DTS', dtshd: 'DTS-HD', dca: 'DTS', aac: 'AAC', mp4a402: 'AAC', mp4a405: 'HE-AAC', opus: 'Opus', flac: 'FLAC', mp3: 'MP3', vorbis: 'Vorbis' }[k] || (/^mp4a/.test(k) ? 'AAC' : /^pcm/.test(k) ? 'PCM' : String(c).toUpperCase());
+  },
+  hls(t) { const a = t.attrs || {}, ch = String(a.CHANNELS || ''); return this.label({ language: t.lang, title: t.name, channels: parseInt(ch, 10) || 0, atmos: /JOC/i.test(ch), codec: t.audioCodec }, 0); },
   tracks(list) { return (Array.isArray(list) ? list : []).map((t, n) => ({ i: n, label: this.label(t || {}, n), def: !!(t && typeof t === 'object' && (t.default || (t.disposition || {}).default)) })); },
   defIndex(tracks) { const d = tracks.find((t) => t.def); return d ? d.i : 0; },
   // a lookup that hangs must not leave the menu saying "Checking" forever

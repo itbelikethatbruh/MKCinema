@@ -352,7 +352,7 @@ const Saver = {
     if (AmbientGL.ok === null && this.level > 0) AmbientGL.init($('.sv-gl', el));
     requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on')));
     clearTimeout(this.fullT); this.fullT = setTimeout(() => { if (this.isOpen) document.body.classList.add('saver-full'); }, 1200);
-    const clock = $('.sv-clock', el), tickClock = () => { clock.textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); };
+    const clock = $('.sv-clock', el), tickClock = () => { clock.textContent = new Date().toLocaleTimeString(appLocale(), { hour: 'numeric', minute: '2-digit' }); };
     tickClock(); clearInterval(this.clk); this.clk = setInterval(tickClock, 15000);
     this.frames = []; this.slow = 0; this.lastF = 0; cancelAnimationFrame(this.raf); this.raf = requestAnimationFrame((t) => this.frame(t));
     this.go(0, false);

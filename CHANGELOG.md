@@ -2,6 +2,21 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.68.0 (your cloud, setup links and a faster Home)
+
+- **Your cloud.** Browse and play what is already in your debrid account.
+- **Setup links.** Pass your whole addon setup to another screen or a friend in one press. It always asks first.
+- **Folders on Home**, with short codes to share them, and **Home opens instantly** with your last rows and keeps your place.
+- **Shuffle a series**, **chapters** in the player, and **subtitles remembered for each title**, plus forced subtitles, an option to hide SDH and an option to wait for your language at the start.
+- **Trakt reviews** on title pages, with spoilers covered.
+- More detail in the audio menu, dates and title logos in your language, **Search again** on the source list, calmer artwork on TVs, live TV that rides out short outages, and a source speed test.
+
+## Web app 2.67 (addon health check, live TV recording, 31 languages, Miko)
+
+- **Addon health check**, **record live TV**, and the app and website in **31 languages**.
+- **Miko chats with everyone**, free with a daily limit, and reads her answers aloud in a **natural voice** made on your device.
+- **Smoother on Android TV and phones:** better source picks for the TV player and clean, steady video starts and stops.
+
 ## Android app 1.10.0 and web app 2.63.0 (friends and TV services)
 
 - **Friends.** Choose a username and the name other people see, then add friends by typing their username. See who is online and, if they choose to share it, what they are watching, and open the same title in one press. Requests need their OK, and Remove, Block and Report are always one tap away.

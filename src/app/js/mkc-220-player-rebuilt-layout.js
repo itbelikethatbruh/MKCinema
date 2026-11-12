@@ -9,7 +9,7 @@
 const PX_TV = IS_TV;
 const PX_TOUCH = () => TOUCH_PLAYER.matches || TOUCH_UI;
 const PxUtil = {
-  fmtClock(d) { try { return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); } catch (e) { return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; } },
+  fmtClock(d) { try { return d.toLocaleTimeString(appLocale(), { hour: 'numeric', minute: '2-digit' }); } catch (e) { return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; } },
   svg(path) { return `<svg class="px-i" viewBox="0 0 24 24" aria-hidden="true">${path}</svg>`; },
 };
 
@@ -240,9 +240,10 @@ const PxMore = {
   html() {
     return `<h5>Info</h5>
       <button type="button" data-pxstats><i data-lucide="activity"></i>Playback stats · ${PxStats.on ? 'on' : 'off'}${PX_TV ? '' : ' (I)'}</button>
-      ${PX_TV || PX_TOUCH() ? '' : '<button type="button" data-pxkeys><i data-lucide="keyboard"></i>Keyboard shortcuts (?)</button>'}`;
+      ${PX_TV || PX_TOUCH() ? '' : '<button type="button" data-pxkeys><i data-lucide="keyboard"></i>Keyboard shortcuts (?)</button>'}${typeof Chapters !== 'undefined' ? Chapters.html() : ''}`;
   },
   bind(m) {
+    if (typeof Chapters !== 'undefined') Chapters.bind(m);
     const s = $('[data-pxstats]', m); if (s) s.onclick = () => { PxStats.toggle(); renderOptMenu(); };
     const k = $('[data-pxkeys]', m); if (k) k.onclick = () => { m.hidden = true; PxKeys.toggle(); };
   },

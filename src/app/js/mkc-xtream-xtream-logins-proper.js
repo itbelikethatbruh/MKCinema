@@ -90,7 +90,7 @@
       const st = String(u.status || '').trim(), bad = st && !/^active$/i.test(st);
       if (st) out.push(`<b>${esc(st)}</b>`);
       const exp = Number(u.exp_date);
-      if (exp > 0) { const d = new Date(exp * 1000); out.push(`${d < new Date() ? 'ended' : 'until'} ${esc(d.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }))}`); }
+      if (exp > 0) { const d = new Date(exp * 1000); out.push(`${d < new Date() ? 'ended' : 'until'} ${esc(d.toLocaleDateString(appLocale(), { day: 'numeric', month: 'short', year: 'numeric' }))}`); }
       else if (u.exp_date === null || u.exp_date === '' || u.exp_date === '0') out.push('no end date');
       const max = Number(u.max_connections);
       if (max > 0) out.push(`${Number(u.active_cons) || 0} of ${max} screen${max === 1 ? '' : 's'} in use`);
@@ -249,8 +249,8 @@
       rows = arr(j && j.epg_listings).map((p) => ({ title: b64(p.title) || 'Programme', desc: b64(p.description), start: String(p.start || ''), s: Number(p.start_timestamp), e: Number(p.stop_timestamp || p.end_timestamp), arch: String(p.has_archive) === '1' }))
         .filter((p) => p.s && p.e && p.e <= now && p.s >= from && (p.arch || p.has_archive === undefined)).sort((x, y) => y.s - x.s);
     } catch (e) { b.innerHTML = `<h3 class="x8-h">${esc(c.name)}</h3><p class="sub">${esc(e.message === 'not-xtream' ? 'The service sent no programme list for this channel.' : e.message)}</p>`; return; }
-    const day = (t) => new Date(t * 1000).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
-    const hm = (t) => new Date(t * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const day = (t) => new Date(t * 1000).toLocaleDateString(appLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
+    const hm = (t) => new Date(t * 1000).toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' });
     b.innerHTML = `<h3 class="x8-h">${esc(c.name)}</h3>${rows.length ? `<div class="xt-list">${rows.slice(0, 300).map((p, i) => `<div class="xt-pair"><button class="xt-row" type="button" data-nav data-pi="${i}" title="${esc(p.desc)}"><span><b>${esc(p.title)}</b><small>${esc(day(p.s))} · ${esc(hm(p.s))}–${esc(hm(p.e))}</small></span><span class="xt-when"><i data-lucide="play"></i></span></button>${window.MkRec ? `<button class="ibtn xt-rec" type="button" data-nav data-pr="${i}" title="Save to a file" aria-label="Save ${esc(p.title)} to a file"><i data-lucide="download"></i></button>` : ''}</div>`).join('')}</div>` : '<p class="sub">Nothing to catch up on for this channel yet.</p>'}`;
     icons();
     const pick = (p) => {

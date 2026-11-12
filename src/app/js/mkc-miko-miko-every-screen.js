@@ -139,7 +139,7 @@ const MikoSoul = (() => {
     if (/^(lol|lmao|haha+|hehe+|rofl|that's funny|thats funny|funny)$/.test(t)) return { say: line('laugh') };
     if (/^(tell me a joke|(say|tell me) something funny|joke|make me laugh|know any jokes)$/.test(t)) return { say: line('joke') };
     if (/^(what's|whats|what is) your fav(ou?rite)? (film|movie|show|series)$|^do you have a fav(ou?rite)? (film|movie|show)$/.test(t)) return { say: line('fav') };
-    if (/^(what time is it|what's the time|whats the time|time)$/.test(t)) { const h = new Date().getHours(); return { say: line('time', { t: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), late: h >= 23 || h < 5 ? '. Bit late for a three-hour epic, maybe' : '' }) }; }
+    if (/^(what time is it|what's the time|whats the time|time)$/.test(t)) { const h = new Date().getHours(); return { say: line('time', { t: new Date().toLocaleTimeString(appLocale(), { hour: 'numeric', minute: '2-digit' }), late: h >= 23 || h < 5 ? '. Bit late for a three-hour epic, maybe' : '' }) }; }
     if ((m = t.match(/^(?:my name is|my name's|call me|you can call me|i'm called|im called|it's me|its me)\s+([\p{L}][\p{L}'-]{0,23}(?: [\p{L}][\p{L}'-]{0,23})?)$/u))) {
       const n = m[1].replace(/(^|[\s-])\p{L}/gu, (c) => c.toUpperCase());
       if (/^(miko|bored|tired|sad|back|here|done|good|fine|ok|okay)$/i.test(n)) return null;
@@ -207,7 +207,7 @@ const MikoSoul = (() => {
     return female()[0] || null;
   };
   // text for the ear: no quotes or symbols read out, short breaths between sentences
-  const spoken = (t) => String(t || '').replace(/[“”"«»]/g, '').replace(/\bS(\d+) · E(\d+)\b/g, 'season $1, episode $2').replace(/·/g, ',').replace(/…/g, '.').replace(/\s+/g, ' ').trim();
+  const spoken = (t) => String(t || '').replace(/\[[^\]]{0,240}\]/g, ' ').replace(/https?:\/\/\S+?(?=[.,!?;:]?(?:\s|$))/g, ' ').replace(/[*_`#~]+/g, '').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, '').replace(/\s&\s/g, ' and ').replace(/[“”"«»]/g, '').replace(/\bS(\d+) · E(\d+)\b/g, 'season $1, episode $2').replace(/·/g, ',').replace(/…/g, '.').replace(/\s+/g, ' ').trim();
   const sysSpeak = (t) => {
     try {
       if (!window.speechSynthesis || typeof SpeechSynthesisUtterance === 'undefined') return;
@@ -228,11 +228,11 @@ const MikoSoul = (() => {
      It runs in a worker so the app never stutters, speaks sentence by sentence so the first words come quickly, and
      falls back to the device's own voice for other languages, on any error, or when this device turns out too slow. */
   const Natural = {
-    URL: 'vendor/kokoro-1.2.1/miko-voice.js', w: null, seq: 0, gen: 0, cbs: new Map(), ctx: null, srcs: [], at: 0, state: '', pct: 0, slow: 0, listeners: new Set(),
+    URL: 'vendor/kokoro-1.2.1/miko-voice-2.js', w: null, seq: 0, gen: 0, cbs: new Map(), ctx: null, srcs: [], at: 0, state: '', pct: 0, slow: 0, listeners: new Set(),
     can() {
       try { return typeof Worker !== 'undefined' && typeof WebAssembly === 'object' && !!(window.AudioContext || window.webkitAudioContext) && /^en\b/i.test(lang()); } catch (e) { return false; }
     },
-    wanted() { return !!ls.get('natural', false); },
+    wanted() { const v = ls.get('natural', null); if (v != null) return !!v; try { return !(navigator.connection && navigator.connection.saveData); } catch (e) { return true; } },
     on() { return this.wanted() && this.can() && this.state !== 'failed' && this.slow < 2; },
     emit() { this.listeners.forEach((f) => { try { f(this.state, this.pct); } catch (e) { /* gone */ } }); },
     voice() { return /^en-(gb|ie|au|nz)\b/i.test(lang()) ? 'bf_emma' : 'af_heart'; },
@@ -253,7 +253,7 @@ const MikoSoul = (() => {
       if (this.state === 'ready') return Promise.resolve();
       if (!this.loadP) {
         this.state = 'loading'; this.emit();
-        this.loadP = this.call('load').then(() => { this.state = 'ready'; this.pct = 100; this.emit(); }).catch((e) => { this.state = 'failed'; this.loadP = null; this.emit(); throw e; });
+        this.loadP = this.call('load').then((d) => { this.mode = (d && d.mode) || ''; this.state = 'ready'; this.pct = 100; this.emit(); }).catch((e) => { this.state = 'failed'; this.loadP = null; this.emit(); throw e; });
       }
       return this.loadP;
     },
@@ -270,27 +270,30 @@ const MikoSoul = (() => {
     async speak(text) {
       this.stop(); const my = this.gen;
       await this.load();
-      // short first piece, so she starts talking fast; long sentences split at a comma
-      const parts = []; (spoken(text).match(/[^.!?]+[.!?]*/g) || []).forEach((s) => { s = s.trim(); if (!s) return; if (s.length > 160) s.split(/(?<=,)\s+/).forEach((x) => x.trim() && parts.push(x.trim())); else parts.push(s); });
-      for (const s of parts.slice(0, 8)) {
+      // her first sentence on its own, so she starts talking fast; then fuller phrases, so she reads with a person's flow
+      const sents = []; (spoken(text).match(/[^.!?]+[.!?]*/g) || []).forEach((s) => { s = s.trim(); if (!s) return; if (s.length > 220) s.split(/(?<=[,;:])\s+/).forEach((x) => x.trim() && sents.push(x.trim())); else sents.push(s); });
+      const parts = []; sents.forEach((s, i) => { const L = parts.length; if (i > 0 && L > 1 && (parts[L - 1] + ' ' + s).length <= 220) parts[L - 1] += ' ' + s; else parts.push(s); });
+      for (const s of parts.slice(0, 6)) {
         if (my !== this.gen) return;
         const t0 = performance.now(), d = await this.call('say', { text: s, voice: this.voice(), speed: 1 });
         if (my !== this.gen) return;
+        if (d.mode) this.mode = d.mode;
         const secs = d.pcm.length / (d.rate || 24000), took = (performance.now() - t0) / 1000;
         // this device can't keep up (more than 2.5 s of work per second of speech, twice): use its own voice instead
-        if (secs > 0.8 && took / secs > 2.5) { this.slow++; if (this.slow >= 2) this.emit(); }
+        if (this.warm && secs > 0.8 && took / secs > 2.5) { this.slow++; if (this.slow >= 2) this.emit(); }
+        this.warm = true;
         this.play(d.pcm, d.rate || 24000);
       }
     },
     async set(on) {
-      ls.set('natural', on ? true : null);
+      ls.set('natural', !!on);
       if (!on) { this.stop(); this.emit(); return; }
       this.slow = 0; if (this.state === 'failed') this.state = '';
       try { await this.load(); } catch (e) { /* state says failed */ }
     },
   };
   const speak = (t) => {
-    if (Natural.on()) { Natural.speak(t).catch(() => sysSpeak(t)); return; }
+    if (Natural.on()) { if (Natural.state === 'ready') { Natural.speak(t).catch(() => sysSpeak(t)); return; } Natural.load().catch(() => { /* state says failed */ }); }
     if (Natural.srcs.length) Natural.stop(); sysSpeak(t);
   };
 
@@ -894,7 +897,7 @@ const Miko = {
     const N = MikoSoul.Natural, row = $('#mikoNatRow'), s = $('#mikoNatS'), b = $('#mikoNat'); if (!row) return;
     const show = !!Store.raw.get('rm.akSpeak', false) && N.can(); row.hidden = !show; s.hidden = !show; if (!show) return;
     const v = N.wanted(); b.classList.toggle('on', v); b.setAttribute('aria-checked', String(v));
-    s.textContent = !v ? 'A lifelike voice that runs on this device, free. About 90 MB, downloaded once. English only for now.'
+    s.textContent = !v ? 'A lifelike voice that runs on this device, free. Downloaded once: about 90 MB, or 300 MB on devices with a strong graphics chip. English only for now.'
       : N.state === 'loading' ? `Getting her voice ready… ${N.pct}%` : N.state === 'failed' ? 'Her natural voice couldn’t load here, so she’s using this device’s voice.'
         : N.slow >= 2 ? 'This device is a little slow for her natural voice, so she’s using its own.' : N.state === 'ready' ? 'Her natural voice is on. It runs on this device.' : 'Her natural voice loads the first time she speaks.';
   },
@@ -961,7 +964,7 @@ Rules:
     if (h) bits.push(`open title page: "${h.name}" (id ${h.id}, ${h.type})`);
     if (this.kids()) bits.push('kids seat');
     const pn = MikoSoul.name(); if (pn) bits.push(`the person's name: ${pn}`);
-    bits.push(`local time ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`);
+    bits.push(`local time ${new Date().toLocaleTimeString(appLocale(), { hour: 'numeric', minute: '2-digit' })}`);
     return `[${bits.join('; ')}]`;
   },
   async tool(name, a) {
