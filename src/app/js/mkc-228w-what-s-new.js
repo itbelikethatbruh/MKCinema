@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.68.2', date: '2026-11-12', items: [
+    ['better', 'Smoother panels', 'Panels open smoothly: no more jumps or flicker behind them, and the update card waits until the app has finished starting.'],
+  ] },
   { v: '2.68.1', date: '2026-11-12', items: [
     ['better', 'Peak Cinema with series', 'Peak Cinema now surfs series too, and only plays scenes in your language.'],
   ] },
@@ -506,7 +509,7 @@ const WhatsNew = {
   later(prev) {
     let n = 0;
     const wait = () => setTimeout(() => {
-      const busy = document.body.classList.contains('intro-on') || document.body.classList.contains('layer-open') || !$('#player').hidden || [...MENU_LAYERS, 'tour'].some((x) => $(`#${x}`) && !$(`#${x}`).hidden) || $('.focus-ask, .sup-ask');
+      const busy = (window.MKCalm ? MKCalm.busy() : document.body.classList.contains('intro-on')) || document.body.classList.contains('layer-open') || !$('#player').hidden || [...MENU_LAYERS, 'tour'].some((x) => $(`#${x}`) && !$(`#${x}`).hidden) || $('.focus-ask, .sup-ask');
       if (!busy) this.open(prev); else if (n++ < 120) wait();
     }, n ? 1500 : 2500);
     wait();

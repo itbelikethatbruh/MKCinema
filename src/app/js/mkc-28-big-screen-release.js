@@ -3312,7 +3312,7 @@ const AddonLink = {
       const m = location.hash.match(/[#&]install=([^&]+)/); if (!m) return;
       let u = ''; try { u = decodeURIComponent(m[1]); } catch (e) { u = m[1]; }
       history.replaceState(null, '', location.pathname + location.search);
-      setTimeout(() => this.ask(u), document.body.classList.contains('intro-on') ? 2500 : 300);
+      setTimeout(() => this.ask(u), (window.MKCalm ? MKCalm.busy() : document.body.classList.contains('intro-on')) ? 2500 : 300);
     };
     fromHash(); addEventListener('hashchange', fromHash);
     // a setup page opened from MKCinema: remember it, and offer the copied link on return
@@ -3401,7 +3401,7 @@ const SideNav = {
   ask() {
     if (Store.raw.get('navAsked', false)) return;
     const fresh = !Store.get('toured', false); this.fresh = fresh;
-    const busy = () => (fresh && !Store.get('toured', false) && n < 120) || document.body.classList.contains('intro-on') || !$('#tour').hidden || document.body.classList.contains('layer-open') || !$('#player').hidden || $$('.x8-layer:not([hidden]), .layer-ov:not([hidden])').length;
+    const busy = () => (fresh && !Store.get('toured', false) && n < 120) || (window.MKCalm ? MKCalm.busy() : document.body.classList.contains('intro-on')) || !$('#tour').hidden || document.body.classList.contains('layer-open') || !$('#player').hidden || $$('.x8-layer:not([hidden]), .layer-ov:not([hidden])').length;
     let n = 0;
     const wait = () => { if (Store.raw.get('navAsked', false)) return; if (busy() && n++ < 240) { setTimeout(wait, 1000); return; } if (!busy()) this.chooser(); };
     setTimeout(wait, 2500);

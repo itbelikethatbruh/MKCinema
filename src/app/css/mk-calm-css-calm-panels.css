@@ -1,0 +1,12 @@
+/* 2.68.2 calm-panels */
+/* 1. Opening any panel locks the page (overflow:hidden). On Windows and Linux screens with a mouse that took the scrollbar
+      away, so the whole page got 15 px wider under the panel and narrower again on close. While locked, the page keeps a
+      matching right edge (set by mk-calm-js only when a scrollbar was really there). scrollbar-gutter can't do this:
+      Chrome drops the gutter on a locked page. */
+html.mk-sbw body{padding-right:var(--mk-sbw)!important}
+html.mk-sbw:not(.nav-side) .dock-wrap{right:var(--mk-sbw)}
+html.mk-sbw #mikoFab{margin-right:var(--mk-sbw)}
+/* 2. Every panel is opaque, yet each one also blurred the whole screen behind it on every frame of its slide-in. The blur
+      could not be seen, cost the most GPU time of the open, and popped in when the backdrop fade ended (Chrome only lets a
+      blur see the page once the fading parent reaches full opacity). */
+.layer-ov>.modal.glass-solid,.layer-ov>.panel.glass-solid,.layer-ov>.modal .glass-solid{-webkit-backdrop-filter:none;backdrop-filter:none}
