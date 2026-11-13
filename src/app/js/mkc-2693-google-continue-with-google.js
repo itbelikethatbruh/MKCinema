@@ -19,7 +19,9 @@
   const isTV = () => typeof TvLogin !== 'undefined' && TvLogin.isTV();
   const inApp = () => location.hostname === 'mkcinema.pages.dev' || /; wv\)|MKCinema|Electron/i.test(ua);
   /* direct | safari | browser | tv */
-  A.googleMode = () => (isTV() ? 'tv' : iosHome() ? 'safari' : inApp() ? 'browser' : 'direct');
+  const nativeAndroid = () => { try { return !!(window.MKAndroid && typeof MKAndroid.signIn === 'function'); } catch (e) { return false; } };
+  /* direct | android (app 1.12+: Custom Tab, back through mkcinema://auth) | safari | browser (older apps) | tv */
+  A.googleMode = () => (isTV() ? 'tv' : nativeAndroid() ? 'android' : iosHome() ? 'safari' : inApp() ? 'browser' : 'direct');
   A.googleOK = function () {
     return !!(this.google && this.client && !this.user && /^https:$/.test(location.protocol)
       && (/^(app\.mkcinema\.app|mkcinema\.pages\.dev)$/.test(location.hostname) || (this.googleMode() !== 'direct' && typeof TvLogin !== 'undefined')));
@@ -101,6 +103,32 @@
       A.signInGoogle(true);
     };
   };
+  /* Android app 1.12+: like any app. Google opens in a Custom Tab and comes back to mkcinema://auth?code=...; the
+     PKCE verifier stays in this WebView, so a code caught by anything else is useless. */
+  const PK = 'mkc:gpkce';
+  const pkce = async () => { await A.loadLib(); const c = A.config(); return window.supabase.createClient(c.url.replace(/\/+$/, ''), c.anonKey, { auth: { flowType: 'pkce', persistSession: true, autoRefreshToken: false, detectSessionInUrl: false, storageKey: PK } }); };
+  const pkceClear = () => { try { Object.keys(localStorage).filter((k) => k.indexOf(PK) === 0).forEach((k) => localStorage.removeItem(k)); } catch (e) { /* blocked */ } };
+  A.googleAndroid = async function () {
+    const tmp = await pkce();
+    const { data, error } = await tmp.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: 'mkcinema://auth', skipBrowserRedirect: true, queryParams: { prompt: 'select_account' } } });
+    if (error) throw error;
+    if (!data || !data.url || !MKAndroid.signIn(data.url)) throw new Error('Could not open Google. Update the MKCinema app and try again.');
+    return '';
+  };
+  window.MKAuthDone = async (uri) => {
+    let u; try { u = new URL(String(uri || '')); } catch (e) { return; }
+    const q = new URLSearchParams(u.search), h = new URLSearchParams((u.hash || '').replace(/^#/, ''));
+    const code = q.get('code'), bad = q.get('error_description') || h.get('error_description');
+    if (bad || !code) { if (bad) toast(`Google sign-in did not finish: ${bad.replace(/\+/g, ' ')}`, 'err', 8000); pkceClear(); return; }
+    try {
+      const tmp = await pkce();
+      const { data, error } = await tmp.auth.exchangeCodeForSession(code); if (error) throw error;
+      if (!A.client) await A.ensure();
+      const r = await A.client.auth.setSession({ access_token: data.session.access_token, refresh_token: data.session.refresh_token }); if (r.error) throw r.error;
+    } catch (e) { toast(`Google sign-in did not finish: ${e.message || e}`, 'err', 8000); }
+    finally { pkceClear(); }
+  };
+  { const m = /[#&]mkauth=([^&]+)/.exec(location.hash || ''); if (m) { history.replaceState(null, '', location.pathname + location.search); setTimeout(() => window.MKAuthDone(decodeURIComponent(m[1])), 600); } }
   A.signInGoogle = function (direct) {
     const mode = direct ? 'direct' : this.googleMode();
     if (mode === 'tv') { // the phone does the Google part
@@ -108,6 +136,7 @@
       if (TvLogin.state !== 'waiting' && TvLogin.state !== 'phone') TvLogin.start();
       toast('Scan the code with your phone, then choose Continue with Google there', 'info', 8000); return Promise.resolve();
     }
+    if (mode === 'android') return this.run('Continue with Google', () => this.googleAndroid());
     if (mode !== 'direct') return this.run('Continue with Google', () => this.googleHandoff());
     return this.run('Continue with Google', async () => {
       const back = `${location.origin}${location.pathname}`;
