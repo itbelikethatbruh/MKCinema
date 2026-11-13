@@ -2,7 +2,9 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
-## Web app 2.69.8 and Android app 1.12.2 (every TV on your Wi-Fi)
+## Web app 2.69.8 and Android app 1.12.3 (every TV on your Wi-Fi)
+
+- Adding a TV by its address says when the TV is on a different network from the phone, and the scan details list each device once.
 
 - **Add a TV by its address:** if a TV doesn't show up, tap "TV not listed?" and type its address; the app connects to it directly and remembers it. The same card shows every device the phone heard on the Wi-Fi.
 - The About page shows the Android app version.
