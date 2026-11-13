@@ -10,6 +10,10 @@
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
+    <!-- 1.12.0: AirPlay to an Apple TV: find it with Bonjour, and keep the session going with the screen off -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <!-- 1.11.0: a programme picked in the guide starts recording on time, with the app closed (RecService.Alarm) -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32"/>
@@ -93,6 +97,8 @@
         <receiver android:name=".RecService$Alarm" android:exported="false">
             <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED"/></intent-filter>
         </receiver>
+        <!-- 1.12.0: an AirPlay session to an Apple TV (the TV stops the film when the phone's connection closes) -->
+        <service android:name=".AirPlayService" android:exported="false" android:foregroundServiceType="mediaPlayback"/>
         <!-- 1.8.1: the checked update APK, handed to the system installer (see UpdateFiles.java) -->
         <provider android:name=".UpdateFiles" android:authorities="com.mkcinema.app.update" android:exported="false" android:grantUriPermissions="true"/>
         <service android:name=".EpisodeAlerts" android:exported="false" android:permission="android.permission.BIND_JOB_SERVICE"/>

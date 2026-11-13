@@ -99,8 +99,13 @@ public class MainActivity extends Activity {
     SpeechRecognizer recognizer;
     String voiceLang;
 
+    /** 1.12.0: the open MKCinema screen, so services (AirPlay) can answer the page */
+    static volatile MainActivity liveAct;
+    static void toPage(String code) { MainActivity a = liveAct; if (a != null && a.web != null) a.js(code); }
+
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
+        liveAct = this;
         UiModeManager ui = (UiModeManager) getSystemService(UI_MODE_SERVICE);
         tv = (ui != null && ui.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION)
                 || getPackageManager().hasSystemFeature("android.software.leanback")
@@ -592,12 +597,24 @@ public class MainActivity extends Activity {
         }
         /** 1.8.1: the Exit button of the TV's "Leaving MKCinema?" prompt */
         @JavascriptInterface public void exit(String k) { if (ok(k)) runOnUiThread(MainActivity.this::finishAndRemoveTask); }
+        /** 1.12.0: AirPlay to an Apple TV (AirPlayService): find TVs, send a link, the TV's code, controls */
+        @JavascriptInterface public boolean apScan(String k) { if (!ok(k) || tv) return false; runOnUiThread(() -> AirPlayService.scan(MainActivity.this)); return true; }
+        @JavascriptInterface public String apPlay(String k, String json) { if (!ok(k) || tv || json == null || json.length() > 20000) return "error: not allowed here"; return AirPlayService.play(MainActivity.this, json); }
+        @JavascriptInterface public void apPin(String k, String pin) { if (ok(k)) AirPlayService.pin(pin); }
+        @JavascriptInterface public void apCtl(String k, String cmd, String arg) { if (ok(k) && cmd != null) AirPlayService.ctl(cmd, arg); }
+        @JavascriptInterface public void apForget(String k, String id) { if (ok(k) && id != null) AirPlayService.forget(getApplicationContext(), id); }
+        @JavascriptInterface public String apState(String k) {
+            if (!ok(k)) return "{}";
+            try { return new JSONObject().put("state", AirPlayService.session == null ? "idle" : AirPlayService.lastState).put("pos", AirPlayService.lastPos).put("dur", AirPlayService.lastDur)
+                .put("tv", AirPlayService.current == null ? "" : AirPlayService.current.name).toString(); } catch (Exception e) { return "{}"; }
+        }
     }
 
     /** Every MKAndroid method, for BRIDGE_JS */
     static final String[] BRIDGE_METHODS = { "voice", "voiceStop", "version", "fps", "watchNext", "watchNextRemove", "p2pStart", "p2pStop",
         "p2pAvailable", "dlStart", "dlSpace", "setSlow", "epEnable", "epOn", "epSync", "dlList", "dlRemove", "dlPlay", "pipState", "pip", "play",
-        "setEngine", "update", "youtube", "exit", "iptvHosts", "recStart", "recStop", "recPlan", "recUnplan", "signIn" };
+        "setEngine", "update", "youtube", "exit", "iptvHosts", "recStart", "recStop", "recPlan", "recUnplan",
+        "apScan", "apPlay", "apPin", "apCtl", "apForget", "apState", "signIn" };
 
     static String newKey() {
         byte[] b = new byte[24]; new SecureRandom().nextBytes(b);
@@ -884,5 +901,5 @@ public class MainActivity extends Activity {
         CookieManager.getInstance().flush();
     }
     @Override protected void onResume() { super.onResume(); resumed = true; web.onResume(); if (webDead) reloadWeb(); if (wasPip && !(Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode())) wasPip = false; }
-    @Override protected void onDestroy() { if (isFinishing()) new Thread(() -> P2P.stop(getApplicationContext())).start(); if (recognizer != null) recognizer.destroy(); if (web != null) { ((ViewGroup) web.getParent()).removeView(web); web.destroy(); } super.onDestroy(); }
+    @Override protected void onDestroy() { if (liveAct == this) liveAct = null; if (isFinishing()) new Thread(() -> P2P.stop(getApplicationContext())).start(); if (recognizer != null) recognizer.destroy(); if (web != null) { ((ViewGroup) web.getParent()).removeView(web); web.destroy(); } super.onDestroy(); }
 }
