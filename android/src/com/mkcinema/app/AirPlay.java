@@ -584,6 +584,31 @@ final class AirPlay {
         return shared;
     }
 
+    /** 1.12.2: asks a receiver at a known address what it is (GET /info, no pairing needed), for "Add a TV by its
+     *  address". Returns name, model, deviceID and features ("0xLO,0xHI"), or null when nothing AirPlay answers there. */
+    static Map<String, String> info(InetAddress host, int port) {
+        for (String proto : new String[] { "HTTP/1.1", "RTSP/1.0" }) {
+            try (Conn c = new Conn(host, port, 4000)) {
+                c.sock.setSoTimeout(5000);
+                Map<String, String> h = new LinkedHashMap<>();
+                h.put("User-Agent", "AirPlay/550.10"); h.put("X-Apple-ProtocolVersion", "1");
+                if (proto.startsWith("RTSP")) h.put("CSeq", "0");
+                Resp r = c.send("GET", "/info", proto, h, null);
+                if (r.code != 200) continue;
+                Object o = plistRead(r.body);
+                if (!(o instanceof Map)) continue;
+                Map<?, ?> d = (Map<?, ?>) o;
+                Map<String, String> out = new LinkedHashMap<>();
+                Object f = d.get("features");
+                if (f instanceof Number) { long v = ((Number) f).longValue(); out.put("features", String.format(Locale.US, "0x%X,0x%X", v & 0xffffffffL, v >>> 32)); }
+                for (String k : new String[] { "name", "model", "deviceID" }) if (d.get(k) != null) out.put(k, String.valueOf(d.get(k)));
+                out.put("flags", d.get("statusFlags") instanceof Number ? String.format(Locale.US, "0x%X", ((Number) d.get("statusFlags")).longValue()) : "0x4");
+                return out;
+            } catch (Exception e) { /* try the other way, then give up */ }
+        }
+        return null;
+    }
+
     static boolean feature(String features, int bit) {
         if (features == null) return false;
         try {

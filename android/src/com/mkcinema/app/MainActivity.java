@@ -70,7 +70,7 @@ public class MainActivity extends Activity {
     static final String[] APP_HOSTS = { HOST, "app.mkcinema.app" };
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6;
-    static final String VER = "1.12.1";
+    static final String VER = "1.12.2";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -603,6 +603,9 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void apPin(String k, String pin) { if (ok(k)) AirPlayService.pin(pin); }
         @JavascriptInterface public void apCtl(String k, String cmd, String arg) { if (ok(k) && cmd != null) AirPlayService.ctl(cmd, arg); }
         @JavascriptInterface public void apForget(String k, String id) { if (ok(k) && id != null) AirPlayService.forget(getApplicationContext(), id); }
+        /** 1.12.2: add a TV the scan can't see, by its address; and what the scan heard */
+        @JavascriptInterface public void apAdd(String k, String ip) { if (ok(k) && !tv && ip != null && ip.length() < 64) AirPlayService.probeLater(getApplicationContext(), ip, true); }
+        @JavascriptInterface public String apDiag(String k) { return ok(k) ? AirPlayService.diag() : "[]"; }
         @JavascriptInterface public String apState(String k) {
             if (!ok(k)) return "{}";
             try { return new JSONObject().put("state", AirPlayService.session == null ? "idle" : AirPlayService.lastState).put("pos", AirPlayService.lastPos).put("dur", AirPlayService.lastDur)
@@ -614,7 +617,7 @@ public class MainActivity extends Activity {
     static final String[] BRIDGE_METHODS = { "voice", "voiceStop", "version", "fps", "watchNext", "watchNextRemove", "p2pStart", "p2pStop",
         "p2pAvailable", "dlStart", "dlSpace", "setSlow", "epEnable", "epOn", "epSync", "dlList", "dlRemove", "dlPlay", "pipState", "pip", "play",
         "setEngine", "update", "youtube", "exit", "iptvHosts", "recStart", "recStop", "recPlan", "recUnplan",
-        "apScan", "apPlay", "apPin", "apCtl", "apForget", "apState", "signIn" };
+        "apScan", "apPlay", "apPin", "apCtl", "apForget", "apState", "signIn", "apAdd", "apDiag" };
 
     static String newKey() {
         byte[] b = new byte[24]; new SecureRandom().nextBytes(b);

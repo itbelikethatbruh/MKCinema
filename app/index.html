@@ -43600,6 +43600,12 @@ html.tv .ea-badge,html.tv .ea-dot{display:none!important}
 .apa-dev small{opacity:.65}
 .apa-dev .apa-go{margin-left:auto;opacity:.6}
 .apa-dev>i:first-child{flex:none;opacity:.85}
+.apa-more{display:block;margin:10px auto 0;background:none;border:0;color:inherit;opacity:.7;font:inherit;text-decoration:underline;cursor:pointer}
+.apa-ip{display:block;width:100%;max-width:280px;margin:14px 0 6px;padding:11px 12px;font-size:18px;font-variant-numeric:tabular-nums;border-radius:var(--r-m);border:1px solid var(--line);background:rgba(255,255,255,.04);color:inherit}
+.apa-ip:focus{outline:none;border-color:var(--champ,#d8b46a)}
+.apa-heard{margin:8px 0 0;padding:0;list-style:none;font-size:13px;max-height:220px;overflow:auto}
+.apa-heard li{padding:6px 0;border-top:1px solid var(--line)}
+.apa-heard small{display:block;opacity:.65}
 .apa-wait{display:flex;align-items:center;gap:10px;padding:10px 2px;opacity:.75}
 .apa-pin{display:block;width:100%;max-width:240px;margin:16px auto 6px;padding:12px 10px;text-align:center;font-size:30px;letter-spacing:.45em;text-indent:.45em;font-variant-numeric:tabular-nums;border-radius:var(--r-m);border:1px solid var(--line);background:rgba(255,255,255,.04);color:inherit}
 .apa-pin:focus{outline:none;border-color:var(--champ,#d8b46a)}
@@ -43682,6 +43688,8 @@ html.tv .ea-badge,html.tv .ea-dot{display:none!important}
       + (AP.scanning ? `<div class="apa-wait"><span class="spin"></span>${devs.length ? 'Looking for more TVs…' : 'Looking for TVs on this Wi-Fi…'}</div>`
         : devs.length ? '' : `<p class="sub">No TV found. Make sure it is on and on the same Wi-Fi as this phone. On an Apple TV, AirPlay has to be on in Settings (AirPlay and HomeKit).</p><div class="actions"><button class="btn btn-ghost" type="button" id="apaAgain"><i data-lucide="refresh-cw"></i>Look again</button></div>
           ${vlc.length ? `<p class="sub">VLC can also send this film to a Chromecast from its own cast icon.</p><div class="actions">${vlc.map((p) => playerBtn(p, url, streamTitle(P.ctx), false)).join('')}</div>` : ''}`);
+    if (typeof A.apAdd === 'function' && !AP.scanning) box.insertAdjacentHTML('beforeend', '<button class="apa-more" type="button" id="apaMore">TV not listed? Add it by its address</button>');
+    const more = $('#apaMore', box); if (more) more.addEventListener('click', () => addByIp());
     $$('[data-apa]', box).forEach((b) => b.addEventListener('click', () => pick(AP.devs.find((d) => d.id === b.dataset.apa))));
     const again = $('#apaAgain', box); if (again) again.addEventListener('click', () => { scan(); paintList(); });
     $$('[data-m3u]', box).forEach((x) => x.addEventListener('click', () => downloadM3U(x.dataset.m3u, x.dataset.title)));
@@ -43694,6 +43702,27 @@ html.tv .ea-badge,html.tv .ea-dot{display:none!important}
       <div class="apa-list" id="apaList"></div>
       <p class="tour-note">The first time, an AirPlay TV shows a 4-digit code to type here. Subtitles inside the video file can be turned on with the TV remote; subtitles MKCinema adds stay on this phone.</p>`);
     scan(); paintList();
+  }
+  /* ---- app 1.12.2: a TV the scan can't see, added by its address; and what the scan heard ---- */
+  function addByIp(msg) {
+    let heard = [];
+    try { heard = JSON.parse(A.apDiag() || '[]'); } catch (e) { heard = []; }
+    const el = card('Add a TV by its address', `<p class="sub">On an Apple TV the address is in Settings › Network (for example 192.168.1.20). On other TVs look in the network settings.</p>
+      <input class="apa-ip" id="apaIp" type="text" inputmode="decimal" autocomplete="off" placeholder="192.168.1.20" aria-label="TV address">
+      <p class="sub apa-ipmsg"></p>
+      <div class="actions"><button class="btn btn-prime" type="button" id="apaIpGo"><i data-lucide="plus"></i>Add TV</button><button class="btn btn-ghost" type="button" id="apaIpBack">Back</button></div>
+      ${heard.length ? `<p class="tour-note" style="margin-top:18px">What this phone heard on the Wi-Fi</p><ul class="apa-heard">${heard.map((h) => `<li><b>${esc(h.name || '?')}</b> <small>${esc([h.kind === 'cast' ? 'Chromecast' : h.kind === 'dlna' ? 'DLNA' : 'AirPlay', h.host, h.why].filter(Boolean).join(' · '))}</small></li>`).join('')}</ul>` : ''}`);
+    const inp = $('#apaIp', el), note = $('.apa-ipmsg', el);
+    if (msg) note.textContent = msg;
+    const go = () => {
+      const v = inp.value.trim();
+      if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(v)) { note.textContent = 'Type the address as four numbers with dots, like 192.168.1.20.'; inp.focus(); return; }
+      note.innerHTML = '<span class="spin"></span> Checking…'; AP.adding = true; A.apAdd(v);
+    };
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+    $('#apaIpGo', el).addEventListener('click', go);
+    $('#apaIpBack', el).addEventListener('click', () => picker(AP.mode), { once: true });
+    setTimeout(() => inp.focus(), 60);
   }
   function pick(d) {
     if (!d) return;
@@ -43780,6 +43809,11 @@ html.tv .ea-badge,html.tv .ea-dot{display:none!important}
   window.MKAirPlay = {
     devices(list) { AP.devs = Array.isArray(list) ? list : []; paintList(); },
     scanned() { AP.scanning = false; clearTimeout(AP.scanT); paintList(); },
+    added(o) {
+      o = o || {}; if (!AP.adding) return; AP.adding = false;
+      if (!o.ok) { const n = $('.apa-ipmsg'); if (n) n.textContent = o.msg || 'Nothing answered at that address.'; return; }
+      toast(`Added ${o.name}`, 'ok', 3000, 'tvc'); picker(AP.mode);
+    },
     state(o) {
       o = o || {}; const st = o.state; AP.st = st;
       if (o.tv) AP.tv = o.tv;
@@ -43852,6 +43886,12 @@ html.tv .ea-badge,html.tv .ea-dot{display:none!important}
     AP.lastSent = s; send(d);
   });
 
+  // the About page shows the Android app's own version next to the web version
+  try {
+    const v = A.version();
+    const tag = () => $$('.ab-hero small').forEach((x) => { if (!x.dataset.appv) { x.dataset.appv = '1'; x.append(` · Android app ${v}`); } });
+    if (v) document.addEventListener('click', () => { setTimeout(tag, 350); setTimeout(tag, 1200); }, true);
+  } catch (e) { /* older app */ }
   // after a reload while the TV is still playing (the session lives in the app)
   try { const now = JSON.parse(A.apState() || '{}'); if (now.state && now.state !== 'idle') { AP.tv = now.tv || ''; AP.bg = true; } } catch (e) { /* older app */ }
   paintHome();

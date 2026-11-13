@@ -2,8 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
-## Web app 2.69.8 and Android app 1.12.1 (every TV on your Wi-Fi)
+## Web app 2.69.8 and Android app 1.12.2 (every TV on your Wi-Fi)
 
+- **Add a TV by its address:** if a TV doesn't show up, tap "TV not listed?" and type its address; the app connects to it directly and remembers it. The same card shows every device the phone heard on the Wi-Fi.
+- The About page shows the Android app version.
 - **Every TV in one list:** Send to TV in the Android app now lists every TV it finds on your Wi-Fi: Apple TVs and AirPlay TVs (Samsung, LG, Sony, Vizio), Chromecast and Google TV, and smart TVs that accept DLNA. A TV that answers several ways shows once.
 - Chromecast, Google TV and DLNA TVs take MKV and WebM links as they are.
 - Finding TVs is more thorough on busy networks with many devices.
