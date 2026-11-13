@@ -119,18 +119,11 @@ func nativeSelfTest(w webview2.WebView, hwnd uintptr, out string) {
 		<-d
 		time.Sleep(1500 * time.Millisecond)
 	}
-	shot("clip")
+	shot("page-over-video")
 	ui(func() { _ = np.c.Hide() })
-	shot("hidden")
-	ui(func() { _ = np.c.Show() })
-	ui(func() {
-		const gwlStyle = ^uintptr(15) // -16
-		st, _, _ := pGetWindowLongPtrW.Call(np.video, gwlStyle)
-		_, _, _ = pSetWindowLongPtrW.Call(np.video, gwlStyle, st&^0x04000000)
-		_, _, _ = pSetWindowPos.Call(np.video, 1, 0, 0, 0, 0, 0x0001|0x0002|0x0010|0x0020) // NOSIZE NOMOVE NOACTIVATE FRAMECHANGED
-	})
-	shot("noclip")
-	res["page"], res["video"] = res["clip"].(map[string]any)["page"], res["clip"].(map[string]any)["video"]
+	shot("video-alone")
+	m := res["page-over-video"].(map[string]any)
+	res["page"], res["video"] = m["page"], m["video"]
 	if v, ok := cl.Get("vo-configured"); ok {
 		res["vo"] = v
 	}

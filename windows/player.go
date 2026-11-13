@@ -72,8 +72,10 @@ func setupPlayer(w webview2.WebView, c *edge.Chromium, parent uintptr) {
 	wc := wndClassEx{WndProc: windows.NewCallback(defProc), Instance: inst, Background: black, ClassName: name}
 	wc.Size = uint32(unsafe.Sizeof(wc))
 	_, _, _ = pRegisterClassExW.Call(uintptr(unsafe.Pointer(&wc)))
-	const wsChild, wsClipSiblings, wsDisabled = 0x40000000, 0x04000000, 0x08000000
-	h, _, err := pCreateWindowExW.Call(0, uintptr(unsafe.Pointer(name)), 0, wsChild|wsClipSiblings|wsDisabled,
+	// No WS_CLIPSIBLINGS: with it, Windows clips the whole video window away under the page's window and the
+	// see-through page shows black (checked by the windows-native workflow's self-test).
+	const wsChild, wsDisabled = 0x40000000, 0x08000000
+	h, _, err := pCreateWindowExW.Call(0, uintptr(unsafe.Pointer(name)), 0, wsChild|wsDisabled,
 		0, 0, 1, 1, parent, 0, inst, 0)
 	if h == 0 {
 		log.Printf("player: video window: %v", err)
