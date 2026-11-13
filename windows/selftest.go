@@ -95,25 +95,42 @@ func nativeSelfTest(w webview2.WebView, hwnd uintptr, out string) {
 		res["err"] = err.Error()
 	}
 	time.Sleep(5 * time.Second)
-	img := grabWindow(hwnd)
-	if f, err := os.Create(out + ".png"); err == nil {
-		_ = png.Encode(f, img)
-		f.Close()
-	}
-	b := img.Bounds()
-	top := img.RGBAAt(b.Dx()/2, 30)
-	res["top"] = []uint8{top.R, top.G, top.B}
-	res["page"] = top.R > 200 && top.G < 60 && top.B < 60
-	// the test pattern is colourful: count the different colours in the middle of the window
-	seen := map[color.RGBA]bool{}
-	for y := b.Dy() / 4; y < b.Dy()*3/4; y += 7 {
-		for x := b.Dx() / 4; x < b.Dx()*3/4; x += 7 {
-			c := img.RGBAAt(x, y)
-			seen[color.RGBA{c.R &^ 15, c.G &^ 15, c.B &^ 15, 255}] = true
+	// colourful = the test pattern shows: count the different colours in the middle of the window
+	shot := func(name string) {
+		img := grabWindow(hwnd)
+		if f, err := os.Create(out + "-" + name + ".png"); err == nil {
+			_ = png.Encode(f, img)
+			f.Close()
 		}
+		b := img.Bounds()
+		top := img.RGBAAt(b.Dx()/2, 30)
+		seen := map[color.RGBA]bool{}
+		for y := b.Dy() / 4; y < b.Dy()*3/4; y += 7 {
+			for x := b.Dx() / 4; x < b.Dx()*3/4; x += 7 {
+				c := img.RGBAAt(x, y)
+				seen[color.RGBA{c.R &^ 15, c.G &^ 15, c.B &^ 15, 255}] = true
+			}
+		}
+		res[name] = map[string]any{"page": top.R > 200 && top.G < 60 && top.B < 60, "colours": len(seen), "video": len(seen) > 12}
 	}
-	res["colours"] = len(seen)
-	res["video"] = len(seen) > 12
+	ui := func(f func()) {
+		d := make(chan struct{})
+		w.Dispatch(func() { f(); close(d) })
+		<-d
+		time.Sleep(1500 * time.Millisecond)
+	}
+	shot("clip")
+	ui(func() { _ = np.c.Hide() })
+	shot("hidden")
+	ui(func() { _ = np.c.Show() })
+	ui(func() {
+		const gwlStyle = ^uintptr(15) // -16
+		st, _, _ := pGetWindowLongPtrW.Call(np.video, gwlStyle)
+		_, _, _ = pSetWindowLongPtrW.Call(np.video, gwlStyle, st&^0x04000000)
+		_, _, _ = pSetWindowPos.Call(np.video, 1, 0, 0, 0, 0, 0x0001|0x0002|0x0010|0x0020) // NOSIZE NOMOVE NOACTIVATE FRAMECHANGED
+	})
+	shot("noclip")
+	res["page"], res["video"] = res["clip"].(map[string]any)["page"], res["clip"].(map[string]any)["video"]
 	if v, ok := cl.Get("vo-configured"); ok {
 		res["vo"] = v
 	}
