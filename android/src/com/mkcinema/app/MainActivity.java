@@ -249,6 +249,7 @@ public class MainActivity extends Activity {
     String startUrl(Intent i) {
         Uri d = i != null ? i.getData() : null;
         if (d != null && "stremio".equals(d.getScheme())) return HOME + (HOME.contains("#") ? "&" : "#") + "install=" + Uri.encode(d.toString());
+        if (authReturn(d)) return HOME + (HOME.contains("#") ? "&" : "#") + "mkauth=" + Uri.encode(d.toString());
         return d != null && ourLink(d) ? inApp(d) : HOME;
     }
 
@@ -273,7 +274,23 @@ public class MainActivity extends Activity {
         Uri d = i.getData();
         // an addon Install link while MKCinema is open: hand it to the page (it asks first), no reload
         if (d != null && "stremio".equals(d.getScheme())) { web.evaluateJavascript("window.MKInstall?MKInstall(" + JSONObject.quote(d.toString()) + "):location.replace(" + JSONObject.quote(startUrl(i)) + ")", null); return; }
+        // 1.12.0: back from Google sign-in (mkcinema://auth?code=...): the page finishes it, no reload
+        if (authReturn(d)) { web.evaluateJavascript("window.MKAuthDone?MKAuthDone(" + JSONObject.quote(d.toString()) + "):location.replace(" + JSONObject.quote(startUrl(i)) + ")", null); return; }
         if (d != null) web.loadUrl(startUrl(i));
+    }
+    /** 1.12.0: the address Google sign-in comes back to (Supabase redirect_to mkcinema://auth) */
+    static boolean authReturn(Uri d) { return d != null && "mkcinema".equals(d.getScheme()) && "auth".equals(d.getHost()); }
+    /** 1.12.0: Google sign-in in a Custom Tab (Google refuses sign-in inside a WebView). Only the project's own
+        Supabase sign-in address is opened; Chrome then returns to mkcinema://auth, which lands in onNewIntent. */
+    void openSignIn(String url) {
+        Uri u;
+        try { u = Uri.parse(url); } catch (Exception e) { return; }
+        if (!"https".equals(u.getScheme()) || u.getHost() == null || !u.getHost().endsWith(".supabase.co") || !"/auth/v1/authorize".equals(u.getPath())) return;
+        Intent i = new Intent(Intent.ACTION_VIEW, u);
+        Bundle extras = new Bundle(); extras.putBinder("android.support.customtabs.extra.SESSION", null); // a Custom Tab without the support library
+        i.putExtras(extras);
+        i.putExtra("android.support.customtabs.extra.TOOLBAR_COLOR", Color.BLACK);
+        try { startActivity(i); } catch (ActivityNotFoundException e) { open(u); }
     }
 
     /** Keeps MKCinema pages in the app; sends players, stores and other sites to the right app. */
@@ -452,6 +469,7 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public void voiceStop(String k) { if (ok(k)) runOnUiThread(() -> { if (recognizer != null) recognizer.cancel(); }); }
         @JavascriptInterface public String version(String k) { return ok(k) ? VER : ""; }
+        @JavascriptInterface public boolean signIn(String k, String url) { if (!ok(k) || url == null || url.length() > 4000) return false; runOnUiThread(() -> openSignIn(url)); return true; }
         /** 1.6.0: frame-rate matching for the in-app player on TVs (the page measures the film's fps; 0 restores the TV's mode) */
         @JavascriptInterface public void fps(String k, float f) { if (!tv || !ok(k)) return; runOnUiThread(() -> TvExtras.matchFrameRate(MainActivity.this, f)); }
         /** 1.6.0: Continue watching on the Android TV / Google TV home screen */
@@ -596,7 +614,7 @@ public class MainActivity extends Activity {
     static final String[] BRIDGE_METHODS = { "voice", "voiceStop", "version", "fps", "watchNext", "watchNextRemove", "p2pStart", "p2pStop",
         "p2pAvailable", "dlStart", "dlSpace", "setSlow", "epEnable", "epOn", "epSync", "dlList", "dlRemove", "dlPlay", "pipState", "pip", "play",
         "setEngine", "update", "youtube", "exit", "iptvHosts", "recStart", "recStop", "recPlan", "recUnplan",
-        "apScan", "apPlay", "apPin", "apCtl", "apForget", "apState" };
+        "apScan", "apPlay", "apPin", "apCtl", "apForget", "apState", "signIn" };
 
     static String newKey() {
         byte[] b = new byte[24]; new SecureRandom().nextBytes(b);
