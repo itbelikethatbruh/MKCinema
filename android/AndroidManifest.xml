@@ -65,6 +65,13 @@
                 <!-- 1.8.1: the web app's public home (shared links), opened on mkcinema.pages.dev where the sign-in lives -->
                 <data android:scheme="https" android:host="app.mkcinema.app"/>
             </intent-filter>
+            <!-- 1.12.0: Google sign-in comes back here from the Custom Tab (Supabase redirect_to mkcinema://auth) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="mkcinema" android:host="auth"/>
+            </intent-filter>
             <!-- 1.8.1: mkcinema.app's front page only (its /download links keep opening in the browser) -->
             <intent-filter android:autoVerify="false">
                 <action android:name="android.intent.action.VIEW"/>
