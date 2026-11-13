@@ -2,6 +2,12 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.69.4 and Android app 1.12.0 (AirPlay from Android)
+
+- **Apple TV from Android:** the MKCinema Android app now sends films to an Apple TV with AirPlay, no extra app needed. Tap Send to TV, pick your Apple TV, and type the 4-digit code it shows the first time. The Apple TV plays the film itself, and the phone becomes the remote (pause, skip, Play here), with Pause and Stop in the notification too.
+- MKV files from Real-Debrid or TorBox go to the Apple TV as the service's TV-ready copy. The TV button on the main page can pick an Apple TV before you press play.
+- Chrome on Android points Apple TV owners to the Android app.
+
 ## Web app 2.69.3 (Watch on your TV, Sign in with Google)
 
 - **Watch on your TV:** a TV button at the top of the main page connects to your TV before you press play. In Chrome it connects to a Chromecast or Google TV; on iPhone, iPad and Mac Safari it turns on TV mode so the next film is made TV-ready.
