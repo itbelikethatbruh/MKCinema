@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	version     = "1.5.0"
+	version     = "1.6.0"
 	home        = "https://mkcinema.pages.dev/" // origins.Hosts[0]: the saved sign-in and settings live on this origin
 	title       = "MKCinema"
 	runtimeLink = "https://go.microsoft.com/fwlink/p/?LinkId=2124703"
@@ -162,16 +162,26 @@ func main() {
 
 	if c := w.(interface{ Chromium() *edge.Chromium }).Chromium(); c != nil {
 		setupBrowser(c, hwnd, w.Dispatch)
+		setupPlayer(w, c, hwnd)
 	}
 
 	_ = w.Bind("mkP2P", mkP2P)
 	_ = w.Bind("mkPresence", mkPresence)
 	_ = w.Bind("mkDL", mkDL)
 	_ = w.Bind("mkPass", mkPass)
+	_ = w.Bind("mkPlayer", mkPlayer)
 	w.Init(desktopInit())
 
+	if out := os.Getenv("MKC_NATIVE_SELFTEST"); out != "" {
+		w.SetHtml(selfTestHTML)
+		go nativeSelfTest(w, hwnd, out)
+		w.Run()
+		stopPlayer()
+		return
+	}
 	w.Navigate(home)
 	w.Run()
+	stopPlayer()
 	stopPass()
 	stopP2P()
 	stopDL()

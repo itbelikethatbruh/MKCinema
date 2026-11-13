@@ -8,5 +8,5 @@ for crashes that made the Windows app close on launch with no message. Only the 
   now caught (`int32`), stored in `edge.LastError` and returned, instead of `log.Fatal` (a silent exit in a
   GUI app). `PermissionRequested` passed the permission kind by value instead of by pointer.
 - `webview.go`: no `log.Fatal`; a failed start destroys the window without posting WM_QUIT (which closed the
-  error dialog); `WindowOptions.BeforeShow`, `OnClose`, `Chromium()` hooks; black window background.
+  error dialog); `WindowOptions.BeforeShow`, `OnClose`, `OnSize`, `Chromium()` hooks; black window background.
 - `pkg/edge/mkcinema_ext.go`: video fullscreen, new-window and process-failed events, `Reload`.
