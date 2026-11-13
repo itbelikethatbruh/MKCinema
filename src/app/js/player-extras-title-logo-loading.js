@@ -215,7 +215,7 @@ const Failover = {
     }, 3500);
   },
   candidates(failed) {
-    const list = visibleStreams((P.ctx && P.ctx.streams) || []).filter((s) => s._tel && s._tel.webReady && !s._tel.isTrailer && s._tel.cached !== false && !this.tried.has(s));
+    const list = visibleStreams((P.ctx && P.ctx.streams) || []).filter((s) => s._tel && s._tel.webReady && !s._tel.isTrailer && !s._tel.is3d && s._tel.cached !== false && !this.tried.has(s));
     const g = failed && failed.behaviorHints && failed.behaviorHints.bingeGroup;
     return list.sort((a, b) => (g ? ((b.behaviorHints || {}).bingeGroup === g) - ((a.behaviorHints || {}).bingeGroup === g) : 0) || b._tel.score - a._tel.score);
   },

@@ -2,6 +2,12 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.69.1 (AirPlay picture, no double pictures)
+
+- **AirPlay with the picture:** Send to TV on iPhone and iPad switches to a source AirPlay can show, so the TV gets the film, not just the sound.
+- **No more double pictures:** 3D copies, which show the same film twice side by side, are no longer picked automatically and are tagged 3D in the source list.
+- Plural row names on Discover in seven languages.
+
 ## Web app 2.69.0 (Discover)
 
 - **Discover:** a new page in the menu with trending films and series, new releases to watch at home, brand-new series and little-known gems.

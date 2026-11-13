@@ -265,7 +265,7 @@ const Peak = {
     try { if (meta && dm !== undefined) D.meta = meta; vis = visibleStreams(streams); } finally { if (meta && dm !== undefined) D.meta = dm; }
     const ok = vis.filter((s) => {
       const t = s._tel, bh = s.behaviorHints || {};
-      if (t.cached !== true || t.isTrailer || bh.proxyHeaders || bh.notWebReady) return false;
+      if (t.cached !== true || t.isTrailer || t.is3d || bh.proxyHeaders || bh.notWebReady) return false;
       if (!(t.kind === 'http' || (t.kind === 'p2p' && t.debrid))) return false;
       return BrowserPlay.ok(s);
     });

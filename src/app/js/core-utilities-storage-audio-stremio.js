@@ -386,6 +386,9 @@ const Telemetry = {
     const isTrailer = kind === 'yt' || /\btrailer\b/i.test(s.name || '') || s._trailer;
     if (isTrailer && kind !== 'yt') source = 'Trailer';
     const mkv = /\.mkv(\?|$)/i.test(url) || /\.mkv\b/i.test(bh.filename || '');
+    // 2.69.1 no-3d: a 3D release holds two pictures side by side (SBS) or stacked (OU/TAB), or an MVC second view
+    const is3d = /(^|[^a-z0-9])(h-?sbs|f-?sbs|half[\s._-]?sbs|full[\s._-]?sbs|sbs[\s._-]?3d|3d[\s._-]?sbs|h-?ou|f-?ou|half[\s._-]?(ou|tab)|full[\s._-]?(ou|tab)|3d[\s._-]?(ou|tab|hou|hsbs)|over[\s._-]?under|mvc|bd3d|3d[\s._-]?bluray|bluray[\s._-]?3d)([^a-z0-9]|$)/.test(T)
+      || (/(^|[^a-z0-9-])3d([^a-z0-9]|$)/.test(T) && !/3d[\s._-]?(audio|sound|spatial)/.test(T));
     const webReady = (kind === 'http' || kind === 'hls') && bh.notWebReady !== true;
     const proxied = !!(bh.proxyHeaders && (bh.proxyHeaders.request || bh.proxyHeaders.response));
     const lines = String(s.title || s.description || '').split('\n').map((l) => l.trim()).filter(Boolean);
@@ -396,17 +399,19 @@ const Telemetry = {
     score += audio.includes('7.1') ? 6 : audio.includes('5.1') ? 4 : 0;
     if (kind === 'hls') score += 6; if (mkv) score -= 60; if (codec === 'HEVC' || codec === 'AV1') score -= 20; // browser codec support is patchy
     if (isTrailer) score -= 1000;
+    if (is3d) score -= 900;
     if (!webReady && kind !== 'yt') score -= 2000;
     const rank = { '4K UHD': 4, '1440p': 3.5, '1080p': 3, '720p': 2, SD: 1 }, ceiling = { '4k': 4, '1080': 3, '720': 2 }[CFG.maxQuality] || 4;
     if (res && rank[res] > ceiling) score -= 250;
     if ((CFG.preferFormat === 'hls' && kind === 'hls') || (CFG.preferFormat === 'mp4' && kind === 'http')) score += 40;
-    return { res, hdr, audio, codec, size, sizeBytes, seeds, source, kind, isTrailer, mkv, webReady, proxied, lines, headline, score };
+    return { res, hdr, audio, codec, size, sizeBytes, seeds, source, kind, isTrailer, mkv, is3d, webReady, proxied, lines, headline, score };
   },
   // compact: one audio tag and no codec/size/peers boxes (the stream row prints those as quiet text)
   badges(s, tel, addonName, compact) {
     const b = [];
     if (tel.res) b.push(`<span class="tb res ${tel.res === '4K UHD' ? 'k4' : ''}">${tel.res}</span>`);
     if (tel.hdr) b.push(`<span class="tb hdr">${tel.hdr}</span>`);
+    if (tel.is3d) b.push('<span class="tb hdr" title="Two pictures side by side, for 3D TVs and glasses">3D</span>');
     if (compact && tel.audio.length) b.push(`<span class="tb aud">${tel.audio.join(' ')}</span>`);
     else tel.audio.forEach((a) => b.push(`<span class="tb aud">${a}</span>`));
     const cls = tel.kind === 'p2p' ? 'p2p' : tel.isTrailer ? 'trl' : tel.kind === 'ext' ? 'ext' : '';

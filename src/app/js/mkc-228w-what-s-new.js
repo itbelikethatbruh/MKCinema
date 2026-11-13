@@ -8,6 +8,10 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.69.1', date: '2026-11-12', items: [
+    ['better', 'AirPlay with the picture', 'Send to TV on iPhone and iPad now switches to a source AirPlay can show, so your TV gets the film, not just the sound.'],
+    ['better', 'No more double pictures', '3D copies, which show the same film twice side by side, are no longer picked for you. They are tagged 3D in the source list.'],
+  ] },
   { v: '2.69.0', date: '2026-11-12', items: [
     ['new', 'Discover', 'Discover: a new page in the menu with trending films and series, new releases to watch at home, brand-new series and little-known gems.'],
   ] },
