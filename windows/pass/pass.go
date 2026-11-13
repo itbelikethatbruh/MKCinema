@@ -33,6 +33,7 @@ type Server struct {
 	Base string
 	srv  *http.Server
 	cl   *http.Client
+	auth authSlot // Google sign-in hand-back, see auth.go
 }
 
 // ErrPrivate is returned for addresses on this computer or the local network.
@@ -110,7 +111,9 @@ func Start() (*Server, error) {
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/"+token+"/r", s.read)
-	mux.HandleFunc("/"+token+"/tv", s.tv) // the person's own TV service, see tv.go
+	mux.HandleFunc("/"+token+"/tv", s.tv)              // the person's own TV service, see tv.go
+	mux.HandleFunc("/"+token+"/auth", s.authBack)      // the browser, back from Google sign-in (auth.go)
+	mux.HandleFunc("/"+token+"/auth/wait", s.authWait) // MKCinema's page waiting for it
 	s.srv = &http.Server{Handler: cors(mux), ReadHeaderTimeout: 10 * time.Second}
 	go func() { _ = s.srv.Serve(ln) }()
 	s.Base = fmt.Sprintf("http://127.0.0.1:%d/%s", ln.Addr().(*net.TCPAddr).Port, token)
