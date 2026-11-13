@@ -7,6 +7,12 @@
 .apa-dev small{opacity:.65}
 .apa-dev .apa-go{margin-left:auto;opacity:.6}
 .apa-dev>i:first-child{flex:none;opacity:.85}
+.apa-more{display:block;margin:10px auto 0;background:none;border:0;color:inherit;opacity:.7;font:inherit;text-decoration:underline;cursor:pointer}
+.apa-ip{display:block;width:100%;max-width:280px;margin:14px 0 6px;padding:11px 12px;font-size:18px;font-variant-numeric:tabular-nums;border-radius:var(--r-m);border:1px solid var(--line);background:rgba(255,255,255,.04);color:inherit}
+.apa-ip:focus{outline:none;border-color:var(--champ,#d8b46a)}
+.apa-heard{margin:8px 0 0;padding:0;list-style:none;font-size:13px;max-height:220px;overflow:auto}
+.apa-heard li{padding:6px 0;border-top:1px solid var(--line)}
+.apa-heard small{display:block;opacity:.65}
 .apa-wait{display:flex;align-items:center;gap:10px;padding:10px 2px;opacity:.75}
 .apa-pin{display:block;width:100%;max-width:240px;margin:16px auto 6px;padding:12px 10px;text-align:center;font-size:30px;letter-spacing:.45em;text-indent:.45em;font-variant-numeric:tabular-nums;border-radius:var(--r-m);border:1px solid var(--line);background:rgba(255,255,255,.04);color:inherit}
 .apa-pin:focus{outline:none;border-color:var(--champ,#d8b46a)}

@@ -29,6 +29,14 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.12.2 (versionCode 29): add a TV by its address
+
+`MKAndroid.apAdd(ip)` checks one address in the background: AirPlay `GET /info` on port 7000 (no pairing needed; name,
+model, deviceID and features come from its binary plist), else an open Chromecast port 8009. It answers in
+`MKAirPlay.added({ok, name|msg})`, keeps the address in the app's settings and checks it again on every scan.
+`MKAndroid.apDiag()` returns what the last scan heard (kind, name, address, and why anything was left out), shown in the
+same card. Needs web 2.69.8 (the updated block); older pages don't show it.
+
 ## 1.12.1 (versionCode 28): every TV on the Wi-Fi
 
 Send to TV lists Chromecast / Google TV and DLNA smart TVs next to AirPlay ones, all through the same bridge

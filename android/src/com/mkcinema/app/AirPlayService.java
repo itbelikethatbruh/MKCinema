@@ -65,6 +65,14 @@ public class AirPlayService extends Service {
     static final ArrayDeque<NsdServiceInfo> toResolve = new ArrayDeque<>(); static boolean resolving, scanning;
     static final java.util.Set<String> seen = java.util.Collections.newSetFromMap(new ConcurrentHashMap<>()), seenNames = java.util.Collections.newSetFromMap(new ConcurrentHashMap<>());
     static final Map<String, Integer> tries = new ConcurrentHashMap<>();
+    /** 1.12.2: what the last scan heard, including what it left out and why (shown under "TV not listed?") */
+    static final Map<String, String[]> heard = new ConcurrentHashMap<>();
+    static void hear(String key, String kind, String name, String host, String why) { heard.put(key, new String[] { kind, name == null ? "" : name, host == null ? "" : host, why }); }
+    static String diag() {
+        JSONArray l = new JSONArray();
+        for (String[] h : heard.values()) { JSONObject o = new JSONObject(); try { o.put("kind", h[0]).put("name", h[1]).put("host", h[2]).put("why", h[3]); } catch (Exception e) { /* never */ } l.put(o); }
+        return l.toString();
+    }
     static WifiManager.MulticastLock mlock;
     static Runnable scanEnd;
     static final int SCAN_MS = 20000;
@@ -74,7 +82,8 @@ public class AirPlayService extends Service {
         final Context app = c.getApplicationContext();
         pushDevices(app);
         if (scanning) { main.removeCallbacks(scanEnd); main.postDelayed(scanEnd, SCAN_MS); return; }
-        scanning = true; seen.clear(); seenNames.clear(); tries.clear();
+        scanning = true; seen.clear(); seenNames.clear(); tries.clear(); heard.clear();
+        for (String ip : manual(app)) probeLater(app, ip, false);
         try {
             WifiManager wm = (WifiManager) app.getSystemService(Context.WIFI_SERVICE);
             if (wm != null) { mlock = wm.createMulticastLock("mkcinema-tv"); mlock.setReferenceCounted(false); mlock.acquire(); }
@@ -86,7 +95,7 @@ public class AirPlayService extends Service {
                 @Override public void onDiscoveryStopped(String t) { }
                 @Override public void onStartDiscoveryFailed(String t, int e) { synchronized (AirPlayService.class) { discs.remove(this); } }
                 @Override public void onStopDiscoveryFailed(String t, int e) { }
-                @Override public void onServiceFound(NsdServiceInfo s) { seenNames.add(String.valueOf(s.getServiceName())); synchronized (AirPlayService.class) { toResolve.add(s); } resolveNext(app); }
+                @Override public void onServiceFound(NsdServiceInfo s) { seenNames.add(String.valueOf(s.getServiceName())); hear(s.getServiceType() + "/" + s.getServiceName(), kindOf(s), s.getServiceName(), null, "looking up"); synchronized (AirPlayService.class) { toResolve.add(s); } resolveNext(app); }
                 @Override public void onServiceLost(NsdServiceInfo s) { }
             };
             try { nsd.discoverServices(type, NsdManager.PROTOCOL_DNS_SD, l); discs.add(l); } catch (Exception e) { /* this kind can't be searched */ }
@@ -94,6 +103,7 @@ public class AirPlayService extends Service {
         Thread ssdp = new Thread(() -> Dlna.discover(SCAN_MS - 2000, r -> {
             Device d = new Device();
             d.kind = "dlna"; d.id = "dlna:" + r.udn; d.name = r.name; d.model = r.model; d.control = r.control; d.host = r.host;
+            hear("dlna/" + r.udn, "dlna", r.name, r.host.getHostAddress(), "listed");
             found(app, d);
         }), "tv-ssdp");
         ssdp.setDaemon(true); ssdp.start();
@@ -128,30 +138,72 @@ public class AirPlayService extends Service {
         String k = s.getServiceType() + "/" + s.getServiceName();
         int n = tries.containsKey(k) ? tries.get(k) : 0;
         if (n < 2) { tries.put(k, n + 1); synchronized (AirPlayService.class) { toResolve.add(s); } }
+        else hear(k, kindOf(s), s.getServiceName(), null, "no answer to the lookup");
     }
     @SuppressWarnings("deprecation")
     static void add(Context app, NsdServiceInfo i) {
         Map<String, byte[]> a = i.getAttributes();
-        if (i.getHost() == null) return;
+        String key = i.getServiceType() + "/" + i.getServiceName(), host = i.getHost() == null ? null : i.getHost().getHostAddress();
+        if (i.getHost() == null) { hear(key, kindOf(i), i.getServiceName(), null, "no address"); return; }
         String type = String.valueOf(i.getServiceType());
         Device d = new Device();
         d.host = i.getHost();
         if (type.contains("googlecast")) {
             String ca = txt(a, "ca"), id = txt(a, "id"), fn = txt(a, "fn");
-            try { if (ca != null && (Long.parseLong(ca.trim()) & 1) == 0) return; } catch (NumberFormatException e) { /* unknown: keep */ }   // speakers and groups can't show video
+            try { if (ca != null && (Long.parseLong(ca.trim()) & 1) == 0) { hear(key, "cast", fn, host, "speaker or group (no video)"); return; } } catch (NumberFormatException e) { /* unknown: keep */ }   // speakers and groups can't show video
             d.kind = "cast"; d.id = "cast:" + (id != null ? id : i.getServiceName());
             d.name = fn != null && !fn.isEmpty() ? fn : i.getServiceName(); d.model = txt(a, "md");
             d.port = i.getPort() > 0 ? i.getPort() : 8009;
         } else {
             String features = txt(a, "features"), id = txt(a, "deviceid");
-            if (!showsVideo(features)) return;   // speakers, receivers and HomePods can't show video
+            if (!showsVideo(features)) { hear(key, "airplay", i.getServiceName(), host, "speaker or receiver (no video), features " + features); return; }   // speakers, receivers and HomePods can't show video
             String md = txt(a, "model");
-            if (md != null && (md.startsWith("AudioAccessory") || md.startsWith("AirPort"))) return;   // HomePod, AirPort Express
+            if (md != null && (md.startsWith("AudioAccessory") || md.startsWith("AirPort"))) { hear(key, "airplay", i.getServiceName(), host, "HomePod or AirPort (" + md + ")"); return; }   // HomePod, AirPort Express
             d.id = (id != null ? id : i.getServiceName()).toUpperCase(Locale.US);
             d.name = i.getServiceName(); d.model = txt(a, "model"); d.features = features; d.flags = txt(a, "flags");
             d.port = i.getPort() > 0 ? i.getPort() : 7000;
         }
+        hear(key, d.kind, d.name, host, "listed");
         found(app, d);
+    }
+    static String kindOf(NsdServiceInfo s) { return String.valueOf(s.getServiceType()).contains("googlecast") ? "cast" : "airplay"; }
+
+    // ---------------------------------------------------------------- 1.12.2: a TV added by its address
+    static java.util.Set<String> manual(Context c) { return new java.util.HashSet<>(prefs(c).getStringSet("manual", new java.util.HashSet<>())); }
+    /** Checks an address in the background and adds what answers there (AirPlay on 7000, then Chromecast on 8009). */
+    static void probeLater(final Context app, final String ip, final boolean ask) {
+        Thread t = new Thread(() -> {
+            String res;
+            try { res = probe(app, ip.trim()); } catch (Exception e) { res = "error: " + (e.getMessage() == null ? "no answer" : e.getMessage()); }
+            if (!ask) return;
+            JSONObject o = new JSONObject();
+            try { if (res.startsWith("error")) o.put("ok", false).put("msg", res.replaceFirst("^error:\\s*", "")); else o.put("ok", true).put("name", res); } catch (Exception e) { /* never */ }
+            MainActivity.toPage("window.MKAirPlay&&MKAirPlay.added&&MKAirPlay.added(" + o + ")");
+        }, "tv-add");
+        t.setDaemon(true); t.start();
+    }
+    static String probe(Context app, String ip) throws Exception {
+        if (!ip.matches("[0-9]{1,3}(\\.[0-9]{1,3}){3}")) return "error: that isn't an address like 192.168.1.20";
+        InetAddress host = InetAddress.getByName(ip);
+        Device d = new Device(); d.host = host;
+        Map<String, String> inf = AirPlay.info(host, 7000);
+        if (inf != null || open(host, 7000)) {
+            if (inf == null) inf = new java.util.HashMap<>();
+            d.kind = "airplay"; d.port = 7000;
+            d.features = inf.containsKey("features") ? inf.get("features") : "0x4A7FDFD5,0xBC157FDE";   // an Apple TV that didn't say: assume a current one
+            d.flags = inf.get("flags"); d.model = inf.get("model");
+            d.id = (inf.containsKey("deviceID") ? inf.get("deviceID") : "IP-" + ip).toUpperCase(Locale.US);
+            d.name = inf.containsKey("name") ? inf.get("name") : "TV at " + ip;
+        } else if (open(host, 8009)) {
+            d.kind = "cast"; d.port = 8009; d.id = "cast:ip-" + ip; d.name = "TV at " + ip; d.model = "Chromecast";
+        } else return "error: nothing at " + ip + " answers as an AirPlay or Chromecast TV";
+        java.util.Set<String> m = manual(app); m.add(ip); prefs(app).edit().putStringSet("manual", m).apply();
+        hear("manual/" + ip, d.kind, d.name, ip, "added by address");
+        found(app, d);
+        return d.name;
+    }
+    static boolean open(InetAddress host, int port) {
+        try (java.net.Socket s = new java.net.Socket()) { s.connect(new java.net.InetSocketAddress(host, port), 3000); return true; } catch (Exception e) { return false; }
     }
     static void found(Context app, Device d) {
         seen.add(d.id);
