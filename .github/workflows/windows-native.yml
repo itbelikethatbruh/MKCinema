@@ -1,0 +1,72 @@
+name: Windows native player
+
+# The Windows app's native player (libmpv) on a real Windows machine: fetches libmpv-2.dll from the mpv-winbuild-cmake
+# releases, runs the libmpv tests (the DLL calls, events, track list), then builds MKCinema.exe and a test zip with
+# MKCinema.exe and libmpv-2.dll side by side.
+on:
+  pull_request:
+    paths: ['windows/**', '.github/workflows/windows-native.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: windows/go.mod
+          cache-dependency-path: windows/go.sum
+      - name: Fetch libmpv
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/mpv" && cd "$RUNNER_TEMP/mpv"
+          tag=$(gh release view --repo shinchiro/mpv-winbuild-cmake --json tagName -q .tagName)
+          echo "mpv-winbuild-cmake release $tag"
+          gh release download "$tag" --repo shinchiro/mpv-winbuild-cmake --pattern 'mpv-dev-x86_64-2*.7z'
+          ls -la
+          7z x -y mpv-dev-*.7z libmpv-2.dll > /dev/null
+          ls -la libmpv-2.dll
+          sha256sum libmpv-2.dll mpv-dev-*.7z | tee SHA256SUMS
+          echo "$tag" > SOURCE
+      - name: Test
+        shell: bash
+        working-directory: windows
+        run: |
+          go vet ./...
+          MKC_LIBMPV_DIR="$RUNNER_TEMP/mpv" go test ./mpv -run . -v -count=1
+          go test ./...
+      - name: Build test zip
+        shell: bash
+        working-directory: windows
+        run: |
+          set -euo pipefail
+          go install github.com/akavel/rsrc@v0.10.2
+          "$(go env GOPATH)/bin/rsrc" -arch amd64 -ico mkcinema.ico -manifest app.manifest -o rsrc_windows_amd64.syso
+          out="$RUNNER_TEMP/out/MKCinema-windows-native"; mkdir -p "$out"
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -H windowsgui" -o "$out/MKCinema.exe" .
+          cp "$RUNNER_TEMP/mpv/libmpv-2.dll" "$out/"
+          {
+            echo "MKCinema for Windows with the native player (test build)."
+            echo "Keep MKCinema.exe and libmpv-2.dll in the same folder."
+            echo
+            echo "libmpv-2.dll: mpv (https://mpv.io), built by https://github.com/shinchiro/mpv-winbuild-cmake release $(cat "$RUNNER_TEMP/mpv/SOURCE")."
+            echo "mpv and FFmpeg are free software (GPL/LGPL); their source is at https://github.com/mpv-player/mpv and https://ffmpeg.org."
+            echo
+            cat "$RUNNER_TEMP/mpv/SHA256SUMS"
+          } > "$out/README.txt"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: MKCinema-windows-native
+          path: ${{ runner.temp }}/out/MKCinema-windows-native/
+          retention-days: 14
+          if-no-files-found: error

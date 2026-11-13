@@ -7,6 +7,7 @@ package main
 //     and deletes what it downloaded when it stops or the app closes.
 //   - presence: Discord "Now watching" status, only when the user turns it on and Discord is running.
 //   - dl (1.3.0): offline downloads into Videos\MKCinema, played in MKCinema or in the user's own video player.
+//   - player (1.6.0): the native player (libmpv under the page, see player.go).
 //   - pass: lets the in-app engine read video files from hosts that don't send CORS headers (see package pass).
 
 import (
@@ -159,5 +160,6 @@ d.pass={start:function(){return window.mkPass('start')}};
 if(d.presence)d.setPresence=function(a){return window.mkPresence(a?JSON.stringify(a):'')};
 d.dl={start:function(o){return window.mkDL('start',JSON.stringify(o))},list:function(){return window.mkDL('list','').then(function(s){return JSON.parse(s||'[]')})},
 remove:function(id){return window.mkDL('remove',String(id))},url:function(id){return window.mkDL('url',String(id))},open:function(id){return window.mkDL('open',String(id))},folder:function(){return window.mkDL('folder','')}};
+d.player={cmd:function(c,a){return window.mkPlayer(String(c),a==null?'':typeof a==='string'?a:JSON.stringify(a))},_ev:null};
 window.MKDesktop=d;})();`
 }
