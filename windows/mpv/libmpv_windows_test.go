@@ -78,7 +78,7 @@ func TestNativeLibmpv(t *testing.T) {
 	if err := c.Do(ops[0]); err != nil {
 		t.Errorf("seek: %v", err)
 	}
-	if v, ok := c.Get("duration"); !ok || !strings.HasPrefix(v, "4") {
+	if v, ok := c.Get("duration"); !ok || !(strings.HasPrefix(v, "3.9") || strings.HasPrefix(v, "4")) { // 95 frames at 24 fps: 3.958 s
 		t.Errorf("get duration %q %v", v, ok)
 	}
 	c.Close()
