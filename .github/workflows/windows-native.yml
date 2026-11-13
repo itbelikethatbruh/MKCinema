@@ -64,6 +64,21 @@ jobs:
             echo
             cat "$RUNNER_TEMP/mpv/SHA256SUMS"
           } > "$out/README.txt"
+      - name: See-through check (page over the native picture)
+        shell: pwsh
+        run: |
+          $out = "$env:RUNNER_TEMP\selftest"
+          $env:MKC_NATIVE_SELFTEST = $out
+          $p = Start-Process -FilePath "$env:RUNNER_TEMP\out\MKCinema-windows-native\MKCinema.exe" -PassThru
+          if (-not $p.WaitForExit(90000)) { Stop-Process -Id $p.Id -Force; Write-Host "self-test timed out" }
+          if (Test-Path "$out.json") { Get-Content "$out.json" } else { Write-Host "no result file" }
+          Get-ChildItem "$env:LOCALAPPDATA\MKCinema" -Filter *.log -ErrorAction SilentlyContinue | ForEach-Object { Get-Content $_.FullName -Tail 40 }
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: selftest
+          path: ${{ runner.temp }}/selftest.*
+          retention-days: 7
+          if-no-files-found: warn
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: MKCinema-windows-native

@@ -172,6 +172,13 @@ func main() {
 	_ = w.Bind("mkPlayer", mkPlayer)
 	w.Init(desktopInit())
 
+	if out := os.Getenv("MKC_NATIVE_SELFTEST"); out != "" {
+		w.SetHtml(selfTestHTML)
+		go nativeSelfTest(w, hwnd, out)
+		w.Run()
+		stopPlayer()
+		return
+	}
 	w.Navigate(home)
 	w.Run()
 	stopPlayer()
