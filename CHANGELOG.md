@@ -2,6 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.69.8 and Android app 1.12.1 (every TV on your Wi-Fi)
+
+- **Every TV in one list:** Send to TV in the Android app now lists every TV it finds on your Wi-Fi: Apple TVs and AirPlay TVs (Samsung, LG, Sony, Vizio), Chromecast and Google TV, and smart TVs that accept DLNA. A TV that answers several ways shows once.
+- Chromecast, Google TV and DLNA TVs take MKV and WebM links as they are.
+- Finding TVs is more thorough on busy networks with many devices.
+- An older Android app shows how to get the update when you tap Send to TV.
+
 ## Web app 2.69.4 and Android app 1.12.0 (AirPlay from Android)
 
 - **Apple TV from Android:** the MKCinema Android app now sends films to an Apple TV with AirPlay, no extra app needed. Tap Send to TV, pick your Apple TV, and type the 4-digit code it shows the first time. The Apple TV plays the film itself, and the phone becomes the remote (pause, skip, Play here), with Pause and Stop in the notification too.

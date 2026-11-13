@@ -604,8 +604,11 @@ final class AirPlay {
         void state(String state, double pos, double dur, String msg);
     }
 
+    /** 1.12.1: what every kind of TV session (AirPlay, Chromecast, DLNA) offers the service */
+    interface Player extends Runnable { void command(String cmd, String arg); void stop(); Events events(); }
+
     /** Runs one film on one TV until it ends, is stopped, or the connection drops. Call run() on its own thread. */
-    static final class Session implements Runnable {
+    static final class Session implements Player {
         final InetAddress host; final int port; final String features, flags; final String url; final double start; final Events ev;
         Creds creds;
         final LinkedBlockingQueue<String[]> cmds = new LinkedBlockingQueue<>();
@@ -615,8 +618,9 @@ final class AirPlay {
         Session(InetAddress host, int port, String features, String flags, Creds creds, String url, double start, Events ev) {
             this.host = host; this.port = port; this.features = features; this.flags = flags; this.creds = creds; this.url = url; this.start = start; this.ev = ev;
         }
-        void command(String cmd, String arg) { cmds.offer(new String[] { cmd, arg == null ? "" : arg }); }
-        void stop() { stopped = true; cmds.offer(new String[] { "stop", "" }); }
+        @Override public Events events() { return ev; }
+        @Override public void command(String cmd, String arg) { cmds.offer(new String[] { cmd, arg == null ? "" : arg }); }
+        @Override public void stop() { stopped = true; cmds.offer(new String[] { "stop", "" }); }
 
         boolean pinRequired() { try { return (Long.decode(flags == null ? "0" : flags) & 0x8) != 0; } catch (Exception e) { return false; } }
 

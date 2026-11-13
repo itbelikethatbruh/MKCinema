@@ -29,6 +29,20 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.12.1 (versionCode 28): every TV on the Wi-Fi
+
+Send to TV lists Chromecast / Google TV and DLNA smart TVs next to AirPlay ones, all through the same bridge
+(`MKAirPlay.devices` rows now carry `kind`: `airplay`, `cast` or `dlna`) and the same foreground service.
+`Cast.java` speaks CASTV2 (protobuf frames over TLS on port 8009, found with Bonjour `_googlecast._tcp`, speakers and
+groups skipped by the `ca` video bit) and opens Google's Default Media Receiver, which fetches the link itself.
+`Dlna.java` finds renderers with SSDP (AVTransport) and drives them with SOAP (SetAVTransportURI, Play, Pause, Seek,
+GetTransportInfo/GetPositionInfo). AirPlay TVs from Samsung, LG, Sony and Vizio don't set the Apple TV "video" bit, so
+the filter also accepts HTTP Live Streaming (bit 4) or Screen (bit 7); receivers and HomePods set none of them.
+A TV found several ways is one row (same address): Cast, then Apple TV AirPlay, then DLNA, then non-Apple AirPlay.
+Lookups that fail on a busy network are retried. Needs web 2.69.8 for the new list; web 2.69.4 shows the rows as AirPlay.
+Tests: `tools/airplay-test` has a simulated Chromecast and DLNA TV. Not tested on real Cast or DLNA TVs yet; a DLNA TV
+may refuse https links or some formats, which shows as an error and the film stays on the phone.
+
 ## 1.12.0 (versionCode 27): AirPlay to an Apple TV
 
 `AirPlay.java` is an AirPlay video sender in plain Java (no libraries, nothing Android in it); `AirPlayService.java` finds
