@@ -192,7 +192,7 @@ const Cast = {
     return appLink(`play?${q.toString()}`);
   },
   render() {
-    const body = $('#castBody'), tabs = `<div class="segc cast-tabs" role="tablist"><button type="button" data-ct="handoff" class="${this.tab === 'handoff' ? 'on' : ''}">Watch on phone</button><button type="button" data-ct="remote" class="${this.tab === 'remote' ? 'on' : ''}">Phone as remote</button><button type="button" data-ct="join" class="${this.tab === 'join' ? 'on' : ''}">Control another screen</button></div>`;
+    const body = $('#castBody'), tabs = `<div class="segc cast-tabs" role="tablist"><button type="button" data-ct="handoff" class="${this.tab === 'handoff' ? 'on' : ''}">Watch on phone</button><button type="button" data-ct="remote" class="${this.tab === 'remote' ? 'on' : ''}">Phone remote</button><button type="button" data-ct="join" class="${this.tab === 'join' ? 'on' : ''}">Control another screen</button></div>`;
     let inner = '';
     if (!/^https?:$/.test(location.protocol)) inner = '<p class="sub">QR codes need MKCinema on a web address (your Cloudflare Pages site, or mkcinema-server.js at http://…:7000). A file opened from disk has no address a phone can reach.</p>';
     else if (this.tab === 'handoff') {
@@ -201,10 +201,13 @@ const Cast = {
         <p class="tour-note">The code contains this stream’s link. Debrid links are tied to your account, so only show it to people you would hand the link to.</p><div class="actions"><button class="btn btn-ghost btn-sm" type="button" id="castCopy"><i data-lucide="copy"></i>Copy link</button></div>`
         : `<p class="sub">${P.stream && P.stream._local ? 'Files opened from this device stay on this device, so they cannot be sent to a phone. Online sources can.' : 'Start a video first, then come back here to send it to your phone at the same moment.'}</p>`;
     } else if (this.tab === 'remote') {
-      Remote.host();
-      inner = `<div class="rm-pair"><div class="qr-wrap">${QR.svg(Remote.link(Remote.code))}</div><div class="rm-pair-t"><p class="sub">Scan with your phone camera. Your phone becomes a remote: touchpad or D-pad, play, pause and seek, and a keyboard (or your voice) for search. It stays paired, so next time just open it.</p>
-        <div class="rm-codebig">${esc(Remote.code)}</div><p class="tour-note" id="castState">${Remote.stateLine()}</p>
-        <div class="actions"><button class="btn btn-ghost btn-sm" type="button" id="rmNew"><i data-lucide="refresh-cw"></i>New code</button></div></div></div>`;
+      const code = Remote.code || (Remote.code = Remote.storedCode()); Remote.host();
+      inner = `<div class="rmx"><div class="rmx-qr">${QR.svg(Remote.link(code))}</div><div class="rmx-t">
+        <h3 class="rmx-h">Use your phone as a remote</h3>
+        <p class="rmx-s">Point your phone’s camera at the code.</p>
+        <p class="rmx-s">No camera? On your phone, open this address and enter the code:</p><p class="rmx-addr">${esc(Remote.link().replace(/^https?:\/\//, ''))}</p>
+        <div class="rmx-code tnum" id="rmCode" aria-label="Code ${esc(code.split('').join(' '))}">${code.split('').map((c) => `<span>${esc(c)}</span>`).join('')}</div>
+        <div class="rmx-foot"><span class="rmx-st" id="castState" data-s="${Remote.stateKind()}"><i></i><span>${Remote.stateLine()}</span></span><button class="rmx-new" type="button" id="rmNew"><i data-lucide="refresh-cw"></i>New code</button></div></div></div>`;
     } else {
       inner = `<p class="sub">Enter the code shown on the other screen. This opens MKCinema Remote, which remembers the screen for next time.</p><div class="inrow"><input class="inp mono rm-code" id="castCode" maxlength="6" autocapitalize="characters" placeholder="ABC123"><button class="btn btn-prime" type="button" id="castJoin"><i data-lucide="link"></i>Connect</button></div>`;
     }
@@ -241,6 +244,7 @@ const Remote = {
   },
   async host(auto) {
     if (this.bus) return this.bus.online;
+    this.code = this.storedCode(); // known at once, so the panel never draws without it
     // one tab hosts the remote: a second tab of this browser would otherwise answer the same phones twice
     if (typeof RmSec !== 'undefined' && !(await RmSec.claim(auto === 'auto'))) { this.paintCast(); return false; }
     if (this.bus) return this.bus.online;
@@ -267,14 +271,19 @@ const Remote = {
     location.href = l;
   },
   leave() { /* the remote lives on its own page now */ },
+  stateKind() { return this.peers.size ? 'on' : !this.bus && typeof RmSec !== 'undefined' && RmSec.elsewhere ? 'away' : this.bus && this.bus.online ? 'ready' : 'wait'; },
   stateLine() {
     const n = this.peers.size;
-    if (n) return `${n === 1 ? 'A phone is' : `${n} phones are`} connected as a remote.`;
-    if (!this.bus && typeof RmSec !== 'undefined' && RmSec.elsewhere) return 'The phone remote is running in another MKCinema tab or window on this device. Close that one, or reopen this panel to move it here.';
-    if (this.bus && this.bus.online) return `Ready. No camera? Open <b>${esc(this.link().replace(/^https?:\/\//, ''))}</b> on the phone and type the code.`;
-    return 'Connecting…';
+    if (n) return n === 1 ? 'Phone connected' : `${n} phones connected`;
+    if (!this.bus && typeof RmSec !== 'undefined' && RmSec.elsewhere) return 'Open in another MKCinema window. Reopen this panel to move it here.';
+    if (this.bus && this.bus.online) return 'Ready for your phone';
+    return 'Getting ready…';
   },
-  paintCast() { const st = $('#castState'); if (st) st.innerHTML = this.stateLine(); },
+  paintCast() {
+    const st = $('#castState'); if (!st) return;
+    const k = this.stateKind(), t = $('span', st); if (st.dataset.s !== k) st.dataset.s = k; if (t) t.textContent = this.stateLine();
+    const cb = $('#rmCode'); if (cb && this.code && cb.textContent !== this.code) { if (typeof Cast !== 'undefined') Cast.render(); }
+  },
   beat() {
     const now = Date.now();
     this.peers.forEach((p, id) => { if (now - p.at > 15000) this.peers.delete(id); });
