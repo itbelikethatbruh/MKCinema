@@ -2926,7 +2926,7 @@ const TvPlayer = {
      such a file can start in the wrong language when its host doesn't let MKCinema read it. The player's options row
      can still switch to the MKCinema player. Settings › Playback › Multi-language files turns it off. */
   phone(stream) {
-    if (IS_TV || CFG.phoneNativeAudio === false || !stream || !stream.url || stream._local || stream._noNative) return false;
+    if (IS_TV || CFG.phoneNativeAudio !== true || !stream || !stream.url || stream._local || stream._noNative) return false;
     try { if (!(window.MKAndroid && typeof MKAndroid.play === 'function')) return false; } catch (e) { return false; }
     const want = CFG.audioOnly; if (!want || want === 'any') return false;
     if (stream._tel && (stream._tel.isTrailer || stream._tel.kind === 'yt')) return false;
@@ -3027,7 +3027,7 @@ const TvPlayer = {
     } else if (sec && !IS_TV && window.MKAndroid && typeof MKAndroid.play === 'function') {
       const rows = sec.rows;
       sec.rows = () => [...rows(),
-        { key: 'phoneNativeAudio', label: 'Multi-language files', help: 'Files that carry several audio languages open in the Android player, which starts in your Audio language. Turn off to play them in the MKCinema player.', type: 'toggle', get: () => CFG.phoneNativeAudio !== false },
+        { key: 'phoneNativeAudio', label: 'Multi-language files', help: 'Files that carry several audio languages open in the Android player, which starts in your Audio language. Turn off to play them in the MKCinema player.', type: 'toggle', get: () => CFG.phoneNativeAudio === true },
       ];
     }
   },
