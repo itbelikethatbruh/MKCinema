@@ -95,7 +95,7 @@ public class AirPlayService extends Service {
                 @Override public void onDiscoveryStopped(String t) { }
                 @Override public void onStartDiscoveryFailed(String t, int e) { synchronized (AirPlayService.class) { discs.remove(this); } }
                 @Override public void onStopDiscoveryFailed(String t, int e) { }
-                @Override public void onServiceFound(NsdServiceInfo s) { seenNames.add(String.valueOf(s.getServiceName())); hear(s.getServiceType() + "/" + s.getServiceName(), kindOf(s), s.getServiceName(), null, "looking up"); synchronized (AirPlayService.class) { toResolve.add(s); } resolveNext(app); }
+                @Override public void onServiceFound(NsdServiceInfo s) { seenNames.add(String.valueOf(s.getServiceName())); hear(kindOf(s) + "/" + s.getServiceName(), kindOf(s), s.getServiceName(), null, "looking up"); synchronized (AirPlayService.class) { toResolve.add(s); } resolveNext(app); }
                 @Override public void onServiceLost(NsdServiceInfo s) { }
             };
             try { nsd.discoverServices(type, NsdManager.PROTOCOL_DNS_SD, l); discs.add(l); } catch (Exception e) { /* this kind can't be searched */ }
@@ -135,7 +135,7 @@ public class AirPlayService extends Service {
     }
     /** A busy network often fails a lookup the first time (a house with many TVs answers at once): try each one 3 times. */
     static void retry(NsdServiceInfo s) {
-        String k = s.getServiceType() + "/" + s.getServiceName();
+        String k = kindOf(s) + "/" + s.getServiceName();
         int n = tries.containsKey(k) ? tries.get(k) : 0;
         if (n < 2) { tries.put(k, n + 1); synchronized (AirPlayService.class) { toResolve.add(s); } }
         else hear(k, kindOf(s), s.getServiceName(), null, "no answer to the lookup");
@@ -143,7 +143,7 @@ public class AirPlayService extends Service {
     @SuppressWarnings("deprecation")
     static void add(Context app, NsdServiceInfo i) {
         Map<String, byte[]> a = i.getAttributes();
-        String key = i.getServiceType() + "/" + i.getServiceName(), host = i.getHost() == null ? null : i.getHost().getHostAddress();
+        String key = kindOf(i) + "/" + i.getServiceName(), host = i.getHost() == null ? null : i.getHost().getHostAddress();
         if (i.getHost() == null) { hear(key, kindOf(i), i.getServiceName(), null, "no address"); return; }
         String type = String.valueOf(i.getServiceType());
         Device d = new Device();
@@ -196,12 +196,30 @@ public class AirPlayService extends Service {
             d.name = inf.containsKey("name") ? inf.get("name") : "TV at " + ip;
         } else if (open(host, 8009)) {
             d.kind = "cast"; d.port = 8009; d.id = "cast:ip-" + ip; d.name = "TV at " + ip; d.model = "Chromecast";
-        } else return "error: nothing at " + ip + " answers as an AirPlay or Chromecast TV";
+        } else {
+            String mine = myIp(app);
+            if (mine != null && !sameNet(mine, ip))
+                return "error: " + ip + " is on a different network from this phone (" + mine + "). Connect this phone to the same network as the TV, or plug the TV into the same router as this phone's Wi-Fi.";
+            return "error: nothing at " + ip + " answers as an AirPlay or Chromecast TV";
+        }
         java.util.Set<String> m = manual(app); m.add(ip); prefs(app).edit().putStringSet("manual", m).apply();
         hear("manual/" + ip, d.kind, d.name, ip, "added by address");
         found(app, d);
         return d.name;
     }
+    /** this phone's IPv4 address on Wi-Fi (or any up, non-loopback interface) */
+    static String myIp(Context c) {
+        try {
+            for (java.net.NetworkInterface n : java.util.Collections.list(java.net.NetworkInterface.getNetworkInterfaces())) {
+                if (!n.isUp() || n.isLoopback() || !n.getName().matches("(wlan|eth|ap|swlan).*")) continue;   // not mobile data
+                for (InetAddress a : java.util.Collections.list(n.getInetAddresses()))
+                    if (a instanceof java.net.Inet4Address && a.isSiteLocalAddress()) return a.getHostAddress();
+            }
+        } catch (Exception e) { /* unknown */ }
+        return null;
+    }
+    /** same /24 (home routers almost always use 255.255.255.0) */
+    static boolean sameNet(String a, String b) { return a.substring(0, a.lastIndexOf('.')).equals(b.substring(0, b.lastIndexOf('.'))); }
     static boolean open(InetAddress host, int port) {
         try (java.net.Socket s = new java.net.Socket()) { s.connect(new java.net.InetSocketAddress(host, port), 3000); return true; } catch (Exception e) { return false; }
     }
