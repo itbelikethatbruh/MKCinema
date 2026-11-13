@@ -29,6 +29,20 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.12.0 (versionCode 27): AirPlay to an Apple TV
+
+`AirPlay.java` is an AirPlay video sender in plain Java (no libraries, nothing Android in it); `AirPlayService.java` finds
+receivers with Bonjour (`_airplay._tcp`, video feature bit only) and keeps the session in a `mediaPlayback` foreground
+service, because the Apple TV stops the film when the phone's connection closes. The Apple TV fetches and plays the
+stream link itself (MP4 or HLS), the phone only sends it and the controls. Pairing is HomeKit pair-setup (SRP-6a 3072/SHA-512,
+Ed25519) with the 4-digit code the TV shows, kept in the app's private settings; every session runs pair-verify (X25519)
+and ChaCha20-Poly1305. AirPlay 2 receivers get RTSP SETUP (NTP timing port, event channel), RECORD, then `/play`.
+TVs that let everyone AirPlay pair without a code (transient pairing). The steps follow pyatv (MIT).
+Page side: `MKAndroid.apScan/apPlay/apPin/apCtl/apForget/apState`, answers in `MKAirPlay.devices/state`; needs web 2.69.4.
+Tests on a computer: `tools/airplay-test` (crypto against the JDK, the whole session against a simulated Apple TV).
+Not tested on a real Apple TV yet. FairPlay-protected video (Apple TV+, Netflix) is out of scope: MKCinema only sends
+plain web links. Subtitles MKCinema adds are not sent (AirPlay link playback has no way to carry them).
+
 ## 1.11.0 (versionCode 24): live TV recording
 
 `RecService.java`: the page asks with `MKAndroid.recStart` and the app records the channel itself, so every TV service
