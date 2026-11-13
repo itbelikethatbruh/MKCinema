@@ -6,10 +6,13 @@
   const A = window.MKAndroid;
   const ua = navigator.userAgent || '';
   if (A && typeof A.apScan !== 'function' && /MKCinemaAndroid\//.test(ua)) {
-    // an app from before 1.12: it can't look for TVs, so say how to get one that can
+    // an app from before 1.12: it can't look for TVs, so say how to get one that can, once the download page
+    // offers one (version.json android 1.12 or later); until then the usual card shows
     const help = TvCast.help;
+    let fresh = false;
+    fetch(`version.json?t=${Date.now()}`, { cache: 'no-store' }).then((r) => (r.ok ? r.json() : {})).then((v) => { fresh = !!(v && v.android && !Updater.newer('1.12.0', v.android)); }).catch(() => {});
     TvCast.help = function (why) {
-      if (why !== 'browser') return help.apply(this, arguments);
+      if (why !== 'browser' || !fresh) return help.apply(this, arguments);
       const el = X8.layer('tvcLayer', { label: 'Send to TV', icon: 'cast', eyebrow: 'Send to TV' });
       X8.body('tvcLayer').innerHTML = '<h3 class="x8-h">Update the app to send to your TV</h3><p class="sub">The newest MKCinema app for Android finds every TV on your Wi-Fi (Apple TV, Chromecast, Google TV and smart TVs) and sends films to them.</p><div class="actions"><a class="btn btn-prime" href="https://mkcinema.app/download/" target="_blank" rel="noopener"><i data-lucide="download"></i>Get the update</a></div>';
       icons(); X8.open('tvcLayer'); return el;
