@@ -576,7 +576,25 @@ public class MainActivity extends Activity {
         @JavascriptInterface public boolean update(String k, String url) {
             if (!ok(k)) return false;
             if (!updateUrlOk(url)) { js("window.toast&&toast('Update rejected: that is not an MKCinema download','err',6000)"); return false; }
-            runOnUiThread(() -> startUpdate(url));
+            runOnUiThread(() -> startUpdate(url, false));
+            return true;
+        }
+        /** 1.13.0: automatic updates. The new APK downloads in the background and installs a few minutes after you leave
+            the app (never while a film, a recording, a download or AirPlay is running). On Android 12 and later it installs
+            without asking once MKCinema has installed an update of its own before; otherwise the page offers Install.
+            False when this app may not install apps yet (the page then shows its usual Update bar). */
+        @JavascriptInterface public boolean updateAuto(String k, String url) {
+            if (!ok(k) || !updateUrlOk(url)) return false;
+            if (Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) return false;
+            if (autoState == 1 || autoState == 2) return true;
+            runOnUiThread(() -> startUpdate(url, true));
+            return true;
+        }
+        /** 1.13.0: installs an update that already downloaded, with the system's Install prompt */
+        @JavascriptInterface public boolean updateInstall(String k) {
+            if (!ok(k)) return false;
+            File apk = UpdateFiles.file(MainActivity.this); if (!apk.exists()) return false;
+            new Thread(() -> { String why = checkApk(apk); if (why != null) { apk.delete(); return; } installApk(apk, false); }).start();
             return true;
         }
         /** Trailers on TVs: hands a YouTube video id to the YouTube app, whose player uses the TV's video hardware.
@@ -617,7 +635,7 @@ public class MainActivity extends Activity {
     static final String[] BRIDGE_METHODS = { "voice", "voiceStop", "version", "fps", "watchNext", "watchNextRemove", "p2pStart", "p2pStop",
         "p2pAvailable", "dlStart", "dlSpace", "setSlow", "epEnable", "epOn", "epSync", "dlList", "dlRemove", "dlPlay", "pipState", "pip", "play",
         "setEngine", "update", "youtube", "exit", "iptvHosts", "recStart", "recStop", "recPlan", "recUnplan",
-        "apScan", "apPlay", "apPin", "apCtl", "apForget", "apState", "signIn", "apAdd", "apDiag" };
+        "apScan", "apPlay", "apPin", "apCtl", "apForget", "apState", "signIn", "apAdd", "apDiag", "updateAuto", "updateInstall" };
 
     static String newKey() {
         byte[] b = new byte[24]; new SecureRandom().nextBytes(b);
@@ -710,8 +728,19 @@ public class MainActivity extends Activity {
 
     static final String UPD_FILE = "MKCinema-update.apk";
     long updId = -1;
-    void startUpdate(String url) {
-        if (Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) {
+    /** 0 nothing, 1 downloading, 2 ready to install when the app is left, 3 installing */
+    static volatile int autoState = 0;
+    final android.os.Handler later = new android.os.Handler(android.os.Looper.getMainLooper());
+    final Runnable autoInstall = () -> {
+        if (autoState != 2 || resumed) return;
+        // never under a film, a recording, a download or an AirPlay session: try again later
+        if (pipPlaying || PlayerActivity.open || !RecService.jobs.isEmpty() || DlService.running || AirPlayService.session != null) { later.postDelayed(this.autoInstall, 10 * 60_000L); return; }
+        autoState = 3;
+        new Thread(() -> { File apk = UpdateFiles.file(this); if (checkApk(apk) == null) installApk(apk, true); else { apk.delete(); autoState = 0; } }).start();
+    };
+    void startUpdate(String url) { startUpdate(url, false); }
+    void startUpdate(String url, boolean auto) {
+        if (!auto && Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) {
             try { startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getPackageName()))); } catch (Exception ignored) { }
             web.evaluateJavascript("window.toast&&toast('Allow MKCinema to install apps, then press Update again','info',7000)", null);
             return;
@@ -721,21 +750,39 @@ public class MainActivity extends Activity {
             DownloadManager.Request r = new DownloadManager.Request(Uri.parse(url)).setTitle("MKCinema update").setMimeType("application/vnd.android.package-archive")
                 .setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, "MKCinema-update-" + System.currentTimeMillis() + ".apk")
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
-            final long id = dm.enqueue(r); updId = id;
+            final long id = dm.enqueue(r); updId = id; if (auto) autoState = 1;
             BroadcastReceiver done = new BroadcastReceiver() { @Override public void onReceive(Context c, Intent i) {
                 if (i.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -2) != id) return;
                 try { unregisterReceiver(this); } catch (Exception ignored) { }
-                new Thread(() -> finishUpdate(dm, id)).start();
+                new Thread(() -> finishUpdate(dm, id, auto)).start();
             } };
             IntentFilter f = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
             if (Build.VERSION.SDK_INT >= 33) registerReceiver(done, f, Context.RECEIVER_EXPORTED); else registerReceiver(done, f);
-        } catch (Exception e) { web.evaluateJavascript("window.toast&&toast('The update could not start','err',6000)", null); }
+        } catch (Exception e) { if (auto) autoState = 0; else web.evaluateJavascript("window.toast&&toast('The update could not start','err',6000)", null); }
     }
 
     /** copies the finished download into the app's private storage (no other app can swap it there), checks
         it is MKCinema signed with this app's key, and only then opens the installer on that copy (UpdateFiles). */
-    void finishUpdate(DownloadManager dm, long id) {
+    void finishUpdate(DownloadManager dm, long id) { finishUpdate(dm, id, false); }
+    void finishUpdate(DownloadManager dm, long id, boolean auto) {
         File apk = UpdateFiles.file(this);
+        if (auto) {
+            try {
+                try (Cursor cur = dm.query(new DownloadManager.Query().setFilterById(id))) {
+                    if (cur == null || !cur.moveToFirst() || cur.getInt(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)) != DownloadManager.STATUS_SUCCESSFUL) { autoState = 0; return; }
+                }
+                apk.getParentFile().mkdirs(); apk.delete();
+                try (InputStream in = new ParcelFileDescriptor.AutoCloseInputStream(dm.openDownloadedFile(id)); OutputStream out = new FileOutputStream(apk)) {
+                    byte[] b = new byte[65536]; int n; while ((n = in.read(b)) > 0) out.write(b, 0, n);
+                }
+                try { dm.remove(id); } catch (Exception ignored) { }
+                if (checkApk(apk) != null) { apk.delete(); autoState = 0; return; }
+                autoState = 2;
+                js("window.MkAutoUpd&&MkAutoUpd.ready()");
+                runOnUiThread(() -> { if (!resumed) { later.removeCallbacks(autoInstall); later.postDelayed(autoInstall, 3 * 60_000L); } });
+            } catch (Exception e) { apk.delete(); autoState = 0; }
+            return;
+        }
         try {
             try (Cursor cur = dm.query(new DownloadManager.Query().setFilterById(id))) {
                 if (cur == null || !cur.moveToFirst() || cur.getInt(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)) != DownloadManager.STATUS_SUCCESSFUL) {
@@ -749,10 +796,34 @@ public class MainActivity extends Activity {
             try { dm.remove(id); } catch (Exception ignored) { }
             String why = checkApk(apk);
             if (why != null) { apk.delete(); js("window.toast&&toast(" + JSONObject.quote("Update rejected: " + why) + ",'err',8000)"); return; }
+            if (installApk(apk, false)) return;
             Uri cu = Uri.parse("content://" + getPackageName() + ".update/" + UPD_FILE);
             Intent inst = new Intent(Intent.ACTION_VIEW).setDataAndType(cu, "application/vnd.android.package-archive").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
             runOnUiThread(() -> { try { startActivity(inst); } catch (Exception e) { js("window.toast&&toast('The installer could not open','err',6000)"); } });
         } catch (Exception e) { apk.delete(); js("window.toast&&toast('The update did not download. Try again','err',6000)"); }
+    }
+
+    /** 1.13.0: installs through the system's package installer session, so MKCinema becomes the app that installed
+        itself and later updates (Android 12+) can install without a prompt. The result arrives in UpdateResult.
+        False when the session could not be made (the caller then opens the installer the old way). */
+    boolean installApk(File apk, boolean silent) {
+        try {
+            android.content.pm.PackageInstaller pi = getPackageManager().getPackageInstaller();
+            android.content.pm.PackageInstaller.SessionParams sp = new android.content.pm.PackageInstaller.SessionParams(android.content.pm.PackageInstaller.SessionParams.MODE_FULL_INSTALL);
+            sp.setAppPackageName(getPackageName());
+            if (Build.VERSION.SDK_INT >= 31) sp.setRequireUserAction(silent ? android.content.pm.PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED : android.content.pm.PackageInstaller.SessionParams.USER_ACTION_REQUIRED);
+            int sid = pi.createSession(sp);
+            try (android.content.pm.PackageInstaller.Session s = pi.openSession(sid)) {
+                try (InputStream in = new java.io.FileInputStream(apk); OutputStream out = s.openWrite("base.apk", 0, apk.length())) {
+                    byte[] b = new byte[65536]; int n; while ((n = in.read(b)) > 0) out.write(b, 0, n);
+                    s.fsync(out);
+                }
+                Intent cb = new Intent(this, UpdateResult.class).setPackage(getPackageName()).putExtra("silent", silent);
+                int fl = android.app.PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 31 ? android.app.PendingIntent.FLAG_MUTABLE : 0);
+                s.commit(android.app.PendingIntent.getBroadcast(this, sid, cb, fl).getIntentSender());
+            }
+            return true;
+        } catch (Exception e) { if (silent) autoState = 2; return false; }
     }
 
     /** null when apk is MKCinema signed with the same key as this app (or a key this app's key was rotated to), else why not */
@@ -892,6 +963,8 @@ public class MainActivity extends Activity {
     }
     @Override protected void onStop() {
         super.onStop();
+        // 1.13.0: a downloaded update installs a few minutes after the app is left (see autoInstall)
+        if (autoState == 2) { later.removeCallbacks(autoInstall); later.postDelayed(autoInstall, 3 * 60_000L); }
         // The window was swiped away: stop the film instead of playing on unseen
         if (wasPip && web != null) { wasPip = false; web.evaluateJavascript("window.MKPip&&MKPip.closed()", null); }
     }
@@ -903,6 +976,6 @@ public class MainActivity extends Activity {
         if (!(Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode())) web.onPause();
         CookieManager.getInstance().flush();
     }
-    @Override protected void onResume() { super.onResume(); resumed = true; web.onResume(); if (webDead) reloadWeb(); if (wasPip && !(Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode())) wasPip = false; }
+    @Override protected void onResume() { super.onResume(); resumed = true; later.removeCallbacks(autoInstall); if (UpdateResult.ask) { UpdateResult.ask = false; js("window.MkAutoUpd&&MkAutoUpd.ask()"); } web.onResume(); if (webDead) reloadWeb(); if (wasPip && !(Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode())) wasPip = false; }
     @Override protected void onDestroy() { if (liveAct == this) liveAct = null; if (isFinishing()) new Thread(() -> P2P.stop(getApplicationContext())).start(); if (recognizer != null) recognizer.destroy(); if (web != null) { ((ViewGroup) web.getParent()).removeView(web); web.destroy(); } super.onDestroy(); }
 }

@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Android app 1.13.0 (updates by itself)
+
+- **Updates by themselves:** new versions download in the background and install a few minutes after you leave the app, never during a film. On Android 12 and later this happens without a prompt after the first update.
+
 ## Web app 2.69.8 and Android app 1.12.3 (every TV on your Wi-Fi)
 
 - Adding a TV by its address says when the TV is on a different network from the phone, and the scan details list each device once.
