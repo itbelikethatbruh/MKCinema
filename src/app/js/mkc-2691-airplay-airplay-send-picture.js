@@ -49,6 +49,29 @@
       icons(); X8.open('tvcLayer');
     },
   };
+  // 2.69.2: an MKV from Real-Debrid or TorBox gets the service's own converted HLS copy, which AirPlay shows in full
+  AirFix.conv = function (s) {
+    const CC = typeof CloudConvert !== 'undefined' ? CloudConvert : null;
+    if (!CC || !CC.on() || s._cloud) return null;
+    try { return CC.who(s); } catch (e) { return null; }
+  };
+  AirFix.convert = async function (s, w) {
+    const CC = CloudConvert, tok = this.tok = (this.tok || 0) + 1, at = pNow(), ctx = P.ctx;
+    toast(`Getting a TV-ready version from your ${CC.label(w.svc)}…`, 'info', 6000, 'airconv');
+    try { MKLog.add('play', `airplay: asking ${w.svc} for a converted copy`); } catch (e) { /* no log */ }
+    let list = [];
+    try { list = await Vault.within(CC.urls(s, w), 45000); } catch (e) { try { MKLog.add('play', `airplay: ${e.message}`); } catch (x) { /* no log */ } }
+    if (tok !== this.tok || P.stream !== s || P.ctx !== ctx || $('#player').hidden) return;
+    list = (list || []).filter((u) => /^https:\/\//i.test(u) && !/\.(mkv|webm)(\?|$)/i.test(u));
+    list.sort((a, b) => (/\.m3u8(\?|$)|\/hls\b|apple/i.test(b) ? 1 : 0) - (/\.m3u8(\?|$)|\/hls\b|apple/i.test(a) ? 1 : 0));
+    if (!list.length) { this.explain(s, true); return; }
+    const bh = { ...(s.behaviorHints || {}) }; delete bh.notWebReady; delete bh.proxyHeaders;
+    const c = { ...s, url: list[0], behaviorHints: bh, _cloud: { svc: w.svc, rest: list.slice(1), of: s, at: isFinite(at) ? at : 0 }, _air: true };
+    ['_tel', '_audioBase', '_audioTry', '_audio', '_mkHeal', '_cors'].forEach((k) => delete c[k]);
+    CC.tried.add(s);
+    CC.go(c, isFinite(at) ? at : 0);
+    this.afterSwitch(c);
+  };
   window.MkAirFix = AirFix;
   const orig = TvCast.start;
   TvCast.start = function () {
@@ -56,7 +79,9 @@
     const s = P.stream;
     if (!s || s._local || s.ytId) return orig.apply(this, arguments);
     $('#optMenu').hidden = true;
-    if (live(s)) { if (!pick()) this.help('fail'); return; }
+    if (live(s) && !P.hls) { if (!pick()) this.help('fail'); return; }
+    const w = AirFix.conv(s);
+    if (w) { AirFix.convert(s, w); return; }
     AirFix.explain(s);
   };
   // Safari reports no AirPlay targets while an MKV is being converted, which hid the button: keep it, and explain on tap

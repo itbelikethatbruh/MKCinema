@@ -2,6 +2,16 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.69.3 (Watch on your TV, Sign in with Google)
+
+- **Watch on your TV:** a TV button at the top of the main page connects to your TV before you press play. In Chrome it connects to a Chromecast or Google TV; on iPhone, iPad and Mac Safari it turns on TV mode so the next film is made TV-ready.
+- **Subtitles on your TV:** with AirPlay on, the player switches to the subtitles inside the file so they show on the TV, and explains Screen Mirroring when there are none.
+- **Sign in with Google:** one tap on the Account page, no password to remember.
+
+## Web app 2.69.2 (AirPlay for MKV files)
+
+- **AirPlay for MKV files:** Send to TV on iPhone and iPad gets a TV-ready copy of MKV files from your debrid service, so the film plays on your TV with the picture.
+
 ## Web app 2.69.1 (AirPlay picture, no double pictures)
 
 - **AirPlay with the picture:** Send to TV on iPhone and iPad switches to a source AirPlay can show, so the TV gets the film, not just the sound.
