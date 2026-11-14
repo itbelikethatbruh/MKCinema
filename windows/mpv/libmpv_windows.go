@@ -27,13 +27,20 @@ var (
 	dll                                                                       *windows.DLL
 	pCreate, pInit, pSetOpt, pCmd, pSetProp, pGetProp, pObserve, pWait, pFree *windows.Proc
 	pDestroy, pErrStr, pRequestLog, pClientAPI, pWakeup                       *windows.Proc
-	loadOnce                                                                  sync.Once
+	loadMu                                                                    sync.Mutex
 	loadErr                                                                   error
 )
 
 // Load finds libmpv-2.dll: next to MKCinema.exe first, then in dir (the app's data folder\mpv).
 func Load(dirs ...string) error {
-	loadOnce.Do(func() {
+	loadMu.Lock()
+	defer loadMu.Unlock()
+	if dll != nil {
+		return loadErr
+	}
+	// a missing DLL is looked for again next time (the app may have downloaded it since)
+	loadErr = nil
+	func() {
 		var tried []string
 		for _, d := range dirs {
 			p := filepath.Join(d, "libmpv-2.dll")
@@ -61,7 +68,7 @@ func Load(dirs ...string) error {
 		pObserve, pWait, pFree = get("mpv_observe_property"), get("mpv_wait_event"), get("mpv_free")
 		pDestroy, pErrStr, pRequestLog = get("mpv_terminate_destroy"), get("mpv_error_string"), get("mpv_request_log_messages")
 		pClientAPI, pWakeup = get("mpv_client_api_version"), get("mpv_wakeup")
-	})
+	}()
 	return loadErr
 }
 

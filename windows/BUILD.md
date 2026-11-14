@@ -55,3 +55,12 @@ Subtitles are saved next to the film as .srt or .vtt, so VLC picks them up.
   server (127.0.0.1, random token, public hosts only, GET and HEAD with Range only, answers readable only by
   MKCinema's own pages) to make the Range requests. Dolby, DTS and TrueHD sound is converted to AAC and HEVC decoded
   on those hosts too, so they play in the app without VLC.
+
+## 1.6.0: native player
+
+- Films play in libmpv (`mpv/`, `player.go`), drawn in a window under the see-through page, so the web player's
+  controls stay on top. Without `libmpv-2.dll` the web player is used as before.
+- The engine is not inside MKCinema.exe. Release builds carry its address and SHA-256 (`-X main.engineURL=...
+  -X main.engineSHA=...`, set by `release.yml` from `tools/release/libmpv.sh`); on the first start without it the app
+  downloads `MKCinema-engine-windows-x64.zip` from that release in the background, checks it and unpacks the DLL to
+  `%LOCALAPPDATA%\MKCinema\mpv` (`player_engine.go`). A `libmpv-2.dll` next to MKCinema.exe is used instead.

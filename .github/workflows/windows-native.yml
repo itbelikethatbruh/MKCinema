@@ -1,11 +1,11 @@
 name: Windows native player
 
-# The Windows app's native player (libmpv) on a real Windows machine: fetches libmpv-2.dll from the mpv-winbuild-cmake
-# releases, runs the libmpv tests (the DLL calls, events, track list), then builds MKCinema.exe and a test zip with
+# The Windows app's native player (libmpv) on a real Windows machine: fetches the pinned libmpv-2.dll from the
+# mpv-winbuild-cmake releases, runs the libmpv tests (the DLL calls, events, track list), then builds MKCinema.exe and a test zip with
 # MKCinema.exe and libmpv-2.dll side by side.
 on:
   pull_request:
-    paths: ['windows/**', '.github/workflows/windows-native.yml']
+    paths: ['windows/**', 'tools/release/libmpv.sh', '.github/workflows/windows-native.yml']
   workflow_dispatch:
 
 permissions:
@@ -30,7 +30,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/mpv" && cd "$RUNNER_TEMP/mpv"
-          tag=$(gh release view --repo shinchiro/mpv-winbuild-cmake --json tagName -q .tagName)
+          # the same pinned build the release ships (tools/release/libmpv.sh)
+          tag=$(sed -n 's/^MPV_TAG=//p' "$GITHUB_WORKSPACE/tools/release/libmpv.sh")
           echo "mpv-winbuild-cmake release $tag"
           gh release download "$tag" --repo shinchiro/mpv-winbuild-cmake --pattern 'mpv-dev-x86_64-2*.7z'
           ls -la
