@@ -29,6 +29,12 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.13.1 (versionCode 32): steadier returns from the TV player and back-to-back recordings
+
+- Results for the page (the TV player closing, Google sign-in coming back) wait until the page is loaded and can take
+  them (`callPage`), so they are not lost when Android rebuilt the page to free memory on 1-2 GB TV sticks.
+- A planned recording on a channel that is already recording extends the running recording to the later end time.
+
 ## 1.13.0 (versionCode 31): updates install by themselves
 
 `MKAndroid.updateAuto(url)` downloads the update in the background (same checks as `update`: MKCinema's own download

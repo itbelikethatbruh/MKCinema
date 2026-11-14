@@ -81,7 +81,16 @@ public class RecService extends Service {
             String url = o.optString("url", "");
             if (!url.startsWith("http://") && !url.startsWith("https://")) return "error: this channel has no address that can be recorded";
             if (jobs.size() >= MAX_JOBS) return "error: three recordings are already running. Stop one first";
-            for (Job j : jobs.values()) if (url.equals(urlOf(c, j.id))) return "error: this channel is already recording";
+            for (Job j : jobs.values()) if (url.equals(urlOf(c, j.id))) {
+                // back-to-back programmes on one channel: the running recording simply keeps going until the later end
+                long want = o.optLong("stopAt", 0), cap = j.started + MAX_MS;
+                if (!o.optBoolean("catchup", false) && want > j.stopAt) {
+                    j.stopAt = Math.min(want, cap);
+                    try { JSONArray all = Downloads.load(c); JSONObject r = Downloads.find(all, j.id); if (r != null) { r.put("stopAt", j.stopAt); Downloads.save(c, all); } } catch (Exception ignored) { }
+                    return j.id;
+                }
+                return "error: this channel is already recording";
+            }
             File d = Downloads.dir(c);
             if (d == null) return "error: storage isn't available right now";
             if (new StatFs(d.getPath()).getAvailableBytes() < MIN_FREE * 2) return "error: less than 600 MB is free on this device";
