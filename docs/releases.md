@@ -21,7 +21,7 @@ The **Release** workflow then runs five jobs side by side and publishes when all
 | Job | Runner | Makes |
 |---|---|---|
 | android | ubuntu-latest | `MKCinema.apk` (also attached as `MKCinema-TV.apk`), signed with the release key; fails if the certificate is not the one in SECURITY.md |
-| windows | ubuntu-latest | `MKCinema.exe` (cross-compiled), after `go vet` and `go test` |
+| windows | ubuntu-latest | `MKCinema.exe` (cross-compiled), after `go vet` and `go test`, and `MKCinema-engine-windows-x64.zip` (the native player's engine, pinned in `tools/release/libmpv.sh`; the exe downloads it from this release and checks its SHA-256) |
 | linux | ubuntu-22.04 | `mkcinema_<v>_amd64.deb` and `mkcinema-<v>-linux-x86_64.tar.gz`, built on the oldest supported Ubuntu so the binary runs on older systems |
 | macos | macos-15 | `MKCinema-<v>-mac.zip` and `MKCinema-<v>.dmg` (universal: Apple silicon and Intel) |
 | publish | ubuntu-latest | `release.json`, `SHA256SUMS`, attestations and the GitHub release |

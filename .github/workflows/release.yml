@@ -7,6 +7,7 @@ name: Release
 # What a tag release carries (each app keeps its own version, read from its source by tools/release/versions.py):
 #   MKCinema.apk, MKCinema-TV.apk     Android, Android TV, Google TV, Fire TV (one APK, signed with the release key)
 #   MKCinema.exe                      Windows 10 and 11, 64-bit
+#   MKCinema-engine-windows-x64.zip   the Windows native player's engine (libmpv), downloaded by MKCinema.exe itself
 #   MKCinema-<v>-mac.zip, .dmg        macOS 11+, Apple silicon and Intel (not notarized, see docs/releases.md)
 #   mkcinema_<v>_amd64.deb, mkcinema-<v>-linux-x86_64.tar.gz   Linux x86-64
 #   com.mkcinema.app_<v>_all.ipk      LG webOS (beta), copied from the website (no webOS build in CI yet)
@@ -166,14 +167,23 @@ jobs:
           cache-dependency-path: windows/go.sum
       - name: Test and build MKCinema.exe
         working-directory: windows
+        env:
+          TAG: ${{ needs.plan.outputs.tag }}
         run: |
           go vet ./...
           go test ./...
           go install github.com/akavel/rsrc@v0.10.2
           "$(go env GOPATH)/bin/rsrc" -arch amd64 -ico mkcinema.ico -manifest app.manifest -o rsrc_windows_amd64.syso
           mkdir -p "$RUNNER_TEMP/out"
-          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -H windowsgui" -o "$RUNNER_TEMP/out/MKCinema.exe" .
+          # the native player's engine: a zip on this release, downloaded by the app on first start (see player_engine.go)
+          bash ../tools/release/libmpv.sh "$RUNNER_TEMP/engine" "$GITHUB_REPOSITORY"
+          . "$RUNNER_TEMP/engine/engine.env"
+          cp "$RUNNER_TEMP/engine/MKCinema-engine-windows-x64.zip" "$RUNNER_TEMP/out/"
+          url="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/MKCinema-engine-windows-x64.zip"
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath \
+            -ldflags "-s -w -H windowsgui -X main.engineURL=$url -X main.engineSHA=$ENGINE_SHA" -o "$RUNNER_TEMP/out/MKCinema.exe" .
           file "$RUNNER_TEMP/out/MKCinema.exe"
+          grep -c "$ENGINE_SHA" "$RUNNER_TEMP/out/MKCinema.exe"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: app-windows

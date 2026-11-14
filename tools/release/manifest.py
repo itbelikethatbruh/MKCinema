@@ -21,6 +21,7 @@ RULES = [
     (r"MKCinema-TV\.apk", "android-tv", "apk"),
     (r"MKCinema(-[0-9.]+)?\.apk", "android", "apk"),
     (r"MKCinema(-[0-9.]+)?\.exe", "windows", "exe"),
+    (r"MKCinema-engine-windows-x64\.zip", "windows", "engine"),
     (r"MKCinema-([0-9.]+)\.dmg", "macos", "dmg"),
     (r"MKCinema-([0-9.]+)-mac\.zip", "macos", "zip"),
     (r"mkcinema_([0-9.]+)_amd64\.deb", "linux", "deb"),
