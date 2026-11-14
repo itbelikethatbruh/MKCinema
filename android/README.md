@@ -29,6 +29,17 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.13.0 (versionCode 31): updates install by themselves
+
+`MKAndroid.updateAuto(url)` downloads the update in the background (same checks as `update`: MKCinema's own download
+address, signed with this app's key, not older). It installs a few minutes after the app is left, never while the TV
+player, a recording, a download or an AirPlay session is running. Installs now go through a `PackageInstaller` session,
+so MKCinema becomes the app that installed itself; from then on Android 12+ installs updates without asking
+(`setRequireUserAction(USER_ACTION_NOT_REQUIRED)`). When Android still wants a tap, the page offers Install
+(`MKAndroid.updateInstall()`) the next time the app opens. `UpdateResult` receives the installer's answer. Manual
+Update uses the session too and falls back to the old installer screen if a session can't be made. Needs web 2.70
+(page side: Settings › About › Update the app by itself); older pages keep the Update bar.
+
 ## 1.12.2 (versionCode 29): add a TV by its address
 
 `MKAndroid.apAdd(ip)` checks one address in the background: AirPlay `GET /info` on port 7000 (no pairing needed; name,
