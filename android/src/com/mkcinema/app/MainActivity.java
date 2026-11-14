@@ -77,6 +77,22 @@ public class MainActivity extends Activity {
     WebView web;
     /** 1.6.1: the page's renderer was stopped while MKCinema was hidden (see onRenderProcessGone) */
     boolean webDead, resumed;
+    /* 1.13.1: a result for the page (TV player closed, Google sign-in came back) waits until the page can take it.
+       After Android rebuilt the page to free memory, the call used to reach a page that was still loading and was lost. */
+    boolean pageReady;
+    final ArrayList<String[]> pagePending = new ArrayList<>();
+    void callPage(String fn, String call, String fallback) {
+        if (webDead || !pageReady) { pagePending.add(new String[] { fn, call, fallback }); return; }
+        deliver(fn, call, fallback, 24);
+    }
+    void deliver(String fn, String call, String fallback, int tries) {
+        final WebView w = web;
+        w.evaluateJavascript("(function(){if(window." + fn + "){" + call + ";return 1}return 0})()", (r) -> {
+            if ("1".equals(r) || w != web) return;
+            if (tries > 0) w.postDelayed(() -> { if (w == web) deliver(fn, call, fallback, tries - 1); }, 500);
+            else if (fallback != null) w.evaluateJavascript(fallback, null);
+        });
+    }
     String lastUrl;
     long goneAt;
     FrameLayout root;
@@ -168,7 +184,10 @@ public class MainActivity extends Activity {
             @Override public void onPageStarted(WebView v, String url, android.graphics.Bitmap icon) { pageHost = hostOf(url); iptvOrigin(); tvJsDone = false; giveKey(v); }
             @Override public void doUpdateVisitedHistory(WebView v, String url, boolean reload) { pageHost = hostOf(url); iptvOrigin(); }
             @Override public void onPageCommitVisible(WebView v, String url) { giveKey(v); if (tv && !tvJsDone) { tvJsDone = true; v.evaluateJavascript(TV_JS, null); } }
-            @Override public void onPageFinished(WebView v, String url) { giveKey(v); if (tv && !tvJsDone) { tvJsDone = true; v.evaluateJavascript(TV_JS, null); } }
+            @Override public void onPageFinished(WebView v, String url) {
+                giveKey(v); if (tv && !tvJsDone) { tvJsDone = true; v.evaluateJavascript(TV_JS, null); }
+                if (v == web && url != null && url.startsWith("http")) { pageReady = true; ArrayList<String[]> l = new ArrayList<>(pagePending); pagePending.clear(); for (String[] c : l) deliver(c[0], c[1], c[2], 24); }
+            }
             @Override public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) { return cleartext(r); }
             @Override public void onReceivedError(WebView v, WebResourceRequest r, WebResourceError e) {
                 if (r.isForMainFrame()) v.loadDataWithBaseURL(null, offline(), "text/html", "utf-8", null);
@@ -184,7 +203,7 @@ public class MainActivity extends Activity {
                 lastUrl = now - goneAt < 15000 ? null : v.getUrl(); goneAt = now;
                 root.removeView(v);
                 try { v.destroy(); } catch (Exception ignored) { }
-                pageHost = "";
+                pageHost = ""; pageReady = false;
                 buildWeb(); // empty until it loads, so every web call stays safe
                 if (resumed) reloadWeb(); else webDead = true;
                 return true;
@@ -275,7 +294,7 @@ public class MainActivity extends Activity {
         // an addon Install link while MKCinema is open: hand it to the page (it asks first), no reload
         if (d != null && "stremio".equals(d.getScheme())) { web.evaluateJavascript("window.MKInstall?MKInstall(" + JSONObject.quote(d.toString()) + "):location.replace(" + JSONObject.quote(startUrl(i)) + ")", null); return; }
         // 1.12.0: back from Google sign-in (mkcinema://auth?code=...): the page finishes it, no reload
-        if (authReturn(d)) { web.evaluateJavascript("window.MKAuthDone?MKAuthDone(" + JSONObject.quote(d.toString()) + "):location.replace(" + JSONObject.quote(startUrl(i)) + ")", null); return; }
+        if (authReturn(d)) { callPage("MKAuthDone", "MKAuthDone(" + JSONObject.quote(d.toString()) + ")", "location.replace(" + JSONObject.quote(startUrl(i)) + ")"); return; }
         if (d != null) web.loadUrl(startUrl(i));
     }
     /** 1.12.0: the address Google sign-in comes back to (Supabase redirect_to mkcinema://auth) */
@@ -370,7 +389,7 @@ public class MainActivity extends Activity {
             boolean ended = data != null && data.getBooleanExtra("ended", false), next = data != null && data.getBooleanExtra("next", false);
             String err = data != null ? data.getStringExtra("error") : null, act = data != null ? data.getStringExtra("action") : null;
             // 1.6.1: act is "sources" (show the film's source list) or "web" (keep watching in MKCinema's own player)
-            web.evaluateJavascript("window.MKNative&&MKNative.done(" + pos + "," + dur + "," + ended + "," + next + "," + (err == null ? "null" : JSONObject.quote(err)) + "," + (act == null ? "null" : JSONObject.quote(act)) + ")", null);
+            callPage("MKNative", "MKNative.done(" + pos + "," + dur + "," + ended + "," + next + "," + (err == null ? "null" : JSONObject.quote(err)) + "," + (act == null ? "null" : JSONObject.quote(act)) + ")", null);
             if (tv) web.requestFocus();
             return;
         }
