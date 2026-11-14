@@ -80,7 +80,11 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         slow = i.getBooleanExtra("slow", false);
         // 1.9.0: a crash while libass was drawing turns styled subtitles off on this app version (see onDestroy)
         android.content.SharedPreferences sp = getSharedPreferences("mk", MODE_PRIVATE);
-        if (sp.getBoolean("assLive", false)) { sp.edit().putString("assOff", MainActivity.VER).putBoolean("assLive", false).apply(); assCrashed = true; }
+        if (sp.getBoolean("assLive", false)) {
+            int n = sp.getInt("assCrashN", 0) + 1;   // one power cut is not a crash: three in a row are
+            if (n >= 3) { sp.edit().putString("assOff", MainActivity.VER).putBoolean("assLive", false).putInt("assCrashN", 0).apply(); assCrashed = true; }
+            else sp.edit().putBoolean("assLive", false).putInt("assCrashN", n).apply();
+        }
         assOk = i.getBooleanExtra("ass", true) && !MainActivity.VER.equals(sp.getString("assOff", ""));
         readSkips(i.getStringExtra("skips")); hasNext = i.getBooleanExtra("hasNext", false); autoSkip = i.getBooleanExtra("autoSkip", false);
         float d = getResources().getDisplayMetrics().density;
@@ -221,7 +225,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         assView = v; root.addView(v, 1, new FrameLayout.LayoutParams(surface.getLayoutParams()));
         liveAss(true);
     }
-    void liveAss(boolean on) { getSharedPreferences("mk", MODE_PRIVATE).edit().putBoolean("assLive", on).commit(); }
+    void liveAss(boolean on) { android.content.SharedPreferences.Editor e = getSharedPreferences("mk", MODE_PRIVATE).edit().putBoolean("assLive", on); if (!on) e.putInt("assCrashN", 0); e.commit(); }
 
     void readSkips(String json) {
         if (json == null || json.isEmpty()) return;
