@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mkcinema.app" android:versionCode="32" android:versionName="1.13.1">
+    package="com.mkcinema.app" android:versionCode="33" android:versionName="1.13.2">
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -49,7 +49,7 @@
     <application android:label="MKCinema" android:icon="@drawable/ic_launcher"
         android:banner="@drawable/banner" android:theme="@style/Noir" android:hardwareAccelerated="true" android:allowBackup="false" android:supportsRtl="true" android:networkSecurityConfig="@xml/network_security_config" android:extractNativeLibs="true" android:largeHeap="true">
         <activity android:name=".MainActivity" android:exported="true" android:icon="@drawable/ic_launcher" android:banner="@drawable/banner" android:launchMode="singleTask"
-            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|uiMode|density"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|navigation|uiMode|density"
             android:supportsPictureInPicture="true" android:resizeableActivity="true"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -89,7 +89,7 @@
         </activity>
         <!-- 1.2.5: the TV player (system hardware decoder), opened from the page with MKAndroid.play -->
         <activity android:name=".PlayerActivity" android:exported="false" android:theme="@style/Noir"
-            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|uiMode|density"/>
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|navigation|uiMode|density"/>
         <!-- 1.5.0: twice-daily check for new episodes of the series you follow (no server; see EpisodeAlerts.java) -->
         <service android:name=".DlService" android:exported="false" android:foregroundServiceType="dataSync"/>
         <!-- 1.11.0: live TV recording, and the alarm that starts a planned one (re-armed after a restart) -->

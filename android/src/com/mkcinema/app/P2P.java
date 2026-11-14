@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -21,14 +22,17 @@ final class P2P {
     private static String base = "";
 
     static synchronized String start(Context ctx) {
-        if (proc != null && proc.isAlive() && !base.isEmpty()) return base;
+        if (proc != null && alive(proc) && !base.isEmpty()) return base;
         stop(ctx);
         File bin = new File(ctx.getApplicationInfo().nativeLibraryDir, "libmkp2p.so");
         if (!bin.exists()) return "error: the torrent engine is not part of this app build";
         try {
             ProcessBuilder pb = new ProcessBuilder(bin.getPath(), "-dir", ctx.getCacheDir().getPath(), "-keep", "1", "-reserve-mb", "600", "-conns", "30");
-            pb.redirectError(ProcessBuilder.Redirect.to(new File("/dev/null")));
             proc = pb.start();
+            // Android 7 has no ProcessBuilder.Redirect: the engine's error output is read and dropped here instead
+            final InputStream err = proc.getErrorStream();
+            Thread e2 = new Thread(() -> { byte[] b = new byte[4096]; try { while (err.read(b) >= 0) { /* dropped */ } } catch (Exception ignored) { } }, "mkp2p-err");
+            e2.setDaemon(true); e2.start();
             stdin = proc.getOutputStream();
             final BufferedReader out = new BufferedReader(new InputStreamReader(proc.getInputStream()));
             final ArrayBlockingQueue<String> first = new ArrayBlockingQueue<>(1);
@@ -53,11 +57,14 @@ final class P2P {
         base = "";
         if (stdin != null) { try { stdin.close(); } catch (Exception ignored) { } stdin = null; }
         if (proc != null) {
-            try { if (!proc.waitFor(3, TimeUnit.SECONDS)) proc.destroy(); } catch (Exception e) { proc.destroy(); }
+            try { long until = System.currentTimeMillis() + 3000; while (alive(proc) && System.currentTimeMillis() < until) Thread.sleep(100); if (alive(proc)) proc.destroy(); } catch (Exception e) { proc.destroy(); }
             proc = null;
         }
         rm(new File(ctx.getCacheDir(), "p2p"));
     }
+
+    /** Process.isAlive() and waitFor(timeout) only exist from Android 8 */
+    private static boolean alive(Process p) { try { p.exitValue(); return false; } catch (IllegalThreadStateException e) { return true; } }
 
     private static void rm(File f) {
         File[] kids = f.listFiles();

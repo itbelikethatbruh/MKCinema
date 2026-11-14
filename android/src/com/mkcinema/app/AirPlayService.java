@@ -307,7 +307,8 @@ public class AirPlayService extends Service {
         JSONObject o = new JSONObject();
         try { o.put("state", st).put("pos", pos).put("dur", dur).put("tv", current == null ? "" : current.name); if (msg != null) o.put("msg", msg); } catch (Exception e) { /* never */ }
         MainActivity.toPage("window.MKAirPlay&&MKAirPlay.state(" + o + ")");
-        if ("ended".equals(st) || "error".equals(st)) { session = null; app.stopService(new Intent(app, AirPlayService.class)); }
+        // the service stops itself only once it is in the foreground: stopping it earlier makes Android close the app
+        if ("ended".equals(st) || "error".equals(st)) { session = null; main.post(() -> { AirPlayService l = live; if (l != null && l.started && session == null) l.stopSelf(); }); }
         else if (changed && live != null) main.post(() -> { if (live != null) live.note(); });
     }
     static void pin(String p) { pins.offer(p == null ? "" : p.replaceAll("[^0-9]", "")); }
@@ -319,7 +320,7 @@ public class AirPlayService extends Service {
 
     // ---------------------------------------------------------------- service (keeps the session alive with the screen off)
     static volatile AirPlayService live;
-    PowerManager.WakeLock wake; WifiManager.WifiLock wifi;
+    PowerManager.WakeLock wake; WifiManager.WifiLock wifi; volatile boolean started;
 
     @Override public void onCreate() {
         super.onCreate(); live = this;
@@ -329,7 +330,7 @@ public class AirPlayService extends Service {
         } catch (Exception e) { /* best effort */ }
     }
     @Override public int onStartCommand(Intent i, int flags, int id) {
-        note();
+        note(); started = true;
         String a = i == null ? null : i.getAction();
         if ("pause".equals(a)) ctl("paused".equals(lastState) ? "play" : "pause", null);
         else if ("stop".equals(a)) ctl("stop", null);

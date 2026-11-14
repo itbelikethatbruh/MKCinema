@@ -232,13 +232,16 @@ final class Dlna {
             while (true) {
                 String[] c = cmds.poll(1000, java.util.concurrent.TimeUnit.MILLISECONDS);
                 if (c != null) {
-                    switch (c[0]) {
-                        case "stop": try { soap(control, "Stop", ""); } catch (IOException e) { /* closing anyway */ } throw new InterruptedException("stopped");
-                        case "pause": soap(control, "Pause", ""); break;
-                        case "play": soap(control, "Play", "<Speed>1</Speed>"); break;
-                        case "seek": try { pos = Double.parseDouble(c[1]); soap(control, "Seek", "<Unit>REL_TIME</Unit><Target>" + hms(pos) + "</Target>"); } catch (NumberFormatException e) { /* ignore */ } break;
-                        default: break;
-                    }
+                    // one refused pause, play or seek (some TVs answer an error while buffering) keeps the session
+                    try {
+                        switch (c[0]) {
+                            case "stop": try { soap(control, "Stop", ""); } catch (IOException e) { /* closing anyway */ } throw new InterruptedException("stopped");
+                            case "pause": soap(control, "Pause", ""); break;
+                            case "play": soap(control, "Play", "<Speed>1</Speed>"); break;
+                            case "seek": try { pos = Double.parseDouble(c[1]); soap(control, "Seek", "<Unit>REL_TIME</Unit><Target>" + hms(pos) + "</Target>"); } catch (NumberFormatException e) { /* ignore */ } break;
+                            default: break;
+                        }
+                    } catch (IOException e) { /* the status poll below notices a TV that is really gone */ }
                 }
                 String st;
                 try {
