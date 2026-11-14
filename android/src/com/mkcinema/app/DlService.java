@@ -88,11 +88,14 @@ public class DlService extends Service {
             JSONArray a = Downloads.load(c);
             for (int i = 0; i < a.length(); i++) {
                 JSONObject r = a.optJSONObject(i);
-                if (r != null && r.optBoolean("own") && !r.optBoolean("done") && !r.optBoolean("dead") && !cancelled.contains(r.optString("id"))) return r;
+                if (r != null && r.optBoolean("own") && !r.optBoolean("done") && !r.optBoolean("dead") && !cancelled.contains(r.optString("id")) && folderThere(r)) return r;
             }
             return null;
         }
     }
+
+    /** a download whose USB drive or SD card is unplugged waits for it instead of failing */
+    static boolean folderThere(JSONObject r) { File d = new File(r.optString("path")).getParentFile(); return d != null && d.exists(); }
 
     static void mark(Context c, String id, String key, Object v, String key2, Object v2) {
         synchronized (Downloads.class) {
@@ -131,19 +134,29 @@ public class DlService extends Service {
         int tries = 0;
         live.put(id, new String[]{"queued", ""});
         while (!cancelled.contains(id)) {
+            if (!folderThere(r)) { live.put(id, new String[]{"paused", "Connect the USB drive to carry on"}); break; }
             if (r.optBoolean("wifiOnly") && metered()) { live.put(id, new String[]{"paused", "Waiting for Wi-Fi"}); note(title, "Waiting for Wi-Fi", 0, true); sleep(15000); continue; }
             long have = f.exists() ? f.length() : 0;
             HttpURLConnection h = null;
             try {
-                h = (HttpURLConnection) new URL(r.optString("url")).openConnection();
-                h.setConnectTimeout(20000); h.setReadTimeout(45000); h.setInstanceFollowRedirects(true);
-                JSONObject hd = r.optJSONObject("headers");
-                if (hd != null) for (Iterator<String> it = hd.keys(); it.hasNext(); ) { String k = it.next(); h.setRequestProperty(k, hd.optString(k)); }
-                if (have > 0) h.setRequestProperty("Range", "bytes=" + have + "-");
-                int code = h.getResponseCode();
+                // redirects are followed here, since Android does not follow one between http and https on its own
+                URL u = new URL(r.optString("url")); int code = 0;
+                for (int hop = 0; ; hop++) {
+                    h = (HttpURLConnection) u.openConnection();
+                    h.setConnectTimeout(20000); h.setReadTimeout(45000); h.setInstanceFollowRedirects(false);
+                    JSONObject hd = r.optJSONObject("headers");
+                    if (hd != null) for (Iterator<String> it = hd.keys(); it.hasNext(); ) { String k = it.next(); h.setRequestProperty(k, hd.optString(k)); }
+                    if (have > 0) h.setRequestProperty("Range", "bytes=" + have + "-");
+                    code = h.getResponseCode();
+                    String loc = code >= 300 && code < 400 ? h.getHeaderField("Location") : null;
+                    if (loc == null) break;
+                    if (hop >= 8) throw new java.io.IOException("too many redirects");
+                    u = new URL(u, loc); h.disconnect(); h = null;
+                }
                 if (code == 416 && have > 0) { mark(c, id, "done", true, "size", have); break; }
                 if (code >= 500 || code == 408 || code == 429) throw new java.io.IOException("the server answered " + code);
                 if (code >= 400) { mark(c, id, "dead", true, "err", Downloads.failedWhy(code)); break; }
+                if (code != 200 && code != 206) throw new java.io.IOException("the server answered " + code);
                 boolean append = have > 0 && code == 206;
                 long total = -1;
                 if (code == 206) { String cr = h.getHeaderField("Content-Range"); int sl = cr == null ? -1 : cr.lastIndexOf('/'); if (sl > 0) try { total = Long.parseLong(cr.substring(sl + 1).trim()); } catch (Exception ignored) { } }
@@ -172,7 +185,7 @@ public class DlService extends Service {
                 if (cancelled.contains(id)) break;
                 File dir = f.getParentFile();
                 try { if (dir != null && new StatFs(dir.getPath()).getAvailableBytes() < 16L * 1024 * 1024) { mark(c, id, "dead", true, "err", "the drive is full"); break; } }
-                catch (Exception gone) { mark(c, id, "dead", true, "err", "the USB drive was removed"); break; }
+                catch (Exception gone) { live.put(id, new String[]{"paused", "Connect the USB drive to carry on"}); break; }
                 if (++tries > 20) { mark(c, id, "dead", true, "err", "the connection kept dropping. Download it again"); break; }
                 live.put(id, new String[]{"paused", "The connection dropped, trying again"});
                 note(title, "The connection dropped, trying again", 0, true);

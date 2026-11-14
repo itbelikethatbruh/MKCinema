@@ -509,17 +509,20 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         return super.dispatchKeyEvent(e);
     }
 
-    void finishWithResult() {
+    void finishWithResult() { setResult(RESULT_OK, result()); finish(); }
+
+    Intent result() {
         Intent r = new Intent();
         try { if (prepared && eng != null) { r.putExtra("pos", pendingSeek >= 0 ? pendingSeek : (int) eng.pos()); r.putExtra("dur", (int) eng.dur()); } } catch (Exception ignored) { }
         r.putExtra("engine", eng == null ? engineName : eng.name());
         r.putExtra("ended", ended); r.putExtra("next", wantNext); if (action != null) r.putExtra("action", action);
-        setResult(RESULT_OK, r); finish();
+        return r;
     }
 
     // the crash flag is only up while the libass layer draws on screen, so Android closing a paused player in the
     // background never counts as a crash
-    @Override protected void onPause() { super.onPause(); modeHold = false; if (eng != null && prepared && eng.playing()) eng.pause(); if (assView != null) liveAss(false); }
+    // the place is handed back on every pause too: reopening the app from its icon closes this screen without Back
+    @Override protected void onPause() { super.onPause(); if (!isFinishing()) { try { setResult(RESULT_OK, result()); } catch (Exception ignored) { } } modeHold = false; if (eng != null && prepared && eng.playing()) eng.pause(); if (assView != null) liveAss(false); }
     @Override protected void onResume() { super.onResume(); if (assView != null) liveAss(true); }
     @Override protected void onDestroy() { super.onDestroy(); open = false; stopPlayer(); liveAss(false); }
 

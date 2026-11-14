@@ -166,9 +166,12 @@ final class Iptv {
         if (hls && (len == null || len.length() < 8)) {
             // a channel's HLS playlist: point its relative addresses at the server that really sent it, and allow the
             // hosts it names (Xtream servers hand out segments from load balancers)
-            byte[] b = readCapped(body, 4 << 20);
-            String text = new String(b, StandardCharsets.UTF_8);
-            if (text.startsWith("#EXTM3U")) {
+            // a big channel list (also sent as mpegurl) is passed straight through: only small playlists are rewritten
+            InputStream src = body;
+            byte[] b = readUpTo(src, 4 << 20);
+            String text = b.length > (4 << 20) ? "" : new String(b, StandardCharsets.UTF_8);
+            if (b.length > (4 << 20)) body = new java.io.SequenceInputStream(new ByteArrayInputStream(b), src);
+            else if (text.startsWith("#EXTM3U")) {
                 body = new ByteArrayInputStream(absolute(text, at).getBytes(StandardCharsets.UTF_8));
                 charset = "utf-8";
             } else body = new ByteArrayInputStream(b);
@@ -179,6 +182,16 @@ final class Iptv {
         if (reason == null || reason.trim().isEmpty()) reason = code < 400 ? "OK" : "Error";
         if (code < 100 || code > 599) code = 502;
         return new WebResourceResponse(mime, charset, code, reason, out, closing);
+    }
+
+    /** reads until the end or until more than cap bytes have arrived (the stream is then left open, mid-way) */
+    static byte[] readUpTo(InputStream in, int cap) throws IOException {
+        ByteArrayOutputStream o = new ByteArrayOutputStream();
+        byte[] buf = new byte[16384]; int n;
+        boolean all = false;
+        try { while (true) { n = in.read(buf); if (n < 0) { all = true; break; } o.write(buf, 0, n); if (o.size() > cap) break; } }
+        finally { if (all) { try { in.close(); } catch (IOException ignored) { } } }
+        return o.toByteArray();
     }
 
     static byte[] readCapped(InputStream in, int cap) throws IOException {
