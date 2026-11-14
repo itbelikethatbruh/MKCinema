@@ -37,7 +37,11 @@ final class Labels {
         }
     }
     static String track(String lang, String label, String mime, int ch, int n) {
-        String name = lang == null || lang.isEmpty() || "und".equals(lang) ? "" : new Locale(lang).getDisplayLanguage();
+        String name = "";
+        if (lang != null && !lang.isEmpty() && !"und".equals(lang)) {
+            name = Locale.forLanguageTag(lang.replace('_', '-')).getDisplayLanguage();
+            if (name.isEmpty()) name = new Locale(lang).getDisplayLanguage();
+        }
         if (label != null && !label.isEmpty() && !label.equalsIgnoreCase(name)) name = name.isEmpty() ? label : name + " (" + label + ")";
         String extra = codec(mime);
         if (ch > 0) extra += (extra.isEmpty() ? "" : " ") + (ch == 6 ? "5.1" : ch == 8 ? "7.1" : ch == 2 ? "stereo" : ch == 1 ? "mono" : ch + " ch");
