@@ -18,7 +18,11 @@ func TestNativeLibmpv(t *testing.T) {
 	if dir == "" {
 		t.Skip("MKC_LIBMPV_DIR not set")
 	}
-	if err := Load(dir); err != nil {
+	// a missing DLL is not remembered: once it arrives (the app downloads it), the next Load finds it
+	if err := Load(t.TempDir()); err == nil {
+		t.Fatal("Load found a DLL in an empty folder")
+	}
+	if err := Load(t.TempDir(), dir); err != nil {
 		t.Fatal(err)
 	}
 	t.Logf("libmpv client API %d.%d", Version()>>16, Version()&0xffff)

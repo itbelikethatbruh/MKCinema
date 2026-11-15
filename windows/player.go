@@ -84,6 +84,7 @@ func setupPlayer(w webview2.WebView, c *edge.Chromium, parent uintptr) {
 	np.video = h
 	webview2.OnSize = func(uintptr) { np.fit() }
 	np.fit()
+	go fetchEngine()
 }
 
 // fit sizes the video window to the whole window, under the page.
