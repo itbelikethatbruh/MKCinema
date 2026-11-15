@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.mkcinema.remote",
+      "sha256_cert_fingerprints": [
+        "9F:B8:08:4D:9A:61:2D:3A:3B:80:49:21:A2:92:95:9F:D2:FE:DD:F1:9B:8C:DF:81:C0:AC:E8:24:B1:CF:7F:D9"
+      ]
+    }
+  }
+]
