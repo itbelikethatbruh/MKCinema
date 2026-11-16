@@ -579,6 +579,7 @@ public class MainActivity extends Activity {
                     // 1.9.0: skip times (seconds), whether a next episode exists, auto-skip, and libass styling (on unless turned off)
                     .putExtra("skips", o.has("skips") && o.optJSONObject("skips") != null && o.getJSONObject("skips").toString().length() < 4000 ? o.getJSONObject("skips").toString() : "")
                     .putExtra("hasNext", o.optBoolean("hasNext", false)).putExtra("autoSkip", o.optBoolean("autoSkip", false))
+                    .putExtra("zap", o.optBoolean("zap", false)).putExtra("zapFlip", o.optBoolean("zapFlip", false))
                     .putExtra("ass", o.optBoolean("ass", true));
                 runOnUiThread(() -> { try { startActivityForResult(i, REQ_PLAY); } catch (Exception ignored) { } });
                 return true;

@@ -60,7 +60,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     boolean assOk, assCrashed; View assView;
     /** 1.9.0: skip times in ms: recap, intro, ending ({start, end}), and where the credits start (-1 unknown) */
     final String[] SEG = { "recap", "intro", "ed" }; final long[][] segs = new long[3][]; final boolean[] segUsed = new boolean[3];
-    long creditsMs = -1; boolean hasNext, autoSkip; int segCur = -1; long segShown; TextView skipBtn;
+    long creditsMs = -1; boolean hasNext, autoSkip, zap, zapFlip; int segCur = -1; long segShown; TextView skipBtn;
 
     /** 1.13.0: an automatic update never installs while this player is open */
     static volatile boolean open;
@@ -87,6 +87,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         }
         assOk = i.getBooleanExtra("ass", true) && !MainActivity.VER.equals(sp.getString("assOff", ""));
         readSkips(i.getStringExtra("skips")); hasNext = i.getBooleanExtra("hasNext", false); autoSkip = i.getBooleanExtra("autoSkip", false);
+        zap = i.getBooleanExtra("zap", false); zapFlip = i.getBooleanExtra("zapFlip", false);
         float d = getResources().getDisplayMetrics().density;
 
         root = new FrameLayout(this); root.setBackgroundColor(Color.BLACK);
@@ -492,6 +493,19 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
                 case KeyEvent.KEYCODE_DPAD_UP: case KeyEvent.KEYCODE_BACK: case KeyEvent.KEYCODE_ESCAPE: sel = -1; paintOpts(); show(3000); return true;
                 case KeyEvent.KEYCODE_DPAD_DOWN: show(8000); return true;
             }
+        }
+        // a live channel from the person's own playlist: Channel +/- (and Up/Down while the bar is hidden) close this
+        // screen with a request for the next channel, which MKCinema starts at once; Last channel goes back
+        if (zap && picker == null && sel < 0) {
+            String want = null;
+            switch (k) {
+                case KeyEvent.KEYCODE_CHANNEL_UP: case KeyEvent.KEYCODE_PAGE_UP: want = "chup"; break;
+                case KeyEvent.KEYCODE_CHANNEL_DOWN: case KeyEvent.KEYCODE_PAGE_DOWN: want = "chdown"; break;
+                case KeyEvent.KEYCODE_LAST_CHANNEL: want = "chlast"; break;
+                case KeyEvent.KEYCODE_DPAD_UP: if (bar.getVisibility() != View.VISIBLE) want = zapFlip ? "chup" : "chdown"; break;
+                case KeyEvent.KEYCODE_DPAD_DOWN: if (bar.getVisibility() != View.VISIBLE) want = zapFlip ? "chdown" : "chup"; break;
+            }
+            if (want != null) { action = want; finishWithResult(); return true; }
         }
         // 1.9.0: while Skip intro (or Next episode) shows, OK presses it
         if ((k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER) && skipShown()) { doSkipSeg(); return true; }
