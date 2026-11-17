@@ -67,4 +67,8 @@ wait_for "under-test: PASS\|under-test: FAIL"
 sleep 1; shot under-playing; log
 grep "under-test\|under:" "$OUT/logcat.txt"
 grep -q "under-test: PASS" "$OUT/logcat.txt" || { echo "MKCinema Player under the web player failed"; cat "$OUT/logcat.txt"; exit 1; }
+# the picture itself must be on screen (not only mpv's state): the test film is bright, a black screenshot means the surface is hidden
+Y=$(ffmpeg -loglevel error -i "$OUT/under-playing.png" -vf "signalstats,metadata=print:file=-" -f null - 2>/dev/null | grep -m1 "YAVG" | sed 's/.*=//')
+echo "screenshot average brightness: $Y"
+python3 -c "import sys; sys.exit(0 if float('${Y:-0}') > 40 else 1)" || { echo "MKCinema Player under the web player: mpv played but the screen is black"; exit 1; }
 echo "MKCinema Player under the web player: played, both languages and the subtitle listed, switched live"
