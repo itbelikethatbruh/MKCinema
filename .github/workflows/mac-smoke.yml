@@ -30,9 +30,13 @@ jobs:
           sh mac/package.sh
           rm -rf /tmp/inst && mkdir /tmp/inst && cd /tmp/inst && unzip -q "$GITHUB_WORKSPACE"/mac/build/MKCinema-*-mac.zip
           cp -R /tmp/inst/MKCinema.app /Applications/
+      - name: Install Rosetta (most Apple silicon Macs have it, and it changes how macOS starts the app)
+        run: |
+          if [ "$(uname -m)" = arm64 ]; then softwareupdate --install-rosetta --agree-to-license || true; fi
+          /usr/bin/pgrep -q oahd && echo 'Rosetta is running' || echo 'Rosetta not running'
       - name: Launch from LaunchServices and run the self-test
         run: |
-          sw_vers
+          sw_vers; uname -m
           LOG="$HOME/Library/Logs/MKCinema/launch.log"
           mkdir -p "$HOME/Library/Caches/MKCinema"; touch "$HOME/Library/Caches/MKCinema/selftest"; rm -f "$LOG"
           open /Applications/MKCinema.app
@@ -44,12 +48,24 @@ jobs:
           screencapture -x "$RUNNER_TEMP/screen.png" || true
           echo "---- launch.log"; cat "$LOG" || true
           echo "---- processes"; pgrep -fl 'MKCinema|osascript' || true
-          for want in 'started' 'window shown' 'page loaded' 'bridge ping ok' 'selftest: quitting'; do
+          for want in 'started' 'running as' 'window shown' 'page loaded' 'bridge ping ok' 'selftest: quitting'; do
             grep -q "$want" "$LOG" || { echo "missing: $want"; exit 1; }
           done
           for i in $(seq 15); do pgrep -f 'MKCinema.app/Contents/Resources/main.js' >/dev/null || break; sleep 1; done
           if pgrep -f 'MKCinema.app/Contents/Resources/main.js' >/dev/null; then echo 'the app did not quit'; exit 1; fi
           grep -q 'error' "$LOG" && { echo 'the log has an error'; exit 1; } || true
+          # On Apple silicon the app must run natively, never under Rosetta (Info.plist LSArchitecturePriority)
+          if [ "$(uname -m)" = arm64 ]; then grep -q 'running as arm64$' "$LOG" || { echo 'not native on Apple silicon'; exit 1; }; fi
+          echo 'PASS'
+      - name: Started under Rosetta anyway, the launcher restarts natively
+        if: runner.arch == 'ARM64'
+        run: |
+          LOG="$HOME/Library/Logs/MKCinema/launch.log"; rm -f "$LOG"
+          /usr/bin/arch -x86_64 /Applications/MKCinema.app/Contents/MacOS/MKCinema &
+          for i in $(seq 90); do grep -q 'selftest: quitting' "$LOG" 2>/dev/null && break; sleep 1; done
+          sleep 3; cat "$LOG" || true
+          grep -q 'running as arm64 (restarted from Rosetta)' "$LOG" || { echo 'the launcher did not restart natively'; exit 1; }
+          grep -q 'bridge ping ok' "$LOG" || { echo 'missing: bridge ping ok'; exit 1; }
           echo 'PASS'
       - name: Screenshot and log
         if: always()

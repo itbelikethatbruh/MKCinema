@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Mac app 1.3.1 (2026-11-17)
+
+- **Faster start on Apple silicon:** the Mac app now always runs natively on M-series Macs, even when Rosetta is installed, so it opens straight to MKCinema instead of stalling at launch.
+
 ## Android app 1.13.0 (updates by itself)
 
 - **Updates by themselves:** new versions download in the background and install a few minutes after you leave the app, never during a film. On Android 12 and later this happens without a prompt after the first update.
