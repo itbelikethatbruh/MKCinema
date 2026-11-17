@@ -5,7 +5,8 @@ cd "$(dirname "$0")"
 SDK=${SDK:-$ANDROID_HOME}; BT=$SDK/build-tools/35.0.0; JAR=$SDK/platforms/android-35/android.jar
 OUT=${OUT:-build}; rm -rf $OUT; mkdir -p $OUT/c $OUT/classes $OUT/dex
 $BT/aapt2 compile --dir res -o $OUT/c/res.zip
-$BT/aapt2 link -I $JAR --manifest AndroidManifest.xml -o $OUT/base.apk $OUT/c/res.zip --auto-add-overlay
+# 1.15.0: DEBUG_APK=1 (the emulator test only, never a release) makes a debuggable build so the test can drive the page
+$BT/aapt2 link -I $JAR --manifest AndroidManifest.xml -o $OUT/base.apk $OUT/c/res.zip --auto-add-overlay ${DEBUG_APK:+--debug-mode}
 # 1.7.0: ExoPlayer (Media3) and Guava jars in libs/ (libs/fetch.sh downloads them)
 # 1.8.1: androidx.webkit (bridge key reaches only MKCinema's own pages, see MainActivity.bridgeJs)
 [ -f libs/media3-exoplayer-1.8.0.jar ] && [ -f libs/webkit-1.12.1.jar ] && [ -f libs/ass-media-0.4.0.jar ] && [ -f libs/ass-jni/arm64-v8a/libass.so ] && [ -f libs/mpv-jni/arm64-v8a/libmpv.so ] || sh libs/fetch.sh

@@ -70,11 +70,13 @@ public class MainActivity extends Activity {
     static final String[] APP_HOSTS = { HOST, "app.mkcinema.app" };
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6;
-    static final String VER = "1.14.0";
+    static final String VER = "1.15.0";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
     WebView web;
+    /** 1.15.0: MKCinema Player under the page, made on first use */
+    volatile UnderPlayer under;
     /** 1.6.1: the page's renderer was stopped while MKCinema was hidden (see onRenderProcessGone) */
     boolean webDead, resumed;
     /* 1.13.1: a result for the page (TV player closed, Google sign-in came back) waits until the page can take it.
@@ -122,6 +124,8 @@ public class MainActivity extends Activity {
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
         liveAct = this;
+        // test builds only (built with --debug-mode): the emulator test drives the page through WebView debugging
+        if ((getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) WebView.setWebContentsDebuggingEnabled(true);
         UiModeManager ui = (UiModeManager) getSystemService(UI_MODE_SERVICE);
         tv = (ui != null && ui.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION)
                 || getPackageManager().hasSystemFeature("android.software.leanback")
@@ -147,6 +151,7 @@ public class MainActivity extends Activity {
         web.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
         web.setOverScrollMode(View.OVER_SCROLL_NEVER);
         root.addView(web, 0, new FrameLayout.LayoutParams(-1, -1));
+        if (under != null) under.below(); // 1.15.0: MKCinema Player's picture stays under the page
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -585,6 +590,15 @@ public class MainActivity extends Activity {
                 return true;
             } catch (Exception e) { return false; }
         }
+        /** 1.15.0: MKCinema Player under the web player (phones and tablets, see UnderPlayer): the page's MkNative sends
+            the same commands as to the Windows app. The answer is the result, or "ERR:" and why. */
+        @JavascriptInterface public String mpv(String k, String c, String arg) {
+            if (!ok(k)) return "ERR:not allowed here";
+            try {
+                UnderPlayer u; synchronized (MainActivity.this) { if (under == null) under = new UnderPlayer(MainActivity.this); u = under; }
+                return u.cmd(c, arg);
+            } catch (Throwable e) { return "ERR:" + (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()); }
+        }
         /** 1.7.0: the TV player's engine, from Settings › Playback (see PlayerActivity.maybeStart for the names) */
         @JavascriptInterface public boolean setEngine(String k, String e) {
             // 1.14.0: "mpv" (MKCinema Player, the default; older pages send "exo" for it), "exoplayer", "system"
@@ -656,7 +670,7 @@ public class MainActivity extends Activity {
     static final String[] BRIDGE_METHODS = { "voice", "voiceStop", "version", "fps", "watchNext", "watchNextRemove", "p2pStart", "p2pStop",
         "p2pAvailable", "dlStart", "dlSpace", "setSlow", "epEnable", "epOn", "epSync", "dlList", "dlRemove", "dlPlay", "pipState", "pip", "play",
         "setEngine", "update", "youtube", "exit", "iptvHosts", "recStart", "recStop", "recPlan", "recUnplan",
-        "apScan", "apPlay", "apPin", "apCtl", "apForget", "apState", "signIn", "apAdd", "apDiag", "updateAuto", "updateInstall" };
+        "apScan", "apPlay", "apPin", "apCtl", "apForget", "apState", "signIn", "apAdd", "apDiag", "updateAuto", "updateInstall", "mpv" };
 
     static String newKey() {
         byte[] b = new byte[24]; new SecureRandom().nextBytes(b);
@@ -993,10 +1007,11 @@ public class MainActivity extends Activity {
     @Override protected void onSaveInstanceState(Bundle b) { super.onSaveInstanceState(b); web.saveState(b); }
     @Override protected void onPause() {
         super.onPause(); resumed = false;
+        if (under != null && !(Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode())) under.pauseForBackground();
         // In the picture-in-picture window the page keeps playing
         if (!(Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode())) web.onPause();
         CookieManager.getInstance().flush();
     }
     @Override protected void onResume() { super.onResume(); resumed = true; later.removeCallbacks(autoInstall); if (UpdateResult.ask) { UpdateResult.ask = false; js("window.MkAutoUpd&&MkAutoUpd.ask()"); } web.onResume(); if (webDead) reloadWeb(); if (wasPip && !(Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode())) wasPip = false; }
-    @Override protected void onDestroy() { if (liveAct == this) liveAct = null; if (isFinishing()) new Thread(() -> P2P.stop(getApplicationContext())).start(); if (recognizer != null) recognizer.destroy(); if (web != null) { ((ViewGroup) web.getParent()).removeView(web); web.destroy(); } super.onDestroy(); }
+    @Override protected void onDestroy() { if (liveAct == this) liveAct = null; if (isFinishing()) new Thread(() -> P2P.stop(getApplicationContext())).start(); if (recognizer != null) recognizer.destroy(); if (under != null) under.release(); if (web != null) { ((ViewGroup) web.getParent()).removeView(web); web.destroy(); } super.onDestroy(); }
 }

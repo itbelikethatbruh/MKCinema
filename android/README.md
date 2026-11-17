@@ -29,6 +29,16 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.15.0 (versionCode 36): MKCinema Player under the web player (phones and tablets)
+
+On phones and tablets every film now plays in mpv on a surface under the page, the way the Windows app does it: the
+page goes see-through while a film plays, so the screen is MKCinema's own web player, 1:1 (controls, Audio & subtitles
+with every language in the file, split screen, calls, X-Ray, skips), and mpv does the playing. The page sends the
+Windows app's commands through `MKAndroid.mpv(cmd, arg)`; `UnderPlayer` checks each one (no raw mpv options, local paths
+or scripts; films and subtitles over http(s) only) and sends mpv's news back to `MkAndroidPlayer._ev` about 8 times a
+second. TVs keep the full-screen player. Test builds made with `DEBUG_APK=1` are debuggable so the emulator test
+(`tools/android/under-test.py`) can drive the page; release builds never are.
+
 ## 1.14.0 (versionCode 35): MKCinema Player (mpv)
 
 - The app's own player (PlayerActivity) now plays with mpv (`MpvEngine`, libmpv-android 1.1.0 from Maven Central,

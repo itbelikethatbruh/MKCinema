@@ -57,3 +57,13 @@ print("positions at the switches:", a)
 assert len(a) >= 2 and a[0] > 1 and a[1] > a[0], "playback did not keep going through the switches"
 PY
 echo "MKCinema Player: mpv played, audio and subtitles switched live"
+
+# 1.15.0: MKCinema Player under the web player (phones and tablets): the app's page drives mpv through MKAndroid.mpv
+adb shell am force-stop com.mkcinema.app; adb logcat -c
+adb shell am start -W -n com.mkcinema.app/.MainActivity
+sleep 15
+sock=$(adb shell cat /proc/net/unix | grep -o 'webview_devtools_remote_[0-9]*' | head -1)
+[ -n "$sock" ] || { echo "no WebView debugging socket (needs DEBUG_APK=1)"; exit 1; }
+adb forward tcp:9222 localabstract:$sock
+python3 "$(dirname "$0")/under-test.py" http://10.0.2.2:8000/test.mkv "$OUT" || { log; cat "$OUT/logcat.txt"; shot under-failed; exit 1; }
+sleep 2; shot under-playing; log
