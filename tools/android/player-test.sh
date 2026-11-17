@@ -59,12 +59,21 @@ PY
 echo "MKCinema Player: mpv played, audio and subtitles switched live"
 
 # 1.15.0: MKCinema Player under the web player (phones and tablets): the app's page drives mpv through MKAndroid.mpv
-adb shell am force-stop com.mkcinema.app; adb logcat -c
-adb shell am start -W -n com.mkcinema.app/.MainActivity
-sleep 15
-pid=$(adb shell pidof com.mkcinema.app | tr -d '\r'); echo "app pid: $pid"
+set -x
+adb shell am force-stop com.mkcinema.app || true
+adb logcat -c || true
+adb shell am start -W -n com.mkcinema.app/.MainActivity || true
+pid=""
+for _ in $(seq 1 30); do
+  sleep 3; adb devices
+  pid=$(timeout 15 adb shell pidof com.mkcinema.app 2>&1 | tr -d '\r' || true)
+  case "$pid" in ''|*[!0-9\ ]*) echo "no pid yet: $pid"; pid="" ;; *) break ;; esac
+done
+echo "app pid: $pid"
 [ -n "$pid" ] || { log; cat "$OUT/logcat.txt"; echo "the app is not running"; exit 1; }
+sleep 10
 adb forward tcp:9222 localabstract:webview_devtools_remote_$pid || { sleep 5; adb forward tcp:9222 localabstract:webview_devtools_remote_$pid; }
 adb forward --list
+set +x
 python3 "$(dirname "$0")/under-test.py" http://10.0.2.2:8000/test.mkv "$OUT" || { log; cat "$OUT/logcat.txt"; shot under-failed; exit 1; }
 sleep 2; shot under-playing; log
