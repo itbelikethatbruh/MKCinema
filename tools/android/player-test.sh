@@ -57,3 +57,14 @@ print("positions at the switches:", a)
 assert len(a) >= 2 and a[0] > 1 and a[1] > a[0], "playback did not keep going through the switches"
 PY
 echo "MKCinema Player: mpv played, audio and subtitles switched live"
+
+# 1.15.0: MKCinema Player under the web player (phones and tablets). A debuggable test build started with underTest
+# plays the film under a blank page using the page's own commands (UnderPlayer.selfTest) and logs what mpv reports.
+adb shell am force-stop com.mkcinema.app || true
+adb logcat -c || true
+adb shell am start -W -n com.mkcinema.app/.MainActivity --es underTest http://10.0.2.2:8000/test.mkv
+wait_for "under-test: PASS\|under-test: FAIL"
+sleep 1; shot under-playing; log
+grep "under-test\|under:" "$OUT/logcat.txt"
+grep -q "under-test: PASS" "$OUT/logcat.txt" || { echo "MKCinema Player under the web player failed"; cat "$OUT/logcat.txt"; exit 1; }
+echo "MKCinema Player under the web player: played, both languages and the subtitle listed, switched live"

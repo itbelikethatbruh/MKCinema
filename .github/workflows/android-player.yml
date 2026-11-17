@@ -36,7 +36,7 @@ jobs:
         run: |
           keytool -genkeypair -keystore "$RUNNER_TEMP/test.jks" -storepass testtest -keypass testtest -alias test -keyalg RSA -keysize 2048 -validity 30 -dname CN=test > /dev/null 2>&1
           echo testtest > "$RUNNER_TEMP/pw"
-          SDK="$ANDROID_HOME" OUT="$RUNNER_TEMP/apk" MPV_X86=1 KS="$RUNNER_TEMP/test.jks" KS_PASS="file:$RUNNER_TEMP/pw" sh android/build.sh 2>&1 | grep -v "kotlin\|^\s*at \|^Info\|^Warning\|Lk0\|^$" || true
+          SDK="$ANDROID_HOME" OUT="$RUNNER_TEMP/apk" MPV_X86=1 DEBUG_APK=1 KS="$RUNNER_TEMP/test.jks" KS_PASS="file:$RUNNER_TEMP/pw" sh android/build.sh 2>&1 | grep -v "kotlin\|^\s*at \|^Info\|^Warning\|Lk0\|^$" || true
           ls -la "$RUNNER_TEMP/apk/MKCinema.apk"
       - name: Play and switch languages on the emulator
         run: |
