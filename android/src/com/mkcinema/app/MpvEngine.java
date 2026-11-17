@@ -47,9 +47,27 @@ class MpvEngine implements Engine, MPVLib.EventObserver {
 
     void opt(String k, String v) { m.setOptionString(k, v); }
 
+    /** 1.15.3: FFmpeg inside libmpv uses mbedTLS, which has no Android certificate store, so every https link failed to
+        open at once (mpv error -13) until it is given a CA file. The Mozilla bundle ships in assets/cacert.pem and is
+        copied once into the app's files folder. Returns its path, or null (then mpv keeps its default). */
+    static String caFile(Context c) {
+        try {
+            File f = new File(c.getFilesDir(), "cacert.pem");
+            long want = 0;
+            try (java.io.InputStream in = c.getAssets().open("cacert.pem")) { want = in.available(); }
+            if (!f.isFile() || f.length() != want) {
+                try (java.io.InputStream in = c.getAssets().open("cacert.pem"); java.io.FileOutputStream out = new java.io.FileOutputStream(f)) {
+                    byte[] buf = new byte[16384]; int n; while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+                }
+            }
+            return f.getAbsolutePath();
+        } catch (Exception e) { return null; }
+    }
+
     public void open(String url, Map<String, String> headers, File subs, String audioLang, int startMs, SurfaceHolder holder) {
         try {
             m = MPVLib.create(ctx);
+            { String ca = caFile(ctx); if (ca != null) { opt("tls-ca-file", ca); opt("tls-verify", "yes"); } }
             opt("config", "no"); opt("load-scripts", "no"); opt("ytdl", "no"); opt("osc", "no"); opt("osd-level", "0");
             opt("input-default-bindings", "no"); opt("terminal", "no"); opt("idle", "yes"); opt("keep-open", "no");
             if (embed) { opt("vo", "mediacodec_embed"); opt("hwdec", "mediacodec"); }
