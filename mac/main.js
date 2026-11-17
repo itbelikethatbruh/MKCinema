@@ -9,7 +9,7 @@ const HOME = 'https://mkcinema.pages.dev/';
 const HOST = 'mkcinema.pages.dev';
 const HOSTS = [HOST, 'app.mkcinema.app'];
 const isAppHost = (h) => HOSTS.indexOf(String(h || '').toLowerCase()) >= 0;
-const VERSION = '1.1';
+const VERSION = '1.3.1';
 // Each launch writes its steps to ~/Library/Logs/MKCinema/launch.log, so a start that fails leaves something readable.
 const LOG = $.NSHomeDirectory().js + '/Library/Logs/MKCinema/launch.log';
 $.NSFileManager.defaultManager.createDirectoryAtPathWithIntermediateDirectoriesAttributesError(LOG.replace(/\/[^/]+$/, ''), true, $(), null);
