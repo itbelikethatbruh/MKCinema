@@ -1,0 +1,15 @@
+# docker compose up -d   then open http://<this computer>:7000/t/<PROXY_TOKEN>/ once (see docs/self-host.md)
+services:
+  mkcinema:
+    image: ghcr.io/itbelikethatbruh/mkcinema:latest
+    build: .
+    restart: unless-stopped
+    ports:
+      - "7000:7000"
+    environment:
+      # a long random word; the app and the proxy only answer pages that know it
+      PROXY_TOKEN: change-me
+      # set when the server sits behind a reverse proxy with its own address, for example https://mkcinema.example.com
+      # PUBLIC_URL: ""
+      # let the proxy reach addresses on your own network (Jellyfin, Plex, a local addon)
+      # PROXY_ALLOW_PRIVATE: "1"
