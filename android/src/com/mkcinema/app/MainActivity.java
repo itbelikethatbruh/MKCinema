@@ -70,7 +70,7 @@ public class MainActivity extends Activity {
     static final String[] APP_HOSTS = { HOST, "app.mkcinema.app" };
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6;
-    static final String VER = "1.12.3";
+    static final String VER = "1.14.0";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -585,9 +585,10 @@ public class MainActivity extends Activity {
                 return true;
             } catch (Exception e) { return false; }
         }
-        /** 1.7.0: the TV player's engine, "exo" (ExoPlayer, the default) or "system" (the basic MediaPlayer), from Settings › Playback */
+        /** 1.7.0: the TV player's engine, from Settings › Playback (see PlayerActivity.maybeStart for the names) */
         @JavascriptInterface public boolean setEngine(String k, String e) {
-            if (!ok(k) || !("exo".equals(e) || "system".equals(e))) return false;
+            // 1.14.0: "mpv" (MKCinema Player, the default; older pages send "exo" for it), "exoplayer", "system"
+            if (!ok(k) || !("exo".equals(e) || "mpv".equals(e) || "exoplayer".equals(e) || "system".equals(e))) return false;
             getSharedPreferences("mk", MODE_PRIVATE).edit().putString("engine", e).apply();
             return true;
         }

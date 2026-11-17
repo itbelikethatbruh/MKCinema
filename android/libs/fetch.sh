@@ -23,4 +23,12 @@ if [ ! -f ass-kt-0.4.0.jar ] || [ ! -f ass-jni/arm64-v8a/libass.so ]; then
   rm x.aar
 fi
 [ -f kotlin-stdlib-2.2.0.jar ] || get org/jetbrains/kotlin/kotlin-stdlib/2.2.0/kotlin-stdlib-2.2.0.jar kotlin-stdlib-2.2.0.jar
+# 1.14.0: libmpv (libmpv-android 1.1.0 by jarnedemeulemeester, GPLv3, mpv + FFmpeg) for MKCinema Player's main engine.
+# The native libraries go to mpv-jni/<abi>/ (x86_64 only for the emulator test, see build.sh); its libc++_shared.so is
+# the newer one and replaces libass's copy in the APK.
+if [ ! -f libmpv-1.1.0.jar ] || [ ! -f mpv-jni/arm64-v8a/libmpv.so ]; then
+  get dev/jdtech/mpv/libmpv/1.1.0/libmpv-1.1.0.aar x.aar && unzip -p x.aar classes.jar > libmpv-1.1.0.jar
+  for abi in arm64-v8a armeabi-v7a x86_64; do mkdir -p mpv-jni/$abi; for so in $(unzip -Z1 x.aar "jni/$abi/*.so"); do unzip -p x.aar "$so" > mpv-jni/$abi/$(basename "$so"); done; done
+  rm x.aar
+fi
 sha256sum -c SHA256SUMS
