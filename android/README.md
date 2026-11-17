@@ -29,6 +29,9 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.15.3 (versionCode 39): MKCinema Player can open https links
+Found from a real phone's log (code 2GV2G3): with Native player on, every https source failed in under 0.2 s with mpv error -13. libmpv's FFmpeg uses mbedTLS, which has no Android certificate store, so without a CA file no https link can be opened (the emulator test only used http, which is why it passed). `assets/cacert.pem` (Mozilla bundle) is copied into the app's files folder and handed to mpv as `tls-ca-file` with `tls-verify=yes`, in both the TV/Open-with player (MpvEngine) and the under-the-page player (UnderPlayer). build.sh packs `assets/`.
+
 ## 1.15.2 (versionCode 38): the TV player stays MKCinema Player
 
 On a TV, when mpv's straight-to-screen mode can't start a file, MKCinema Player now tries again with its own renderer (software decoding allowed) before ExoPlayer is tried, so every audio and subtitle track stays listed. The reason a file could not play (engine and error code, device model) is added to the page's log (Settings > Help > Send log), and the "Trying ExoPlayer…" line shows the error code.

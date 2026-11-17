@@ -226,6 +226,8 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
                 { "stream-lavf-o", "reconnect=1,reconnect_streamed=1,reconnect_on_network_error=1,reconnect_delay_max=8" },
                 { "sub-font-size", "46" }, { "sub-border-size", "2.6" }, { "sub-shadow-offset", "1" }, { "sub-ass-override", "scale" },
                 { "sub-auto", "no" }, { "audio-file-auto", "no" }, { "save-position-on-quit", "no" } };
+            String ca = MpvEngine.caFile(a.getApplicationContext()); // https needs a CA file (see MpvEngine.caFile)
+            if (ca != null) { x.setOptionString("tls-ca-file", ca); x.setOptionString("tls-verify", "yes"); }
             for (String[] kv : o) x.setOptionString(kv[0], kv[1]);
             x.init();
             x.addObserver(this);
