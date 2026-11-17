@@ -32,4 +32,9 @@ jobs:
           awk '{print $2}' SHA256SUMS | while read -r f; do
             curl -fsSL --retry 4 --retry-all-errors --retry-delay 5 -o "$f" "https://mkcinema.app/download/$f"
           done
-          sha256sum -c SHA256SUMS || { echo "::error::site/download/SHA256SUMS does not match what mkcinema.app serves. Run tools/download-checksums.sh"; exit 1; }
+          if ! sha256sum -c SHA256SUMS; then
+            echo "Repo list vs the list mkcinema.app publishes (/download/SHA256SUMS):"
+            curl -fsSL https://mkcinema.app/download/SHA256SUMS | LC_ALL=C sort -k2 | diff <(LC_ALL=C sort -k2 SHA256SUMS) - || true
+            echo "::error::site/download/SHA256SUMS does not match what mkcinema.app serves. Run tools/download-checksums.sh <site download folder> and commit the result."
+            exit 1
+          fi
