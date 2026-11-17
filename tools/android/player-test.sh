@@ -24,8 +24,9 @@ trap 'kill $srv 2>/dev/null || true' EXIT
 
 adb install -r -g "$APK" > /dev/null
 adb logcat -c
+adb shell setprop log.tag.MKCPlayer DEBUG
 adb shell am start -W -a android.intent.action.VIEW -d http://10.0.2.2:8000/test.mkv -t video/x-matroska -n com.mkcinema.app/.OpenActivity
-log() { adb logcat -d -s MKCPlayer:* MKCinema:* > "$OUT/logcat.txt" || true; }
+log() { adb logcat -d -s MKCPlayer:* MKCinema:* mpv:* AndroidRuntime:E > "$OUT/logcat.txt" || true; }
 wait_for() { for _ in $(seq 1 60); do log; grep -q "$1" "$OUT/logcat.txt" && return 0; sleep 2; done; echo "timed out waiting for: $1"; cat "$OUT/logcat.txt"; return 1; }
 shot() { adb exec-out screencap -p > "$OUT/$1.png"; }
 

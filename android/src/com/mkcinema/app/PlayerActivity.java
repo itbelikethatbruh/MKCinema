@@ -447,6 +447,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
             if (t.on) pickSel = pickRows.size();
             addPick(t.label, t.on, () -> note.setText(eng.select(subs, t.id) ? (subs ? "Subtitles: " : "Audio: ") + t.label : subs ? "That subtitle can’t be shown here" : "That audio track can’t be played here"));
         }
+        android.util.Log.i("MKCPlayer", (subs ? "subtitle" : "audio") + " list, " + pickRows.size() + " rows, highlighted " + pickSel);
         android.widget.ScrollView sc = new android.widget.ScrollView(this); sc.addView(picker);
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams((int) (360 * d), -2, Gravity.END | Gravity.CENTER_VERTICAL); lp.rightMargin = (int) (40 * d);
         root.addView(sc, lp); paintPick(); bar.setVisibility(View.GONE); hideAt = 0;
@@ -465,7 +466,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
             pickRows.get(k).setBackground(g); pickRows.get(k).setTextColor(on ? 0xFF0B0B0C : Color.WHITE);
         }
     }
-    void choosePick() { Runnable r = pickActs.get(pickSel); closePicker(); r.run(); show(3000); }
+    void choosePick() { android.util.Log.i("MKCPlayer", "picked row " + pickSel); Runnable r = pickActs.get(pickSel); closePicker(); r.run(); show(3000); }
     void closePicker() { if (picker != null) { root.removeView((View) picker.getParent()); picker = null; } }
 
     final Runnable tick = new Runnable() { @Override public void run() {
@@ -495,6 +496,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     @Override public boolean dispatchKeyEvent(KeyEvent e) {
         if (e.getAction() != KeyEvent.ACTION_DOWN) return super.dispatchKeyEvent(e);
         int k = e.getKeyCode(); boolean held = e.getRepeatCount() > 0;
+        if (android.util.Log.isLoggable("MKCPlayer", android.util.Log.DEBUG)) android.util.Log.d("MKCPlayer", "key " + KeyEvent.keyCodeToString(k));
         if (picker != null) {
             switch (k) {
                 case KeyEvent.KEYCODE_DPAD_UP: pickSel = Math.max(0, pickSel - 1); paintPick(); return true;
