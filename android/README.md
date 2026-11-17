@@ -37,7 +37,7 @@ with every language in the file, split screen, calls, X-Ray, skips), and mpv doe
 Windows app's commands through `MKAndroid.mpv(cmd, arg)`; `UnderPlayer` checks each one (no raw mpv options, local paths
 or scripts; films and subtitles over http(s) only) and sends mpv's news back to `MkAndroidPlayer._ev` about 8 times a
 second. TVs keep the full-screen player. Test builds made with `DEBUG_APK=1` are debuggable so the emulator test
-(`tools/android/under-test.py`) can drive the page; release builds never are.
+(`UnderPlayer.selfTest`, started with `--es underTest <film>`) can run; release builds never are.
 
 ## 1.14.0 (versionCode 35): MKCinema Player (mpv)
 

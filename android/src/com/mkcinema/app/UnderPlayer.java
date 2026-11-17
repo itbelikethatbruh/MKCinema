@@ -169,6 +169,42 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
         throw new IllegalArgumentException("unknown command " + c);
     }
 
+    // ---- the emulator test (debuggable test builds only, see MainActivity.debugTest and tools/android/player-test.sh) ----
+
+    /** Plays the test film under the (blank) page with the page's own commands and logs what mpv reports: both audio
+        languages and the subtitle listed, English first, then French and Spanish switched while the film keeps going. */
+    static void selfTest(MainActivity a, String film) {
+        new Thread(() -> {
+            String T = "MKCPlayer";
+            try {
+                Thread.sleep(3000);
+                UnderPlayer u; synchronized (a) { if (a.under == null) a.under = new UnderPlayer(a); u = a.under; }
+                android.util.Log.i(T, "under-test: probe " + u.cmd("probe", ""));
+                u.cmd("show", "1"); Thread.sleep(1500);
+                android.util.Log.i(T, "under-test: open " + u.cmd("open", new JSONObject().put("url", film).put("start", 0).put("alang", "eng").put("title", "Test").toString()));
+                double t1 = 0;
+                for (int i = 0; i < 40 && (t1 = u.num("t")) < 2; i++) Thread.sleep(500);
+                JSONArray tr = u.tracks(); int au = 0, su = 0;
+                for (int i = 0; i < tr.length(); i++) { String ty = tr.getJSONObject(i).optString("type"); if ("audio".equals(ty)) au++; else if ("sub".equals(ty)) su++; }
+                String a1 = u.str("aid");
+                android.util.Log.i(T, "under-test: playing t=" + t1 + " audio=" + au + " subs=" + su + " aid=" + u.str("aid") + " hwdec=" + u.str("hwdec") + " size=" + u.num("w") + "x" + u.num("h"));
+                u.cmd("aid", "2"); Thread.sleep(3000);
+                double t2 = u.num("t");
+                android.util.Log.i(T, "under-test: after aid t=" + t2 + " aid=" + u.str("aid"));
+                u.cmd("sid", "1"); Thread.sleep(3000);
+                double t3 = u.num("t");
+                android.util.Log.i(T, "under-test: after sid t=" + t3 + " sid=" + u.str("sid"));
+                String refused; try { u.cmd("open", "{\"url\":\"file:///sdcard/x\"}"); refused = "no"; } catch (Exception e) { refused = "yes"; }
+                boolean ok = t1 >= 2 && au == 2 && su == 1 && "1".equals(a1) && "2".equals(u.str("aid")) && "1".equals(u.str("sid")) && t2 > t1 && t3 > t2 && "yes".equals(refused);
+                android.util.Log.i(T, "under-test: local path refused=" + refused);
+                android.util.Log.i(T, ok ? "under-test: PASS" : "under-test: FAIL");
+            } catch (Throwable e) { android.util.Log.e(T, "under-test: FAIL " + e); }
+        }).start();
+    }
+    double num(String k) { synchronized (lock) { Object v = vals.get(k); return v instanceof Number ? ((Number) v).doubleValue() : 0; } }
+    String str(String k) { synchronized (lock) { Object v = vals.get(k); return v == null ? "" : String.valueOf(v); } }
+    JSONArray tracks() { synchronized (lock) { Object v = vals.get("tracks"); return v instanceof JSONArray ? (JSONArray) v : new JSONArray(); } }
+
     // ---- mpv, created once on first use ----
 
     synchronized MPVLib client() {

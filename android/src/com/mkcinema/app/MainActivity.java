@@ -138,7 +138,14 @@ public class MainActivity extends Activity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         if (b != null) web.restoreState(b);
+        else if (debugTest() != null) { web.loadUrl("about:blank"); UnderPlayer.selfTest(this, debugTest()); } // emulator test only
         else web.loadUrl(startUrl(getIntent()));
+    }
+
+    /** test builds only (debuggable): the emulator test's film for UnderPlayer.selfTest, or null */
+    String debugTest() {
+        if ((getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) == 0 || getIntent() == null) return null;
+        String u = getIntent().getStringExtra("underTest"); return UnderPlayer.webUrl(u) ? u : null;
     }
 
     /** Creates and sets up the page's WebView (also used to rebuild it after its renderer was stopped). */

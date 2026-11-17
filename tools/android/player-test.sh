@@ -58,22 +58,13 @@ assert len(a) >= 2 and a[0] > 1 and a[1] > a[0], "playback did not keep going th
 PY
 echo "MKCinema Player: mpv played, audio and subtitles switched live"
 
-# 1.15.0: MKCinema Player under the web player (phones and tablets): the app's page drives mpv through MKAndroid.mpv
-set -x
+# 1.15.0: MKCinema Player under the web player (phones and tablets). A debuggable test build started with underTest
+# plays the film under a blank page using the page's own commands (UnderPlayer.selfTest) and logs what mpv reports.
 adb shell am force-stop com.mkcinema.app || true
 adb logcat -c || true
-adb shell am start -W -n com.mkcinema.app/.MainActivity || true
-pid=""
-for _ in $(seq 1 30); do
-  sleep 3; adb devices
-  pid=$(timeout 15 adb shell pidof com.mkcinema.app 2>&1 | tr -d '\r' || true)
-  case "$pid" in ''|*[!0-9\ ]*) echo "no pid yet: $pid"; pid="" ;; *) break ;; esac
-done
-echo "app pid: $pid"
-[ -n "$pid" ] || { log; cat "$OUT/logcat.txt"; echo "the app is not running"; exit 1; }
-sleep 10
-adb forward tcp:9222 localabstract:webview_devtools_remote_$pid || { sleep 5; adb forward tcp:9222 localabstract:webview_devtools_remote_$pid; }
-adb forward --list
-set +x
-python3 "$(dirname "$0")/under-test.py" http://10.0.2.2:8000/test.mkv "$OUT" || { log; cat "$OUT/logcat.txt"; shot under-failed; exit 1; }
-sleep 2; shot under-playing; log
+adb shell am start -W -n com.mkcinema.app/.MainActivity --es underTest http://10.0.2.2:8000/test.mkv
+wait_for "under-test: PASS\|under-test: FAIL"
+sleep 1; shot under-playing; log
+grep "under-test\|under:" "$OUT/logcat.txt"
+grep -q "under-test: PASS" "$OUT/logcat.txt" || { echo "MKCinema Player under the web player failed"; cat "$OUT/logcat.txt"; exit 1; }
+echo "MKCinema Player under the web player: played, both languages and the subtitle listed, switched live"

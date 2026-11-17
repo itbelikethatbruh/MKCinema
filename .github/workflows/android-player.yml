@@ -54,7 +54,6 @@ jobs:
           if [ -z "$booted" ]; then echo "the emulator did not start"; tail -60 "$RUNNER_TEMP/emulator.log"; exit 1; fi
           echo "emulator up after about $((i * 5)) s"
           adb shell settings put global window_animation_scale 0; adb shell settings put global transition_animation_scale 0
-          pip3 install --quiet websocket-client==1.8.0
           APK="$RUNNER_TEMP/apk/MKCinema.apk" OUT="$RUNNER_TEMP/player" bash tools/android/player-test.sh
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
