@@ -9,11 +9,11 @@ APK=${APK:?} OUT=${OUT:-out}
 mkdir -p "$OUT/www"
 cat > "$OUT/subs.srt" <<'SRT'
 1
-00:00:00,500 --> 00:00:30,000
+00:00:00,500 --> 00:02:00,000
 Hola, esto es una prueba
 SRT
 ffmpeg -loglevel error -y -f lavfi -i testsrc2=size=1280x720:rate=24 -f lavfi -i sine=frequency=440:sample_rate=48000 \
-  -f lavfi -i sine=frequency=880:sample_rate=48000 -i "$OUT/subs.srt" -t 30 \
+  -f lavfi -i sine=frequency=880:sample_rate=48000 -i "$OUT/subs.srt" -t 120 \
   -map 0:v -map 1:a -map 2:a -map 3:s -c:v libx264 -preset veryfast -pix_fmt yuv420p \
   -c:a:0 dca -strict -2 -ac:a:0 2 -c:a:1 ac3 -c:s srt \
   -metadata:s:a:0 language=eng -metadata:s:a:0 title="English DTS" -metadata:s:a:1 language=fra -metadata:s:s:0 language=spa \
@@ -35,6 +35,8 @@ wait_for "mpv ready"
 sleep 5; shot playing
 key() { adb shell input keyevent "$1"; sleep 1.5; }
 # Audio: the remote's Menu key opens the audio list; Down, OK picks the second language
+# the first navigation key on a touch device only leaves touch mode and is not delivered; real remotes never are in touch mode
+key KEYCODE_DPAD_UP; sleep 1
 key KEYCODE_MENU; shot audio-list
 key KEYCODE_DPAD_DOWN; key KEYCODE_DPAD_CENTER
 wait_for "aid 2 now 2"
