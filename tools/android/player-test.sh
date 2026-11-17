@@ -62,8 +62,9 @@ echo "MKCinema Player: mpv played, audio and subtitles switched live"
 adb shell am force-stop com.mkcinema.app; adb logcat -c
 adb shell am start -W -n com.mkcinema.app/.MainActivity
 sleep 15
-sock=$(adb shell cat /proc/net/unix | grep -o 'webview_devtools_remote_[0-9]*' | head -1)
-[ -n "$sock" ] || { echo "no WebView debugging socket (needs DEBUG_APK=1)"; exit 1; }
-adb forward tcp:9222 localabstract:$sock
+pid=$(adb shell pidof com.mkcinema.app | tr -d '\r'); echo "app pid: $pid"
+[ -n "$pid" ] || { log; cat "$OUT/logcat.txt"; echo "the app is not running"; exit 1; }
+adb forward tcp:9222 localabstract:webview_devtools_remote_$pid || { sleep 5; adb forward tcp:9222 localabstract:webview_devtools_remote_$pid; }
+adb forward --list
 python3 "$(dirname "$0")/under-test.py" http://10.0.2.2:8000/test.mkv "$OUT" || { log; cat "$OUT/logcat.txt"; shot under-failed; exit 1; }
 sleep 2; shot under-playing; log
