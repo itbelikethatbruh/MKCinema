@@ -36,4 +36,6 @@ interface Engine {
     void subsOff();
     void addSubs(File srt);
     void release();
+    /** 1.14.0: the video surface's new size in pixels (mpv draws to fit it) */
+    default void resized(int w, int h) { }
 }

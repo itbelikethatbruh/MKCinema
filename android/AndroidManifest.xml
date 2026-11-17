@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mkcinema.app" android:versionCode="26" android:versionName="1.11.2">
+    package="com.mkcinema.app" android:versionCode="39" android:versionName="1.15.3">
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -10,6 +10,10 @@
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
+    <!-- 1.12.0: AirPlay to an Apple TV: find it with Bonjour, and keep the session going with the screen off -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <!-- 1.11.0: a programme picked in the guide starts recording on time, with the app closed (RecService.Alarm) -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32"/>
@@ -45,7 +49,7 @@
     <application android:label="MKCinema" android:icon="@drawable/ic_launcher"
         android:banner="@drawable/banner" android:theme="@style/Noir" android:hardwareAccelerated="true" android:allowBackup="false" android:supportsRtl="true" android:networkSecurityConfig="@xml/network_security_config" android:extractNativeLibs="true" android:largeHeap="true">
         <activity android:name=".MainActivity" android:exported="true" android:icon="@drawable/ic_launcher" android:banner="@drawable/banner" android:launchMode="singleTask"
-            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|uiMode|density"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|navigation|uiMode|density"
             android:supportsPictureInPicture="true" android:resizeableActivity="true"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -60,6 +64,13 @@
                 <data android:scheme="https" android:host="mkcinema.pages.dev"/>
                 <!-- 1.8.1: the web app's public home (shared links), opened on mkcinema.pages.dev where the sign-in lives -->
                 <data android:scheme="https" android:host="app.mkcinema.app"/>
+            </intent-filter>
+            <!-- 1.12.0: Google sign-in comes back here from the Custom Tab (Supabase redirect_to mkcinema://auth) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="mkcinema" android:host="auth"/>
             </intent-filter>
             <!-- 1.8.1: mkcinema.app's front page only (its /download links keep opening in the browser) -->
             <intent-filter android:autoVerify="false">
@@ -76,9 +87,24 @@
                 <data android:scheme="stremio"/>
             </intent-filter>
         </activity>
+        <!-- 1.14.0: "Open with MKCinema" for video files and video links from other apps; plays them in MKCinema Player -->
+        <activity android:name=".OpenActivity" android:exported="true" android:theme="@android:style/Theme.Translucent.NoTitleBar" android:excludeFromRecents="true" android:noHistory="true" android:label="MKCinema Player">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:scheme="content" android:mimeType="video/*"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="http" android:mimeType="video/*"/>
+                <data android:scheme="https" android:mimeType="video/*"/>
+            </intent-filter>
+        </activity>
         <!-- 1.2.5: the TV player (system hardware decoder), opened from the page with MKAndroid.play -->
         <activity android:name=".PlayerActivity" android:exported="false" android:theme="@style/Noir"
-            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|uiMode|density"/>
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|navigation|uiMode|density"/>
         <!-- 1.5.0: twice-daily check for new episodes of the series you follow (no server; see EpisodeAlerts.java) -->
         <service android:name=".DlService" android:exported="false" android:foregroundServiceType="dataSync"/>
         <!-- 1.11.0: live TV recording, and the alarm that starts a planned one (re-armed after a restart) -->
@@ -86,8 +112,12 @@
         <receiver android:name=".RecService$Alarm" android:exported="false">
             <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED"/></intent-filter>
         </receiver>
+        <!-- 1.12.0: an AirPlay session to an Apple TV (the TV stops the film when the phone's connection closes) -->
+        <service android:name=".AirPlayService" android:exported="false" android:foregroundServiceType="mediaPlayback"/>
         <!-- 1.8.1: the checked update APK, handed to the system installer (see UpdateFiles.java) -->
         <provider android:name=".UpdateFiles" android:authorities="com.mkcinema.app.update" android:exported="false" android:grantUriPermissions="true"/>
+        <!-- 1.13.0: the package installer's answer to an update this app installed itself (see UpdateResult.java) -->
+        <receiver android:name=".UpdateResult" android:exported="false"/>
         <service android:name=".EpisodeAlerts" android:exported="false" android:permission="android.permission.BIND_JOB_SERVICE"/>
     </application>
 </manifest>

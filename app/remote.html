@@ -673,6 +673,74 @@ html.glass #psText p{font:600 34px/1.25 var(--f-body);color:#fff}
 @media (max-height:600px){.ak-log{padding-top:10px}.ak-foot{padding-bottom:calc(var(--sab) + 8px)}}
 .toast{z-index:40}
 </style>
+<style id="rm2699css">
+/* 2.69.9 Simple remote: one screen, no scrolling. Header, now playing, a big D-pad, four keys, play controls.
+   Everything extra lives in the menu. Transform and opacity motion only. */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+#ctl{overflow:hidden;gap:12px;padding-top:calc(var(--sat) + 10px);padding-bottom:calc(var(--sab) + 14px)}
+#ctl > *{margin-top:0!important}
+#ctl > .surface{flex:1 1 0;min-height:0}
+.top{min-height:48px}
+.tvchip{padding:4px 6px}
+.tvchip b{font-size:17px}
+#menuBtn{position:relative;background:rgba(255,255,255,.04)}
+#menuBtn.dot::after{content:"";position:absolute;top:9px;right:9px;width:8px;height:8px;border-radius:50%;background:var(--champ);box-shadow:0 0 0 2px #000}
+/* now playing: one slim card */
+.now{min-height:0;padding:10px 12px;border-radius:18px;gap:12px}
+.now .art{width:72px;height:46px;border-radius:10px}
+.now .meta{gap:3px}
+.now .t{font-size:15px}
+.now:not(.playing) .k{display:none}
+/* the extras sit in the menu now */
+#ctl > .tray{display:none!important}
+#menu .tray{margin:0 0 14px}
+#menu #trayH{margin-top:2px}
+/* control surface: the D-pad, sized to the room it has */
+#surface{display:grid;place-items:center;container-type:size}
+#surface > .seg{display:none!important}
+#surface .dpad{position:relative;left:auto;top:auto;transform:none;width:min(100cqw,100cqh,330px);height:auto;max-width:none!important;aspect-ratio:1;
+  background:radial-gradient(circle at 50% 35%,#1b1b1e 0%,#0e0e10 62%,#0a0a0b 100%);border:1px solid rgba(255,255,255,.1);
+  box-shadow:0 30px 70px -30px #000,inset 0 1px 0 rgba(255,255,255,.08),inset 0 -1px 0 rgba(0,0,0,.6)}
+.surface.small .dpad{width:min(100cqw,100cqh,330px)!important;height:auto!important}
+.dpad .dir svg{width:30px;height:30px;color:rgba(242,242,243,.72);stroke-width:2.2}
+.dpad .d-up svg,.dpad .d-down svg{margin-left:-15px}
+.dpad .d-left svg,.dpad .d-right svg{margin-top:-15px}
+.dpad .d-up svg{top:10%}.dpad .d-down svg{bottom:10%}.dpad .d-left svg{left:10%}.dpad .d-right svg{right:10%}
+.dpad .dir.on svg{color:#fff;transform:scale(1.12)}
+.dpad .x{display:none}
+.dpad .ok{width:38%;margin:-19% 0 0 -19%;background:radial-gradient(circle at 50% 30%,#2a2a2e,#121214 75%);font-size:16px;letter-spacing:.14em;color:var(--ink)}
+.dpad .ok.on{transform:scale(.93)}
+/* the swipe pad, for people who pick it in the menu: no blank circle, the hint stays */
+#surface .pad{position:absolute;inset:0}
+.pad::before{display:none}
+.pad .tip{bottom:16px;padding:0 16px;color:var(--mute)}
+.pad.used .tip{opacity:.55}
+/* keys: four even buttons */
+.keys,.keys.k4{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.keys .key{height:56px;flex-direction:column;gap:5px;font-size:11.5px;letter-spacing:.02em;border-radius:16px;background:rgba(255,255,255,.045)}
+.keys .key svg.i{width:20px;height:20px}
+.keys:not(.k4){grid-template-columns:repeat(3,minmax(0,1fr))}
+/* play controls */
+.transport{padding:0 4px}
+.transport.idle .tb{opacity:.45}
+.play{width:70px;height:70px}
+/* the menu: control style switch */
+.menu .item.mode{cursor:default}
+.menu .item.mode .grow{flex:1}
+@media (max-height:700px){
+  #ctl{gap:9px}
+  .now .art{width:60px;height:38px}
+  .keys .key{height:48px;gap:3px}
+  .play{width:60px;height:60px}.tb{width:46px;height:46px}
+}
+@media (max-height:560px){
+  .now .art,.now .art.empty{display:none}
+  .keys .key{height:42px;flex-direction:row;gap:6px}
+  .keys .key svg.i{width:17px;height:17px}
+}
+@supports not (container-type:size){#surface .dpad{width:min(100%,300px)}}
+#menu:has(#fhBtn:not([hidden])) #mHelp{display:none}
+</style>
 </head>
 <body>
 <div class="amb"></div>
@@ -2691,7 +2759,7 @@ GlPhone.init();
   // each tile shows one short word or two, so nothing is ever cut off; the full name stays as its accessible label
   const SHORT = { ifBtn: 'Details', exBtn: 'Explore', lsnBtn: 'Listen', lngBtn: 'Language', psBtn: 'Subtitles', tkBtn: 'Take it', fhBtn: 'Help', adBtn: 'Add-ons' };
   let tray = $('#tray');
-  if (!tray) { tray = document.createElement('div'); tray.className = 'tray'; tray.id = 'tray'; tray.setAttribute('aria-label', 'More on this phone'); tray.hidden = true; ($('#pvBox') || surf).before(tray); }
+  if (!tray) { tray = document.createElement('div'); tray.className = 'tray'; tray.id = 'tray'; tray.setAttribute('aria-label', 'More on this phone'); tray.hidden = true; const mh = $('#menu h3'); if (mh) { mh.insertAdjacentHTML('beforebegin', '<h3 id="trayH" hidden>On this phone</h3>'); $('#trayH').after(tray); } else ($('#pvBox') || surf).before(tray); }
   const gather = () => {
     $$('#ctl > button.login').forEach((b) => {
       if (ALERTS.has(b.id)) return;
@@ -2703,7 +2771,7 @@ GlPhone.init();
     on.forEach((b) => { if (tray.firstElementChild !== b) tray.prepend(b); });
     fit();
   };
-  const fit = () => { const n = [...tray.children].filter((b) => !b.hidden).length; if (tray.hidden === !!n) tray.hidden = !n; tray.classList.toggle('k4', n > 6); };
+  const fit = () => { const n = [...tray.children].filter((b) => !b.hidden).length; if (tray.hidden === !!n) tray.hidden = !n; tray.classList.toggle('k4', n > 6); const th = $('#trayH'); if (th) th.hidden = !n; const mb = $('#menuBtn'); if (mb) mb.classList.toggle('dot', [...tray.children].some((b) => !b.hidden && b.classList.contains('on'))); };
   gather();
   new MutationObserver(gather).observe(ctl, { childList: true });
   new MutationObserver(fit).observe(tray, { attributes: true, attributeFilter: ['hidden', 'class'], subtree: true });
@@ -4129,9 +4197,24 @@ Rules:
   const on = R.onMsg.bind(R);
   R.onMsg = (m) => { on(m); if (m.t === 'st' && Ask.on && !Ask.busy) Ask.chips(); };
 }
+/* ---------- 2.69.9 Simple remote ----------
+   The D-pad or the swipe pad is picked in the menu (the switch no longer sits on the pad). Swipe speed only shows
+   for the swipe pad. */
+{
+  const after = $('#mSpd') || $('#mPair');
+  if (after && !$('#mMode')) {
+    after.insertAdjacentHTML('beforebegin', '<div class="item mode" id="mMode"><svg class="i"><use href="#i-dpad"/></svg><span class="grow">Controls</span><span class="mseg" role="radiogroup" aria-label="Controls"><button type="button" role="radio" data-mm="dpad">Buttons</button><button type="button" role="radio" data-mm="pad">Swipe</button></span></div>');
+    const paint = () => { const m = Store.get('mode', 'dpad'); $$('#mMode .mseg button').forEach((b) => { b.classList.toggle('on', b.dataset.mm === m); b.setAttribute('aria-checked', String(b.dataset.mm === m)); }); const sp = $('#mSpd'); if (sp) sp.hidden = m !== 'pad'; };
+    $$('#mMode .mseg button').forEach((b) => { b.onclick = () => { setMode(b.dataset.mm); paint(); buzz(6); }; });
+    new MutationObserver(paint).observe($('#seg'), { attributes: true, attributeFilter: ['data-m'] });
+    paint();
+  }
+}
 /* ---------- Start ---------- */
 (() => {
-  setMode(Store.get('mode', 'pad'));
+  // 2.69.9: the D-pad is the remote everyone starts with (once); the swipe pad stays one tap away in the menu
+  if (!Store.get('ui2699', false)) { Store.set('ui2699', true); Store.set('mode', 'dpad'); }
+  setMode(Store.get('mode', 'dpad'));
   const raw = decodeURIComponent(location.hash.replace(/^#/, '')).replace(/^(remote=|code=)/i, '').replace(/~addons$/i, () => { Ads.want = true; return ''; }).replace(/~(subs|match)$/i, (x, w) => { if (/subs/i.test(w)) PSub.want = true; else CM.want = true; return ''; }), [c, cfg] = raw.split('.');
   // 2.37: the TV's QR code adds its pairing key after the code (CODE_KEY); older links have only the code
   const code = (c || '').toUpperCase().slice(0, 6), qk = /^_[A-Za-z0-9_-]{22}$/.test((c || '').slice(6)) ? c.slice(7) : '';

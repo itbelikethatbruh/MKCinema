@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MKCinema Remote for Android: the phone remote as its own small app (see README.md). Same signing key as MKCinema. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.mkcinema.remote" android:versionCode="1" android:versionName="1.0.0">
+    <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <!-- party voice and the party camera on this phone (asked only when used) -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    <uses-feature android:name="android.hardware.microphone" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.front" android:required="false"/>
+    <queries>
+        <intent><action android:name="android.intent.action.VIEW"/><data android:scheme="https"/></intent>
+    </queries>
+    <application android:label="MK Remote" android:icon="@drawable/ic_launcher" android:roundIcon="@drawable/ic_launcher"
+        android:theme="@style/Noir" android:hardwareAccelerated="true" android:allowBackup="false" android:supportsRtl="true"
+        android:networkSecurityConfig="@xml/network_security_config">
+        <activity android:name=".RemoteActivity" android:exported="true" android:launchMode="singleTask"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|navigation|uiMode|density"
+            android:screenOrientation="portrait" android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- the TV's QR code opens this app (verified by https://app.mkcinema.app/.well-known/assetlinks.json) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="app.mkcinema.app" android:path="/remote"/>
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

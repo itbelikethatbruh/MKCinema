@@ -70,13 +70,31 @@ public class MainActivity extends Activity {
     static final String[] APP_HOSTS = { HOST, "app.mkcinema.app" };
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6;
-    static final String VER = "1.11.2";
+    static final String VER = "1.15.3";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
     WebView web;
+    /** 1.15.0: MKCinema Player under the page, made on first use */
+    volatile UnderPlayer under;
     /** 1.6.1: the page's renderer was stopped while MKCinema was hidden (see onRenderProcessGone) */
     boolean webDead, resumed;
+    /* 1.13.1: a result for the page (TV player closed, Google sign-in came back) waits until the page can take it.
+       After Android rebuilt the page to free memory, the call used to reach a page that was still loading and was lost. */
+    boolean pageReady;
+    final ArrayList<String[]> pagePending = new ArrayList<>();
+    void callPage(String fn, String call, String fallback) {
+        if (webDead || !pageReady) { pagePending.add(new String[] { fn, call, fallback }); return; }
+        deliver(fn, call, fallback, 24);
+    }
+    void deliver(String fn, String call, String fallback, int tries) {
+        final WebView w = web;
+        w.evaluateJavascript("(function(){if(window." + fn + "){" + call + ";return 1}return 0})()", (r) -> {
+            if ("1".equals(r) || w != web) return;
+            if (tries > 0) w.postDelayed(() -> { if (w == web) deliver(fn, call, fallback, tries - 1); }, 500);
+            else if (fallback != null) w.evaluateJavascript(fallback, null);
+        });
+    }
     String lastUrl;
     long goneAt;
     FrameLayout root;
@@ -99,8 +117,15 @@ public class MainActivity extends Activity {
     SpeechRecognizer recognizer;
     String voiceLang;
 
+    /** 1.12.0: the open MKCinema screen, so services (AirPlay) can answer the page */
+    static volatile MainActivity liveAct;
+    static void toPage(String code) { MainActivity a = liveAct; if (a != null && a.web != null) a.js(code); }
+
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
+        liveAct = this;
+        // test builds only (built with --debug-mode): the emulator test drives the page through WebView debugging
+        if ((getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) WebView.setWebContentsDebuggingEnabled(true);
         UiModeManager ui = (UiModeManager) getSystemService(UI_MODE_SERVICE);
         tv = (ui != null && ui.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION)
                 || getPackageManager().hasSystemFeature("android.software.leanback")
@@ -113,7 +138,14 @@ public class MainActivity extends Activity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         if (b != null) web.restoreState(b);
+        else if (debugTest() != null) { web.loadUrl("about:blank"); UnderPlayer.selfTest(this, debugTest()); } // emulator test only
         else web.loadUrl(startUrl(getIntent()));
+    }
+
+    /** test builds only (debuggable): the emulator test's film for UnderPlayer.selfTest, or null */
+    String debugTest() {
+        if ((getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) == 0 || getIntent() == null) return null;
+        String u = getIntent().getStringExtra("underTest"); return UnderPlayer.webUrl(u) ? u : null;
     }
 
     /** Creates and sets up the page's WebView (also used to rebuild it after its renderer was stopped). */
@@ -126,6 +158,7 @@ public class MainActivity extends Activity {
         web.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
         web.setOverScrollMode(View.OVER_SCROLL_NEVER);
         root.addView(web, 0, new FrameLayout.LayoutParams(-1, -1));
+        if (under != null) under.below(); // 1.15.0: MKCinema Player's picture stays under the page
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -163,7 +196,10 @@ public class MainActivity extends Activity {
             @Override public void onPageStarted(WebView v, String url, android.graphics.Bitmap icon) { pageHost = hostOf(url); iptvOrigin(); tvJsDone = false; giveKey(v); }
             @Override public void doUpdateVisitedHistory(WebView v, String url, boolean reload) { pageHost = hostOf(url); iptvOrigin(); }
             @Override public void onPageCommitVisible(WebView v, String url) { giveKey(v); if (tv && !tvJsDone) { tvJsDone = true; v.evaluateJavascript(TV_JS, null); } }
-            @Override public void onPageFinished(WebView v, String url) { giveKey(v); if (tv && !tvJsDone) { tvJsDone = true; v.evaluateJavascript(TV_JS, null); } }
+            @Override public void onPageFinished(WebView v, String url) {
+                giveKey(v); if (tv && !tvJsDone) { tvJsDone = true; v.evaluateJavascript(TV_JS, null); }
+                if (v == web && url != null && url.startsWith("http")) { pageReady = true; ArrayList<String[]> l = new ArrayList<>(pagePending); pagePending.clear(); for (String[] c : l) deliver(c[0], c[1], c[2], 24); }
+            }
             @Override public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) { return cleartext(r); }
             @Override public void onReceivedError(WebView v, WebResourceRequest r, WebResourceError e) {
                 if (r.isForMainFrame()) v.loadDataWithBaseURL(null, offline(), "text/html", "utf-8", null);
@@ -179,7 +215,7 @@ public class MainActivity extends Activity {
                 lastUrl = now - goneAt < 15000 ? null : v.getUrl(); goneAt = now;
                 root.removeView(v);
                 try { v.destroy(); } catch (Exception ignored) { }
-                pageHost = "";
+                pageHost = ""; pageReady = false;
                 buildWeb(); // empty until it loads, so every web call stays safe
                 if (resumed) reloadWeb(); else webDead = true;
                 return true;
@@ -244,6 +280,7 @@ public class MainActivity extends Activity {
     String startUrl(Intent i) {
         Uri d = i != null ? i.getData() : null;
         if (d != null && "stremio".equals(d.getScheme())) return HOME + (HOME.contains("#") ? "&" : "#") + "install=" + Uri.encode(d.toString());
+        if (authReturn(d)) return HOME + (HOME.contains("#") ? "&" : "#") + "mkauth=" + Uri.encode(d.toString());
         return d != null && ourLink(d) ? inApp(d) : HOME;
     }
 
@@ -268,7 +305,23 @@ public class MainActivity extends Activity {
         Uri d = i.getData();
         // an addon Install link while MKCinema is open: hand it to the page (it asks first), no reload
         if (d != null && "stremio".equals(d.getScheme())) { web.evaluateJavascript("window.MKInstall?MKInstall(" + JSONObject.quote(d.toString()) + "):location.replace(" + JSONObject.quote(startUrl(i)) + ")", null); return; }
+        // 1.12.0: back from Google sign-in (mkcinema://auth?code=...): the page finishes it, no reload
+        if (authReturn(d)) { callPage("MKAuthDone", "MKAuthDone(" + JSONObject.quote(d.toString()) + ")", "location.replace(" + JSONObject.quote(startUrl(i)) + ")"); return; }
         if (d != null) web.loadUrl(startUrl(i));
+    }
+    /** 1.12.0: the address Google sign-in comes back to (Supabase redirect_to mkcinema://auth) */
+    static boolean authReturn(Uri d) { return d != null && "mkcinema".equals(d.getScheme()) && "auth".equals(d.getHost()); }
+    /** 1.12.0: Google sign-in in a Custom Tab (Google refuses sign-in inside a WebView). Only the project's own
+        Supabase sign-in address is opened; Chrome then returns to mkcinema://auth, which lands in onNewIntent. */
+    void openSignIn(String url) {
+        Uri u;
+        try { u = Uri.parse(url); } catch (Exception e) { return; }
+        if (!"https".equals(u.getScheme()) || u.getHost() == null || !u.getHost().endsWith(".supabase.co") || !"/auth/v1/authorize".equals(u.getPath())) return;
+        Intent i = new Intent(Intent.ACTION_VIEW, u);
+        Bundle extras = new Bundle(); extras.putBinder("android.support.customtabs.extra.SESSION", null); // a Custom Tab without the support library
+        i.putExtras(extras);
+        i.putExtra("android.support.customtabs.extra.TOOLBAR_COLOR", Color.BLACK);
+        try { startActivity(i); } catch (ActivityNotFoundException e) { open(u); }
     }
 
     /** Keeps MKCinema pages in the app; sends players, stores and other sites to the right app. */
@@ -348,7 +401,8 @@ public class MainActivity extends Activity {
             boolean ended = data != null && data.getBooleanExtra("ended", false), next = data != null && data.getBooleanExtra("next", false);
             String err = data != null ? data.getStringExtra("error") : null, act = data != null ? data.getStringExtra("action") : null;
             // 1.6.1: act is "sources" (show the film's source list) or "web" (keep watching in MKCinema's own player)
-            web.evaluateJavascript("window.MKNative&&MKNative.done(" + pos + "," + dur + "," + ended + "," + next + "," + (err == null ? "null" : JSONObject.quote(err)) + "," + (act == null ? "null" : JSONObject.quote(act)) + ")", null);
+            if (err != null) callPage("MKNative", "if(typeof MKLog!=='undefined')MKLog.add('play',"+JSONObject.quote("android player could not play: " + err + " (" + Build.MODEL + ", app " + VER + ")")+")", null); // 1.15.2: the reason reaches Send log
+            callPage("MKNative", "MKNative.done(" + pos + "," + dur + "," + ended + "," + next + "," + (err == null ? "null" : JSONObject.quote(err)) + "," + (act == null ? "null" : JSONObject.quote(act)) + ")", null);
             if (tv) web.requestFocus();
             return;
         }
@@ -447,6 +501,7 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public void voiceStop(String k) { if (ok(k)) runOnUiThread(() -> { if (recognizer != null) recognizer.cancel(); }); }
         @JavascriptInterface public String version(String k) { return ok(k) ? VER : ""; }
+        @JavascriptInterface public boolean signIn(String k, String url) { if (!ok(k) || url == null || url.length() > 4000) return false; runOnUiThread(() -> openSignIn(url)); return true; }
         /** 1.6.0: frame-rate matching for the in-app player on TVs (the page measures the film's fps; 0 restores the TV's mode) */
         @JavascriptInterface public void fps(String k, float f) { if (!tv || !ok(k)) return; runOnUiThread(() -> TvExtras.matchFrameRate(MainActivity.this, f)); }
         /** 1.6.0: Continue watching on the Android TV / Google TV home screen */
@@ -537,14 +592,25 @@ public class MainActivity extends Activity {
                     // 1.9.0: skip times (seconds), whether a next episode exists, auto-skip, and libass styling (on unless turned off)
                     .putExtra("skips", o.has("skips") && o.optJSONObject("skips") != null && o.getJSONObject("skips").toString().length() < 4000 ? o.getJSONObject("skips").toString() : "")
                     .putExtra("hasNext", o.optBoolean("hasNext", false)).putExtra("autoSkip", o.optBoolean("autoSkip", false))
+                    .putExtra("zap", o.optBoolean("zap", false)).putExtra("zapFlip", o.optBoolean("zapFlip", false))
                     .putExtra("ass", o.optBoolean("ass", true));
                 runOnUiThread(() -> { try { startActivityForResult(i, REQ_PLAY); } catch (Exception ignored) { } });
                 return true;
             } catch (Exception e) { return false; }
         }
-        /** 1.7.0: the TV player's engine, "exo" (ExoPlayer, the default) or "system" (the basic MediaPlayer), from Settings › Playback */
+        /** 1.15.0: MKCinema Player under the web player (phones and tablets, see UnderPlayer): the page's MkNative sends
+            the same commands as to the Windows app. The answer is the result, or "ERR:" and why. */
+        @JavascriptInterface public String mpv(String k, String c, String arg) {
+            if (!ok(k)) return "ERR:not allowed here";
+            try {
+                UnderPlayer u; synchronized (MainActivity.this) { if (under == null) under = new UnderPlayer(MainActivity.this); u = under; }
+                return u.cmd(c, arg);
+            } catch (Throwable e) { return "ERR:" + (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()); }
+        }
+        /** 1.7.0: the TV player's engine, from Settings › Playback (see PlayerActivity.maybeStart for the names) */
         @JavascriptInterface public boolean setEngine(String k, String e) {
-            if (!ok(k) || !("exo".equals(e) || "system".equals(e))) return false;
+            // 1.14.0: "mpv" (MKCinema Player, the default; older pages send "exo" for it), "exoplayer", "system"
+            if (!ok(k) || !("exo".equals(e) || "mpv".equals(e) || "exoplayer".equals(e) || "system".equals(e))) return false;
             getSharedPreferences("mk", MODE_PRIVATE).edit().putString("engine", e).apply();
             return true;
         }
@@ -553,7 +619,25 @@ public class MainActivity extends Activity {
         @JavascriptInterface public boolean update(String k, String url) {
             if (!ok(k)) return false;
             if (!updateUrlOk(url)) { js("window.toast&&toast('Update rejected: that is not an MKCinema download','err',6000)"); return false; }
-            runOnUiThread(() -> startUpdate(url));
+            runOnUiThread(() -> startUpdate(url, false));
+            return true;
+        }
+        /** 1.13.0: automatic updates. The new APK downloads in the background and installs a few minutes after you leave
+            the app (never while a film, a recording, a download or AirPlay is running). On Android 12 and later it installs
+            without asking once MKCinema has installed an update of its own before; otherwise the page offers Install.
+            False when this app may not install apps yet (the page then shows its usual Update bar). */
+        @JavascriptInterface public boolean updateAuto(String k, String url) {
+            if (!ok(k) || !updateUrlOk(url)) return false;
+            if (Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) return false;
+            if (autoState == 1 || autoState == 2) return true;
+            runOnUiThread(() -> startUpdate(url, true));
+            return true;
+        }
+        /** 1.13.0: installs an update that already downloaded, with the system's Install prompt */
+        @JavascriptInterface public boolean updateInstall(String k) {
+            if (!ok(k)) return false;
+            File apk = UpdateFiles.file(MainActivity.this); if (!apk.exists()) return false;
+            new Thread(() -> { String why = checkApk(apk); if (why != null) { apk.delete(); return; } installApk(apk, false); }).start();
             return true;
         }
         /** Trailers on TVs: hands a YouTube video id to the YouTube app, whose player uses the TV's video hardware.
@@ -574,12 +658,27 @@ public class MainActivity extends Activity {
         }
         /** 1.8.1: the Exit button of the TV's "Leaving MKCinema?" prompt */
         @JavascriptInterface public void exit(String k) { if (ok(k)) runOnUiThread(MainActivity.this::finishAndRemoveTask); }
+        /** 1.12.0: AirPlay to an Apple TV (AirPlayService): find TVs, send a link, the TV's code, controls */
+        @JavascriptInterface public boolean apScan(String k) { if (!ok(k) || tv) return false; runOnUiThread(() -> AirPlayService.scan(MainActivity.this)); return true; }
+        @JavascriptInterface public String apPlay(String k, String json) { if (!ok(k) || tv || json == null || json.length() > 20000) return "error: not allowed here"; return AirPlayService.play(MainActivity.this, json); }
+        @JavascriptInterface public void apPin(String k, String pin) { if (ok(k)) AirPlayService.pin(pin); }
+        @JavascriptInterface public void apCtl(String k, String cmd, String arg) { if (ok(k) && cmd != null) AirPlayService.ctl(cmd, arg); }
+        @JavascriptInterface public void apForget(String k, String id) { if (ok(k) && id != null) AirPlayService.forget(getApplicationContext(), id); }
+        /** 1.12.2: add a TV the scan can't see, by its address; and what the scan heard */
+        @JavascriptInterface public void apAdd(String k, String ip) { if (ok(k) && !tv && ip != null && ip.length() < 64) AirPlayService.probeLater(getApplicationContext(), ip, true); }
+        @JavascriptInterface public String apDiag(String k) { return ok(k) ? AirPlayService.diag() : "[]"; }
+        @JavascriptInterface public String apState(String k) {
+            if (!ok(k)) return "{}";
+            try { return new JSONObject().put("state", AirPlayService.session == null ? "idle" : AirPlayService.lastState).put("pos", AirPlayService.lastPos).put("dur", AirPlayService.lastDur)
+                .put("tv", AirPlayService.current == null ? "" : AirPlayService.current.name).put("kind", AirPlayService.current == null ? "" : AirPlayService.current.kind).toString(); } catch (Exception e) { return "{}"; }
+        }
     }
 
     /** Every MKAndroid method, for BRIDGE_JS */
     static final String[] BRIDGE_METHODS = { "voice", "voiceStop", "version", "fps", "watchNext", "watchNextRemove", "p2pStart", "p2pStop",
         "p2pAvailable", "dlStart", "dlSpace", "setSlow", "epEnable", "epOn", "epSync", "dlList", "dlRemove", "dlPlay", "pipState", "pip", "play",
-        "setEngine", "update", "youtube", "exit", "iptvHosts", "recStart", "recStop", "recPlan", "recUnplan" };
+        "setEngine", "update", "youtube", "exit", "iptvHosts", "recStart", "recStop", "recPlan", "recUnplan",
+        "apScan", "apPlay", "apPin", "apCtl", "apForget", "apState", "signIn", "apAdd", "apDiag", "updateAuto", "updateInstall", "mpv" };
 
     static String newKey() {
         byte[] b = new byte[24]; new SecureRandom().nextBytes(b);
@@ -672,8 +771,19 @@ public class MainActivity extends Activity {
 
     static final String UPD_FILE = "MKCinema-update.apk";
     long updId = -1;
-    void startUpdate(String url) {
-        if (Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) {
+    /** 0 nothing, 1 downloading, 2 ready to install when the app is left, 3 installing */
+    static volatile int autoState = 0;
+    final android.os.Handler later = new android.os.Handler(android.os.Looper.getMainLooper());
+    final Runnable autoInstall = () -> {
+        if (autoState != 2 || resumed) return;
+        // never under a film, a recording, a download or an AirPlay session: try again later
+        if (pipPlaying || PlayerActivity.open || !RecService.jobs.isEmpty() || DlService.running || AirPlayService.session != null) { later.postDelayed(this.autoInstall, 10 * 60_000L); return; }
+        autoState = 3;
+        new Thread(() -> { File apk = UpdateFiles.file(this); if (checkApk(apk) == null) installApk(apk, true); else { apk.delete(); autoState = 0; } }).start();
+    };
+    void startUpdate(String url) { startUpdate(url, false); }
+    void startUpdate(String url, boolean auto) {
+        if (!auto && Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) {
             try { startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getPackageName()))); } catch (Exception ignored) { }
             web.evaluateJavascript("window.toast&&toast('Allow MKCinema to install apps, then press Update again','info',7000)", null);
             return;
@@ -683,21 +793,39 @@ public class MainActivity extends Activity {
             DownloadManager.Request r = new DownloadManager.Request(Uri.parse(url)).setTitle("MKCinema update").setMimeType("application/vnd.android.package-archive")
                 .setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, "MKCinema-update-" + System.currentTimeMillis() + ".apk")
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
-            final long id = dm.enqueue(r); updId = id;
+            final long id = dm.enqueue(r); updId = id; if (auto) autoState = 1;
             BroadcastReceiver done = new BroadcastReceiver() { @Override public void onReceive(Context c, Intent i) {
                 if (i.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -2) != id) return;
                 try { unregisterReceiver(this); } catch (Exception ignored) { }
-                new Thread(() -> finishUpdate(dm, id)).start();
+                new Thread(() -> finishUpdate(dm, id, auto)).start();
             } };
             IntentFilter f = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
             if (Build.VERSION.SDK_INT >= 33) registerReceiver(done, f, Context.RECEIVER_EXPORTED); else registerReceiver(done, f);
-        } catch (Exception e) { web.evaluateJavascript("window.toast&&toast('The update could not start','err',6000)", null); }
+        } catch (Exception e) { if (auto) autoState = 0; else web.evaluateJavascript("window.toast&&toast('The update could not start','err',6000)", null); }
     }
 
     /** copies the finished download into the app's private storage (no other app can swap it there), checks
         it is MKCinema signed with this app's key, and only then opens the installer on that copy (UpdateFiles). */
-    void finishUpdate(DownloadManager dm, long id) {
+    void finishUpdate(DownloadManager dm, long id) { finishUpdate(dm, id, false); }
+    void finishUpdate(DownloadManager dm, long id, boolean auto) {
         File apk = UpdateFiles.file(this);
+        if (auto) {
+            try {
+                try (Cursor cur = dm.query(new DownloadManager.Query().setFilterById(id))) {
+                    if (cur == null || !cur.moveToFirst() || cur.getInt(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)) != DownloadManager.STATUS_SUCCESSFUL) { autoState = 0; return; }
+                }
+                apk.getParentFile().mkdirs(); apk.delete();
+                try (InputStream in = new ParcelFileDescriptor.AutoCloseInputStream(dm.openDownloadedFile(id)); OutputStream out = new FileOutputStream(apk)) {
+                    byte[] b = new byte[65536]; int n; while ((n = in.read(b)) > 0) out.write(b, 0, n);
+                }
+                try { dm.remove(id); } catch (Exception ignored) { }
+                if (checkApk(apk) != null) { apk.delete(); autoState = 0; return; }
+                autoState = 2;
+                js("window.MkAutoUpd&&MkAutoUpd.ready()");
+                runOnUiThread(() -> { if (!resumed) { later.removeCallbacks(autoInstall); later.postDelayed(autoInstall, 3 * 60_000L); } });
+            } catch (Exception e) { apk.delete(); autoState = 0; }
+            return;
+        }
         try {
             try (Cursor cur = dm.query(new DownloadManager.Query().setFilterById(id))) {
                 if (cur == null || !cur.moveToFirst() || cur.getInt(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)) != DownloadManager.STATUS_SUCCESSFUL) {
@@ -711,10 +839,34 @@ public class MainActivity extends Activity {
             try { dm.remove(id); } catch (Exception ignored) { }
             String why = checkApk(apk);
             if (why != null) { apk.delete(); js("window.toast&&toast(" + JSONObject.quote("Update rejected: " + why) + ",'err',8000)"); return; }
+            if (installApk(apk, false)) return;
             Uri cu = Uri.parse("content://" + getPackageName() + ".update/" + UPD_FILE);
             Intent inst = new Intent(Intent.ACTION_VIEW).setDataAndType(cu, "application/vnd.android.package-archive").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
             runOnUiThread(() -> { try { startActivity(inst); } catch (Exception e) { js("window.toast&&toast('The installer could not open','err',6000)"); } });
         } catch (Exception e) { apk.delete(); js("window.toast&&toast('The update did not download. Try again','err',6000)"); }
+    }
+
+    /** 1.13.0: installs through the system's package installer session, so MKCinema becomes the app that installed
+        itself and later updates (Android 12+) can install without a prompt. The result arrives in UpdateResult.
+        False when the session could not be made (the caller then opens the installer the old way). */
+    boolean installApk(File apk, boolean silent) {
+        try {
+            android.content.pm.PackageInstaller pi = getPackageManager().getPackageInstaller();
+            android.content.pm.PackageInstaller.SessionParams sp = new android.content.pm.PackageInstaller.SessionParams(android.content.pm.PackageInstaller.SessionParams.MODE_FULL_INSTALL);
+            sp.setAppPackageName(getPackageName());
+            if (Build.VERSION.SDK_INT >= 31) sp.setRequireUserAction(silent ? android.content.pm.PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED : android.content.pm.PackageInstaller.SessionParams.USER_ACTION_REQUIRED);
+            int sid = pi.createSession(sp);
+            try (android.content.pm.PackageInstaller.Session s = pi.openSession(sid)) {
+                try (InputStream in = new java.io.FileInputStream(apk); OutputStream out = s.openWrite("base.apk", 0, apk.length())) {
+                    byte[] b = new byte[65536]; int n; while ((n = in.read(b)) > 0) out.write(b, 0, n);
+                    s.fsync(out);
+                }
+                Intent cb = new Intent(this, UpdateResult.class).setPackage(getPackageName()).putExtra("silent", silent);
+                int fl = android.app.PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 31 ? android.app.PendingIntent.FLAG_MUTABLE : 0);
+                s.commit(android.app.PendingIntent.getBroadcast(this, sid, cb, fl).getIntentSender());
+            }
+            return true;
+        } catch (Exception e) { if (silent) autoState = 2; return false; }
     }
 
     /** null when apk is MKCinema signed with the same key as this app (or a key this app's key was rotated to), else why not */
@@ -854,6 +1006,8 @@ public class MainActivity extends Activity {
     }
     @Override protected void onStop() {
         super.onStop();
+        // 1.13.0: a downloaded update installs a few minutes after the app is left (see autoInstall)
+        if (autoState == 2) { later.removeCallbacks(autoInstall); later.postDelayed(autoInstall, 3 * 60_000L); }
         // The window was swiped away: stop the film instead of playing on unseen
         if (wasPip && web != null) { wasPip = false; web.evaluateJavascript("window.MKPip&&MKPip.closed()", null); }
     }
@@ -861,10 +1015,11 @@ public class MainActivity extends Activity {
     @Override protected void onSaveInstanceState(Bundle b) { super.onSaveInstanceState(b); web.saveState(b); }
     @Override protected void onPause() {
         super.onPause(); resumed = false;
+        if (under != null && !(Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode())) under.pauseForBackground();
         // In the picture-in-picture window the page keeps playing
         if (!(Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode())) web.onPause();
         CookieManager.getInstance().flush();
     }
-    @Override protected void onResume() { super.onResume(); resumed = true; web.onResume(); if (webDead) reloadWeb(); if (wasPip && !(Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode())) wasPip = false; }
-    @Override protected void onDestroy() { if (isFinishing()) new Thread(() -> P2P.stop(getApplicationContext())).start(); if (recognizer != null) recognizer.destroy(); if (web != null) { ((ViewGroup) web.getParent()).removeView(web); web.destroy(); } super.onDestroy(); }
+    @Override protected void onResume() { super.onResume(); resumed = true; later.removeCallbacks(autoInstall); if (UpdateResult.ask) { UpdateResult.ask = false; js("window.MkAutoUpd&&MkAutoUpd.ask()"); } web.onResume(); if (webDead) reloadWeb(); if (wasPip && !(Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode())) wasPip = false; }
+    @Override protected void onDestroy() { if (liveAct == this) liveAct = null; if (isFinishing()) new Thread(() -> P2P.stop(getApplicationContext())).start(); if (recognizer != null) recognizer.destroy(); if (under != null) under.release(); if (web != null) { ((ViewGroup) web.getParent()).removeView(web); web.destroy(); } super.onDestroy(); }
 }

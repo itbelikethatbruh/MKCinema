@@ -75,6 +75,9 @@ type WindowOptions struct {
 // OnClose, when set, runs as the main window is closing (before it is destroyed).
 var OnClose func(hwnd uintptr)
 
+// OnSize, when set, runs after the main window changed size (MKCinema's native video window follows it).
+var OnSize func(hwnd uintptr)
+
 // Chromium gives access to the underlying WebView2 wrapper.
 func (w *webview) Chromium() *edge.Chromium {
 	c, _ := w.browser.(*edge.Chromium)
@@ -287,6 +290,9 @@ func wndproc(hwnd, msg, wp, lp uintptr) uintptr {
 			return r
 		case w32.WMSize:
 			w.browser.Resize()
+			if OnSize != nil {
+				OnSize(hwnd)
+			}
 		case w32.WMActivate:
 			if wp == w32.WAInactive {
 				break

@@ -1,0 +1,5 @@
+**
+!app/
+app/node_modules
+app/.env
+app/vendor/kokoro*

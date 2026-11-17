@@ -203,8 +203,9 @@ final class Downloads {
                     else {
                         String[] lv = DlService.live.get(rec.optString("id"));
                         state = lv != null ? lv[0] : "queued"; err = lv != null ? lv[1] : "";
-                        if (lv == null && !DlService.running) kick = true;
-                        if (!f.getParentFile().exists()) { state = "paused"; err = "Connect the USB drive to carry on"; }
+                        boolean there = f.getParentFile() != null && f.getParentFile().exists();
+                        if (lv == null && !DlService.running && there) kick = true;
+                        if (!there) { state = "paused"; err = "Connect the USB drive to carry on"; }
                     }
                 } else {
                     state = "failed"; err = "the download was removed";

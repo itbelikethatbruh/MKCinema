@@ -60,10 +60,12 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     boolean assOk, assCrashed; View assView;
     /** 1.9.0: skip times in ms: recap, intro, ending ({start, end}), and where the credits start (-1 unknown) */
     final String[] SEG = { "recap", "intro", "ed" }; final long[][] segs = new long[3][]; final boolean[] segUsed = new boolean[3];
-    long creditsMs = -1; boolean hasNext, autoSkip; int segCur = -1; long segShown; TextView skipBtn;
+    long creditsMs = -1; boolean hasNext, autoSkip, zap, zapFlip; int segCur = -1; long segShown; TextView skipBtn;
 
+    /** 1.13.0: an automatic update never installs while this player is open */
+    static volatile boolean open;
     @Override protected void onCreate(Bundle b) {
-        super.onCreate(b);
+        super.onCreate(b); open = true;
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON | WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         Intent i = getIntent();
@@ -78,9 +80,14 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         slow = i.getBooleanExtra("slow", false);
         // 1.9.0: a crash while libass was drawing turns styled subtitles off on this app version (see onDestroy)
         android.content.SharedPreferences sp = getSharedPreferences("mk", MODE_PRIVATE);
-        if (sp.getBoolean("assLive", false)) { sp.edit().putString("assOff", MainActivity.VER).putBoolean("assLive", false).apply(); assCrashed = true; }
+        if (sp.getBoolean("assLive", false)) {
+            int n = sp.getInt("assCrashN", 0) + 1;   // one power cut is not a crash: three in a row are
+            if (n >= 3) { sp.edit().putString("assOff", MainActivity.VER).putBoolean("assLive", false).putInt("assCrashN", 0).apply(); assCrashed = true; }
+            else sp.edit().putBoolean("assLive", false).putInt("assCrashN", n).apply();
+        }
         assOk = i.getBooleanExtra("ass", true) && !MainActivity.VER.equals(sp.getString("assOff", ""));
         readSkips(i.getStringExtra("skips")); hasNext = i.getBooleanExtra("hasNext", false); autoSkip = i.getBooleanExtra("autoSkip", false);
+        zap = i.getBooleanExtra("zap", false); zapFlip = i.getBooleanExtra("zapFlip", false);
         float d = getResources().getDisplayMetrics().density;
 
         root = new FrameLayout(this); root.setBackgroundColor(Color.BLACK);
@@ -115,7 +122,9 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         bar.addView(row);
         opts = new LinearLayout(this); opts.setOrientation(LinearLayout.HORIZONTAL);
         LinearLayout.LayoutParams ol = new LinearLayout.LayoutParams(-2, -2); ol.topMargin = (int) (12 * d); bar.addView(opts, ol);
-        String[][] ob = { { "audio", "Audio" }, { "subs", "Subtitles" }, { "sources", "Other sources" }, { "web", "Full player" } };
+        // 1.14.0: a file opened from another app has no source list or web player to go to
+        String[][] ob = i.getBooleanExtra("local", false) ? new String[][] { { "audio", "Audio" }, { "subs", "Subtitles" } }
+            : new String[][] { { "audio", "Audio" }, { "subs", "Subtitles" }, { "sources", "Other sources" }, { "web", "Full player" } };
         for (String[] o : ob) {
             TextView t = text(15, Color.WHITE, Typeface.BOLD); t.setText(o[1]); t.setTag(o[0]);
             t.setPadding((int) (16 * d), (int) (8 * d), (int) (16 * d), (int) (8 * d));
@@ -150,6 +159,8 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         if (u == null) return false;
         String l = u.toLowerCase(java.util.Locale.US);
         if (l.startsWith("https://") || l.startsWith("http://")) return true;
+        // 1.14.0: a file another app handed to "Open with MKCinema" (OpenActivity), with read permission for it
+        if (!path && l.startsWith("content://")) return getIntent().getBooleanExtra("local", false) && u.equals(String.valueOf(getIntent().getData()));
         String f = path && u.startsWith("/") ? u : !path && l.startsWith("file:") ? android.net.Uri.parse(u).getPath() : null;
         if (f == null) return false;
         try {
@@ -198,17 +209,28 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     TextView text(int sp, int color, int style) { TextView t = new TextView(this); t.setTextSize(sp); t.setTextColor(color); t.setTypeface(Typeface.create("sans-serif", style)); return t; }
 
     @Override public void surfaceCreated(SurfaceHolder holder) { surfaceReady = true; if (eng == null) maybeStart(); else eng.surface(holder); }
-    @Override public void surfaceChanged(SurfaceHolder holder, int f, int w, int hh) { }
+    @Override public void surfaceChanged(SurfaceHolder holder, int f, int w, int hh) { if (eng != null) eng.resized(w, hh); }
     @Override public void surfaceDestroyed(SurfaceHolder holder) { surfaceReady = false; if (eng != null) eng.surface(null); }
 
     void maybeStart() {
         if (eng != null || !surfaceReady || !subsWaited || isFinishing()) return;
-        try { if ("system".equals(engineName)) eng = new MpEngine(this, this); else { ExoEngine x = new ExoEngine(this, this); x.slow = slow; x.wantAss = assOk; eng = x; } }
+        // 1.14.0: "mpv" (MKCinema Player, the default; "exo" from older app pages means the default too), "exoplayer", "system"
+        try {
+            if ("system".equals(engineName)) eng = new MpEngine(this, this);
+            else if (!"exoplayer".equals(engineName) && MpvEngine.available()) { MpvEngine x = new MpvEngine(this, this, !touch); x.slow = slow; eng = x; }
+            else eng = exo();
+        }
         catch (Throwable t) { fellBack = true; eng = new MpEngine(this, this); } // ExoPlayer missing or broken on this device
         DvFallback.used = false;
+        android.util.Log.i("MKCPlayer", "engine " + eng.name() + " for " + (url.startsWith("content:") ? "a local file" : "a stream"));
         eng.open(url, hdr, subFile, audioLang, startMs, surface.getHolder());
         addOverlay();
     }
+
+    Engine exo() { ExoEngine x = new ExoEngine(this, this); x.slow = slow; x.wantAss = assOk; return x; }
+    /** 1.14.0: mpv couldn't open the file: ExoPlayer tries next (then the basic player, see error()) */
+    boolean triedExo, triedGpu; String errChain = "";
+    void chain(String what) { errChain += (errChain.isEmpty() ? "" : " > ") + what; android.util.Log.w("MKCPlayer", "player: " + errChain); }
 
     /** 1.9.0: the libass layer sits exactly over the picture (same size and place as the video surface), under the bar */
     void addOverlay() {
@@ -219,7 +241,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         assView = v; root.addView(v, 1, new FrameLayout.LayoutParams(surface.getLayoutParams()));
         liveAss(true);
     }
-    void liveAss(boolean on) { getSharedPreferences("mk", MODE_PRIVATE).edit().putBoolean("assLive", on).commit(); }
+    void liveAss(boolean on) { android.content.SharedPreferences.Editor e = getSharedPreferences("mk", MODE_PRIVATE).edit().putBoolean("assLive", on); if (!on) e.putInt("assCrashN", 0); e.commit(); }
 
     void readSkips(String json) {
         if (json == null || json.isEmpty()) return;
@@ -287,14 +309,31 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     @Override public void frameRate(float fps) { if (matchRate && Build.VERSION.SDK_INT >= 23) matchFrameRate(fps); }
     @Override public void error(String code, boolean beforeReady) {
         // 1.7.0: a file ExoPlayer can't open gets one try in the basic player before MKCinema's own player takes over
+        // 1.15.2: on a TV mpv first draws straight onto the screen (hardware decoder only). When that can't start, MKCinema Player
+        // tries again with its own renderer, which also decodes in software, BEFORE ExoPlayer: same engine, every audio and subtitle track stays listed.
+        if (beforeReady && eng instanceof MpvEngine && ((MpvEngine) eng).embed && !triedGpu && !isFinishing()) {
+            triedGpu = true; chain("mpv-tv:" + code); eng.release(); eng = null; prepared = false; note.setText("Starting MKCinema Player…");
+            MpvEngine x = new MpvEngine(this, this, false); x.slow = slow; eng = x;
+            eng.open(url, hdr, subFile, audioLang, startMs, surface.getHolder()); addOverlay();
+            return;
+        }
+        if (beforeReady && eng instanceof MpvEngine && !triedExo && !isFinishing()) {
+            chain("mpv:" + code);
+            triedExo = true; eng.release(); eng = null; prepared = false; note.setText("Trying ExoPlayer… (" + code + ")");
+            try { eng = exo(); } catch (Throwable t) { fellBack = true; eng = new MpEngine(this, this); }
+            eng.open(url, hdr, subFile, audioLang, startMs, surface.getHolder()); addOverlay();
+            return;
+        }
         if (beforeReady && eng instanceof ExoEngine && !fellBack && !isFinishing()) {
+            chain("exo:" + code);
             fellBack = true; eng.release(); eng = null; prepared = false; note.setText("Trying the basic player…");
             eng = new MpEngine(this, this); eng.open(url, hdr, subFile, audioLang, startMs, surface.getHolder()); addOverlay();
             return;
         }
+        chain("final:" + code);
         note.setText("This source won’t play here");
         if (!beforeReady && prepared) { h.postDelayed(this::finishWithResult, 1800); return; } // keeps the position so it is saved
-        h.postDelayed(() -> { setResult(RESULT_CANCELED, new Intent().putExtra("error", code)); finish(); }, 1800);
+        h.postDelayed(() -> { setResult(RESULT_CANCELED, new Intent().putExtra("error", errChain.isEmpty() ? code : errChain)); finish(); }, 1800);
     }
 
     /** Letterbox the surface to the video's shape. */
@@ -420,6 +459,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
             if (t.on) pickSel = pickRows.size();
             addPick(t.label, t.on, () -> note.setText(eng.select(subs, t.id) ? (subs ? "Subtitles: " : "Audio: ") + t.label : subs ? "That subtitle can’t be shown here" : "That audio track can’t be played here"));
         }
+        android.util.Log.i("MKCPlayer", (subs ? "subtitle" : "audio") + " list, " + pickRows.size() + " rows, highlighted " + pickSel);
         android.widget.ScrollView sc = new android.widget.ScrollView(this); sc.addView(picker);
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams((int) (360 * d), -2, Gravity.END | Gravity.CENTER_VERTICAL); lp.rightMargin = (int) (40 * d);
         root.addView(sc, lp); paintPick(); bar.setVisibility(View.GONE); hideAt = 0;
@@ -438,7 +478,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
             pickRows.get(k).setBackground(g); pickRows.get(k).setTextColor(on ? 0xFF0B0B0C : Color.WHITE);
         }
     }
-    void choosePick() { Runnable r = pickActs.get(pickSel); closePicker(); r.run(); show(3000); }
+    void choosePick() { android.util.Log.i("MKCPlayer", "picked row " + pickSel); Runnable r = pickActs.get(pickSel); closePicker(); r.run(); show(3000); }
     void closePicker() { if (picker != null) { root.removeView((View) picker.getParent()); picker = null; } }
 
     final Runnable tick = new Runnable() { @Override public void run() {
@@ -468,6 +508,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     @Override public boolean dispatchKeyEvent(KeyEvent e) {
         if (e.getAction() != KeyEvent.ACTION_DOWN) return super.dispatchKeyEvent(e);
         int k = e.getKeyCode(); boolean held = e.getRepeatCount() > 0;
+        if (android.util.Log.isLoggable("MKCPlayer", android.util.Log.DEBUG)) android.util.Log.d("MKCPlayer", "key " + KeyEvent.keyCodeToString(k));
         if (picker != null) {
             switch (k) {
                 case KeyEvent.KEYCODE_DPAD_UP: pickSel = Math.max(0, pickSel - 1); paintPick(); return true;
@@ -486,6 +527,19 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
                 case KeyEvent.KEYCODE_DPAD_UP: case KeyEvent.KEYCODE_BACK: case KeyEvent.KEYCODE_ESCAPE: sel = -1; paintOpts(); show(3000); return true;
                 case KeyEvent.KEYCODE_DPAD_DOWN: show(8000); return true;
             }
+        }
+        // a live channel from the person's own playlist: Channel +/- (and Up/Down while the bar is hidden) close this
+        // screen with a request for the next channel, which MKCinema starts at once; Last channel goes back
+        if (zap && picker == null && sel < 0) {
+            String want = null;
+            switch (k) {
+                case KeyEvent.KEYCODE_CHANNEL_UP: case KeyEvent.KEYCODE_PAGE_UP: want = "chup"; break;
+                case KeyEvent.KEYCODE_CHANNEL_DOWN: case KeyEvent.KEYCODE_PAGE_DOWN: want = "chdown"; break;
+                case KeyEvent.KEYCODE_LAST_CHANNEL: want = "chlast"; break;
+                case KeyEvent.KEYCODE_DPAD_UP: if (bar.getVisibility() != View.VISIBLE) want = zapFlip ? "chup" : "chdown"; break;
+                case KeyEvent.KEYCODE_DPAD_DOWN: if (bar.getVisibility() != View.VISIBLE) want = zapFlip ? "chdown" : "chup"; break;
+            }
+            if (want != null) { action = want; finishWithResult(); return true; }
         }
         // 1.9.0: while Skip intro (or Next episode) shows, OK presses it
         if ((k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER) && skipShown()) { doSkipSeg(); return true; }
@@ -507,19 +561,22 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         return super.dispatchKeyEvent(e);
     }
 
-    void finishWithResult() {
+    void finishWithResult() { setResult(RESULT_OK, result()); finish(); }
+
+    Intent result() {
         Intent r = new Intent();
         try { if (prepared && eng != null) { r.putExtra("pos", pendingSeek >= 0 ? pendingSeek : (int) eng.pos()); r.putExtra("dur", (int) eng.dur()); } } catch (Exception ignored) { }
         r.putExtra("engine", eng == null ? engineName : eng.name());
         r.putExtra("ended", ended); r.putExtra("next", wantNext); if (action != null) r.putExtra("action", action);
-        setResult(RESULT_OK, r); finish();
+        return r;
     }
 
     // the crash flag is only up while the libass layer draws on screen, so Android closing a paused player in the
     // background never counts as a crash
-    @Override protected void onPause() { super.onPause(); modeHold = false; if (eng != null && prepared && eng.playing()) eng.pause(); if (assView != null) liveAss(false); }
+    // the place is handed back on every pause too: reopening the app from its icon closes this screen without Back
+    @Override protected void onPause() { super.onPause(); if (!isFinishing()) { try { setResult(RESULT_OK, result()); } catch (Exception ignored) { } } modeHold = false; if (eng != null && prepared && eng.playing()) eng.pause(); if (assView != null) liveAss(false); }
     @Override protected void onResume() { super.onResume(); if (assView != null) liveAss(true); }
-    @Override protected void onDestroy() { super.onDestroy(); stopPlayer(); liveAss(false); }
+    @Override protected void onDestroy() { super.onDestroy(); open = false; stopPlayer(); liveAss(false); }
 
     /** 1.11.1: the player (its decoders and its audio output) is let go the moment this screen closes. Android runs
         onDestroy only once the screen behind is idle, which on a slow TV box can be seconds later: a film started again

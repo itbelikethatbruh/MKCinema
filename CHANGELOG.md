@@ -2,6 +2,27 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Android app 1.13.0 (updates by itself)
+
+- **Updates by themselves:** new versions download in the background and install a few minutes after you leave the app, never during a film. On Android 12 and later this happens without a prompt after the first update.
+
+## Web app 2.69.8 and Android app 1.12.3 (every TV on your Wi-Fi)
+
+- Adding a TV by its address says when the TV is on a different network from the phone, and the scan details list each device once.
+
+- **Add a TV by its address:** if a TV doesn't show up, tap "TV not listed?" and type its address; the app connects to it directly and remembers it. The same card shows every device the phone heard on the Wi-Fi.
+- The About page shows the Android app version.
+- **Every TV in one list:** Send to TV in the Android app now lists every TV it finds on your Wi-Fi: Apple TVs and AirPlay TVs (Samsung, LG, Sony, Vizio), Chromecast and Google TV, and smart TVs that accept DLNA. A TV that answers several ways shows once.
+- Chromecast, Google TV and DLNA TVs take MKV and WebM links as they are.
+- Finding TVs is more thorough on busy networks with many devices.
+- An older Android app shows how to get the update when you tap Send to TV.
+
+## Web app 2.69.4 and Android app 1.12.0 (AirPlay from Android)
+
+- **Apple TV from Android:** the MKCinema Android app now sends films to an Apple TV with AirPlay, no extra app needed. Tap Send to TV, pick your Apple TV, and type the 4-digit code it shows the first time. The Apple TV plays the film itself, and the phone becomes the remote (pause, skip, Play here), with Pause and Stop in the notification too.
+- MKV files from Real-Debrid or TorBox go to the Apple TV as the service's TV-ready copy. The TV button on the main page can pick an Apple TV before you press play.
+- Chrome on Android points Apple TV owners to the Android app.
+
 ## Web app 2.69.3 (Watch on your TV, Sign in with Google)
 
 - **Watch on your TV:** a TV button at the top of the main page connects to your TV before you press play. In Chrome it connects to a Chromecast or Google TV; on iPhone, iPad and Mac Safari it turns on TV mode so the next film is made TV-ready.

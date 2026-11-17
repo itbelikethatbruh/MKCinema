@@ -28,7 +28,7 @@ jobs:
           command -v go >/dev/null || brew install go
           go version
           sh mac/package.sh
-          rm -rf /tmp/inst && mkdir /tmp/inst && cd /tmp/inst && unzip -q "$GITHUB_WORKSPACE/mac/build/MKCinema-1.2.0-mac.zip"
+          rm -rf /tmp/inst && mkdir /tmp/inst && cd /tmp/inst && unzip -q "$GITHUB_WORKSPACE"/mac/build/MKCinema-*-mac.zip
           cp -R /tmp/inst/MKCinema.app /Applications/
       - name: Launch from LaunchServices and run the self-test
         run: |

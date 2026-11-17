@@ -80,15 +80,12 @@ func dcConnect() *os.File {
 			f.Close()
 			continue
 		}
-		// Discord answers every frame; read and discard so the pipe never fills up.
-		go func(f *os.File) {
-			_, _ = io.Copy(io.Discard, f)
-			dcMu.Lock()
-			if dcPipe == f {
-				dcPipe = nil
-			}
-			dcMu.Unlock()
-		}(f)
+		// Discord answers every frame. A pipe opened this way does one thing at a time, so a reader left waiting
+		// in the background would hold up every later write: each answer is read right after its request instead.
+		if err := dcRead(f); err != nil {
+			f.Close()
+			continue
+		}
 		dcPipe = f
 		return f
 	}
@@ -110,6 +107,9 @@ func dcSend(act any) bool {
 		"args":  map[string]any{"pid": os.Getpid(), "activity": act},
 		"nonce": fmt.Sprint(time.Now().UnixNano()),
 	})
+	if err == nil {
+		err = dcRead(f)
+	}
 	if err != nil {
 		log.Printf("discord: %v", err)
 		f.Close()
@@ -117,6 +117,20 @@ func dcSend(act any) bool {
 		return false
 	}
 	return true
+}
+
+// dcRead reads one whole answer frame (8-byte header, then its JSON body) and drops it.
+func dcRead(f *os.File) error {
+	hdr := make([]byte, 8)
+	if _, err := io.ReadFull(f, hdr); err != nil {
+		return err
+	}
+	n := binary.LittleEndian.Uint32(hdr[4:])
+	if n > 1<<20 {
+		return fmt.Errorf("discord answer too large")
+	}
+	_, err := io.CopyN(io.Discard, f, int64(n))
+	return err
 }
 
 func trim(s string, n int) string {

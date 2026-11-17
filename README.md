@@ -46,7 +46,7 @@ Most web players give up at the first MKV file and send you off to VLC. MKCinema
 - **Every audio and subtitle track** inside the file, including styled anime subtitles and picture-based (PGS) Blu-ray subtitles.
 - **iPhone and iPad** play MKV files in Safari, with nothing to install.
 
-For almost everything you watch, you won't need another app. Handing off to VLC, mpv or Infuse is still one press away for the odd file the browser really can't decode, such as 4K HEVC on a phone.
+For almost everything you watch, you won't need another app. Handing off to VLC is still one press away for the odd file the browser really can't decode, such as 4K HEVC on a phone.
 
 ## One house, every screen
 
@@ -164,7 +164,7 @@ We've looked, and we haven't found these in other apps. Every one is live today.
 - **Subtitles on smart glasses:** Even Realities G1 and G2 and Brilliant Labs Frame over Bluetooth, and Meta Ray-Ban Display through the Meta AI app.
 - **Your audio language first** on multi-language files, everywhere the device lets MKCinema choose.
 - **The in-browser engine** plays MKV, MP4 and TS, converts Dolby, DTS and TrueHD sound, shows PGS subtitles and decodes HEVC on computers, so an outside player is rarely needed.
-- **Hand off to any player** your device supports, such as VLC, mpv, Infuse or MX Player, for the rare file that still needs one. Picture-in-picture, lock-screen controls, and Send to TV (Chromecast).
+- **Hand off to VLC**, for the rare file that still needs one. Picture-in-picture, lock-screen controls, and Send to TV (Chromecast).
 - **Spoiler Guard**, **Never miss a line** after a pause, and **Last time…** to remind you where you were.
 - **Chapters** in Player › Options › More, **Shuffle a series**, and your **subtitle choice remembered for each title**, with forced subtitles for foreign-language scenes, an option to hide SDH, and an option to wait for your language at the start.
 - **Your cloud.** Browse and play the films and episodes already in your debrid account, from Library or Settings › Debrid.
@@ -273,6 +273,7 @@ We've looked, and we haven't found these in other apps. Every one is live today.
 | Linux | [DEB](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/mkcinema_1.1_amd64.deb) or [tar.gz](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/mkcinema-1.1-linux-x86_64.tar.gz) (1.1) | x86_64, WebKitGTK 4.1 |
 | LG webOS | [IPK](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/com.mkcinema.app_1.1.0_all.ipk) (1.1.0) | Beta, needs Developer Mode |
 | Samsung Tizen | [TizenBrew module](tizen/README.md) | Beta, 2023 models and later |
+| Your own server | `docker run -p 7000:7000 ghcr.io/itbelikethatbruh/mkcinema` | The web app plus the stream proxy and audio rescue, on a NAS or home server. [Self-hosting guide](docs/self-host.md) |
 
 Every download has a SHA-256 checksum and a build provenance attestation on its release ([how to check](SECURITY.md)). Install notes for each platform are in [docs/install.md](docs/install.md).
 
@@ -333,6 +334,8 @@ cd app
 npm install
 node mkcinema-server.js   # app at http://127.0.0.1:7000/
 ```
+
+Or run it in a container: `docker compose up -d` (see [docs/self-host.md](docs/self-host.md)).
 
 Releases minify a copy of `app/` with `node tools/minify-web.mjs <copy>`. The Web checks workflow smoke-tests the source and the minified copy in headless Chromium, checks every relative link and runs Lighthouse on the website. Native build steps are in [docs/install.md](docs/install.md#build-from-source).
 
