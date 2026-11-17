@@ -229,7 +229,8 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
 
     Engine exo() { ExoEngine x = new ExoEngine(this, this); x.slow = slow; x.wantAss = assOk; return x; }
     /** 1.14.0: mpv couldn't open the file: ExoPlayer tries next (then the basic player, see error()) */
-    boolean triedExo;
+    boolean triedExo, triedGpu; String errChain = "";
+    void chain(String what) { errChain += (errChain.isEmpty() ? "" : " > ") + what; android.util.Log.w("MKCPlayer", "player: " + errChain); }
 
     /** 1.9.0: the libass layer sits exactly over the picture (same size and place as the video surface), under the bar */
     void addOverlay() {
@@ -308,20 +309,31 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     @Override public void frameRate(float fps) { if (matchRate && Build.VERSION.SDK_INT >= 23) matchFrameRate(fps); }
     @Override public void error(String code, boolean beforeReady) {
         // 1.7.0: a file ExoPlayer can't open gets one try in the basic player before MKCinema's own player takes over
+        // 1.15.2: on a TV mpv first draws straight onto the screen (hardware decoder only). When that can't start, MKCinema Player
+        // tries again with its own renderer, which also decodes in software, BEFORE ExoPlayer: same engine, every audio and subtitle track stays listed.
+        if (beforeReady && eng instanceof MpvEngine && ((MpvEngine) eng).embed && !triedGpu && !isFinishing()) {
+            triedGpu = true; chain("mpv-tv:" + code); eng.release(); eng = null; prepared = false; note.setText("Starting MKCinema Player…");
+            MpvEngine x = new MpvEngine(this, this, false); x.slow = slow; eng = x;
+            eng.open(url, hdr, subFile, audioLang, startMs, surface.getHolder()); addOverlay();
+            return;
+        }
         if (beforeReady && eng instanceof MpvEngine && !triedExo && !isFinishing()) {
-            triedExo = true; eng.release(); eng = null; prepared = false; note.setText("Trying ExoPlayer…");
+            chain("mpv:" + code);
+            triedExo = true; eng.release(); eng = null; prepared = false; note.setText("Trying ExoPlayer… (" + code + ")");
             try { eng = exo(); } catch (Throwable t) { fellBack = true; eng = new MpEngine(this, this); }
             eng.open(url, hdr, subFile, audioLang, startMs, surface.getHolder()); addOverlay();
             return;
         }
         if (beforeReady && eng instanceof ExoEngine && !fellBack && !isFinishing()) {
+            chain("exo:" + code);
             fellBack = true; eng.release(); eng = null; prepared = false; note.setText("Trying the basic player…");
             eng = new MpEngine(this, this); eng.open(url, hdr, subFile, audioLang, startMs, surface.getHolder()); addOverlay();
             return;
         }
+        chain("final:" + code);
         note.setText("This source won’t play here");
         if (!beforeReady && prepared) { h.postDelayed(this::finishWithResult, 1800); return; } // keeps the position so it is saved
-        h.postDelayed(() -> { setResult(RESULT_CANCELED, new Intent().putExtra("error", code)); finish(); }, 1800);
+        h.postDelayed(() -> { setResult(RESULT_CANCELED, new Intent().putExtra("error", errChain.isEmpty() ? code : errChain)); finish(); }, 1800);
     }
 
     /** Letterbox the surface to the video's shape. */

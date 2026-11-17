@@ -29,6 +29,10 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.15.2 (versionCode 38): the TV player stays MKCinema Player
+
+On a TV, when mpv's straight-to-screen mode can't start a file, MKCinema Player now tries again with its own renderer (software decoding allowed) before ExoPlayer is tried, so every audio and subtitle track stays listed. The reason a file could not play (engine and error code, device model) is added to the page's log (Settings > Help > Send log), and the "Trying ExoPlayer…" line shows the error code.
+
 ## 1.15.1 (versionCode 37): MKCinema Player under the page, steadier start
 
 The film now waits (up to 2.5 s) for the picture surface before it opens, the player attaches a surface that came up first, and every open leaves log lines (open, file loaded, size, hwdec, end-file) that the page copies into Settings > Help > Send log. The emulator test also checks that the screen is not black.
