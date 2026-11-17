@@ -28,7 +28,10 @@ jobs:
           sm="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           yes | "$sm" --licenses > /dev/null || true
           "$sm" "build-tools;35.0.0" "platforms;android-35" "platform-tools" "emulator" "system-images;android-34;google_apis;x86_64" | grep -v "^\[" | tail -5
-          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -n test -k "system-images;android-34;google_apis;x86_64" -d pixel_6 > /dev/null
+          echo "ANDROID_AVD_HOME=$HOME/.android/avd" >> "$GITHUB_ENV"; mkdir -p "$HOME/.android/avd"
+          ls "$ANDROID_HOME/system-images/android-34/google_apis/x86_64" | head -3
+          echo no | ANDROID_AVD_HOME="$HOME/.android/avd" "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -f -n test -k "system-images;android-34;google_apis;x86_64"
+          ls -la "$HOME/.android/avd"
       - name: Build the test APK
         run: |
           keytool -genkeypair -keystore "$RUNNER_TEMP/test.jks" -storepass testtest -keypass testtest -alias test -keyalg RSA -keysize 2048 -validity 30 -dname CN=test > /dev/null 2>&1
@@ -45,6 +48,7 @@ jobs:
           booted=
           for i in $(seq 1 120); do
             [ "$(timeout 10 adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ] && { booted=1; break; }
+            pgrep -f "qemu-system\|emulator -avd" > /dev/null || { echo "the emulator stopped"; break; }
             sleep 5
           done
           if [ -z "$booted" ]; then echo "the emulator did not start"; tail -60 "$RUNNER_TEMP/emulator.log"; exit 1; fi
