@@ -26,6 +26,8 @@ function logLine(text) {
   } catch (e) { /* logging never stops the app */ }
 }
 logLine('started ' + VERSION + ' on macOS ' + $.NSProcessInfo.processInfo.operatingSystemVersionString.js);
+// MKC_ARCH comes from the launcher (MKCinema.sh): which processor type this run uses, so a slow start can be traced.
+(function () { const a = $.NSProcessInfo.processInfo.environment.objectForKey('MKC_ARCH'); logLine('running as ' + (a.isNil() ? 'unknown' : a.js)); })();
 // The launch test (.github/workflows/mac-smoke.yml) sets this flag: once the page has loaded, ping the bridge, then quit.
 const SELFTEST = $.NSFileManager.defaultManager.fileExistsAtPath($.NSHomeDirectory().js + '/Library/Caches/MKCinema/selftest');
 const app = $.NSApplication.sharedApplication;
