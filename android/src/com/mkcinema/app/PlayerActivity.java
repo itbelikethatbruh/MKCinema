@@ -122,7 +122,9 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         bar.addView(row);
         opts = new LinearLayout(this); opts.setOrientation(LinearLayout.HORIZONTAL);
         LinearLayout.LayoutParams ol = new LinearLayout.LayoutParams(-2, -2); ol.topMargin = (int) (12 * d); bar.addView(opts, ol);
-        String[][] ob = { { "audio", "Audio" }, { "subs", "Subtitles" }, { "sources", "Other sources" }, { "web", "Full player" } };
+        // 1.14.0: a file opened from another app has no source list or web player to go to
+        String[][] ob = i.getBooleanExtra("local", false) ? new String[][] { { "audio", "Audio" }, { "subs", "Subtitles" } }
+            : new String[][] { { "audio", "Audio" }, { "subs", "Subtitles" }, { "sources", "Other sources" }, { "web", "Full player" } };
         for (String[] o : ob) {
             TextView t = text(15, Color.WHITE, Typeface.BOLD); t.setText(o[1]); t.setTag(o[0]);
             t.setPadding((int) (16 * d), (int) (8 * d), (int) (16 * d), (int) (8 * d));
@@ -157,6 +159,8 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         if (u == null) return false;
         String l = u.toLowerCase(java.util.Locale.US);
         if (l.startsWith("https://") || l.startsWith("http://")) return true;
+        // 1.14.0: a file another app handed to "Open with MKCinema" (OpenActivity), with read permission for it
+        if (!path && l.startsWith("content://")) return getIntent().getBooleanExtra("local", false) && u.equals(String.valueOf(getIntent().getData()));
         String f = path && u.startsWith("/") ? u : !path && l.startsWith("file:") ? android.net.Uri.parse(u).getPath() : null;
         if (f == null) return false;
         try {
@@ -205,17 +209,27 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     TextView text(int sp, int color, int style) { TextView t = new TextView(this); t.setTextSize(sp); t.setTextColor(color); t.setTypeface(Typeface.create("sans-serif", style)); return t; }
 
     @Override public void surfaceCreated(SurfaceHolder holder) { surfaceReady = true; if (eng == null) maybeStart(); else eng.surface(holder); }
-    @Override public void surfaceChanged(SurfaceHolder holder, int f, int w, int hh) { }
+    @Override public void surfaceChanged(SurfaceHolder holder, int f, int w, int hh) { if (eng != null) eng.resized(w, hh); }
     @Override public void surfaceDestroyed(SurfaceHolder holder) { surfaceReady = false; if (eng != null) eng.surface(null); }
 
     void maybeStart() {
         if (eng != null || !surfaceReady || !subsWaited || isFinishing()) return;
-        try { if ("system".equals(engineName)) eng = new MpEngine(this, this); else { ExoEngine x = new ExoEngine(this, this); x.slow = slow; x.wantAss = assOk; eng = x; } }
+        // 1.14.0: "mpv" (MKCinema Player, the default; "exo" from older app pages means the default too), "exoplayer", "system"
+        try {
+            if ("system".equals(engineName)) eng = new MpEngine(this, this);
+            else if (!"exoplayer".equals(engineName) && MpvEngine.available()) { MpvEngine x = new MpvEngine(this, this, !touch); x.slow = slow; eng = x; }
+            else eng = exo();
+        }
         catch (Throwable t) { fellBack = true; eng = new MpEngine(this, this); } // ExoPlayer missing or broken on this device
         DvFallback.used = false;
+        android.util.Log.i("MKCPlayer", "engine " + eng.name() + " for " + (url.startsWith("content:") ? "a local file" : "a stream"));
         eng.open(url, hdr, subFile, audioLang, startMs, surface.getHolder());
         addOverlay();
     }
+
+    Engine exo() { ExoEngine x = new ExoEngine(this, this); x.slow = slow; x.wantAss = assOk; return x; }
+    /** 1.14.0: mpv couldn't open the file: ExoPlayer tries next (then the basic player, see error()) */
+    boolean triedExo;
 
     /** 1.9.0: the libass layer sits exactly over the picture (same size and place as the video surface), under the bar */
     void addOverlay() {
@@ -294,6 +308,12 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     @Override public void frameRate(float fps) { if (matchRate && Build.VERSION.SDK_INT >= 23) matchFrameRate(fps); }
     @Override public void error(String code, boolean beforeReady) {
         // 1.7.0: a file ExoPlayer can't open gets one try in the basic player before MKCinema's own player takes over
+        if (beforeReady && eng instanceof MpvEngine && !triedExo && !isFinishing()) {
+            triedExo = true; eng.release(); eng = null; prepared = false; note.setText("Trying ExoPlayer…");
+            try { eng = exo(); } catch (Throwable t) { fellBack = true; eng = new MpEngine(this, this); }
+            eng.open(url, hdr, subFile, audioLang, startMs, surface.getHolder()); addOverlay();
+            return;
+        }
         if (beforeReady && eng instanceof ExoEngine && !fellBack && !isFinishing()) {
             fellBack = true; eng.release(); eng = null; prepared = false; note.setText("Trying the basic player…");
             eng = new MpEngine(this, this); eng.open(url, hdr, subFile, audioLang, startMs, surface.getHolder()); addOverlay();
@@ -427,6 +447,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
             if (t.on) pickSel = pickRows.size();
             addPick(t.label, t.on, () -> note.setText(eng.select(subs, t.id) ? (subs ? "Subtitles: " : "Audio: ") + t.label : subs ? "That subtitle can’t be shown here" : "That audio track can’t be played here"));
         }
+        android.util.Log.i("MKCPlayer", (subs ? "subtitle" : "audio") + " list, " + pickRows.size() + " rows, highlighted " + pickSel);
         android.widget.ScrollView sc = new android.widget.ScrollView(this); sc.addView(picker);
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams((int) (360 * d), -2, Gravity.END | Gravity.CENTER_VERTICAL); lp.rightMargin = (int) (40 * d);
         root.addView(sc, lp); paintPick(); bar.setVisibility(View.GONE); hideAt = 0;
@@ -445,7 +466,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
             pickRows.get(k).setBackground(g); pickRows.get(k).setTextColor(on ? 0xFF0B0B0C : Color.WHITE);
         }
     }
-    void choosePick() { Runnable r = pickActs.get(pickSel); closePicker(); r.run(); show(3000); }
+    void choosePick() { android.util.Log.i("MKCPlayer", "picked row " + pickSel); Runnable r = pickActs.get(pickSel); closePicker(); r.run(); show(3000); }
     void closePicker() { if (picker != null) { root.removeView((View) picker.getParent()); picker = null; } }
 
     final Runnable tick = new Runnable() { @Override public void run() {
@@ -475,6 +496,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     @Override public boolean dispatchKeyEvent(KeyEvent e) {
         if (e.getAction() != KeyEvent.ACTION_DOWN) return super.dispatchKeyEvent(e);
         int k = e.getKeyCode(); boolean held = e.getRepeatCount() > 0;
+        if (android.util.Log.isLoggable("MKCPlayer", android.util.Log.DEBUG)) android.util.Log.d("MKCPlayer", "key " + KeyEvent.keyCodeToString(k));
         if (picker != null) {
             switch (k) {
                 case KeyEvent.KEYCODE_DPAD_UP: pickSel = Math.max(0, pickSel - 1); paintPick(); return true;

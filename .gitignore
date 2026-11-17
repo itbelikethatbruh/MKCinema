@@ -11,6 +11,8 @@ node_modules/
 android/libs/*.jar
 # 1.9.0: libass native libraries, also from fetch.sh
 android/libs/ass-jni/
+# 1.14.0: libmpv native libraries, also from fetch.sh
+android/libs/mpv-jni/
 **/password.txt
 **/keystore/
 *.p12

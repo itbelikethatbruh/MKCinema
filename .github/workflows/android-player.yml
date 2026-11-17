@@ -1,0 +1,67 @@
+name: Android player
+
+# MKCinema Player (the Android app's own player with the mpv engine) on an Android emulator: builds the APK with a
+# throwaway test key (never the release key) plus x86_64 libmpv for the emulator, opens a test film with two audio
+# languages and a subtitle track, and switches both with the remote's keys (tools/android/player-test.sh).
+# Screenshots and the player's log are kept as an artifact.
+on:
+  pull_request:
+    paths: ['android/**', 'tools/android/**', '.github/workflows/android-player.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Android SDK parts and the emulator
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends ffmpeg > /dev/null
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules > /dev/null
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+          sm="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$sm" --licenses > /dev/null || true
+          "$sm" "build-tools;35.0.0" "platforms;android-35" "platform-tools" "emulator" "system-images;android-34;google_apis;x86_64" | grep -v "^\[" | tail -5
+          echo "ANDROID_AVD_HOME=$HOME/.android/avd" >> "$GITHUB_ENV"; mkdir -p "$HOME/.android/avd"
+          ls "$ANDROID_HOME/system-images/android-34/google_apis/x86_64" | head -3
+          echo no | ANDROID_AVD_HOME="$HOME/.android/avd" "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -f -n test -k "system-images;android-34;google_apis;x86_64"
+          ls -la "$HOME/.android/avd"
+      - name: Build the test APK
+        run: |
+          keytool -genkeypair -keystore "$RUNNER_TEMP/test.jks" -storepass testtest -keypass testtest -alias test -keyalg RSA -keysize 2048 -validity 30 -dname CN=test > /dev/null 2>&1
+          echo testtest > "$RUNNER_TEMP/pw"
+          SDK="$ANDROID_HOME" OUT="$RUNNER_TEMP/apk" MPV_X86=1 KS="$RUNNER_TEMP/test.jks" KS_PASS="file:$RUNNER_TEMP/pw" sh android/build.sh 2>&1 | grep -v "kotlin\|^\s*at \|^Info\|^Warning\|Lk0\|^$" || true
+          ls -la "$RUNNER_TEMP/apk/MKCinema.apk"
+      - name: Play and switch languages on the emulator
+        run: |
+          export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+          ls -la /dev/kvm; "$ANDROID_HOME/emulator/emulator" -accel-check || true
+          "$ANDROID_HOME/emulator/emulator" -list-avds
+          "$ANDROID_HOME/emulator/emulator" -avd test -no-window -no-audio -no-boot-anim -no-snapshot -no-metrics -accel on \
+            -gpu swiftshader_indirect -camera-back none -camera-front none -memory 4096 > "$RUNNER_TEMP/emulator.log" 2>&1 &
+          booted=
+          for i in $(seq 1 120); do
+            [ "$(timeout 10 adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ] && { booted=1; break; }
+            [ "$i" -gt 3 ] && ! pgrep -f qemu-system > /dev/null && { echo "the emulator stopped"; break; }
+            sleep 5
+          done
+          if [ -z "$booted" ]; then echo "the emulator did not start"; tail -60 "$RUNNER_TEMP/emulator.log"; exit 1; fi
+          echo "emulator up after about $((i * 5)) s"
+          adb shell settings put global window_animation_scale 0; adb shell settings put global transition_animation_scale 0
+          APK="$RUNNER_TEMP/apk/MKCinema.apk" OUT="$RUNNER_TEMP/player" bash tools/android/player-test.sh
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: android-player
+          path: |
+            ${{ runner.temp }}/player/*.png
+            ${{ runner.temp }}/player/logcat.txt
+            ${{ runner.temp }}/emulator.log
+          retention-days: 7
+          if-no-files-found: warn

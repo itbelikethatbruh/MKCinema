@@ -29,6 +29,21 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.14.0 (versionCode 35): MKCinema Player (mpv)
+
+- The app's own player (PlayerActivity) now plays with mpv (`MpvEngine`, libmpv-android 1.1.0 from Maven Central,
+  GPLv3, fetched by `libs/fetch.sh`). It reads every format FFmpeg knows and decodes DTS, TrueHD, AC3 and E-AC3 itself,
+  so those tracks are never hidden on phones or TVs without the decoder. Audio and subtitle tracks switch instantly,
+  with no reload. ExoPlayer, then the basic player, still take over when mpv can't open a file.
+- Phones and tablets draw with mpv's GPU renderer (full ASS styling, picture subtitles). TVs draw straight from the
+  hardware decoder (`mediacodec_embed`) so 4K stays smooth and HDR stays HDR; text subtitles show through `sub-text`,
+  picture subtitles (PGS) need the ExoPlayer engine there.
+- "Open with MKCinema" (`OpenActivity`): video files from Files, Downloads or a USB drive, and video links from other
+  apps, play in MKCinema Player.
+- Engine names for `MKAndroid.setEngine`: `mpv` (default; older pages send `exo` for it), `exoplayer`, `system`.
+- The APK grows by about 24 MB (libmpv and FFmpeg for arm64 and armv7). `.github/workflows/android-player.yml` plays a
+  test film on an emulator and switches its audio and subtitles (`tools/android/player-test.sh`).
+
 ## 1.13.1 (versionCode 32): steadier returns from the TV player and back-to-back recordings
 
 - Results for the page (the TV player closing, Google sign-in coming back) wait until the page is loaded and can take
