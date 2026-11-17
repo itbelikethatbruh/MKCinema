@@ -48,7 +48,7 @@ jobs:
           booted=
           for i in $(seq 1 120); do
             [ "$(timeout 10 adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ] && { booted=1; break; }
-            pgrep -f "qemu-system\|emulator -avd" > /dev/null || { echo "the emulator stopped"; break; }
+            [ "$i" -gt 3 ] && ! pgrep -f qemu-system > /dev/null && { echo "the emulator stopped"; break; }
             sleep 5
           done
           if [ -z "$booted" ]; then echo "the emulator did not start"; tail -60 "$RUNNER_TEMP/emulator.log"; exit 1; fi
