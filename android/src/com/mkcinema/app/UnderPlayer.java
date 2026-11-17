@@ -28,10 +28,11 @@ import org.json.JSONObject;
     TVs keep the full-screen PlayerActivity (remote-first, HDR straight to the screen), so probe says no there. */
 final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback {
     final MainActivity a; final Handler h = new Handler(Looper.getMainLooper());
-    SurfaceView sv; MPVLib m; String initErr; boolean shown, hasSurface;
+    SurfaceView sv; MPVLib m; String initErr; boolean shown; volatile boolean hasSurface;
     final Object lock = new Object();
     final Map<String, Object> vals = new HashMap<>(); final Set<String> dirty = new HashSet<>(); final Map<String, Object> extra = new HashMap<>();
-    int gen;
+    int gen; volatile boolean want; final StringBuilder dbg = new StringBuilder();
+    void note(String t) { android.util.Log.i("MKCPlayer", "under: " + t); synchronized (lock) { if (dbg.length() < 600) dbg.append(dbg.length() == 0 ? "" : " | ").append(t); extra.put("log", dbg.toString()); } }
 
     UnderPlayer(MainActivity a) { this.a = a; }
 
@@ -60,7 +61,7 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
                 if (a.tv) { o.put("ok", false); o.put("err", "TVs use the full-screen player"); return o.toString(); }
                 boolean ok = client() != null; o.put("ok", ok); o.put("api", "android"); o.put("err", ok ? "" : initErr); return o.toString();
             }
-            case "show": { final boolean on = !"0".equals(arg); a.runOnUiThread(() -> show(on)); return ""; }
+            case "show": { final boolean on = !"0".equals(arg); want = on; a.runOnUiThread(() -> show(on)); return ""; }
             case "get": {
                 for (String w : WATCHED) if (w.equals(arg)) { MPVLib x = client(); String v = x == null ? null : x.getPropertyString(arg); return v == null ? "" : v; }
                 throw new IllegalArgumentException("not allowed");
@@ -69,7 +70,11 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
         List<Op> ops = translate(c, arg);
         MPVLib x = client(); if (x == null) throw new IllegalStateException(initErr == null ? "no player" : initErr);
         int g = 0;
-        if ("open".equals(c)) { synchronized (lock) { g = ++gen; vals.clear(); dirty.clear(); extra.clear(); } android.util.Log.i("MKCPlayer", "under: open, gen " + g); }
+        if ("open".equals(c)) {
+            for (int i = 0; i < 50 && want && !hasSurface; i++) Thread.sleep(50); // the picture surface comes up a moment after "show"
+            synchronized (lock) { g = ++gen; vals.clear(); dirty.clear(); extra.clear(); dbg.setLength(0); }
+            note("open gen " + g + " surface " + hasSurface + " shown " + shown);
+        }
         Exception last = null;
         for (Op o : ops) {
             try { if (o.prop != null) x.setPropertyString(o.prop, o.val); else x.command(o.args); }
@@ -226,6 +231,7 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
             x.addObserver(this);
             for (String w : WATCHED) x.observeProperty(w, 1);
             m = x;
+            if (hasSurface && sv != null) surfaceCreated(sv.getHolder()); // the picture surface came up before the player did
             android.util.Log.i("MKCPlayer", "under: mpv ready");
             h.post(pump);
         } catch (Throwable e) { initErr = "the player could not start (" + e.getClass().getSimpleName() + ")"; android.util.Log.w("MKCPlayer", "under: " + initErr); }
@@ -306,10 +312,11 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
     @Override public void eventProperty(String p, boolean v) { put(p, v); }
     @Override public void eventProperty(String p, String v) { put(p, parse(p, v)); }
     @Override public void event(int id) {
-        if (id == 8) { news("loaded", true); android.util.Log.i("MKCPlayer", "under: file loaded"); } // FILE_LOADED
+        if (id == 8) { news("loaded", true); note("file loaded, size " + str("w") + "x" + str("h") + " hwdec " + str("hwdec") + " tracks " + tracks().length()); } // FILE_LOADED
     }
     @Override public void eventEndFile(int reason, int error) {
         // reason 0: the end of the film; 4: an error
+        note("end-file reason " + reason + " error " + error + " t=" + num("t"));
         if (reason == 0) news("end", "eof");
         else if (reason == 4) { news("end", "error"); news("err", "the file could not be opened (" + error + ")"); android.util.Log.w("MKCPlayer", "under: mpv error " + error); }
     }
