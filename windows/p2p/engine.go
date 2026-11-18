@@ -166,6 +166,46 @@ func cors(h http.Handler) http.Handler {
 	})
 }
 
+// fallbackTrackers are well-known public trackers added to every torrent after the ones its source listed. Many
+// sources list no trackers at all, and the DHT alone can find nobody on networks that block or slow it, so a
+// torrent with plenty of peers used to wait 75 s and fail with zero peers.
+var fallbackTrackers = []string{
+	"udp://tracker.opentrackr.org:1337/announce",
+	"udp://open.stealth.si:80/announce",
+	"udp://tracker.torrent.eu.org:451/announce",
+	"udp://exodus.desync.com:6969/announce",
+	"udp://open.demonii.com:1337/announce",
+	"udp://explodie.org:6969/announce",
+	"udp://tracker.dler.org:6969/announce",
+	"udp://opentracker.io:6969/announce",
+	"http://tracker.opentrackr.org:1337/announce",
+}
+
+// trackerTiers keeps the source's own http(s)/udp trackers (at most 20) and adds the fallback ones, without repeats.
+func trackerTiers(supplied []string) [][]string {
+	seen := map[string]bool{}
+	var out [][]string
+	add := func(tr string) {
+		tr = strings.TrimSpace(tr)
+		l := strings.ToLower(tr)
+		if seen[l] || !(strings.HasPrefix(l, "udp://") || strings.HasPrefix(l, "http://") || strings.HasPrefix(l, "https://")) {
+			return
+		}
+		seen[l] = true
+		out = append(out, []string{tr})
+	}
+	for i, tr := range supplied {
+		if i >= 20 {
+			break
+		}
+		add(tr)
+	}
+	for _, tr := range fallbackTrackers {
+		add(tr)
+	}
+	return out
+}
+
 func (e *Engine) add(r *http.Request) (*torrent.Torrent, error) {
 	q := r.URL.Query()
 	ih := strings.ToLower(q.Get("ih"))
@@ -178,20 +218,15 @@ func (e *Engine) add(r *http.Request) (*torrent.Torrent, error) {
 	}
 	t, isNew := e.cl.AddTorrentInfoHash(h)
 	if isNew {
-		var trs [][]string
-		for _, tr := range q["tr"] {
-			if strings.HasPrefix(tr, "udp://") || strings.HasPrefix(tr, "http://") || strings.HasPrefix(tr, "https://") {
-				trs = append(trs, []string{tr})
-			}
-		}
-		if len(trs) > 0 {
-			t.AddTrackers(trs)
-		}
+		t.AddTrackers(trackerTiers(q["tr"]))
 		e.remember(h)
 	}
 	select {
 	case <-t.GotInfo():
 	case <-time.After(75 * time.Second):
+		if st := t.Stats(); st.TotalPeers == 0 {
+			return nil, errors.New("no peers found for this torrent: nobody seems to be sharing it right now")
+		}
 		return nil, errors.New("no peers sent the torrent's details in time")
 	case <-r.Context().Done():
 		return nil, r.Context().Err()
@@ -373,8 +408,17 @@ func (e *Engine) status(w http.ResponseWriter, r *http.Request) {
 	out := map[string]any{"known": false}
 	if t, ok := e.cl.Torrent(h); ok {
 		st := t.Stats()
-		out = map[string]any{"known": true, "info": t.Info() != nil, "peers": st.ActivePeers, "seeds": st.ConnectedSeeders, "read": st.BytesReadUsefulData.Int64()}
+		out = map[string]any{"known": true, "info": t.Info() != nil, "peers": st.ActivePeers, "seeds": st.ConnectedSeeders, "read": st.BytesReadUsefulData.Int64(),
+			"found": st.TotalPeers, "trying": st.HalfOpenPeers}
 	}
+	// how many DHT nodes answer: 0 after a minute means this network blocks the DHT, not that the torrent is dead
+	dht := 0
+	for _, s := range e.cl.DhtServers() {
+		if w, ok := s.(torrent.AnacrolixDhtServerWrapper); ok {
+			dht += w.Server.Stats().GoodNodes
+		}
+	}
+	out["dht"] = dht
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(out)
 }
