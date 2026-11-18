@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 1.15.4: adaptive launcher icon for phones and tablets (Android 8+). Without it the launcher shrank the square PNG
+     into a white circle. TVs never load this file: drawable-television-*/ic_launcher.png beats it, because the UI mode
+     qualifier ranks above density and API level, so Fire OS keeps its plain PNG tile (see AndroidManifest.xml).
+     Art: art/art.html #adbg #adfg #admono. Monochrome is the themed-icon layer (Android 13+). -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/ic_launcher_bg"/>
+    <foreground android:drawable="@drawable/ic_launcher_fg"/>
+    <monochrome android:drawable="@drawable/ic_launcher_mono"/>
+</adaptive-icon>

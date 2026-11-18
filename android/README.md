@@ -29,6 +29,9 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.15.4 (versionCode 40): the app icon fills its shape on phones
+Drake's Pixel showed MKCinema as a small black square inside a white circle: the only launcher icon was a square PNG, and Android 8+ launchers shrink a non-adaptive icon into a white shape. `res/drawable-anydpi-v26/ic_launcher.xml` is now an adaptive icon: background `ic_launcher_bg` (the Noir glow), foreground `ic_launcher_fg` (the MK disc, 64 dp of the 108 dp layer, inside the 66 dp safe zone) and monochrome `ic_launcher_mono` (rings and letters for Android 13+ themed icons), each in drawable-mdpi..xxxhdpi, rendered from `art/art.html` (#adbg, #adfg, #admono). Android 7 keeps the square PNG. TVs keep `drawable-television-*/ic_launcher.png`, because the television UI-mode qualifier ranks above density and API level, so Fire OS never sees the adaptive XML (its launcher can't read one, see 1.2.1).
+
 ## 1.15.3 (versionCode 39): MKCinema Player can open https links
 Found from a real phone's log (code 2GV2G3): with Native player on, every https source failed in under 0.2 s with mpv error -13. libmpv's FFmpeg uses mbedTLS, which has no Android certificate store, so without a CA file no https link can be opened (the emulator test only used http, which is why it passed). `assets/cacert.pem` (Mozilla bundle) is copied into the app's files folder and handed to mpv as `tls-ca-file` with `tls-verify=yes`, in both the TV/Open-with player (MpvEngine) and the under-the-page player (UnderPlayer). build.sh packs `assets/`.
 
