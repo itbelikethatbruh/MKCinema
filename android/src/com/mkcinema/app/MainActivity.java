@@ -70,7 +70,7 @@ public class MainActivity extends Activity {
     static final String[] APP_HOSTS = { HOST, "app.mkcinema.app" };
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6, REQ_MIRROR = 7, REQ_MIRROR_MIC = 8;
-    static final String VER = "1.16.1";
+    static final String VER = "1.17.1";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -251,7 +251,7 @@ public class MainActivity extends Activity {
                 if (fileCb != null) fileCb.onReceiveValue(null);
                 fileCb = cb;
                 Intent pick = p.createIntent();
-                // 1.16.1: a page that asks for several files (Ambient Studio's Add photos) gets a gallery that lets you pick several
+                // 1.17.1: a page that asks for several files (Ambient Studio's Add photos) gets a gallery that lets you pick several
                 if (p.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE) pick.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
                 try { startActivityForResult(pick, REQ_FILE); }
                 catch (ActivityNotFoundException e) { fileCb = null; return false; }
@@ -293,6 +293,7 @@ public class MainActivity extends Activity {
         Uri d = i != null ? i.getData() : null;
         if (d != null && "stremio".equals(d.getScheme())) return HOME + (HOME.contains("#") ? "&" : "#") + "install=" + Uri.encode(d.toString());
         if (authReturn(d)) return HOME + (HOME.contains("#") ? "&" : "#") + "mkauth=" + Uri.encode(d.toString());
+        if (resumeLink(d)) return HOME + "#resume?v=" + Uri.encode(d.getQueryParameter("v"));
         return d != null && ourLink(d) ? inApp(d) : HOME;
     }
 
@@ -319,7 +320,14 @@ public class MainActivity extends Activity {
         if (d != null && "stremio".equals(d.getScheme())) { web.evaluateJavascript("window.MKInstall?MKInstall(" + JSONObject.quote(d.toString()) + "):location.replace(" + JSONObject.quote(startUrl(i)) + ")", null); return; }
         // 1.12.0: back from Google sign-in (mkcinema://auth?code=...): the page finishes it, no reload
         if (authReturn(d)) { callPage("MKAuthDone", "MKAuthDone(" + JSONObject.quote(d.toString()) + ")", "location.replace(" + JSONObject.quote(startUrl(i)) + ")"); return; }
+        // 1.17.0: Resume on the home-screen widget while MKCinema is open: the page plays it, no reload
+        if (resumeLink(d)) { callPage("MKResumeLink", "MKResumeLink(" + JSONObject.quote(d.getQueryParameter("v")) + ")", "location.replace(" + JSONObject.quote(startUrl(i)) + ")"); return; }
         if (d != null) web.loadUrl(startUrl(i));
+    }
+    /** 1.17.0: the widget's Resume (mkcinema://resume?v=VIDEO_ID). The page only resumes a title that is in its own Continue watching. */
+    static boolean resumeLink(Uri d) {
+        if (d == null || !"mkcinema".equals(d.getScheme()) || !"resume".equals(d.getHost())) return false;
+        String v = d.getQueryParameter("v"); return v != null && !v.isEmpty() && v.length() <= 160;
     }
     /** 1.12.0: the address Google sign-in comes back to (Supabase redirect_to mkcinema://auth) */
     static boolean authReturn(Uri d) { return d != null && "mkcinema".equals(d.getScheme()) && "auth".equals(d.getHost()); }
@@ -438,7 +446,7 @@ public class MainActivity extends Activity {
     }
 
     /** The files picked for the page. Several picked at once arrive in the intent's ClipData, which parseResult ignores
-        (it reads one data URI only), so a multi-select gave the page one photo or none before 1.16.1. */
+        (it reads one data URI only), so a multi-select gave the page one photo or none before 1.17.1. */
     static Uri[] pickedFiles(int res, Intent data) {
         if (res != RESULT_OK || data == null) return null;
         android.content.ClipData clip = data.getClipData();
@@ -554,6 +562,9 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void fps(String k, float f) { if (!tv || !ok(k)) return; runOnUiThread(() -> TvExtras.matchFrameRate(MainActivity.this, f)); }
         /** 1.6.0: Continue watching on the Android TV / Google TV home screen */
         @JavascriptInterface public void watchNext(String k, String json) { if (!tv || !ok(k) || json == null || json.length() > 4000) return; final android.content.Context c = getApplicationContext(); new Thread(() -> TvExtras.watchNext(c, json)).start(); }
+        /** 1.17.0 Continue watching widget: is one on the home screen, and what it shows (see ContinueWidget.sync) */
+        @JavascriptInterface public boolean widgetOn(String k) { return ok(k) && !tv && ContinueWidget.placed(getApplicationContext()); }
+        @JavascriptInterface public void widgetSync(String k, String json) { if (!ok(k) || tv || json == null || json.length() > 20000) return; final android.content.Context c = getApplicationContext(); new Thread(() -> ContinueWidget.sync(c, json)).start(); }
         @JavascriptInterface public void watchNextRemove(String k, String id) { if (!tv || !ok(k) || id == null) return; final android.content.Context c = getApplicationContext(); new Thread(() -> TvExtras.removeWatchNext(c, id)).start(); }
         /** 1.3.0: torrent engine on this device; returns the local address, or "error: ..." */
         @JavascriptInterface public String p2pStart(String k) { return ok(k) ? P2P.start(getApplicationContext()) : "error: not allowed here"; }
@@ -727,7 +738,7 @@ public class MainActivity extends Activity {
         "p2pAvailable", "dlStart", "dlSpace", "setSlow", "epEnable", "epOn", "epSync", "dlList", "dlRemove", "dlPlay", "pipState", "pip", "play",
         "setEngine", "update", "youtube", "exit", "iptvHosts", "recStart", "recStop", "recPlan", "recUnplan",
         "apScan", "apPlay", "apPin", "apCtl", "apForget", "apState", "signIn", "apAdd", "apDiag", "updateAuto", "updateInstall", "mpv",
-        "mirrorStart", "mirrorSignal", "mirrorStop", "mirrorOn" };
+        "mirrorStart", "mirrorSignal", "mirrorStop", "mirrorOn", "widgetOn", "widgetSync" };
 
     static String newKey() {
         byte[] b = new byte[24]; new SecureRandom().nextBytes(b);
