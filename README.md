@@ -281,6 +281,8 @@ We've looked, and we haven't found these in other apps. Every one is live today.
 | Windows | [MKCinema.exe](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.exe) (1.4.0) | Not code-signed yet: More info › Run anyway |
 | macOS | [ZIP](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema-1.3.1-mac.zip) (1.3.1) | Not notarized yet |
 | Linux | [DEB](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/mkcinema_1.1_amd64.deb) or [tar.gz](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/mkcinema-1.1-linux-x86_64.tar.gz) (1.1) | x86_64, WebKitGTK 4.1 |
+| Raspberry Pi | [DEB](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/mkcinema_1.1_arm64.deb) or [tar.gz](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/mkcinema-1.1-linux-arm64.tar.gz) (1.1) | Raspberry Pi 4 or 5, 64-bit Raspberry Pi OS |
+| Xbox | [app.mkcinema.app](https://app.mkcinema.app) in Microsoft Edge | The controller is the remote |
 | LG webOS | [IPK](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/com.mkcinema.app_1.1.0_all.ipk) (1.1.0) | Beta, needs Developer Mode |
 | Samsung Tizen | [TizenBrew module](tizen/README.md) | Beta, 2023 models and later |
 | Your own server | `docker run -p 7000:7000 ghcr.io/itbelikethatbruh/mkcinema` | The web app plus the stream proxy and audio rescue, on a NAS or home server. [Self-hosting guide](docs/self-host.md) |
