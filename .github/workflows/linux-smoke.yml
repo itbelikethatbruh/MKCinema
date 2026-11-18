@@ -1,0 +1,56 @@
+name: Linux app launch test
+
+# Builds the Linux app on x86-64 and on 64-bit ARM (the Raspberry Pi 4 and 5 build), installs the .deb the way a
+# person would (apt) and starts it on a virtual screen. The job passes when MKCinema is still running after 30 seconds
+# (it did not crash on start) and both of its programs are built for that machine.
+on:
+  push:
+    paths: ['linux/**', '.github/workflows/linux-smoke.yml']
+  pull_request:
+    paths: ['linux/**', '.github/workflows/linux-smoke.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  launch:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-22.04
+          - arch: arm64
+            runner: ubuntu-22.04-arm
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: windows/go.mod
+          cache-dependency-path: windows/go.sum
+      - name: Build
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends libwebkit2gtk-4.1-dev python3-pil xvfb file
+          OUT="$RUNNER_TEMP/build" sh linux/package.sh
+          file "$RUNNER_TEMP/build/mkcinema" "$RUNNER_TEMP/build/mkp2p"
+          [ "$(dpkg-deb --field "$RUNNER_TEMP"/build/*.deb Architecture)" = "${{ matrix.arch }}" ]
+      - name: Install the .deb and start MKCinema on a virtual screen
+        run: |
+          sudo apt-get install -y -q "$RUNNER_TEMP"/build/mkcinema_*_${{ matrix.arch }}.deb
+          test -x /usr/lib/mkcinema/mkp2p
+          set +e
+          xvfb-run -a -s '-screen 0 1920x1080x24' timeout 30 mkcinema > "$RUNNER_TEMP/run.log" 2>&1
+          rc=$?
+          set -e
+          cat "$RUNNER_TEMP/run.log"
+          # 124 = still running when the 30 seconds were up, so it started and kept going
+          if [ "$rc" != 124 ]; then echo "::error::MKCinema exited early with code $rc"; exit 1; fi
+          echo "MKCinema ran for 30 seconds on ${{ matrix.runner }} ($(uname -m))"
