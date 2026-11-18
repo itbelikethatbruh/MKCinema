@@ -48,7 +48,7 @@ jobs:
           screencapture -x "$RUNNER_TEMP/screen.png" || true
           echo "---- launch.log"; cat "$LOG" || true
           echo "---- processes"; pgrep -fl 'MKCinema|osascript' || true
-          for want in 'started' 'running as' 'window shown' 'page loaded' 'bridge ping ok' 'selftest: quitting'; do
+          for want in 'started' 'running as' 'window shown' 'page loaded' 'bridge ping ok' 'bridge reply ok' 'selftest: quitting'; do
             grep -q "$want" "$LOG" || { echo "missing: $want"; exit 1; }
           done
           for i in $(seq 15); do pgrep -f 'MKCinema.app/Contents/Resources/main.js' >/dev/null || break; sleep 1; done

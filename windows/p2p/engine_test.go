@@ -152,3 +152,17 @@ func TestHashDirOnlyInsideCache(t *testing.T) {
 		t.Fatal("inside accepted a path outside the cache")
 	}
 }
+
+// Sources often list no trackers: the fallback ones must still be added, and supplied ones come first without repeats.
+func TestTrackerTiers(t *testing.T) {
+	if got := trackerTiers(nil); len(got) != len(fallbackTrackers) {
+		t.Fatalf("no supplied trackers: got %d tiers, want %d", len(got), len(fallbackTrackers))
+	}
+	got := trackerTiers([]string{"udp://a.example:1/announce", "file:///etc/passwd", "wss://x.example", fallbackTrackers[0], "UDP://A.example:1/announce"})
+	if got[0][0] != "udp://a.example:1/announce" {
+		t.Fatalf("supplied tracker not first: %v", got[0])
+	}
+	if len(got) != 1+len(fallbackTrackers) {
+		t.Fatalf("got %d tiers, want %d (bad schemes and repeats dropped)", len(got), 1+len(fallbackTrackers))
+	}
+}

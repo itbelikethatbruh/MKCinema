@@ -9,7 +9,7 @@ const HOME = 'https://mkcinema.pages.dev/';
 const HOST = 'mkcinema.pages.dev';
 const HOSTS = [HOST, 'app.mkcinema.app'];
 const isAppHost = (h) => HOSTS.indexOf(String(h || '').toLowerCase()) >= 0;
-const VERSION = '1.3.1';
+const VERSION = '1.3.2';
 // Each launch writes its steps to ~/Library/Logs/MKCinema/launch.log, so a start that fails leaves something readable.
 const LOG = $.NSHomeDirectory().js + '/Library/Logs/MKCinema/launch.log';
 $.NSFileManager.defaultManager.createDirectoryAtPathWithIntermediateDirectoriesAttributesError(LOG.replace(/\/[^/]+$/, ''), true, $(), null);
@@ -124,8 +124,9 @@ function passStart() {
 
 const bridgeJs = "(function(){if(location.protocol!=='https:'||" + JSON.stringify(HOSTS) + ".indexOf(location.hostname)<0)return;var h=window.webkit.messageHandlers.mkd,n=0,w={};"
   + "Object.defineProperty(window,'__mkdDone',{value:function(i,e,v){var p=w[i];delete w[i];if(p){if(e)p[1](new Error(e));else p[0](v)}}});"
-  + "function call(c){return new Promise(function(a,b){var i=++n;w[i]=[a,b];h.postMessage({id:i,cmd:c})})}"
+  + "function call(c,x){return new Promise(function(a,b){var i=++n,m={id:i,cmd:c};for(var k in x)m[k]=String(x[k]);w[i]=[a,b];h.postMessage(m)})}"
   + "var d={platform:'mac',version:'" + VERSION + "'};"
+  + "d.savePlaylist=function(name,text){return call('save-m3u',{name:name,text:text})};"
   + (hasEngine ? "d.p2p={start:function(){return call('p2p-start')},stop:function(){return call('p2p-stop')}};d.pass={start:function(){return call('pass-start')}};" : '')
   + "window.MKDesktop=d;" + (SELFTEST ? "var pg=function(){setTimeout(function(){call('ping')},1500)};if(document.readyState==='complete')pg();else addEventListener('load',pg,{once:true});" : '') + "})();";
 
@@ -140,6 +141,30 @@ function fromApp(msg) {
   } catch (e) { return false; }
 }
 
+// Sends the answer back to the page. The completion handler must be a real function: passing null crashes the app
+// (SIGABRT) on macOS 26, which stopped torrent playback before it started (issue #302).
+let replied = false;
+function reply(webView, js) {
+  webView.evaluateJavaScriptCompletionHandler(js, function () {
+    if (!replied) { replied = true; logLine('bridge reply ok'); }
+  });
+}
+
+// .m3u playlists: WebKit in this window can't download files, so the page hands the playlist to the app, which saves
+// it in Downloads and opens it with the Mac's player for .m3u files (VLC, IINA...). Only a short .m3u text is accepted.
+function savePlaylist(name, text) {
+  if (typeof text !== 'string' || text.length > 16384 || !/^#EXTM3U/.test(text)) throw new Error('not a playlist');
+  // every entry must be a web address: a playlist can never point a player at a file or a share on this Mac
+  if (text.split(/\r?\n/).some((l) => l.trim() && l[0] !== '#' && !/^https?:\/\//i.test(l.trim()))) throw new Error('not a playlist');
+  const base = String(name || 'stream').replace(/[^\w\- ]+/g, '').trim().slice(0, 80) || 'stream';
+  const dir = $.NSHomeDirectory().js + '/Downloads';
+  fm.createDirectoryAtPathWithIntermediateDirectoriesAttributesError(dir, true, $(), null);
+  const file = dir + '/' + base + '.m3u';
+  if (!$(text).writeToFileAtomicallyEncodingError(file, true, $.NSUTF8StringEncoding, null)) throw new Error('could not save the playlist');
+  $.NSWorkspace.sharedWorkspace.openURL($.NSURL.fileURLWithPath(file));
+  return file;
+}
+
 function bridge(msg) {
   const body = msg.body;
   let id = 0, cmd = '';
@@ -147,7 +172,7 @@ function bridge(msg) {
   let err = '', val = null;
   if (!fromApp(msg)) {
     // answer the main frame so its promise settles; frames get nothing
-    try { if (msg.frameInfo.isMainFrame) msg.webView.evaluateJavaScriptCompletionHandler('window.__mkdDone&&window.__mkdDone(' + JSON.stringify(id) + ',"not allowed on this page",null)', null); } catch (e) { /* nothing */ }
+    try { if (msg.frameInfo.isMainFrame) reply(msg.webView, 'window.__mkdDone&&window.__mkdDone(' + JSON.stringify(id) + ',"not allowed on this page",null)'); } catch (e) { /* nothing */ }
     return;
   }
   try {
@@ -157,8 +182,12 @@ function bridge(msg) {
     } else if (cmd === 'p2p-start') val = engineStart();
     else if (cmd === 'p2p-stop') engineStop();
     else if (cmd === 'pass-start') val = passStart();
+    else if (cmd === 'save-m3u') {
+      const arg = (k) => { const v = body.objectForKey(k); return v.isNil() ? '' : v.js; };
+      savePlaylist(arg('name'), arg('text')); val = true;
+    }
   } catch (e) { err = String(e && e.message || e) || 'the engine did not start'; }
-  msg.webView.evaluateJavaScriptCompletionHandler('window.__mkdDone&&window.__mkdDone(' + JSON.stringify(id) + ',' + JSON.stringify(err) + ',' + JSON.stringify(val) + ')', null);
+  reply(msg.webView, 'window.__mkdDone&&window.__mkdDone(' + JSON.stringify(id) + ',' + JSON.stringify(err) + ',' + JSON.stringify(val) + ')');
 }
 
 const offlinePage = '<!doctype html><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#000;color:#f2f2f3;font:16px -apple-system,system-ui;text-align:center">'
