@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 1.17.0: the widget picker's name and description (the widget's own words come from the page, in the person's language) -->
+    <string name="widget_cw_name">Continue watching</string>
+    <string name="widget_cw_desc">Pick up where you left off, one tap from your home screen.</string>
+</resources>

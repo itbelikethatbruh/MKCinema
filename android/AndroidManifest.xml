@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mkcinema.app" android:versionCode="41" android:versionName="1.16.0">
+    package="com.mkcinema.app" android:versionCode="42" android:versionName="1.17.0">
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -124,6 +124,11 @@
         <provider android:name=".UpdateFiles" android:authorities="com.mkcinema.app.update" android:exported="false" android:grantUriPermissions="true"/>
         <!-- 1.13.0: the package installer's answer to an update this app installed itself (see UpdateResult.java) -->
         <receiver android:name=".UpdateResult" android:exported="false"/>
+        <!-- 1.17.0: Continue watching on the home screen (phones and tablets), filled by the page via MKAndroid.widgetSync -->
+        <receiver android:name=".ContinueWidget" android:exported="false" android:label="@string/widget_cw_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_cw_info"/>
+        </receiver>
         <service android:name=".EpisodeAlerts" android:exported="false" android:permission="android.permission.BIND_JOB_SERVICE"/>
     </application>
 </manifest>

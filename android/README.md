@@ -29,6 +29,20 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.17.0 (versionCode 42): Continue watching widget (phones and tablets)
+
+- A home-screen widget (`ContinueWidget`, layout `res/layout/widget_cw.xml`, info `res/xml/widget_cw_info.xml`): the newest
+  title in progress with its picture, how much is left, a progress line and a Resume button; taller sizes add up to three
+  more titles. Tapping the header (or the empty state) opens MKCinema. No clock, no weather, no stats, no timed updates.
+- The page fills it: `MKAndroid.widgetOn()` says whether a widget is placed, `MKAndroid.widgetSync(json)` sends
+  `{labels:{title,resume,empty,emptySub,open}, items:[{v,id,type,name,sub,pct,art}]}` (newest first, at most 4, words already
+  in the person's language). The app downloads each `art` (https only) once, crops it to 16:9, keeps a small JPEG in its
+  own files folder and deletes pictures that left the list.
+- Resume opens `mkcinema://resume?v=VIDEO_ID` on MainActivity (explicit intent, no intent filter). With the page open it
+  calls `MKResumeLink(v)` without a reload; otherwise the app starts on `HOME#resume?v=...`. The page resumes only a
+  video that is in its own Continue watching, so an outside app sending that link can do nothing else.
+- TVs: refused (TVs have the Watch Next row from 1.6.0 instead). Untested on a real phone.
+
 ## 1.16.0 (versionCode 41): screen mirroring
 
 - Phones and tablets can show their screen on any other MKCinema screen (TV, Fire TV, computer, browser). The page pairs
