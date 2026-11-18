@@ -31,4 +31,11 @@ if [ ! -f libmpv-1.1.0.jar ] || [ ! -f mpv-jni/arm64-v8a/libmpv.so ]; then
   for abi in arm64-v8a armeabi-v7a x86_64; do mkdir -p mpv-jni/$abi; for so in $(unzip -Z1 x.aar "jni/$abi/*.so"); do unzip -p x.aar "$so" > mpv-jni/$abi/$(basename "$so"); done; done
   rm x.aar
 fi
+# 1.16.0: libwebrtc for screen mirroring (webrtc-sdk android 144.7559.15, BSD-3-Clause): classes.jar + the native library
+# per ABI in webrtc-jni/<abi>/ (x86_64 only for the emulator test, see build.sh)
+if [ ! -f webrtc-144.7559.15.jar ] || [ ! -f webrtc-jni/arm64-v8a/libjingle_peerconnection_so.so ]; then
+  get io/github/webrtc-sdk/android/144.7559.15/android-144.7559.15.aar x.aar && unzip -p x.aar classes.jar > webrtc-144.7559.15.jar
+  for abi in arm64-v8a armeabi-v7a x86_64; do mkdir -p webrtc-jni/$abi; unzip -p x.aar jni/$abi/libjingle_peerconnection_so.so > webrtc-jni/$abi/libjingle_peerconnection_so.so; done
+  rm x.aar
+fi
 sha256sum -c SHA256SUMS
