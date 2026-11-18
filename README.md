@@ -104,7 +104,7 @@ Web, Android, Android TV and Fire TV, Windows, Mac, Linux, and LG and Samsung TV
 </tr>
 <tr>
 <td width="50%" align="center"><img src="docs/screenshots/app-series-home.webp" alt="The Series home with its own Top 10"><br><sub>Films and Series each open with their own Top 10 and networks</sub></td>
-<td width="50%" align="center"><img src="docs/screenshots/app-film.webp" alt="A film page"><br><sub>Film pages with Smart Play, Find a line and every source</sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/app-film.webp" alt="A film page"><br><sub>Film pages with one Play button, Find a line and every source</sub></td>
 </tr>
 <tr>
 <td width="50%" align="center"><img src="site/shots/player.webp" alt="The player's Audio tab"><br><sub>The player: audio languages, 200 % volume, Listen on phone</sub></td>
@@ -113,6 +113,10 @@ Web, Android, Android TV and Fire TV, Windows, Mac, Linux, and LG and Samsung TV
 <tr>
 <td width="50%" align="center"><img src="docs/screenshots/app-seats.webp" alt="Seats"><br><sub>A seat for everyone in the house, with PINs and kids seats</sub></td>
 <td width="50%" align="center"><img src="site/shots/tv.webp" alt="MKCinema on a TV"><br><sub>On a TV, built for the remote</sub></td>
+</tr>
+<tr>
+<td width="50%" align="center"><img src="docs/screenshots/app-home.webp" alt="Home with the floating menu bar"><br><sub>One floating bar: Home, Movies, Series, Anime, Live TV, Library</sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/app-live-hub.webp" alt="Live TV and Sports on one page"><br><sub>Live TV and Sports on one page, with the next big game on top</sub></td>
 </tr>
 <tr>
 <td width="50%" align="center"><img src="docs/screenshots/app-split-screen.webp" alt="Split Screen playing three Blender open movies"><br><sub>Split Screen: up to four streams, the sound follows your pick</sub></td>
@@ -126,6 +130,12 @@ Web, Android, Android TV and Fire TV, Windows, Mac, Linux, and LG and Samsung TV
 <td width="25%" align="center"><img src="docs/screenshots/app-phone-miko.webp" alt="Miko answering who directed Dune"><br><sub>Ask Miko anything</sub></td>
 <td width="25%" align="center"><img src="docs/screenshots/app-remote.webp" alt="The phone remote"><br><sub>Phone remote</sub></td>
 <td width="25%" align="center"><img src="site/shots/phone-title.webp" alt="A film's details on the phone"><br><sub>Details on your phone</sub></td>
+</tr>
+<tr>
+<td width="25%" align="center"><img src="docs/screenshots/app-phone-home.webp" alt="Home on a phone"><br><sub>Home on your phone</sub></td>
+<td width="25%" align="center"><img src="docs/screenshots/app-phone-live-hub.webp" alt="Live TV and Sports on a phone"><br><sub>Live TV and Sports</sub></td>
+<td width="25%" align="center"><img src="docs/screenshots/app-menu.webp" alt="The menu naming every tool"><br><sub>A menu that names everything</sub></td>
+<td width="25%"></td>
 </tr>
 </table>
 
