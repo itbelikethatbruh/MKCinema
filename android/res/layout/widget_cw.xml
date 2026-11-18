@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 1.17.0 Continue watching widget (ContinueWidget.java). Noir: near-black card, champagne accent, no clock, no stats. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@android:id/background"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical"
+    android:background="@drawable/widget_bg" android:padding="16dp">
+    <LinearLayout android:id="@+id/cw_head" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+        <TextView android:id="@+id/cw_title" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:text="Continue watching" android:textAllCaps="true" android:letterSpacing="0.14" android:textColor="#FFD9D4C7" android:textSize="11sp" android:maxLines="1" android:ellipsize="end"/>
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="MKCinema" android:letterSpacing="0.06" android:textColor="#FF5C5C63" android:textSize="11sp"/>
+    </LinearLayout>
+    <LinearLayout android:id="@+id/cw_main" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp"
+        android:orientation="horizontal" android:gravity="center_vertical">
+        <FrameLayout android:layout_width="120dp" android:layout_height="68dp">
+            <ImageView android:id="@+id/cw_art0" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/widget_art_blank" android:importantForAccessibility="no"/>
+            <ProgressBar android:id="@+id/cw_prog0" style="@android:style/Widget.ProgressBar.Horizontal" android:layout_width="match_parent" android:layout_height="3dp"
+                android:layout_gravity="bottom" android:layout_marginStart="8dp" android:layout_marginEnd="8dp" android:layout_marginBottom="7dp"
+                android:max="100" android:progress="0" android:progressDrawable="@drawable/widget_progress"/>
+        </FrameLayout>
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:orientation="vertical">
+            <TextView android:id="@+id/cw_name0" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FFECECEE" android:textSize="15sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end"/>
+            <TextView android:id="@+id/cw_sub0" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:textColor="#FF8B8B92" android:textSize="12sp" android:maxLines="1" android:ellipsize="end"/>
+            <LinearLayout android:id="@+id/cw_resume_btn" android:layout_width="wrap_content" android:layout_height="32dp" android:layout_marginTop="8dp"
+                android:background="@drawable/widget_pill" android:orientation="horizontal" android:gravity="center_vertical" android:paddingStart="12dp" android:paddingEnd="14dp">
+                <ImageView android:layout_width="14dp" android:layout_height="14dp" android:src="@drawable/widget_play" android:importantForAccessibility="no"/>
+                <TextView android:id="@+id/cw_resume" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:text="Resume" android:textColor="#FF0B0B0D" android:textSize="13sp" android:textStyle="bold" android:maxLines="1"/>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout android:id="@+id/cw_row1" android:layout_width="match_parent" android:layout_height="44dp" android:layout_marginTop="8dp"
+        android:orientation="horizontal" android:gravity="center_vertical" android:visibility="gone">
+        <ImageView android:id="@+id/cw_art1" android:layout_width="64dp" android:layout_height="36dp" android:scaleType="fitXY" android:src="@drawable/widget_art_blank" android:importantForAccessibility="no"/>
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:orientation="vertical">
+            <TextView android:id="@+id/cw_name1" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FFECECEE" android:textSize="13sp" android:maxLines="1" android:ellipsize="end"/>
+            <TextView android:id="@+id/cw_sub1" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FF8B8B92" android:textSize="11sp" android:maxLines="1" android:ellipsize="end"/>
+            <ProgressBar android:id="@+id/cw_prog1" style="@android:style/Widget.ProgressBar.Horizontal" android:layout_width="match_parent" android:layout_height="2dp" android:layout_marginTop="4dp" android:max="100" android:progress="0" android:progressDrawable="@drawable/widget_progress"/>
+        </LinearLayout>
+        <ImageView android:layout_width="18dp" android:layout_height="18dp" android:layout_marginStart="12dp" android:src="@drawable/widget_play_small" android:importantForAccessibility="no"/>
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/cw_row2" android:layout_width="match_parent" android:layout_height="44dp" android:layout_marginTop="8dp"
+        android:orientation="horizontal" android:gravity="center_vertical" android:visibility="gone">
+        <ImageView android:id="@+id/cw_art2" android:layout_width="64dp" android:layout_height="36dp" android:scaleType="fitXY" android:src="@drawable/widget_art_blank" android:importantForAccessibility="no"/>
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:orientation="vertical">
+            <TextView android:id="@+id/cw_name2" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FFECECEE" android:textSize="13sp" android:maxLines="1" android:ellipsize="end"/>
+            <TextView android:id="@+id/cw_sub2" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FF8B8B92" android:textSize="11sp" android:maxLines="1" android:ellipsize="end"/>
+            <ProgressBar android:id="@+id/cw_prog2" style="@android:style/Widget.ProgressBar.Horizontal" android:layout_width="match_parent" android:layout_height="2dp" android:layout_marginTop="4dp" android:max="100" android:progress="0" android:progressDrawable="@drawable/widget_progress"/>
+        </LinearLayout>
+        <ImageView android:layout_width="18dp" android:layout_height="18dp" android:layout_marginStart="12dp" android:src="@drawable/widget_play_small" android:importantForAccessibility="no"/>
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/cw_row3" android:layout_width="match_parent" android:layout_height="44dp" android:layout_marginTop="8dp"
+        android:orientation="horizontal" android:gravity="center_vertical" android:visibility="gone">
+        <ImageView android:id="@+id/cw_art3" android:layout_width="64dp" android:layout_height="36dp" android:scaleType="fitXY" android:src="@drawable/widget_art_blank" android:importantForAccessibility="no"/>
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:orientation="vertical">
+            <TextView android:id="@+id/cw_name3" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FFECECEE" android:textSize="13sp" android:maxLines="1" android:ellipsize="end"/>
+            <TextView android:id="@+id/cw_sub3" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FF8B8B92" android:textSize="11sp" android:maxLines="1" android:ellipsize="end"/>
+            <ProgressBar android:id="@+id/cw_prog3" style="@android:style/Widget.ProgressBar.Horizontal" android:layout_width="match_parent" android:layout_height="2dp" android:layout_marginTop="4dp" android:max="100" android:progress="0" android:progressDrawable="@drawable/widget_progress"/>
+        </LinearLayout>
+        <ImageView android:layout_width="18dp" android:layout_height="18dp" android:layout_marginStart="12dp" android:src="@drawable/widget_play_small" android:importantForAccessibility="no"/>
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/cw_empty" android:layout_width="match_parent" android:layout_height="match_parent" android:layout_marginTop="10dp" android:orientation="vertical" android:gravity="center_vertical" android:visibility="gone">
+        <TextView android:id="@+id/cw_empty_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Nothing in progress" android:textColor="#FFECECEE" android:textSize="15sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end"/>
+        <TextView android:id="@+id/cw_empty_sub" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="Start a film or an episode and it waits here." android:textColor="#FF8B8B92" android:textSize="12sp" android:maxLines="2" android:ellipsize="end"/>
+        <TextView android:id="@+id/cw_open" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Open MKCinema" android:textColor="#FFD9D4C7" android:textSize="13sp" android:textStyle="bold"/>
+    </LinearLayout>
+</LinearLayout>
