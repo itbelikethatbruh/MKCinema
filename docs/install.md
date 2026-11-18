@@ -9,7 +9,7 @@ Back to the [README](../README.md).
   <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema-TV.apk"><img src="readme/download-tv.svg" width="290" alt="Download for Android TV, Google TV and Fire TV"></a>
   <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/com.mkcinema.app_1.1.0_all.ipk"><img src="readme/download-webos.svg" width="290" alt="Download for LG webOS"></a>
   <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.exe"><img src="readme/download-windows.svg" width="290" alt="Download for Windows"></a>
-  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema-1.3.1-mac.zip"><img src="readme/download-macos.svg" width="290" alt="Download for macOS"></a>
+  <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema-1.3.2-mac.zip"><img src="readme/download-macos.svg" width="290" alt="Download for macOS"></a>
   <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/mkcinema_1.1_amd64.deb"><img src="readme/download-linux.svg" width="290" alt="Download for Linux"></a>
   <a href="https://app.mkcinema.app"><img src="readme/download-web.svg" width="290" alt="Open the web app"></a>
 </p>
@@ -102,7 +102,7 @@ The app is a standard `.app` bundle that runs `main.js` with the system's JavaSc
 
 ```sh
 cd mac
-DMGTOOLS=/path/to/libdmg-hfsplus/build sh package.sh   # writes build/MKCinema-1.3.1-mac.zip (and .dmg)
+DMGTOOLS=/path/to/libdmg-hfsplus/build sh package.sh   # writes build/MKCinema-1.3.2-mac.zip (and .dmg)
 ```
 </details>
 

@@ -894,5 +894,10 @@ body.mk-player-on #app,body.mk-player-on #app *{animation-play-state:paused!impo
 <!-- mk-ds:end -->
 <script id="mk-p2pwait">@@src:js/mk-p2pwait-torrent-wait-github.js@@</script>
 <script id="mk-noxp">@@src:js/mk-noxp-player-never-sends.js@@</script>
+<style id="mk-smooth-scroll">
+@media (hover:hover){html.mk-scrolling:not(.tv) .card,html.mk-scrolling:not(.tv) .card *{pointer-events:none!important}}
+html:not(.tv):not([data-look="anime"]) .card-inner{transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+</style>
+<script id="mk-smooth-scroll-js">@@src:js/mk-smooth-scroll-js-const-de-documentdocumentelement.js@@</script>
 </body>
 </html>
