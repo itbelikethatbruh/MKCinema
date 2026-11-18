@@ -8,6 +8,10 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.83.2', date: '2026-11-17', items: [
+    ['better', 'Smoother scrolling on computers', 'Posters no longer tilt and flicker as they slide under the pointer while you scroll, so Library, Home and Discover scroll smoothly, most of all on a Mac.'],
+    ['better', 'MKCinema for Mac 1.3.2', 'Runs on the newest macOS, finds torrent peers faster and saves .m3u playlists to Downloads. Settings › Updates offers it.'],
+  ] },
   { v: '2.83.1', date: '2026-11-17', items: [
     ['better', 'TVs always use MKCinema\'s own player', 'On a TV, films always play in MKCinema\'s own player with every sound format, even if a phone on your account opens films in another app.'],
     ['better', 'Torrents on your computer', 'Torrent sources now get the time they need to find peers, show how many peers they found while they start, and tell you plainly when nobody is sharing a torrent. The Mac app also saves .m3u playlists again.'],

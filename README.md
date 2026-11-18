@@ -279,7 +279,7 @@ We've looked, and we haven't found these in other apps. Every one is live today.
 | Android | [MKCinema.apk](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.apk) (1.11.0) | Phones and tablets, with its own player, picture-in-picture and downloads |
 | Android TV, Google TV, Fire TV | [MKCinema-TV.apk](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema-TV.apk) (1.11.0, same file) | Fire TV: type `tv.mkcinema.app` or code `6400996` into Downloader |
 | Windows | [MKCinema.exe](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema.exe) (1.4.0) | Not code-signed yet: More info › Run anyway |
-| macOS | [ZIP](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema-1.3.1-mac.zip) (1.3.1) | Not notarized yet |
+| macOS | [ZIP](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/MKCinema-1.3.2-mac.zip) (1.3.2) | Not notarized yet |
 | Linux | [DEB](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/mkcinema_1.1_amd64.deb) or [tar.gz](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/mkcinema-1.1-linux-x86_64.tar.gz) (1.1) | x86_64, WebKitGTK 4.1 |
 | Raspberry Pi | [DEB](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/mkcinema_1.1_arm64.deb) or [tar.gz](https://github.com/itbelikethatbruh/MKCinema/releases/latest/download/mkcinema-1.1-linux-arm64.tar.gz) (1.1) | Raspberry Pi 4 or 5, 64-bit Raspberry Pi OS |
 | Xbox | [app.mkcinema.app](https://app.mkcinema.app) in Microsoft Edge | The controller is the remote |
