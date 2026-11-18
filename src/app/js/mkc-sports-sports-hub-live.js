@@ -6,7 +6,7 @@
    and group. Channels tune straight away, like Live TV; events and replays open their page so a source can be picked. */
 const SportsHub = {
   CATS: [
-    ['football', 'Football', /\b(soccer|football club|futbol|futebol|fussball|calcio|premier league|epl|la ?liga|laliga|serie a|bundesliga|ligue 1|eredivisie|champions league|europa league|conference league|uefa|fifa|world cup|copa|mls|liga mx|efl|fa cup|carabao|scottish premiership|saudi pro league|eliteserien|allsvenskan|super lig|primeira liga|a-league|j1 league|k league|real madrid|barcelona|man(chester)? (united|city|utd)|liverpool|arsenal|chelsea|tottenham|juventus|psg|bayern|inter miami|celtic|rangers fc)\b/],
+    ['football', 'Football', /\b(soccer|football|football club|futbol|futebol|fussball|calcio|premier league|epl|la ?liga|laliga|serie a|bundesliga|ligue 1|eredivisie|champions league|europa league|conference league|uefa|fifa|world cup|copa|mls|liga mx|efl|fa cup|carabao|scottish premiership|saudi pro league|eliteserien|allsvenskan|super lig|primeira liga|a-league|j1 league|k league|real madrid|barcelona|man(chester)? (united|city|utd)|liverpool|arsenal|chelsea|tottenham|juventus|psg|bayern|inter miami|celtic|rangers fc)\b/],
     ['american', 'American football', /\b(nfl|ncaaf|college football|american football|super bowl|redzone|red zone|cfl|xfl|ufl)\b/],
     ['basketball', 'Basketball', /\b(basketball|nba|wnba|ncaab|march madness|euroleague|eurocup|fiba|nbl|g league)\b/],
     ['baseball', 'Baseball', /\b(baseball|mlb|npb|kbo|world series)\b/],
@@ -104,6 +104,22 @@ const SportsHub = {
           n++;
           add({ key: `iptv:${l.id}:${ch.url}`, cat, tag: ch.group || '', name: ch.name, type: 'tv', iptv: ch, logo: ch.logo, source: l.name, src: `iptv:${l.id}`, live: true });
         }
+        /* 2.75: games in the playlist's TV guide (on now, or starting in the next 8 hours) on any of its channels,
+           each matched to the channel that shows it */
+        const now = Date.now(); let e = 0;
+        if (d.epg && d.epg.size) for (const ch of d.channels) {
+          if (e >= 300) break;
+          const progs = d.epg.get(Channels.key(ch)) || [];
+          for (const p of progs) {
+            if (!(p.end > now && p.start < now + 8 * 3600e3) || !p.title) continue;
+            // the programme's own title has to say it is sport (a league, a sport, or a matchup); the channel group only sorts it
+            const own = this.classify(p.title, '', '');
+            if (!own && !this.sporty(p.title)) continue;
+            const g = this.classify('', '', ch.group || ''), cat = own && own !== 'channels' ? own : g && g !== 'channels' ? g : 'other';
+            e++;
+            add({ key: `ev:${l.id}:${ch.url}:${p.start}`, cat, tag: '', name: p.title, type: 'tv', iptv: ch, logo: ch.logo, source: l.name, src: `iptv:${l.id}`, live: p.start <= now, ev: { start: p.start, end: p.end, ch: ch.name, p } });
+          }
+        }
       }).catch(() => failed.push(l.name)));
     }
     await Promise.allSettled(jobs);
@@ -124,11 +140,16 @@ const SportsHub = {
     return `<span class="shub-mono">${esc((it.name || '?').replace(/[^\p{L}\p{N}]/gu, '').slice(0, 3).toUpperCase())}</span>`;
   },
   tile(it, i) {
-    const sub = [it.tag && this.norm(it.tag) !== this.norm(this.label(it.cat)) ? it.tag : '', it.source].filter(Boolean).join(' · ');
+    const hm = (t) => new Date(t).toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' });
+    const sub = it.ev ? [it.ev.start <= Date.now() ? `On now until ${hm(it.ev.end)}` : `${hm(it.ev.start)}`, it.ev.ch].join(' · ') : [it.tag && this.norm(it.tag) !== this.norm(this.label(it.cat)) ? it.tag : '', it.source].filter(Boolean).join(' · ');
     return `<button class="shub-tile" type="button" data-nav data-sp="${i}" aria-label="${esc(it.name)}"><span class="shub-art">${this.art(it)}${it.live ? '<span class="shub-live">Live</span>' : ''}</span><span class="shub-meta"><b>${esc(it.name)}</b><small>${esc(sub)}</small></span></button>`;
   },
   open(it) {
     if (!it) return;
+    if (it.ev && it.ev.start > Date.now() + 60e3) {
+      if (window.MkRec) { MkRec.offer(it.iptv, it.ev.p); return; }
+      toast(`${it.name} starts at ${new Date(it.ev.start).toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' })} on ${it.ev.ch}`, 'info', 5000); return;
+    }
     if (it.iptv) { Channels.tune(it.iptv); return; }
     if (it.type === 'tv' || it.type === 'channel') { tuneChannel(it.meta); return; }
     openDetail(it.meta);
@@ -162,6 +183,7 @@ const SportsHub = {
   },
   paint() {
     const box = $('#sportsBody'); if (!box) return;
+    if (this.st.src && !this.items.some((x) => x.src === this.st.src)) this.st.src = '';   // the filtered source is gone: show everything
     const pool = this.items.filter((x) => !this.st.src || x.src === this.st.src);
     const counts = {}; pool.forEach((x) => { counts[x.cat] = (counts[x.cat] || 0) + 1; });
     if (this.st.cat && !counts[this.st.cat]) this.st.cat = '';
@@ -175,7 +197,9 @@ const SportsHub = {
       const list = pool.map((x, i) => [x, i]).filter(([x]) => x.cat === this.st.cat).slice(0, IS_TV ? 120 : 300);
       body = `<div class="shub-grid">${list.map(([x, i]) => this.tile(x, i)).join('')}</div>`;
     } else {
-      body = `<div class="rows shub-rows">${this.CATS.filter(([id]) => counts[id]).map(([id, l]) => {
+      const evs = pool.map((x, i) => [x, i]).filter(([x]) => x.ev).sort((a, b) => a[0].ev.start - b[0].ev.start).slice(0, 40);
+      const onCh = evs.length ? `<section class="row shub-row shub-ev"><div class="row-head"><h2 class="row-title">On your channels</h2></div><div class="rail">${evs.map(([x, i]) => this.tile(x, i)).join('')}</div></section>` : '';
+      body = `<div class="rows shub-rows">${onCh}${this.CATS.filter(([id]) => counts[id]).map(([id, l]) => {
         const list = pool.map((x, i) => [x, i]).filter(([x]) => x.cat === id), more = list.length > 24;
         return `<section class="row shub-row"><div class="row-head"><h2 class="row-title">${esc(l)} <small>${list.length}</small></h2>${more ? `<button class="row-more" type="button" data-nav data-spall="${id}">See all<i data-lucide="chevron-right"></i></button>` : ''}</div><div class="rail">${list.slice(0, 24).map(([x, i]) => this.tile(x, i)).join('')}</div></section>`;
       }).join('')}</div>`;

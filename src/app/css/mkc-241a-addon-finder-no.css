@@ -1,8 +1,8 @@
 
 /* 2.41.0 Addon Finder (no "ad-" class names: ad blockers hide those) */
 .mkd-find-wrap{margin:6px 0 20px}
-.mkd-find{display:flex;align-items:center;gap:16px;width:100%;padding:16px 18px;border-radius:var(--r-m,14px);border:1px solid rgba(255,255,255,.14);background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.02));color:var(--ink);text-align:left;cursor:pointer;font:inherit;transition:transform .2s var(--ease,ease),border-color .2s}
-.mkd-find:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.26)}
+.mkd-find{display:flex;align-items:center;gap:16px;width:100%;padding:16px 18px;border-radius:var(--r-m,14px);border:1px solid rgba(var(--kffffff-c,255,255,255),.14);background:linear-gradient(135deg,rgba(var(--kffffff-c,255,255,255),.08),rgba(var(--kffffff-c,255,255,255),.02));color:var(--ink);text-align:left;cursor:pointer;font:inherit;transition:transform .2s var(--ease,ease),border-color .2s}
+.mkd-find:hover{transform:translateY(-1px);border-color:rgba(var(--kffffff-c,255,255,255),.26)}
 .mkd-find:active{transform:scale(.99)}
 .mkd-find>svg{flex:none;opacity:.6}
 .mkd-find-ic{flex:none;display:grid;place-items:center;width:46px;height:46px;border-radius:calc(var(--r-m) * 1.3);background:var(--nececee,#ececee);color:var(--n0b0b0c,#0b0b0c)}
@@ -25,15 +25,15 @@
 .mkd-chips{margin:12px 0 4px}
 #mkdChips .chip.on{color:var(--n000000,#000);background:var(--nececee,#ececee);border-color:var(--nececee,#ececee)}
 .mkd-list{display:grid;gap:8px;margin-top:10px}
-.mkd-row{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-m,14px);background:rgba(255,255,255,.015)}
-.mkd-row.open{border-color:rgba(255,255,255,.28)}
+.mkd-row{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-m,14px);background:rgba(var(--kffffff-c,255,255,255),.015)}
+.mkd-row.open{border-color:rgba(var(--kffffff-c,255,255,255),.28)}
 .mkd-logo{width:46px;height:46px;border-radius:calc(var(--r-m) * 1.2);object-fit:contain;background:var(--s2)}
 .mkd-mono{display:grid;place-items:center;font-size:calc(13px * var(--ts,1));font-weight:700;letter-spacing:.04em;color:var(--mute)}
 .mkd-t{min-width:0}
 .mkd-name{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
 .mkd-name b{font-size:calc(15px * var(--ts,1));font-weight:600;overflow-wrap:anywhere}
 .mkd-ver{font-size:calc(12px * var(--ts,1));color:var(--mute)}
-.mkd-pill{font-size:calc(11px * var(--ts,1));font-weight:600;padding:2px 8px;border-radius:99px;border:1px solid rgba(255,255,255,.2);color:var(--ink)}
+.mkd-pill{font-size:calc(11px * var(--ts,1));font-weight:600;padding:2px 8px;border-radius:99px;border:1px solid rgba(var(--kffffff-c,255,255,255),.2);color:var(--ink)}
 .mkd-t p{margin:4px 0 0;font-size:calc(13px * var(--ts,1));color:var(--mute);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
 .mkd-what{margin-top:6px;font-size:calc(12px * var(--ts,1));font-weight:600;letter-spacing:.03em;color:var(--ink);opacity:.72}
 .mkd-act{display:flex;flex-direction:column;align-items:flex-end;gap:8px}

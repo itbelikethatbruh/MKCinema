@@ -53,7 +53,8 @@
   Party.electHost = function () {
     const h = this.peers.get(this.hostId);
     if (this.hostId && (this.hostId === this.me.id || (h && !h.voice))) return;
-    const ids = [this.me.id, ...[...this.peers.values()].filter((p) => !p.voice).map((p) => p.id)].sort(); this.hostId = ids[0]; this.render();
+    const all = [this.me.id, ...[...this.peers.values()].filter((p) => !p.voice).map((p) => p.id)], firm = all.filter((id) => !(typeof PartyGuest !== 'undefined' && PartyGuest.isGuest(id)));
+    const ids = (firm.length ? firm : all).sort(); this.hostId = ids[0]; this.render(); // 2.78: someone with an account leads before a guest does
   };
   const vin = Party.voiceIn;
   Party.voiceIn = function (p, stream) { vin.call(this, p, stream); this.applyVoice(); };

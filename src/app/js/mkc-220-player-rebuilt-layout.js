@@ -30,8 +30,8 @@ const PxLayout = {
     sp.textContent = '1×'; $('#pSubs').before(sp);
     sp.onclick = () => PxMenu.open('play');
     // the waveform button is the Audio tab now (language, volume boost, Night Mode, Listen on phone)
-    const ad = $('#pDsp'); ad.title = 'Audio (A)'; ad.setAttribute('aria-label', 'Audio'); ad.classList.remove('pp-desk'); ad.onclick = () => PxMenu.open('audio');
-    $('#pSubs').title = 'Subtitles (C)';
+    const ad = $('#pDsp'); ad.title = 'Audio (A)'; ad.setAttribute('aria-label', 'Audio'); ad.classList.remove('pp-desk'); ad.onclick = () => PxMenu.open('audio'); ad.hidden = true; // 2.72: sound tracks live with the subtitles, sound settings in Options › Audio
+    $('#pSubs').title = 'Audio & subtitles (C)';
     $('#pOpts').title = 'Playback, picture and more (O)';
     $('#player').classList.toggle('theatre', this.theatre());
     P.amb = this.theatre();
@@ -65,7 +65,7 @@ const PxLayout = {
 /* ---- Options menu as tabs ---- */
 const PxMenu = {
   tab: 'play',
-  TABS: [['play', 'Playback'], ['pic', 'Picture'], ['audio', 'Audio'], ['more', 'More']],
+  TABS: [['play', 'Playback'], ['pic', 'Picture'], ['audio', 'Sound'], ['more', 'More']],
   where(h) {
     const k = String(h || '').trim().toLowerCase();
     if (/^(speed|quality|tools|subtitle timing)/.test(k)) return 'play';
@@ -143,15 +143,20 @@ const PxBoost = {
   },
   async set(g, quiet) {
     g = clamp(Math.round(g * 100) / 100, 1, 2);
+    if (window.MkNative && MkNative.active) { this.g = g; MkNative.vol(); if (!quiet && g > 1) toast(`Volume ${Math.round(video.volume * g * 100)} %`, 'info', 900, 'pxvol'); this.paint(); return; }
     if (g > 1 && !this.graph()) {
       // reload the stream in a way its sound can be read, the same way Night Mode does
       if (P.stream && !P.stream._local && !P.hls) {
-        const s = P.stream; PxBoost.want = g; this.need = true; await DSP.prepare(s);
-        if (s._cors === 'none') { toast('This source does not let the browser raise its volume above 100 %. Another source or your MKCinema server can.', 'err', 6000); this.g = 1; this.paint(); return; }
+        // the slider and the wheel send many steps: only one reload, the latest level is picked up after it
+        PxBoost.want = g; if (this.reloading === P.stream) return;
+        const s = P.stream; this.reloading = s; this.need = true;
+        try { await DSP.prepare(s); } finally { setTimeout(() => { if (this.reloading === s) this.reloading = null; }, 4000); }
+        // refused: the asked-for level is forgotten, so a later film doesn't jump to it by itself
+        if (s._cors === 'none') { PxBoost.want = 0; this.need = false; toast('This source does not let the browser raise its volume above 100 %. Another source or your MKCinema server can.', 'err', 6000); this.g = 1; this.paint(); return; }
         toast('Reconnecting the stream so it can go louder…', 'info', 2200);
         playStream(P.ctx, s, { startAt: pNow() }); return;
       }
-      toast('Volume above 100 % is not available for this source', 'err'); this.g = 1; this.paint(); return;
+      PxBoost.want = 0; toast('Volume above 100 % is not available for this source', 'err'); this.g = 1; this.paint(); return;
     }
     this.g = g;
     if (this.node) { const t = DSP.ctx.currentTime; this.node.gain.cancelScheduledValues(t); this.node.gain.setTargetAtTime(g, t, 0.03); }
@@ -220,6 +225,7 @@ const PxPicture = {
   apply() {
     const p = this.get(), on = !PX_TV && (p.b !== 100 || p.c !== 100 || p.s !== 100);
     video.style.filter = on ? `brightness(${p.b / 100}) contrast(${p.c / 100}) saturate(${p.s / 100})` : '';
+    if (window.MkNative && MkNative.active) MkNative.picture();
   },
   set(p) { setCfg('pxPic', p); this.apply(); },
   html() {
@@ -337,6 +343,7 @@ const PxGestures = {
     const say = (h) => { pill.innerHTML = h; pill.hidden = false; clearTimeout(pillT); };
     const hush = (ms = 500) => { clearTimeout(pillT); pillT = setTimeout(() => { pill.hidden = true; }, ms); };
     this.bright = 1;
+    const fixedVol = (() => { try { const a = document.createElement('audio'); a.volume = 0.5; return a.volume === 1; } catch (e) { return false; } })();
     const ok = (e) => e.pointerType === 'touch' && !P.locked && !$('#player').hidden && !e.target.closest('button, a, input, .menu, .drawer, .upnext, .p-msg, #ytwrap, .seek, .px-seekrow, .pp-ui, .hud-top, .ctl');
     st.addEventListener('pointerdown', (e) => {
       if (!ok(e) || g) return;
@@ -358,6 +365,8 @@ const PxGestures = {
       if (g.mode === 'seek') {
         const d = pDur(), span = Math.min(600, d * 0.5), to = clamp(g.t0 + (dx / g.r.width) * span, 0, d - 1); g.to = to;
         say(`<b class="tnum">${fmtTime(to)}</b><small class="tnum">${to >= g.t0 ? '+' : '−'}${fmtTime(Math.abs(to - g.t0))}</small>`);
+      } else if (g.mode === 'vol' && fixedVol) {
+        say(`${PxUtil.svg('<path d="M11 5 6 9H2v6h4l5 4V5Z" fill="currentColor"/>')}<small>Use the side buttons for volume</small>`);
       } else if (g.mode === 'vol') {
         const v = clamp(g.v0 - dy / (g.r.height * 0.7), 0, 1); video.volume = v; video.muted = v === 0;
         say(`${PxUtil.svg('<path d="M11 5 6 9H2v6h4l5 4V5Z" fill="currentColor"/>')}<b class="tnum">${Math.round(v * 100)}%</b>`);
@@ -394,7 +403,8 @@ const PxMem = {
   fileKey() { const s = P.stream; if (!s) return ''; const f = (s.behaviorHints || {}).filename || s.title || ''; return P.ctx ? `f:${P.ctx.video ? P.ctx.video.id : P.ctx.meta.id}:${String(f).slice(0, 120)}` : ''; },
   init() {
     video.addEventListener('ratechange', () => {
-      if (!P.ctx || $('#player').hidden || PxMem.applying) return;
+      // a reset while the next video loads (no metadata yet) is not the viewer's choice
+      if (!P.ctx || $('#player').hidden || PxMem.applying || video.readyState < 1) return;
       clearTimeout(this.rt); this.rt = setTimeout(() => { const r = video.playbackRate; if (r !== 2 || !document.querySelector('.px-pill:not([hidden])')) this.put(this.titleKey(), { sp: r === (CFG.speed || 1) ? null : r }); }, 700);
     });
     video.addEventListener('loadedmetadata', () => {
@@ -402,7 +412,7 @@ const PxMem = {
       if (m && m.sp && m.sp !== video.playbackRate) { this.applying = true; video.playbackRate = m.sp; setTimeout(() => { this.applying = false; }, 50); toast(`Speed ${m.sp}× (as last time)`, 'info', 1800, 'pxsp'); }
     });
     const sd = setSubDelay;
-    setSubDelay = function (v) { sd.apply(this, arguments); PxMem.put(PxMem.fileKey(), { sd: P.subDelay || null }); };
+    setSubDelay = function (v, quiet, why) { sd.apply(this, arguments); if (why !== 'auto') PxMem.put(PxMem.fileKey(), { sd: P.subDelay || null }); };
     const ss = selectSub;
     selectSub = async function (i, o) {
       const r = await ss.apply(this, arguments);
@@ -464,9 +474,12 @@ const PxListen = {
     // 1. live sound from this screen
     if (window.RTCPeerConnection && (PxBoost.graph() || await this.makeReadable(s))) {
       if (this.peers.get(id) !== peer) return;
+      if ($('#player').hidden || P.stream !== s) { this.peers.delete(id); this.why(id, 'idle', 'Start a film or episode on the TV first.'); return; }
       if (PxBoost.graph()) { this.tap(); if (this.dest) { this.rtc(id, peer); return; } }
     }
     if (this.peers.get(id) !== peer) return;
+    // the film was closed (or changed) on this screen during the wait: the phone doesn't start
+    if ($('#player').hidden || P.stream !== s) { this.peers.delete(id); this.why(id, 'idle', 'Start a film or episode on the TV first.'); return; }
     // 2. the phone plays the same source and follows this screen
     const url = s._local || !/^https?:/i.test(s.url || '') ? '' : s.url, hdr = (s.behaviorHints || {}).proxyHeaders;
     if (!url || hdr) { this.peers.delete(id); this.why(id, 'source', s._local ? 'Files opened from this device can’t be sent to a phone.' : 'This source can’t be shared with a phone. Try another source.'); return; }

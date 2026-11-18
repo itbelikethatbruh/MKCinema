@@ -1,7 +1,7 @@
 
 'use strict';
 /* ---------------- 2.62 Top 10 you can filter ----------------
-   Drake (2026-11-08): the Top 10 should stand out more and offer other Top 10s: where, which category, which network.
+   Owner (2026-11-08): the Top 10 should stand out more and offer other Top 10s: where, which category, which network.
    Pressing Series (or Films) should open a home of its own with that Top 10 and the same filters, years should be a
    filter everywhere, and Peak Cinema belongs near the top with a real invitation.
    - Where: Worldwide (Cinemeta's popularity, as before) or a country. A country lists what is popular on the
@@ -106,7 +106,7 @@ const Top10 = {
         else l = await this.pages((skip) => this.cat(a, type, 'top', { genre: g, skip }), ok, 10, 2);
       }
       l = l.slice(0, 10);
-      this.cache.set(key, { t: Date.now(), l });
+      if (l.length) this.cache.set(key, { t: Date.now(), l }); // an empty answer (often a failed request) is asked again next time
       return l;
     })().finally(() => this.live.delete(key));
     this.live.set(key, job);
@@ -250,6 +250,8 @@ const YearF = {
       }
       const ax = typeof AddonUI === 'undefined' ? 'poster' : AddonUI.layout(cat, add);
       const gx = ax === 'landscape' || ax === 'square' ? ax : 'poster'; if (fresh || !grid.dataset.ax) grid.dataset.ax = gx;
+      // an earlier "Nothing …" message gives way to cards that load later
+      if (add.length) grid.querySelectorAll(':scope > .empty').forEach((x) => x.remove());
       grid.insertAdjacentHTML('beforeend', add.map((m) => this.card(m, grid.dataset.ax || 'poster')).join(''));
       if (fresh && !grid.querySelector('[data-card]')) grid.innerHTML = `<div class="empty">Nothing ${esc(Top10.yearWords(y))} in this catalog yet. Try another year.</div>`;
       if (more) more.hidden = !!D.done; icons();
@@ -285,7 +287,7 @@ const YearF = {
         // a page with nothing new (this list sends the same page again) or a short page is the end
         if (!fresh2 || l.length < 20) { N.done = true; break; }
       }
-      if (fresh) grid.innerHTML = '';
+      if (fresh) grid.innerHTML = ''; else if (add.length) grid.querySelectorAll(':scope > .empty').forEach((x) => x.remove());
       grid.insertAdjacentHTML('beforeend', add.map((m) => cardHTML(m)).join(''));
       if (!grid.querySelector('[data-card]')) grid.innerHTML = `<div class="empty">Nothing ${esc(Top10.yearWords(y))} on this service in ${esc(N.country())} right now.</div>`;
       if (more) more.hidden = !!N.done;
@@ -310,13 +312,15 @@ const PeakUp = {
       <h3>Can’t pick a film? Let the films pitch themselves.</h3>
       <p>Ninety seconds from the middle of one film, then the next, back to back. When one grabs you, keep watching from that exact second.</p>
       <button class="btn btn-bolt pk2-go" id="pkGo" type="button" data-nav><i data-lucide="play"></i><span class="sp-l">Start surfing<small>Scenes, back to back</small></span></button>
-      <ul class="pk2-steps"><li><b>Surf</b> a new scene every 90 seconds</li><li><b>Skip</b> anything that isn’t for you</li><li><b>Keep</b> watching the whole film</li></ul>`;
+      <ul class="pk2-steps"><li><b>Surf</b> a new scene every 90 seconds</li><li><b>Skip</b> anything that isn’t for you</li><li><b>Keep</b> watching the whole film</li></ul>
+      <button class="btn btn-ghost btn-sm pk2-hide" id="pkHide" type="button" data-nav><i data-lucide="eye-off"></i>Remove from Home</button>`;
   },
   dress() {
     const pk = document.getElementById('pkStrip'); if (!pk) return null;
     if (!pk.classList.contains('pk2')) {
       pk.classList.add('pk2'); pk.innerHTML = this.html();
       document.getElementById('pkGo').addEventListener('click', () => Peak.open());
+      document.getElementById('pkHide').addEventListener('click', () => this.hide());
       icons();
     }
     return pk;
@@ -328,6 +332,22 @@ const PeakUp = {
     const key = src.join('|'); if (!src.length || box.dataset.k === key) return;
     box.dataset.k = key;
     box.innerHTML = src.map((s) => `<img src="${esc(s)}" alt="" decoding="async" loading="lazy" draggable="false">`).join('');
+  },
+  /* 2.73.5: take the invitation off Home for good (Settings > Home brings it back); Peak Cinema itself stays */
+  hide() {
+    const pk = document.getElementById('pkStrip');
+    const lay = Layout.get();
+    if (!lay.hidden.includes('peak')) Store.set('homeLayout', { ...lay, hidden: [...lay.hidden, 'peak'] });
+    if (typeof Account !== 'undefined' && Account.schedule) Account.schedule();
+    if (!pk) return;
+    // the remote lands on the next thing on Home (or the one before), never on nothing
+    const all = [...document.querySelectorAll('#homeRows [data-nav]')].filter((el) => !pk.contains(el) && el.offsetParent);
+    const next = all.find((el) => pk.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) || all.reverse().find((el) => pk.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_PRECEDING);
+    if (next && pk.contains(document.activeElement)) { if (IS_TV && typeof Nav !== 'undefined' && Nav.focus) Nav.focus(next, true); else try { next.focus({ preventScroll: true }); } catch (e) { /* fine */ } }
+    const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (calm) pk.remove();
+    else { pk.style.pointerEvents = 'none'; pk.style.transition = 'opacity .22s ease'; pk.style.opacity = '0'; setTimeout(() => pk.remove(), 240); }
+    toast('Peak Cinema was removed from Home. Settings › Home brings it back.', 'info', 4200);
   },
   place() {
     Top10.safe('peak', () => {

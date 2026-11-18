@@ -37,7 +37,7 @@ const DSP = {
   wants() { return this.attached; },
   /* Is what the video element plays right now readable by Web Audio? */
   clean() {
-    if (!P.stream) return false;
+    if (!P.stream || (window.MkNative && MkNative.active)) return false;
     if (P.hls || P.stream._local || P.remux) return true;
     return video.crossOrigin === 'anonymous' && video.readyState >= 1;
   },
@@ -145,8 +145,11 @@ const Skip = {
       if (tt.kind !== 'chapters') continue; tt.mode = 'hidden';
       for (const c of Array.from(tt.cues || [])) {
         const txt = String(c.text || '').toLowerCase();
-        if (/\b(intro|opening|op)\b/.test(txt)) this.m = { ...(this.m || {}), intro: [c.startTime, c.endTime], src: 'chapters' };
-        if (/\b(credits|ending|ed|outro|end credits)\b/.test(txt)) this.m = { ...(this.m || {}), credits: c.startTime, src: 'chapters' };
+        const op = /\b(intro|opening|op)\b/.test(txt);
+        if (op) this.m = { ...(this.m || {}), intro: [c.startTime, c.endTime], src: 'chapters' };
+        // "Opening Credits" is the intro, and nothing in the first half of the film is the end credits
+        const d = video.duration;
+        if (!op && !(isFinite(d) && d > 0 && c.startTime < d * 0.5) && /\b(credits|ending|ed|outro|end credits)\b/.test(txt)) this.m = { ...(this.m || {}), credits: c.startTime, src: 'chapters' };
       }
     }
   },
@@ -316,7 +319,10 @@ const Rescue = {
     if (P.hls) { try { P.hls.destroy(); } catch (e) { /* ignore */ } P.hls = null; }
     const token = this.token = (this.token || 0) + 1;
     const start = await this.keyframe(stream, t);
-    if (token !== this.token || P.stream !== stream || !P.remux) return;
+    if (token !== this.token || P.stream !== stream || !P.remux) {
+      if (token === this.token && this.userMuted != null) { video.playbackRate = CFG.speed || 1; video.muted = !!this.userMuted; this.userMuted = null; Loader.hold = false; }
+      return;
+    }
     P.remux.offset = start; video.crossOrigin = 'anonymous';
     video.src = this.remuxUrl(stream, start);
     // land on the exact second asked for once the first frames arrive
@@ -337,6 +343,9 @@ const Rescue = {
         requestAnimationFrame(step);
       };
       requestAnimationFrame(step);
+    } else if (this.userMuted != null) {
+      // an earlier catch-up was cut short by this load: give the sound and the loading screen back
+      video.playbackRate = CFG.speed || 1; video.muted = !!this.userMuted; this.userMuted = null; Loader.hold = false;
     }
     video.play().catch(() => wakeHud(true));
   },
@@ -550,22 +559,24 @@ const XRay = {
   },
   async person(p) {
     const body = $('#xrBody'); if (!body || !p) return; this.inPerson = true;
+    // answers for a person no longer on screen are dropped
+    const tok = this.personTok = (this.personTok || 0) + 1, here = () => tok === this.personTok && this.inPerson;
     body.innerHTML = `<button type="button" class="xr-back" id="xrBack" data-nav><i data-lucide="chevron-left"></i>X-Ray</button>
       <div class="xr-bio"><span class="xr-ph lg" data-ini="${esc(p.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join(''))}">${p.photo ? `<img src="${esc(p.photo)}" alt="">` : ''}</span><div><h4>${esc(p.name)}</h4>${p.character ? `<p class="xr-as">as ${esc(p.character)}</p>` : p.role !== 'cast' ? `<p class="xr-as">${esc(p.role)}</p>` : ''}<p class="xr-desc" id="xrDesc"></p></div></div>
       <p class="xr-extract" id="xrExtract"><span class="spin"></span></p>
       <h5>Also with ${esc(p.name.split(' ')[0])}</h5><div id="xrMore"><div class="status-line"><span class="spin"></span>Searching your addons…</div></div>`;
     icons(); $('#xrBack').onclick = () => this.back(); this.refocus('#xrBack');
     Wiki.person(p.name).then((w) => {
-      const ex = $('#xrExtract'); if (!ex) return;
+      const ex = $('#xrExtract'); if (!ex || !here()) return;
       if (w) { $('#xrDesc').textContent = w.description || ''; ex.innerHTML = `${esc(w.extract)} <a class="xr-credit" href="${esc(safeHref(w.url) || '#')}" target="_blank" rel="noopener">Wikipedia</a>`; const ph = $('.xr-ph.lg', body); if (w.big && ph) ph.innerHTML = `<img src="${esc(w.big)}" alt="">`; } else ex.remove();
     });
     try {
       const res = await engine.search(p.name); const seen = new Set(), out = [];
       res.forEach(({ metas }) => metas.forEach((m) => { if (!seen.has(m.id) && m.id !== P.ctx.meta.id) { seen.add(m.id); out.push(remember(m)); } }));
-      const box = $('#xrMore'); if (!box) return;
+      const box = $('#xrMore'); if (!box || !here()) return;
       box.innerHTML = out.length ? `<div class="xr-rail">${out.slice(0, 12).map((m) => `<button type="button" class="xr-t" data-xm="${esc(m.id)}">${imgTag(metaPoster(m), m.name, m.id)}<small>${esc(m.name)}</small></button>`).join('')}</div>` : '<p class="xr-sub">No other titles found in your search addons.</p>';
       $$('[data-xm]', box).forEach((b) => b.addEventListener('click', () => { const m = S.metas.get(b.dataset.xm); if (!m) return; closePlayer(); openDetail(m); }));
-    } catch (e) { const box = $('#xrMore'); if (box) box.innerHTML = `<p class="xr-sub">Search failed (${esc(e.message)}).</p>`; }
+    } catch (e) { const box = $('#xrMore'); if (box && here()) box.innerHTML = `<p class="xr-sub">Search failed (${esc(e.message)}).</p>`; }
   },
 };
 /* Wikipedia summaries (REST API, CORS-enabled, no key) for portraits, bios and the story behind a title */

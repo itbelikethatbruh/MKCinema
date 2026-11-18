@@ -65,7 +65,7 @@
       try { this.aw = this.aw || new Worker(new URL('captions/asr.worker.js', location.href), { type: 'module' }); }
       catch (e) { return this.fail('this browser can’t run the speech model'); }
       this.aw.onmessage = (e) => this.onAsr(e.data || {});
-      this.aw.onerror = (e) => this.fail(`the speech model stopped (${(e && e.message) || 'error'})`);
+      this.aw.onerror = (e) => { this.dropAsr(); this.fail(`the speech model stopped (${(e && e.message) || 'error'})`); };
       if (!this.ready) this.aw.postMessage({ op: 'load' });
       // the film's sound
       let w;
@@ -119,7 +119,7 @@
         // a seek: carry on from the end of what is already captioned there, or start reading at the new spot
         const from = this.covered(now) ? this.coverEnd(now) : now - 1;
         const reading = this.bufT0 != null && now >= this.bufT0 - 30 && now <= this.readTo + 5;
-        if (!reading || from > this.readTo + 5) this.restart(Math.max(0, from));
+        if (!reading || from > this.readTo + 5) { this.restart(Math.max(0, from)); this.lastT = now; }
       }
       // don't read much further than the speech model has got through
       const until = Math.min(now + AHEAD, Math.max(this.edge, now) + (this.ready ? 60 : 30));
@@ -162,7 +162,7 @@
       // pieces the film has already passed are skipped, except the one playing now
       while (this.q.length > 1 && this.q[0].t0 + this.q[0].pcm.length / 16000 < now - 2) this.q.shift();
       const x = this.q.shift(); if (!x) return;
-      this.busy = true; const id = ++this.seq; this.cur = x;
+      this.busy = true; const id = ++this.seq; this.cur = x; this.runId = id;
       this.aw.postMessage({ op: 'run', id, t0: x.t0, dur: x.pcm.length / 16000, data: x.pcm.buffer, lang: this.lang || null, task: this.task }, [x.pcm.buffer]);
     },
     onAsr(m) {
@@ -177,7 +177,10 @@
         if (this.state === 'loading') { this.state = 'running'; toast(`Making captions on this device${TOUCH_UI ? '. On phones they can fall behind; a short pause lets them catch up' : ''}`, 'ok', 4000, 'gencap'); }
         renderSubMenu(); this.pump(); return;
       }
-      if (m.op === 'fail') { this.fail(`the speech model could not load (${m.reason})`); return; }
+      // a model that failed to load is thrown away, so the next try starts a fresh one
+      if (m.op === 'fail') { this.dropAsr(); this.fail(`the speech model could not load (${m.reason})`); return; }
+      // an answer for a piece of an earlier film (or before a restart) is not used
+      if ((m.op === 'error' || m.op === 'text') && m.id !== this.runId) return;
       if (m.op === 'error') { this.busy = false; log('warn', `captions: ${m.reason}`); this.pump(); return; }
       if (m.op !== 'text') return;
       this.busy = false;
@@ -204,7 +207,7 @@
         const next = chunks[i + 1] && chunks[i + 1].timestamp && Number(chunks[i + 1].timestamp[0]);
         if (!Number.isFinite(e) || e <= s) e = Math.min(dur, Number.isFinite(next) && next > s ? next : s + Math.max(1.5, text.length / 15));
         s = Math.min(s, dur); e = Math.min(Math.max(e, s + 0.6), dur + 0.5);
-        if (text === '♪') { const l = out[out.length - 1]; if (l && l.text === '♪' && s - l.e < 2) { l.e = e; return; } }
+        if (text === '♪') { const l = out[out.length - 1]; if (l && l.text === '♪' && t0 + s - l.e < 2) { l.e = Math.max(l.e, t0 + e); return; } }   // cues hold film time (t0 + piece time)
         // long pieces split into readable cues, timed by their share of the words
         const parts = this.split(text), total = parts.reduce((a, p) => a + p.length, 0) || 1;
         let at = s;
@@ -292,11 +295,12 @@
       if (i >= 0 && !this.cues.length) { P.subs.splice(i, 1); if (P.curSub > i) P.curSub--; }
       renderSubMenu();
     },
+    dropAsr() { if (this.aw) { try { this.aw.terminate(); } catch (e) { /* gone */ } } this.aw = null; this.ready = false; this.busy = false; this.runId = 0; },
     stopReader() { if (this.lw) { try { this.lw.postMessage({ op: 'close' }); this.lw.terminate(); } catch (e) { /* gone */ } } this.lw = null; this.q = []; },
     stop(quiet) {
       clearInterval(this.timer); this.timer = 0; this.stopReader();
       if (this.trEl) { try { URL.revokeObjectURL(this.trEl.src); } catch (e) { /* ignore */ } }
-      this.trEl = null; this.stream = null; this.state = 'idle'; this.cues = []; this.done = []; this.edge = 0; this.busy = false;
+      this.trEl = null; this.stream = null; this.state = 'idle'; this.cues = []; this.done = []; this.edge = 0; this.busy = false; this.runId = 0;
       // the speech model's worker is kept (and its model loaded) for the next film
       if (!quiet) renderSubMenu();
     },
@@ -332,7 +336,7 @@
       let status = '';
       if (mine && G.state === 'loading') status = G.pct && G.pct < 100 ? `Downloading the caption model · ${G.pct}%` : 'Getting the captions ready…';
       else if (mine && G.state === 'running') status = G.behind ? 'Captions are catching up. A short pause helps.' : G.cues.length ? 'Captions are being made as the film plays.' : 'Listening to the film…';
-      else if (G.state === 'blocked' || G.state === 'failed') status = G.why ? `Captions couldn’t be made: ${G.why}.` : '';
+      else if (mine && (G.state === 'blocked' || G.state === 'failed')) status = G.why ? `Captions couldn’t be made: ${G.why}.` : '';
       const p = (t) => `<p class="gencap-note" style="color:var(--mute);font-size:calc(12.5px * var(--ts,1));margin:4px 12px 8px;max-width:32ch">${esc(t)}</p>`;
       const wrap = document.createElement('div'); wrap.className = 'gencap';
       const can = G.supported(P.stream);

@@ -14,6 +14,19 @@
 <link rel="manifest" href="remote.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/remote-1320x2868.png">
+<link rel="apple-touch-startup-image" media="(device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/remote-1260x2736.png">
+<link rel="apple-touch-startup-image" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/remote-1206x2622.png">
+<link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/remote-1290x2796.png">
+<link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/remote-1179x2556.png">
+<link rel="apple-touch-startup-image" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/remote-1284x2778.png">
+<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/remote-1170x2532.png">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/remote-1125x2436.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/remote-1242x2688.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash/remote-828x1792.png">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash/remote-750x1334.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/remote-1242x2208.png">
+<link rel="apple-touch-startup-image" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash/remote-640x1136.png">
 <link rel="preconnect" href="https://wogffhgdixgrayowewnf.supabase.co" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -850,6 +863,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <button class="login lsn" type="button" id="pvBtn"><svg class="i"><use href="#i-mic"/></svg><span class="grow"><b id="pvT">Party voice on this phone</b><small id="pvS">Hear your friends here instead of on the TV</small></span></button>
     <div class="pv-ctl" id="pvCtl" hidden>
       <button class="pv-mic" type="button" id="pvMic" aria-pressed="false"><svg class="i"><use href="#i-mic"/></svg><span id="pvMicT">Mic off</span></button>
+      <button class="pv-mic" type="button" id="pvHear" hidden><svg class="i"><use href="#i-head"/></svg><span>Tap to hear</span></button>
       <label class="pv-vol"><span>Voices</span><input type="range" id="pvVol" min="0" max="100" step="5" aria-label="Voice volume"></label>
       <label class="pv-vol" id="pvFilmRow" hidden><span>Film</span><input type="range" id="pvFilm" min="0" max="100" step="5" aria-label="Film volume"></label>
     </div>
@@ -987,7 +1001,16 @@ const Store = {
 };
 const ME = Store.get('id', '') || (() => { const id = rid(); Store.set('id', id); return id; })();
 const fmt = (s) => { s = Math.max(0, Math.floor(s || 0)); const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, x = String(s % 60).padStart(2, '0'); return h ? `${h}:${String(m).padStart(2, '0')}:${x}` : `${m}:${x}`; };
-const buzz = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { /* not allowed */ } };
+let hapEl = null;
+const buzz = (ms) => {
+  try {
+    if (navigator.vibrate) { navigator.vibrate(ms); return; }
+    // iPhone: Safari has no vibrate(), but flipping a switch (never shown, never focused) gives the system tap on iOS 18+
+    if (!/iP(hone|od|ad)/.test(navigator.userAgent) || /^(INPUT|TEXTAREA)$/.test((document.activeElement || {}).tagName || '')) return;
+    if (!hapEl) { hapEl = document.createElement('label'); hapEl.setAttribute('aria-hidden', 'true'); hapEl.innerHTML = '<input type="checkbox" switch tabindex="-1">'; }
+    document.head.appendChild(hapEl); hapEl.click(); hapEl.remove();
+  } catch (e) { /* not allowed */ }
+};
 const phoneName = () => { const u = navigator.userAgent; return /Android/.test(u) ? 'Android phone' : /iPhone|iPad/.test(u) ? 'iPhone' : 'Phone'; };
 let toastT = 0;
 function toast(t, ms = 2600) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), ms); }
@@ -1078,7 +1101,7 @@ const R = {
      denied = the TV said no (or removed this phone) */
   mode: '', pk: null, sn: '', qk: '', pairing: null, why: '', tvId: '', tvAt: 0, secAt: 0,
   connect(code, sb, qk) {
-    if (this.link) this.link.close();
+    if (this.link || this.code) this.leave();   // the full goodbye (the phone's sound, voice) before another TV
     const rec = TVs.get(code);
     this.sb = sb || TVs.sb(code); this.code = code; this.st = null; this.lastSt = 0; this.kbWas = false;
     this.qk = qk || (rec && rec.k) || ''; this.pk = null; this.sn = ''; this.pairing = null; this.why = ''; this.tvId = ''; this.secAt = 0;
@@ -1096,7 +1119,11 @@ const R = {
     if (this.mode === 'denied') return;
     this.send({ t: 'hi', name: phoneName(), v: 3 });
   },
-  leave() { clearInterval(this.hiT); clearInterval(this.watchT); if (this.link) this.link.close(); this.link = null; this.code = ''; this.st = null; cancelAnimationFrame(this.raf); this.mode = ''; this.pairing = null; this.pk = null; Pw.paint(); },
+  leave() {
+    clearInterval(this.hiT); clearInterval(this.watchT);
+    // the goodbye is sealed after this returns: it keeps this TV's key, code and session, which are cleared below
+    { const k = this.pk, c = this.code, sn = this.sn, l = this.link; if (l && l.seal && k) l.seal = (m) => Sec.seal(k, { ...m, sn }, Sec.aad('p2t', c, ME)).then((env) => ({ t: 'x', ...env })); }
+    if (this.link) this.link.close(); this.link = null; this.code = ''; this.st = null; cancelAnimationFrame(this.raf); this.mode = ''; this.pairing = null; this.pk = null; Pw.paint(); },
   /* nothing reaches the TV until it has allowed this phone */
   send(msg) {
     if (!this.link) return;
@@ -1111,7 +1138,8 @@ const R = {
   async startPair(why) {
     if (!this.link) return;
     if (!Sec.can) { this.mode = 'plainpair'; this.why = why || ''; Pw.paint(); this.paintState(); this.sendPair(); return; }
-    this.mode = 'pair'; this.why = why || ''; this.pairing = null; Pw.paint(); this.paintState();
+    // the old key (the TV forgot it) would hide the TV's answer to this pairing
+    this.mode = 'pair'; this.why = why || ''; this.pairing = null; this.pk = null; this.link.seal = null; Pw.paint(); this.paintState();
     try {
       const kp = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, false, ['deriveBits']);
       const pub = Sec.enc(new Uint8Array(await crypto.subtle.exportKey('raw', kp.publicKey)));
@@ -1432,7 +1460,7 @@ const Kb = {
     if (this.rec) { this.stopMic(); return; }
     const r = this.rec = new SR(); r.lang = navigator.language || 'en-US'; r.interimResults = true; r.maxAlternatives = 1;
     $('#kbMic').classList.add('live'); buzz(10);
-    r.onresult = (e) => { let s = ''; for (const res of e.results) s += res[0].transcript; $('#kbIn').value = s.trim(); this.push(); if (e.results[e.results.length - 1].isFinal) { this.stopMic(); this.go(); } };
+    r.onresult = (e) => { if (this.rec !== r) return; /* cancelled: late words are dropped */ let s = ''; for (const res of e.results) s += res[0].transcript; $('#kbIn').value = s.trim(); this.push(); if (e.results[e.results.length - 1].isFinal) { this.stopMic(); this.go(); } };
     r.onerror = (e) => { this.stopMic(); if (e.error === 'not-allowed') toast('Allow the microphone to search by voice'); };
     r.onend = () => this.stopMic();
     try { r.start(); } catch (e) { this.stopMic(); }
@@ -1461,13 +1489,13 @@ function openMenu() {
     b.onclick = () => { closeSheet(); if (t.code !== R.code) R.connect(t.code); };
     box.appendChild(b);
   });
-  $('#mInstall').hidden = !installEv; $('#mForget').hidden = !R.code;
+  $('#mInstall').hidden = !installEv && !IOSApp.can(); $('#mForget').hidden = !R.code;
   openSheet('menu'); buzz(6);
 }
 $('#menuBtn').onclick = openMenu; $('#tvChip').onclick = openMenu;
 $('#mPair').onclick = () => { closeSheet(true); R.leave(); Pair.show(); };
 $('#mForget').onclick = () => { const c = R.code; closeSheet(); R.leave(); TVs.forget(c); toast('TV forgotten'); Pair.show(); };
-$('#mInstall').onclick = async () => { closeSheet(); if (!installEv) return; installEv.prompt(); try { await installEv.userChoice; } catch (e) { /* dismissed */ } installEv = null; };
+$('#mInstall').onclick = async () => { closeSheet(); if (!installEv) { IOSApp.guide(); return; } installEv.prompt(); try { await installEv.userChoice; } catch (e) { /* dismissed */ } installEv = null; };
 
 /* ---------- Waking up: phones drop sockets when the screen goes off ---------- */
 document.addEventListener('visibilitychange', () => {
@@ -1615,6 +1643,10 @@ const Listen = {
    member. It hears everyone through its own speaker or headphones, with a volume of its own, and can talk with its
    own mic. The TV mutes voices once the phone is in, and never plays this phone's voice (you are in the same room).
    This phone does the same for the TV's mic. The film's sound stays separate: Listen on this phone has its own slider. */
+{
+  let fixed = false; try { const a = document.createElement('audio'); a.volume = 0.5; fixed = a.volume === 1; } catch (e) { fixed = false; }
+  if (fixed) { document.documentElement.classList.add('fixed-vol'); const st = document.createElement('style'); st.textContent = '.fixed-vol .pv-vol{display:none!important}'; document.head.appendChild(st); }
+}
 const PV = {
   on: false, link: null, id: '', code: '', tv: '', name: '', net: '', peers: new Map(), mic: null,
   ICE: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] }],
@@ -1641,7 +1673,9 @@ const PV = {
     this.on = true; this.code = pv.code; this.tv = String(pv.tv || ''); this.name = `${String(pv.name || 'Guest').slice(0, 20)} (phone)`; this.id = `~${rid()}`; this.net = '';
     buzz(10);
     // a tap is the user gesture the phone needs before it may play the voices that arrive later
-    try { const a = new Audio(); a.muted = true; a.play().catch(() => {}); } catch (e) { /* nothing to unlock */ }
+    // iPhone only lets a player that was started inside a tap play sound later, so the players for the voices are made here
+    this.pool = this.pool || [];
+    while (this.pool.length < 6) { const a = document.createElement('audio'); a.autoplay = true; a.setAttribute('playsinline', ''); document.body.appendChild(a); try { const pr = a.play(); if (pr) pr.catch(() => {}); } catch (e) { /* nothing to unlock */ } this.pool.push(a); }
     this.link = new Link(this.code, (m) => this.onMsg(m), (s) => { this.net = s; if (s === 'online') this.hello(); this.paint(); }, R.sb,
       { topic: `realtime:mkc-party-${this.code}`, bc: `mkc:party-${this.code}`, id: this.id });
     this.paint();
@@ -1689,15 +1723,15 @@ const PV = {
     } catch (e) { console.warn('party voice signaling', e); }
   },
   voice(p, stream) {
-    if (!p.audio) { const a = p.audio = document.createElement('audio'); a.autoplay = true; a.setAttribute('playsinline', ''); document.body.appendChild(a); }
+    if (!p.audio) { const a = p.audio = (this.pool && this.pool.shift()) || document.createElement('audio'); a.autoplay = true; a.setAttribute('playsinline', ''); if (!a.isConnected) document.body.appendChild(a); }
     p.audio.srcObject = stream; this.level();
-    p.audio.play().catch(() => toast('Tap Party voice again to let this phone play sound', 3600));
+    p.audio.play().catch(() => { const h = $('#pvHear'); if (h) h.hidden = false; toast('Tap “Tap to hear” to let this phone play the voices', 3600); });
   },
   level() { const v = this.vol(); this.peers.forEach((p) => { if (p.audio) { p.audio.volume = v; p.audio.muted = p.id === this.tv; } }); },
   drop(id) {
     const p = this.peers.get(id); if (!p) return;
     try { p.pc.close(); } catch (e) { /* closed */ }
-    if (p.audio) { p.audio.srcObject = null; p.audio.remove(); }
+    if (p.audio) { p.audio.srcObject = null; if (this.pool && this.pool.length < 6) this.pool.push(p.audio); else p.audio.remove(); }
     this.peers.delete(id); this.paint();
   },
   async toggleMic() {
@@ -1706,11 +1740,14 @@ const PV = {
       this.peers.forEach((p) => p.pc.getSenders().forEach((s) => { if (s.track && s.track.kind === 'audio') { try { p.pc.removeTrack(s); } catch (e) { /* closed */ } } }));
       this.mic = null; buzz(6); this.paint(); return;
     }
+    if (this.micBusy) return;   // a second tap while the microphone starts does nothing
     let mic;
     // a plain http address is not a secure context: the browser hides the microphone there entirely
     if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { toast('The mic needs this page on an https address, such as app.mkcinema.app', 4200); return; }
+    this.micBusy = true;
     try { mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); }
-    catch (e) { toast(e && e.name === 'NotFoundError' ? 'No microphone was found on this phone' : 'Microphone permission was not given', 3600); return; }
+    catch (e) { this.micBusy = false; toast(e && e.name === 'NotFoundError' ? 'No microphone was found on this phone' : 'Microphone permission was not given', 3600); return; }
+    this.micBusy = false;
     if (!this.on) { mic.getTracks().forEach((t) => t.stop()); return; }
     this.mic = mic; this.peers.forEach((p) => mic.getTracks().forEach((t) => p.pc.addTrack(t, mic)));
     buzz(10); this.paint();
@@ -1734,6 +1771,7 @@ const PV = {
   Listen.paint = () => { lp(); PV.paint(); };
   $('#pvBtn').onclick = () => PV.toggle();
   $('#pvMic').onclick = () => PV.toggleMic();
+  $('#pvHear').onclick = () => { $('#pvHear').hidden = true; PV.peers.forEach((p) => { if (p.audio) p.audio.play().catch(() => {}); }); };
   $('#pvVol').addEventListener('input', (e) => { Store.set('pvVol', Number(e.target.value) / 100); PV.level(); });
   $('#pvFilm').addEventListener('input', (e) => { Store.set('pvFilm', Number(e.target.value) / 100); if (Listen.el) Listen.el.volume = PV.film(); });
   addEventListener('pagehide', () => { if (PV.on && PV.link) PV.link.close(); });
@@ -1825,7 +1863,7 @@ const PSub = {
     const box = $('#psList'); if (!box) return;
     if (!this.list) { box.innerHTML = '<div class="pa-empty">Asking your TV…</div>'; return; }
     if (!this.list.length) { box.innerHTML = `<div class="pa-empty">${this.playing ? 'This film has no downloadable subtitles. Turn on an add-on like OpenSubtitles on the TV.' : 'Start a film on the TV first.'}</div>`; return; }
-    box.innerHTML = this.list.map((s) => `<button class="item" type="button" data-psi="${s.i}"><svg class="i"><use href="#i-cc"/></svg><span class="grow"><b>${this.h(s.lang)}</b>${s.from ? `<small>${this.h(s.from)}</small>` : ''}</span></button>`).join('');
+    box.innerHTML = this.list.map((s) => `<button class="item" type="button" data-psi="${Number(s.i) || 0}"><svg class="i"><use href="#i-cc"/></svg><span class="grow"><b>${this.h(s.lang)}</b>${s.from ? `<small>${this.h(s.from)}</small>` : ''}</span></button>`).join('');
   },
   parse(text) {
     const out = [], re = /(?:(\d+):)?(\d{1,2}):(\d{2})[.,](\d{3})\s*-->\s*(?:(\d+):)?(\d{1,2}):(\d{2})[.,](\d{3})/;
@@ -1851,6 +1889,7 @@ const PSub = {
       this.show(`Loading ${this.lang} subtitles…`);
       try { const r = await fetch(m.url); if (!r.ok) throw new Error(String(r.status)); this.cues = this.parse(await r.text()); }
       catch (e) { this.cues = []; }
+      if (this.url !== m.url) return;   // closed, or another language asked for, while it downloaded
       if (!this.cues.length) { this.show('These subtitles could not be loaded on this phone. Try another language.'); return; }
     }
     $('#psHow').textContent = { file: 'Timed to the film', auto: 'Timed to the film', same: 'Timed to the film', subs: 'Timed to the TV’s subtitles', hand: 'Timed like the TV', raw: 'Timing as downloaded' }[m.how] || '';
@@ -1860,7 +1899,10 @@ const PSub = {
     closeSheet(true);
     const v = $('#psView'); v.hidden = false; requestAnimationFrame(() => v.classList.add('on'));
     $('#psLang').textContent = this.lang || 'Subtitles'; $('#psText').innerHTML = `<p class="ps-wait">${this.h(msg)}</p>`;
-    try { if (navigator.wakeLock && !this.lock) navigator.wakeLock.request('screen').then((l) => { this.lock = l; }).catch(() => {}); } catch (e) { /* not allowed */ }
+    this.wake();
+  },
+  wake() {
+    try { if (navigator.wakeLock && !this.lock) navigator.wakeLock.request('screen').then((l) => { if ($('#psView').hidden) { try { l.release(); } catch (e) { /* gone */ } return; } this.lock = l; try { l.addEventListener('release', () => { if (this.lock === l) this.lock = null; }); } catch (e) { /* old */ } }).catch(() => {}); } catch (e) { /* not allowed */ }
   },
   run() {
     this.show(''); cancelAnimationFrame(this.raf);
@@ -1892,6 +1934,7 @@ $('#psClose').onclick = () => PSub.close();
 $('#psLangBtn').onclick = () => { PSub.close(); PSub.open(); };
 $('#psBig').onclick = () => { PSub.size = Math.min(1.8, PSub.size + 0.15); $('#psText').style.setProperty('--pss', PSub.size); };
 $('#psSmall').onclick = () => { PSub.size = Math.max(0.7, PSub.size - 0.15); $('#psText').style.setProperty('--pss', PSub.size); };
+document.addEventListener('visibilitychange', () => { if (!document.hidden && !$('#psView').hidden) PSub.wake(); });
 $('#psEarly').onclick = () => { PSub.delay -= 0.5; toast(`Subtitles ${PSub.delay > 0 ? '+' : ''}${PSub.delay.toFixed(1)} s`, 1200); PSub.last = ''; };
 $('#psLate').onclick = () => { PSub.delay += 0.5; toast(`Subtitles ${PSub.delay > 0 ? '+' : ''}${PSub.delay.toFixed(1)} s`, 1200); PSub.last = ''; };
 
@@ -1900,13 +1943,14 @@ $('#psLate').onclick = () => { PSub.delay += 0.5; toast(`Subtitles ${PSub.delay 
 const CM = {
   want: false, id: '', deck: [], i: 0, yes: new Set(),
   h: (s) => PSub.h(s),
-  join() { closeSheet(true); openSheet('cm'); this.paint('Asking your TV…'); R.send({ t: 'cm', op: 'join', name: phoneName() }); clearTimeout(this.waitT); this.waitT = setTimeout(() => { if (!this.deck.length && sheet === 'cm') this.paint('No couch match is open. Start one on the TV: Settings › Devices › Couch match.'); }, 7000); },
+  join() { closeSheet(true); openSheet('cm'); this.paint('Asking your TV…'); this.got = false; R.send({ t: 'cm', op: 'join', name: phoneName() }); clearTimeout(this.waitT); this.waitT = setTimeout(() => { if (!this.got && sheet === 'cm') this.paint('No couch match is open. Start one on the TV: Settings › Devices › Couch match.'); }, 7000); },
   onMsg(m) {
     if (!m || m.t !== 'cm') return false;
     clearTimeout(this.waitT);
-    if (m.op === 'end') { if (sheet === 'cm') this.paint('Couch match ended on the TV.'); this.id = ''; return true; }
+    if (m.op === 'end') { if (sheet === 'cm') this.paint('Couch match ended on the TV.'); this.id = ''; this.deck = []; this.i = 0; this.yes.clear(); return true; }
     if (m.op === 'deck') {
-      if (m.id !== this.id) { this.id = m.id; this.i = 0; this.yes.clear(); }
+      this.got = true;
+      if (m.id !== this.id) { this.id = m.id; this.deck = []; this.i = 0; this.yes.clear(); }
       const left = this.deck.slice(this.i).map((x) => x.id);
       this.deck = Array.isArray(m.list) ? m.list : [];
       if (left.length) this.i = Math.max(0, this.deck.findIndex((x) => x.id === left[0]));
@@ -1926,10 +1970,10 @@ const CM = {
     Bg.apply($('#cmBody')); this.swipe($('#cmCard'));
   },
   vote(yes) {
-    const x = this.deck[this.i]; if (!x) return;
+    const x = this.deck[this.i]; if (!x || this.moving) return; this.moving = true;
     R.send({ t: 'cm', id: this.id, op: 'vote', mid: x.id, yes: !!yes }); buzz(yes ? 14 : 6);
     const c = $('#cmCard'); if (c) { c.style.transition = 'transform .28s ease, opacity .28s ease'; c.style.transform = `translate3d(${yes ? 120 : -120}%,0,0) rotate(${yes ? 8 : -8}deg)`; c.style.opacity = '0'; }
-    this.i++; setTimeout(() => this.card(), 220);
+    this.i++; setTimeout(() => { this.moving = false; if (!c || c.isConnected) this.card(); }, 220);
   },
   swipe(el) {
     if (!el) return; let x0 = null, dx = 0;
@@ -2112,7 +2156,7 @@ $('#fhFix').addEventListener('click', (e) => { const b = e.target.closest('[data
 const LNG = {
   alt: '', altL: '', k: 1, nudge: 0, dur: 0,
   FPS: [1, 23.976 / 25, 25 / 23.976, 24 / 25, 25 / 24, 23.976 / 24, 24 / 23.976],
-  fps(dFrom, dTo) { if (!(dFrom > 120 && dTo > 120)) return 1; const r = dTo / dFrom; for (const k of this.FPS) if (k !== 1 && Math.abs(r / k - 1) < 0.0025) return k; return 1; },
+  fps(dFrom, dTo) { if (!(dFrom > 120 && dTo > 120)) return 1; const r = dTo / dFrom; let best = 1, bd = Math.abs(r - 1); for (const k of this.FPS) { const d = Math.abs(r / k - 1); if (d < bd) { bd = d; best = k; } } return bd < 0.0025 ? best : 1; },
   langs() { const l = R.st && R.st.lsn && R.st.lsn.langs; return Array.isArray(l) ? l.slice(0, 8) : []; },
   key() { return `mkc:lngNudge:${(R.st && R.st.title) || ''}|${this.alt}`; },
   paint() {
@@ -2269,10 +2313,12 @@ MkIce.load();
   };
   PV.toggleCam = async function () {
     if (cam.s) { stop(); buzz(6); this.paint(); return; }
+    if (cam.starting) return; // a second tap while the camera starts
     if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { toast('The camera needs this page on an https address, such as app.mkcinema.app', 4200); return; }
-    let s;
+    let s; cam.starting = true;
     try { s = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: 'user', width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { ideal: 15, max: 20 } } }); }
     catch (e) { toast(e && e.name === 'NotFoundError' ? 'No camera was found on this phone' : 'Camera permission was not given', 3600); return; }
+    finally { cam.starting = false; }
     if (!this.on) { s.getTracks().forEach((x) => x.stop()); return; }
     cam.s = s; this.peers.forEach((p) => send(p)); wake(true);
     const pv = $('#pvPrev'); if (pv) { pv.srcObject = s; pv.play().catch(() => {}); }
@@ -2502,6 +2548,7 @@ const Glasses = {
     const n = e && e.name, m = String((e && e.message) || e || '');
     if (n === 'NotFoundError' && /cancel/i.test(m)) return '';
     if (n === 'WrongArm') return `Almost: ${m}.`;
+    if (n === 'NeedRight') return 'Left arm connected. Tap Even G1 again to pick the right arm.';
     if (n === 'NotFoundError') return 'No glasses picked. Turn them on, keep them close and try again.';
     if (n === 'SecurityError' || n === 'NotAllowedError') return 'Bluetooth is blocked for this page. Allow it in the browser’s site settings.';
     if (n === 'NotSupportedError') return 'This browser can’t use Bluetooth. Use Chrome or Edge.';
@@ -2510,6 +2557,7 @@ const Glasses = {
   changed() { try { this.onchange && this.onchange(this.on()); } catch (e) { /* ui gone */ } },
   async connect(kind) {
     if (!this.can()) throw Object.assign(new Error('no bluetooth'), { name: 'NotSupportedError' });
+    if (kind !== 'g1' && this.g1L) { try { this.g1L.L.gatt.disconnect(); } catch (e) { /* gone */ } this.g1L = null; }
     await this.disconnect(true);
     const bt = navigator.bluetooth;
     if (kind === 'frame') {
@@ -2534,7 +2582,12 @@ const Glasses = {
       // two arms, two connections: the browser asks for each one
       const pick = (side) => bt.requestDevice({ filters: [{ namePrefix: 'Even G1' }, { namePrefix: 'G1' }], optionalServices: [this.NUS.svc] })
         .then((d) => { if (!new RegExp(`_${side}_`, 'i').test(d.name || '') && /_[LR]_/i.test(d.name || '')) throw Object.assign(new Error(`pick the ${side === 'L' ? 'left' : 'right'} arm (its name has _${side}_)`), { name: 'WrongArm' }); return d; });
-      const L = await pick('L'); const l = await this.open(L, this.NUS);
+      // the browser lets one tap open one Bluetooth chooser, so the right arm is asked for on the next tap
+      if (!this.g1L || !this.g1L.L.gatt.connected) {
+        this.g1L = null; const L0 = await pick('L'); const l0 = await this.open(L0, this.NUS); this.g1L = { L: L0, l: l0 };
+        throw Object.assign(new Error('right arm next'), { name: 'NeedRight' });
+      }
+      const { L, l } = this.g1L; this.g1L = null;
       let R, r;
       try { R = await pick('R'); r = await this.open(R, this.NUS); } catch (e) { try { L.gatt.disconnect(); } catch (x) { /* gone */ } throw e; }
       this.kind = 'g1'; this.dev = [L, R]; this.tx = [l.tx, r.tx]; this.rx = [l.rx, r.rx];
@@ -2681,7 +2734,7 @@ const MetaGlass = {
       if (MetaGlass.auto || !this.list || !this.list.length) return;
       let want = ''; try { want = localStorage.getItem('mkc:glassLang') || ''; } catch (e) { /* none */ }
       const s = want && this.list.find((x) => x.lang === want); if (!s) return;
-      MetaGlass.auto = true; const b = $(`#psList [data-psi="${s.i}"]`); if (b) b.click();
+      MetaGlass.auto = true; const b = $(`#psList [data-psi="${Number(s.i) || 0}"]`); if (b) b.click();
     };
     $('#psList').addEventListener('click', (e) => { const b = e.target.closest('[data-psi]'); if (!b) return; const s = (PSub.list || []).find((x) => String(x.i) === b.dataset.psi); try { if (s) localStorage.setItem('mkc:glassLang', s.lang); } catch (x) { /* full */ } });
     PSub.want = true;
@@ -2709,7 +2762,7 @@ const GlPhone = {
   toggle() { const box = $('#psGl'); box.hidden = !box.hidden; this.paint(); },
   async pick(kind) {
     if (kind === 'meta') { MetaGlass.how(); return; }
-    if (kind === 'g1') toast('Pick the left arm first, then the right arm', 3200);
+    if (kind === 'g1') toast(Glasses.g1L ? 'Now pick the right arm (its name has _R_)' : 'Pick the left arm first, then the right arm', 3200);
     if (kind === 'g2') toast('Close the Even app first, then pick the one with _R_ in its name', 3800);
     $('#psGlState').textContent = 'Connecting…';
     try { const n = await Glasses.connect(kind); buzz([10, 40, 10]); toast(`${n} connected`, 2000); this.send(); }
@@ -2957,7 +3010,7 @@ const Info = {
       paint(e.k === 'title' ? this.titleHtml(e) : e.k === 'person' ? this.personHtml(e) : this.creditsHtml(e));
       $('#ifTitle').textContent = e.name || '';
       requestAnimationFrame(() => { $('#ifScroll').scrollTop = y; });
-      if (e.k === 'title') this.later(e, job);
+      if (e.k === 'title') { this.later(e, job); if (this.tvOk() && /^tt\d{5,10}$/.test(e.id || '')) R.send({ t: 'cmd', c: 'wlq', v: { id: e.id } }); }
     }).catch((err) => paint(`<div class="if-wrap" style="padding-top:calc(var(--sat) + 70px)"><p class="if-empty">${this.esc(err && err.message ? err.message : 'That didn’t load.')} Check the connection and try again.</p><button class="if-more" type="button" data-act="retry">Try again</button></div>`));
   },
   /* ---- a film or show ---- */
@@ -3150,7 +3203,7 @@ const Info = {
     if (act === 'credits') { this.go({ k: 'credits', id: e.id, name: `${e.name} · Cast and crew` }); return; }
     if (act === 'lim') { e.lim = (e.lim || 50) + 50; $('#ifFilm').innerHTML = this.filmHtml(e); return; }
     if (act === 'open' || act === 'trailer' || act === 'ep') { this.toTv(act, e, t); return; }
-    if (act === 'wl') { R.send({ t: 'cmd', c: 'wl', v: { type: e.type, id: e.id, name: e.name } }); buzz(10); const on = !t.classList.contains('on'); this.wlPaint(on); toast(on ? 'Added to the TV’s watchlist' : 'Removed from the TV’s watchlist', 2200); return; }
+    if (act === 'wl') { const q = R.st && R.st.wlq; R.send({ t: 'cmd', c: 'wl', v: { type: e.type, id: e.id, name: e.name } }); buzz(10); if (!(q && q.id === e.id)) { this.wlWait = e.id; return; } const on = !q.on; this.wlPaint(on); toast(on ? 'Added to the TV’s watchlist' : 'Removed from the TV’s watchlist', 2200); return; }
     if (t.dataset.season != null && t.closest('.if-ss')) { e.season = Number(t.dataset.season); const box = $('#ifEps'); if (box) box.outerHTML = this.episodesHtml(e); buzz(4); return; }
     if (t.classList.contains('if-ep')) { t.classList.toggle('open'); return; }
     if (t.dataset.tab) { e.tab = t.dataset.tab; e.lim = 50; $('#ifFilm').innerHTML = this.filmHtml(e); buzz(4); return; }
@@ -3176,7 +3229,7 @@ const Info = {
     if (btn.dataset.lbl) { btn.lastChild.textContent = btn.dataset.lbl; btn.classList.remove('sure'); }
   },
   wlPaint(on) { const b = $('#ifWl'); if (!b) return; b.classList.toggle('on', on); b.innerHTML = `<svg class="i"><use href="#${on ? 'i-check' : 'i-bookmark'}"/></svg>${on ? 'On your list' : 'Watchlist'}`; },
-  onSt() { const e = this.top(), q = R.st && R.st.wlq; if (this.on && e && e.k === 'title' && q && q.id === e.id) this.wlPaint(!!q.on); },
+  onSt() { const e = this.top(), q = R.st && R.st.wlq; if (this.on && e && e.k === 'title' && q && q.id === e.id) { this.wlPaint(!!q.on); if (this.wlWait === e.id) { this.wlWait = ''; toast(q.on ? 'Added to the TV’s watchlist' : 'Removed from the TV’s watchlist', 2200); } } },
   fromTv() {
     const s = R.st; if (!s) return;
     if (s.id) this.go({ k: 'title', type: s.type === 'series' ? 'series' : 'movie', id: s.id, name: s.title, backdrop: this.https(s.art) });
@@ -3307,6 +3360,7 @@ const MikoSoul = (() => {
   const chat = (text, o = {}) => {
     const np = o.picks === false ? '_np' : '';
     let t = norm(text);
+    if (/^(hi|hey|hello|hiya|yo|howdy|heya|sup|hey there|hi there|hello there)( miko)?$/.test(t)) return { say: hello() };   // before the filler words are cut
     for (let i = 0; i < 3; i++) t = t.replace(/^(hey|hi|hello|ok|okay|so|um|uh|miko|oh|yo)\s+(?=\S)/, '');
     t = t.replace(/\s+miko$/, '');
     if (!t) return null;
@@ -3424,7 +3478,7 @@ const MikoSoul = (() => {
     can() {
       try { return typeof Worker !== 'undefined' && typeof WebAssembly === 'object' && !!(window.AudioContext || window.webkitAudioContext) && /^en\b/i.test(lang()); } catch (e) { return false; }
     },
-    wanted() { const v = ls.get('natural', null); if (v != null) return !!v; try { return !(navigator.connection && navigator.connection.saveData); } catch (e) { return true; } },
+    wanted() { const v = ls.get('natural', null); if (v != null) return !!v; try { const c = navigator.connection; return !(c && (c.saveData || c.type === 'cellular')); } catch (e) { return true; } },   // on mobile data it waits until turned on
     on() { return this.wanted() && this.can() && this.state !== 'failed' && this.slow < 2; },
     emit() { this.listeners.forEach((f) => { try { f(this.state, this.pct); } catch (e) { /* gone */ } }); },
     voice() { return /^en-(gb|ie|au|nz)\b/i.test(lang()) ? 'bf_emma' : 'af_heart'; },
@@ -3463,7 +3517,7 @@ const MikoSoul = (() => {
       this.stop(); const my = this.gen;
       await this.load();
       // her first sentence on its own, so she starts talking fast; then fuller phrases, so she reads with a person's flow
-      const sents = []; (spoken(text).match(/[^.!?]+[.!?]*/g) || []).forEach((s) => { s = s.trim(); if (!s) return; if (s.length > 220) s.split(/(?<=[,;:])\s+/).forEach((x) => x.trim() && sents.push(x.trim())); else sents.push(s); });
+      const sents = []; (spoken(text).match(/[^.!?]+[.!?]*/g) || []).forEach((s) => { s = s.trim(); if (!s) return; if (s.length > 220) s.replace(/([,;:])\s+/g, '$1\n').split('\n').forEach((x) => x.trim() && sents.push(x.trim())); else sents.push(s); });
       const parts = []; sents.forEach((s, i) => { const L = parts.length; if (i > 0 && L > 1 && (parts[L - 1] + ' ' + s).length <= 220) parts[L - 1] += ' ' + s; else parts.push(s); });
       for (const s of parts.slice(0, 6)) {
         if (my !== this.gen) return;
@@ -3531,7 +3585,7 @@ const Ask = {
   can(c) { return !!(R.st && Array.isArray(R.st.caps) && R.st.caps.includes(c)); },
   pos() { const b = R.base; return Math.max(0, b.cur + (b.paused ? 0 : (performance.now() - b.at) / 1000)); },
   span(s) { s = Math.round(Math.abs(s)); if (s < 60) return `${s} seconds`; if (s >= 3600) return this.hm(s); const m = Math.floor(s / 60), r = s % 60; return `${m} minute${m > 1 ? 's' : ''}${r ? ` ${r} seconds` : ''}`; },
-  hm(s) { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60); return h ? `${h} hour${h > 1 ? 's' : ''}${m ? ` ${m} min` : ''}` : `${Math.max(1, m)} minute${m <= 1 ? '' : 's'}`; },
+  hm(s) { /* whole minutes first, so never "1 hour 60 min" */ const mins = Math.round(s / 60), h = Math.floor(mins / 60), m = mins % 60; return h ? `${h} hour${h > 1 ? 's' : ''}${m ? ` ${m} min` : ''}` : `${Math.max(1, m)} minute${m <= 1 ? '' : 's'}`; },
   norm: (s) => String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/&/g, ' and ').replace(/[^a-z0-9 ]+/g, ' ').replace(/^(the|a|an) /, '').replace(/\s+/g, ' ').trim(),
 
   /* ---- the layer ---- */
@@ -3643,17 +3697,27 @@ const Ask = {
   and: (a) => (a.length < 2 ? a.join('') : `${a.slice(0, -1).join(', ')} and ${a[a.length - 1]}`),
   pplHtml(list) { const E = this.E; return `<div class="ak-ppl">${list.map((p) => `<button type="button" class="ak-chip pp" data-pid="${Number(p.id) || 0}" data-name="${E(p.name)}">${E(p.name)}${p.as ? `<small>${E(p.as)}</small>` : ''}</button>`).join('')}</div>`; },
   async ask(text) {
-    text = String(text || '').trim().slice(0, 300); if (!text || this.busy) return;
+    text = String(text || '').trim().slice(0, 300); if (!text) return;
+    // sent while she is still answering: it waits its turn instead of vanishing
+    if (this.busy) { this.queued = text; return; }
     this.stopMic(); this.me(text); this.busy = true; this.mode(); const w = this.think(); $('#akView').classList.add('busy');
     if (Store.get('akSpeak', false) && MikoSoul.Natural.on()) MikoSoul.Natural.unlock();
     try { await this.run(text); } catch (e) { this.say(e && e.message ? e.message : 'Something went wrong. Try again.'); }
     w.remove(); this.busy = false; $('#akView').classList.remove('busy'); this.chips(); this.mode();
+    if (this.queued) { const q = this.queued; this.queued = ''; this.ask(q); }
   },
   async run(text) {
     const c = MikoSoul.chat(text, { picks: false });
     if (c) { await new Promise((r) => setTimeout(r, Math.min(600, 200 + c.say.length * 3))); this.say(c.say, c.help ? { html: this.helpHtml() } : {}); return; }
     let local = this.parse(text);
-    if (!local) { const f = MikoSoul.fix(text); if (f !== text) local = this.parse(f); }
+    if (!local) {
+      const f = MikoSoul.fix(text);
+      if (f !== text) {
+        // one word close to a command ("Rome", "Pulse"): a title with that exact name wins over the corrected command
+        if (!/\s/.test(String(text).trim())) { let res = []; try { res = await this.find(text); } catch (e) { res = []; } if (res.length && res[0].score >= 100) { this.say(MikoSoul.line('found'), { html: this.cards(res.slice(0, 3)) }); return; } }
+        local = this.parse(f);
+      }
+    }
     if (local) { const r = await local(); if (r !== 'defer') return; }
     if (this.cfg()) return this.agent(text);
     if (this.nano === undefined) await this.nanoUp();
@@ -3673,7 +3737,8 @@ const Ask = {
   needTv() { if (this.live()) return false; this.say('Your TV isn’t connected right now. Open MKCinema on it and I’ll pick it up.'); return true; },
   needPlay() { if (this.needTv()) return true; if (this.playing()) return false; this.say('Nothing is playing on the TV right now.'); return true; },
   keys(k, n = 1) { n = clamp(Math.round(n) || 1, 1, 20); for (let i = 0; i < n; i++) setTimeout(() => R.key(k), i * 160); buzz(8); },
-  seek(t) { const d = R.base.dur || (R.st && R.st.dur) || 0; t = clamp(t, 0, Math.max(0, d - 2)); R.send({ t: 'cmd', c: 'seek', v: Math.round(t) }); R.base = { ...R.base, cur: t, at: performance.now() }; if (R.tick) R.tick(true); buzz(10); return t; },
+  seek(t) { const d = R.base.dur || (R.st && R.st.dur) || 0; t = d > 2 && isFinite(d) ? clamp(t, 0, d - 2) : Math.max(0, t);   // length unknown (or live): no upper limit
+    R.send({ t: 'cmd', c: 'seek', v: Math.round(t) }); R.base = { ...R.base, cur: t, at: performance.now() }; if (R.tick) R.tick(true); buzz(10); return t; },
   vol(n) { n = clamp(Math.round(n), 0, 100); R.send({ t: 'cmd', c: 'vol', v: n }); if (R.st) R.st.vol = n; buzz(8); return n; },
   async find(q, kind) {
     q = String(q || '').trim(); if (q.length < 2) return [];
@@ -3684,9 +3749,14 @@ const Ask = {
       const [mv, sr] = await Promise.all([kind === 'series' ? [] : cat('movie'), kind === 'movie' ? [] : cat('series')]);
       return mv.concat(sr).filter((x) => /^tt\d{5,10}$/.test(x.id || ''));
     };
-    let list = await look(bare.length >= 2 ? bare : q); if (!list.length && bare !== q) list = await look(q);
-    const n = this.norm(bare || q);
-    list.forEach((x) => { const m = this.norm(x.name); x.score = (m === n ? 100 : m.startsWith(n) || n.startsWith(m) ? 40 : m.includes(n) ? 25 : 0) + (10 - Math.min(10, x.i)) + (year && String(x.year).startsWith(year) ? 45 : 0); });
+    // the whole title first ("Blade Runner 2049", "1917"); the number counts as a year only when that finds no exact match
+    const nq = this.norm(q), nb = this.norm(bare);
+    let list = await look(q);
+    if (year && bare.length >= 2 && !list.some((x) => this.norm(x.name) === nq)) { const have = new Set(list.map((x) => x.id)); list = list.concat((await look(bare)).filter((x) => !have.has(x.id))); }
+    list.forEach((x) => {
+      const m = this.norm(x.name), full = m === nq, n = full || !year ? nq : nb;
+      x.score = (m === n ? 100 : m.startsWith(n) || n.startsWith(m) ? 40 : m.includes(n) ? 25 : 0) + (10 - Math.min(10, x.i)) + (!full && year && String(x.year).startsWith(year) ? 45 : 0);
+    });
     list.sort((a, b) => b.score - a.score);
     const seen = new Set(); return list.filter((x) => (seen.has(x.id) ? false : seen.add(x.id)));
   },
@@ -3715,7 +3785,9 @@ const Ask = {
     return { ...x, type: 'series', vid: `${x.id}:${s}:${e}`, ep: [s, e], name: m.name || x.name };
   },
   async title(act, q, kind, ep) {
-    const res = await this.find(q, ep ? 'series' : kind);
+    let res = null;
+    if (this.cut && !ep && !/\b(please|thanks|thank you|miko)\b/.test(this.cut)) { const r0 = await this.find(`${q} ${this.cut}`, kind); if (r0.length && r0[0].score >= 100) res = r0; }
+    if (!res) res = await this.find(q, ep ? 'series' : kind);
     if (!res.length) { if (this.cfg()) return 'defer'; this.say(`I couldn’t find “${q}”.`); return; }
     let x = res[0]; const sure = x.score >= 100 || (res.length === 1 && x.score >= 25);
     if (!sure && this.cfg()) return 'defer';
@@ -3792,6 +3864,8 @@ const Ask = {
     for (let i = 0; i < w.length; i++) {
       const n = this.NUM[w[i]];
       if (n == null) { out.push(w[i]); continue; }
+      // "a bit louder" is not "1": the article stays a word before bit, little, lot, tad, notch...
+      if ((w[i] === 'a' || w[i] === 'an') && /^(bit|little|lot|tad|touch|smidge|notch|step|bunch)$/.test(w[i + 1] || '')) { out.push(w[i]); continue; }
       if (n >= 20 && n % 10 === 0 && this.NUM[w[i + 1]] != null && this.NUM[w[i + 1]] < 10 && this.NUM[w[i + 1]] > 0) { out.push(String(n + this.NUM[w[i + 1]])); i++; continue; }
       out.push(String(n));
     }
@@ -3811,7 +3885,9 @@ const Ask = {
   clean(text) {
     let t = String(text).toLowerCase().replace(/[’‘]/g, "'").replace(/[“”"]/g, '').replace(/[.!?,;]+/g, ' ').replace(/\s+/g, ' ').trim();
     for (let i = 0; i < 3; i++) t = t.replace(/^(hey|hi|ok|okay|so|um|uh|remote|mkcinema|tv|please|can you|could you|would you|will you|can we|could we|i want you to|go ahead and|just|now|quickly)\b\s*/, '');
-    for (let i = 0; i < 2; i++) t = t.replace(/\s*\b(please|for me|now|thanks|thank you|right now)$/, '');
+    // the words cut from the end are kept: a title can end in them ("Apocalypse Now"), and is searched in full first
+    this.cut = '';
+    for (let i = 0; i < 2; i++) t = t.replace(/\s*\b(please|for me|now|thanks|thank you|right now)$/, (x) => { this.cut = `${x.trim()} ${this.cut}`.trim(); return ''; });
     return t.trim();
   },
   parse(text) {
@@ -3842,6 +3918,7 @@ const Ask = {
     }
     // where in the film
     if (/\b(start (it )?over|restart|from the (start|beginning|top)|(go|back|skip|jump) to the (start|beginning)|beginning)\b/.test(t) && !/^(play|watch|put on) (?!it\b|this\b|from\b)/.test(t)) return async () => { if (this.needPlay()) return; this.seek(0); this.did('From the start'); };
+    if ((m = n.match(/(?:^|\b(?:to|at) )minute (\d+)\b/))) { const mm = Number(m[1]); return async () => { if (this.needPlay()) return; const t2 = this.seek(mm * 60); this.did(`Jumped to ${fmt(t2)}`); }; }
     const span = this.dur(n), clk = this.clock(n);
     if ((span != null || clk != null) && (m = n.match(/\b(go|jump|skip|seek|move|take me|start|fast forward|rewind|back|go back)( it)? (to|at)\b|\bminute (\d+)|\bthe (\d+) (hour|minute) mark\b|^(at|to) /))) {
       return async () => { if (this.needPlay()) return; const at = clk != null ? clk : m[4] ? Number(m[4]) * 60 : m[5] ? Number(m[5]) * (m[6] === 'hour' ? 3600 : 60) : span; const t2 = this.seek(at); this.did(`Jumped to ${fmt(t2)}`); };
@@ -3866,19 +3943,21 @@ const Ask = {
     if (/\b(how (long|much)( time)? (is |has it got |have we got |do we have )?left|time left|time remaining|how long to go|when (does|will) (it|this|the (film|movie|episode)) (end|finish|be over)|what time (does|will) (it|this) (end|finish))\b/.test(t)) return async () => this.left();
     if (/^(where are we|what time is it in the (film|movie|show)|how far (in|through) (are we|is it))$/.test(t)) return async () => { if (this.needPlay()) return; this.say(`You’re ${fmt(this.pos())} in${R.base.dur ? `, of ${fmt(R.base.dur)}` : ''}.`); };
     // questions about what's on (or a named title)
+    // "play The Score", "watch Plot Against America": a leading play or watch means a title, not a question
+    const playLead = /^(?:can we |let's |lets |i want to |i wanna |i'd like to |i would like to )?(?:play|watch|put on|start|stream|throw on) (?!(?:the |a )?trailer\b)\S/.test(t);
     if ((m = t.match(/^who(?:'s| is) (?:playing|the actor (?:playing|who plays)) (.+)$|^who plays (.+?)(?: in (?:this|it))?$/)) && !/^(in )?(this|it|that)$/.test(m[1] || m[2])) {
       let role = (m[1] || m[2]).replace(/^the /, ''), inT = role.match(/^(.+?) in (.+)$/); if (inT && target(inT[2])) role = inT[1]; else inT = null;
       return async () => { if (inT) { const r = await this.find(inT[2]); if (!r.length) { this.say(`I couldn’t find “${inT[2]}”.`); return; } await this.whoPlays(r[0], role); return; } const x = this.needNow(); if (x) await this.whoPlays(x, role); };
     }
     if ((m = t.match(/^(?:who(?:'s| is| are)(?: in| starring in| the (?:cast|actors) (?:of|in))|cast (?:of|for)|who stars in|who acts in|actors (?:in|of)) (.+)$/)) && target(m[1])) { const q = target(m[1]); return () => this.title('cast', q); }
-    if (/\b(who(?:'s| is| are)? (in (it|this|that)|starring|acting|on screen)|who stars|the cast|cast list|^cast$|the actors|who's that|who is that)\b/.test(t)) return async () => { const x = this.needNow(); if (x) await this.castOf(x); };
-    if (/\b(who directed|director|who made (it|this))\b/.test(t)) return async () => { const x = this.needNow(); if (x) await this.crewOf(x, false); };
-    if (/\b(who wrote|writer|screenplay)\b/.test(t)) return async () => { const x = this.needNow(); if (x) await this.crewOf(x, true); };
-    if (/\b(what('s| is) (it|this|that|the (film|movie|show|story|episode)) about|plot|summary|synopsis|premise|the story)\b/.test(t) && !/\b(with|starring)\b/.test(t)) return () => this.aboutNow('plot');
-    if (/\b(rating|rated|is it (any )?good|reviews?|imdb|score)\b/.test(t)) return () => this.aboutNow('rating');
-    if (/\b(what year|when was (it|this) (made|released|out)|release date|how old is (it|this))\b/.test(t)) return () => this.aboutNow('year');
-    if (/\b(how long is (it|this|the (film|movie|episode))|runtime|run time)\b/.test(t)) return () => this.aboutNow('runtime');
-    if (/\b(what (kind|type|sort|genre) of|genre)\b/.test(t)) return () => this.aboutNow('genre');
+    if (!playLead && /\b(who(?:'s| is| are)? (in (it|this|that)|starring|acting|on screen)|who stars|the cast|cast list|^cast$|the actors|who's that|who is that)\b/.test(t)) return async () => { const x = this.needNow(); if (x) await this.castOf(x); };
+    if (!playLead && /\b(who directed|director|who made (it|this))\b/.test(t)) return async () => { const x = this.needNow(); if (x) await this.crewOf(x, false); };
+    if (!playLead && /\b(who wrote|writer|screenplay)\b/.test(t)) return async () => { const x = this.needNow(); if (x) await this.crewOf(x, true); };
+    if (!playLead && /\b(what('s| is) (it|this|that|the (film|movie|show|story|episode)) about|plot|summary|synopsis|premise|the story)\b/.test(t) && !/\b(with|starring)\b/.test(t)) return () => this.aboutNow('plot');
+    if (!playLead && /\b(rating|rated|is it (any )?good|reviews?|imdb|score)\b/.test(t)) return () => this.aboutNow('rating');
+    if (!playLead && /\b(what year|when was (it|this) (made|released|out)|release date|how old is (it|this))\b/.test(t)) return () => this.aboutNow('year');
+    if (!playLead && /\b(how long is (it|this|the (film|movie|episode))|runtime|run time)\b/.test(t)) return () => this.aboutNow('runtime');
+    if (!playLead && /\b(what (kind|type|sort|genre) of|genre)\b/.test(t)) return () => this.aboutNow('genre');
     if (/^(what('s| is) (this|on|playing|on (the )?tv)|what am i watching|what('s| is) the name of (this|it))$/.test(t)) return async () => { const x = this.needNow(); if (x) this.say(`${x.name || 'This'}${R.st.sub ? `, ${R.st.sub}` : ''}.`, { html: this.cards([x], { noGo: this.playing() }) }); };
     if (/\b(where (can i|to|else can i) (watch|stream)|which (service|app)s? (has|have))\b/.test(t)) return async () => { const x = this.needNow(); if (x) this.toInfo({ k: 'title', type: x.type, id: x.id, name: x.name }); };
     if (/^(details|more (info|details)|tell me (more|about (it|this))|show (me )?(the )?details|info)$/.test(t)) return async () => { const x = this.needNow(); if (x) this.toInfo({ k: 'title', type: x.type, id: x.id, name: x.name }); };
@@ -4166,7 +4245,7 @@ Rules:
     if (this.rec) { this.stopMic(); return; }
     const r = this.rec = new SR(); r.lang = navigator.language || 'en-US'; r.interimResults = true; r.maxAlternatives = 1;
     $('#akMic').classList.add('live'); $('#akView').classList.add('hear'); this.mode(); $('#akQ').placeholder = 'Listening…'; buzz(10);
-    r.onresult = (e) => { let s = ''; for (const res of e.results) s += res[0].transcript; $('#akQ').value = s.trim(); if (e.results[e.results.length - 1].isFinal) { const q = s.trim(); this.stopMic(); $('#akQ').value = ''; if (q) this.ask(q); } };
+    r.onresult = (e) => { if (this.rec !== r) return; let s = ''; for (const res of e.results) s += res[0].transcript; $('#akQ').value = s.trim(); if (e.results[e.results.length - 1].isFinal) { const q = s.trim(); this.stopMic(); $('#akQ').value = ''; if (q) this.ask(q); } };
     r.onerror = (e) => { this.stopMic(); if (e.error === 'not-allowed') this.say('Allow the microphone for this page to talk to the remote.', { quiet: true }); };
     r.onend = () => this.stopMic();
     try { r.start(); } catch (e) { this.stopMic(); }
@@ -4210,6 +4289,133 @@ Rules:
     paint();
   }
 }
+/* ---------- MK Remote for Android ----------
+   The app (MKCinemaRemote/ in the user agent) calls window.MKRemote: vol(+1|-1) sends the phone's volume buttons to the
+   TV while a film plays there and answers true when it did; back() closes the remote's own sheet or panel and answers
+   true, or false so the app can close. Phones on Android in a browser are offered the app in the menu. */
+{
+  const inApp = /MKCinemaRemote\//.test(navigator.userAgent);
+  window.MKRemote = {
+    vol(d) { if (!R.live() || !R.st || R.st.v !== 'player') return false; R.key(d > 0 ? 'volup' : 'voldown'); buzz(6); return true; },
+    back() {
+      const open = (typeof sheet !== 'undefined' && sheet) || (typeof Info !== 'undefined' && Info.on) || (typeof Ask !== 'undefined' && Ask.on);
+      if (!open) return false;
+      try { window.back(); } catch (e) { /* nothing open */ }
+      return true;
+    },
+  };
+  if (!inApp && /Android/i.test(navigator.userAgent) && $('#mForget') && !$('#mApk')) {
+    $('#mForget').insertAdjacentHTML('beforebegin', '<a class="item" href="https://mkcinema.app/remote-app" id="mApk" target="_blank" rel="noopener"><svg class="i"><use href="#i-install"/></svg>Get the MK Remote app for Android</a>');
+  }
+}
+/* ---------- MK Remote on iPhone and iPad ----------
+   There is no App Store app, so on iPhone the remote is this page on the Home Screen. Safari has no install button
+   a page can press, so after the first good connection the remote offers a short "Add to Home Screen" guide once (and
+   keeps it in the menu). While the guide is open, the address carries this TV's code, so a Home Screen copy that
+   starts from the current address pairs by itself; otherwise the guide shows the code to type once. Home Screen web
+   apps can't open from the camera, so their pairing screen asks for the typed code. The screen stays on while you use
+   the remote (it may sleep after 3 minutes without a touch), and the sheets ride above the iPhone keyboard. */
+const IOSApp = {
+  ios: /iP(hone|od|ad)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),
+  home: navigator.standalone === true || (() => { try { return matchMedia('(display-mode: standalone)').matches; } catch (e) { return false; } })(),
+  can() { return this.ios && !this.home; },
+  link() {
+    if (!R.code) return '';
+    const t = TVs.get(R.code), k = R.qk || (t && t.k) || '', sb = R.sb || (t && t.sb);
+    let h = R.code + (/^[A-Za-z0-9_-]{22}$/.test(k) ? '_' + k : '');
+    if (sb && sb.url) { try { h += '.' + btoa(JSON.stringify({ u: sb.url, k: sb.key })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); } catch (e) { /* plain code */ } }
+    return h;
+  },
+  build() {
+    if ($('#iosAdd')) return;
+    const share = '<svg class="i" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m8 7 4-4 4 4"/><path d="M8 11H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-2"/></svg>';
+    const add = '<svg class="i" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="4"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>';
+    const el = document.createElement('div');
+    el.className = 'sheet'; el.id = 'iosAdd'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Add MK Remote to your Home Screen');
+    el.innerHTML = '<div class="grab"></div><h3>On your Home Screen</h3>'
+      + '<div class="ia-lede"><svg aria-hidden="true"><use href="#mk"/></svg><span><b>Keep the remote one tap away</b><small>It opens full screen, like an app. Free, nothing to download.</small></span></div>'
+      + '<ol class="ia-steps">'
+      + '<li><i class="n">1</i><span>Tap Share<small>At the bottom of Safari, or in the ••• menu on newer iPhones</small></span>' + share + '</li>'
+      + '<li><i class="n">2</i><span>Tap Add to Home Screen<small>Scroll down the list if you don’t see it</small></span>' + add + '</li>'
+      + '<li><i class="n">3</i><span>Tap Add<small>Then open MK Remote from your Home Screen</small></span></li>'
+      + '</ol><p class="ia-code" id="iaCode" hidden></p>'
+      + '<div class="acts"><button class="btn btn-ghost" type="button" id="iaLater">Not now</button><button class="btn btn-prime" type="button" id="iaOk">Got it</button></div>';
+    document.body.appendChild(el);
+    $('#iaLater').onclick = () => closeSheet(); $('#iaOk').onclick = () => closeSheet();
+    // the address carries the TV's code only while the guide is open (the remote clears it again, as after pairing)
+    new MutationObserver(() => {
+      if (el.classList.contains('on')) { const h = this.link(); if (h) history.replaceState(null, '', location.pathname + '#' + h); }
+      else if (location.hash) history.replaceState(null, '', location.pathname);
+    }).observe(el, { attributes: true, attributeFilter: ['class'] });
+  },
+  guide() {
+    if (!this.can()) return;
+    this.build(); Store.set('iosAdd', true);
+    const c = $('#iaCode');
+    c.hidden = !R.code;
+    if (R.code) c.innerHTML = 'If it asks for a code, type your TV’s code once: <b class="tnum">' + R.code + '</b>';
+    openSheet('iosAdd'); buzz(6);
+  },
+  /* offered once, a few seconds after this phone first reaches a TV */
+  offer() {
+    if (!this.can() || Store.get('iosAdd', false)) return;
+    let n = 0;
+    const t = setInterval(() => {
+      if (Store.get('iosAdd', false)) { clearInterval(t); return; }
+      n = R.st && R.mode !== 'pair' && R.mode !== 'plainpair' && R.mode !== 'denied' && !document.hidden ? n + 1 : 0;
+      if (n >= 4 && !sheet) { clearInterval(t); this.guide(); }
+    }, 1000);
+  },
+  /* the screen stays on while the remote is in use */
+  lock: null, touched: Date.now(), asking: false,
+  async awake() {
+    const want = !document.hidden && !!R.link && !!R.code && Date.now() - this.touched < 180000;
+    try {
+      if (want && !this.lock && !this.asking && navigator.wakeLock) {
+        this.asking = true;
+        const l = await navigator.wakeLock.request('screen'); this.asking = false;
+        this.lock = l; l.addEventListener('release', () => { if (this.lock === l) this.lock = null; });
+      } else if (!want && this.lock) { const l = this.lock; this.lock = null; l.release().catch(() => {}); }
+    } catch (e) { this.asking = false; }
+  },
+  /* the iPhone keyboard covers the bottom of the page instead of resizing it: lift the sheets above it */
+  keyboard() {
+    const vv = window.visualViewport; if (!vv) return;
+    const fit = () => {
+      const kb = Math.max(0, Math.round(innerHeight - vv.height - vv.offsetTop));
+      document.documentElement.style.setProperty('--kb', (kb > 80 ? kb : 0) + 'px');
+      document.documentElement.classList.toggle('kbup', kb > 80);
+    };
+    vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit);
+  },
+  start() {
+    if (this.ios) {
+      const st = document.createElement('style');
+      st.textContent = '.ia-lede{display:flex;align-items:center;gap:14px;margin:0 2px 14px}.ia-lede svg{width:48px;height:48px;flex:none;color:var(--champ)}'
+          + '.ia-lede b{display:block;font:600 17px/1.25 var(--f-display)}.ia-lede small{display:block;color:var(--mute);font-size:13px;margin-top:3px}'
+          + '.ia-steps{list-style:none;margin:0;padding:0;display:grid;gap:8px}.ia-steps li{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:var(--glass);font-size:14px}'
+          + '.ia-steps .n{width:26px;height:26px;border-radius:50%;flex:none;display:grid;place-items:center;font:600 12px/1 var(--f-display);color:#0a0a0b;background:var(--plat)}'
+          + '.ia-steps li span{flex:1;min-width:0}.ia-steps li small{display:block;color:var(--dim);font-size:12px;margin-top:2px}.ia-steps li>svg{color:var(--ink)}'
+          + '.ia-code{margin:12px 2px 0;color:var(--mute);font-size:13px}.ia-code b{color:var(--champ);font:700 15px/1 var(--f-display);letter-spacing:.18em}'
+          + '#iosAdd{max-height:calc(100dvh - var(--kb,0px) - 16px);overflow-y:auto;overscroll-behavior:contain}#iosAdd .btn{white-space:nowrap;padding:0 18px}'
+          + '@media (max-height:700px){.ia-lede{margin-bottom:10px}.ia-lede svg{width:40px;height:40px}.ia-lede small{display:none}.ia-steps li{padding:9px 12px}.ia-code{margin-top:10px}}'
+          + '.ios .sheet{bottom:var(--kb,0px)}.ios.kbup .sheet{padding-bottom:18px}';
+      document.head.appendChild(st);
+      document.documentElement.classList.add('ios'); this.keyboard();
+    }
+    if (this.ios && this.home) {
+      // a Home Screen app can't be opened by the camera, so its pairing screen asks for the typed code
+      const p = $('#pair .pair-body p');
+      if (p) p.innerHTML = 'Open MKCinema on your TV and type the 6-character code from <b>Settings › Devices › Phone remote</b>. You only do this once.';
+    }
+    this.offer();
+    const touch = () => { this.touched = Date.now(); if (!this.lock) this.awake(); };
+    addEventListener('pointerdown', touch, { capture: true, passive: true });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) this.touched = Date.now(); this.awake(); });
+    setInterval(() => this.awake(), 15000);
+  },
+};
+IOSApp.start();
 /* ---------- Start ---------- */
 (() => {
   // 2.69.9: the D-pad is the remote everyone starts with (once); the swipe pad stays one tap away in the menu

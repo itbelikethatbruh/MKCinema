@@ -33,6 +33,7 @@ const AudioLang = {
   hls(t) { const a = t.attrs || {}, ch = String(a.CHANNELS || ''); return this.label({ language: t.lang, title: t.name, channels: parseInt(ch, 10) || 0, atmos: /JOC/i.test(ch), codec: t.audioCodec }, 0); },
   tracks(list) { return (Array.isArray(list) ? list : []).map((t, n) => ({ i: n, label: this.label(t || {}, n), def: !!(t && typeof t === 'object' && (t.default || (t.disposition || {}).default)) })); },
   defIndex(tracks) { const d = tracks.find((t) => t.def); return d ? d.i : 0; },
+  repaint(s) { if (P.stream !== s) return; if (!$('#optMenu').hidden) renderOptMenu(); if (!$('#subMenu').hidden) renderSubMenu(); },
   // a lookup that hangs must not leave the menu saying "Checking" forever
   within(ms, p) { return Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error('no answer in time')), ms))]); },
   // which TorBox torrent and file this stream is, from MKCinema's own resolve or a Torrentio-style /resolve/torbox/ link
@@ -92,12 +93,13 @@ const AudioLang = {
     } catch (e) { st.err = st.err || e.message; }
     st.state = st.tracks && st.tracks.length > 1 || st.hlsOnly ? 'ok' : 'none';
     if (st.state === 'ok' && st.cur == null) st.cur = s._audio != null ? s._audio : st.via === 'srv' && P.remux ? P.remux.audio || 0 : st.hlsOnly ? -1 : this.defIndex(st.tracks);
-    if (P.stream === s && !$('#optMenu').hidden) renderOptMenu();
+    this.repaint(s);
     return st;
   },
   section(s) {
-    const st = this.info.get(s), head = '<h5>Audio language</h5>';
-    if (!st) this.probe(s);
+    let st = this.info.get(s); const head = '<h5>Audio language</h5>';
+    // the check is started, then its record read again, so a check that finished at once is drawn as finished
+    if (!st) { this.probe(s); st = this.info.get(s); }
     if (!st || st.state === 'loading') return `${head}<p class="al-note"><span class="spin"></span>Checking the languages in this file…</p>`;
     if (st.state === 'ok' && st.hlsOnly) return `${head}<button type="button" class="${s._audioTry ? 'on' : ''}" data-alang="-1"><i data-lucide="languages"></i>${s._audioTry ? 'All languages loaded · pick one above' : 'Load every language (TorBox stream)'}</button>`;
     if (st.state === 'ok') return `${head}${st.tracks.map((t) => `<button type="button" class="${st.cur === t.i ? 'on' : ''}" data-alang="${t.i}"><i data-lucide="audio-lines"></i>${esc(t.label)}</button>`).join('')}`;
@@ -107,7 +109,7 @@ const AudioLang = {
   },
   async pick(i) {
     const s = P.stream, st = s && this.info.get(s); if (!st || st.state !== 'ok' || st.cur === i && !(i === -1 && !s._audioTry)) return;
-    const t = st.tracks.find((x) => x.i === i), at = pNow(); st.cur = i; s._audio = i;
+    const t = st.tracks.find((x) => x.i === i), at = pNow(), tok = this.pickTok = (this.pickTok || 0) + 1; st.cur = i; s._audio = i;
     toast(i === -1 ? 'Loading TorBox’s stream with every language…' : `Audio: ${t ? t.label : `track ${i + 1}`}…`, 'info', 2600);
     if (st.via === 'srv') {
       if (P.remux) { P.remux.audio = i; Rescue.load(s, at); } else { Rescue.wantAudio = i; Rescue.start(s, at); }
@@ -118,9 +120,10 @@ const AudioLang = {
     if (i !== -1 && i === this.defIndex(st.tracks)) { s.url = s._audioBase; delete s._audioTry; }
     else {
       try { const r = i === -1 ? { hls: st.hls } : await this.within(30000, this.tbStream(st.ref, i)); if (!r.hls) throw new Error('TorBox did not return a stream'); s.url = r.hls; s._audioTry = Date.now(); }
-      catch (e) { toast(`TorBox: ${this.tbErr(e)}`, 'err', 6000); st.cur = st.hlsOnly ? -1 : this.defIndex(st.tracks); s._audio = null; return; }
+      catch (e) { if (tok !== this.pickTok) return; toast(`TorBox: ${this.tbErr(e)}`, 'err', 6000); st.cur = st.hlsOnly ? -1 : this.defIndex(st.tracks); s._audio = null; return; }
     }
-    if (P.stream !== s) return;
+    // a newer language pick, another film, or a closed player: this answer is no longer wanted
+    if (tok !== this.pickTok || P.stream !== s || $('#player').hidden) return;
     s._tel = Telemetry.parse(s);
     playStream(P.ctx, s, { startAt: at });
   },
@@ -128,7 +131,7 @@ const AudioLang = {
     const s = P.stream, st = s && this.info.get(s);
     if (st && st.state === 'ok' && !st.tracks.length) { if (!s._audioTry) this.pick(-1); else toast('Pick a language from the audio menu', 'info'); return true; }
     if (st && st.state === 'ok') { const n = st.tracks[(st.tracks.findIndex((t) => t.i === st.cur) + 1) % st.tracks.length]; this.pick(n.i); return true; }
-    if (s && !st) { this.probe(s).then((r) => { if (r.state === 'ok') this.cycle(); else toast('This stream has a single audio track'); }); return true; }
+    if (s && !st) { this.probe(s).then((r) => { if (P.stream !== s) return; if (r.state === 'ok') this.cycle(); else toast('This stream has a single audio track'); }); return true; }
     return false;
   },
 };

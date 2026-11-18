@@ -128,7 +128,7 @@
       if (!v || !v.e.length) return [];
       const changed = [];
       (meta.videos || []).forEach((ep) => {
-        if (Number(ep.season ?? 1) !== season || !this.shared(ep.thumbnail)) return;
+        if (Number(qq(ep.season, 1)) !== season || !this.shared(ep.thumbnail)) return;
         const p = this.match(ep, v.e); if (!p) return;
         const url = this.IMG + p; if (ep.thumbnail === url) return;
         ep.thumbnail = url; changed.push(ep);
@@ -147,7 +147,7 @@
     },
     fix(meta, season) {
       const tt = this.tt(meta); if (!tt || meta.type !== 'series' || !(season >= 1)) return;
-      if (!(meta.videos || []).some((ep) => Number(ep.season ?? 1) === season && this.shared(ep.thumbnail))) return;
+      if (!(meta.videos || []).some((ep) => Number(qq(ep.season, 1)) === season && this.shared(ep.thumbnail))) return;
       const k = `${tt}:${season}`, have = this.store().get(k);
       if (have) { this.apply(meta, season, have); return; }
       this.get(tt, season).then((v) => { if (v) this.paint(meta, this.apply(meta, season, v)); });

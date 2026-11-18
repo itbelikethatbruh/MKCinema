@@ -231,7 +231,7 @@ const Glasses = {
     }
     this.dev.forEach((d) => d.addEventListener('gattserverdisconnected', () => { if (this.dev.includes(d)) { this.forget(); this.changed(); } }));
     this.shown = null; this.changed();
-    this.show(['MKCinema', 'Subtitles will show here']);
+    this.show(['MKCinema', 'Subtitles will show here']); this.holdUntil = Date.now() + 3000;
     return this.label();
   },
   async open(d, S) {
@@ -361,7 +361,7 @@ const GlPlayer = {
     }
     return [];
   },
-  tick() { if (!Glasses.on()) { this.stop(); return; } Glasses.show(this.lines()); },
+  tick() { if (!Glasses.on()) { this.stop(); return; } const l = this.lines(); if (!l.length && Date.now() < (Glasses.holdUntil || 0)) return; Glasses.show(l); },
   start() { if (this.t || !Glasses.on()) return; this.t = setInterval(() => this.tick(), 120); this.tick(); },
   stop() { clearInterval(this.t); this.t = 0; },
   async pick(kind) {

@@ -4,11 +4,11 @@
 /* ---- search: one rounded field holding the icon, the text, Clear and the mic ---- */
 html:not(.tv) .pal-in{gap:10px}
 html:not(.tv) .pal-field{flex:1;min-width:0;display:flex;align-items:center;gap:2px;height:48px;padding:0 5px 0 16px;border-radius:999px;
-  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);transition:border-color .2s ease,background-color .2s ease,box-shadow .2s ease}
+  background:rgba(var(--kffffff-c,255,255,255),.06);border:1px solid rgba(var(--kffffff-c,255,255,255),.1);transition:border-color .2s ease,background-color .2s ease,box-shadow .2s ease}
 html:not(.tv) .pal-field>svg{flex:none;width:18px;height:18px;color:var(--mute);margin-right:8px}
 html:not(.tv) .pal-field input{flex:1;min-width:0;height:100%;padding:0;background:none;border:0;border-radius:0;font-size:calc(16px * var(--ts,1))}
 html:not(.tv) .pal-field input:focus,html:not(.tv) .pal-field input:focus-visible{outline:none;box-shadow:none}
-html:not(.tv) .pal-field:focus-within{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.26);box-shadow:0 0 0 4px rgba(255,255,255,.05)}
+html:not(.tv) .pal-field:focus-within{background:rgba(var(--kffffff-c,255,255,255),.08);border-color:rgba(var(--kffffff-c,255,255,255),.26);box-shadow:0 0 0 4px rgba(var(--kffffff-c,255,255,255),.05)}
 html:not(.tv) .pal-field .pal-x,html:not(.tv) .pal-field .pal-mic{width:38px;height:38px;border-radius:999px}
 html:not(.tv) .pal-field .pal-x:focus-visible,html:not(.tv) .pal-field .pal-mic:focus-visible{outline-offset:0;box-shadow:none}
 

@@ -1,0 +1,6 @@
+/* 2.70 native player: the page is see-through over the native picture while a film plays. The root's colour scheme
+   goes light so the browser doesn't paint its dark page canvas; everything inside keeps the dark scheme. */
+html.mk-native-on{color-scheme:light!important}
+html.mk-native-on body{color-scheme:dark}
+html.mk-native-on,html.mk-native-on body,html.mk-native-on #player,html.mk-native-on #stage{background:transparent!important;background-image:none!important}
+html.mk-native-on body::before,html.mk-native-on body::after,html.mk-native-on #amb,html.mk-native-on #video,.mk-nv-under{visibility:hidden!important} html.mk-native-on ::backdrop,html.mk-native-on #player::backdrop{background:transparent!important}

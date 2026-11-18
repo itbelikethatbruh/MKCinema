@@ -39,7 +39,7 @@ const Sensory = {
   stop() {
     this.live = false;
     if (this.h && video.cancelVideoFrameCallback) try { video.cancelVideoFrameCallback(this.h); } catch (e) { /* gone */ }
-    cancelAnimationFrame(this.raf); this.h = 0; this.raf = 0; this.setDim(false);
+    cancelAnimationFrame(this.raf); clearTimeout(this.relT); this.h = 0; this.raf = 0; this.setDim(false);
   },
   /* sRGB 0-255 to linear light */
   lin(c) { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); },
@@ -68,6 +68,8 @@ const Sensory = {
     // 3 swings inside a second is the start of flashing; dim before it reaches the 3 flashes a second WCAG warns about
     if (this.ev.length >= 3 || trig) this.dimUntil = now + this.HOLD;
     this.setDim(now < this.dimUntil);
+    // a paused film draws no new frames: a timer lets the dim go once its hold is over
+    clearTimeout(this.relT); if (now < this.dimUntil) this.relT = setTimeout(() => { if (performance.now() >= this.dimUntil) this.setDim(false); }, this.dimUntil - now + 50);
   },
   /* ---------- sound: a second, faster stage after the sound-mode compressor, so a bang can't punch through ---------- */
   limiter() {

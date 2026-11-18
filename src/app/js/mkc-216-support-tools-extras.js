@@ -88,7 +88,7 @@ const DeviceInfo = {
   settings() {
     const c = {};
     for (const [k, v] of Object.entries(CFG)) {
-      if (/key|token|secret|pass|pin|css|party|atelier|keymap|name|email|url|proxy/i.test(k)) continue;
+      if (/key|token|secret|pass|pin|css|party|atelier|keymap|name|email|url|proxy|share/i.test(k)) continue;
       if (typeof v === 'string' && v.length > 60) continue;
       c[k] = v;
     }
@@ -272,27 +272,33 @@ const Diagnostic = {
       <div id="dgBody">${last ? this.report(last, true) : ''}</div>
       <div class="actions"><button class="btn btn-prime" type="button" data-nav id="dgRun"><i data-lucide="activity"></i>${last ? 'Run again' : 'Start'}</button></div>`;
     icons(); X8.open('diagLayer'); $('#dgRun').onclick = () => this.run();
+    if (this.busy) { $('#dgRun').hidden = true; this.paint(); }
     if (IS_TV) setTimeout(() => Nav.focus($('#dgRun')), 60);
   },
   saved() { try { return JSON.parse(localStorage.getItem('mkc:diag') || 'null'); } catch (e) { return null; } },
+  paint() {
+    const body = $('#dgBody'), st = this.st || {}; if (!body || !this.steps) return;
+    body.innerHTML = `<ol class="dg-steps">${this.steps.map(([k, l]) => `<li data-dg="${k}" class="${(st[k] && st[k].c) || ''}"><i class="dg-dot"></i>${esc(l)}<small>${esc((st[k] && st[k].t) || '')}</small></li>`).join('')}</ol>`;
+  },
   async run() {
     if (this.busy) return; this.busy = true;
-    const body = $('#dgBody'), btn = $('#dgRun'); if (btn) btn.hidden = true;
-    const steps = [['codecs', 'Video and sound decoders'], ['frames', 'Interface smoothness'], ['speed', 'Connection speed'], ['addons', 'Your addons']];
-    body.innerHTML = `<ol class="dg-steps">${steps.map(([k, l]) => `<li data-dg="${k}"><i class="dg-dot"></i>${esc(l)}<small></small></li>`).join('')}</ol>`;
+    { const btn = $('#dgRun'); if (btn) btn.hidden = true; }
+    const steps = this.steps = [['codecs', 'Video and sound decoders'], ['frames', 'Interface smoothness'], ['speed', 'Connection speed'], ['addons', 'Your addons']];
+    this.st = {}; this.paint();
     const r = { at: Date.now(), app: APP_VERSION, device: DeviceInfo.get() };
     for (const [k] of steps) {
-      const li = $(`[data-dg="${k}"]`, body); li.classList.add('on');
-      try { r[k] = await this[k](); li.classList.add('ok'); $('small', li).textContent = this.short(k, r[k]); }
-      catch (e) { r[k] = null; li.classList.add('bad'); $('small', li).textContent = e.message || 'did not finish'; }
-      li.classList.remove('on');
+      this.st[k] = { c: 'on', t: '' }; this.paint();
+      try { r[k] = await this[k](); this.st[k] = { c: 'ok', t: this.short(k, r[k]) }; }
+      catch (e) { r[k] = null; this.st[k] = { c: 'bad', t: e.message || 'did not finish' }; }
+      this.paint();
     }
     r.recommend = this.recommend(r);
     try { localStorage.setItem('mkc:diag', JSON.stringify(r)); } catch (e) { /* full */ }
     MKLog.add('info', `diagnostic: ${Object.entries({ fps: r.frames && r.frames.fps, mbps: r.speed && r.speed.mbps, hevc: r.codecs && r.codecs.hevc && r.codecs.hevc.ok, hevc4k: r.codecs && r.codecs.hevc4k && r.codecs.hevc4k.smooth }).map(([a, v]) => `${a}=${v}`).join(' ')}`);
-    body.innerHTML = this.report(r, false); icons(); this.bindReport(r);
+    this.busy = false; this.steps = null;
+    const body = $('#dgBody'), btn = $('#dgRun');
+    if (body) { body.innerHTML = this.report(r, false); icons(); this.bindReport(r); }
     if (btn) { btn.hidden = false; btn.lastChild.textContent = 'Run again'; }
-    this.busy = false;
   },
   short(k, v) {
     if (!v) return '';
@@ -418,7 +424,8 @@ const AppleTrailer = {
   norm: (s) => String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/&/g, 'and').replace(/^the\s+/, '').replace(/[^a-z0-9]+/g, ''),
   cache() { try { return JSON.parse(localStorage.getItem('mkc:apl') || '{}'); } catch (e) { return {}; } },
   async find(meta) {
-    if (!meta || meta.type !== 'movie' || !meta.name) return null;
+    // a title with no Latin letters or digits cleans to nothing, and nothing matches every film: no Apple match then
+    if (!meta || meta.type !== 'movie' || !meta.name || !this.norm(meta.name)) return null;
     const c = this.cache(), hit = c[meta.id];
     if (hit && Date.now() - hit.at < (hit.u ? 7 : 2) * 864e5) return hit.u ? hit : null;
     if (this.mem.has(meta.id)) return this.mem.get(meta.id);
@@ -458,9 +465,12 @@ const AppleTrailer = {
 {
   const pt = playTrailer;
   playTrailer = async function (meta) {
-    const args = arguments, yt = () => pt.apply(this, args);
+    const args = arguments, yt = () => pt.apply(this, args), tok = TR.req = (TR.req || 0) + 1, wasDetail = !$('#detail').hidden;
+    // a trailer that is found late never opens over a film, or after the person left the page or pressed again
+    const still = () => TR.req === tok && $('#player').hidden && (!wasDetail || !$('#detail').hidden);
     if (meta && meta.type === 'movie' && !engine.offline) {
       const hit = await Promise.race([AppleTrailer.find(meta), sleep(2500).then(() => null)]).catch(() => null);
+      if (!still()) return;
       if (hit) { AppleTrailer.play(hit, meta, yt); return; }
     }
     return yt();
@@ -584,6 +594,9 @@ const AnimeHub = {
         this.row = this.row || await this.list('kitsu-anime-trending');
         $('.rail', sec).innerHTML = this.row.slice(0, 20).map((m) => cardHTML(m)).join(''); icons();
       } catch (e) { sec.remove(); return; }
+      // another redraw placed its own row during the wait: keep that one
+      const other = $('#animeRow'); if (other && other !== sec) return;
+      if (!$('#homeRows') || CFG.animeRow === false || this.kids()) return;
     }
     const after = $('#netRow') || $('#homeRows .t10c') && $('#homeRows .t10c').closest('#homeRows > section');
     if (after && after.parentNode === rows) { if (after.nextElementSibling !== sec) after.after(sec); }
@@ -903,7 +916,8 @@ const MkvSubs = {
   },
   /* where byte ranges come from: the file itself, the stream link, or your MKCinema proxy when the host blocks browsers */
   async reader(stream) {
-    if (stream._local && this.localFile) { const f = this.localFile; return async (a, b) => new Uint8Array(await f.slice(a, b + 1).arrayBuffer()); }
+    // only the file opened from disk itself; a played download is read through its own link
+    if (stream._local && !stream._dl && this.localFile) { const f = this.localFile; return async (a, b) => new Uint8Array(await f.slice(a, b + 1).arrayBuffer()); }
     const bh = stream.behaviorHints || {}, headers = bh.proxyHeaders && bh.proxyHeaders.request;
     const range = async (url, a, b) => {
       const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 15000);
@@ -1038,7 +1052,7 @@ const MkvSubs = {
     const p = []; let rest = text;
     for (let i = 0; i < 8; i++) { const c = rest.indexOf(','); if (c < 0) return null; p.push(rest.slice(0, c)); rest = rest.slice(c + 1); }
     const ts = (v) => { v = Math.max(0, v); const h = Math.floor(v / 3600), m = Math.floor(v % 3600 / 60), sec = v % 60; return `${h}:${String(m).padStart(2, '0')}:${sec.toFixed(2).padStart(5, '0')}`; };
-    return { o: Number(p[0]) || 0, s, e, line: `Dialogue: ${p[1]},${ts(s)},${ts(e)},${p.slice(2, 8).join(',')},${rest.replace(/\r?\n/g, '\\N')}` };
+    return { o: Number(p[0]) || 0, s, e, line: `Dialogue: ${p[1]},${ts(s)},${ts(e)},${p.slice(2, 8).join(',')},${rest.replace(/\r?\n/g, '\\N')}`, text: rest.replace(/\{[^}]*\}/g, '').replace(/\\N/gi, '\n').replace(/\\h/g, ' ').trim() };
   },
   plain(text, t) {
     if (t.ass) { const p = text.split(','); return p.slice(8).join(',').replace(/\{[^}]*\}/g, '').replace(/\\N/gi, '\n').replace(/\\h/g, ' ').trim(); }
@@ -1227,7 +1241,9 @@ UiSound.init();
     if (!ytFirst() || !meta) return apl.apply(this, arguments);
     const hasYt = (meta.trailerStreams || []).some((t) => t.ytId) || (meta.trailers || []).some((t) => t.source);
     if (!hasYt && meta.type === 'movie') {
+      const tok = TR.req = (TR.req || 0) + 1, wasDetail = !$('#detail').hidden;
       const hit = await AppleTrailer.find(meta);
+      if (TR.req !== tok || !$('#player').hidden || (wasDetail && $('#detail').hidden)) return;
       if (hit) { AppleTrailer.play(hit, meta, () => toast('No official trailer is listed for this title', 'err')); return; }
     }
     if (meta.type === 'movie') fbMeta = meta;

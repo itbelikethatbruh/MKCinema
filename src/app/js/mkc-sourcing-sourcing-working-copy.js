@@ -27,7 +27,9 @@
   video.addEventListener('timeupdate', () => {
     if (P.mkReal || t0 < 0 || video.paused) return;
     const d = pNow() - t0; if (d >= 2.5 && d < 40) P.mkReal = true;
+    else if (d < 0 || d >= 40) t0 = pNow(); // a jump (automatic intro skip, resume, user seek): measure again from here
   });
+  video.addEventListener('seeked', () => { if (!P.mkReal && t0 >= 0) t0 = pNow(); });
   const setClock = (at, d0) => {
     const a = $('#pxCur'), b = $('#pxEnd'), c = $('#pTime');
     if (a) a.textContent = fmt(at || 0);
@@ -62,6 +64,7 @@
     // a copy that never really played says nothing about where the film is: the next one starts where the film was asked to
     if (!(P.mkReal && P.stream === failed)) at = P.mkWant || 0;
     else if (at == null) at = pNow();
+    P.mkWant = at || 0; // a second switch in a row starts from here too, not from the film's first start
     Sx.hopUntil = Date.now() + 14000;
     const r = fnext.call(this, failed, reason, at);
     if (!r) Sx.hopUntil = 0;
@@ -142,12 +145,13 @@
     const rec = { st: 'checking', at: Date.now(), p };
     Sx.res.set(s, rec);
     const t1 = performance.now();
-    return p.then(([st, why]) => {
+    // every caller of a check that is still running gets the same finished status, never the raw [status, why] pair
+    return (rec.p = p.then(([st, why]) => {
       if (Sx.res.get(s) === rec) { rec.st = st; rec.at = Date.now(); rec.why = why; rec.p = null; }
       try { if (st === 'ok') Preflight.mark(s, 'ok'); else if (st === 'bad') Preflight.mark(s, 'bad', why); } catch (e) { /* no memory */ }
       try { MKLog.add('info', `sourcing ${MKLog.describe(s)}: ${st}${why ? ` (${why})` : ''} in ${Math.round(performance.now() - t1)} ms`); } catch (e) { /* no log */ }
       return st;
-    });
+    }));
   };
   const isAuto = (ctx, s) => {
     try {

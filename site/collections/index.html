@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><script id="mkc-lang">(function(){try{var L="es pt fr de it pl tr ru id vi tl sw ha sm ar fa ur hi mr bn pa gu ta te kn ml th zh ja ko".split(" "),A={fil:"tl","in":"id"},s=null;try{s=localStorage.getItem("mkc-lang")}catch(e){}var c=s||(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||"en"]).map(function(x){x=String(x).toLowerCase().split("-")[0];return A[x]||x}).filter(function(x){return x==="en"||L.indexOf(x)>=0})[0]||"en";if(c!=="en"&&L.indexOf(c)<0)c="en";var h=document.documentElement;h.setAttribute("data-lang",c);if(c!=="en"){h.className+=" i18n-wait";window.__sl=fetch("/i18n/"+c+".json");setTimeout(function(){h.classList.remove("i18n-wait")},1500)}}catch(e){}})()</script><style id="mkc-lang-css">.i18n-wait body{opacity:0}.lang-pick{-webkit-appearance:none;appearance:none;font:inherit;font-size:13px;line-height:1;color:inherit;background:transparent url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23bbb%27 stroke-width=%271.6%27%3E%3Ccircle cx=%2712%27 cy=%2712%27 r=%279%27/%3E%3Cpath d=%27M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z%27/%3E%3C/svg%3E") no-repeat 10px 50%/15px;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:8px 12px 8px 30px;max-width:132px;cursor:pointer}.lang-pick:hover,.lang-pick:focus-visible{border-color:rgba(255,255,255,.4);outline:none}.lang-pick option{color:#111;background:#fff}.lang-foot{margin-top:14px}.nav-in .lang-pick,.bar-in .lang-pick{margin-right:8px}.links .lang-menu{display:none}@media (max-width:860px){.nav-in>.lang-pick{display:none}.nav.open .links .lang-menu{display:block;max-width:none;margin:16px 0 4px;font-size:16px;padding:12px 16px 12px 36px}}@media (max-width:640px){.bar-in .lang-pick{width:40px;max-width:40px;padding:8px 0 8px 32px;color:transparent;margin-right:4px}}html:not([data-lang=en]) .links{gap:20px}html:not([data-lang=en]) .links a{white-space:nowrap}@media (min-width:861px) and (max-width:1560px){html:not([data-lang=en]) .links a[href="#different"],html:not([data-lang=en]) .links a[href="#everything"],html:not([data-lang=en]) .links a[href="#iphone"]{display:none}}@media (min-width:861px) and (max-width:1240px){html:not([data-lang=en]) .links a[href="#social"],html:not([data-lang=en]) .links a[href="#faq"]{display:none}}[data-rtl]{unicode-bidi:plaintext}html:not([data-lang=en]):not([data-lang=es]):not([data-lang=pt]):not([data-lang=fr]):not([data-lang=de]):not([data-lang=it]):not([data-lang=pl]):not([data-lang=tr]):not([data-lang=id]):not([data-lang=vi]):not([data-lang=tl]):not([data-lang=sw]):not([data-lang=ha]):not([data-lang=sm]):not([data-lang=ru]) body *{letter-spacing:0!important}</style>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Collection maker: make a folder for MKCinema Home · MKCinema</title>
+<meta name="description" content="Make a MKCinema collection: a name, a cover picture and rows of films and shows. Share it with a code or a link. Free, in your browser.">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<meta name="author" content="Dee Lavish">
+<link rel="canonical" href="https://mkcinema.app/collections/">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#050505">
+<meta name="color-scheme" content="dark">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Collection maker · MKCinema">
+<meta property="og:description" content="Make a MKCinema collection: a name, a cover picture and rows of films and shows. Share it with a code or a link. Free, in your browser.">
+<meta property="og:image" content="https://mkcinema.app/og.jpg">
+<meta property="og:url" content="https://mkcinema.app/collections/">
+<meta property="og:site_name" content="MKCinema">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/fonts/fraunces-v1.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/onest-v1.woff2" as="font" type="font/woff2" crossorigin>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"MKCinema collection maker","url":"https://mkcinema.app/collections/","applicationCategory":"MultimediaApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+<style>
+
+@font-face{font-family:"Fraunces";font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/fraunces-v1.woff2) format("woff2")}
+@font-face{font-family:"Fraunces";font-style:italic;font-weight:400 600;font-display:swap;src:url(/fonts/fraunces-italic-v1.woff2) format("woff2")}
+@font-face{font-family:"Onest";font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/onest-v1.woff2) format("woff2")}
+:root{--bg:#050505;--card:#0f0f0f;--ink:#f3f0e9;--ink2:#c9c5bc;--mute:#8f8b84;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);--gold:#d8c29a;--serif:"Fraunces",Georgia,serif;--sans:"Onest",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.65 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--gold)}img{display:block;max-width:100%;height:auto}
+.wrap{max-width:860px;margin:0 auto;padding:0 clamp(16px,4vw,32px)}
+.skip{position:absolute;left:12px;top:-60px;padding:10px 16px;border-radius:10px;background:var(--ink);color:#0a0a0a;font-weight:600;text-decoration:none}.skip:focus{top:12px}
+header.bar{border-bottom:1px solid var(--line)}
+.bar-in{display:flex;align-items:center;gap:18px;height:68px;max-width:1180px;margin:0 auto;padding:0 clamp(16px,4vw,32px)}
+.brand{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font:500 18px/1 var(--serif);letter-spacing:.02em}
+.brand img{width:34px;height:34px}.brand b{font-weight:600}.brand i{font-style:normal;color:var(--ink2)}
+.bar nav{margin-left:auto;display:flex;align-items:center;gap:20px}.bar nav a.t{color:var(--ink2);text-decoration:none;font-size:14px}.bar nav a.t:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 22px;border-radius:999px;font:600 15px/1 var(--sans);text-decoration:none;white-space:nowrap}
+.btn.plat{color:#0a0a0a;background:linear-gradient(180deg,#fbf9f4,#d9d5cc);box-shadow:inset 0 1px 0 #fff,0 10px 30px -10px rgba(216,194,154,.5)}
+.btn.ghost{color:var(--ink);border:1px solid var(--line2);background:rgba(255,255,255,.03)}
+.crumbs{font-size:13px;color:var(--mute);margin:40px 0 0}.crumbs a{color:var(--ink2);text-decoration:none}.crumbs a:hover{color:var(--ink)}
+.eyebrow{margin-top:28px;font:600 11.5px/1 var(--sans);letter-spacing:.24em;text-transform:uppercase;color:var(--gold)}
+h1,h2,h3{font-family:var(--serif);font-weight:400;letter-spacing:-.02em;margin:0}
+h1{font-size:clamp(38px,6.4vw,66px);line-height:1.02;margin-top:14px}h1 em,h2 em{font-style:italic;color:var(--gold)}
+h2{font-size:clamp(26px,3.6vw,36px);line-height:1.1;margin-top:56px}
+h3{font-size:20px;margin-top:28px}
+.lead{font-size:clamp(17px,1.8vw,20px);color:var(--ink2);margin-top:22px;max-width:62ch}
+p{margin:16px 0 0;color:var(--ink2)}
+ol,ul{margin:16px 0 0;padding-left:22px;color:var(--ink2);display:grid;gap:10px}
+li b,p b{color:var(--ink);font-weight:600}
+code{font:500 13.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;background:rgba(255,255,255,.07);padding:3px 7px;border-radius:6px;color:var(--ink)}
+.shot{margin:34px 0 0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--card)}
+.shot figcaption{padding:12px 18px;font-size:13px;color:var(--mute);border-top:1px solid var(--line)}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.note{margin-top:22px;padding:16px 20px;border:1px solid var(--line);border-radius:14px;background:var(--card);font-size:14.5px;color:var(--ink2)}
+details{border:1px solid var(--line);border-radius:14px;background:#0a0a0a;margin-top:10px}
+summary{cursor:pointer;list-style:none;padding:18px 22px;font-weight:500;color:var(--ink)}summary::-webkit-details-marker{display:none}
+summary::after{content:"+";float:right;color:var(--gold);font-size:20px;line-height:1}details[open] summary::after{content:"\2212"}
+.det{padding:0 22px 20px;color:var(--ink2);font-size:15px}.det p{margin-top:0}
+.more{display:grid;gap:10px;margin-top:18px}.more a{display:block;padding:16px 20px;border:1px solid var(--line);border-radius:14px;background:var(--card);text-decoration:none;color:var(--ink)}
+.more a span{display:block;font-size:14px;color:var(--mute);margin-top:4px}.more a:hover{border-color:rgba(216,194,154,.5)}
+footer{border-top:1px solid var(--line);margin-top:80px;padding:40px 0 calc(40px + env(safe-area-inset-bottom));font-size:13.5px;color:var(--mute)}
+.foot{display:flex;flex-wrap:wrap;gap:8px 22px}.foot a{color:var(--ink2);text-decoration:none}.foot a:hover{color:var(--ink)}
+.legal{margin-top:22px;font-size:12.5px;line-height:1.6;color:var(--mute)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:6px}
+@media(max-width:560px){.bar nav a.t{display:none}}
+
+.box{margin-top:30px;padding:22px;border:1px solid var(--line2);border-radius:20px;background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.012))}
+.box label{display:block;font-weight:600;color:var(--ink);font-size:15px}
+.box small{display:block;color:var(--mute);font-size:13.5px;margin-top:4px}
+textarea{display:block;width:100%;margin-top:14px;min-height:96px;resize:vertical;padding:14px 16px;border-radius:14px;border:1px solid var(--line2);background:#0a0a0a;color:var(--ink);font:500 14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+textarea:focus{outline:none;border-color:rgba(216,194,154,.6)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
+button.btn{border:0;cursor:pointer}button.btn.ghost{border:1px solid var(--line2)}
+button.btn:disabled{opacity:.5;cursor:default}
+.priv{display:flex;gap:10px;align-items:flex-start;margin-top:16px;font-size:13.5px;color:var(--mute)}
+.priv svg{flex:none;margin-top:2px;color:var(--gold)}
+#out{margin-top:26px;display:grid;gap:12px}
+.st{margin:0;color:var(--ink2);font-size:14.5px}
+.sum{display:flex;gap:14px;align-items:center;padding:18px 20px;border-radius:18px;border:1px solid var(--line2);background:var(--card)}
+.sum b{display:block;color:var(--ink);font:500 22px/1.2 var(--serif)}.sum span{display:block;color:var(--mute);font-size:14px;margin-top:4px}
+.sum i{flex:none;width:14px;height:14px;border-radius:50%}
+.v-good i.d,.sum.good i{background:#3ddc84}.v-slow i.d,.v-warn i.d,.sum.slow i{background:#ffb84d}.v-bad i.d,.v-setup i.d,.sum.bad i{background:#ff5470}.v-blocked i.d{background:#8caaff}
+.card{border:1px solid var(--line);border-radius:18px;background:var(--card);overflow:hidden;opacity:0;transform:translateY(6px);animation:rise .35s ease forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.card{animation:none;opacity:1;transform:none}}
+.ch{display:flex;align-items:center;gap:12px;padding:16px 18px}
+.ch .lg{flex:none;width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.07);display:grid;place-items:center;font-weight:600;color:var(--ink);object-fit:cover}
+.ch .nm{flex:1;min-width:0}.ch .nm b{display:block;color:var(--ink);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ch .nm span{display:block;color:var(--mute);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill{flex:none;display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;background:rgba(255,255,255,.07);color:var(--ink)}
+.pill i.d{width:8px;height:8px;border-radius:50%}
+.cb{padding:0 18px 18px}
+.tests{list-style:none;padding:0;margin:0;display:grid;gap:6px;grid-template-columns:minmax(0,1fr)}
+.tests li{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:var(--ink2);border-bottom:1px solid var(--line);padding:6px 0}
+.tests li span:last-child{color:var(--mute);text-align:right;white-space:nowrap}.tests li.bad span:first-child{color:#ff9fb0}
+.fx{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+.fx li{padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:#0a0a0a;font-size:14.5px;color:var(--ink)}
+.fx li.bad{border-color:rgba(255,84,112,.32)}.fx li.warn{border-color:rgba(255,180,60,.3)}.fx li.info{color:var(--ink2)}
+.fx li small{display:block;margin-top:5px;color:var(--mute);font-size:13.5px}
+.fx li a{display:inline-block;margin-top:8px;font-size:13.5px}
+.good-t{margin:10px 0 0;color:#8ff0b8;font-size:14px}
+.all{border:1px solid rgba(216,194,154,.3);border-radius:18px;padding:16px 18px;background:rgba(216,194,154,.04)}
+.all h3{margin:0;font-size:18px}
+
+.in{display:block;width:100%;margin-top:10px;height:46px;padding:0 16px;border-radius:12px;border:1px solid var(--line2);background:#0a0a0a;color:var(--ink);font:400 15px/1 var(--sans)}
+.in:focus{outline:none;border-color:rgba(216,194,154,.6)}
+.box .l2{margin-top:20px}
+.cv{margin-top:12px;border-radius:14px;overflow:hidden;border:1px solid var(--line)}.cv img{width:100%;aspect-ratio:21/7;object-fit:cover}
+.rw{margin-top:22px;padding:16px;border:1px solid var(--line);border-radius:16px;background:#0a0a0a}
+.rw-h{display:flex;gap:10px;align-items:center}.rw-h .in{margin:0;flex:1}
+.btn.sm{height:38px;padding:0 14px;font-size:13.5px}
+.its{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}.its>small{color:var(--mute)}
+.it{position:relative;display:grid;gap:6px;width:92px;font-size:12.5px;color:var(--ink2)}
+.it img{width:92px;aspect-ratio:2/3;object-fit:cover;border-radius:8px;background:var(--card)}
+.it b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.it button{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.7);color:#fff;cursor:pointer;line-height:1}
+.sr{margin-top:14px}.sr .in{margin:0}
+.hits{display:grid;gap:6px;margin-top:8px}.hits>small{color:var(--mute)}
+.hit{display:flex;gap:12px;align-items:center;text-align:left;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font:inherit}
+.hit:hover,.hit:focus-visible{border-color:rgba(216,194,154,.5)}
+.hit img{width:34px;aspect-ratio:2/3;object-fit:cover;border-radius:5px;background:#111}
+.hit b{display:block;font-weight:500}.hit small{display:block;color:var(--mute);font-size:12.5px}
+#cDesc{font:400 15px/1.5 var(--sans)}
+.out textarea{font:500 12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;min-height:84px;word-break:break-all}
+pre{margin:16px 0 0;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:#0a0a0a;overflow:auto}pre code{background:none;padding:0;font-size:12.5px;line-height:1.6;white-space:pre}
+</style>
+<script data-goatcounter="https://itbelikethatbruh.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="bar"><div class="bar-in">
+  <a class="brand" href="/" aria-label="MKCinema home"><img src="/icon-192.png" width="34" height="34" alt=""><span><b>MK</b><i>Cinema</i></span></a>
+  <nav aria-label="Main"><a class="t" href="/#download">Download</a><a class="t" href="/#faq">FAQ</a><a class="btn plat" href="https://app.mkcinema.app/">Open MKCinema</a></nav>
+</div></header>
+<main id="main" class="wrap">
+  <p class="crumbs"><a href="/">MKCinema</a> › Collection maker</p>
+  <div class="eyebrow">Free tool</div>
+  <h1>Make a <em>collection</em> for Home.</h1>
+  <p class="lead">Give it a name, a cover picture and a few rows of films and shows. MKCinema shows it as a folder on Home, with its own cover. Share it with a code or a link to the file.</p>
+
+  <form class="box" id="f" autocomplete="off">
+    <label for="cName">Name</label>
+    <input class="in" id="cName" maxlength="30" placeholder="Heist night">
+    <label for="cCover" class="l2">Cover picture link</label>
+    <small>Any picture link that starts with https. Wide pictures look best.</small>
+    <input class="in" id="cCover" inputmode="url" placeholder="https://…/cover.jpg">
+    <div class="cv" id="cvPrev" hidden><img alt="" referrerpolicy="no-referrer"></div>
+    <label for="cDesc" class="l2">Description</label>
+    <textarea id="cDesc" maxlength="300" placeholder="Crews, vaults and one last job."></textarea>
+    <div id="rows"></div>
+    <div class="row"><button class="btn ghost" type="button" id="addRow">Add a row</button></div>
+  </form>
+
+  <div class="box out" id="out">
+    <label>Your collection</label>
+    <small>In MKCinema, open <b>Settings › Home › Add a shared folder or collection</b> and paste the code. Or save the file, put it on GitHub or any https site, and paste its link there.</small>
+    <textarea id="code" readonly spellcheck="false"></textarea>
+    <div class="row"><button class="btn plat" type="button" id="cpCode">Copy code</button><button class="btn ghost" type="button" id="dl">Save the file</button><button class="btn ghost" type="button" id="cpJson">Copy the file text</button></div>
+    <p class="st" id="msg" aria-live="polite"></p>
+  </div>
+
+  <h2>How it <em>works</em></h2>
+  <ul>
+    <li><b>Rows of titles.</b> Search for films and shows by name and add them to a row. A collection can have up to 20 rows of 100 titles.</li>
+    <li><b>No addon needed to browse.</b> The rows show posters and open title pages straight away. Playing still uses your own sources.</li>
+    <li><b>Private.</b> Everything happens in your browser. Searches go to the public Cinemeta catalog, and nothing is sent to us.</li>
+    <li><b>Edit it later.</b> In the app, open the folder and press <b>Edit</b> to change the name, cover or description.</li>
+  </ul>
+  <div class="note">A collection holds titles and pictures only. It never holds streams or links to them.</div>
+
+  <h2>The file <em>format</em></h2>
+  <p>A plain JSON file, so other tools can make collections too:</p>
+  <pre><code>{ "mkcinema": "collection", "v": 1, "name": "Heist night",
+  "cover": "https://…/cover.jpg", "description": "…",
+  "rows": [ { "name": "Classics", "titles": ["tt0113277", { "id": "tt0240772", "type": "movie" }] } ] }</code></pre>
+
+  <div class="cta"><a class="btn plat" href="https://app.mkcinema.app/">Open MKCinema</a><a class="btn ghost" href="/#download">Download the app</a></div>
+</main>
+<footer><div class="wrap">
+  <div class="foot"><a href="/">Home</a><a href="/guides/">All guides</a><a href="/addon-check/">Addon health check</a><a href="/collections/">Collection maker</a><a href="/layouts/">Layout Studio</a><a href="/stremio-addons/">Stremio addons</a><a href="/fire-tv/">Fire TV and Android TV</a><a href="/iphone-ipad/">iPhone and iPad</a><a href="/mkv-in-browser/">MKV in the browser</a><a href="/skip-intro/">Skip intro and credits</a><a href="/#download">Download</a><a href="https://github.com/itbelikethatbruh/MKCinema">GitHub</a><a href="https://ko-fi.com/mkcinema">Ko-fi</a></div>
+  <p class="legal">MKCinema does not host, provide or link to any copyrighted content. This tool only reads what an addon serves publicly and reports nothing back to it. Stremio is a trademark of its owner; MKCinema is an independent project, not affiliated with or endorsed by Stremio. © 2026 MKCinema · Made by Dee Lavish · Free forever · Open source under GPL-3.0</p>
+</div></footer>
+<script>
+/* Collection maker: builds a MKCinema collection (name, cover, description, rows of IMDb titles) in the browser.
+   Title search uses the public Cinemeta catalog. Nothing is sent to MKCinema. */
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const KEY = 'mkc-collection-draft';
+  let st = { name: '', cover: '', desc: '', rows: [{ name: 'Row 1', items: [] }] };
+  try { const d = JSON.parse(localStorage.getItem(KEY) || 'null'); if (d && Array.isArray(d.rows)) st = d; } catch (e) { /* fresh */ }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { /* private window */ } };
+  const okCover = (u) => /^https:\/\/[^\s"'<>]{4,600}$/.test(String(u || '').trim());
+  const b64e = (o) => btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const doc = () => ({
+    mkcinema: 'collection', v: 1, name: st.name.trim() || 'Collection', cover: okCover(st.cover) ? st.cover.trim() : undefined, description: st.desc.trim() || undefined,
+    rows: st.rows.filter((r) => r.items.length).map((r) => ({ name: r.name.trim() || 'Titles', titles: r.items.map((x) => ({ id: x.id, type: x.type, name: x.name, poster: okCover(x.poster) ? x.poster : undefined })) })),
+  });
+  const code = () => { const d = doc(); return `mkfold:${b64e({ v: 2, name: d.name, keys: [], cover: d.cover, desc: d.description, lists: d.rows.map((r) => ({ name: r.name, items: r.titles })) })}`; };
+
+  function out() {
+    const n = st.rows.reduce((a, r) => a + r.items.length, 0);
+    $('#code').value = n ? code() : '';
+    $('#msg').textContent = n ? `${n} title${n === 1 ? '' : 's'} in ${st.rows.filter((r) => r.items.length).length} row${st.rows.filter((r) => r.items.length).length === 1 ? '' : 's'}.` : 'Add a title to a row to get your code.';
+    ['#cpCode', '#dl', '#cpJson'].forEach((s) => { $(s).disabled = !n; });
+    save();
+  }
+  function rows() {
+    const box = $('#rows');
+    box.innerHTML = st.rows.map((r, i) => `<div class="rw" data-r="${i}">
+      <div class="rw-h"><input class="in rn" value="${esc(r.name)}" maxlength="60" aria-label="Row name"><button class="btn ghost sm" type="button" data-del="${i}" ${st.rows.length < 2 ? 'disabled' : ''}>Remove row</button></div>
+      <div class="its">${r.items.map((x, k) => `<span class="it"><img src="${esc(x.poster || `https://images.metahub.space/poster/small/${x.id}/img`)}" alt="" loading="lazy" referrerpolicy="no-referrer"><b>${esc(x.name)}</b><button type="button" aria-label="Remove ${esc(x.name)}" data-x="${k}">×</button></span>`).join('') || '<small>No titles yet.</small>'}</div>
+      <div class="sr"><input class="in sq" placeholder="Search a film or show to add" aria-label="Search titles"><div class="hits"></div></div>
+    </div>`).join('');
+    box.querySelectorAll('.rw').forEach((el) => {
+      const i = Number(el.dataset.r), r = st.rows[i];
+      el.querySelector('.rn').addEventListener('input', (e) => { r.name = e.target.value; out(); });
+      const del = el.querySelector('[data-del]'); del.onclick = () => { st.rows.splice(i, 1); rows(); out(); };
+      el.querySelectorAll('[data-x]').forEach((b) => { b.onclick = () => { r.items.splice(Number(b.dataset.x), 1); rows(); out(); }; });
+      const q = el.querySelector('.sq'), hits = el.querySelector('.hits'); let t = 0, tok = 0;
+      q.addEventListener('input', () => {
+        clearTimeout(t); const v = q.value.trim(); if (v.length < 2) { hits.innerHTML = ''; return; }
+        t = setTimeout(async () => {
+          const my = ++tok; hits.innerHTML = '<small>Searching…</small>';
+          try {
+            const get = (type) => fetch(`https://v3-cinemeta.strem.io/catalog/${type}/top/search=${encodeURIComponent(v)}.json`).then((x) => x.json()).then((j) => (j.metas || []).slice(0, 6).map((m) => ({ ...m, type }))).catch(() => []);
+            const [a, b] = await Promise.all([get('movie'), get('series')]); if (my !== tok) return;
+            const list = [...a, ...b].filter((m) => /^tt\d{5,10}$/.test(m.id || '')).slice(0, 10);
+            hits.innerHTML = list.length ? list.map((m, k) => `<button type="button" class="hit" data-h="${k}"><img src="${esc(m.poster || '')}" alt="" loading="lazy" referrerpolicy="no-referrer"><span><b>${esc(m.name)}</b><small>${esc(m.type === 'series' ? 'Series' : 'Film')}${m.releaseInfo ? ` · ${esc(m.releaseInfo)}` : ''}</small></span></button>`).join('') : '<small>Nothing found.</small>';
+            hits.querySelectorAll('[data-h]').forEach((h) => { h.onclick = () => { const m = list[Number(h.dataset.h)]; if (r.items.some((x) => x.id === m.id)) return; if (r.items.length >= 100) return; r.items.push({ id: m.id, type: m.type, name: String(m.name || '').slice(0, 120), poster: m.poster }); rows(); out(); const n = $(`[data-r="${i}"] .sq`); if (n) n.focus(); }; });
+          } catch (e) { hits.innerHTML = '<small>Search did not answer. Try again.</small>'; }
+        }, 280);
+      });
+    });
+  }
+  $('#cName').value = st.name; $('#cCover').value = st.cover; $('#cDesc').value = st.desc;
+  const prev = () => { const ok = okCover(st.cover); $('#cvPrev').hidden = !ok; if (ok) $('#cvPrev img').src = st.cover.trim(); };
+  $('#cName').addEventListener('input', (e) => { st.name = e.target.value; out(); });
+  $('#cCover').addEventListener('input', (e) => { st.cover = e.target.value; prev(); out(); });
+  $('#cDesc').addEventListener('input', (e) => { st.desc = e.target.value; out(); });
+  $('#cvPrev img').addEventListener('error', () => { $('#cvPrev').hidden = true; });
+  $('#addRow').onclick = () => { if (st.rows.length >= 20) return; st.rows.push({ name: `Row ${st.rows.length + 1}`, items: [] }); rows(); out(); };
+  const copy = (txt, label) => navigator.clipboard.writeText(txt).then(() => { $('#msg').textContent = `${label} copied.`; }).catch(() => { $('#msg').textContent = 'Copy did not work here. Select the text and copy it.'; });
+  $('#cpCode').onclick = () => copy($('#code').value, 'Code');
+  $('#cpJson').onclick = () => copy(JSON.stringify(doc(), null, 2), 'File text');
+  $('#dl').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(doc(), null, 2)], { type: 'application/json' })); a.download = `${(st.name.trim() || 'collection').replace(/[^\w-]+/g, '-').toLowerCase()}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
+  $('#f').addEventListener('submit', (e) => e.preventDefault());
+  prev(); rows(); out();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+
+/* 2.81 screen mirroring: the Phone panel's 4th tab, the picture full screen, and the sender's pill. Opacity and transform only. */
+.cast-tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:560px){.cast-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.mr-seg{display:flex;margin:4px 0 14px}
+.mr-seg button{flex:1 1 0}
+.mr-send{padding:4px 2px}
+.mr-send .rmx-h{margin:4px 0 8px}
+.mr-send .inrow{margin-top:12px}
+.mr-fine{margin-top:12px}
+.mr-qr-wait{width:100%;aspect-ratio:1;border-radius:calc(var(--r-m) * 1.2);background:rgba(var(--kffffff-c,255,255,255),.05)}
+#castLayer.mr-full .modal{opacity:0;pointer-events:none}
+.mr-view{position:fixed;inset:0;z-index:5;background:var(--n000000,#000);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.mr-view video{width:100%;height:100%;object-fit:contain;background:var(--n000000,#000);opacity:0;transition:opacity .4s ease}
+.mr-view.live video{opacity:1}
+.mr-wait{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;pointer-events:none;transition:opacity .3s ease}
+.mr-view.live .mr-wait{opacity:0}
+.mr-wait b{font-size:calc(18px * var(--ts,1));font-weight:600}
+.mr-top{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(14px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) 36px max(18px,env(safe-area-inset-left,0px));background:linear-gradient(to bottom,rgba(var(--n000000-c,0,0,0),.75),rgba(var(--n000000-c,0,0,0),0));opacity:0;transform:translateY(-6px);transition:opacity .3s ease,transform .3s ease}
+.mr-view.awake .mr-top,.mr-view:not(.live) .mr-top,.mr-top:focus-within{opacity:1;transform:none}
+.mr-who{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:calc(15px * var(--ts,1));min-width:0}
+.mr-who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mr-who svg{width:18px;height:18px;flex:none}
+.mr-acts{display:flex;gap:8px;flex:none}
+.mr-tap{position:absolute;left:50%;bottom:calc(40px + env(safe-area-inset-bottom,0px));transform:translateX(-50%)}
+.mr-tap[hidden]{display:none}
+.mr-chip{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:96;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px);padding:7px 8px 7px 14px;border-radius:999px;background:var(--s2,var(--k151517,#151517));border:1px solid var(--line-hi,rgba(var(--kffffff-c,255,255,255),.14));box-shadow:0 10px 30px rgba(var(--k000000-c,0,0,0),.45);font-size:calc(13px * var(--ts,1));animation:mrIn .25s ease both}
+.mr-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mr-dot{width:8px;height:8px;border-radius:50%;background:var(--bad,#e5484d);flex:none;animation:mrPulse 1.6s ease-in-out infinite}
+.mr-x{flex:none;border:0;border-radius:999px;padding:6px 12px;background:rgba(var(--kffffff-c,255,255,255),.1);color:var(--ink,#fff);font:inherit;font-weight:600;cursor:pointer}
+.mr-x:focus-visible,.mr-x.nav-focus{outline:2px solid var(--ink,#fff);outline-offset:2px}
+@keyframes mrIn{from{opacity:0;transform:translate(-50%,-6px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes mrPulse{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.mr-chip,.mr-dot{animation:none}}

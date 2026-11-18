@@ -10,7 +10,7 @@ const Taste = {
   get() { const t = Store.get('taste', null); return t && typeof t === 'object' ? { ...t, picks: Array.isArray(t.picks) ? t.picks : [], genres: Array.isArray(t.genres) ? t.genres : [] } : { picks: [], genres: [] }; },
   set(t) { Store.set('taste', { ...t, at: Date.now() }); },
   ready() { const t = this.get(); return t.picks.length + t.genres.length >= 3; },
-  clear() { Store.set('taste', null); },
+  clear() { Store.set('taste', { picks: [], genres: [], at: Date.now() }); },   // an explicit empty value, so the reset reaches other devices
 };
 
 /* ---------------- Recommendation engine ---------------- */
@@ -99,7 +99,9 @@ const Recs = {
   parse(q) {
     let s = ` ${String(q || '').toLowerCase().replace(/[’‘]/g, "'")} `;
     const p = { genres: [], not: [], kw: [], type: null, from: null, to: null, like: '', best: false, sort: '', rt: 0, lang: '', person: '', fam: false };
-    const like = (String(q || '').match(/\b(?:like|similar to|in the vein of|as good as)\s+(.+?)(?:\s+but\b|\s+only\b|[,.!?]|$)/i) || [])[1];
+    // a full stop after a short abbreviation ("Mr. Robot", "Dr. Strangelove") is part of the title, not the end of it
+    const qa = String(q || '').replace(/\b(mr|mrs|ms|dr|st|jr|sr|vs|no|vol|lt|sgt|capt|prof)\./gi, '$1\u2024');
+    const like = ((qa.match(/\b(?:like|similar to|in the vein of|as good as)\s+(.+?)(?:\s+but\b|\s+only\b|[,.!?]|$)/i) || [])[1] || '').replace(/\u2024/g, '.') || undefined;
     if (like) { p.like = like.trim().replace(/^(the (film|movie|show|series) )/i, ''); s = s.replace(like.toLowerCase(), ' '); }
     // people: "with Tom Hanks", "starring Zendaya", "directed by Greta Gerwig"
     const who = s.match(/\b(?:directed by|by director|from director|starring|featuring|with actor|with actress|with)\s+([a-z][a-z.'-]+(?:\s+[a-z][a-z.'-]+){0,3}?)(?=\s+(?:in it|from|set|that|which|and|but|under|over|before|after|in the)\b|\s*$)/);
@@ -112,7 +114,8 @@ const Recs = {
     s = s.replace(/funnier/g, 'funny').replace(/scarier/g, 'scary').replace(/sadder/g, 'emotional').replace(/darker/g, 'thriller').replace(/lighter|happier/g, 'feel-good');
     for (const [g, re] of Object.entries(this.WORDS)) if (re.test(s) && !p.not.includes(g)) p.genres.push(g);
     if (/\b(rom-?com)\b/.test(s)) ['Romance', 'Comedy'].forEach((g) => { if (!p.genres.includes(g)) p.genres.push(g); });
-    p.type = /\b(show|series|tv|episodes?|seasons?|binge|k-?drama|anime series)\b/.test(s) ? 'series' : /\b(movie|film|flick)s?\b/.test(s) ? 'movie' : null;
+    const st = s.replace(/\b(show|give|tell|find)\s+(me|us)\b/g, ' '); // "show me a funny movie" is a film
+    p.type = /\b(movie|film|flick)s?\b/.test(st) && !/\b(series|tv|episodes?|seasons?|k-?drama)\b/.test(st) ? 'movie' : /\b(show|series|tv|episodes?|seasons?|binge|k-?drama|anime series)\b/.test(st) ? 'series' : /\b(movie|film|flick)s?\b/.test(s) ? 'movie' : null;
     const dec = s.match(/\b(19[2-9]0|20[0-2]0)s\b|\b([2-9]0)s\b/);
     if (dec) { const d = dec[1] ? Number(dec[1]) : 1900 + Number(dec[2]); p.from = d; p.to = d + 9; }
     const yr = s.match(/\b(?:from|in|since|after)\s+((?:19|20)\d\d)\b/); if (yr && !dec) { p.from = Number(yr[1]); if (/\bin\s/.test(yr[0])) p.to = p.from; }
@@ -263,6 +266,7 @@ async function renderForYouRow(rows) {
 const QP = { sel: new Map(), genres: new Set(), pool: [], onDone: null };
 async function quickPickHTML(root, { compact = false } = {}) {
   const t = Taste.get(); QP.sel = new Map(t.picks.map((m) => [m.id, m])); QP.genres = new Set(t.genres);
+  QP.root = root;   // the counter, Done button and voice box are looked up inside the screen that is showing
   root.innerHTML = `<div class="qp">
     <div class="qp-genres">${PICK_GENRES.map((g) => `<button type="button" class="qp-g ${QP.genres.has(g) ? 'on' : ''}" data-g="${esc(g)}" data-nav>${esc(g)}</button>`).join('')}</div>
     <div class="qp-search"><i data-lucide="search"></i><input id="qpSearch" placeholder="Find a show or movie you love" autocomplete="off" spellcheck="false">${Voice.ok ? '<button type="button" class="qp-mic" data-voice-for="qpSearch" aria-label="Search by voice"><i data-lucide="mic"></i></button>' : ''}</div>
@@ -303,9 +307,9 @@ async function quickPickHTML(root, { compact = false } = {}) {
   qpCount();
 }
 function qpCount() {
-  const n = QP.sel.size + QP.genres.size, el = $('#qpCount'); if (!el) return;
+  const r = QP.root && QP.root.isConnected ? QP.root : document, n = QP.sel.size + QP.genres.size, el = $('#qpCount', r); if (!el) return;
   el.innerHTML = n >= 3 ? `<i data-lucide="check-circle-2"></i>${n} picked` : `Pick <b>${3 - n}</b> more`;
-  el.classList.toggle('ok', n >= 3); $('#qpDone').disabled = n < 3; icons();
+  el.classList.toggle('ok', n >= 3); const dn = $('#qpDone', r); if (dn) dn.disabled = n < 3; icons();
 }
 function openQuickPick() {
   const el = openLayer('tastePick');
@@ -316,14 +320,15 @@ function openQuickPick() {
 
 /* ---------------- Ask results ---------------- */
 async function showAsk(q, over) {
-  const el = openLayer('askLayer');
+  const el = openLayer('askLayer'), tok = showAsk.tok = (showAsk.tok || 0) + 1;   // only the newest question's answer is drawn
   $('#askTitle').textContent = `“${q}”`; $('#askSub').textContent = 'Finding picks…'; $('#askGrid').innerHTML = skeletons(10);
   try {
     const { list, why, parsed, anchor, mode } = await Recs.ask(q, over);
+    if (tok !== showAsk.tok) return;
     const said = Recs.describe(parsed, mode === 'like' ? null : anchor);
     $('#askSub').textContent = list.length ? (mode === 'like' && anchor ? `What fans of ${anchor.name} watch next${parsed.genres.length ? ` · ${said}` : ''}` : `Your Picks understood: ${said || 'your taste'}`) : 'Nothing matched. Try different words, or name a title you like ("something like Arrival").';
     $('#askGrid').innerHTML = list.map((m) => cardHTML(m, { sub: why(m) })).join(''); icons();
-  } catch (e) { $('#askSub').textContent = `Could not search right now (${e.message}).`; $('#askGrid').innerHTML = ''; }
+  } catch (e) { if (tok !== showAsk.tok) return; $('#askSub').textContent = `Could not search right now (${e.message}).`; $('#askGrid').innerHTML = ''; }
   el.scrollTop = 0;
 }
 
@@ -373,7 +378,7 @@ const Voice = {
 window.MKVoice = Voice;
 /* the remote's search / mic key (Android app 1.2+) */
 window.MKVoiceSearch = () => { if ($('#palette').hidden) openPalette(); setTimeout(() => { if (Voice.ok) Voice.start($('#palInput'), $('#palMic')); }, 120); return true; };
-function bindVoice(root) { $$('[data-voice-for]', root).forEach((b) => { b.onclick = (e) => { e.preventDefault(); Voice.start($(`#${b.dataset.voiceFor}`), b); }; }); }
+function bindVoice(root) { $$('[data-voice-for]', root).forEach((b) => { b.onclick = (e) => { e.preventDefault(); Voice.start($(`#${b.dataset.voiceFor}`, root) || $(`#${b.dataset.voiceFor}`), b); }; }); }
 
 /* ---------------- First-visit walkthrough ---------------- */
 const TOUR = [
@@ -431,10 +436,10 @@ if (Voice.ok) bindVoice($('#palette')); else $('#palMic').hidden = true;
 $('#askAgain').onclick = () => { closeLayer('askLayer'); openPalette('', { ask: true }); };
 /* Show the tour once, after the intro, on a visitor's first visit */
 function maybeTour() {
-  if (Store.get('toured', false)) return;
+  if (Store.get('toured', false) || /^#party=/.test(location.hash)) return;
   let n = 0;
   const wait = () => ((window.MKCalm ? MKCalm.busy() : document.body.classList.contains('intro-on')) ? setTimeout(wait, 400) : setTimeout(() => {
-    if (Store.get('toured', false) || !$('#tour').hidden) return;
+    if (Store.get('toured', false) || !$('#tour').hidden || Party.code || $('#pgInvite')) return;
     if ([...MENU_LAYERS, 'player'].every((x) => $(`#${x}`).hidden)) openTour(0); else if (n++ < 90) wait();
   }, 700));
   wait();
@@ -480,7 +485,7 @@ const StremioImport = {
   async run(email, password, { library, progress, addons, seen }) {
     const login = await this.call('login', { type: 'Login', email, password, facebook: false });
     const authKey = login && login.authKey; if (!authKey) throw new Error('Stremio did not return a session');
-    const out = { saved: 0, progress: 0, watched: 0, addons: 0, skippedAddons: 0 };
+    const out = { saved: 0, progress: 0, watched: 0, addons: 0, skippedAddons: 0, skippedSeries: 0 };
     try {
       if (library || progress || seen) {
         const items = (await this.call('datastoreGet', { authKey, collection: 'libraryItem', ids: [], all: true })) || [];
@@ -493,7 +498,8 @@ const StremioImport = {
             const w = watchedMap(), when = Date.parse(st.lastWatched) || Date.now();
             const mark = (id) => { if (!w[id]) { w[id] = when; out.watched++; } };
             if (type === 'movie' && (st.timesWatched > 0 || st.flaggedWatched > 0)) mark(it._id);
-            if (type === 'series' && st.watched) seenJobs.push(() => this.seenEpisodes(it).then((ids) => ids.forEach(mark)).catch(() => {}));
+            if (type === 'series' && st.watched && typeof DecompressionStream === 'undefined') out.skippedSeries++;
+            else if (type === 'series' && st.watched) seenJobs.push(() => this.seenEpisodes(it).then((ids) => ids.forEach(mark)).catch(() => {}));
           }
           if (library && !it.temp && !it.removed && !S.watchlist.some((m) => m.id === it._id)) {
             S.watchlist.push({ id: it._id, type, name: it.name, poster: it.poster || metaPoster({ id: it._id }), background: null, releaseInfo: '', genres: [], imdbRating: '' }); out.saved++;
@@ -505,7 +511,7 @@ const StremioImport = {
             const at = Date.parse(st.lastWatched) || Date.now();
             if (!prev || prev.at < at) {
               S.progress[vid] = { videoId: vid, metaId: it._id, type, name: it.name, poster: it.poster || metaPoster({ id: it._id }), background: null, genres: [],
-                season: type === 'series' && parts.length === 3 ? Number(parts[1]) : undefined, episode: type === 'series' && parts.length === 3 ? Number(parts[2]) : undefined, t, d, at, imported: 'stremio' };
+                season: type === 'series' && parts.length === 3 && /^tt\d+$/.test(parts[0]) ? Number(parts[1]) : undefined, episode: type === 'series' && parts.length === 3 && /^tt\d+$/.test(parts[0]) ? Number(parts[2]) : undefined, t, d, at, imported: 'stremio' };
               out.progress++;
             }
           }
@@ -543,7 +549,8 @@ $('#siForm').addEventListener('submit', async (e) => {
     $('#siPass').value = '';
     $('#siForm').hidden = true; $('#siDone').hidden = false;
     $('#siSummary').innerHTML = [[r.saved, 'titles added to your library'], [r.progress, 'items in progress'], [r.watched, 'films and episodes marked watched'], [r.addons, 'addons installed']].map(([n, l]) => `<div><b class="tnum">${n}</b><span>${l}</span></div>`).join('');
-    $('#siNote').textContent = r.skippedAddons ? `${r.skippedAddons} addon${r.skippedAddons === 1 ? ' was' : 's were'} already installed or built into Stremio, so ${r.skippedAddons === 1 ? 'it was' : 'they were'} skipped.` : '';
+    $('#siNote').textContent = [r.skippedAddons ? `${r.skippedAddons} addon${r.skippedAddons === 1 ? ' was' : 's were'} already installed or built into Stremio, so ${r.skippedAddons === 1 ? 'it was' : 'they were'} skipped.` : '',
+      r.skippedSeries ? `Watched episodes of ${r.skippedSeries} series could not be read on this device. Import again on a newer browser or phone to bring them over.` : ''].filter(Boolean).join(' ');
     Recs.cache = null; if (S.view === 'home') renderHome(); if (S.view === 'library') renderLibrary();
   } catch (err) {
     $('#siErr').hidden = false; $('#siErr').textContent = /passw|user|email|not found|wrong/i.test(err.message) ? 'Stremio did not accept that email and password.' : err.message;

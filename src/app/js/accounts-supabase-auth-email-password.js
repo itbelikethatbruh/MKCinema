@@ -465,7 +465,7 @@ const Account = {
   dirty() {
     const m = this.m();
     const out = SYNC_SECTIONS.filter((s) => s !== 'cfg' && (m.at[s] || 0) > (m.rat[s] || 0) && (s !== 'secrets' || (CFG.syncKeys !== false && this.canWriteSecrets())));
-    if (Object.keys(m.cf).some((k) => m.cf[k] > (m.rcf[k] || 0))) out.push('cfg');
+    if (Object.keys(m.cf).some((k) => m.cf[k] > (m.rcf[k] || 0) && !(typeof CFG[k] === 'string' && CFG[k].length > SYNC_AV_MAX))) out.push('cfg');
     return out;
   },
   schedule(fast) {
@@ -681,6 +681,9 @@ const Account = {
       Store.set('addons', d.addons);
       const have = new Set(engine.addons.map((a) => a.baseUrl));
       d.addons.filter((u) => !have.has(u)).forEach((u) => engine.install(u, { silent: true }).catch(() => {}));
+      // the synced list is the newer whole copy: an addon removed on another device goes here too
+      const keep = new Set(d.addons);
+      engine.addons.filter((a) => !a.builtin && !a.studio && !a.virtual && a.baseUrl && !keep.has(a.baseUrl)).forEach((a) => engine.remove(a.baseUrl));
     }
   },
   async prepare() {
@@ -776,7 +779,7 @@ const Account = {
   /* sign-out: this device keeps the library but not the keys */
   signedOut() {
     clearTimeout(this.pushT); this.pushT = 0; this.pendingPass = ''; this.loadedOnce = false; this.keyChecked = false; this.noRow = false; this.newer = false;
-    this.sync.at = null; Store.set('syncAt', null); this.resetMeta(); this.dropKeys();
+    this.sync.at = null; Store.set('syncAt', null); this.resetMeta(); this.dropKeys(); Store.raw.set('syncOwner', '');
   },
   dropKeys() {
     let had = false; this.applying = true;
@@ -853,7 +856,16 @@ const Account = {
       Store.set('avatar', c.toDataURL('image/jpeg', .85)); this.render(); toast('Profile photo saved', 'ok');
     } catch (e) { toast(`Could not read that image (${e.message})`, 'err'); }
   },
-  render() { this.chip(); if (!$('#settings').hidden && setSection === 'account') renderSettings(); },
+  render() {
+    this.chip(); if ($('#settings').hidden || setSection !== 'account') return;
+    const ids = ['acc-email', 'acc-pass', 'acc-newpass', 'acc-key', 'acc-url', 'sk-pass'], keep = {}, ae = document.activeElement, fid = ae && ids.indexOf(ae.id) >= 0 ? ae.id : '';
+    ids.forEach((id) => { const x = document.getElementById(id); if (x && x.value) keep[id] = x.value; });
+    let sel = null; try { if (fid) sel = [ae.selectionStart, ae.selectionEnd]; } catch (e) { /* some input types have no selection */ }
+    renderSettings();
+    Object.keys(keep).forEach((id) => { const x = document.getElementById(id); if (x && !x.value) x.value = keep[id]; });
+    const f = fid && document.getElementById(fid);
+    if (f && document.activeElement !== f) { try { f.focus({ preventScroll: true }); if (sel) f.setSelectionRange(sel[0], sel[1]); } catch (e) { /* best effort */ } }
+  },
   panelHTML() {
     const c = this.config();
     if (c && this.lazy && !this.client) setTimeout(() => this.ensure(), 0);

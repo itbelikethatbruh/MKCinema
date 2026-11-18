@@ -1,0 +1,28 @@
+
+/* 2.84 Simple player */
+html.mk-tidy #player .mk-td-dev{display:none!important}
+#player .mk-td-l{display:none}
+#dspPop.mk-td-pop{min-width:260px;width:min(340px,calc(100vw - 24px))}
+#dspPop.mk-td-pop h5{margin:6px 12px 8px}
+#dspPop.mk-td-pop button{min-height:44px;gap:12px;font-size:calc(14px * var(--ts,1))}
+#dspPop.mk-td-pop button svg{flex:none;width:18px;height:18px;opacity:.8}
+@media (min-width:761px){#dspPop.mk-td-pop{bottom:104px}}
+#optMenu .mk-td-go{display:flex;align-items:center;gap:12px;width:100%;min-height:46px;margin:6px 0 4px;padding:8px 12px;border-radius:calc(var(--r-m) * 1.2);background:rgba(var(--kffffff-c,255,255,255),.06);font-size:calc(14px * var(--ts,1));font-weight:500}
+#optMenu .mk-td-go span{flex:1;text-align:left}
+#optMenu .mk-td-go svg{flex:none;width:18px;height:18px;opacity:.8}
+/* words next to the three right-hand buttons on computers and TVs, icons only on phones and tablets */
+@media (min-width:1100px) and (pointer:fine){
+  #player .ctl .mk-td-lb{display:inline-flex;align-items:center;width:auto;padding:0 12px 0 10px;gap:8px;border-radius:999px}
+  #player .ctl .mk-td-lb .mk-td-l{display:inline;font-size:calc(13px * var(--ts,1));font-weight:600;white-space:nowrap}
+}
+html.tv #player .ctl .mk-td-lb{display:inline-flex;align-items:center;width:auto;padding:0 16px 0 12px;gap:10px;border-radius:999px}
+html.tv #player .ctl .mk-td-lb .mk-td-l{display:inline;font-size:calc(16px * var(--ts,1));font-weight:600;white-space:nowrap}
+/* Audio & subtitles: languages folded */
+#subMenu button.av-lang{justify-content:space-between}
+#subMenu .av-lang>span{display:flex;align-items:center;gap:8px}
+#subMenu .av-lang em{font-style:normal;font-size:calc(12px * var(--ts,1));color:var(--mute)}
+#subMenu .av-g{margin:10px 12px 4px;font-size:calc(11px * var(--ts,1));letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+#subMenu button.av-more{color:var(--mute)}
+#subMenu button.av-ver{padding-left:30px}
+#subMenu .av-foot button{white-space:nowrap}
+@media (pointer:coarse) and (max-height:500px){#subMenu .av-foot button{font-size:calc(13px * var(--ts,1));gap:6px;padding-left:8px;padding-right:8px}}

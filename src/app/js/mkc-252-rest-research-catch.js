@@ -94,7 +94,11 @@ const WhichCut = {
   TAGS: [[/director'?s[ ._-]?cut|\bdc\b/i, 'Director’s cut'], [/extended/i, 'Extended cut'], [/\bunrated\b/i, 'Unrated cut'], [/\buncut\b/i, 'Uncut'], [/theatrical/i, 'Theatrical cut'], [/ultimate/i, 'Ultimate cut'], [/final[ ._-]?cut/i, 'Final cut'], [/\bredux\b/i, 'Redux'], [/special[ ._-]?edition/i, 'Special edition'], [/\bimax\b/i, 'IMAX version'], [/remastered/i, 'Remastered']],
   guess() {
     if (!F52.played() || P.ctx.video) return null;
-    const s = P.stream, bh = s.behaviorHints || {}, name = [s.name, s.title, s.description, bh.filename].filter(Boolean).join(' ');
+    const s = P.stream, bh = s.behaviorHints || {};
+    // the film's own title is taken out first ("Uncut Gems", "Final Cut"), with dots, dashes or spaces between its words
+    const tw = String(P.ctx.meta.name || '').toLowerCase().split(/[^a-z0-9']+/).filter(Boolean).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const own = tw.length ? new RegExp(tw.join("[ ._\\-:']*"), 'ig') : null;
+    let name = [s.name, s.title, s.description, bh.filename].filter(Boolean).join(' '); if (own) name = name.replace(own, ' ');
     const tags = this.TAGS.filter(([re]) => re.test(name)).map(([, l]) => l);
     const listed = X8.runtimeMin(P.ctx.meta) * 60, d = pDur();
     const diff = listed && isFinite(d) && d > 600 ? d - listed : null;
@@ -132,7 +136,7 @@ const FilmShape = {
       heat[i] += (t.match(/!/g) || []).length * 2 + (t.match(/\?/g) || []).length + (t.match(/\b[A-Z]{3,}\b/g) || []).length * 2 + (/^[-–]/.test(t) ? 1 : 0);
     });
     const norm = (a) => { const m = Math.max(1, ...a); return a.map((x) => x / m); };
-    const smooth = (a) => a.map((x, i) => (a[i - 1] ?? x) * 0.25 + x * 0.5 + (a[i + 1] ?? x) * 0.25);
+    const smooth = (a) => a.map((x, i) => qq(a[i - 1], x) * 0.25 + x * 0.5 + qq(a[i + 1], x) * 0.25);
     return { end, words: norm(smooth(words)), heat: norm(smooth(heat)), lang: sub.lang || '' };
   },
   path(a, w, h) { return a.map((v, i) => `${i ? 'L' : 'M'}${(i / (a.length - 1) * w).toFixed(1)},${(h - v * (h - 6) - 3).toFixed(1)}`).join(' '); },
@@ -168,6 +172,7 @@ const Stubs = {
   },
   /* the stub as a picture: drawn on a canvas, no network, poster left out so nothing cross-site is needed */
   draw(x) {
+    try { const CP = window.CanvasRenderingContext2D && CanvasRenderingContext2D.prototype; if (CP && !CP.roundRect) CP.roundRect = function (x0, y0, w, h) { this.rect(x0, y0, w, h); }; } catch (e) { /* no canvas */ }
     const c = document.createElement('canvas'), W = 1080, H = 540; c.width = W; c.height = H; const g = c.getContext('2d');
     g.fillStyle = '#111113'; g.fillRect(0, 0, W, H);
     g.fillStyle = '#1b1b1f'; g.beginPath(); g.roundRect(40, 40, W - 80, H - 80, 28); g.fill();

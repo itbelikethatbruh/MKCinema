@@ -174,6 +174,7 @@ const PcShare = {
     this.publish(true);
     if (on && this.on && !quiet) toast('Your TV can play these now. If Windows asks, allow MKCinema on private networks.', 'ok', 9000, 'pcs');
     Offline.sig = ''; Offline.paint();
+    const box = $('#dlList'), old = box && $('#pcsCard', box); if (old) { old.remove(); this.deskCard(box); }
   },
   publish(force) {
     const val = this.on && this.info && this.info.base

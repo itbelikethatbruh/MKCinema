@@ -84,11 +84,11 @@ const YourApps = {
       if (TMDB.key()) {
         const [a, b] = await Promise.all([TMDB.get('watch/providers/movie', { watch_region: reg }), TMDB.get('watch/providers/tv', { watch_region: reg })]);
         const seen = new Map(); [...((a && a.results) || []), ...((b && b.results) || [])].forEach((p) => { if (!seen.has(p.provider_id)) seen.set(p.provider_id, p); });
-        list = [...seen.values()].sort((x, y) => ((x.display_priorities || {})[reg] ?? x.display_priority ?? 99) - ((y.display_priorities || {})[reg] ?? y.display_priority ?? 99));
+        list = [...seen.values()].sort((x, y) => qq(qq((x.display_priorities || {})[reg], x.display_priority), 99) - qq(qq((y.display_priorities || {})[reg], y.display_priority), 99));
       } else { const j = await People.relay('providers', { region: reg }); list = (j && j.results) || []; }
     } catch (e) { list = []; }
     list = list.slice(0, 80).map((p) => ({ provider_id: p.provider_id, provider_name: p.provider_name, logo_path: p.logo_path }));
-    this.cat = { k: ck, v: list }; return list;
+    if (list.length) this.cat = { k: ck, v: list }; return list;   // an empty answer (a failure) is asked again next time
   },
   logo: (p, w = 'w92') => (p.logo_path ? `<img src="https://image.tmdb.org/t/p/${w}${esc(p.logo_path)}" alt="" loading="lazy">` : `<span class="ya-mono">${esc(String(p.provider_name || '?').slice(0, 1))}</span>`),
   async pick() {
@@ -338,6 +338,12 @@ const PhoneLang = {
     // a phone listening in its own language stays connected while its screen is off
     const beat = Remote.beat.bind(Remote);
     Remote.beat = function () { PhoneLang.peers.forEach((p, id) => { const k = Remote.peers.get(id); if (k) k.at = Date.now(); }); return beat(); };
+    // a different film or episode: the phone's sound belonged to the old one
+    const ps = playStream, key = (c) => (c && c.meta ? (c.video ? c.video.id : c.meta.id) : '');
+    playStream = function (ctx) {
+      if (PhoneLang.peers.size && P.ctx && key(ctx) !== key(P.ctx)) { PhoneLang.peers.forEach((p, id) => PxListen.send(id, { t: 'lsn-st', ok: false, code: 'stopped' })); PhoneLang.peers.clear(); clearInterval(PhoneLang.syncT); }
+      return ps.apply(this, arguments);
+    };
     const close = closePlayer;
     closePlayer = async function () { PhoneLang.peers.forEach((p, id) => PxListen.send(id, { t: 'lsn-st', ok: false, code: 'stopped' })); PhoneLang.peers.clear(); clearInterval(PhoneLang.syncT); return close.apply(this, arguments); };
   },
@@ -456,7 +462,8 @@ const WatchAlong = {
       const sub = (want && subs.find((s) => langName(s.lang) === want)) || ScriptClock.pick();
       const cues = sub && (t.lines || []).length >= 8 ? (((await ScriptClock.cues(sub)) || {}).list || []) : [];
       if (cues && cues.length) {
-        const key = (x) => F51.norm(x).slice(0, 60), mine = new Map(), theirs = new Map();
+        // letters of every script count (F51.norm keeps only a-z, which empties Japanese, Greek or Arabic lines)
+        const key = (x) => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim().slice(0, 60), mine = new Map(), theirs = new Map();
         cues.forEach((c) => { const k = key(c.t); if (k.length >= 8) mine.set(k, mine.has(k) ? null : c.s); });
         t.lines.forEach(([s, x]) => { const k = key(x); if (k.length >= 8) theirs.set(k, theirs.has(k) ? null : s); });
         theirs.forEach((s, k) => { const v = mine.get(k); if (s != null && v != null) pairs.push([s, v]); });
@@ -523,6 +530,9 @@ const WatchAlong = {
     const close = closePlayer;
     closePlayer = async function () { if (WatchAlong.rec) await WatchAlong.finish(); WatchAlong.stop(); return close.apply(this, arguments); };
     video.addEventListener('seeked', () => { if (this.a) this.sync(true); });
+    // a different film or episode starting in the open player ends the watch-along (a source switch keeps it)
+    const ps = playStream, key = (c) => (c && c.meta ? (c.video ? c.video.id : c.meta.id) : '');
+    playStream = function (ctx) { if (WatchAlong.a && !WatchAlong.rec && P.ctx && key(ctx) !== key(P.ctx)) WatchAlong.stop(); return ps.apply(this, arguments); };
   },
 };
 

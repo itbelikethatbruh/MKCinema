@@ -1,10 +1,10 @@
 
 /* 2.46 Universes: each franchise's own title logo floats over its dimmed art. Only transform/translate/opacity move */
 .uni-card.has-logo img.uni-art.in{opacity:.55}
-.uni-card.has-logo::after{background:radial-gradient(ellipse 70% 60% at 50% 45%,rgba(0,0,0,.5),rgba(0,0,0,.12) 75%),linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,0,0,.8) 100%)}
+.uni-card.has-logo::after{background:radial-gradient(ellipse 70% 60% at 50% 45%,rgba(var(--k000000-c,0,0,0),.5),rgba(var(--k000000-c,0,0,0),.12) 75%),linear-gradient(180deg,rgba(var(--k000000-c,0,0,0),0) 45%,rgba(var(--k000000-c,0,0,0),.8) 100%)}
 .uni-card img.uni-logo{inset:auto;left:50%;top:45%;width:auto;height:auto;max-width:76%;max-height:48%;object-fit:contain;z-index:2;
   transform:translate(-50%,-50%);transition:transform .35s cubic-bezier(.2,.7,.2,1),opacity .4s ease;
-  filter:drop-shadow(0 2px 0 rgba(0,0,0,.55)) drop-shadow(0 12px 14px rgba(0,0,0,.85))}
+  filter:drop-shadow(0 2px 0 rgba(var(--k000000-c,0,0,0),.55)) drop-shadow(0 12px 14px rgba(var(--k000000-c,0,0,0),.85))}
 .uni-card img.uni-logo.in{opacity:1}
 .uni-card.has-logo .uni-txt b{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (hover:hover){.uni-card.has-logo:hover img.uni-art{opacity:.75}.uni-card:hover img.uni-logo{transform:translate(-50%,-50%) scale(1.08)}}
@@ -17,7 +17,7 @@ body.reduce-motion .uni-card img.uni-logo{animation:none}
 @media (max-width:600px){.uni-card img.uni-logo{max-width:80%;max-height:50%}}
 .uni-grid .uni-card img.uni-logo{max-height:46%}
 #uniBody .uni-hero img.uni-hero-logo{position:static;display:block;width:auto;height:auto;max-height:clamp(64px,9vw,128px);max-width:min(460px,78vw);object-fit:contain;opacity:1;
-  filter:drop-shadow(0 2px 0 rgba(0,0,0,.55)) drop-shadow(0 14px 18px rgba(0,0,0,.85))}
+  filter:drop-shadow(0 2px 0 rgba(var(--k000000-c,0,0,0),.55)) drop-shadow(0 14px 18px rgba(var(--k000000-c,0,0,0),.85))}
 #uniBody .uni-title{margin-bottom:12px}
 /* 2.46 network logos: about a third bigger everywhere */
 .net-rail .net-tile{width:290px;height:164px}

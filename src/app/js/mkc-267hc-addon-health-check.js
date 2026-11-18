@@ -230,7 +230,7 @@ const AddonCheck = (() => {
         if (limitHit) add('bad', W(`It takes ${sec(r.ms)} to find sources, longer than the ${opts.timeout || 15} s addon timeout, so MKCinema gives up on it every time.`, `It takes ${sec(r.ms)} to find sources, longer than most players wait (about 15 s), so its sources are usually skipped.`), W('Turn it off, or raise Settings › Your addons › Addon timeout if you really want its sources.', 'Turn it off, or remove it if it is always this slow.'), 'off', true);
         else if (r.ms > T.streamSlow) add('warn', `It takes ${sec(r.ms)} to find sources. ${W('Smart Play and the source list wait', 'Your player waits')} for it on every title.`, 'Turn it off if you do not need it.', 'off', true);
         else if (r.ms > T.streamOk) add('info', `It takes ${sec(r.ms)} to find sources, a little slow.`);
-        if (r.ms > T.streamOk && !opts.signal?.aborted) {
+        if (r.ms > T.streamOk && !(opts.signal && opts.signal.aborted)) {
           step('Asking again to see if it gets faster');
           const again = await get(first.url, cap, opts.signal);
           if (again.ok) {
@@ -370,7 +370,9 @@ const AddonHealth = {
       <div id="hcBody">${this.last ? this.report(this.last) : ''}</div>
       <div class="actions hc-acts"><button class="btn btn-prime" type="button" data-nav id="hcGo"><i data-lucide="activity"></i>${this.last ? 'Check again' : 'Start the check'}</button>${this.last ? '<button class="btn btn-ghost" type="button" data-nav id="hcCopy"><i data-lucide="copy"></i>Copy report</button>' : ''}</div>`;
     icons(); X8.open('healthLayer'); this.bind();
-    X8.onClose.healthLayer = () => { if (this.ctl) this.ctl.abort(); };
+    this.shut = false;
+    // closed by the user: the check stops and its result never reopens the sheet
+    X8.onClose.healthLayer = () => { this.shut = true; if (this.ctl) this.ctl.abort(); };
     if (IS_TV) setTimeout(() => Nav.focus($('#hcGo')), 60);
   },
   bind() {
@@ -406,13 +408,13 @@ const AddonHealth = {
       }
     };
     try { await Promise.all([worker(), worker(), worker()]); this.finish(list, reports, sig); }
-    catch (e) { MKLog.add('error', `addon health: ${String(e && e.message || e).slice(0, 120)}`); this.last = null; this.open(); const bb = $('#hcBody'); if (bb) bb.innerHTML = '<p class="dg-warn">The check stopped unexpectedly. Please try again.</p>'; }
+    catch (e) { MKLog.add('error', `addon health: ${String(e && e.message || e).slice(0, 120)}`); this.last = null; if (this.shut) return; this.open(); const bb = $('#hcBody'); if (bb) bb.innerHTML = '<p class="dg-warn">The check stopped unexpectedly. Please try again.</p>'; }
     finally { this.busy = false; this.ctl = null; }
   },
   finish(list, reports, sig) {
     this.busy = false;
     const done = reports.filter(Boolean);
-    if (sig.aborted && !done.some((r) => r.verdict !== 'cancel')) { this.open(); return; }
+    if (sig.aborted && !done.some((r) => r.verdict !== 'cancel')) { if (!this.shut) this.open(); return; }
     // title pages ask meta addons in list order and take the first that answers
     const metaOrder = engine.addons.filter((a) => a.enabled && !a.virtual && engine.supports(a, 'meta', 'movie', 'tt1375666')).map((a) => {
       const r = done.find((x) => x.base === a.baseUrl) || done.find((x) => x.base === this.k(a.baseUrl)); if (!r) return null;
@@ -421,10 +423,10 @@ const AddonHealth = {
     }).filter(Boolean);
     const extra = AddonCheck.together(done.filter((r) => r.verdict !== 'cancel'), { timeout: CFG.timeout || 15, metaOrder });
     this.last = { at: Date.now(), reports: done, extra };
-    this.byBase = new Map(done.map((r) => [list.find((a) => a.baseUrl === r.base || this.k(a.baseUrl) === r.base)?.baseUrl || r.base, r]));
+    this.byBase = new Map(done.map((r) => [(list.find((a) => a.baseUrl === r.base || this.k(a.baseUrl) === r.base) || {}).baseUrl || r.base, r]));
     const n = (v) => done.filter((r) => r.verdict === v).length;
     MKLog.add('info', `addon health: ${done.length} checked, ${n('good')} healthy, ${n('slow')} slow, ${n('bad')} not working, ${n('setup')} need setup, ${n('blocked')} untestable`);
-    this.open();
+    if (!this.shut) this.open();
     if (!$('#addons').hidden) renderAddons();
   },
   /* one list of what to fix, worst first, then a card per addon */

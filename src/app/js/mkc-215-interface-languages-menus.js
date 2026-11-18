@@ -63,7 +63,7 @@ const I18N = {
   pat(k) {
     const P = this.pats; if (!P || k.length < 4) return '';
     const L = [...(P.head.get(k.slice(0, 4)) || []), ...(P.tail.get(k.slice(-4)) || [])];
-    for (const [re, out] of L) { const m = re.exec(k); if (m) return out.replace(/\{(\d+)\}/g, (_, i) => m[+i + 1] ?? ''); }
+    for (const [re, out] of L) { const m = re.exec(k); if (m) return out.replace(/\{(\d+)\}/g, (_, i) => qq(m[+i + 1], '')); }
     return '';
   },
   loadPats(obj) {

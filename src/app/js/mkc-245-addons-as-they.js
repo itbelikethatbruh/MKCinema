@@ -23,7 +23,7 @@ const InfoRows = {
   /* ---- reading one row ---- */
   short(label) { const k = String(label).toLowerCase().replace(/[^\p{L}\p{N} ]/gu, '').trim(); return this.SHORT[k] || AddonUI.txt(label, 7); },
   num(v) {
-    const m = String(v).match(/^(\d{1,3}(?:[.,]\d{1,2})?)\s*(?:\/\s*(10|100|5)\b|(%))?/); if (!m) return '';
+    const m = String(v).match(/^(\d{1,3}(?:[.,]\d{1,2})?)\s*(?:\/\s*(10|100|5)\b|(%))?\s*(?:\([^)]*\))?\s*$/); if (!m) return '';
     const n = m[1].replace(',', '.');
     if (m[2] === '100' || m[3]) return `${Math.round(parseFloat(n))}%`;
     if (m[2] === '5') return `${n}/5`;
@@ -45,9 +45,10 @@ const InfoRows = {
       let m;
       if ((m = l.match(/^\(?\s*([\d.,]+\s*[KMB]?)\s+votes?\s*\)?$/i))) { if (last && !last.votes) last.votes = this.votes(m[1]); continue; }
       if ((m = l.match(/^(.{1,24}?)\s*[:：]\s*(.{1,48})$/))) {
-        const label = m[1].trim(), val = m[2].trim(), sc = this.num(val);
-        if (sc) { const vm = val.match(/\(([\d.,]+\s*[KMB]?)\s*votes?\)/i); last = { label: AddonUI.txt(label, 24), short: this.short(label), score: sc, votes: vm ? this.votes(vm[1]) : '' }; if (out.ratings.length < 6) out.ratings.push(last); continue; }
+        const label = m[1].trim(), val = m[2].trim();
         if (/mpaa|rated|age|certif|fsk|bbfc/i.test(label) && this.AGE.test(val)) { out.age = out.age || val.toUpperCase(); continue; }
+        const sc = this.num(val);
+        if (sc) { const vm = val.match(/\(([\d.,]+\s*[KMB]?)\s*votes?\)/i); last = { label: AddonUI.txt(label, 24), short: this.short(label), score: sc, votes: vm ? this.votes(vm[1]) : '' }; if (out.ratings.length < 6) out.ratings.push(last); continue; }
         continue;
       }
       if (this.AGE.test(l)) out.age = out.age || l.toUpperCase();
@@ -218,6 +219,8 @@ const AddonNotice = {
     video.addEventListener('loadedmetadata', () => { const s = P.stream; if (s && !$('#player').hidden && this.suspect(s) && this.isClip()) this.caught(s); });
     video.addEventListener('play', () => { if (this.block && this.block === P.stream) video.pause(); });
     video.addEventListener('loadstart', () => { if (this.block !== P.stream || !this.block) { this.block = null; video.style.opacity = ''; } });
+    // any new start (the same source again included) or closing the player clears the notice state
+    video.addEventListener('emptied', () => { this.block = null; video.style.opacity = ''; });
   },
 };
 

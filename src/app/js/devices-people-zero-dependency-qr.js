@@ -185,21 +185,23 @@ const Cast = {
     if (!P.ctx || !P.stream) return '';
     const m = P.ctx.meta, s = P.stream, q = new URLSearchParams({ type: m.type, id: m.id });
     if (P.ctx.video) q.set('video', P.ctx.video.id);
-    const url = !s._local && /^https?:/i.test(s.url || '') ? s.url : '';
-    if (url) q.set('stream', url);
-    const h = s.behaviorHints && s.behaviorHints.proxyHeaders && s.behaviorHints.proxyHeaders.request; if (url && h) q.set('h', b64json(h));
+    if (s._local) return '';
     q.set('t', String(Math.floor(pNow() || 0)));
     return appLink(`play?${q.toString()}`);
   },
   render() {
-    const body = $('#castBody'), tabs = `<div class="segc cast-tabs" role="tablist"><button type="button" data-ct="handoff" class="${this.tab === 'handoff' ? 'on' : ''}">Watch on phone</button><button type="button" data-ct="remote" class="${this.tab === 'remote' ? 'on' : ''}">Phone remote</button><button type="button" data-ct="join" class="${this.tab === 'join' ? 'on' : ''}">Control another screen</button></div>`;
+    const body = $('#castBody'), tabs = `<div class="segc cast-tabs" role="tablist"><button type="button" data-ct="handoff" class="${this.tab === 'handoff' ? 'on' : ''}">Watch on phone</button><button type="button" data-ct="remote" class="${this.tab === 'remote' ? 'on' : ''}">Phone remote</button><button type="button" data-ct="join" class="${this.tab === 'join' ? 'on' : ''}">Control another screen</button><button type="button" data-ct="mirror" class="${this.tab === 'mirror' ? 'on' : ''}">Screen mirroring</button></div>`;
     let inner = '';
     if (!/^https?:$/.test(location.protocol)) inner = '<p class="sub">QR codes need MKCinema on a web address (your Cloudflare Pages site, or mkcinema-server.js at http://…:7000). A file opened from disk has no address a phone can reach.</p>';
     else if (this.tab === 'handoff') {
       const link = this.handoffLink();
-      inner = link ? `<div class="qr-wrap">${QR.svg(link)}</div><p class="sub">Scan with your phone camera. It opens ${esc(P.ctx.meta.name)} at <b class="tnum">${fmtTime(pNow())}</b> on the same source.</p>
-        <p class="tour-note">The code contains this stream’s link. Debrid links are tied to your account, so only show it to people you would hand the link to.</p><div class="actions"><button class="btn btn-ghost btn-sm" type="button" id="castCopy"><i data-lucide="copy"></i>Copy link</button></div>`
+      // a very long link (some sources) is too much for a QR code: Copy link still works
+      let qr = ''; if (link) { try { qr = QR.svg(link); } catch (e) { qr = '<p class="sub">This link is too long for a QR code. Copy it and open it on your phone instead.</p>'; } }
+      inner = link ? `<div class="qr-wrap">${qr}</div><p class="sub">Scan with your phone camera. It opens ${esc(P.ctx.meta.name)} at <b class="tnum">${fmtTime(pNow())}</b> with your own addons.</p>
+        <p class="tour-note">Signed in to the same account on your phone? Your addons are already there. The code never holds the stream’s link or any key.</p><div class="actions"><button class="btn btn-ghost btn-sm" type="button" id="castCopy"><i data-lucide="copy"></i>Copy link</button></div>`
         : `<p class="sub">${P.stream && P.stream._local ? 'Files opened from this device stay on this device, so they cannot be sent to a phone. Online sources can.' : 'Start a video first, then come back here to send it to your phone at the same moment.'}</p>`;
+    } else if (this.tab === 'mirror' && typeof Mirror !== 'undefined') {
+      inner = Mirror.html(); // 2.81
     } else if (this.tab === 'remote') {
       const code = Remote.code || (Remote.code = Remote.storedCode()); Remote.host();
       inner = `<div class="rmx"><div class="rmx-qr">${QR.svg(Remote.link(code))}</div><div class="rmx-t">
@@ -207,15 +209,17 @@ const Cast = {
         <p class="rmx-s">Point your phone’s camera at the code.</p>
         <p class="rmx-s">No camera? On your phone, open this address and enter the code:</p><p class="rmx-addr">${esc(Remote.link().replace(/^https?:\/\//, ''))}</p>
         <div class="rmx-code tnum" id="rmCode" aria-label="Code ${esc(code.split('').join(' '))}">${code.split('').map((c) => `<span>${esc(c)}</span>`).join('')}</div>
-        <div class="rmx-foot"><span class="rmx-st" id="castState" data-s="${Remote.stateKind()}"><i></i><span>${Remote.stateLine()}</span></span><button class="rmx-new" type="button" id="rmNew"><i data-lucide="refresh-cw"></i>New code</button></div></div></div>`;
+        <div class="rmx-foot"><span class="rmx-st" id="castState" data-s="${Remote.stateKind()}"><i></i><span>${Remote.stateLine()}</span></span><button class="rmx-new" type="button" id="rmNew"><i data-lucide="refresh-cw"></i>New code</button></div>
+        <p class="rmx-app"><span>Android phone? Get the free MK Remote app:</span> <b>mkcinema.app/remote-app</b></p></div></div>`;
     } else {
       inner = `<p class="sub">Enter the code shown on the other screen. This opens MKCinema Remote, which remembers the screen for next time.</p><div class="inrow"><input class="inp mono rm-code" id="castCode" maxlength="6" autocapitalize="characters" placeholder="ABC123"><button class="btn btn-prime" type="button" id="castJoin"><i data-lucide="link"></i>Connect</button></div>`;
     }
-    body.innerHTML = (IS_TV && this.tab === 'remote' ? '' : tabs) + inner; icons();
+    body.innerHTML = (IS_TV && (this.tab === 'remote' || this.tab === 'mirror') ? '' : tabs) + inner; icons();
     $$('[data-ct]', body).forEach((b) => b.addEventListener('click', () => { this.tab = b.dataset.ct; this.render(); }));
     const cp = $('#castCopy'); if (cp) cp.onclick = () => copyText(this.handoffLink());
     const j = $('#castJoin'); if (j) j.onclick = () => { const c = $('#castCode').value.trim().toUpperCase(); if (RM_CODE.test(c)) Remote.join(c); else toast('Codes have 6 characters', 'err'); };
     const nw = $('#rmNew'); if (nw) nw.onclick = () => Remote.renew();
+    if (this.tab === 'mirror' && typeof Mirror !== 'undefined') Mirror.bind(body);
   },
 };
 $('#pCast').onclick = () => Cast.open();
@@ -231,7 +235,7 @@ const Remote = {
   code: '', bus: null, peers: new Map(), last: '', lastAt: 0, soonT: 0, beatT: 0, hintEl: null,
   device() {
     const u = navigator.userAgent;
-    return /AFT[A-Z]/.test(u) ? 'Fire TV' : /Web0S|webOS/.test(u) ? 'LG TV' : /GoogleTV/.test(u) ? 'Google TV' : /Android TV|MKCinemaTV|BRAVIA/.test(u) ? 'Android TV' : /Tizen/.test(u) ? 'Samsung TV' : IS_TV ? 'TV'
+    return /AFT[A-Z]/.test(u) ? 'Fire TV' : /Web0S|webOS/.test(u) ? 'LG TV' : /GoogleTV/.test(u) ? 'Google TV' : /Android TV|MKCinemaTV|BRAVIA/.test(u) ? 'Android TV' : /Tizen/.test(u) ? 'Samsung TV' : /Xbox/.test(u) ? 'Xbox' : /PlayStation/.test(u) ? 'PlayStation' : IS_TV ? 'TV'
       : /Android|iPad/.test(u) ? 'Tablet' : /Mac/.test(u) ? 'Mac' : /Windows/.test(u) ? 'Windows PC' : 'Computer';
   },
   storedCode() { let c = Store.get('rcode', ''); if (!RM_CODE.test(c)) { c = roomCode(); Store.set('rcode', c); } return c; },
@@ -340,6 +344,11 @@ const Remote = {
     const a = document.activeElement, el = a && a !== document.body && a.isConnected && !a.closest('[hidden]') ? a : null, player = $('#player');
     if (rmText(el)) { if (el.value && (el.id === 'palInput' || el.type === 'search')) this.press('Enter'); else this.push(true); return; }
     if (!player.hidden) {
+      // a prompt or panel open over the film ("Allow this phone?"): OK answers it instead of pausing
+      const ids = ((typeof X8 !== 'undefined' && X8.order) || []).concat(['castLayer', 'partyLayer', 'epSheet', 'askLayer', 'palette', 'settings']);
+      let top = null; for (let i = ids.length - 1; i >= 0 && !top; i--) { const L = $(`#${ids[i]}`); if (L && !L.hidden && !player.contains(L)) top = L; }
+      if (top && !(el && top.contains(el))) { const f = $('button:not([disabled]), [data-nav]', top); if (f) { f.focus(); if (IS_TV && typeof Nav !== 'undefined' && Nav.focus) Nav.focus(f); } return; }
+      if (top) { if (this.press('Enter').defaultPrevented || !el.isConnected) return; el.click(); return; }
       if (Skip.visible()) { Skip.go(); return; }
       const hud = $('#hud');
       if (!el || !player.contains(el) || (hud.contains(el) && hud.classList.contains('idle'))) { togglePlay(); wakeHud(); return; }
@@ -667,7 +676,7 @@ const PartyHost = {
     Party.renderMembers = function (...a) {
       const r = rm.apply(this, a);
       if (this.code && this.isHost()) this.peers.forEach((p) => {
-        if (p.voice) return;
+        if (p.voice || (typeof PartyGuest !== 'undefined' && PartyGuest.isGuest(p.id))) return;
         $$(`.pm-row[data-pid="${CSS.escape(p.id)}"]`).forEach((row) => {
           if ($('.pm-mk', row)) return;
           row.insertAdjacentHTML('beforeend', `<button class="pm-mk" type="button" data-nav aria-label="Make ${esc(p.name)} the host">Make host</button>`);
@@ -677,7 +686,7 @@ const PartyHost = {
       return r;
     };
     Party.handOff = function (id) {
-      const p = this.peers.get(id); if (!this.isHost() || !p || p.voice) return;
+      const p = this.peers.get(id); if (!this.isHost() || !p || p.voice || (typeof PartyGuest !== 'undefined' && PartyGuest.isGuest(id))) return;
       this.send({ t: 'host', to: id }); this.hostId = id; this.sysLine(`${p.name} is the host now`); this.render();
     };
   },
@@ -687,8 +696,8 @@ document.head.insertAdjacentHTML('beforeend', `<style id="mkc-237-rmsec">
 #mkGate{z-index:90}
 #mkGate .sc-p b.mono{font-size:calc(18px * var(--ts,1));letter-spacing:.18em}
 .mk-gate-acts{margin:10px -6px 0;padding:6px;gap:10px;flex-wrap:wrap}
-.pm-mk{margin-left:auto;flex:none;font-size:calc(11px * var(--ts,1));padding:5px 11px;border-radius:999px;border:1px solid rgba(255,255,255,.18);color:inherit;background:none;cursor:pointer}
-.pm-mk:hover,.pm-mk.nav-focus,.pm-mk:focus-visible{border-color:rgba(255,255,255,.5)}
+.pm-mk{margin-left:auto;flex:none;font-size:calc(11px * var(--ts,1));padding:5px 11px;border-radius:999px;border:1px solid rgba(var(--kffffff-c,255,255,255),.18);color:inherit;background:none;cursor:pointer}
+.pm-mk:hover,.pm-mk.nav-focus,.pm-mk:focus-visible{border-color:rgba(var(--kffffff-c,255,255,255),.5)}
 .tvl-chk{margin-top:8px}
 .tvl-chk b{font-size:calc(20px * var(--ts,1));letter-spacing:.24em;margin-left:6px}
 </style>`);
@@ -700,6 +709,8 @@ const Party = {
   code: '', me: { id: rid(), name: '' }, bus: null, peers: new Map(), hostId: '', chat: [], applying: false, mic: null, speaking: new Set(), offsets: new Map(), hbT: 0, pingT: 0, vadT: 0, rateT: 0, actx: null,
   name() { return CFG.partyName || (Account.user ? Account.name().split('@')[0] : '') || `Guest ${this.me.id.slice(0, 4).toUpperCase()}`; },
   isHost() { return this.hostId === this.me.id; },
+  // 2.78: someone without an account joined from a link (shown as Guest, never made the host)
+  guestFlag() { return typeof Account !== 'undefined' && !Account.user ? 1 : 0; },
   openPanel() {
     if (!$('#player').hidden) { openDrawer('party'); this.render(); }
     else { openLayer('partyLayer'); this.render(); }
@@ -713,7 +724,7 @@ const Party = {
     this.render(); this.pill();
     const ok = await this.bus.connect();
     if (!ok) toast('The realtime service did not answer. Only other tabs on this computer can join right now.', 'err', 7000);
-    this.bus.send({ t: 'hello', name: this.name(), host: this.isHost() });
+    this.bus.send({ t: 'hello', g: this.guestFlag(), name: this.name(), host: this.isHost() });
     clearInterval(this.hbT); this.hbT = setInterval(() => this.heartbeat(), 2000);
     // pings (clock offsets, and proof that a member is still there) only while someone else is in the room
     clearInterval(this.pingT); this.pingT = setInterval(() => { if (this.peers.size) this.send({ t: 'ping', a: Date.now() }); }, 5000);
@@ -725,6 +736,7 @@ const Party = {
     try { this.bus && this.bus.send({ t: 'bye' }); } catch (e) { /* ignore */ }
     this.peers.forEach((p) => this.dropPeer(p.id)); this.peers.clear();
     if (this.mic) { this.mic.getTracks().forEach((t) => t.stop()); this.mic = null; }
+    if (typeof PartyGuest !== 'undefined') PartyGuest.end();
     clearInterval(this.hbT); clearInterval(this.pingT); clearInterval(this.vadT); this.speaking.clear(); Duck.set(false);
     this.bus && this.bus.close(); this.bus = null; this.code = ''; this.hostId = '';
     video.playbackRate = CFG.speed || 1;
@@ -743,11 +755,12 @@ const Party = {
     const seen = this.peers.get(from); if (seen) seen.seen = Date.now();
     switch (m.t) {
       case 'hello': {
+        if (typeof PartyGuest !== 'undefined' && PartyGuest.gate(m, from)) break;
         m.name = String(m.name || 'Guest').slice(0, 40);
         this.peerFor(from, m.name).seen = Date.now();
         // the room's creator is its host; a claim counts only while no host is here, so nobody can take over
         if (m.host && from !== this.hostId && !this.isHost() && !(this.hostId && this.peers.has(this.hostId))) { this.hostId = from; this.render(); }
-        if (!m.reply) this.bus.send({ t: 'hello', name: this.name(), reply: true, host: this.isHost(), _to: from });
+        if (!m.reply) this.bus.send({ t: 'hello', g: this.guestFlag(), name: this.name(), reply: true, host: this.isHost(), _to: from });
         if (this.isHost() && P.ctx) setTimeout(() => this.broadcastState('welcome'), 600);
         this.sysLine(`${m.name} joined`); break;
       }
@@ -756,11 +769,11 @@ const Party = {
       // playback follows the host only, with sane values: members (or anyone who knows the code) can't drive the room
       case 'state': if (from === this.hostId && this.stateOk(m)) { if (typeof PartyLine !== 'undefined') PartyLine.lastSt = m; this.applyState(m); } break;
       case 'host': if (from === this.hostId && typeof m.to === 'string' && (m.to === this.me.id || this.peers.has(m.to))) { this.hostId = m.to; this.sysLine(m.to === this.me.id ? 'You are the host now' : `${(this.peers.get(m.to) || {}).name || 'Someone'} is the host now`); this.render(); if (this.isHost() && P.ctx) this.broadcastState('host'); } break;
-      case 'chat': this.chat.push({ name: m.name, text: String(m.text).slice(0, 400), at: Date.now() }); this.renderChat(); if (!$('#player').hidden && !$('#partyDrawer').classList.contains('open')) toast(`${m.name}: ${String(m.text).slice(0, 80)}`, 'info', 3000); break;
+      case 'chat': { const nm = (this.peers.get(from) || {}).name || String(m.name || 'Guest').slice(0, 40); this.chat.push({ name: nm, text: String(m.text).slice(0, 400), at: Date.now() }); this.renderChat(); if (!$('#player').hidden && !$('#partyDrawer').classList.contains('open')) toast(`${nm}: ${String(m.text).slice(0, 80)}`, 'info', 3000); break; }
       case 'react': this.float(m.e); break;
       case 'ping': this.send({ t: 'pong', a: m.a, b: Date.now(), _to: from }); break;
       case 'pong': if (m._to === this.me.id) { const now = Date.now(), rtt = now - m.a, off = m.b - (m.a + rtt / 2); const prev = this.offsets.get(from); this.offsets.set(from, prev == null ? off : prev * 0.7 + off * 0.3); const p = this.peers.get(from); if (p) { p.rtt = rtt; this.renderMembers(); } } break;
-      default: break;
+      default: if (typeof PartyGuest !== 'undefined') PartyGuest.onMsg(m, from); break;
     }
   },
   stateOk(m) {
@@ -800,7 +813,7 @@ const Party = {
       } else if (candidate) { try { await pc.addIceCandidate(candidate); } catch (e) { if (!p.ignoreOffer) throw e; } }
     } catch (e) { console.warn('party signaling', e); }
   },
-  dropPeer(id) { const p = this.peers.get(id); if (!p) return; try { p.pc.close(); } catch (e) { /* closed */ } if (p.audio) p.audio.remove(); this.peers.delete(id); this.speaking.delete(id); this.renderMembers(); },
+  dropPeer(id) { if (typeof PartyGuest !== 'undefined') PartyGuest.drop(id); const p = this.peers.get(id); if (!p) return; try { p.pc.close(); } catch (e) { /* closed */ } if (p.audio) p.audio.remove(); this.peers.delete(id); this.speaking.delete(id); this.renderMembers(); },
   /* ---- Voice: mic out, voices in, and ducking while anyone talks ---- */
   async toggleMic() {
     if (this.mic) {
@@ -839,12 +852,15 @@ const Party = {
   mediaInfo() {
     if (!P.ctx || !P.stream) return null; const m = P.ctx.meta, s = P.stream;
     // only the host shares a link, only when they chose to, and never one that carries a server key or a login
-    const url = this.isHost() && CFG.partyShareLink && !s._local && /^https?:/i.test(s.url || '') && this.shareable(s) ? s.url : '';
+    const url = ''; // 2.78 (owner's call): a party never hands out the host's stream link; guests without a source see the host's screen
     return { type: m.type, metaId: m.id, videoId: P.ctx.video ? P.ctx.video.id : '', name: m.name, url, headers: url && s.behaviorHints && s.behaviorHints.proxyHeaders ? s.behaviorHints.proxyHeaders.request : null, local: !!s._local };
   },
   shareable(s) {
     const u = String(s.url || ''), h = (s.behaviorHints && s.behaviorHints.proxyHeaders && s.behaviorHints.proxyHeaders.request) || {};
     if (/[?&#;](api[_-]?key|apikey|x-plex-token|x-emby-token|x-mediabrowser-token|access_token|token|auth|authorization|password|passwd)=/i.test(u) || /^[a-z]+:\/\/[^/?#]*@/i.test(u)) return false;
+    // 2.78: addon links that carry a debrid key or the addon's settings in their path (…/resolve/realdebrid/KEY/…)
+    if (/\/resolve\/(real-?debrid|all-?debrid|premiumize|debrid-?link|torbox|offcloud|easydebrid|put-?io)\//i.test(u) || /\/(realdebrid|alldebrid|premiumize|debridlink|torbox|offcloud|easydebrid|putio|apikey|api_key|token)=/i.test(u)) return false;
+    try { const segs = new URL(u).pathname.split('/').filter((x) => x.length >= 24); if (segs.some((x) => engine.addons.some((a) => String(a.transportUrl || a.baseUrl || '').includes(x)))) return false; } catch (e) { return false; }
     return !Object.keys(h).some((k) => /authorization|token|cookie|api[-_]?key|password/i.test(k)) && !Object.values(h).some((v) => /token=|mediabrowser/i.test(String(v)));
   },
   broadcastState(reason) {},
@@ -859,7 +875,7 @@ const Party = {
     });
     if (lost) this.electHost();
     // a party whose realtime channel didn't come up, or dropped, keeps trying every 20 s
-    if (this.bus && !this.bus.online && this.bus.reconnect && now - (this.retryAt || 0) > 20000) { this.retryAt = now; const b = this.bus; b.reconnect().then((ok) => { if (ok && this.bus === b) b.send({ t: 'hello', name: this.name(), host: this.isHost() }); }).catch(() => {}); }
+    if (this.bus && !this.bus.online && this.bus.reconnect && now - (this.retryAt || 0) > 20000) { this.retryAt = now; const b = this.bus; b.reconnect().then((ok) => { if (ok && this.bus === b) b.send({ t: 'hello', g: this.guestFlag(), name: this.name(), host: this.isHost() }); }).catch(() => {}); }
     if (this.isHost() && this.peers.size && P.ctx && !video.paused) this.broadcastState('beat');
     this.pill();
   },
@@ -878,6 +894,7 @@ const Party = {
   },
   async applyState(st) {},
   async loadMedia(media, at) {
+    if (typeof PartyGuest !== 'undefined' && PartyGuest.take(media)) return;
     if (media.local) { toast('The host is playing a file from their own device, so it cannot be shared', 'err'); return; }
     const lk = `${media.metaId}|${media.videoId || ''}`; if (this.loadingKey === lk) return; this.loadingKey = lk;
     this.applying = true;
@@ -894,7 +911,7 @@ const Party = {
         if (!pick && await this.askLink(media)) { pick = { name: 'Party host', title: 'The host’s source', url: media.url, _addon: 'Watch party', behaviorHints: media.headers ? { proxyHeaders: { request: media.headers } } : {} }; pick._tel = Telemetry.parse(pick); streams.unshift(pick); }
         if (!pick) pick = pickBest(streams);
       } else pick = pickBest(streams);
-      if (!pick) { toast('None of your addons has a playable stream for what the party is watching', 'err', 6000); return; }
+      if (!pick) { if (typeof PartyGuest !== 'undefined' && PartyGuest.take(media, true)) return; toast('None of your addons has a playable stream for what the party is watching', 'err', 6000); return; }
       toast(`Party: ${media.name}`, 'info');
       await playStream({ meta, video: vid, streams }, pick, { startAt: at });
     } finally { this.loadingKey = ''; setTimeout(() => { this.applying = false; }, 1500); }
@@ -912,7 +929,7 @@ const Party = {
   react(e) { if (!this.code) return; this.send({ t: 'react', e }); this.float(e); },
   float(e) {
     if (!/^[\p{Extended_Pictographic}‍️]{1,8}$/u.test(e)) return;
-    const box = $('#player').hidden ? null : $('#reacts'); if (!box) { toast(e, 'info', 1200); return; }
+    const box = $('#player').hidden ? (typeof PartyGuest !== 'undefined' ? PartyGuest.reactBox() : null) : $('#reacts'); if (!box) { toast(e, 'info', 1200); return; }
     const s = document.createElement('span'); s.textContent = e; s.style.left = `${8 + Math.random() * 84}%`; s.style.setProperty('--dx', `${(Math.random() * 60 - 30).toFixed(0)}px`);
     box.appendChild(s); setTimeout(() => s.remove(), 2600);
   },
@@ -930,7 +947,8 @@ const Party = {
       on('#pyJoin', 'click', () => this.join($('#pyCode', root).value));
       on('#pyCode', 'keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') this.join(e.target.value); });
       on('#pyLink', 'change', (e) => setCfg('partyShareLink', e.target.checked));
-      on('#pyCopy', 'click', () => copyText(appLink(`party=${this.code}`) || this.code));
+      on('#pyCopy', 'click', () => (typeof PartyGuest !== 'undefined' ? PartyGuest.share() : copyText(appLink(`party=${this.code}`) || this.code)));
+      if (typeof PartyGuest !== 'undefined') PartyGuest.bind(root);
       on('#pyQr', 'click', () => { const b = $('#pyQrBox', root); b.hidden = !b.hidden; });
       on('#pyMic', 'click', () => this.toggleMic());
       on('#pyLeave', 'click', () => this.leave());
@@ -955,7 +973,7 @@ addEventListener('beforeunload', () => { Party.leave(true); });
 }
 
 /* ---------------- Setup Cloner: your whole setup as a code or a .mkcinema file, restored without a reload ---------------- */
-const b64url = { enc: (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''), dec: (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)), (c) => c.charCodeAt(0)) };
+const b64url = { enc: (bytes) => { let t = ''; for (let i = 0; i < bytes.length; i += 0x8000) t += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(t).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); } /* in chunks: a big library overflowed the call stack */, dec: (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)), (c) => c.charCodeAt(0)) };
 async function pipeBytes(bytes, stream) { return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer()); }
 const Cloner = {
   snapshot({ secrets = false } = {}) {
@@ -1023,7 +1041,7 @@ const Cloner = {
    The key is only ever in the QR code, and the phone's own sign-in is left alone. */
 const TvLogin = {
   code: '', key: '', bus: null, state: '', t: 0, auto: false,
-  isTV: () => document.documentElement.classList.contains('tv') || /MKCinemaTV|Android TV|GoogleTV|AFT[A-Z]|SMART-TV|SmartTV|Web0S|webOS|Tizen|BRAVIA/i.test(navigator.userAgent),
+  isTV: () => document.documentElement.classList.contains('tv') || /MKCinemaTV|Android TV|GoogleTV|AFT[A-Z]|SMART-TV|SmartTV|Web0S|webOS|Tizen|BRAVIA|Xbox|PlayStation/i.test(navigator.userAgent),
   aes: (key) => crypto.subtle.importKey('raw', b64url.dec(key), 'AES-GCM', false, ['encrypt', 'decrypt']),
   link() { return appLink(`login=${this.code}.${this.key}.2`); },
   html() {
@@ -1123,6 +1141,8 @@ const TvLogin = {
         msg('Sending to your TV…');
         const r = await reply;
         if (!r) throw new Error('your TV did not answer. Make sure the code is still on its screen');
+        // a mistyped check number: back to the number step, so it can be typed again
+        if (r.t === 'fail' && check && /check number/i.test(r.msg || '')) { bus.close(); this.join(code, key, '2'); const cm = $('#tvl-cmsg'); if (cm) cm.textContent = 'That number didn’t match. Type the 4 digits shown on your TV again.'; return; }
         if (r.t === 'fail') throw new Error(r.msg || 'your TV could not sign in');
         body.innerHTML = '<h2>Your TV is signed in</h2><p class="sub">You can put your phone down. Your library, progress and addons load on the TV now.</p>';
         bus.close();
@@ -1139,9 +1159,17 @@ const Deep = {
     if (h.startsWith('play?')) { history.replaceState(null, '', location.pathname); const q = new URLSearchParams(h.slice(5)); if (await this.askPlay(q)) await this.play(q); }
     else if (h.startsWith('remote=')) { const c = h.slice(7).toUpperCase(); if (RM_CODE.test(c)) { location.replace(Remote.link(c)); return; } history.replaceState(null, '', location.pathname); }
     else if (h.startsWith('login=')) { history.replaceState(null, '', location.pathname); const [code, key, ver] = h.slice(6).split('.'); TvLogin.join((code || '').toUpperCase(), key, ver); }
+    else if (h.startsWith('lssend=')) { history.replaceState(null, '', location.pathname); LayStudio.sendLink(h.slice(7)); }
+    else if (h.startsWith('ambsend=')) { history.replaceState(null, '', location.pathname); AmbStudio.sendLink(h.slice(8)); }
+    else if (h === 'ambient') { history.replaceState(null, '', location.pathname); const t = (n) => { if ((document.body.classList.contains('intro-on') || !S.booted) && n < 40) setTimeout(() => t(n + 1), 500); else AmbStudio.open(); }; t(0); }
+    else if (h.startsWith('layout=') || h === 'studio') { history.replaceState(null, '', location.pathname); LayStudio.fromLink(h === 'studio' ? '' : h.slice(7)); }
+    else if (h.startsWith('mirror=')) { history.replaceState(null, '', location.pathname); if (typeof Mirror !== 'undefined') Mirror.link(h.slice(7)); }
+    else if (h.startsWith('resume?')) { history.replaceState(null, '', location.pathname); if (typeof HomeWidget !== 'undefined') HomeWidget.resume(new URLSearchParams(h.slice(7)).get('v')); }
     else if (h.startsWith('party=')) {
       history.replaceState(null, '', location.pathname);
       const c = h.slice(6).trim().toUpperCase(); if (!/^[A-Z0-9]{6}$/.test(c)) { toast('That party link isn’t complete', 'err'); return; }
+      if (document.readyState === 'loading') await new Promise((r) => addEventListener('DOMContentLoaded', r, { once: true })); // links open while the page is still loading
+      if (typeof PartyGuest !== 'undefined') { PartyGuest.invite(c); return; }
       if (Party.code === c) { Party.openPanel(); return; }
       if ((await Gate.ask({ icon: 'users', eyebrow: 'Watch party', title: `Join watch party ${c}?`, yes: 'Join', no: 'Not now', html: 'A link invites you to a watch party. The others see your name and chat, and the host picks what plays. You can leave at any time.' })) !== true) return;
       openLayer('partyLayer'); Party.render(); await Party.join(c);
@@ -1159,7 +1187,7 @@ const Deep = {
   },
   async play(q) {},
 };
-addEventListener('hashchange', () => { if (/^#(play\?|remote=|party=|login=)/.test(location.hash)) Deep.handle(); });
+addEventListener('hashchange', () => { if (/^#(play\?|resume\?|remote=|party=|mirror=|login=|layout=|lssend=|ambsend=|ambient$|studio$)/.test(location.hash)) Deep.handle(); });
 
 COMMANDS.push(
   { label: 'Start or join a watch party', icon: 'users', run: () => Party.openPanel() },

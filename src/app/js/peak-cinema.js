@@ -114,7 +114,7 @@ const Peak = {
     $('#pkKeep', el).onclick = () => this.keep(false);
     $('#pkStart', el).onclick = () => this.keep(true);
     $('#pkDetails', el).onclick = () => { const c = this.cur; if (!c) return; this.close(); openDetail(c.meta); };
-    $('#pkMute', el).onclick = () => this.setMuted(!this.muted);
+    $('#pkMute', el).onclick = () => this.setMuted(!(this.cur ? this.cur.v.muted : this.muted));
     $('#pkHow', el).onclick = () => this.how(true);
     $('#pkHowOk', el).onclick = () => this.how(false);
     $('#pkForget', el).onclick = () => { Store.set('peakLearn', {}); toast('Peak Cinema starts fresh', 'ok', 2400); this.how(false); };
@@ -129,7 +129,7 @@ const Peak = {
   async open() {
     if (this.on) return;
     const el = this.el;
-    this.on = true; this.tok++; this.n = 0; this.miss = 0; this.dry = false; this.cur = this.next = this.staged = null; this.used.clear();
+    this.on = true; this.tok++; this.busy = false; this.n = 0; this.miss = 0; this.dry = false; this.cur = this.next = this.staged = null; this.used.clear();
     this.muted = !!Store.get('peakMuted', false); this.setMuted(this.muted);
     $('#pkInfo').innerHTML = ''; $('#pkNext').textContent = ''; $('#pkBar').style.transform = 'scaleX(0)'; $('#pkCount').textContent = '';
     /* pk-2738: TV video layers are placed against the scrolled page, so the page goes to the top while Peak is open */
@@ -139,12 +139,12 @@ const Peak = {
     this.wake(true);
     if (!engine.addons.some((a) => a.enabled !== false && !a.builtin && engine.supports(a, 'stream', 'movie', 'tt0111161'))) { this.blocked('none'); return; }
     this.status('Finding a scene your sources have ready…', true);
-    await this.buildPool(this.tok);
-    this.fill();
+    const tok = this.tok; await this.buildPool(tok);
+    if (tok === this.tok) this.fill();
   },
   close() {
     if (!this.on) return;
-    this.on = false; this.tok++; clearTimeout(this.idleT);
+    this.on = false; this.tok++; this.busy = false; clearTimeout(this.idleT);
     this.vids.forEach((v) => this.unload(v));
     this.cur = this.next = this.staged = null;
     const s = $('.pk-stage', this.el); if (s.id === 'remote') { s.removeAttribute('id'); tvBackHook(); }
@@ -161,8 +161,8 @@ const Peak = {
   },
   claimBack() { if (IS_TV && this.on && !$('#remote')) $('.pk-stage', this.el).id = 'remote'; },
   unload(v) { this.fit({ videoWidth: 0, style: v.style }); v.pause(); v.removeAttribute('src'); v.load(); v.classList.remove('on'); v._clip = null; },
-  setMuted(m) {
-    this.muted = m; Store.set('peakMuted', m);
+  setMuted(m, once) {
+    if (!once) { this.muted = m; Store.set('peakMuted', m); }
     if (this.cur) this.cur.v.muted = m;
     const b = $('#pkMute'); if (b) { b.innerHTML = `<i data-lucide="${m ? 'volume-x' : 'volume-2'}"></i>`; b.setAttribute('aria-label', m ? 'Sound on' : 'Mute'); icons(); }
   },
@@ -298,7 +298,7 @@ const Peak = {
       for (let i = 0; i < 12 && hashes.length && Vault.service() && hashes.some((s) => !Vault.cached.has(String(s.infoHash).toLowerCase())); i++) await sleep(250);
       hashes.forEach((s) => { s._tel = Telemetry.parse(s); });
       const list = this.choose(streams, meta);
-      if (list.length) { this.miss = 0; return { meta: remember(meta), video, streams, list }; }
+      if (list.length) { return { meta: remember(meta), video, streams, list }; }
       this.miss++;
       if (this.miss >= this.MAX_MISS) return null;
     }
@@ -395,13 +395,14 @@ const Peak = {
     return (this.trackIs(first, w) && this.trackIs(def, w)) || why(`the playing track is ${first.lang || 'untagged'}${first.name ? ` (${first.name})` : ''}`);
   },
   async load(st, tok) {
-    const lazy = IS_TV && this.cur, v = lazy ? null : this.vids.find((x) => !x._clip && (!this.cur || this.cur.v !== x)); if (!v && !lazy) return null;
+    const free = () => this.vids.find((x) => !x._clip && (!this.cur || this.cur.v !== x));
+    let v = IS_TV && this.cur ? null : free(); if (!v && !(IS_TV && this.cur)) return 'wait';
     const list = st.list.slice(0, 3);
     for (const [i, s] of list.entries()) {
       let url = s.url;
       if (!url && s.infoHash) {
         await this.gate('linkAt', 2000); if (tok !== this.tok) return null;
-        try { url = await Vault.resolve(s, { meta: st.meta, video: st.video || null }); s._infoHash = s.infoHash; delete s.infoHash; s.url = url; s._debrid = s._tel.debrid; s._tel = Telemetry.parse(s); } catch (e) { continue; }
+        try { url = await Vault.resolve(s, { meta: st.meta, video: st.video || null }); s._infoHash = s.infoHash; delete s.infoHash; s.url = url; s._debrid = s._via || s._tel.debrid; s._tel = Telemetry.parse(s); } catch (e) { continue; }
         if (tok !== this.tok) return null;
       }
       // 2.68.4: the file's own audio track must be in your language, or this copy is not used
@@ -409,6 +410,9 @@ const Peak = {
       if (tok !== this.tok) return null;
       // TV: the other candidate travels with it, so a copy that will not open falls back to the film's next source
       if (IS_TV && this.cur) return { meta: st.meta, video: st.video || null, stream: s, streams: st.streams, v: null, url, lazy: true, offset: 0, d: 0, alt: { ...st, list: list.slice(i + 1) } };
+      // the scene on screen may have been skipped during the wait: look again for a free video slot
+      if (!v || v._clip || (this.cur && this.cur.v === v)) v = free();
+      if (!v) return 'wait';   // the link found is kept on the stream, so the next try starts from it
       const clip = { meta: st.meta, video: st.video || null, stream: s, streams: st.streams, v, offset: 0, d: 0 };
       v._clip = clip;
       const ok = await this.seekTo(v, url, clip, tok);
@@ -456,8 +460,9 @@ const Peak = {
         const st = this.staged; this.staged = null;
         if (this.cur) $('#pkNext').innerHTML = `<span class="spin"></span>Up next: ${esc(st.meta.name)}`;
         const clip = await this.load(st, tok); if (tok !== this.tok) return;
+        if (clip === 'wait') { this.staged = st; return; }   // a slot frees when the old scene fades out; fill runs again then
         if (!clip) { this.miss++; if (this.miss >= this.MAX_MISS && !this.cur) { this.blocked('miss'); return; } continue; }
-        this.next = clip;
+        this.next = clip; this.miss = 0;
         if (!this.cur) this.advance();
         else $('#pkNext').innerHTML = `<span class="pk-dot"></span>Up next: ${esc(clip.meta.name)}`;
       }
@@ -484,12 +489,12 @@ const Peak = {
     if (!ok) {
       this.unload(v);
       // the film's other cached source is tried before moving on to another film
-      const alt = n.alt && n.alt.list.length ? await this.load(n.alt, tok) : null;
+      let alt = n.alt && n.alt.list.length ? await this.load(n.alt, tok) : null; if (alt === 'wait') alt = null;
       if (tok !== this.tok) { if (alt && alt.v) this.unload(alt.v); return; }
       if (!alt) { this.miss++; this.advance(); return; }
       n = alt;
     }
-    n.lazy = false; this.next = n; this.advance();
+    n.lazy = false; this.miss = 0; this.next = n; this.advance();
   },
   advance() {
     const n = this.next, old = this.cur;
@@ -501,13 +506,14 @@ const Peak = {
     if (n.lazy) { this.loadLazy(n, old); return; }
     this.next = null; this.cur = n; this.n++;
     const l = this.learn(); l.seen[n.meta.id] = Date.now(); this.saveLearn(l);
-    n.v.muted = this.muted; n.startedAt = Date.now();
-    n.v.play().catch(() => { n.v.muted = true; this.setMuted(true); n.v.play().catch(() => {}); });
+    this.setMuted(this.muted, true); n.startedAt = Date.now();
+    n.v.play().catch(() => { if (this.cur === n) this.setMuted(true, true); else n.v.muted = true; n.v.play().catch(() => {}); });
     n.v.classList.add('on'); this.el.classList.remove('pk-empty');
     if (old) { old.v.classList.remove('on'); setTimeout(() => { if (old.v._clip === old) this.unload(old.v); this.fill(); }, 500); }
     this.render(); this.status(''); $('#pkNext').textContent = ''; this.wake();
     // the remote starts on Keep watching once there is something to keep watching
-    if (IS_TV && !old) { Nav.mem.delete(this.el); Nav.focus($('#pkKeep'), true); }
+    // (only for a session's first scene: on TVs every later scene also starts with nothing on screen)
+    if (IS_TV && this.n === 1) { Nav.mem.delete(this.el); Nav.focus($('#pkKeep'), true); }
     clearTimeout(this.silentT);
     // a file whose sound this device cannot decode plays silently: say so once it is clear, and move on
     this.silentT = setTimeout(() => { const c = this.cur; if (c === n && !c.v.paused && !c.v.muted && 'webkitAudioDecodedByteCount' in c.v && c.v.webkitAudioDecodedByteCount === 0) { this.status('That file had no sound this device can play, so here is the next scene.', false, 4000); this.advance(); } }, 4500);
@@ -536,6 +542,7 @@ const Peak = {
     if (ms) this.stT = setTimeout(() => { s.hidden = true; }, ms);
   },
   blocked(why) {
+    this.blockWhy = why;
     const msg = {
       none: ['Peak Cinema needs a stream addon', 'It plays scenes from sources your debrid service already has cached. Add a stream addon, and your debrid key in Settings › Debrid.'],
       miss: ['No cached copies turned up', `The last ${this.MAX_MISS} titles had no cached source in your language, in a format this device can play. Try another mood, or check Settings › Debrid and Settings › Audio language.`],
@@ -575,19 +582,20 @@ const Peak = {
     const stop = () => { e.preventDefault(); e.stopImmediatePropagation(); this.wake(); };
     if (k === 'MediaTrackNext' || k === 'ChannelUp' || k === 'ChannelDown' || e.keyCode === 427 || e.keyCode === 428 || k === 'n' || k === 'N') { stop(); this.skip(); return; }
     if (k === 'MediaPlayPause' || k === 'MediaPlay' || k === 'MediaPause' || k === 'k' || (k === ' ' && tag !== 'BUTTON')) { stop(); const c = this.cur; if (c) (c.v.paused ? c.v.play().catch(() => {}) : c.v.pause()); return; }
-    if (k === 'm' || k === 'M') { stop(); this.setMuted(!this.muted); return; }
+    if (k === 'm' || k === 'M') { stop(); this.setMuted(!(this.cur ? this.cur.v.muted : this.muted)); return; }
     this.wake();
   },
   /* the Home invitation, first thing under the featured banner */
   strip() {
-    const rows = $('#homeRows'); if (!rows || $('#pkStrip')) return;
+    const rows = $('#homeRows'); if (!Layout.shows('peak')) { const o = $('#pkStrip'); if (o) o.remove(); return; }
+    if (!rows || $('#pkStrip')) return;
     rows.insertAdjacentHTML('afterbegin', `<section class="pk-strip" id="pkStrip" aria-label="Peak Cinema">
       <div class="pk-strip-t"><span class="pk-mark">Peak Cinema</span><h3>Can't decide? Surf scenes instead.</h3><p>Ninety seconds from the middle of one film, then the next, from sources your debrid service already has cached. Keep watching from that second, or start from the top.</p></div>
       <button class="btn btn-bolt" id="pkGo" type="button" data-nav><i data-lucide="film"></i><span class="sp-l">Start surfing<small>Scenes, back to back</small></span></button></section>`);
     $('#pkGo').onclick = () => this.open(); icons();
   },
   init() {
-    this.el = this.build(); MENU_LAYERS.push('peak');
+    this.el = this.build(); MENU_LAYERS.push('peak'); HOME_ROWS.push(['peak', 'Peak Cinema']);
     document.addEventListener('keydown', (e) => this.key(e), true);
     // leaving the app pauses the scene; coming back picks it up again
     addEventListener('resize', () => { if (this.on) this.vids.forEach((v) => { if (v._clip) this.fit(v); }); });
@@ -606,10 +614,11 @@ const Peak = {
     };
     const root = Nav.root.bind(Nav), start = Nav.start.bind(Nav);
     Nav.root = function () {
-      if (Peak.on && $('#player').hidden && $('#castLayer').hidden && $('#partyLayer').hidden) return !$('#pkHowBox').hidden ? $('#pkHowBox') : (!$('#pkStatus').hidden && $('.pk-block', Peak.el)) ? $('#pkStatus') : Peak.el;
+      if (Peak.on && $('#player').hidden && $('#castLayer').hidden && $('#partyLayer').hidden) return !$('#pkHowBox').hidden ? $('#pkHowBox') : (!$('#pkStatus').hidden && $('.pk-block', Peak.el) && Peak.blockWhy === 'none') ? $('#pkStatus') : Peak.el;
       return root();
     };
     Nav.start = function (r, list) {
+      if (r === Peak.el && !$('#pkStatus').hidden && $('.pk-block', Peak.el)) return list.find((el) => el.dataset && el.dataset.pk) || list[0];
       if (r === Peak.el) return list.find((el) => el.id === (Peak.cur ? 'pkKeep' : 'pkSkip')) || list[0];
       return start(r, list);
     };

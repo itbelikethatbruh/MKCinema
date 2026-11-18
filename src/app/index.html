@@ -4,8 +4,10 @@
 <meta charset="utf-8">
 <script id="mkc-evt">@@src:js/mkc-evt-image-fallbacks-font.js@@</script>
 <script>@@src:js/settings-are-read-parsed-once.js@@</script>
-<script>@@src:js/try-var-ul-window-cfg0.js@@</script>
+<script>@@src:js/side-default.js@@</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script id="mkc-lite-head">@@src:js/mkc-lite-head-lite-mode-decided.js@@</script>
+<style id="mkc-lite-css">@@src:css/mkc-lite-css-lite-mode-weak.css@@</style>
 <script id="mkc-fit-head">@@src:js/mkc-fit-head-phones-portrait-that.js@@</script>
 <script id="mkc-domain">@@src:js/mkc-domain-lives-at-app.js@@</script>
 <style id="mkc-domain-css">@@src:css/mkc-domain-css-mkcmove-position-fixed.css@@</style>
@@ -181,9 +183,9 @@ html.tv :is(button,a,input,select,[data-nav],[tabindex],.card,.card *,.l1,.info,
 
       <!-- CALENDAR -->
       <section class="view" id="view-calendar" aria-label="Airing calendar">
-        <h1 class="page-title">Airing calendar</h1>
-        <p class="page-sub">New episodes of the series in your watchlist and Continue watching. Aired ones play in one tap.</p>
-        <div class="toolbar"><div class="segc" id="calRange" role="radiogroup" aria-label="Range"><button type="button" data-days="7" class="on" role="radio" aria-checked="true">7 days</button><button type="button" data-days="30" role="radio" aria-checked="false">30 days</button></div><span class="cal-note" id="calNote"></span></div>
+        <h1 class="page-title">Calendar</h1>
+        <p class="page-sub">New episodes of your series, and the films on your watchlist as they reach cinemas and homes in your region. Aired ones play in one tap.</p>
+        <div class="toolbar"><div class="segc" id="calRange" role="radiogroup" aria-label="Range"><button type="button" data-days="7" class="on" role="radio" aria-checked="true">7 days</button><button type="button" data-days="30" role="radio" aria-checked="false">30 days</button><button type="button" data-days="90" role="radio" aria-checked="false">90 days</button></div><span class="cal-note" id="calNote"></span></div>
         <div id="calBody"></div>
       </section>
 
@@ -328,6 +330,7 @@ html.tv :is(button,a,input,select,[data-nav],[tabindex],.card,.card *,.l1,.info,
         <button class="ibtn" id="pEpsBtn" type="button" title="Episodes (E)" aria-label="Episodes" hidden><i data-lucide="list-video"></i></button>
         <button class="ibtn" id="pRec" type="button" title="Record" aria-label="Record" hidden><span class="rec-dot"></span></button>
         <button class="ibtn" id="pLock" type="button" title="Lock controls" aria-label="Lock controls"><i data-lucide="lock"></i></button>
+        <button class="ibtn" id="pSplit" type="button" title="Split Screen" aria-label="Split Screen"><i data-lucide="layout-grid"></i></button>
         <button class="ibtn" id="pSrcBtn" type="button" title="Sources (S)" aria-label="Sources"><i data-lucide="layers"></i></button>
       </div>
       <div class="hud-mid" id="hudMid">
@@ -349,7 +352,7 @@ html.tv :is(button,a,input,select,[data-nav],[tabindex],.card,.card *,.l1,.info,
           <button class="ibtn pp-desk" id="pDsp" type="button" title="Audio (A)" aria-label="Audio"><i data-lucide="audio-lines"></i></button>
           <button class="ibtn pp-desk" id="pParty" type="button" title="Watch party (P)" aria-label="Watch party"><i data-lucide="users"></i></button>
           <button class="ibtn pp-desk" id="pCast" type="button" title="Send to phone, or use your phone as a remote" aria-label="Phone handoff and remote"><i data-lucide="smartphone"></i></button>
-          <button class="ibtn" id="pSubs" type="button" title="Subtitles (C)" aria-label="Subtitles"><i data-lucide="captions"></i></button>
+          <button class="ibtn" id="pSubs" type="button" title="Audio &amp; subtitles (C)" aria-label="Audio &amp; subtitles"><i data-lucide="captions"></i></button>
           <button class="ibtn" id="pOpts" type="button" title="Speed, quality and audio" aria-label="Playback options"><i data-lucide="settings-2"></i></button>
           <button class="ibtn on" id="pAmb" type="button" title="Ambilight" aria-label="Ambilight"><i data-lucide="sun"></i></button>
           <button class="ibtn" id="pPip" type="button" title="Picture in picture" aria-label="Picture in picture"><i data-lucide="picture-in-picture-2"></i></button>
@@ -660,13 +663,13 @@ body.mk-player-on #app,body.mk-player-on #app *{animation-play-state:paused!impo
 <script id="mkc-253">@@src:js/mkc-253-your-stats-top.js@@</script>
 <script id="mkc-254tv">@@src:js/mkc-254tv-tv-player-parity.js@@</script>
 <style id="mkc-255css">
-#sensDim{position:absolute;inset:0;z-index:1;background:#000;opacity:0;pointer-events:none;transition:opacity .5s ease-out}
+#sensDim{position:absolute;inset:0;z-index:1;background:var(--k000000,#000);opacity:0;pointer-events:none;transition:opacity .5s ease-out}
 #sensDim.on{opacity:.62;transition:opacity .05s linear}
 .sens-note{margin:0;padding:0 12px 8px;font-size:calc(12px * var(--ts,1));line-height:1.45;color:var(--mute)}
 @media (min-width:521px){.snd-modes{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 <script id="mkc-255">@@src:js/mkc-255-sensory-friendly-screening.js@@</script>
-<style id="mkc-255cmcss">@@src:css/mkc-255cmcss-lobby-after-film.css@@</style>
+<style id="mkc-255cmcss">@@src:css/mkc-255cmcss-camstrip-position-fixed.css@@</style>
 <script id="mkc-255cm">@@src:js/mkc-255cm-party-relay-parties.js@@</script>
 <style id="mkc-255glcss">
 .gl-note{margin:0;padding:0 12px 8px;font-size:calc(12px * var(--ts,1));line-height:1.45;color:var(--mute)}
@@ -706,6 +709,10 @@ body.mk-player-on #app,body.mk-player-on #app *{animation-play-state:paused!impo
 <style id="mkc-attidy-css">@@src:css/mkc-attidy-css-audio-tab-tidied.css@@</style>
 <script id="mkc-attidy">@@src:js/mkc-attidy-audio-tab-tidied.js@@</script>
 <!-- mk-attidy:end -->
+<!-- mk-tidyplayer:start -->
+<style id="mk-tidyplayer-css">@@src:css/mk-tidyplayer-css-simple-player.css@@</style>
+<script id="mk-tidyplayer">@@src:js/mk-tidyplayer-simple-player-one.js@@</script>
+<!-- mk-tidyplayer:end -->
 <script id="mkc-2602qs">@@src:js/mkc-2602qs-quiet-sign-sync.js@@</script>
 <!-- mk-livesync:start -->
 <script>@@src:js/live-sync-devices-tell-each.js@@</script>
@@ -749,7 +756,7 @@ body.mk-player-on #app,body.mk-player-on #app *{animation-play-state:paused!impo
 .as-lock{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .as-lock span{flex:1 1 220px;min-width:0}
 .as-lock .as-b{display:flex;gap:8px;flex:none}
-#addons .as-lock{margin:0 0 16px;padding:12px 14px;border-radius:calc(var(--r-m) * 1.2);border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);font-size:calc(14px * var(--ts,1))}
+#addons .as-lock{margin:0 0 16px;padding:12px 14px;border-radius:calc(var(--r-m) * 1.2);border:1px solid rgba(var(--kffffff-c,255,255,255),.1);background:rgba(var(--kffffff-c,255,255,255),.04);font-size:calc(14px * var(--ts,1))}
 </style>
 <script id="mkc-262as">@@src:js/mkc-262as-addons-follow-account.js@@</script>
 <!-- mk-addonsync:end -->
@@ -770,6 +777,10 @@ body.mk-player-on #app,body.mk-player-on #app *{animation-play-state:paused!impo
 <!-- mk-tvhttp:start -->
 <script id="mkc-tvhttp">@@src:js/mkc-tvhttp-plain-http-tv.js@@</script>
 <!-- mk-tvhttp:end -->
+<!-- mk-livetv:start -->
+<style id="mkc-livetv-css">@@src:css/mkc-livetv-css-live-tv-for.css@@</style>
+<script id="mkc-livetv">@@src:js/mkc-livetv-live-tv-for.js@@</script>
+<!-- mk-livetv:end -->
 <!-- mk-xtream:end -->
 <!-- mk-audiofirst:start -->
 
@@ -818,13 +829,70 @@ body.mk-player-on #app,body.mk-player-on #app *{animation-play-state:paused!impo
 </style>
 <script id="mkc-2693-tv">@@src:js/mkc-2693-tv-tv-button-connect.js@@</script>
 <script id="mkc-2693-google">@@src:js/mkc-2693-google-continue-with-google.js@@</script>
-<!-- mk-ds:start -->
-<style id="mkc-ds-css">@@src:css/mkc-ds-css-design-system-one.css@@</style>
-<script id="mkc-ds">@@src:js/mkc-ds-design-system-runtime.js@@</script>
-<!-- mk-ds:end -->
 <style id="mkc-2694-apa-css">@@src:css/mkc-2694-apa-css-android-airplay-every.css@@</style>
 <script id="mkc-2694-apa">@@src:js/mkc-2694-apa-android-airplay-android.js@@</script>
 <style id="mkc-tabfit-css">@@src:css/mkc-tabfit-css-tablet-fit-touch.css@@</style>
 <script id="mkc-tabfit">@@src:js/mkc-tabfit-tablet-fit-touch.js@@</script>
+<style id="mkc-270nv-css">@@src:css/mkc-270nv-css-native-player-page.css@@</style>
+<script id="mkc-270nv">@@src:js/mkc-270nv-native-player-windows.js@@</script>
+<style id="mkc-270gp-css">@@src:css/mkc-270gp-css-household-gaps-continue.css@@</style>
+<script id="mkc-270gp">@@src:js/mkc-270gp-household-gaps-continue.js@@</script>
+<!-- mk-277-studio:start -->
+<style id="mkc-277-studio-css">@@src:css/mkc-277-studio-css-layout-studio-card.css@@</style>
+<script id="mkc-277-studio">@@src:js/mkc-277-studio-layout-studio-one.js@@</script>
+<!-- mk-277-studio:end -->
+<!-- mk-278-guests:start -->
+<style id="mkc-278-guests-css">@@src:css/mkc-278-guests-css-guests-by-link.css@@</style>
+<script id="mkc-278-guests">@@src:js/mkc-278-guests-guests-by-link.js@@</script>
+<!-- mk-278-guests:end -->
+<!-- mk-279-lite:start -->
+<script id="mkc-279-lite">@@src:js/mkc-279-lite-lite-mode-for.js@@</script>
+<!-- mk-279-lite:end -->
+<!-- mk-278-easy:start -->
+<style id="mkc-278-easy-css">@@src:css/mkc-278-easy-css-easy-bar-one.css@@</style>
+<script id="mkc-278-easy">@@src:js/mkc-278-easy-easy-bar-top.js@@</script>
+<!-- mk-278-easy:end -->
+<!-- mk-281-mirror:start -->
+<style id="mkc-281-mirror-css">@@src:css/mkc-281-mirror-css-screen-mirroring-phone.css@@</style>
+<script id="mkc-281-mirror">@@src:js/mkc-281-mirror-screen-mirroring-phone.js@@</script>
+<!-- mk-281-mirror:end -->
+<!-- mk-282-cards:start -->
+<style id="mkc-282-cards-css">@@src:css/mkc-282-cards-css-home-cards-one.css@@</style>
+<script id="mkc-282-cards">@@src:js/mkc-282-cards-home-cards-android.js@@</script>
+<!-- mk-282-cards:end -->
+<!-- mk-282-ambient:start -->
+<style id="mkc-282-ambient-css">@@src:css/mkc-282-ambient-css-ambient-studio-recipe.css@@</style>
+<script id="mkc-282-ambient">@@src:js/mkc-282-ambient-ambient-studio-your.js@@</script>
+<!-- mk-282-ambient:end -->
+<!-- mk-283-music:start -->
+<style id="mkc-283-music-css">@@src:css/mkc-283-music-css-music-room.css@@</style>
+<script id="mkc-283-music">@@src:js/mkc-283-music-music-room-home.js@@</script>
+<!-- mk-283-music:end -->
+<!-- mk-2732:start -->
+<style id="mk-2732-css">@@src:css/mk-2732-css-smk-pin-display.css@@</style>
+<script id="mk-2732">@@src:js/mk-2732-light-looks-settings.js@@</script>
+<!-- mk-2732:end -->
+<!-- mk-addstreams:start -->
+<style id="mkc-addstreams-css">
+.sn-strip{align-items:center;margin:0 0 18px}
+.sn-strip>.lucide,.sn-strip>svg{width:26px;height:26px;margin-top:0;flex:none}
+.sn-strip .sn-body{display:grid;gap:4px;min-width:0}
+.sn-strip strong{font-size:calc(16px * var(--ts,1))}
+.sn-strip .sn-act{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.sn-strip .btn .lucide,.sn-strip .btn svg{color:inherit;margin-top:0}
+</style>
+<script>@@src:js/tell-newcomer-where-streams-are.js@@</script>
+<!-- mk-addstreams:end -->
+<script id="mkc-avinplace">@@src:js/mkc-avinplace-audio-languages-place.js@@</script>
+<style id="mk-room">@@src:css/mk-room-media-max-width.css@@</style>
+<script id="mk-room-js">@@src:js/mk-room-js-phones-menu-bar.js@@</script>
+<script id="mk-tvown">@@src:js/mk-tvown-tv-settings-playback.js@@</script>
+<script id="mkc-tvtiming">@@src:js/mkc-tvtiming-real-device-timing.js@@</script>
+<!-- mk-ds:start -->
+<style id="mkc-ds-css">@@src:css/mkc-ds-css-design-system-one.css@@</style>
+<script id="mkc-ds">@@src:js/mkc-ds-design-system-runtime.js@@</script>
+<!-- mk-ds:end -->
+<script id="mk-p2pwait">@@src:js/mk-p2pwait-torrent-wait-github.js@@</script>
+<script id="mk-noxp">@@src:js/mk-noxp-player-never-sends.js@@</script>
 </body>
 </html>

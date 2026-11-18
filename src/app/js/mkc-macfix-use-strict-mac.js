@@ -61,7 +61,7 @@
     const at = PLAYERS.findIndex((p) => p.m3u);
     PLAYERS.splice(at < 0 ? PLAYERS.length : at, 0, { id: 'vlc-mac', os: 'mac', name: 'VLC (copies the link, then ⌘N in VLC)', short: 'VLC', copy: true, link: (u) => u });
   }
-  try { if (typeof EXT_HELP === 'object' && EXT_HELP) EXT_HELP.mac = 'Infuse and IINA open directly. VLC for Mac has no web link, so the VLC choice copies the stream link: in VLC press ⌘N, paste, then Open. The .m3u playlist works too if VLC opens .m3u files on your Mac.'; } catch (e) { /* help text is optional */ }
+  try { if (typeof EXT_HELP === 'object' && EXT_HELP) EXT_HELP.mac = 'VLC for Mac has no web link, so the VLC choice copies the stream link: in VLC press ⌘N, paste, then Open. The .m3u playlist works too if VLC opens .m3u files on your Mac.'; } catch (e) { /* help text is optional */ }
   if (typeof playerBtn === 'function') {
     const pb = playerBtn;
     playerBtn = function (p, url, title, prime) {

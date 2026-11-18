@@ -42,6 +42,7 @@
   renderOptMenu = function () {
     const r = base.apply(this, arguments);
     try { run(); } catch (e) { console.error('audio tab tidy', e); }
+    try { if (window.MkTidy) MkTidy.menu(); } catch (e) { console.error('player tidy', e); }
     return r;
   };
 })();

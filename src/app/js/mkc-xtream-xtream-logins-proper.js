@@ -35,7 +35,7 @@
   C.text = async function (url, opt) {
     if (!(this.nat() && hostIn(url))) {
       try { return await text0(url, opt); } catch (e) {
-        if (/^http:\/\//i.test(url) || /CORS/.test(e.message)) e.message += ' The MKCinema app for Android and Android TV reads any TV service directly.';
+        if (!/MKCinema app/.test(e.message) && (/^http:\/\//i.test(url) || /CORS/.test(e.message))) e.message += ' The MKCinema app for Android and Android TV reads any TV service directly.';
         throw e;
       }
     }
@@ -151,7 +151,7 @@
     hookDone();
     const h = st.behaviorHints && st.behaviorHints.proxyHeaders && st.behaviorHints.proxyHeaders.request;
     let ok = false;
-    try { ok = MKAndroid.play(JSON.stringify({ url: st.url, title: meta.name || '', sub, startMs: 0, matchRate: CFG.matchRate !== false, audioLang: CFG.audioOnly || '', headers: h && Object.keys(h).length ? h : undefined })); } catch (e) { ok = false; }
+    try { ok = MKAndroid.play(JSON.stringify({ url: st.url, title: meta.name || '', sub, startMs: 0, matchRate: CFG.matchRate !== false, audioLang: CFG.audioOnly || '', headers: h && Object.keys(h).length ? h : undefined, zap: !!(meta && meta._iptv), zapFlip: !!CFG.zapFlip })); } catch (e) { ok = false; }
     if (ok) natCur = { st, meta };
     return ok;
   };
@@ -242,13 +242,14 @@
     const b = X8.body('xtPast');
     b.innerHTML = `<h3 class="x8-h">${esc(c.name)}</h3><div style="padding:22px" class="status-line"><span class="spin"></span>Reading what was on…</div>`;
     X8.open('xtPast');
-    let rows = [];
+    let rows = []; const tok = this.xtPastTok = (this.xtPastTok || 0) + 1;   // a later channel's panel wins
     try {
       const j = await Xt.api(l, 'get_simple_data_table', `&stream_id=${encodeURIComponent(c.xid)}`);
+      if (tok !== this.xtPastTok) return;
       const now = Date.now() / 1000, from = now - c.archive * 86400;
-      rows = arr(j && j.epg_listings).map((p) => ({ title: b64(p.title) || 'Programme', desc: b64(p.description), start: String(p.start || ''), s: Number(p.start_timestamp), e: Number(p.stop_timestamp || p.end_timestamp), arch: String(p.has_archive) === '1' }))
-        .filter((p) => p.s && p.e && p.e <= now && p.s >= from && (p.arch || p.has_archive === undefined)).sort((x, y) => y.s - x.s);
-    } catch (e) { b.innerHTML = `<h3 class="x8-h">${esc(c.name)}</h3><p class="sub">${esc(e.message === 'not-xtream' ? 'The service sent no programme list for this channel.' : e.message)}</p>`; return; }
+      rows = arr(j && j.epg_listings).map((p) => ({ title: b64(p.title) || 'Programme', desc: b64(p.description), start: String(p.start || ''), s: Number(p.start_timestamp), e: Number(p.stop_timestamp || p.end_timestamp), arch: p.has_archive == null ? true : String(p.has_archive) === '1' }))   // no flag at all: the service does not say, so keep it
+        .filter((p) => p.s && p.e && p.e <= now && p.s >= from && p.arch).sort((x, y) => y.s - x.s);
+    } catch (e) { if (tok !== this.xtPastTok) return; b.innerHTML = `<h3 class="x8-h">${esc(c.name)}</h3><p class="sub">${esc(e.message === 'not-xtream' ? 'The service sent no programme list for this channel.' : e.message)}</p>`; return; }
     const day = (t) => new Date(t * 1000).toLocaleDateString(appLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
     const hm = (t) => new Date(t * 1000).toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' });
     b.innerHTML = `<h3 class="x8-h">${esc(c.name)}</h3>${rows.length ? `<div class="xt-list">${rows.slice(0, 300).map((p, i) => `<div class="xt-pair"><button class="xt-row" type="button" data-nav data-pi="${i}" title="${esc(p.desc)}"><span><b>${esc(p.title)}</b><small>${esc(day(p.s))} · ${esc(hm(p.s))}–${esc(hm(p.e))}</small></span><span class="xt-when"><i data-lucide="play"></i></span></button>${window.MkRec ? `<button class="ibtn xt-rec" type="button" data-nav data-pr="${i}" title="Save to a file" aria-label="Save ${esc(p.title)} to a file"><i data-lucide="download"></i></button>` : ''}</div>`).join('')}</div>` : '<p class="sub">Nothing to catch up on for this channel yet.</p>'}`;
@@ -274,17 +275,22 @@
   C.xtVod = async function (l, d, mode) {
     const again = () => this.xtVod(l, d, mode);
     const box = $('#xtBody'); if (!box) return;
-    const series = mode === 'series';
+    const series = mode === 'series', st0 = this.st;
+    // the person switched tabs (or lists) while this loaded: its answer belongs to the old tab
+    const gone = () => this.st !== st0 || this.st.mode !== mode || !$('#xtBody');
     const cats = arr(await once(`${l.id}|${mode}-cats`, () => Xt.api(l, series ? 'get_series_categories' : 'get_vod_categories')));
+    if (gone()) return;
     if (!cats.length && !this.st.cat) this.st.cat = '*';
     if (!this.st.cat) this.st.cat = String(cats[0].category_id);
     const cat = this.st.cat;
     const items = arr(await once(`${l.id}|${mode}|${cat}`, () => Xt.api(l, series ? 'get_series' : 'get_vod_streams', cat === '*' ? '' : `&category_id=${encodeURIComponent(cat)}`)));
+    if (gone() || this.st.cat !== cat) return;
     const q = normTitle(this.st.q || '');
     const list0 = items.filter((x) => x && (!q || normTitle(String(x.name || '')).includes(q)));
     const per = IS_TV ? 36 : 72, list = list0.slice(0, per * (this.st.page || 1));
     const opts = [...cats.map((c) => [String(c.category_id), String(c.category_name || '').trim() || 'Other']), ['*', 'Everything (can be slow)']];
     const yr = (x) => String(x.year || x.releaseDate || x.releasedate || '').slice(0, 4);
+    const box2 = $('#xtBody'); if (box2 !== box) return;
     box.innerHTML = `${barHTML(series ? `Find a series in ${l.name}` : `Find a film in ${l.name}`, opts, cat)}
       ${list.length ? `<div class="xt-grid">${list.map((x, i) => { const art = x.stream_icon || x.cover || ''; return `<button class="xt-card" type="button" data-nav data-vi="${i}"><span class="xt-art">${art ? `<img src="${esc(art)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-gone>` : `<span>${esc(x.name || '')}</span>`}</span><b>${esc(x.name || '')}</b>${yr(x) ? `<small>${esc(yr(x))}</small>` : ''}</button>`; }).join('')}</div>` : `<div class="empty" style="margin:16px">${q ? 'Nothing matches.' : 'Nothing in this category.'}</div>`}`;
     icons(); bindBar(again);
@@ -303,9 +309,10 @@
     const b = X8.body('xtSer');
     b.innerHTML = `<h3 class="x8-h">${esc(x.name || '')}</h3><div style="padding:22px" class="status-line"><span class="spin"></span>Reading the episodes…</div>`;
     X8.open('xtSer');
-    let j;
+    let j; const tok = this.xtSerTok = (this.xtSerTok || 0) + 1;   // a later series' panel wins
     try { j = await once(`${l.id}|ser|${x.series_id}`, () => Xt.api(l, 'get_series_info', `&series_id=${encodeURIComponent(x.series_id)}`)); }
-    catch (e) { b.innerHTML = `<h3 class="x8-h">${esc(x.name || '')}</h3><p class="sub">${esc(e.message === 'not-xtream' ? 'The service sent no episodes for this series.' : e.message)}</p>`; return; }
+    catch (e) { if (tok !== this.xtSerTok) return; b.innerHTML = `<h3 class="x8-h">${esc(x.name || '')}</h3><p class="sub">${esc(e.message === 'not-xtream' ? 'The service sent no episodes for this series.' : e.message)}</p>`; return; }
+    if (tok !== this.xtSerTok) return;
     const eps = (j && j.episodes) || {};
     const seasons = Object.keys(eps).sort((a, c) => Number(a) - Number(c));
     if (!seasons.length) { b.innerHTML = `<h3 class="x8-h">${esc(x.name || '')}</h3><p class="sub">The service lists no episodes for this series.</p>`; return; }

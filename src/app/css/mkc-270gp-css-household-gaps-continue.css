@@ -1,0 +1,14 @@
+
+/* 2.70 household gaps: Continue watching menu, sources grouped by addon, trailers behind film pages */
+.card[data-video].cw-hold{transform:scale(.97);transition:transform .2s}
+.cw-menu{position:fixed;z-index:400;min-width:240px;max-width:min(340px,calc(100vw - 32px));padding:6px;border-radius:calc(var(--r-l) * 0.7778);background:var(--s2,var(--k151517,#151517));border:1px solid var(--line-hi,rgba(var(--kffffff-c,255,255,255),.14));box-shadow:0 18px 50px rgba(var(--k000000-c,0,0,0),.6);opacity:0;transform:translateY(6px) scale(.98);transition:opacity .16s,transform .16s}
+.cw-menu.on{opacity:1;transform:none}
+.cw-menu button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;border:0;border-radius:var(--r-m);background:none;color:var(--ink,var(--kffffff,#fff));font:inherit;font-size:15px;text-align:left;cursor:pointer}
+.cw-menu button:hover,.cw-menu button:focus-visible{background:rgba(var(--kffffff-c,255,255,255),.07);outline:none}
+html.tv .cw-menu button:focus{background:rgba(var(--kffffff-c,255,255,255),.12);box-shadow:inset 0 0 0 2px var(--champ,#d8b46a)}
+.cw-menu .cw-h{padding:8px 14px 6px;font-size:12px;color:var(--mute,var(--k9a9aa0,#9a9aa0));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card.cw-gone{opacity:0;transform:scale(.94);transition:opacity .22s,transform .22s}
+.src-grp{display:flex;align-items:baseline;gap:8px;margin:14px 2px 6px;font-size:calc(12px * var(--ts,1));letter-spacing:.08em;text-transform:uppercase;color:var(--mute,var(--k9a9aa0,#9a9aa0))}
+.src-grp:first-child{margin-top:2px}
+.src-grp b{font-weight:600;color:var(--ink,var(--kffffff,#fff));letter-spacing:.04em}
+.d-hero>.d-body{position:relative;z-index:1}

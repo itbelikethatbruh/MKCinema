@@ -22,6 +22,7 @@
     const first = link ? add('link', 'Copy stream link', () => copyText(link, 'Stream link copied')) : null;
     if (!link) { const n = document.createElement('div'); n.className = 'lp-h'; n.textContent = 'This source has no link to copy'; m.appendChild(n); }
     if (name) add('copy', 'Copy file name', () => copyText(name, 'File name copied'));
+    if (st.url && !IS_TV && typeof PartyGuest !== 'undefined') add('users', 'Watch together by link', () => PartyGuest.together(st, row));
     if (window.MkLpExtra) try { window.MkLpExtra(st, add, link, row); } catch (e) { /* extras are optional */ }
     document.body.appendChild(m); if (typeof icons === 'function') icons();
     const r = m.getBoundingClientRect(), vw = innerWidth, vh = innerHeight;

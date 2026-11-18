@@ -1,0 +1,178 @@
+
+/* 2.78 Easy bar: one floating bar, a labelled menu, one Play button with a small pill. Everything that left the bar is
+   in the menu, nothing was removed. 2.81: the bar is the only menu on every screen (TVs, phones, tablets, computers);
+   the side menu and the phone bottom bar are gone. */
+html.ezb-bar .dock{display:flex;align-items:center;justify-content:center;gap:0;background:transparent!important;border-color:transparent!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;min-height:76px;padding:12px 24px;position:relative}
+html.ezb-bar .dock .brand{position:absolute;left:24px;top:50%;transform:translateY(-50%);margin:0}
+html.ezb-bar .dock .brand .ea-badge{display:none!important}
+@media (max-width:1279px){html.ezb-bar body .dock-wrap .dock .brand .word{display:none!important}}
+html.ezb-bar .dock .brand .mk{width:44px;height:44px}
+html.ezb-bar #sideBtn{display:none!important}
+html.ezb-bar #tabs{flex:none;display:flex;align-items:center;gap:2px;padding:6px;margin:0 auto;border-radius:999px;background:rgba(10,10,10,.86);border:1px solid rgba(255,255,255,.12);box-shadow:0 12px 40px rgba(0,0,0,.45);overflow:visible;max-width:none;width:auto}
+html.ezb-bar #tabs .tab{position:relative;padding:10px 18px;min-height:40px;border-radius:999px;background:transparent!important;border:0!important;box-shadow:none!important;color:rgba(255,255,255,.72);font-weight:500;white-space:nowrap;transition:color .25s ease,background-color .25s ease}
+html.ezb-bar #tabs .tab::after{display:none!important}
+html.ezb-bar #tabs .tab>i,html.ezb-bar #tabs .tab>svg{display:none}
+html.ezb-bar #tabs .tab .lbl{display:inline!important}
+html.ezb-bar #tabs .tab.on{color:#0b0b0b!important;font-weight:600;background:linear-gradient(180deg,#fbf8f2,#e6e0d4)!important;box-shadow:0 2px 12px rgba(255,240,210,.16)!important}
+html.ezb-bar #tabs .tab.on .lbl{color:#0b0b0b!important}
+html.ezb-bar #tabs .tab:not(.on):hover{color:#fff}
+html.ezb-bar #tabs .tab.ezb-off{display:none!important}
+html.ezb-bar #tabs .ezb-sep{width:1px;height:22px;background:rgba(255,255,255,.16);margin:0 6px;flex:none}
+html.ezb-bar #tabs .ezb-ib{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#eee;background:transparent;border:0;cursor:pointer;flex:none;transition:background .2s ease}
+html.ezb-bar #tabs .ezb-ib:hover,html.ezb-bar #tabs .ezb-ib[aria-expanded=true]{background:rgba(255,255,255,.12)}
+html.ezb-bar #tabs .ezb-ib svg{width:20px;height:20px}
+html.ezb-bar .dock-tools{position:absolute;right:24px;top:50%;transform:translateY(-50%);gap:6px}
+html.ezb-bar .dock-tools>*:not(#openAccount){display:none!important}
+html.ezb-bar .dock-tools #openAccount{width:44px;height:44px;border-radius:50%}
+/* phones: the logo, then Search, the menu and your seat on the first row; the sections in the same floating pill below */
+@media (max-width:760px){
+  html.ezb-bar{--dock-h:112px}
+  html.ezb-bar .dock{min-height:64px;height:auto!important;overflow:visible!important;padding:10px 14px 8px;justify-content:space-between;flex-wrap:wrap;row-gap:8px}
+  html.ezb-bar .dock .brand{position:static;transform:none;order:1}
+  html.ezb-bar .dock-tools{order:2}
+  html.ezb-bar #tabs{order:3;flex:1 0 100%;max-width:100%;margin:0;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:4px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  html.ezb-bar #tabs::-webkit-scrollbar{display:none}
+  html.ezb-bar #tabs{gap:0}
+  html.ezb-bar #tabs .tab{flex:1 0 auto;padding:8px 5px;min-width:0;min-height:36px;font-size:calc(13px * var(--ts,1));justify-content:center}
+  html.ezb-bar #tabs .ezb-sep,html.ezb-bar #tabs .ezb-ib{display:none!important}
+  html.ezb-bar .dock-tools{position:static;transform:none;display:flex;align-items:center;gap:2px;padding:5px;border-radius:999px;background:rgba(10,10,10,.86);border:1px solid rgba(255,255,255,.12)}
+  html.ezb-bar .dock-tools>#openPalette,html.ezb-bar .dock-tools>#ezbMenuP{display:grid!important}
+  html.ezb-bar .dock-tools #openAccount{width:40px;height:40px}
+  html.ezb-bar .dock-tools>button{background:transparent!important;border-color:transparent!important;box-shadow:none!important;border-radius:999px!important}
+  html.ezb-bar .dock-tools>button::before{display:none!important}
+  html.ezb-bar .dock-tools>#openPalette{order:1}html.ezb-bar .dock-tools>#ezbMenuP{order:2}html.ezb-bar .dock-tools>#openAccount{order:3}
+}
+@media (min-width:761px){html.ezb-bar #ezbMenuP{display:none!important}}
+/* the menu */
+#ezbMenu{position:fixed;z-index:60;width:304px;max-height:calc(100vh - 100px);overflow:auto;padding:8px;border-radius:calc(var(--r-l) * 1.2222);background:#101010;border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 60px rgba(0,0,0,.6);color:#eee;opacity:0;transform:translateY(-6px) scale(.98);transform-origin:top right;transition:opacity .2s ease,transform .26s cubic-bezier(.2,.7,.2,1)}
+#ezbMenu.open{opacity:1;transform:none}
+#ezbMenu[hidden]{display:none}
+/* 2.80.1 the menu's close button, and the menu keeps its own scrolling */
+#ezbMenu{overscroll-behavior:contain}
+#ezbMenu .ezb-top{display:flex;justify-content:flex-end;margin:-2px -2px 2px}
+#ezbMenu .ezb-x{width:38px;height:38px;padding:0;justify-content:center;border-radius:50%;background:rgba(255,255,255,.08);color:#fff}
+#ezbMenu .ezb-x svg{width:18px;height:18px;opacity:.92}
+html.ezb-menu-open,html.ezb-menu-open body{overscroll-behavior:none}
+#ezbMenu button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:calc(var(--r-m) * 1.2);color:rgba(255,255,255,.88);font:inherit;font-size:calc(15px * var(--ts,1));cursor:pointer}
+#ezbMenu button:hover,#ezbMenu button:focus-visible{background:rgba(255,255,255,.08);color:#fff}
+#ezbMenu button svg{width:18px;height:18px;flex:none;opacity:.82}
+#ezbMenu .ezb-big{padding:12px;margin-bottom:6px;border-radius:calc(var(--r-l) * 0.8889);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08)}
+#ezbMenu .ezb-big .ezb-ic{width:38px;height:38px;border-radius:calc(var(--r-m) * 1.2);display:grid;place-items:center;flex:none;background:linear-gradient(180deg,#fbf8f2,#e6e0d4);color:#111}
+#ezbMenu .ezb-big .ezb-ic svg{opacity:1;width:20px;height:20px}
+#ezbMenu .ezb-big b{display:block;font-weight:600}
+#ezbMenu .ezb-big small{display:block;font-size:calc(13px * var(--ts,1));color:rgba(255,255,255,.55)}
+#ezbMenu .ezb-big .ezb-go{margin-left:auto}
+#ezbMenu hr{border:0;border-top:1px solid rgba(255,255,255,.09);margin:6px 4px}
+#ezbMenu .ezb-lab{font-size:calc(11px * var(--ts,1));letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.42);padding:8px 12px 2px}
+#ezbMenu .ezb-seg{display:flex;margin:6px 4px 4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.06)}
+#ezbMenu .ezb-seg button{flex:1;justify-content:center;padding:7px 0;border-radius:999px;font-size:calc(13px * var(--ts,1));color:rgba(255,255,255,.7)}
+#ezbMenu .ezb-seg button[aria-pressed=true]{background:rgba(255,255,255,.14);color:#fff}
+#ezbMenu .ezb-state{margin-left:auto;font-size:calc(13px * var(--ts,1));color:rgba(255,255,255,.5)}
+@media (max-width:760px){#ezbMenu{left:14px!important;right:14px!important;width:auto;top:76px!important}}
+/* one Play button + one small pill */
+.ezb-pill{display:inline-flex;align-items:center;height:52px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(20,20,20,.55);padding:0 6px;position:relative;flex:none;vertical-align:middle}
+.ezb-pill>button{all:unset;box-sizing:border-box;width:48px;height:40px;display:grid;place-items:center;color:#eee;position:relative;cursor:pointer;border-radius:999px;transition:background .2s ease}
+.ezb-pill>button:hover,.ezb-pill>button:focus-visible,.ezb-pill>button[aria-expanded=true]{background:rgba(255,255,255,.12)}
+.ezb-pill>button+button::before{content:'';position:absolute;left:-1px;top:10px;bottom:10px;width:1px;background:rgba(255,255,255,.2)}
+.ezb-pill svg{width:20px;height:20px}
+.ezb-pill>button[data-tip]:hover::after,.ezb-pill>button[data-tip]:focus-visible::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#f3efe7;color:#111;font-size:12px;font-weight:600;padding:5px 9px;border-radius:var(--r-s);white-space:nowrap;pointer-events:none}
+html.ezb-lean #heroTrailer,html.ezb-lean #heroInfo,html.ezb-lean #heroList{display:none!important}
+html.ezb-lean #detail .actions>.ezb-moved{display:none!important}
+#ezbMore{position:absolute;top:calc(100% + 8px);right:0;z-index:20;width:236px;padding:8px;border-radius:var(--r-l);background:#101010;border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 60px rgba(0,0,0,.6)}
+#ezbMore[hidden]{display:none}
+#ezbMore button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:calc(var(--r-m) * 1.2);color:rgba(255,255,255,.88);font-size:calc(15px * var(--ts,1));cursor:pointer}
+#ezbMore button:hover,#ezbMore button:focus-visible{background:rgba(255,255,255,.08);color:#fff}
+#ezbMore svg{width:18px;height:18px;flex:none;opacity:.82}
+.ezb-src{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:14px;color:rgba(255,255,255,.62);font-size:calc(14px * var(--ts,1))}
+.ezb-src button{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.2);color:#f3efe7;font-weight:600;cursor:pointer;transition:background .2s ease}
+.ezb-src button:hover,.ezb-src button:focus-visible{background:rgba(255,255,255,.08)}
+.ezb-src svg{width:18px;height:18px}
+html.ezb-lean #detail .d-grid.ezb-src-off{grid-template-columns:minmax(0,1fr)!important}
+html.ezb-lean #detail .d-grid.ezb-src-off>.ezb-srccol{display:none!important}
+@media (max-width:760px){
+  html.ezb-bar .dock-tools>button{background:transparent!important;border:0!important;box-shadow:none!important}
+  html.ezb-lean #hero .actions{flex-wrap:nowrap!important;align-items:center}
+  html.ezb-lean #heroPlay{flex:1 1 auto!important;min-width:0;width:auto!important}
+  html.ezb-lean #hero .ezb-pill{margin-left:10px}
+  html.ezb-lean #detail .actions{flex-wrap:nowrap!important;align-items:center}
+  html.ezb-lean #dSmart{flex:1 1 auto!important;min-width:0}
+  html.ezb-lean #detail .ezb-pill{margin-left:10px}
+}
+/* keeps the bar readable over rows when the page is scrolled */
+html.ezb-bar .dock-wrap{background:linear-gradient(180deg,rgba(0,0,0,.92) 0%,rgba(0,0,0,.72) 58%,rgba(0,0,0,0) 100%)}
+/* 2.81 one menu everywhere: no side menu, no phone bottom bar */
+#mtabs,#sideBtn,#sideDrawer{display:none!important}
+@media (max-width:760px){main{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))!important}}
+/* TVs: the bar is walked with the remote, so every stop shows a clear ring */
+html.tv.ezb-bar .dock{min-height:84px}
+html.tv.ezb-bar #tabs .tab{padding:11px 22px;font-size:calc(16px * var(--ts,1))}
+html.tv.ezb-bar #tabs .tab.nav-focus,html.tv.ezb-bar #tabs .ezb-ib.nav-focus,html.tv.ezb-bar .dock-tools #openAccount.nav-focus,
+html.kbnav.ezb-bar #tabs .tab:focus-visible,html.kbnav.ezb-bar #tabs .ezb-ib:focus-visible{outline:3px solid #f3efe7!important;outline-offset:2px}
+html.tv #ezbMenu button.nav-focus,#ezbMenu button:focus-visible{background:rgba(255,255,255,.14)!important;color:#fff;box-shadow:inset 0 0 0 2px #f3efe7}
+html.tv #ezbMenu{max-height:calc(100vh - 120px);z-index:2147483000}
+/* Layout Studio phone preview: the sections pill under the top row */
+.ezb-pvph{position:absolute;z-index:3;left:0;right:0;top:calc(var(--u) * 14);display:flex;justify-content:center;padding:0 calc(var(--u) * 5)}
+.ezb-pvph .ezb-pvp{flex:1!important;justify-content:space-between;padding:calc(var(--u) * 1.6) calc(var(--u) * 2.4)}
+.ezb-pvph .ezb-pvp i{width:calc(var(--u) * 7);height:calc(var(--u) * 1.6)}
+.ezb-pvph .ezb-pvp i.on{width:calc(var(--u) * 9);height:calc(var(--u) * 3.4)}
+/* 2.78 Live hub */
+.lh{margin:4px 0 22px;min-width:0;max-width:100%}
+.lh-top{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;margin-bottom:18px}
+.lh-feat{position:relative;overflow:hidden;min-height:300px;border-radius:var(--r-l,22px);border:1px solid rgba(255,255,255,.1);display:grid;grid-template-columns:1fr minmax(180px,1.1fr) 1fr;align-items:center;padding:34px 26px 40px;background:#0a0a0a}
+.lh-feat::before{content:'';position:absolute;inset:0;background:radial-gradient(70% 120% at 0% 50%,color-mix(in srgb,var(--c1) 55%,transparent),transparent 70%),radial-gradient(70% 120% at 100% 50%,color-mix(in srgb,var(--c2) 55%,transparent),transparent 70%);opacity:.75}
+.lh-feat::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.1),rgba(0,0,0,.55))}
+.lh-feat>*{position:relative;z-index:1}
+.lh-feat.lh-wait{animation:lhPulse 1.4s ease-in-out infinite alternate}
+@keyframes lhPulse{from{opacity:.55}to{opacity:1}}
+.lh-team{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;min-width:0}
+.lh-logo-wrap{width:96px;height:96px;display:grid;place-items:center;margin-bottom:10px;filter:drop-shadow(0 8px 24px rgba(0,0,0,.5))}
+.lh-logo{max-width:96px;max-height:96px;object-fit:contain}
+.lh-noimg{font-weight:700;font-size:28px;letter-spacing:.04em}
+.lh-team small{font-size:calc(11px * var(--ts,1));letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+.lh-team b{font-size:calc(24px * var(--ts,1));font-weight:700;line-height:1.1;text-transform:uppercase;letter-spacing:.02em}
+.lh-team em{font-style:normal;font-size:calc(14px * var(--ts,1));color:rgba(255,255,255,.75);font-variant-numeric:tabular-nums}
+.lh-mid{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}
+.lh-league{font-size:calc(11px * var(--ts,1));letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.62);margin-bottom:6px}
+.lh-k{font-size:calc(12px * var(--ts,1));letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.8);display:inline-flex;align-items:center;gap:7px}
+.lh-count{font-size:calc(48px * var(--ts,1));font-weight:700;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.lh-when{font-size:calc(13px * var(--ts,1));color:rgba(255,255,255,.72)}
+.lh-acts{margin-top:14px;min-height:20px}
+.lh-on{font-size:calc(13px * var(--ts,1));color:rgba(255,255,255,.65)}
+.lh-venue{position:absolute!important;left:0;right:0;bottom:14px;text-align:center;font-size:calc(12px * var(--ts,1));color:rgba(255,255,255,.6)}
+.lh-dot{width:8px;height:8px;border-radius:50%;background:#e5484d;box-shadow:0 0 0 3px rgba(229,72,77,.25);display:inline-block;animation:lhLive 1.6s ease-in-out infinite}
+@keyframes lhLive{50%{opacity:.4}}
+.lh-list{display:flex;flex-direction:column;min-height:0;border-radius:var(--r-l,22px);border:1px solid rgba(255,255,255,.1);background:#0c0c0c;padding:12px 10px 10px}
+.lh-lh{display:flex;justify-content:space-between;align-items:baseline;padding:0 6px 8px}
+.lh-lh b{font-size:calc(15px * var(--ts,1))}
+.lh-lh span{font-size:calc(12px * var(--ts,1));color:rgba(255,255,255,.45)}
+.lh-scroll{display:flex;flex-direction:column;gap:8px;overflow:auto;max-height:262px;padding-right:2px}
+.lh-g{all:unset;box-sizing:border-box;display:block;padding:9px 12px;border-radius:calc(var(--r-l) * 0.7778);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);cursor:pointer;transition:background .2s ease,border-color .2s ease}
+.lh-g:hover,.lh-g:focus-visible{background:rgba(255,255,255,.08)}
+.lh-g.on{border-color:rgba(243,239,231,.55);background:rgba(255,255,255,.09)}
+.lh-gl{display:block;font-size:calc(10px * var(--ts,1));letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:5px}
+.lh-gr{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lh-gt{display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:calc(13px * var(--ts,1))}
+.lh-sl{width:22px;height:22px;object-fit:contain}
+.lh-sl.lh-noimg{font-size:10px;width:auto}
+.lh-gm{white-space:nowrap;display:flex;flex-direction:column;align-items:center;font-size:calc(12px * var(--ts,1));font-weight:600;font-variant-numeric:tabular-nums;gap:1px}
+.lh-gm small{font-size:calc(10px * var(--ts,1));font-weight:400;color:rgba(255,255,255,.5)}
+.lh-sw{margin:0 0 6px}
+.lh-sw button{display:inline-flex;align-items:center;gap:8px}
+.lh-sw svg{width:16px;height:16px}
+html.lh-on #view-tv>.page-title,html.lh-on #view-tv>.page-sub,html.lh-on #view-sports .shub-head .page-title{display:none}
+@media (max-width:1000px){.lh-top{grid-template-columns:minmax(0,1fr)}.lh-list{min-width:0}.lh-scroll{flex-direction:row;overflow-x:auto;max-height:none}.lh-g{flex:0 0 220px}}
+@media (max-width:620px){.lh-feat{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:'mid mid' 'a h';row-gap:18px;padding:22px 14px 38px;min-height:0}.lh-mid{grid-area:mid}.lh-team:first-of-type{grid-area:a}.lh-team:last-of-type{grid-area:h}.lh-logo-wrap{width:64px;height:64px}.lh-logo{max-width:64px;max-height:64px}.lh-team b{font-size:calc(18px * var(--ts,1))}.lh-count{font-size:calc(40px * var(--ts,1))}}
+html.tv .lh-g.nav-focus,html.tv .lh-sw button.nav-focus{outline:2px solid #f3efe7;outline-offset:2px}
+/* 2.78 Layout Studio preview of the floating bar */
+.lsp-top.ezb-pvt{justify-content:center;height:calc(var(--u) * 6)}
+.lsp-top.ezb-pvt .lsp-logo{position:absolute;left:calc(var(--u) * 2.6);width:calc(var(--u) * 2.6);height:calc(var(--u) * 2.6);border-radius:50%}
+.lsp-top.ezb-pvt .lsp-dot{position:absolute;right:calc(var(--u) * 2.6)}
+.ezb-pvp{flex:none!important;display:flex;align-items:center;gap:calc(var(--u) * 1);padding:calc(var(--u) * .7) calc(var(--u) * 1.2);border-radius:999px;background:color-mix(in srgb,var(--p0) 70%,#000);border:1px solid color-mix(in srgb,var(--pi) 22%,transparent)}
+.ezb-pvp i{width:calc(var(--u) * 3.6);height:calc(var(--u) * .8);border-radius:999px;background:var(--pi);opacity:.5}
+.ezb-pvp i.on{width:calc(var(--u) * 4.6);height:calc(var(--u) * 1.8);background:var(--pa);opacity:1}
+.ezb-pvp u{width:1px;height:calc(var(--u) * 1.4);background:var(--pi);opacity:.3}
+.ezb-pvp em{width:calc(var(--u) * 1.3);height:calc(var(--u) * 1.3);border-radius:50%;background:var(--pi);opacity:.6}
+.lsp-bar.ezb-pvb{justify-content:space-between}
+.ezb-pvr{display:flex;gap:calc(var(--u) * 2.4);padding:calc(var(--u) * 1.4) calc(var(--u) * 2.6);border-radius:999px;background:color-mix(in srgb,var(--p0) 70%,#000)}
+.ezb-pvr em{width:calc(var(--u) * 4.4);height:calc(var(--u) * 4.4);border-radius:50%;background:var(--pi);opacity:.6}
+.ezb-pvr em.s{background:var(--pa);opacity:.9}
