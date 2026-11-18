@@ -70,6 +70,7 @@ const SoundModes = {
   host(s) { try { return new URL(s.url).host; } catch (e) { return ''; } },
   /* attach to what is playing now, if that can be done without a reload */
   tryNow() {
+    if (window.MkNative && MkNative.active) { MkNative.sound(); return true; }
     if (this.live()) { this.apply(); return true; }
     if (!DSP.clean() || !this.ctxRunning()) return false;
     if (!DSP.attach()) return false;
@@ -148,7 +149,7 @@ const AudioDelay = {
     AudioSync.html = function () {
       const ms = this.ms;
       return `<h5>Audio delay · ${ms ? `${ms} ms` : 'off'}</h5><div class="seg-row" data-async><button type="button" data-asd="-50" aria-label="Less delay">−50</button><button type="button" data-asd="0" title="Reset">${ms ? `${ms} ms` : '0 ms'}</button><button type="button" data-asd="50" aria-label="More delay">+50</button><button type="button" data-asd="250">+250</button></div>
-      <p class="as-note">For voices that come before lips move. If the sound comes late, it’s usually Bluetooth headphones: your phone or TV corrects that itself, and VLC can shift sound either way.</p>`;
+      <p class="as-note">For voices that come before lips move. If the sound comes late, it’s usually Bluetooth headphones: your phone or TV corrects that itself.</p>`;
     };
   },
 };

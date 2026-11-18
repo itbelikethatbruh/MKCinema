@@ -39,7 +39,7 @@
       X8.body('tvcLayer').innerHTML = `<h3 class="x8-h">Send to TV with AirPlay</h3>
         <p class="sub">AirPlay can only show the picture from MP4 or HLS sources. This source is an MKV file that MKCinema converts on this device, so only the sound would reach your TV.</p>
         ${alt ? '<div class="actions"><button class="btn btn-prime" type="button" id="airAlt"><i data-lucide="cast"></i>Switch to an AirPlay-ready source</button></div><p class="tour-note air-src"></p>' : '<p class="sub">None of the sources for this title are AirPlay-ready.</p>'}
-        ${apps.length ? `<p class="sub">Infuse plays MKV files and sends them to your TV with AirPlay.</p><div class="actions">${apps.map((p) => playerBtn(p, url, streamTitle(P.ctx), !alt)).join('')}</div>` : ''}`;
+        ${apps.length ? `<p class="sub">VLC plays MKV files, so you can open this one there instead.</p><div class="actions">${apps.map((p) => playerBtn(p, url, streamTitle(P.ctx), !alt)).join('')}</div>` : ''}`;
       const note = $('.air-src', el);
       if (note && alt) note.textContent = String(alt.name || '').replace(/\s+/g, ' ').trim().slice(0, 60) + ((alt._tel && alt._tel.res) ? ` · ${alt._tel.res}` : '');
       const b = $('#airAlt', el);

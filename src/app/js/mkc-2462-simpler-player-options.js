@@ -131,9 +131,9 @@
      Full screen shows only the player, so a pop-up opened from it (Your phone, a watch party, a question) moves into
      the player for as long as it is open, and the notices follow. */
   const home = new Map();
-  const fsPlayer = () => document.fullscreenElement && document.fullscreenElement.id === 'player' ? document.fullscreenElement : null;
+  const fsPlayer = () => { const f = document.fullscreenElement || document.webkitFullscreenElement || document.webkitCurrentFullScreenElement || null; return f && f.id === 'player' ? f : null; };
   const adopt = (el) => {
-    const pl = fsPlayer(); if (!pl || !el || el.id === 'player' || el.parentElement === pl) return;
+    const pl = fsPlayer(); if (!pl || !el || el.id === 'player' || el.dataset.ownFs || el.parentElement === pl) return;
     home.set(el, [el.parentElement, el.nextSibling]); el.classList.add('mk-fsl'); pl.appendChild(el);
   };
   const giveBack = (el) => {
@@ -145,11 +145,12 @@
   const cl = closeLayer;
   closeLayer = function (id) { const r = cl.apply(this, arguments); try { const el = $(`#${id}`); if (el && home.has(el)) setTimeout(() => { if (el.hidden) giveBack(el); }, 260); } catch (e) { /* ignore */ } return r; };
   const toastBox = $('#toasts'), toastHome = toastBox && toastBox.parentElement;
-  document.addEventListener('fullscreenchange', () => {
+  const fsChange = () => {
     const pl = fsPlayer();
     if (toastBox) { if (pl) pl.appendChild(toastBox); else if (toastBox.parentElement !== toastHome) toastHome.appendChild(toastBox); }
     if (!pl) [...home.keys()].forEach(giveBack);
-  });
+  };
+  document.addEventListener('fullscreenchange', fsChange); document.addEventListener('webkitfullscreenchange', fsChange);
 
   /* ---- the sign-in sync notice: short, and never over the player ---- */
   const t0 = toast;

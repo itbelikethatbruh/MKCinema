@@ -1,0 +1,29 @@
+
+/* 2.82 Home cards: one quiet strip above the rows, off by default (Settings › Home › Cards on the Home screen) */
+.hwc-strip{margin:0 0 18px;padding:0 var(--pad-x,clamp(16px,4vw,56px))}
+.hwc-rail{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding:2px 0 4px;scroll-snap-type:x proximity}
+.hwc-rail::-webkit-scrollbar{display:none}
+.hwc-slot{flex:0 0 auto;scroll-snap-align:start;animation:hwcIn .32s ease both}
+.hwc{position:relative;display:flex;align-items:center;gap:12px;width:min(372px,86vw);min-height:84px;padding:10px 12px 10px 10px;border-radius:var(--r-l,16px);background:rgba(var(--kffffff-c,255,255,255),.035);border:1px solid var(--line,rgba(255,255,255,.09))}
+.hwc-main{display:flex;align-items:center;gap:12px;flex:1;min-width:0;padding:0;border:0;background:none;color:inherit;text-align:start;cursor:pointer;font:inherit}
+.hwc-art{position:relative;flex:0 0 auto;width:112px;height:63px;border-radius:var(--r-m,10px);overflow:hidden;background:rgba(var(--kffffff-c,255,255,255),.06);display:grid;place-items:center;color:var(--gold)}
+.hwc-art img{width:100%;height:100%;object-fit:cover}
+.hwc-art .lucide{width:24px;height:24px}
+.hwc-bar{position:absolute;left:8px;right:8px;bottom:6px;height:3px;border-radius:calc(var(--r-s) * 0.25);background:rgba(var(--kffffff-c,255,255,255),.25);overflow:hidden}
+.hwc-bar i{position:absolute;inset:0;background:var(--gold);transform-origin:left center}
+.hwc-t{display:flex;flex-direction:column;gap:2px;min-width:0}
+.hwc-t b{font-size:calc(14px * var(--ts,1));font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hwc-t small{font-size:calc(12px * var(--ts,1));color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hwc-t .hwc-eye{font-size:calc(11px * var(--ts,1));letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.hwc-act{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;border:0;background:var(--gold);color:var(--n03050a,#0b0b0d);font:inherit;font-size:calc(13px * var(--ts,1));font-weight:600;cursor:pointer}
+.hwc-act .lucide{width:14px;height:14px}
+.hwc-dot{width:7px;height:7px;border-radius:50%;background:#e5484d}
+.hwc-x{position:absolute;top:4px;right:4px;opacity:.6}
+.hwc[data-hc="party"] .hwc-act{margin-right:18px}
+@media (hover:hover){.hwc-main:hover b{color:var(--kffffff,#fff)}.hwc-act:hover{opacity:.9}}
+.hwc-act:active,.hwc-main:active{transform:scale(.97)}
+@keyframes hwcIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (max-width:520px){.hwc{width:calc(100vw - 76px)}.hwc-art{width:84px;height:47px}.hwc-act{padding:0 12px}.hwc-t .hwc-eye{letter-spacing:.08em}}
+html.tv .hwc{width:420px}
+html.tv .hwc-main.nav-focus,html.tv .hwc-act.nav-focus,html.tv .hwc-x.nav-focus{outline:2px solid var(--kffffff,#fff);outline-offset:3px;border-radius:var(--r-m,10px)}
+.reduce-motion .hwc-slot{animation:none}

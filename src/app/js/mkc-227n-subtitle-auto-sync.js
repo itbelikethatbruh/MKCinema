@@ -106,7 +106,7 @@ const SubSync = {
       if (c._o == null) { c._o = c._s != null ? c._s : c.startTime - (P.subDelay || 0); c._oe = c._e != null ? c._e : c.endTime - (P.subDelay || 0); }
       c._s = c._o * k; c._e = c._oe * k;
     }
-    setSubDelay(off, true);
+    setSubDelay(off, true, 'auto'); // an automatic fix, not a timing the viewer set by hand
   },
   async run(i, { auto = false } = {}) {
     const s = P.subs && P.subs[i], stream = P.stream;
@@ -137,7 +137,8 @@ const SubSync = {
     MKLog.add('info', `Subtitle auto-sync (${how}): ${r ? `shift ${r.off}s, rate ${r.k.toFixed(4)}, match ${(r.j * 100).toFixed(0)}% (was ${(r.j0 * 100).toFixed(0)}%), z ${r.z.toFixed(1)}, rival ${(r.rival * 100).toFixed(0)}%` : 'no match'}`);
     const clear = r && r.z >= minZ && r.j >= (how === 'speech' ? 0.2 : 0.25) && r.j >= r.rival * 1.15 && r.j > r.j0 + 0.02;
     if (!clear) {
-      if (r && Math.abs(r.off) < 0.15 && r.k === 1 && r.j0 >= 0.25) { if (!auto) toast('These subtitles already match the film', 'ok', 3000, 'subsync'); return; }
+      // the file itself matches: a delay or speed left over from before is taken off, so what is shown matches too
+      if (r && Math.abs(r.off) < 0.15 && r.k === 1 && r.j0 >= 0.25) { if ((P.subDelay || 0) !== 0 || (P.subScale || 1) !== 1) this.apply(1, 0); if (!auto) toast('These subtitles already match the film', 'ok', 3000, 'subsync'); return; }
       if (!auto) toast('Couldn’t find a sure match, so the timing was left as it was. Sync on a timeline can fix it by hand.', 'err', 6000, 'subsync');
       return;
     }
@@ -310,8 +311,9 @@ const PhoneAddons = {
    the TV's basic player (the 1.2.5 to 1.6.x engine) tries it before MKCinema's own player does.
    Settings › Playback › TV player engine can force the basic player; the app keeps the choice (MKAndroid.setEngine). */
 const TvEngine = {
-  can() { try { return IS_TV && !!window.MKAndroid && typeof MKAndroid.setEngine === 'function'; } catch (e) { return false; } },
-  push() { if (this.can()) try { MKAndroid.setEngine(CFG.tvEngine === 'system' ? 'system' : 'exo'); } catch (e) { /* older app */ } },
+  can() { try { return !!window.MKAndroid && typeof MKAndroid.setEngine === 'function'; } catch (e) { return false; } },
+  mpv() { try { return Updater.newer(MKAndroid.version(), '1.13.9'); } catch (e) { return false; } },
+  push() { if (this.can()) try { MKAndroid.setEngine(CFG.tvEngine === 'system' ? 'system' : CFG.tvEngine === 'exoplayer' && this.mpv() ? 'exoplayer' : 'exo'); } catch (e) { /* older app */ } },
 };
 {
   const sc = setCfg;
@@ -319,7 +321,8 @@ const TvEngine = {
   const sec = SECTIONS.find((s) => s.id === 'playback');
   if (sec && TvEngine.can()) {
     const rows = sec.rows;
-    sec.rows = () => { const r = rows(); const at = r.findIndex((x) => x.key === 'tvPlayer'); r.splice(at < 0 ? r.length : at + 1, 0, { key: 'tvEngine', label: 'TV player engine', help: 'ExoPlayer is the engine most Android TV apps use. It handles MKV, picture subtitles and audio tracks more reliably. If it can’t open a file, the basic player tries it next. Pick the basic player only if a file plays better that way.', type: 'select', options: [['exo', 'ExoPlayer (recommended)'], ['system', 'Basic player']], get: () => (CFG.tvEngine === 'system' ? 'system' : 'exo') }); return r; };
+    sec.rows = () => { const r = rows(); const at = r.findIndex((x) => x.key === 'tvPlayer'); r.splice(at < 0 ? r.length : at + 1, 0, (TvEngine.mpv() ? { key: 'tvEngine', label: 'Player engine', help: 'MKCinema Player plays every format, including DTS and TrueHD sound, and switches audio and subtitle languages instantly. If a file won’t open, ExoPlayer and then the basic player try it. Pick ExoPlayer for picture subtitles (PGS) on a TV.', type: 'select', options: [['exo', 'MKCinema Player (mpv, recommended)'], ['exoplayer', 'ExoPlayer'], ['system', 'Basic player']], get: () => (CFG.tvEngine === 'system' || CFG.tvEngine === 'exoplayer' ? CFG.tvEngine : 'exo') }
+      : { key: 'tvEngine', label: 'TV player engine', help: 'ExoPlayer is the engine most Android TV apps use. It handles MKV, picture subtitles and audio tracks more reliably. If it can’t open a file, the basic player tries it next. Pick the basic player only if a file plays better that way.', type: 'select', options: [['exo', 'ExoPlayer (recommended)'], ['system', 'Basic player']], get: () => (CFG.tvEngine === 'system' ? 'system' : 'exo') })); return r; };
   }
   setTimeout(() => TvEngine.push(), 1500); // a choice synced from another device reaches this TV's app
 }

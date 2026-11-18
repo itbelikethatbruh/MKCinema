@@ -13,6 +13,7 @@ const Preflight = {
   WK: !IS_TV && (PLATFORM === 'ios' || (/Safari\//.test(navigator.userAgent) && /Apple/.test(navigator.vendor || '') && !/Chrome|Chromium|CriOS|FxiOS|EdgiOS|Edg\/|Android/.test(navigator.userAgent))),
   on() {
     if (CFG.failover === false || this.WK) return false;
+    if (window.MkNative && MkNative.ready()) return false; // 2.70: the browser's test player can't judge what the native player plays
     try { if (TvPlayer.on()) return false; } catch (e) { /* no TV player */ }
     return true;
   },
@@ -43,13 +44,14 @@ const Preflight = {
     if (!url) return Promise.resolve('unknown');
     const t0 = performance.now();
     const p = /\.m3u8(\?|$)/i.test(s.url) ? this.hls(url) : this.media(url);
-    const rec = { st: 'checking', at: Date.now(), p };
+    // every caller of a check still running gets the same finished status (not the raw [status, reason] pair)
+    const rec = { st: 'checking', at: Date.now(), p: null };
     this.res.set(s, rec);
-    return p.then(([st, why]) => {
+    return (rec.p = p.then(([st, why]) => {
       if (this.res.get(s) === rec) this.mark(s, st, why);
       try { MKLog.add('info', `checked ${MKLog.describe(s)}: ${st}${why ? ` (${why})` : ''} in ${Math.round(performance.now() - t0)} ms`); } catch (e) { /* no log */ }
       return st;
-    });
+    }));
   },
   async hls(url) {
     try {

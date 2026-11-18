@@ -10,6 +10,7 @@
   window.MK_WARM_OK = false;
   const net = navigator.connection || {};
   const slow = !!net.saveData || /(^|-)2g|3g/.test(net.effectiveType || '');
+  window.MK_WARM_SLOW = slow;
   const MH = /^(https:\/\/images\.metahub\.space\/background\/)(medium|large)(\/.+)$/;
   let first = true;
   const okWarm = () => { if (!slow) setTimeout(() => { window.MK_WARM_OK = true; }, 2500); };

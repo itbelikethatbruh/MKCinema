@@ -89,8 +89,10 @@ const Dedupe = {
     const row = streamRowHTML;
     streamRowHTML = function (s) {
       const h = row.apply(this, arguments);
-      if (!s._dups || !s._dups.length) return h;
-      return h.replace('</div>\n    <span class="go">', `<div class="s-also">Also in ${esc(s._dups.slice(0, 3).join(', '))}${s._dups.length > 3 ? ` +${s._dups.length - 3}` : ''}</div></div>\n    <span class="go">`);
+      // the row's own addon and nameless ones are left out of "Also in"
+      const also = (s._dups || []).filter((a, i, l) => a && a !== s._addon && l.indexOf(a) === i);
+      if (!also.length) return h;
+      return h.replace('</div>\n    <span class="go">', `<div class="s-also">Also in ${esc(also.slice(0, 3).join(', '))}${also.length > 3 ? ` +${also.length - 3}` : ''}</div></div>\n    <span class="go">`);
     };
     const st = secById('streams');
     if (st) { const rows = st.rows; st.rows = () => { const r = rows(); r.splice(Math.min(2, r.length), 0, { key: 'dedupeStreams', label: 'Fold duplicate sources', help: 'When several addons find the same file, show it once with "Also in …" underneath. The cached or browser-ready copy is the one kept.', type: 'toggle', get: () => CFG.dedupeStreams !== false }); return r; }; }
@@ -100,7 +102,7 @@ const Dedupe = {
 /* ---------------- Audio sync: delay the sound when it is ahead of the picture ---------------- */
 const AudioSync = {
   ms: 0, delay: null, wired: false,
-  html() {},
+  html() { return ''; },
   bind(m) {
     $$('[data-asd]', m).forEach((b) => b.addEventListener('click', () => { const d = Number(b.dataset.asd); this.set(d ? this.ms + d : 0); }));
   },

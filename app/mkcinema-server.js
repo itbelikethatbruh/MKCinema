@@ -27,8 +27,9 @@
  *   PROXY_TOKEN=secret         optional shared secret for /proxy, /remux, /debrid and /stremio-api. Then set the app's
  *                              proxy URL to http://<host>:7000/t/<secret>, and open the app from the server once at
  *                              http://<host>:7000/t/<secret>/ (it remembers the secret in a cookie for this site)
- *   CORS_ORIGINS=a,b           extra web origins allowed to read the proxy (the MKCinema app's own sites, this server
- *                              and file:// pages are always allowed; '*' allows every site, the old behaviour)
+ *   CORS_ORIGINS=a,b           extra web origins allowed to read the proxy (the MKCinema app's own sites and this server
+ *                              are always allowed; '*' allows every site, the old behaviour)
+ *   ALLOW_NULL_ORIGIN=1        also allow the app opened from a file on disk (file:// pages send origin "null")
  *   TRUST_PROXY=1              trust X-Forwarded-* headers (on by itself when PUBLIC_URL is set)
  */
 'use strict';
@@ -411,8 +412,11 @@ app.get('/remux/probe', needToken, async (req, res) => {
   const p = spawn(FFPROBE, ['-v', 'error', ...FF_PROTO, '-print_format', 'json', '-show_format', '-show_streams', ffInput(u.href, req.query.headers)], { stdio: ['ignore', 'pipe', 'pipe'] });
   let out = '', err = ''; const kill = setTimeout(() => p.kill('SIGKILL'), 25000);
   p.stdout.on('data', (d) => { out += d; }); p.stderr.on('data', (d) => { err += d; });
+  // ffprobe missing or not runnable: answer this request instead of crashing the whole server
+  p.on('error', (e) => { clearTimeout(kill); console.warn('[probe]', e.message); if (!res.headersSent) res.status(501).json({ error: 'ffprobe is not available on this server' }); });
   p.on('close', (code) => {
     clearTimeout(kill);
+    if (res.headersSent) return;
     if (code !== 0) { console.warn('[probe]', (err.trim().split('\n').pop() || `exit ${code}`).replace(/token=[^&\s]+/g, 'token=…')); return res.status(502).json({ error: 'could not read this stream' }); }
     try {
       const j = JSON.parse(out), v = (j.streams || []).find((s) => s.codec_type === 'video'), a = (j.streams || []).filter((s) => s.codec_type === 'audio');
@@ -433,7 +437,7 @@ function keyframeAt(href, t, headersParam) {
       '-read_intervals', `${t.toFixed(3)}%+#1`, ffInput(href, headersParam)], { stdio: ['ignore', 'pipe', 'ignore'] });
     let out = ''; const kill = setTimeout(() => p.kill('SIGKILL'), 20000);
     p.stdout.on('data', (d) => { out += d; });
-    p.on('close', () => { clearTimeout(kill); const v = out.split('\n')[0].split(',').map(Number).find((x) => Number.isFinite(x)); resolve(Number.isFinite(v) && v <= t + 0.05 ? v : t); });
+    p.on('close', () => { clearTimeout(kill); const v = out.split('\n')[0].split(',').map((x) => x.trim()).filter((x) => x && x !== 'N/A').map(Number).find((x) => Number.isFinite(x)); resolve(Number.isFinite(v) && v <= t + 0.05 ? v : t); });
     p.on('error', () => { clearTimeout(kill); resolve(t); });
   });
 }
@@ -463,10 +467,15 @@ app.get('/remux', needToken, async (req, res) => {
   const finish = () => { if (done) return; done = true; remuxRunning--; try { ff.kill('SIGKILL'); } catch (e) { /* gone */ } };
   ff.stderr.on('data', (d) => { err = (err + d).slice(-2000); });
   ff.on('error', () => { if (!res.headersSent) res.status(500).json({ error: 'could not start ffmpeg' }); finish(); });
-  ff.on('close', (code) => { if (code && !res.headersSent) { console.warn('[remux]', (err.trim().split('\n').pop() || `exit ${code}`).replace(/token=[^&\s]+/g, 'token=…')); res.status(502).json({ error: 'could not convert this stream' }); } else res.end(); finish(); });
+  let wrote = false;
+  ff.on('close', (code) => {
+    if (code && !wrote) { console.warn('[remux]', (err.trim().split('\n').pop() || `exit ${code}`).replace(/token=[^&\s]+/g, 'token=…')); if (!res.headersSent) res.status(502).json({ error: 'could not convert this stream' }); else res.end(); }
+    else res.end();
+    finish();
+  });
   req.on('close', finish);
-  ff.stdout.once('data', () => { if (!res.headersSent) res.set({ 'Content-Type': 'video/mp4', 'Cache-Control': 'no-store', 'X-Remux-Start': String(t) }); });
-  ff.stdout.pipe(res);
+  ff.stdout.once('data', () => { wrote = true; if (!res.headersSent) res.set({ 'Content-Type': 'video/mp4', 'Cache-Control': 'no-store', 'X-Remux-Start': String(t) }); });
+  ff.stdout.pipe(res, { end: false });   // the answer ends once ffmpeg has, so a failure can still say so
 });
 
 /* ------------------------------------------------------------------ *
@@ -516,9 +525,9 @@ app.get(Object.keys(PWA_FILES).map((f) => `/${f}`), (req, res, next) => {
   res.type(PWA_FILES[name]); if (name === 'sw.js') res.set('Cache-Control', 'no-cache'); res.sendFile(file);
 });
 // The rest of the app's files: only these folders and files, never this script, package files or .env
-const STATIC_DIRS = ['i18n', 'kids', 'vendor', 'anime', 'net', 'rate'];
+const STATIC_DIRS = ['i18n', 'kids', 'vendor', 'anime', 'net', 'rate', 'engine', 'captions', 'addons'];
 for (const d of STATIC_DIRS) app.use(`/${d}`, express.static(path.join(__dirname, d), { index: false, dotfiles: 'ignore', fallthrough: true, redirect: false }));
-const STATIC_FILES = ['universes.json', 'version.json', 'logs.html', 'status.html', 'privacy.html', 'apple-touch-icon.png'];
+const STATIC_FILES = ['universes.json', 'universes-home.json', 'version.json', 'logs.html', 'status.html', 'privacy.html', 'apple-touch-icon.png'];
 app.get(STATIC_FILES.map((f) => `/${f}`), (req, res, next) => {
   const file = path.join(__dirname, req.path.slice(1));
   if (!fs.existsSync(file)) return next();

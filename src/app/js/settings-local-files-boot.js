@@ -16,6 +16,7 @@ function applyAll() {
   root.setProperty('--amb-o', String(CFG.ambIntensity / 100));
   body.toggle('reduce-motion', !!CFG.reduceMotion); body.toggle('hc', CFG.contrast === 'high');
   body.toggle('ci-hover', cardInfoMode() === 'hover'); body.toggle('ci-below', cardInfoMode() === 'below');
+  { const de = document.documentElement.classList; de.toggle('ls-cs-s', CFG.cardSize === 's'); de.toggle('ls-cs-l', CFG.cardSize === 'l'); de.toggle('ls-hero-short', CFG.banner === 'short'); de.toggle('ls-hero-off', CFG.banner === 'off'); if (typeof LayStudio !== 'undefined') LayStudio.menuSync(); }
   root.setProperty('--sub-size', `${CFG.subSize}%`); root.setProperty('--sub-color', CFG.subColor);
   root.setProperty('--sub-bg', `rgba(0,0,0,${CFG.subBg / 100})`); root.setProperty('--sub-font', SUB_FONTS[CFG.subFont] || SUB_FONTS.sans);
   root.setProperty('--sub-shadow', CFG.subOutline ? '0 0 3px #000,0 0 2px #000,1px 1px 2px #000' : 'none');
@@ -116,8 +117,8 @@ const RailMouse = {
       b.addEventListener('mouseenter', () => clearTimeout(this.hideT));
       b.addEventListener('mouseleave', () => this.hideSoon());
     });
-    document.addEventListener('mouseover', (e) => { if (this.drag) return; const r = this.find(e.target); if (r) { clearTimeout(this.hideT); if (r !== this.rail) this.show(r); } else if (this.rail && !this.rail.contains(e.target) && !e.target.closest?.('.rail-nav')) this.hideSoon(); }, { passive: true });
-    document.addEventListener('mouseout', (e) => { const r = this.rail; if (r && r.contains(e.target) && !(e.relatedTarget && (r.contains(e.relatedTarget) || e.relatedTarget.closest?.('.rail-nav')))) this.hideSoon(); }, { passive: true });
+    document.addEventListener('mouseover', (e) => { if (this.drag) return; const r = this.find(e.target); if (r) { clearTimeout(this.hideT); if (r !== this.rail) this.show(r); } else if (this.rail && !this.rail.contains(e.target) && !(e.target.closest && e.target.closest('.rail-nav'))) this.hideSoon(); }, { passive: true });
+    document.addEventListener('mouseout', (e) => { const r = this.rail; if (r && r.contains(e.target) && !(e.relatedTarget && (r.contains(e.relatedTarget) || (e.relatedTarget.closest && e.relatedTarget.closest('.rail-nav'))))) this.hideSoon(); }, { passive: true });
     document.addEventListener('scroll', (e) => { if (this.rail && (e.target === this.rail || e.target === document || e.target.contains && e.target.contains(this.rail))) this.place(); }, { capture: true, passive: true });
     addEventListener('resize', () => this.place(), { passive: true });
     // click and drag
@@ -131,7 +132,7 @@ const RailMouse = {
       if (!(e.buttons & 1)) { this.drag = null; return; }
       const dx = e.clientX - d.x;
       if (!this.moved && Math.abs(dx) < 6) return;
-      if (!this.moved) { this.moved = true; d.r.classList.add('mk-dragging'); getSelection()?.removeAllRanges?.(); }
+      if (!this.moved) { this.moved = true; d.r.classList.add('mk-dragging'); { const sel = getSelection(); if (sel && sel.removeAllRanges) sel.removeAllRanges(); } }
       d.r.scrollLeft = d.left - dx;
     }, { passive: true });
     const end = () => { const d = this.drag; this.drag = null; if (!d) return; if (this.moved) { const r = d.r; requestAnimationFrame(() => r.classList.remove('mk-dragging')); setTimeout(() => { this.moved = false; }, 0); } };
@@ -190,9 +191,9 @@ const pct = (v) => `${v}%`;
 const EXT_HELP = {
   android: 'Opens the stream in an installed Android app, the same way Stremio does. If the app is missing, the Play Store opens.',
   ios: 'Opens the stream in an installed app through its link. Safari asks before it switches apps.',
-  mac: 'Infuse and IINA open directly. VLC and mpv for Mac have no web link, so pick the .m3u playlist for those.',
-  windows: 'PotPlayer opens directly. VLC, mpv and MPC-HC have no web link, so the .m3u playlist opens in whichever player handles .m3u files.',
-  linux: 'Desktop players on Linux have no web link, so MKCinema saves an .m3u playlist your default player opens.',
+  mac: 'VLC for Mac has no web link, so pick VLC to copy the stream link (in VLC press ⌘N, paste, then Open), or the .m3u playlist.',
+  windows: 'VLC has no web link on Windows, so the .m3u playlist opens in VLC (or whichever player handles .m3u files).',
+  linux: 'VLC has no web link on Linux, so MKCinema saves an .m3u playlist that VLC opens.',
 };
 const SECTIONS = [
   { id: 'account', icon: 'circle-user-round', label: 'Account', intro: 'Sign in with Supabase to keep your library, progress, addons and settings in sync across devices.', bind: () => Account.bind(), rows: () => [
@@ -224,6 +225,7 @@ const SECTIONS = [
   ] },
   { id: 'performance', icon: 'gauge', label: 'Performance', intro: 'High is the default: raised, shimmering buttons, posters with depth, the 3D logo while a film loads, and frosted glass on desktops. Phones get all of it except the glass. If scrolling ever stutters or the battery runs low, MKCinema drops to Low by itself. Video quality is never affected.', rows: () => [
     { html: presetsHTML },
+    ...(IS_TV && typeof Lite !== 'undefined' ? [{ key: 'liteMode', label: 'Lite mode', help: Lite.HELP, type: 'seg', options: [['auto', 'Automatic'], ['on', 'On'], ['off', 'Off']], get: () => Lite.mode(), set: (v) => Lite.set(v) }] : []),
     { key: 'blur', label: 'Glass blur', help: `0 gives solid black panels, the fastest option.${IS_TV ? ' TVs always use solid panels, which keeps the remote smooth at High.' : TOUCH_UI ? ' This device always uses solid panels, because Chrome on Android can black out parts of the screen under glass.' : ''}`, type: 'range', min: 0, max: 30, step: 2, fmt: (v) => (v ? `${v}px` : 'solid') },
     { key: 'showFps', label: 'Show frame rate', type: 'toggle' },
   ] },
@@ -240,6 +242,8 @@ const SECTIONS = [
     { key: 'xray', label: 'X-Ray when paused', help: 'A moment after you pause: who is on screen, the story, and quick actions for this moment.', type: 'toggle' },
     { key: 'spoilerGuard', label: 'Spoiler Guard', help: 'Blurs thumbnails and hides summaries of episodes you have not watched. Tap Reveal on any one.', type: 'toggle' },
     { key: 'autoNext', label: 'Play next episode automatically', help: 'Keeps the same source group (bingeGroup) when it can.', type: 'toggle' },
+    { key: 'liveMini', label: 'Keep live TV playing in a corner', help: 'Leave a playlist channel’s player and it keeps playing in a small window over the guide. Press it to go back to full screen.', type: 'toggle' },
+    { key: 'pickMemo', label: 'Remember the source I pick for each show', help: 'When you choose a source yourself, the same addon and quality are tried first next time: the next episode, Continue watching and Smart Play.', type: 'toggle' },
     { key: 'upNextAt', label: 'Show "Next episode" before the end', help: 'Also shows when the credits start, if the episode has a credits marker. With autoplay on, it counts down 10 s.', type: 'range', min: 10, max: 90, step: 5, fmt: (v) => `${v}s` },
     { key: 'seekStep', label: 'Skip step', type: 'select', num: true, options: [[5, '5 seconds'], [10, '10 seconds'], [15, '15 seconds'], [30, '30 seconds']] },
     { key: 'speed', label: 'Default speed', type: 'select', num: true, options: [[0.75, '0.75×'], [1, '1×'], [1.25, '1.25×'], [1.5, '1.5×'], [2, '2×']] },
@@ -269,23 +273,25 @@ const SECTIONS = [
     { key: 'manage', label: 'Installed addons', type: 'button', text: 'Manage addons', icon: 'puzzle', run: () => { closeLayer('settings'); $('#openAddons').click(); } },
   ] },
   { id: 'debrid', icon: 'zap', label: 'Debrid', intro: 'Use your own debrid account to play torrent results instantly. Signed in, your keys travel with your account, locked with your password, so they load on every device you sign in on. They are never in setup codes unless you tick that box, never shared, and only ever sent to that service (or through your own MKCinema server if your browser blocks the service).', rows: () => [
-    { html: () => `${Object.entries(DEBRID).map(([k, d]) => `<div class="set-row"><div><b>${d.label}${Vault.service() === k ? ' <span class="tag-s g">in use</span>' : ''}</b><small>Key from ${esc(d.help)}</small><small class="dk-st" id="dk-st-${k}"></small></div><div class="set-ctl"><input class="inp mono" type="password" data-dk="${k}" style="width:min(240px,100%)" ${SecretFill.attr(Vault.cfg()[k])} placeholder="API key" autocomplete="off" spellcheck="false" aria-label="${d.label} key"><button class="btn btn-ghost btn-sm" type="button" data-dt="${k}">Test</button></div></div>`).join('')}` },
+    { html: () => { const has = engine.addons.some((a) => a.enabled !== false && !a.builtin && (engine.supports(a, 'stream', 'movie', 'tt0111161') || engine.supports(a, 'stream', 'series', 'tt0903747'))); return `<div class="set-row" id="dk-need"><div><b>${has ? 'Works with your stream addons' : 'You also need a stream addon'}</b><small>Your debrid account does not find sources by itself. Stream addons find them, and your debrid account turns them into fast, direct streams.</small>${has ? '' : '<small>No stream addon is installed yet, so nothing will show up to play. Add one from the addon manager.</small>'}</div>${has ? '' : '<div class="set-ctl"><button class="btn btn-prime btn-sm" type="button" id="dk-addons"><i data-lucide="puzzle"></i>Manage addons</button></div>'}</div>`; } },
+    { html: () => `${Object.entries(DEBRID).map(([k, d]) => `<div class="set-row"><div><b>${d.label}${Vault.services().includes(k) ? ' <span class="tag-s g">in use</span>' : ''}</b><small>Key from ${esc(d.help)}</small><small class="dk-st" id="dk-st-${k}"></small></div><div class="set-ctl"><input class="inp mono" type="password" data-dk="${k}" style="width:min(240px,100%)" ${SecretFill.attr(Vault.cfg()[k])} placeholder="API key" autocomplete="off" spellcheck="false" aria-label="${d.label} key"><button class="btn btn-ghost btn-sm" type="button" data-dt="${k}">Test</button></div></div>`).join('')}` },
     { html: () => Account.unlockHTML() },
     { key: 'syncKeys', label: 'Sync keys with my account', help: 'Debrid, RPDB, OMDb, TMDB and fanart keys, your custom poster URL, addon links that contain a key and TV playlist logins load wherever you sign in, locked with your password. Off keeps them, and addon links that contain a key, on this device only.', type: 'toggle', set: (v) => { CFG.syncKeys = v; saveCfg(); Account.schedule(); } },
     { key: 'vaultOff', label: 'Use debrid for torrent results', help: 'Torrent results get a Debrid badge (Instant when your service reports them cached) and Smart Play prefers them. If more than one key is saved, the one you added first is used.', type: 'toggle', get: () => !Vault.cfg().off, set: (v) => { Store.set('vault', { ...Vault.cfg(), off: !v }); engine.clearCache(); } },
   ], bind: () => {
     Account.bindUnlock();
-    $$('[data-dk]').forEach((i) => i.addEventListener('change', () => { Vault.save(i.dataset.dk, i.value); renderSettingsBody(); toast(i.value ? `${DEBRID[i.dataset.dk].label} key saved${Account.keysSync() ? ' and synced to your account' : Account.needsUnlock() ? ' on this device. Unlock synced keys to sync it' : ' on this device'}` : 'Key removed', 'ok'); }));
+    { const b = $('#dk-addons'); if (b) b.addEventListener('click', () => { closeLayer('settings'); $('#openAddons').click(); }); }
+    $$('[data-dk]').forEach((i) => i.addEventListener('change', () => { Vault.save(i.dataset.dk, i.value); const lb = i.closest('.set-row') && i.closest('.set-row').querySelector('b'); if (lb) lb.innerHTML = `${DEBRID[i.dataset.dk].label}${Vault.services().includes(i.dataset.dk) ? ' <span class="tag-s g">in use</span>' : ''}`; toast(i.value ? `${DEBRID[i.dataset.dk].label} key saved${Account.keysSync() ? ' and synced to your account' : Account.needsUnlock() ? ' on this device. Unlock synced keys to sync it' : ' on this device'}` : 'Key removed', 'ok'); }));
     $$('[data-dt]').forEach((b) => b.addEventListener('click', async () => { const k = b.dataset.dt, st = $(`#dk-st-${k}`); st.textContent = 'Checking…'; try { st.textContent = `✓ ${await Vault.test(k)}`; } catch (e) { st.textContent = `✗ ${e.message}`; } }));
   } },
-  { id: 'sync', icon: 'refresh-ccw', label: 'Trakt & Simkl', intro: 'Scrobble what you watch and keep watchlists in step. Past 80 % a title counts as watched. Connect with your own free API app; tokens stay in this browser.', rows: () => [
+  { id: 'sync', icon: 'refresh-ccw', label: 'Trakt & Simkl', intro: 'Scrobble what you watch and keep watchlists in step. Past 80 % a title counts as watched. Simkl connects with a QR code; Trakt uses your own free API app. Sign-ins stay on this device.', rows: () => [
     { group: 'Trakt' },
     { key: 'traktId', label: 'Client ID', help: 'Create an app at trakt.tv/oauth/applications with redirect URI urn:ietf:wg:oauth:2.0:oob.', type: 'secret', get: () => Trakt.cfg().clientId || '', set: (v) => Trakt.save({ clientId: v }) },
     { key: 'traktSecret', label: 'Client secret', help: 'Trakt needs it to finish signing in. It is your own app’s secret and stays on this device.', type: 'secret', get: () => Trakt.cfg().secret || '', set: (v) => Trakt.save({ secret: v }) },
     { html: () => `<div class="set-row"><div><b>${Trakt.on() ? 'Connected' : 'Not connected'}</b><small id="trk-st">${Trakt.on() ? 'Scrobbling is on.' : 'Save the ID and secret, then connect.'}</small></div><div class="set-ctl">${Trakt.on() ? '<button class="btn btn-ghost btn-sm" type="button" id="trk-in"><i data-lucide="download"></i>Import watchlist</button><button class="btn btn-ghost btn-sm" type="button" id="trk-out"><i data-lucide="upload"></i>Export watchlist</button><button class="btn btn-ghost btn-sm danger" type="button" id="trk-x">Disconnect</button>' : '<button class="btn btn-prime btn-sm" type="button" id="trk-go"><i data-lucide="link"></i>Connect Trakt</button>'}</div></div>` },
     { group: 'Simkl' },
-    { key: 'simklId', label: 'Client ID', help: 'Create an app at simkl.com/settings/developer. No secret needed.', type: 'secret', get: () => Simkl.cfg().clientId || '', set: (v) => Simkl.save({ clientId: v }) },
-    { html: () => `<div class="set-row"><div><b>${Simkl.on() ? 'Connected' : 'Not connected'}</b><small id="smk-st">${Simkl.on() ? 'Finished titles are added to your Simkl history.' : 'Save the client ID, then connect.'}</small></div><div class="set-ctl">${Simkl.on() ? '<button class="btn btn-ghost btn-sm" type="button" id="smk-in"><i data-lucide="download"></i>Import watchlist</button><button class="btn btn-ghost btn-sm" type="button" id="smk-out"><i data-lucide="upload"></i>Export watchlist</button><button class="btn btn-ghost btn-sm danger" type="button" id="smk-x">Disconnect</button>' : '<button class="btn btn-prime btn-sm" type="button" id="smk-go"><i data-lucide="link"></i>Connect Simkl</button>'}</div></div>` },
+    ...(Simkl.own() ? [{ key: 'simklId', label: 'Client ID', help: 'Create an app at simkl.com/settings/developer. No secret needed.', type: 'secret', get: () => Simkl.cfg().clientId || '', set: (v) => Simkl.save({ clientId: v }) }] : []),
+    { html: () => Simkl.rowHTML() },
   ], bind: () => {
     const flow = (svc, stId) => async () => {
       const st = $(stId);
@@ -293,14 +299,13 @@ const SECTIONS = [
       catch (e) { st.textContent = e.message; }
     };
     const run = (id, fn) => { const b = $(id); if (b) b.onclick = async () => { b.disabled = true; try { await fn(); } catch (e) { toast(e.message, 'err'); } b.disabled = false; }; };
-    run('#trk-go', flow(Trakt, '#trk-st')); run('#smk-go', flow(Simkl, '#smk-st'));
+    run('#trk-go', flow(Trakt, '#trk-st')); Simkl.bind(run);
     run('#trk-in', async () => toast(`Added ${await Trakt.importList()} titles from Trakt`, 'ok')); run('#trk-out', async () => toast(`Sent ${await Trakt.exportList()} titles to Trakt`, 'ok'));
-    run('#smk-in', async () => toast(`Added ${await Simkl.importList()} titles from Simkl`, 'ok')); run('#smk-out', async () => toast(`Sent ${await Simkl.exportList()} titles to Simkl`, 'ok'));
     run('#trk-x', async () => { Store.set('trakt', { clientId: Trakt.cfg().clientId, secret: Trakt.cfg().secret }); renderSettingsBody(); });
-    run('#smk-x', async () => { Store.set('simkl', { clientId: Simkl.cfg().clientId }); renderSettingsBody(); });
   } },
   { id: 'devices', icon: 'smartphone', label: 'Devices', intro: 'Hand a film to your phone at the same second, drive this screen from your phone, or watch in sync with friends.', rows: () => [
     { key: 'castOpen', label: 'Phone remote', help: 'Scan a QR code and your phone becomes a remote for this screen: touchpad or D-pad, play and seek, and a keyboard or your voice for search. Phones stay paired.', type: 'button', text: 'Pair a phone', icon: 'qr-code', run: () => { closeLayer('settings'); Cast.open('remote'); } },
+    ...(typeof Mirror !== 'undefined' ? [{ key: 'mirrorOpen', label: 'Screen mirroring', help: 'Show an Android phone or a computer on this screen, or share this device’s screen with another MKCinema screen. Uses a code, like the phone remote.', type: 'button', text: 'Open', icon: 'cast', run: () => { closeLayer('settings'); Mirror.open(); } }] : []),
     { key: 'remoteNew', label: 'Unpair all phones', help: 'Makes a new pairing code and removes every allowed phone. They need to scan again, and this screen asks again before each one may control it.', type: 'button', text: 'New code', icon: 'refresh-cw', run: () => Remote.renew() },
     ...(typeof RmSec !== 'undefined' ? RmSec.rows() : []),
     { key: 'remoteJoin', label: 'Use this phone as a remote', help: 'Opens MKCinema Remote, where you type the code shown on the TV. It remembers the TV for next time.', type: 'button', text: 'Open remote', icon: 'smartphone', run: () => Remote.join('') },
@@ -308,15 +313,18 @@ const SECTIONS = [
     { key: 'install', label: 'Install as an app', help: PWA.installed() ? 'MKCinema is running as an installed app.' : 'Adds MKCinema to your home screen or dock, with its own window and faster start.', type: 'button', text: 'Install', icon: 'download', run: () => PWA.install() },
   ] },
   { id: 'home', icon: 'layout-dashboard', label: 'Home', intro: 'Choose what MKCinema opens on and what your Home shows.', rows: () => [
+    { key: 'layStudio', label: 'Layout Studio', help: 'Look, menu, card size, banner and rows in one place, with a live preview for computer, TV and phone. Saves to your account and can be shared with a link.', type: 'button', text: 'Open Layout Studio', icon: 'palette', run: () => { closeLayer('settings'); setTimeout(() => LayStudio.open(), 280); } },
     { key: 'saverNow', label: 'Screensaver / Ambient Mode', help: 'Full-screen 3D parallax art with atmosphere, right now. Left and Right browse, OK opens the film, Back returns.', type: 'button', text: 'Start Ambient Mode', icon: 'monitor-play', run: () => { closeLayer('settings'); setTimeout(() => Saver.open(true), 450); } },
+    { key: 'ambStudio', label: 'Ambient Studio', help: 'Make Ambient Mode your own: photos from your phone or computer (or sent to the TV from your phone), motion, atmosphere, colour, film grain and the clock. Try it full screen before you save.', type: 'button', text: 'Open Ambient Studio', icon: 'wand-sparkles', run: () => { closeLayer('settings'); setTimeout(() => AmbStudio.open(), 300); } },
     { key: 'hlStart', label: 'Open on', type: 'select', options: [['home', 'Home'], ['movie', 'Movies'], ['series', 'Series'], ['tv', 'Live TV'], ['library', 'Library'], ['calendar', 'Calendar']], get: () => Layout.get().start, set: (v) => Layout.set({ start: v }) },
-    { key: 'saverAfter', label: 'Start Ambient Mode when idle', help: 'Films from your Home, watchlist and Continue watching, in 3D, when nothing has been pressed for a while. It never starts while something plays.', type: 'select', num: true, options: [[0, 'Off'], [1, 'After 1 minute'], [1.5, 'After 90 seconds'], [3, 'After 3 minutes'], [5, 'After 5 minutes'], [10, 'After 10 minutes'], [20, 'After 20 minutes']], get: () => Saver.after(), set: (v) => Saver.setAfter(v) },
+    { key: 'saverAfter', label: 'Start Ambient Mode when idle', help: 'Films from your Home, watchlist and Continue watching, or your own photos from Ambient Studio, when nothing has been pressed for a while. It never starts while something plays.', type: 'select', num: true, options: [[0, 'Off'], [1, 'After 1 minute'], [1.5, 'After 90 seconds'], [3, 'After 3 minutes'], [5, 'After 5 minutes'], [10, 'After 10 minutes'], [20, 'After 20 minutes']], get: () => Saver.after(), set: (v) => Saver.setAfter(v) },
     { key: 'fanartKey', label: 'Fanart.tv key (optional)', help: 'Unlocks the full 3D shadowbox: transparent character cutouts and clean logos from fanart.tv. Get a free personal key at fanart.tv. Syncs with your account when Sync keys is on.', type: 'secret', get: () => Keys.get().fanart || '', set: (v) => { Keys.set('fanart', v); AmbientArt.cache.clear(); } },
     { key: 'tmdbKey', label: 'TMDB key (optional)', help: 'Backdrops and logos from themoviedb.org, and the depth effect for films without a cutout. Free API key (v3) at themoviedb.org. Syncs with your account when Sync keys is on.', type: 'secret', get: () => Keys.get().tmdb || '', set: (v) => TMDB.setKey(v) },
     { key: 'hlFocus', label: 'Movies or series', help: 'Orders, or limits, the catalog rows on Home and the featured banner.', type: 'select', options: [['both', 'Both, as my addons list them'], ['movies-first', 'Movies first'], ['series-first', 'Series first'], ['movies', 'Movies only'], ['series', 'Series only']], get: () => Layout.get().focus, set: (v) => Layout.set({ focus: v }) },
     { group: 'Rows on Home' },
     { key: 'hlTrakt', label: 'Trakt Watchlist and Collection rows', help: 'Off by default: they repeat My watchlist and are often empty. Empty rows never show on Home.', type: 'toggle', get: () => Layout.get().traktLists, set: (v) => Layout.set({ traktLists: v }) },
     ...HOME_ROWS.map(([k, l]) => ({ key: `hl-${k}`, label: l, type: 'toggle', get: () => Layout.shows(k), set: (v) => { const h = Layout.get().hidden.filter((x) => x !== k); if (!v) h.push(k); Layout.set({ hidden: h }); } })),
+    ...(typeof HomeCards !== 'undefined' ? HomeCards.rows() : []),
   ] },
   { id: 'sound', icon: 'volume-2', label: 'Sound', intro: IS_TV ? 'On a TV, MKCinema opens straight to Home, so the remote is ready right away. The interface makes no sounds.' : 'MKCinema opens straight to Home. Sound here covers the welcome tour and Interface sounds only.', rows: () => IS_TV ? [] : [
     { key: 'sound', label: 'Sound', type: 'toggle', get: () => !sfx.muted, set: (v) => { if (v === sfx.muted) toggleMute(); } },

@@ -28,3 +28,8 @@
 # Miko's natural voice: exact-version files that never change
 /vendor/kokoro-1.2.1/*
   Cache-Control: public, max-age=31536000, immutable
+
+# Android app links for the MK Remote app
+/.well-known/assetlinks.json
+  Content-Type: application/json
+  Access-Control-Allow-Origin: *

@@ -78,7 +78,7 @@ const AniList = {
     const ids = Store.get('anilistArm', {}), items = [];
     const look = async (m) => {
       let v = ids[m.id];
-      if (!v) { try { const r = await fetch(`https://arm.haglund.dev/api/v2/ids?source=anilist&id=${m.id}`); v = r.ok ? (await r.json()) || {} : {}; } catch (e) { v = {}; } ids[m.id] = { imdb: v.imdb || '', kitsu: v.kitsu || '' }; v = ids[m.id]; }
+      if (!v) { try { const r = await fetch(`https://arm.haglund.dev/api/v2/ids?source=anilist&id=${m.id}`); v = r.ok ? (await r.json()) || {} : r.status === 404 ? {} : null; } catch (e) { v = null; } if (!v) return; /* a failed lookup is tried again next time */ ids[m.id] = { imdb: v.imdb || '', kitsu: v.kitsu || '' }; v = ids[m.id]; }
       const id = v.imdb || (v.kitsu ? `kitsu:${v.kitsu}` : ''); if (!id) return;
       items.push({ id, type: m.format === 'MOVIE' ? 'movie' : 'series', name: (m.title && (m.title.english || m.title.romaji)) || '', releaseInfo: String((m.startDate && m.startDate.year) || ''), poster: id.startsWith('tt') ? undefined : (m.coverImage && m.coverImage.large) || undefined });
     };
@@ -99,7 +99,7 @@ const Mal = {
   HOSTS: /^(app\.mkcinema\.app|mkcinema\.pages\.dev)$/,
   get REDIRECT() {
     const own = location.protocol === 'https:' && this.HOSTS.test(location.hostname), set = String(this.cfg().redirect || '').trim();
-    return /^https?:\/\/\S+$/i.test(set) ? set : 'https://mkcinema.pages.dev/';
+    return /^https?:\/\/\S+$/i.test(set) ? set : own ? `${location.origin}/` : 'https://mkcinema.pages.dev/';
   },
   cfg() { return Store.get('mal', {}); }, save(v) { Store.set('mal', { ...this.cfg(), ...v }); },
   on() { return !!this.cfg().token; },
@@ -174,7 +174,7 @@ const Mal = {
     const out = [], list = items.filter(Boolean).slice(0, 300);
     const look = async (m) => {
       let v = ids[m.mal];
-      if (!v) { try { const r = await fetch(`https://arm.haglund.dev/api/v2/ids?source=myanimelist&id=${m.mal}`); v = r.ok ? (await r.json()) || {} : {}; } catch (e) { v = {}; } ids[m.mal] = { imdb: v.imdb || '', kitsu: v.kitsu || '' }; v = ids[m.mal]; }
+      if (!v) { try { const r = await fetch(`https://arm.haglund.dev/api/v2/ids?source=myanimelist&id=${m.mal}`); v = r.ok ? (await r.json()) || {} : r.status === 404 ? {} : null; } catch (e) { v = null; } if (!v) return; /* a failed lookup is tried again next time */ ids[m.mal] = { imdb: v.imdb || '', kitsu: v.kitsu || '' }; v = ids[m.mal]; }
       const id = v.imdb || (v.kitsu ? `kitsu:${v.kitsu}` : ''); if (!id) return;
       out.push({ id, type: m.movie ? 'movie' : 'series', name: m.name || '', releaseInfo: String(m.year || ''), poster: id.startsWith('tt') ? undefined : m.poster || undefined });
     };

@@ -120,7 +120,7 @@ const Arrange = {
       <p class="tour-note">Turn whole groups on or off in Settings › Home. Empty rows never show.</p>`;
     icons();
     $$('[data-arr-act]', b).forEach((btn) => btn.addEventListener('click', () => this.act(btn.closest('.arr-item').dataset.k, btn.dataset.arrAct)));
-    const r = $('[data-arr-reset]', b); if (r) r.onclick = () => { Store.set(this.KEY, null); if (typeof Account !== 'undefined') Account.schedule(); this.restore(); this.render(); toast('Home is back to normal', 'ok'); };
+    const r = $('[data-arr-reset]', b); if (r) r.onclick = () => { Store.set(this.KEY, { order: [], hide: [], names: {}, titles: {}, folders: {} }); /* an explicit empty arrangement, so the reset reaches other devices */ if (typeof Account !== 'undefined') Account.schedule(); this.restore(); this.render(); toast('Home is back to normal', 'ok'); };
     if (focusKey) {
       const li = [...$$('.arr-item', b)].find((x) => x.dataset.k === focusKey);
       let f = li && $(`[data-arr-act="${focusAct}"]`, li);
@@ -149,6 +149,7 @@ const Arrange = {
   folder(k) {
     const b = X8.body('arrangeHome'), li = b && [...$$('.arr-item', b)].find((x) => x.dataset.k === k); if (!li || !window.MkFolders) return;
     const f = MkFolders.get(), cur = MkFolders.of(k), box = $('.arr-t', li);
+    $$('.arr-fold-form', b).forEach((x) => x.remove());   // one folder form at a time
     box.insertAdjacentHTML('beforeend', `<form class="arr-fold-form"><select class="inp" aria-label="Folder"><option value="">Not in a folder</option>${Object.keys(f).map((id) => `<option value="${esc(id)}"${id === cur ? ' selected' : ''}>${esc(f[id].name)}</option>`).join('')}<option value="new">New folder…</option></select><input class="inp" maxlength="30" placeholder="Folder name" aria-label="Folder name" hidden><button class="btn btn-prime btn-sm" type="submit" data-nav>Save</button>${cur ? '<button class="btn btn-ghost btn-sm" type="button" data-nav data-fcode>Copy folder code</button>' : ''}</form>`);
     const form = $('.arr-fold-form', box), sel = $('select', form), inp = $('input', form);
     const sync = () => { inp.hidden = sel.value !== 'new'; if (!inp.hidden) inp.focus(); };
@@ -187,8 +188,8 @@ const Arrange = {
   button() {
     const rows = $('#homeRows'); if (!rows || $('#arrHomeBtn')) return;
     const w = document.createElement('div'); w.className = 'arr-home'; w.id = 'arrHomeBtn';
-    w.innerHTML = '<button class="btn btn-ghost btn-sm" type="button" data-nav><i data-lucide="layout-list"></i>Arrange Home</button>';
-    rows.after(w); $('button', w).onclick = () => this.open(); icons();
+    w.innerHTML = '<button class="btn btn-ghost btn-sm" id="lsHomeBtn" type="button" data-nav><i data-lucide="palette"></i>Layout Studio</button><button class="btn btn-ghost btn-sm" id="arrHomeGo" type="button" data-nav><i data-lucide="layout-list"></i>Arrange Home</button>';
+    rows.after(w); $('#arrHomeGo', w).onclick = () => this.open(); $('#lsHomeBtn', w).onclick = () => LayStudio.open(); icons();
   },
   init() {
     if (!SEAT_KEYS.includes(this.KEY)) SEAT_KEYS.push(this.KEY);
@@ -257,7 +258,7 @@ const KidsAge = {
   /* rating text to a minimum age (same rules as build_ages.py) */
   toAge(c, r) {
     r = String(r || '').trim().toUpperCase(); if (!r || /^(NR|NOT RATED|UNRATED)$/.test(r)) return null;
-    if (c === 'US') return { 'TV-Y': 0, 'TV-G': 0, G: 0, 'TV-Y7': 7, 'TV-Y7-FV': 7, PG: 8, 'TV-PG': 10, 'PG-13': 13, 'TV-14': 14, R: 17, 'TV-MA': 17, 'NC-17': 18 }[r] ?? null;
+    if (c === 'US') return qq({ 'TV-Y': 0, 'TV-G': 0, G: 0, 'TV-Y7': 7, 'TV-Y7-FV': 7, PG: 8, 'TV-PG': 10, 'PG-13': 13, 'TV-14': 14, R: 17, 'TV-MA': 17, 'NC-17': 18 }[r], null);
     if (c === 'BR' && /^(L|AL|LIVRE)$/.test(r)) return 0;
     if (c === 'IN' && /^(U|UA|U\/A|A|S)$/.test(r)) return { U: 0, UA: 12, 'U/A': 12, A: 18, S: 18 }[r];
     if (c === 'GB' && /^(U|UC|PG|12A|R18)$/.test(r)) return { U: 0, UC: 0, PG: 8, '12A': 12, R18: 18 }[r];
@@ -284,13 +285,13 @@ const KidsAge = {
       const P = { US: 'P1657', BR: 'P3216', DE: 'P1981' };
       const sparql = `SELECT ?imdb ?p ?vl WHERE { VALUES ?imdb { ${ids.map((x) => `"${x}"`).join(' ')} } ?i wdt:P345 ?imdb . VALUES ?p { ${Object.values(P).map((p) => `wdt:${p}`).join(' ')} } ?i ?p ?v . ?v rdfs:label ?vl . FILTER(LANG(?vl) = "en") }`;
       const r = await fetch(`https://query.wikidata.org/sparql?format=json&query=${encodeURIComponent(sparql)}`, { headers: { Accept: 'application/sparql-results+json' } });
-      if (!r.ok) return {};
+      if (!r.ok) return null; // a failed answer is not "no rating"
       const j = await r.json(), out = {};
       (j.results.bindings || []).forEach((b) => {
         const id = b.imdb.value, p = b.p.value.split('/').pop(), c = Object.keys(P).find((k) => P[k] === p);
         const a = c === 'DE' ? this.toAge('DE', String(b.vl.value).replace(/^FSK\s*/i, '')) : this.toAge(c, b.vl.value);
         if (a == null) return;
-        out[id] = out[id] || C.map(() => null); const i = C.indexOf(c); out[id][i] = Math.max(out[id][i] ?? 0, a);
+        out[id] = out[id] || C.map(() => null); const i = C.indexOf(c); out[id][i] = Math.max(qq(out[id][i], 0), a);
       });
       return out;
     };
@@ -306,7 +307,8 @@ const KidsAge = {
         }
       } else {
         const films = todo.filter(([, t]) => t !== 'series').map(([id]) => id);
-        const w = films.length ? await wiki(films).catch(() => ({})) : {};
+        const w = films.length ? await wiki(films).catch(() => null) : {};
+        if (!w) { todo.forEach(([id]) => this.asked.delete(id)); return got; } // asked again later
         todo.forEach(([id, t]) => { if (w[id]) { this.remember(id, w[id]); got = true; } else if (t !== 'series') this.remember(id, 0); });
       }
     } catch (e) { /* offline: the genre rule still applies */ }
@@ -322,7 +324,7 @@ const KidsAge = {
   scan() {
     if (!this.data && !this.cache) return;
     const need = []; const seen = new Set();
-    $$('.card[data-id]').forEach((c) => { const id = c.dataset.id; if (!/^tt\d+$/.test(id) || seen.has(id) || this.ages(id) || (this.cache && this.cache[id] === 0)) return; seen.add(id); need.push([id, c.dataset.type]); });
+    $$('.card[data-id]').forEach((c) => { const id = c.dataset.id; if (!/^tt\d+$/.test(id) || seen.has(id) || this.ages(id) || (this.cache && this.cache[id] === 0) || (this.asked && this.asked.has(id))) return; /* titles already asked about are not asked again */ seen.add(id); need.push([id, c.dataset.type]); });
     this.prune();
     if (need.length && !this.running) { this.running = true; this.lookup(need).then((got) => { this.running = false; if (got) this.prune(); if (need.length > 40) this.later(); }).catch(() => { this.running = false; }); }
   },

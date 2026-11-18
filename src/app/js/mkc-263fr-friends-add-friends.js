@@ -53,7 +53,8 @@ const Friends = {
         ch.subscribe(); this.ch = ch;
       } catch (e) { this.ch = null; }
     }
-    try { this.me = await this.rpc('mkc_me'); this.ready = true; } catch (e) { this.me = null; this.ready = /not switched on/.test(e.message) ? 'off' : true; }
+    // a failed check is "try again", not "no profile": the setup form is only for people who really have none
+    try { this.me = await this.rpc('mkc_me'); this.ready = true; this.failed = false; } catch (e) { this.me = null; if (/not switched on/.test(e.message)) this.ready = 'off'; else { this.ready = false; this.failed = true; } }
     if (this.me) { this.syncCfg(); await this.refresh(); this.beat(true); if (typeof Social !== 'undefined') Social.start(); if (typeof Hub !== 'undefined') Hub.start(); }
     clearInterval(this.beatT); this.beatT = setInterval(() => this.beat(), 60000);
     clearInterval(this.listT); this.listT = setInterval(() => { if (this.me && (this.layerOpen() || document.visibilityState === 'visible')) this.refresh(); }, 45000);
@@ -125,6 +126,7 @@ const Friends = {
       case 'p': clearTimeout(this.pT); this.pT = setTimeout(() => this.refresh(), 400 + Math.random() * 800); break;
       case 'r': this.refresh().then(() => { const f = this.byId(from); if (f && f.state === 'in') this.note(`${this.label(f)} wants to be friends`); else if (f && f.state === 'friend') this.note(`${this.label(f)} is now your friend`); }); break;
       case 'm':
+        if (typeof HomeCards !== 'undefined') HomeCards.later('party');
         if (this.chat && this.chat.id === from && this.layerOpen()) this.loadChat(true);
         else this.refresh().then(() => { const f = this.byId(from); if (f && f.state === 'friend') this.note(`${this.label(f)}: ${String(p.x || 'sent a message').slice(0, 80)}`, f.id); });
         break;
@@ -197,9 +199,14 @@ const Friends = {
       this.bindCommon(b); icons(); this.focusFirst(b); return;
     }
     if (this.ready === 'off') { b.innerHTML = '<h3 class="x8-h">Social Hub</h3><p class="x8-p">Friends are not switched on for this server yet. Please try again later.</p>'; return; }
+    if (!this.ready && this.failed) {
+      b.innerHTML = '<p class="x8-p">Couldn’t reach the Social Hub. Check your connection and try again.</p><div class="actions"><button class="btn btn-prime" type="button" data-nav id="frRetry"><i data-lucide="refresh-cw"></i>Try again</button></div>';
+      $('#frRetry', b).onclick = () => { this.failed = false; this.paint(); this.start(); }; icons(); this.focusFirst(b); return;
+    }
     if (!this.ready) { b.innerHTML = '<p class="x8-p">Loading…</p>'; return; }
-    if (!this.me) { this.paintSetup(b); return; }
-    if (this.mode === 'edit') { this.paintSetup(b, true); return; }
+    // a form already on screen is left alone (a background refresh used to wipe what was typed)
+    if (!this.me) { if (!$('#frUser', b)) this.paintSetup(b); return; }
+    if (this.mode === 'edit') { if (!$('#frUser', b)) this.paintSetup(b, true); return; }
     if (typeof Social !== 'undefined' && Social.owns()) { Social.paint(b); return; }
     if (this.mode !== 'list' || !$('#frLists', b)) this.paintShell(b);
     this.paintLists();
@@ -558,13 +565,20 @@ const FCall = {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { s.noMic = true; return; }
     try { s.mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); }
     catch (e) { s.noMic = true; toast('No microphone here: you can hear them, they can’t hear you', 'info', 5000); }
+    // the call ended while the permission prompt was up: the microphone goes straight off again
+    if (this.st !== s) { if (s.mic) s.mic.getTracks().forEach((t) => t.stop()); s.mic = null; return; }
     if (withCam) await this.camOn(s);
   },
   async camOn(s) {
     try { s.camStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 24, max: 30 } } }); s.cam = true; }
     catch (e) { toast('Camera permission was not given', 'err'); s.cam = false; return; }
+    if (this.st !== s) { s.camStream.getTracks().forEach((t) => t.stop()); s.camStream = null; s.cam = false; return; }
     if (s.pc) s.camStream.getTracks().forEach((t) => { s.vSender = s.pc.addTrack(t, s.camStream); });
     this.bar();
+  },
+  async sld(pc, answer) {
+    try { await pc.setLocalDescription(); }
+    catch (e) { if (pc.signalingState === 'closed') throw e; const d = answer ? await pc.createAnswer() : await pc.createOffer(); await pc.setLocalDescription(d); }
   },
   async peer(s) {
     if (s.pc) return;
@@ -572,7 +586,9 @@ const FCall = {
     if (this.st !== s) return;
     const pc = s.pc = new RTCPeerConnection({ iceServers: [{ urls: ['stun:stun.cloudflare.com:3478', 'stun:stun.l.google.com:19302'] }] });
     s.polite = s.dir === 'in'; s.makingOffer = false; s.ignoreOffer = false;
-    pc.onnegotiationneeded = async () => { try { s.makingOffer = true; await pc.setLocalDescription(); this.sig({ t: 'sdp', d: pc.localDescription && pc.localDescription.toJSON() }); } catch (e) { /* retried */ } finally { s.makingOffer = false; } };
+    pc.onnegotiationneeded = async () => { try { s.makingOffer = true; await this.sld(pc, false); this.sig({ t: 'sdp', d: pc.localDescription && pc.localDescription.toJSON() }); } catch (e) { /* retried */ } finally { s.makingOffer = false; } };
+    // a call that never connects ends on its own instead of staying on "Connecting" with the microphone open
+    clearTimeout(s.connT); s.connT = setTimeout(() => { if (this.st === s && s.state !== 'live') { toast('Could not connect the call', 'err'); this.end('fail', true); } }, 40000);
     pc.onicecandidate = ({ candidate }) => { if (candidate) this.sig({ t: 'ice', c: candidate.toJSON() }); };
     pc.ontrack = (e) => this.trackIn(s, e);
     pc.onconnectionstatechange = () => {
@@ -596,7 +612,7 @@ const FCall = {
         const collision = m.d.type === 'offer' && (s.makingOffer || pc.signalingState !== 'stable');
         s.ignoreOffer = !s.polite && collision; if (s.ignoreOffer) return;
         await pc.setRemoteDescription(m.d);
-        if (m.d.type === 'offer') { await pc.setLocalDescription(); this.sig({ t: 'sdp', d: pc.localDescription.toJSON() }); }
+        if (m.d.type === 'offer') { await this.sld(pc, true); this.sig({ t: 'sdp', d: pc.localDescription.toJSON() }); }
       } else if (m.t === 'ice' && m.c) { try { await pc.addIceCandidate(m.c); } catch (e) { if (!s.ignoreOffer) throw e; } }
     } catch (e) { console.warn('call signalling', e); }
   },
@@ -624,7 +640,7 @@ const FCall = {
     if (!s || s.state === 'ringing-in') { if (b) b.hidden = true; return; }
     if (!b) {
       b = document.createElement('div'); b.id = 'fcBar'; b.setAttribute('role', 'region'); b.setAttribute('aria-label', 'Call');
-      b.addEventListener('click', (e) => { const x = e.target.closest('[data-fc]'); if (!x) return; const k = x.dataset.fc; if (k === 'end') this.end('hang'); if (k === 'mute') this.mute(); if (k === 'cam') this.cam(); if (k === 'open') Friends.open(s && s.peer && s.peer.id); });
+      b.addEventListener('click', (e) => { const x = e.target.closest('[data-fc]'); if (!x) return; const k = x.dataset.fc; if (k === 'end') this.end('hang'); if (k === 'mute') this.mute(); if (k === 'cam') this.cam(); if (k === 'open') { const c = this.st; Friends.open(c && c.peer && c.peer.id); } });   // the call on now, not the one the bar was made for
       document.body.appendChild(b);
     }
     const showV = !!(s.rv && s.rv.getVideoTracks().some((t) => t.readyState === 'live' && !t.muted));

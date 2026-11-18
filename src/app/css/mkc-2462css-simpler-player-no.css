@@ -11,7 +11,7 @@ html #player .menu .seg-row button{font-size:calc(13px * var(--ts,1));font-weigh
 html #player .px-t{font-weight:500}
 /* the tab bar gets a close button */
 #optMenu .px-tabs{align-items:center}
-#optMenu .px-tabs .px-x{flex:0 0 auto;width:36px;height:36px;padding:0;display:grid;place-items:center;border-radius:999px;color:var(--mute);background:rgba(255,255,255,.06)}
+#optMenu .px-tabs .px-x{flex:0 0 auto;width:36px;height:36px;padding:0;display:grid;place-items:center;border-radius:999px;color:var(--mute);background:rgba(var(--kffffff-c,255,255,255),.06)}
 #optMenu .px-tabs .px-x svg{width:18px;height:18px}
 html.tv #optMenu .px-tabs .px-x{display:none}
 /* touch: bigger targets */
@@ -34,7 +34,7 @@ html.tv #optMenu .px-tabs .px-x{display:none}
 /* on a phone the phone-handoff icon and the speed chip live in the menu, not the bar */
 body.mk-phone #pCast,body.mk-phone #pxSpeed{display:none!important}
 /* notices never block a tap, and in the player they sit at the top, away from the menus */
-.toast:not(.mk-ask){pointer-events:none}
+.toast:not(.mk-ask):not(.as-lock){pointer-events:none}
 #player #toasts{position:absolute}
 body.mk-player-on #toasts{top:calc(12px + env(safe-area-inset-top,0px));bottom:auto;width:min(440px,calc(100% - 32px))}
 body.mk-player-on .toast{padding:9px 14px;font-size:calc(13px * var(--ts,1))}

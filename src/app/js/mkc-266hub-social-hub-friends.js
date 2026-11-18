@@ -58,7 +58,8 @@ const Hub = {
       else if (p.k === 'reply') Friends.note(`${Friends.label(f)} replied to your post`);
     }
   },
-  feedShown() { return Social.tab === 'feed' && !Social.view && !Friends.chat && !this.single; },
+  // the profile form (Settings › Edit name) is never repainted over
+  feedShown() { return Social.tab === 'feed' && !Social.view && !Friends.chat && !this.single && Friends.mode !== 'edit'; },
 
   /* ---- the shell: header, sections, the main column and (on wide screens) who is around ---- */
   main() { const b = X8.body('friendsLayer'); return b ? $('#hubMain', b) : null; },
@@ -208,8 +209,8 @@ const Hub = {
     });
   },
   tab(t) {
-    this.single = null;
-    if (t === 'feed' && this.feedShown() && Friends.layerOpen()) { const m = this.main(); if (m) { if (m.scrollTop > 0) m.scrollTop = 0; else this.loadFeed(true).catch(() => {}); } return; }
+    const was = this.single; this.single = null;   // leaving a single post always redraws the feed
+    if (t === 'feed' && !was && this.feedShown() && Friends.layerOpen()) { const m = this.main(); if (m) { if (m.scrollTop > 0) m.scrollTop = 0; else this.loadFeed(true).catch(() => {}); } return; }
     Social.setTab(t);
   },
   openWho(id) {
@@ -246,11 +247,11 @@ const Hub = {
   args() { return { p_before: null, p_user: this.filt === 'mine' ? Friends.me.id : null, p_mentions: this.filt === 'mentions', p_id: null }; },
   async loadFeed(reset) {
     if (this.loading || !this.on()) return;
-    this.loading = true; const f = this.filt;
+    this.loading = true; const f = this.filt; let redo = false;
     try {
       const a = this.args(); if (!reset && this.feed.length) a.p_before = this.feed[this.feed.length - 1].id;
       const l = (await this.rpc('mkc_feed', a)) || [];
-      if (f !== this.filt) return;
+      if (f !== this.filt) { redo = true; return; }   // the filter changed during the load: load the new one now
       l.forEach((p) => this.posts.set(p.id, p));
       if (reset) {
         const ids = new Set(l.map((p) => p.id)), oldest = l.length ? l[l.length - 1].id : 0;
@@ -259,7 +260,7 @@ const Hub = {
         this.feed = [...l, ...rest];
       } else { const have = new Set(this.feed.map((p) => p.id)); this.feed = [...this.feed, ...l.filter((p) => !have.has(p.id))]; this.more = l.length >= 20; }
       this.feedAt = Date.now(); this.err = '';
-    } catch (e) { this.err = e.message || String(e); if (!this.feedAt) this.feedAt = Date.now(); } finally { this.loading = false; }
+    } catch (e) { if (f !== this.filt) redo = true; else { this.err = e.message || String(e); if (!this.feedAt) this.feedAt = Date.now(); } } finally { this.loading = false; if (redo) setTimeout(() => this.loadFeed(true).catch(() => {}), 0); }
     const m = this.main(); if (!m || !this.feedShown() || !Friends.layerOpen()) return;
     if (this.off || !$('#hubPosts', m)) this.paintTab(m); else this.paintPosts();
   },
@@ -467,6 +468,7 @@ const Hub = {
   async doPost(btn) {
     const d = this.draft, body = d.body.trim();
     if (!body) { toast(d.mood || d.title ? 'Add a few words too' : 'Write something first', 'info', 2400); const t = $('#hubText'); if (t) { if (IS_TV) Nav.focus(t, true); else t.focus(); } return; }
+    if (this.posting) return; this.posting = true;   // Ctrl+Enter while a post is sending does nothing
     if (btn) btn.disabled = true;
     try {
       const p = await this.rpc('mkc_post', { p_body: body, p_mood: d.mood, p_title: d.title ? { id: d.title.id, k: d.title.k, t: d.title.t, p: d.title.p, ep: d.title.ep } : null, p_parent: null });
@@ -480,7 +482,7 @@ const Hub = {
         (p.tags || []).forEach((u) => { if (u && u.id) Friends.poke(u.id, { t: 'n', k: 'tag' }); });
       }
       toast('Posted', 'ok', 1800);
-    } catch (e) { toast(e.message || String(e), 'err', 5000); } finally { if (btn && btn.isConnected) btn.disabled = false; }
+    } catch (e) { toast(e.message || String(e), 'err', 5000); } finally { this.posting = false; if (btn && btn.isConnected) btn.disabled = false; }
   },
 
   /* ---- delete, report, block ---- */

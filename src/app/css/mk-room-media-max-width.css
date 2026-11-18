@@ -1,0 +1,16 @@
+
+@media (max-width:640px){
+html:not(.tv) .view .page-title:not(.uni-title):not(.net-title){margin-top:6px;margin-bottom:8px}
+html:not(.tv) .view>.page-sub{font-size:calc(15px * var(--ts,1));line-height:1.5;max-width:34em}
+html:not(.tv) #libRows{margin-top:22px}
+html:not(.tv) .lib-tabs{margin-bottom:14px}
+html:not(.tv) .lib-bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+html:not(.tv) .lib-bar>*{min-width:0;margin:0}
+html:not(.tv) .lib-bar .segc{grid-column:1}
+html:not(.tv) .lib-bar .lib-sort{grid-column:2;width:auto;max-width:160px;min-width:0}
+html:not(.tv) .lib-bar .lib-q{grid-column:1;order:3;width:100%;flex:none}
+html:not(.tv) .lib-bar #libHide{grid-column:2;order:4;white-space:nowrap;justify-content:center;text-align:center}
+html:not(.tv) .lib-bar:not(:has(#libHide)) .lib-q{grid-column:1/-1}
+html:not(.tv) .lib-bar #libClear,html:not(.tv) .lib-bar #libDel{grid-column:1/-1;order:5;justify-self:start}
+html:not(.tv) .lib-grid{margin-top:24px;column-gap:14px;row-gap:24px}
+}

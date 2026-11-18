@@ -1,0 +1,17 @@
+
+/* 2.79 Lite mode (weak TVs only, html.lite): nothing moves on its own and nothing glides, so a slow chip only ever
+   draws the frame the remote asked for. Colours, fonts, posters, the Noir look and every feature stay as they are. */
+html.lite *,html.lite *::before,html.lite *::after{transition:none!important;animation:none!important;will-change:auto!important}
+html.lite .net-logo{transform:none!important}
+/* signs that something is loading keep moving, so a wait never looks frozen (transform and opacity only) */
+html.lite .lucide-loader{animation:spin 1s linear infinite!important}
+html.lite #dDl.busy svg{animation:dlSpin 1s linear infinite!important}
+html.lite .smk-wait svg.lucide{animation:smkSpin 1.1s linear infinite!important}
+html.lite .spin{animation:rot .8s linear infinite!important}
+html.lite .p-load .pl-art{animation:plPulseFlat 2.2s ease-in-out infinite!important}
+html.lite .pl-bar i{animation:plBar 1.3s ease-in-out infinite!important}
+html.lite .p-load .mk-src i{animation:mkSrcDot 1.2s ease-in-out infinite!important}
+html.lite #mikoBox .mk-dots i{animation:mkDot 1s ease infinite!important}
+html.lite #pRec.on .rec-dot{animation:recPulse 1.6s ease-in-out infinite!important}
+html.lite .pal-mic.live,html.lite .qp-mic.live{animation:micPulse 1.2s ease-in-out infinite!important}
+html.lite .sv-hint{animation:svHint 8s ease 1.4s both!important}

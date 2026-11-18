@@ -41,7 +41,7 @@
       movie: ['Action', 'Comedy', 'Thriller', 'Drama', 'Horror', 'Sci-Fi', 'Animation', 'Romance', 'Crime', 'Adventure', 'Family', 'Fantasy', 'Mystery', 'Documentary'],
       series: ['Drama', 'Comedy', 'Crime', 'Sci-Fi', 'Animation', 'Thriller', 'Mystery', 'Fantasy', 'Action', 'Reality-TV', 'Documentary', 'Family'],
     },
-    MAX_GENRES: 8, MAX_CATS: 3,
+    MAX_GENRES: 8, MAX_CATS: 60,
     dom() {
       const view = document.getElementById('view-discover'), bar = view && view.querySelector('.toolbar'), grid = document.getElementById('discGrid');
       if (!view || !bar || !grid) return null;

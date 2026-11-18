@@ -43,7 +43,9 @@
 
   /* ---------- the person's private browser storage (Origin Private File System), with a memory fallback ---------- */
   const Disk = {
-    ok() { try { return !!(navigator.storage && navigator.storage.getDirectory && window.FileSystemFileHandle && 'createWritable' in FileSystemFileHandle.prototype); } catch (e) { return false; } },
+    broken: false,
+    probe() { if (this.ok()) this.dir().catch(() => { this.broken = true; }); },
+    ok() { if (this.broken) return false; try { return !!(navigator.storage && navigator.storage.getDirectory && window.FileSystemFileHandle && 'createWritable' in FileSystemFileHandle.prototype); } catch (e) { return false; } },
     async dir() { const r = await navigator.storage.getDirectory(); return r.getDirectoryHandle('mk-recordings', { create: true }); },
     async file(name) { return (await (await this.dir()).getFileHandle(name)).getFile(); },
     async drop(name) { try { await (await this.dir()).removeEntry(name); } catch (e) { /* already gone */ } },
@@ -58,12 +60,13 @@
         if (this.w && (this.inPart + u8.byteLength > PART || now() - this.at > 30000)) { await this.close(); }
         if (!this.w) {
           const name = `${r.id}-${String(r.parts.length + 1).padStart(3, '0')}`;
-          const h = await (await Disk.dir()).getFileHandle(name, { create: true });
-          this.w = await h.createWritable(); r.parts.push(name); this.inPart = 0; this.at = now(); Rec.persist(r);
+          try { const h = await (await Disk.dir()).getFileHandle(name, { create: true }); this.w = await h.createWritable(); }
+          catch (e) { if (r.parts.length || (e && e.name === 'QuotaExceededError')) throw e; Disk.broken = true; r.disk = false; Rec.persist(r); return this.write(u8); }   // storage refused before anything was saved: keep it in memory
+          r.parts.push(name); this.inPart = 0; this.at = now(); Rec.persist(r);
         }
         await this.w.write(u8); this.inPart += u8.byteLength;
       } else {
-        const cap = (TOUCH_UI ? 700 : 2048) << 20;
+        const cap = (TOUCH_UI ? 700 : 2048) * 1048576; // 2048 << 20 overflows to a negative number
         if (r.bytes + u8.byteLength > cap) { const e = new Error('full'); e.full = true; throw e; }
         this.buf.push(u8); this.bufN += u8.byteLength;
         if (this.bufN > (16 << 20)) this.flushMem();
@@ -120,8 +123,9 @@
       }
       const e = new Error('unreadable'); e.cors = true; e.cause = last; throw e;
     },
-    async bytes(r, url, opt) { const res = await this.get(r, url, opt); return new Uint8Array(await res.arrayBuffer()); },
-    async text(r, url) { const res = await this.get(r, url, { ms: 20000 }); return res.text(); },
+    async read(res, ms, how) { const t = setTimeout(() => { try { res._ac.abort(); } catch (e) { /* closed */ } }, ms); try { return await res[how](); } finally { clearTimeout(t); } },
+    async bytes(r, url, opt) { const res = await this.get(r, url, opt); return new Uint8Array(await this.read(res, (opt && opt.ms) || 30000, 'arrayBuffer')); },
+    async text(r, url) { const res = await this.get(r, url, { ms: 20000 }); return this.read(res, 20000, 'text'); },
   };
 
   /* ---------- HLS ---------- */
@@ -187,15 +191,16 @@
     stop(why) { if (why && !this.r.why) this.r.why = why; this.ac.abort(); }
     async put(u8, url) {
       if (!this.r.ext) { this.r.ext = extOf(u8, url); Rec.persist(this.r); }
-      await this.sink.write(u8);
+      await this.sink.write(u8); this.dataAt = now();
       Rec.tick();
     }
     async run() {
-      const r = this.r;
+      const r = this.r; this.t0 = now();
       try {
         const first = await Net.get(r, r.url, { ms: 25000, signal: this.ac.signal });
         const rd = first.body && first.body.getReader ? first.body.getReader() : null;
-        let head = rd ? await rd.read() : { value: new Uint8Array(await first.arrayBuffer()), done: true };
+        const t1 = setTimeout(() => { try { first._ac.abort(); } catch (e) { /* closed */ } }, 25000);
+        let head; try { head = rd ? await rd.read() : { value: new Uint8Array(await first.arrayBuffer()), done: true }; } finally { clearTimeout(t1); }
         const u8 = head.value || new Uint8Array(0);
         const peek = new TextDecoder().decode(u8.subarray(0, 16));
         const ct = String(first.headers.get('content-type') || '').toLowerCase();
@@ -222,7 +227,7 @@
       let tries = 0;
       for (;;) {
         if (head && head.value && head.value.byteLength) await this.put(head.value, r.url);
-        let idle = 0;
+        let idle = 0, broke = false;
         try {
           while (rd && !(head && head.done)) {
             if (this.stopped) { try { res._ac.abort(); } catch (e) { /* closed */ } return; }
@@ -230,13 +235,14 @@
             const x = await rd.read(); if (x.done) break;
             await this.put(x.value, r.url); tries = 0;
           }
-        } catch (e) { if (e.full || e.name === 'QuotaExceededError') throw e; } finally { clearTimeout(idle); }
+        } catch (e) { if (e.full || e.name === 'QuotaExceededError') throw e; broke = true; } finally { clearTimeout(idle); }
+        if (finite && broke && !this.stopped) { r.why = 'the download stopped part-way, so the end is missing'; return; }
         if (finite || this.stopped) return;
         if (++tries > 20) { r.why = 'the channel kept dropping'; return; }
         r.gaps = (r.gaps || 0) + 1;
         await Tick.sleep(Math.min(15000, 1000 * tries));
         if (this.stopped) return;
-        try { res = await Net.get(r, r.url, { ms: 25000, signal: this.ac.signal }); rd = res.body.getReader(); head = await rd.read(); } catch (e) { if (e.status === 404 || e.status === 403 || e.status === 401) { r.why = `the channel stopped answering (HTTP ${e.status})`; return; } head = null; rd = null; }
+        try { res = await Net.get(r, r.url, { ms: 25000, signal: this.ac.signal }); rd = res.body.getReader(); const t2 = setTimeout(() => { try { res._ac.abort(); } catch (e) { /* closed */ } }, 25000); try { head = await rd.read(); } finally { clearTimeout(t2); } } catch (e) { if (e.status === 404 || e.status === 403 || e.status === 401) { r.why = `the channel stopped answering (HTTP ${e.status})`; return; } head = null; rd = null; }
       }
     }
     async seg(s) {
@@ -263,7 +269,7 @@
       let pl = M3U8.parse(text, base), mediaUrl = base;
       if (!pl) throw new Error('not a playlist');
       if (pl.master) { const v = M3U8.pick(pl); mediaUrl = v.url; pl = M3U8.parse(await Net.text(r, mediaUrl), mediaUrl); if (!pl || pl.master) throw new Error('not a playlist'); }
-      let next = -1, misses = 0, lost = 0;
+      let next = -1, misses = 0, lost = 0, fails = 0;
       for (;;) {
         if (pl.segs.some((s) => s.key && s.key.method !== 'AES-128')) { const e = new Error('protected'); e.protected = true; throw e; }
         const finite = pl.end || pl.vod;
@@ -279,7 +285,13 @@
           const got = await Promise.all(group.map((s) => this.seg(s).then((u8) => u8, (e) => { if (e.protected || this.ac.signal.aborted) throw e; return e; })));
           for (let k = 0; k < group.length; k++) {
             const s = group[k], u8 = got[k];
-            if (u8 instanceof Error) { if (finite) throw u8; r.gaps = (r.gaps || 0) + 1; next = s.seq + 1; continue; }
+            if (u8 instanceof Error) {
+              if (finite) throw u8; r.gaps = (r.gaps || 0) + 1; next = s.seq + 1;
+              // the playlist loads but its video pieces are refused: stop instead of "recording" nothing for hours
+              if (++fails >= 12 || now() - (this.dataAt || this.t0) > 60000) { r.why = 'the channel’s video stopped arriving'; return; }
+              continue;
+            }
+            fails = 0;
             if (s.map && s.map.uri !== this.mapUrl) { const init = await Net.bytes(r, s.map.uri, { range: s.map.range ? (() => { const [n, o] = s.map.range.split('@'); return `bytes=${Number(o) || 0}-${(Number(o) || 0) + Number(n) - 1}`; })() : undefined, signal: this.ac.signal }); await this.put(init, s.map.uri); this.mapUrl = s.map.uri; }
             await this.put(u8, s.url); next = s.seq + 1;
           }
@@ -321,7 +333,7 @@
     /* start a recording now: {url, headers, name, channel, logo, kind: 'live'|'catchup', stopAt} */
     async start(o) {
       if (!o || !/^https?:\/\//i.test(String(o.url || ''))) return toast('This channel has no address that can be recorded.', 'err', 5000, 'rec');
-      if (this.oldApp()) return toast('Update the MKCinema app to record TV: Settings › About › Check for updates.', 'info', 7000, 'rec');
+      if (this.oldApp()) return toast('Update the MKCinema app to record TV: Settings › Updates.', 'info', 7000, 'rec');
       const stopAt = o.kind === 'catchup' ? 0 : Math.min(o.stopAt || Infinity, now() + MAX_H * 3600e3);
       if (this.nat()) {
         let id = '';
@@ -331,7 +343,13 @@
         this.tick(); return id;
       }
       if (this.jobs.size >= 3) return toast('Three recordings are already running here. Stop one first.', 'info', 5000, 'rec');
-      if ([...this.jobs.values()].some((j) => j.r.url === o.url)) return toast(`${o.channel || o.name} is already recording.`, 'info', 4000, 'rec');
+      { // back-to-back programmes on one channel: the running recording keeps going until the later end
+        const same = [...this.jobs.values()].find((j) => j.r.url === o.url);
+        if (same) {
+          if (o.kind !== 'catchup' && same.r.stopAt && isFinite(stopAt) && stopAt > same.r.stopAt) { same.r.stopAt = Math.min(stopAt, same.r.started + MAX_H * 3600e3); this.persist(same.r); this.tick(); toast(`${o.channel || o.name} keeps recording until ${hm(same.r.stopAt)}.`, 'ok', 4000, 'rec'); return same.r.id; }
+          return toast(`${o.channel || o.name} is already recording.`, 'info', 4000, 'rec');
+        }
+      }
       // a quick check first, so a channel that can't be saved here says so straight away
       const r = { id: `r${now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, url: o.url, headers: o.headers || null, name: safe(o.name || o.channel), channel: o.channel || '', logo: o.logo || '', kind: o.kind || 'live', started: now(), stopAt: isFinite(stopAt) ? stopAt : 0, bytes: 0, parts: [], disk: Disk.ok(), state: 'rec', why: '', ext: '' };
       if (!(await Net.routes(r.url, r.headers)).length) return this.cant(r, this.blockedWhy(r.url));
@@ -401,11 +419,15 @@
     looping: false,
     async loop() {
       if (this.looping) return; this.looping = true;
+      if (navigator.locks && typeof navigator.locks.request === 'function') { navigator.locks.request('mk-rec-plans', () => this.loopRun()).catch(() => { this.looping = false; }); return; }
+      return this.loopRun();
+    },
+    async loopRun() {
       try {
         for (;;) {
           const l = ls.get(this.KP, []), t = now(); let changed = false;
           for (const p of l.slice()) {
-            if (p.end + POST <= t) { l.splice(l.indexOf(p), 1); changed = true; if (!p.began) toast(`${p.name} on ${p.channel} wasn’t recorded: MKCinema was closed when it was on.`, 'info', 8000, `recm${p.id}`); continue; }
+            if (p.end + POST <= t) { l.splice(l.indexOf(p), 1); changed = true; if (!p.began && !p.nat) toast(`${p.name} on ${p.channel} wasn’t recorded: MKCinema was closed when it was on.`, 'info', 8000, `recm${p.id}`); continue; }
             if (!p.began && p.start - PRE <= t) { p.began = true; if (p.nat) { changed = true; continue; } changed = true; this.start({ url: p.url, headers: p.headers, name: p.name, channel: p.channel, logo: p.logo, kind: 'live', stopAt: p.end + POST }); }
           }
           const keep = l.filter((p) => !(p.began && p.end + POST <= t));
@@ -418,7 +440,7 @@
 
     /* ---------- the sheet that starts one ---------- */
     offer(c, prog) {
-      if (this.oldApp()) return toast('Update the MKCinema app to record TV: Settings › About › Check for updates.', 'info', 7000, 'rec');
+      if (this.oldApp()) return toast('Update the MKCinema app to record TV: Settings › Updates.', 'info', 7000, 'rec');
       const d = C.data.get(c.list), t = now();
       const cur = prog && prog.start > t ? null : ((d && d.epg && d.epg.get(C.key(c))) || []).find((p) => p.start <= t && t < p.end);
       X8.layer('recNew', { label: 'Record', icon: 'tv', eyebrow: 'Recording' });
@@ -490,11 +512,11 @@
       const natAll = this.natList();
       const plans = this.plans();
       const doneWeb = this.list().filter((x) => !this.jobs.has(x.id));
-      const row = (logo, title, sub, act, bad) => `<div class="rec-row">${logo ? `<img src="${esc(logo)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-gone>` : ''}<span class="rec-tx"><b>${esc(title)}</b><small class="${bad ? 'bad' : ''}">${sub}</small></span><span class="rec-act">${act}</span></div>`;
+      const row = (logo, title, sub, act, bad, lv) => `<div class="rec-row">${logo ? `<img src="${esc(logo)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-gone>` : ''}<span class="rec-tx"><b>${esc(title)}</b><small class="${bad ? 'bad' : ''}"${lv ? ` data-rlv="${esc(lv)}"` : ''}>${sub}</small></span><span class="rec-act">${act}</span></div>`;
       const btn = (attr, icon, label, prime) => `<button class="btn ${prime ? 'btn-prime' : 'btn-ghost'} btn-sm" type="button" data-nav ${attr}>${icon === 'dot' ? '<span class="rec-dot"></span>' : `<i data-lucide="${icon}"></i>`}${esc(label)}</button>`;
       const live = [
-        ...runningWeb.map((r) => row(r.logo, r.channel && r.channel !== r.name ? `${r.name} · ${r.channel}` : r.name, `<span class="rec-dot"></span> ${esc(dur(t - r.started))} · ${esc(fmtBytes(r.bytes) || 'starting')}${r.stopAt ? ` · stops at ${esc(hm(r.stopAt))}` : ''}`, btn(`data-rstop="${esc(r.id)}"`, 'square', 'Stop'))),
-        ...natAll.filter((d) => d.state === 'running' || d.state === 'queued').map((d) => row((d.meta || {}).poster, (d.meta || {}).name || d.file, `<span class="rec-dot"></span> ${esc(fmtBytes(d.got) || 'starting')}${d.stopAt ? ` · stops at ${esc(hm(d.stopAt))}` : ''}`, btn(`data-rstop="${esc(d.id)}"`, 'square', 'Stop'))),
+        ...runningWeb.map((r) => row(r.logo, r.channel && r.channel !== r.name ? `${r.name} · ${r.channel}` : r.name, `<span class="rec-dot"></span> ${esc(dur(t - r.started))} · ${esc(fmtBytes(r.bytes) || 'starting')}${r.stopAt ? ` · stops at ${esc(hm(r.stopAt))}` : ''}`, btn(`data-rstop="${esc(r.id)}"`, 'square', 'Stop'), false, r.id)),
+        ...natAll.filter((d) => d.state === 'running' || d.state === 'queued').map((d) => row((d.meta || {}).poster, (d.meta || {}).name || d.file, `<span class="rec-dot"></span> ${esc(fmtBytes(d.got) || 'starting')}${d.stopAt ? ` · stops at ${esc(hm(d.stopAt))}` : ''}`, btn(`data-rstop="${esc(d.id)}"`, 'square', 'Stop'), false, d.id)),
       ];
       const soon = plans.map((p) => row(p.logo, p.name, `${esc(p.channel)} · ${esc(day(p.start))} ${esc(hm(p.start))}–${esc(hm(p.end))}${p.began ? ' · recording' : ''}`, p.began ? '' : btn(`data-rplan="${esc(p.id)}"`, 'x', 'Cancel')));
       const saved = nat
@@ -504,12 +526,16 @@
           const sub = gone ? 'Kept only while that tab was open' : x.state === 'failed' ? `Didn’t record: ${esc(x.why || 'nothing arrived')}` : `${esc(day(x.started))} ${esc(hm(x.started))} · ${esc(fmtBytes(x.bytes))}${x.ended ? ` · ${esc(dur(x.ended - x.started))}` : ''}${lost ? ' · cut short when the tab closed' : x.why ? ` · ended early: ${esc(x.why)}` : ''}`;
           return row(x.logo, x.channel && x.channel !== x.name ? `${x.name} · ${x.channel}` : x.name, sub, `${!gone && x.bytes > 0 ? btn(`data-rsave="${esc(x.id)}"`, 'download', 'Save file', true) : ''}${btn(`data-rdel="${esc(x.id)}"`, 'trash-2', 'Delete')}`, x.state === 'failed' || gone);
         });
-      b.innerHTML = `<h3 class="x8-h">Recordings</h3>
+      const html = `<h3 class="x8-h">Recordings</h3>
         ${live.length ? `<p class="rec-sec">Recording now</p>${live.join('')}` : ''}
         ${soon.length ? `<p class="rec-sec">Coming up</p>${soon.join('')}` : ''}
         ${saved.length ? `<p class="rec-sec">${nat ? 'On this device' : 'In this browser'}</p>${saved.join('')}` : ''}
         ${!live.length && !soon.length && !saved.length ? '<div class="empty" style="margin:12px 0">Nothing recorded yet. Press the red dot while a channel plays, or pick a programme later in the guide.</div>' : ''}
         <p class="tour-note" style="margin-top:14px">${nat ? 'Recordings are saved on this device and play from Library › Downloads too. They are yours: MKCinema never sees or keeps them.' : 'Recordings stay in this browser until you save them as a file (they play in VLC) or delete them. They never leave your device.'}</p>`;
+      // only the running numbers changed: update them in place, so focus, a half-confirmed Delete and presses survive
+      const LV = /<small class="[^"]*" data-rlv="([^"]*)">([\s\S]*?)<\/small>/g, key = html.replace(LV, '<small data-rlv="$1"></small>');
+      if (!force && key === this.listKey && b.querySelector('.rec-row')) { const lv = $$('[data-rlv]', b); let i = 0; html.replace(LV, (m, id, inner) => { const x = lv[i++]; if (x && x.innerHTML !== inner) x.innerHTML = inner; return m; }); return; }
+      this.listKey = key; b.innerHTML = html;
       icons();
       $$('[data-rstop]', b).forEach((x) => x.addEventListener('click', () => { this.stop(x.dataset.rstop); setTimeout(() => this.paint(), 400); }));
       $$('[data-rplan]', b).forEach((x) => x.addEventListener('click', () => { const id = x.dataset.rplan; if (nat) { try { MKAndroid.recUnplan(String(id)); } catch (e) { /* older app */ } } this.savePlans(this.plans().filter((p) => p.id !== id)); this.paint(); }));
@@ -548,6 +574,7 @@
       l.forEach((x) => { if (x.state === 'rec') { x.state = x.bytes > 0 || (x.parts || []).length ? 'done' : 'failed'; x.why = x.why || 'MKCinema was closed while it recorded'; ch = true; } });
       if (ch) ls.set(this.K, l);
       // parts on disk carry their real size
+      Disk.probe();
       if (Disk.ok()) this.list().filter((x) => x.disk && x.parts.length).forEach(async (x) => { try { let n = 0; for (const p of x.parts) n += (await Disk.file(p)).size; if (n !== x.bytes) { const all = this.list(); const y = all.find((z) => z.id === x.id); if (y) { y.bytes = n; if (!n) { y.state = 'failed'; y.why = y.why || 'nothing was saved'; } ls.set(this.K, all); this.paint(); } } } catch (e) { /* a part is gone */ } });
       // a planned recording that was under way when the tab closed starts again (the Android app keeps its own going)
       if (!this.nat()) { const pl = ls.get(this.KP, []); pl.forEach((p) => { if (p.began && p.end + POST > now()) p.began = false; }); ls.set(this.KP, pl); }

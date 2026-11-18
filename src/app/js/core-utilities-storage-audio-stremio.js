@@ -6,7 +6,13 @@
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+/* older TV browsers (Chromium before 80) cannot read ?. or ??, which would stop the whole script: qq(a, b) is a ?? b */
+function qq(a, b) { return a !== null && a !== undefined ? a : b; }
+if (!String.prototype.matchAll) {
+  // Chromium before 73 (2019-2020 Samsung and LG TVs)
+  Object.defineProperty(String.prototype, 'matchAll', { configurable: true, writable: true, value(re) { const r = new RegExp(re.source, re.flags.indexOf('g') < 0 ? `${re.flags}g` : re.flags), out = []; let m; while ((m = r.exec(this))) { out.push(m); if (m[0] === '') r.lastIndex++; } return out[Symbol.iterator](); } });
+}
+const esc = (s) => String(qq(s, '')).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const hash = (s) => { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
@@ -58,7 +64,7 @@ const b64json = (obj) => btoa(unescape(encodeURIComponent(JSON.stringify(obj))))
 
 /* ---------------- Storage ---------------- */
 /* 2.8 Seats: the library keys below belong to the seat in use; the main seat keeps the plain keys */
-const SEAT_KEYS = ['watchlist', 'progress', 'watched', 'taste', 'recentSearches', 'bookmarks', 'slSkipped'];
+const SEAT_KEYS = ['watchlist', 'progress', 'watched', 'taste', 'recentSearches', 'bookmarks', 'slSkipped', 'pickMemo', 'music', 'ratings', 'sportsFollow', 'chSeatOff'];
 const SEAT = (() => { try { const v = localStorage.getItem('mkc:seat') || ''; return /^[a-z0-9]{4,16}$/.test(v) ? v : ''; } catch (e) { return ''; } })();
 const Store = {
   key(k) { return SEAT && SEAT_KEYS.includes(k) ? `mkc:seat:${SEAT}:${k}` : 'mkc:' + k; },
@@ -472,7 +478,8 @@ const CatSnap = {
     try { const c = await caches.open(this.C), r = await c.match(this.key(cat)); if (!r) return null; const j = await r.json(); return Array.isArray(j.metas) && Date.now() - (j.at || 0) < this.TTL ? j.metas : null; } catch (e) { return null; }
   },
   put(cat, metas) {
-    if (!window.caches || !metas || !metas.length) return;
+    if (!window.caches) return;
+    if (!metas || !metas.length) { caches.open(this.C).then((c) => c.delete(this.key(cat))).catch(() => {}); return; }
     const body = JSON.stringify({ at: Date.now(), metas: metas.slice(0, this.MAX).map((m) => this.slim(m)) });
     caches.open(this.C).then((c) => c.put(this.key(cat), new Response(body, { headers: { 'content-type': 'application/json' } }))).catch(() => {});
   },
@@ -506,9 +513,11 @@ class StremioEngine {
   }
   /* Polymorphic resources: ["stream"] or [{ name, types, idPrefixes }] */
   static resources(manifest) {
-    return (manifest.resources || []).map((r) => (typeof r === 'string'
+    const out = (Array.isArray(manifest.resources) ? manifest.resources : []).filter((r) => r && (typeof r === 'string' || r.name)).map((r) => (typeof r === 'string'
       ? { name: r, types: manifest.types || [], idPrefixes: manifest.idPrefixes || null }
       : { name: r.name, types: r.types || manifest.types || [], idPrefixes: r.idPrefixes || manifest.idPrefixes || null }));
+    if (Array.isArray(manifest.catalogs) && manifest.catalogs.length && !out.some((r) => r.name === 'catalog')) out.push({ name: 'catalog', types: [], idPrefixes: null });
+    return out;
   }
   static catalogExtras(cat) {
     if (Array.isArray(cat.extra)) return cat.extra.map((e) => (typeof e === 'string' ? { name: e } : e));
@@ -555,7 +564,20 @@ class StremioEngine {
     this.flight.set(url, p);
     return p;
   }
+  /* 2.73.6: some networks, ad blockers and Private DNS filters stop raw.githubusercontent.com, where many addons live.
+     jsDelivr serves the same files from GitHub, so a request there that got no answer at all tries that copy once. */
+  static mirror(url) {
+    const m = /^https:\/\/raw\.githubusercontent\.com\/([^/?#]+)\/([^/?#]+)\/(?:refs\/heads\/)?([^/?#]+)\/([^?#]+)$/i.exec(String(url || ''));
+    return m ? `https://cdn.jsdelivr.net/gh/${m[1]}/${m[2]}@${m[3]}/${m[4]}` : '';
+  }
   async fetchJson(url, timeout, tries = 2) {
+    try { return await this.fetchJson0(url, timeout, tries); } catch (e) {
+      const alt = StremioEngine.mirror(url);
+      if (!alt || !(e instanceof TypeError || (e && e.message === 'Timed out'))) throw e;
+      try { return await this.fetchJson0(alt, timeout, 1); } catch (e2) { throw e; }
+    }
+  }
+  async fetchJson0(url, timeout, tries = 2) {
     for (let i = 0; ; i++) {
       const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), timeout);
       try {
@@ -571,7 +593,7 @@ class StremioEngine {
     }
   }
   async call(addon, resource, type, id, extra) {
-    if (addon.virtual) return (await addon.handlers[resource]?.({ type, id, extra: extra || {} })) || {};
+    if (addon.virtual) return (addon.handlers[resource] ? await addon.handlers[resource]({ type, id, extra: extra || {} }) : undefined) || {};
     if (resource === 'catalog' && extra) {
       // send only the extras the catalog declares; a page or a search it cannot do is simply empty
       const decl = ((addon.manifest && addon.manifest.catalogs) || []).find((c) => c && c.id === id && c.type === type);
@@ -597,7 +619,7 @@ class StremioEngine {
   validate(manifest) {
     if (!manifest || typeof manifest !== 'object') throw new Error('The link did not return a manifest.');
     if (!manifest.id || !manifest.name) throw new Error('The manifest is missing an id or name.');
-    if (!Array.isArray(manifest.resources) || !manifest.resources.length) throw new Error('The manifest lists no resources.');
+    if ((!Array.isArray(manifest.resources) || !manifest.resources.length) && !(Array.isArray(manifest.catalogs) && manifest.catalogs.length)) throw new Error('The manifest lists no resources.');
     return manifest;
   }
   async install(input, { builtin = false, enabled = true, silent = false, position } = {}) {
@@ -687,6 +709,7 @@ class StremioEngine {
     return out;
   }
   async fetchCatalog(cat, extra = {}) {
+    if (cat && cat._fix) extra = { ...cat._fix, ...(extra || {}) };
     // an addon may send nulls, numbers as ids or no list at all: keep what is usable instead of failing the row
     const tidy = (r) => (Array.isArray(r && r.metas) ? r.metas : []).filter((m) => m && typeof m === 'object' && (typeof m.id === 'string' || typeof m.id === 'number') && String(m.id))
       .map((m) => ({ ...m, id: String(m.id), type: m.type || cat.type, _addon: cat.addon.manifest.name }));
@@ -742,10 +765,12 @@ class StremioEngine {
     if (best && best._tel.res) this.qualityCache.set(baseIdOf(id), [best._tel.res === '4K UHD' ? '4K' : best._tel.res, best._tel.hdr === 'Dolby Vision' ? 'DV' : best._tel.hdr ? 'HDR' : '', best._tel.audio.includes('Atmos') ? 'Atmos' : ''].filter(Boolean).join(' · '));
     return { streams: all, errors, addons: cands.length };
   }
-  pickBest(streams, { bingeGroup } = {}) {
+  pickBest(streams, { bingeGroup, memo } = {}) {
     // a source the debrid service has not cached yet only plays a "downloading" notice, so it is a last resort
     const ok = (s) => s._tel.cached !== false;
-    /* 2.26.1: never auto-pick a trailer */ if (bingeGroup) { const m = streams.find((s) => s.behaviorHints?.bingeGroup === bingeGroup && ok(s) && s._tel.webReady && !s._tel.isTrailer && !s.ytId); if (m) return m; }
+    /* 2.26.1: never auto-pick a trailer */ if (bingeGroup) { const m = streams.find((s) => (s.behaviorHints || {}).bingeGroup === bingeGroup && ok(s) && s._tel.webReady && !s._tel.isTrailer && !s.ytId); if (m) return m; }
+    /* 2.75: the addon and quality picked by hand for this show last time come first */
+    if (memo && memo.a) { const m = streams.find((s) => s._addon === memo.a && (!memo.r || s._tel.res === memo.r) && ok(s) && s._tel.webReady && !s._tel.isTrailer && !s.ytId); if (m) return m; }
     // a trailer is never a stand-in for the film: with no playable source the caller opens the source list instead
     const film = (s) => s._tel.webReady && !s._tel.isTrailer && !s.ytId;
     return streams.find((s) => film(s) && ok(s)) || streams.find(film) || null;

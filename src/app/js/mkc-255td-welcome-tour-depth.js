@@ -1,6 +1,6 @@
 
 /* ---------------- 2.55 Welcome tour, in depth ----------------
-   Drake (2026-11-07): the tour summed everything up on one screen and went to Home. Now every feature gets its own
+   Owner (2026-11-07): the tour summed everything up on one screen and went to Home. Now every feature gets its own
    screen between "Your player" and "From Stremio", in five chapters: Addons & sources, Watching, Discover, Together
    and Yours. Each screen has a small drawn preview of the feature, what it does, three points on how it works and
    where to find it. A contents screen comes first, and "Skip the features" (top bar) jumps to the setup part.
@@ -94,7 +94,7 @@ const TourDeep = {
         where: 'Menu › Discover' },
       { id: 'home', ch: 'discover', t: 'A Home that’s yours', art: 'home',
         lede: 'Continue watching, your watchlist, a Top 10 you can set by country, network, category or year, Peak Cinema, networks, Universes and rows from every addon.',
-        pts: [['rows-3', 'Arrange Home', 'Hide, move or rename any row, addon catalogs included. Each seat keeps its own.'], ['tv', 'Your apps', 'Pick the streaming services you already pay for. Their films get a Watch on button.'], ['film', 'Peak Cinema', 'Can’t decide? Surf ninety-second scenes by mood, then keep watching from that second. Needs a debrid service.']],
+        pts: [['palette', 'Layout Studio', 'Look, menu, card size, banner and rows in one place, with a live preview. Share your layout with a link.'], ['tv', 'Your apps', 'Pick the streaming services you already pay for. Their films get a Watch on button.'], ['film', 'Peak Cinema', 'Can’t decide? Surf ninety-second scenes by mood, then keep watching from that second. Needs a debrid service.']],
         where: 'Settings › Home' },
       { id: 'picks', ch: 'discover', t: 'Your Picks', art: 'picks',
         lede: 'A For you row worked out on this device from what you watch and the favorites you pick in a moment. Your taste never leaves it.',
@@ -111,7 +111,7 @@ const TourDeep = {
         where: 'Open any poster' },
       { id: 'live', ch: 'discover', t: 'Live TV and Split Screen', art: 'live',
         lede: 'Bring your own playlist, Xtream login or channel addons, with a full guide grid and search.',
-        pts: [['layout-grid', 'Split Screen', tv ? 'Two channels or streams at once. Sound follows the one you pick.' : 'Up to four channels or streams at once, two on phones. Sound follows the tile you pick.'], ['trophy', 'Sports', 'Live sports from your own sources, sorted by sport.'], ['radio', 'MK Channel', 'Switch on and something is already playing, made from your progress and watchlist.'], ['clock', 'Record', 'Record a channel now, or pick a programme in the guide and it records when it starts.']],
+        pts: [['tv', 'Live TV with your remote', 'Up/Down or Channel +/- switch channels, typed numbers jump, and 0 goes back to the last channel.'], ['layout-grid', 'Split Screen', 'Pick two, three or four screens and place a film, show or channel in each. They load together and start at once.'], ['trophy', 'Live TV and Sports, one page', 'The next big game on top with a countdown and the games coming up. Channels and the sports in your sources are one tap apart.'], ['radio', 'MK Channel', 'Switch on and something is already playing, made from your progress and watchlist.'], ['clock', 'Record', 'Record a channel now, or pick a programme in the guide and it records when it starts.']],
         where: 'Live TV in the menu' },
       { id: 'anime', ch: 'discover', t: 'Anime', art: 'anime',
         lede: 'Its own section with Trending, Airing now, Most popular and Top rated, filled by your addons.',
@@ -127,7 +127,7 @@ const TourDeep = {
         pts: [['users', 'Only people you accept', 'Requests need your OK. Remove or block anyone, any time, without them being told.'], ['messages-square', 'A feed just for friends', 'Posts, moods, reactions, replies and @tags, seen only by friends you accepted.'], ['trophy', 'Profiles and trophies', 'A bio, four favourites and a trophy case. Friends see what you watch only if you share it.']],
         where: 'Social Hub, the speech-bubble button in the menu' },
       { id: 'remote', ch: 'together', t: 'Your phone is the remote', art: 'remote',
-        lede: 'Scan the TV’s code and your phone becomes a touchpad, keyboard and voice search. The TV asks before a new phone can take control.',
+        lede: 'Scan the TV’s code and your phone becomes the remote: a big D-pad, a keyboard and Miko. On Android, the free MK Remote app adds the volume buttons. The TV asks before a new phone can take control.',
         pts: [['headphones', 'Listen on phone', 'The film plays on the TV, the sound in your headphones.'], ['subtitles', 'Subtitles on your phone', 'Everyone reads their own language, in step with the TV.'], ['monitor-smartphone', 'Take it with you', 'Leaving the room? The film carries on on your phone at the same line.'], ['languages', 'Hear it in your language', 'A dub plays on your phone while the TV keeps its sound for the room.']],
         where: 'Settings › Devices' },
       { id: 'phoneinfo', ch: 'together', t: 'Cast and details on your phone', art: 'phoneinfo', when: () => has('RmInfo'),
@@ -162,9 +162,21 @@ const TourDeep = {
         logos: [['plex', 'Plex'], ['jellyfin', 'Jellyfin'], ['emby', 'Emby']],
         where: 'Library › Downloads · Settings › Media servers' },
       { id: 'looks', ch: 'yours', t: 'Make it look like yours', art: 'looks',
-        lede: 'Five looks, from Noir to Anime, and a colour wheel that tints the whole app.',
+        lede: 'Dark looks and light ones, from Noir to Daylight, and a colour wheel that tints the whole app.',
         pts: [['type', 'Fonts and text size', 'Nine type styles, and a size that reads well from the sofa.'], ['languages', 'Twelve languages', 'From English and Español to हिन्दी, Tamil and Samoan.'], ['blocks', 'Plugins & themes', 'A reviewed, signed gallery. Every file is checked before it runs.']],
         where: 'Settings › Appearance' },
+      { id: 'ambient', ch: 'yours', t: 'Your own Ambient Mode', art: 'ambient',
+        lede: tv ? 'When the TV rests, MKCinema fills it with films in slow 3D, or with your own photos sent from your phone.' : 'When the screen rests, MKCinema fills it with films in slow 3D, or with your own photos from this phone or computer.',
+        pts: [['gallery-horizontal', 'Your photos', tv ? 'Send them from your phone with a code. They stay on the TV, never online.' : 'Pick them from your gallery. They stay on this device, never online.'], ['wand-sparkles', 'Your effects', 'Slow drift or 3D depth, dust, fog or embers, colour, film grain and the clock.'], ['monitor-play', 'Try it first', 'See it full screen before you save.']],
+        where: 'Settings › Home › Ambient Studio' },
+      { id: 'music', ch: 'discover', t: 'A Music room for the house', art: 'music',
+        lede: 'Charts, artists and albums, live radio from around the world, and synced lyrics on a big Now Playing screen. Music keeps playing while you browse.',
+        pts: [['server', 'Your own music in full', 'From your Plex, Jellyfin, Emby or Navidrome server, or files on this device.'], ['radio', 'Live radio', 'Thousands of stations, playing their own streams.'], ['mic-vocal', 'Lyrics that follow along', 'Line by line, in time with the song.']],
+        where: 'Music, in the main menu' },
+      { id: 'scores', ch: 'discover', t: 'Scores and tables', art: 'scores',
+        lede: 'Twenty-two leagues with game pages, league tables and your own teams first, plus a switch that hides every score.',
+        pts: [['star', 'Follow your teams', 'Their games come first, with score alerts while MKCinema is open.'], ['table', 'League tables', 'Football, basketball, hockey, baseball and more.'], ['eye-off', 'Hide scores', 'Watch it later without spoilers.']],
+        where: 'Live TV › Scores and tables' },
     ];
     return F.filter((f) => !f.when || f.when());
   },
@@ -206,7 +218,9 @@ const TourDeep = {
     if (typeof TOUR === 'undefined' || typeof Tour240 === 'undefined' || this._on) return;
     const at = TOUR.findIndex((s) => s.id === 'inside'); if (at < 0) return;
     this._on = true;
-    const list = this.list(), self = this;
+    // screens in chapter order (the order the contents screen shows), keeping each chapter's own order
+    const order = this.CH.map(([k]) => k), rank = (f) => { const r = order.indexOf(f.ch); return r < 0 ? order.length : r; };
+    const list = this.list().map((f, i) => [f, i]).sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1]).map(([f]) => f), self = this;
     const steps = [{ id: 'td-map', html: () => this.map(list) }].concat(list.map((f) => {
       const same = list.filter((x) => x.ch === f.ch);
       return { id: `td-${f.id}`, td: f, html: () => self.screen(f, same.indexOf(f) + 1, same.length) };

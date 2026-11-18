@@ -14,7 +14,8 @@ const People = {
     l = String(l).replace('_', '-'); const m = l.match(/^([a-z]{2})(?:-([a-z]{2}))?/i); if (!m) return 'en-US';
     return m[2] ? `${m[1].toLowerCase()}-${m[2].toUpperCase()}` : m[1].toLowerCase();
   },
-  norm: (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ''),
+  // letters of every script are kept (Japanese, Korean, Cyrillic... names used to all become empty and match each other)
+  norm: (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ''),
   ownKey: () => { try { return String(Keys.get().tmdb || '').trim(); } catch (e) { return ''; } },
   /* ---- data: the viewer's own key first, then MKCinema's function ---- */
   async relay(a, params) {
@@ -58,13 +59,13 @@ const People = {
       try {
         if (!this.castCache.has(tt)) this.castCache.set(tt, this.api('cast', { tt }).catch(() => null));
         const list = ((await this.castCache.get(tt)) || {}).people || [];
-        const hit = list.find((x) => this.norm(x.name) === n && (role === 'cast' ? x.character !== undefined : x.department || x.job)) || list.find((x) => this.norm(x.name) === n);
+        const hit = n && list.find((x) => this.norm(x.name) === n && (role === 'cast' ? x.character !== undefined : x.department || x.job)) || (n && list.find((x) => this.norm(x.name) === n));
         if (hit && hit.id) return hit.id;
       } catch (e) { /* search by name below */ }
     }
     const j = await this.api('search', { q: name }); const res = (j && j.results) || [];
     const want = role === 'cast' ? 'Acting' : role === 'Director' ? 'Directing' : 'Writing';
-    const exact = res.filter((x) => this.norm(x.name) === n);
+    const exact = n ? res.filter((x) => this.norm(x.name) === n) : [];
     const pick = exact.find((x) => x.known_for_department === want) || exact[0] || res[0];
     return pick ? pick.id : 0;
   },
@@ -190,7 +191,10 @@ const People = {
     const d = this.cur && this.cur.data; if (!d) return;
     const kind = btn.dataset.cpk, id = Number(btn.dataset.cpi);
     const c = Object.values(d.groups).flat().find((x) => x.kind === kind && x.id === id); if (!c) return;
-    btn.classList.add('busy');
+    if (this.picking) return;   // a double tap opens it once
+    // the pick is dropped if the person page closed (Back) or showed someone else meanwhile
+    const cur0 = this.cur, gone = () => this.cur !== cur0 || !$('#personLayer') || $('#personLayer').hidden;
+    this.picking = true; btn.classList.add('busy');
     try {
       const key = `${kind}/${id}`;
       if (!this.idsCache.has(key)) this.idsCache.set(key, this.api('ids', { kind, id: String(id) }).then((j) => (j && j.imdb_id) || '').catch(() => ''));
@@ -199,9 +203,10 @@ const People = {
       if (!seed) {
         const y = this.year(c.date), want = this.norm(c.title); let found = null;
         const res = await engine.search(c.title).catch(() => []);
-        res.forEach(({ metas }) => (metas || []).forEach((m) => { if (!found && m.type === type && this.norm(m.name) === want && (!y || String(m.releaseInfo || m.year || '').includes(y))) found = m; }));
+        res.forEach(({ metas }) => (metas || []).forEach((m) => { if (!found && want && m.type === type && this.norm(m.name) === want && (!y || String(m.releaseInfo || m.year || '').includes(y))) found = m; }));
         seed = found;
       }
+      if (gone()) return;
       if (!seed) { toast(`${c.title} isn’t in your catalogs yet`, 'info'); return; }
       if (!seed.poster && c.poster) seed.poster = this.img(c.poster, 'w342');
       if (!seed.background && c.backdrop) seed.background = this.img(c.backdrop, 'w1280');
@@ -211,7 +216,7 @@ const People = {
       if (this.trail.length > 12) this.trail.shift();
       this.leaving = true; try { X8.close('personLayer'); } finally { this.leaving = false; }
       openDetail(remember(seed));
-    } finally { btn.classList.remove('busy'); }
+    } finally { this.picking = false; btn.classList.remove('busy'); }
   },
   /* Back on a title opened from a person page: the person page again, over the title it was opened from */
   canReturn() {

@@ -53,7 +53,10 @@ const Offline = {
     if (!this.api) return;
     const meta = this.recMeta(ctx, s);
     const dup = this.recs.find((r) => r.meta && r.meta.key === meta.key && r.state !== 'failed');
-    if (dup) { toast(dup.state === 'done' ? 'Already downloaded. It’s in Library › Downloads.' : 'Already downloading. It’s in Library › Downloads.', 'info', 4000, 'dl'); return; }
+    if (dup || (this.starting || (this.starting = new Set())).has(meta.key)) { toast(dup && dup.state === 'done' ? 'Already downloaded. It’s in Library › Downloads.' : 'Already downloading. It’s in Library › Downloads.', 'info', 4000, 'dl'); return; }
+    // counts as downloading from the first tap until the list knows it (a second tap meanwhile does nothing)
+    this.starting.add(meta.key);
+    try {
     let url = s.url;
     if (!url) {
       toast('Getting the download link…', 'info', 4000, 'dl');
@@ -69,7 +72,8 @@ const Offline = {
       await this.api.start({ url, headers, file, subUrl, wifiOnly: this.api.platform === 'android' && CFG.dlWifiOnly !== false, meta });
       toast(`Downloading ${meta.name}${meta.season != null ? ` S${meta.season} E${meta.episode}` : ''}. Find it in Library › Downloads.`, 'ok', 5000, 'dl');
     } catch (e) { toast(`Download: ${e.message || e}`, 'err', 7000, 'dl'); }
-    this.refresh();
+    await this.refresh();
+    } finally { this.starting.delete(meta.key); }
   },
   async refresh() {
     if (!this.api) return;

@@ -146,7 +146,9 @@ const Social = {
   stop() { this.mine = null; this.feed = []; this.feedAt = 0; this.view = null; this.viewCard = null; this.pubSig = ''; },
   /* send my card. Seat-based parts (trophies, history, stats) are only worked out on the sharing seat. */
   async publish(force, change) {
-    if (!this.ready() || this.busy) return;
+    if (!this.ready()) return;
+    // a forced send (sharing switch, profile save) waits for one already running instead of being dropped
+    while (this.busy) { if (!force) return; try { await this.busyP; } catch (e) { /* that send's own error */ } }
     if (!this.mine) { try { this.mine = await this.rpc('mkc_card', { other: Friends.me.id }); } catch (e) { return; } }
     const mine = this.mine || {}, share = CFG.socShare === true, seat = this.seatOk();
     let tro = {}, stats = mine.stats || null, recent = mine.recent || null;
@@ -161,8 +163,8 @@ const Social = {
     const body = Object.assign({ p_bio: mine.bio || '', p_favs: mine.favs || [], p_trophies: tro, p_show_trophies: CFG.socTrophies !== false, p_share: share, p_stats: share ? stats : null, p_recent: share ? recent : null }, change || {});
     const sig = JSON.stringify([body.p_bio, body.p_favs, Object.keys(body.p_trophies).sort(), body.p_show_trophies, body.p_share, body.p_stats && [body.p_stats.m, body.p_stats.y, body.p_stats.cur], body.p_recent && body.p_recent.map((x) => [x.t, x.ep, x.n])]);
     if (!force && sig === this.pubSig && Date.now() - this.pubAt < 6 * 3600e3) return;
-    this.busy = true;
-    try { this.mine = await this.rpc('mkc_card_set', body); this.pubSig = sig; this.pubAt = Date.now(); }
+    this.busy = true; const job = this.busyP = this.rpc('mkc_card_set', body);
+    try { this.mine = await job; this.pubSig = sig; this.pubAt = Date.now(); }
     catch (e) { if (force) throw e; }
     finally { this.busy = false; }
   },
@@ -338,8 +340,10 @@ const Social = {
     let h = this.hidden();
     if (!key) h = []; else if (!h.includes(key)) h = [key, ...h].slice(0, 300);
     Store.raw.set('socHide', h);
-    this.publish(true).catch(() => {}).then(() => this.paintYou($('#socPane')));
-    const d = $('.soc-hide'); if (d) d.open = true;
+    this.publish(true).catch(() => {}).then(() => {
+      if (this.tab !== 'you' || !$('#socPane')) return;   // the person moved to another tab meanwhile
+      this.paintYou($('#socPane')); const d = $('.soc-hide'); if (d) d.open = true;   // the list stays open after the redraw
+    });
   },
   /* the hub on your phone: a QR code to the same page. Everything syncs with your account. */
   phoneHtml() {

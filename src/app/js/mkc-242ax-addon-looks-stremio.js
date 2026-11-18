@@ -25,7 +25,8 @@ const AddonUI = {
   txt(v, n, what) {
     if (typeof v !== 'string' && typeof v !== 'number') { if (v != null && what) this.w(`${what}: not text, dropped`); return ''; }
     // control characters and bidi overrides out (they can disguise text), then trim to the limit
-    const t = String(v).replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁠-⁩﻿]/g, '').replace(/\s+/g, ' ').trim();
+    // line breaks and tabs become spaces first, so "ends here.\nNext" keeps its space
+    const t = String(v).replace(/[\t\n\r\v\f]+/g, ' ').replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁠-⁩﻿]/g, '').replace(/\s+/g, ' ').trim();
     if (what && t.length > n) this.w(`${what}: cut to ${n} characters`);
     return t.slice(0, n);
   },
@@ -393,7 +394,7 @@ const AddonUI = {
     engine.fetchMeta = async function () { const r = await fm.apply(this, arguments); if (!r || !('mkcinema' in r)) return r; const a = (this.addons || []).find((x) => x.manifest && x.manifest.name === r._addon); return AddonUI.clean(r, a); };
     // 2. badges on any poster that carries them (not on progress cards)
     const ch = cardHTML;
-    cardHTML = function (m, o) { const h = ch.apply(this, arguments); return m && m._mkx && !(o && o.progress) ? h.replace('<button class="orb"', `${AddonUI.badgesHTML(m)}<button class="orb"`) : h; };
+    cardHTML = function (m, o) { const h = ch.apply(this, arguments); return m && m._mkx && !(o && o.progress) ? h.replace(/<button class="orb"|<!--orb-->/, (o) => `${AddonUI.badgesHTML(m)}${o}`) : h; };
     // 3. episode badges wherever an episode list is drawn (film page, the phone episode sheet)
     const eh = episodesHTML;
     episodesHTML = function () { const h = eh.apply(this, arguments); if (!AddonUI.detail.size) return h; const box = document.createElement('div'); box.innerHTML = h; AddonUI.paintEpisodes(box); return box.innerHTML; };

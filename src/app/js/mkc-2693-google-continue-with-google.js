@@ -165,6 +165,62 @@
     finally { pkceClear(); }
   };
   { const m = /[#&]mkauth=([^&]+)/.exec(location.hash || ''); if (m) { history.replaceState(null, '', location.pathname + location.search); setTimeout(() => window.MKAuthDone(decodeURIComponent(m[1])), 600); } }
+  /* iPhone/iPad home-screen app (2.69.7): Google opens over the app and comes straight back, no Safari detour and no
+     check number. Leaving the app's address opens Apple's in-app browser; the way back (app.mkcinema.app/?gret=…&code=…)
+     normally lands in the home-screen app itself, which holds the PKCE verifier and finishes here. If iOS keeps the
+     return in its in-app browser instead (separate storage, no verifier), that page passes the code to the waiting app
+     over a one-off channel. A code is useless without the verifier, which never leaves the app. */
+  const GRET = 'mkc:gret';
+  const pkceHere = () => { try { return Object.keys(localStorage).some((k) => k.indexOf(PK) === 0); } catch (e) { return false; } };
+  const gretListen = (id) => {
+    let done = false;
+    const bus = new Bus(`gret-${id}`, (m) => {
+      if (done || !m || m.t !== 'code' || !m.code) return;
+      done = true; bus.send({ t: 'ok' });
+      setTimeout(() => bus.close(), 1500);
+      window.MKAuthDone(`mkcinema://auth?code=${encodeURIComponent(m.code)}`);
+    });
+    bus.connect();
+    const wake = () => { if (!done && document.visibilityState === 'visible' && !bus.online) bus.reconnect(); };
+    document.addEventListener('visibilitychange', wake); window.addEventListener('focus', wake);
+    setTimeout(() => { if (!done) { done = true; bus.close(); } }, 10 * 60000);
+  };
+  A.googleIOS = async function () {
+    const tmp = await pkce(), id = rid(24);
+    const { data, error } = await tmp.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `https://${location.host}/?gret=${id}`, skipBrowserRedirect: true, queryParams: { prompt: 'select_account' } } });
+    if (error) throw error;
+    if (!data || !data.url) throw new Error('Could not reach Google. Check the connection and try again.');
+    try { localStorage.setItem(GRET, JSON.stringify({ id, at: Date.now() })); } catch (e) { /* blocked */ }
+    gretListen(id);
+    location.assign(data.url);
+    return '';
+  };
+  {
+    const q = new URLSearchParams(location.search), id = q.get('gret');
+    if (id && /^[a-z0-9]{24}$/.test(id)) {
+      const code = q.get('code'), bad = q.get('error_description');
+      history.replaceState(null, '', location.pathname + location.hash);
+      if (pkceHere() || bad) { // back in the home-screen app: finish here
+        try { localStorage.removeItem(GRET); } catch (e) { /* blocked */ }
+        setTimeout(() => window.MKAuthDone(`mkcinema://auth?${code ? `code=${encodeURIComponent(code)}` : `error_description=${encodeURIComponent(bad || '')}`}`), 600);
+      } else if (code) { // Apple's in-app browser: hand the code to the app underneath
+        setTimeout(async () => {
+          handLayer('<h2>Finishing sign-in…</h2><p class="sub" id="gl-msg">Passing your Google sign-in to the MKCinema app.</p>');
+          let ok = false;
+          const bus = new Bus(`gret-${id}`, (m) => { if (m && m.t === 'ok') ok = true; });
+          await bus.connect();
+          const t0 = Date.now();
+          while (!ok && Date.now() - t0 < 3 * 60000) {
+            bus.send({ t: 'code', code });
+            if (Date.now() - t0 > 4000) { const el = $('#gl-msg'); if (el) el.textContent = 'Tap Done at the top to go back to MKCinema. It finishes signing in there.'; }
+            await new Promise((res) => setTimeout(res, 1500));
+          }
+          bus.close();
+          handLayer(ok ? '<h2>You’re signed in</h2><p class="sub">Tap Done at the top to go back to MKCinema.</p>' : '<h2>Could not finish</h2><p class="sub">Go back to the MKCinema app and tap Continue with Google again.</p>');
+        }, 400);
+      }
+    }
+  }
   A.signInGoogle = function (direct) {
     const mode = direct ? 'direct' : this.googleMode();
     if (mode === 'tv') { // the phone does the Google part
@@ -174,6 +230,7 @@
     }
     if (mode === 'android') return this.run('Continue with Google', () => this.googleAndroid());
     if (mode === 'desktop') return this.googleDesktop();
+    if (mode === 'safari') return this.run('Continue with Google', () => this.googleIOS());
     if (mode !== 'direct') return this.run('Continue with Google', () => this.googleHandoff());
     return this.run('Continue with Google', async () => {
       const back = `${location.origin}${location.pathname}`;

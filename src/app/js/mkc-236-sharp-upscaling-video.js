@@ -21,7 +21,7 @@ const PxUp = {
   live: false, shown: false, h: 0, raf: 0, state: 'off', why: '', blocked: false, forcing: false, taint: null,
   guard: { t: 0, last: null, strikes: 0 }, box: null, subKey: '',
   mode() { const m = CFG.pxUp; return this.SHARP[m] != null ? m : 'off'; },
-  on() { return !PX_TV && this.mode() !== 'off' && !this.blocked; },
+  on() { return !PX_TV && this.mode() !== 'off' && !this.blocked && !(window.MkNative && MkNative.active); },
   /* ---------- WebGL ---------- */
   init() {
     if (this.gl) return true; if (this.gl === false) return false;
@@ -212,7 +212,7 @@ const PxUp = {
 {
   /* load direct files CORS-readable while upscaling is on, but only from hosts that allow it: routing never changes */
   const wants = DSP.wants.bind(DSP), prep = DSP.prepare.bind(DSP);
-  DSP.wants = function () { return wants() || PxUp.forcing; };
+  DSP.wants = function () { return wants() || PxUp.forcing || (typeof PartyGuest !== 'undefined' && PartyGuest.relaying()); };
   DSP.prepare = async function (s) {
     await prep(s);
     if (s._cors != null || !PxUp.on() || s._local || !s.url) return;

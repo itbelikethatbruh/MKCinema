@@ -109,8 +109,10 @@ const ScriptClock = {
   /* two lengths that differ by a frame-rate change (the 4 % PAL speed-up and friends) */
   fps(dFrom, dTo) {
     if (!(dFrom > 120 && dTo > 120)) return 1;
-    const r = dTo / dFrom; for (const k of SC_FPS) if (k !== 1 && Math.abs(r / k - 1) < 0.0025) return k;
-    return 1;
+    // the nearest rate wins, the same speed included: two copies of the same length are never treated as 23.976 vs 24
+    const r = dTo / dFrom; let best = 1, bd = Math.abs(r - 1);
+    for (const k of SC_FPS) { const d = Math.abs(r / k - 1); if (d < bd) { bd = d; best = k; } }
+    return bd < 0.0025 ? best : 1;
   },
   /* the script position right now, when it is known: for saving progress, notes and links */
   now() {
@@ -139,7 +141,7 @@ const ScriptClock = {
    script (the host's subtitle file), so a guest on a different release lands on the same line. No shared subtitle
    or no sure match: two lengths that differ by a frame-rate change are scaled; otherwise a nudge lines it up by hand. */
 const PartyLine = {
-  ref: '', manual: 0, map: null, mapFor: '', solving: false, status: '',
+  ref: '', refFor: '', manual: 0, map: null, mapFor: '', solving: false, status: '',
   myMap() {
     if (!this.ref || !P.stream) return null;
     const p = ScriptClock.pick(this.ref), sub = p && ScriptClock.subKey(p) === this.ref ? p : { url: this.ref, kind: 'url' };
@@ -174,13 +176,16 @@ const PartyLine = {
   init() {
     Party.broadcastState = function (reason) {
       if (!this.code || !P.ctx) return;
+      // a new episode or film needs its own reference subtitle
+      const mi = this.mediaInfo(), item = mi ? `${mi.metaId}|${mi.videoId || ''}` : '';
+      if (this.isHost() && PartyLine.refFor !== item) { PartyLine.ref = ''; PartyLine.refFor = item; PartyLine.mapFor = ''; }
       if (this.isHost() && !PartyLine.ref) { const s = ScriptClock.pick(); if (s) PartyLine.ref = ScriptClock.subKey(s); }
       const pos = pNow(), d = pDur();
       this.send({ t: 'state', reason, paused: video.paused, pos: pos - PartyLine.manual, rate: CFG.speed || 1, at: Date.now(), media: this.mediaInfo(), d: isFinite(d) ? Math.round(d * 100) / 100 : 0, ...(PartyLine.room(pos) || {}), ref: PartyLine.ref || '' });
     };
     Party.applyState = async function (st) {
       if (!st.media) return;
-      if (st.ref && st._from === this.hostId && st.ref !== PartyLine.ref) { PartyLine.ref = st.ref; PartyLine.mapFor = ''; }
+      if (st._from === this.hostId && (st.ref || '') !== PartyLine.ref) { PartyLine.ref = st.ref || ''; PartyLine.mapFor = ''; }
       const mine = this.mediaInfo(), off = this.offsets.get(st._from) || 0;
       const elapsed = st.paused ? 0 : Math.max(0, (Date.now() + off - st.at) / 1000) * (st.rate || 1);
       if (!mine || mine.metaId !== st.media.metaId || mine.videoId !== st.media.videoId) { PartyLine.manual = 0; await this.loadMedia(st.media, st.pos + elapsed); return; }
@@ -209,7 +214,7 @@ const PartyLine = {
       });
     };
     const lv = Party.leave.bind(Party);
-    Party.leave = function () { PartyLine.ref = ''; PartyLine.manual = 0; PartyLine.status = ''; return lv.apply(Party, arguments); };
+    Party.leave = function () { PartyLine.ref = ''; PartyLine.refFor = ''; PartyLine.manual = 0; PartyLine.status = ''; return lv.apply(Party, arguments); };
   },
 };
 
@@ -248,6 +253,8 @@ const Land = {
   },
   arrived() {
     const L = this.pending; if (!L || L.stream !== P.stream) return;
+    // time is counted from when the film really starts playing, not from when it was asked for
+    if (!L.began) { if (!video.paused && video.readyState >= 3) L.began = Date.now(); else video.addEventListener('playing', () => { if (!L.began) L.began = Date.now(); }, { once: true }); }
     const d = pDur(); if (!isFinite(d)) return;
     const k = ScriptClock.fps(L.d, d);
     if (k !== 1 && Math.abs(pNow() - L.at) < 30) {
@@ -266,7 +273,7 @@ const Land = {
     const m = await ScriptClock.solve(sub, { wait: 20000 });
     if (!m || P.stream !== L.stream || this.pending !== L) return;
     this.pending = null;
-    const want = ScriptClock.toVideo(L.ss, m), ran = video.paused ? 0 : (Date.now() - L.set) / 1000;
+    const want = ScriptClock.toVideo(L.ss, m), ran = video.paused || !L.began ? 0 : (Date.now() - L.began) / 1000;
     const expect = L.at + ran;
     // only when the viewer has not moved since it started
     if (Math.abs(pNow() - expect) > 6) return;
@@ -280,7 +287,8 @@ const Land = {
 /* ---------------- 3 Find a line ---------------- */
 const Lines = {
   ctx: null, list: [], q: '',
-  norm: (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9Ѐ-ӿ؀-ۿऀ-ॿ぀-ヿ一-鿿 ]+/g, ' ').replace(/\s+/g, ' ').trim(),
+  // letters of every script are kept, so Korean, Greek, Hebrew, Thai... can be searched too
+  norm: (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\p{L}\p{N}\p{M} ]+/gu, ' ').replace(/\s+/g, ' ').trim(),
   layer() {
     const el = X8.layer('findLine', { label: 'Find a line', icon: 'search', eyebrow: 'Find a line', wide: true });
     return el;
@@ -341,7 +349,10 @@ const Lines = {
       if (exact || words.every((w) => t.includes(w))) found.push({ c, x: exact ? 1 : 0 });
     }
     const hits = found.sort((a, b) => b.x - a.x || a.c.s - b.c.s).slice(0, 40).map((h) => h.c);
-    const mark = (txt) => { let h = esc(txt); words.filter((w) => w.length > 1).forEach((w) => { h = h.replace(new RegExp(`(${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig'), '<mark>$1</mark>'); }); return h; };
+    // every word is marked in one pass over the plain text, so a later word never lands inside an earlier <mark>
+    const ws = [...new Set(words.filter((w) => w.length > 1))].sort((x, y) => y.length - x.length).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const re = ws.length ? new RegExp(`(${ws.join('|')})`, 'ig') : null;
+    const mark = (txt) => (re ? String(txt).split(re).map((part, k) => (k % 2 ? `<mark>${esc(part)}</mark>` : esc(part))).join('') : esc(txt));
     box.innerHTML = hits.length ? hits.map((c, i) => `<button type="button" class="fl-row" data-nav data-fl="${i}"><span class="tnum">${fmtTime(c.s)}</span><span>${mark(c.t)}</span><i data-lucide="play"></i></button>`).join('')
       : '<p class="sc-p">No line with those words. Try fewer words, or another spelling.</p>';
     icons();
@@ -365,7 +376,7 @@ const Lines = {
 const PhoneSubs = {
   list() {
     const seen = new Set();
-    return (P.subs || []).map((s, i) => ({ s, i })).filter(({ s }) => s.kind === 'url' && /^https?:/i.test(s.url || ''))
+    return (P.subs || []).map((s, i) => ({ s, i })).filter(({ s }) => s.kind === 'url' && !s._tr && /^https?:/i.test(s.url || ''))   // a translated entry is the original file until this screen translates it
       .filter(({ s }) => { const k = `${langName(s.lang)}|${s._addon || ''}`; if (seen.has(k)) return false; seen.add(k); return true; })
       .map(({ s, i }) => ({ i, lang: langName(s.lang) || 'Unknown', code: String(s.lang || ''), from: s._addon || '' }));
   },
@@ -429,7 +440,8 @@ const LastTime = {
     const { list } = await ScriptClock.cues(); if (P.stream !== stream) return;
     // spoken in the four minutes before you stopped, nothing after
     const lines = list.filter((c) => c.e <= at + 0.5 && c.s >= at - 240).slice(-6);
-    if (lines.length < 2) return;
+    // only while the film is still near where it picked up (a late card would interrupt the film)
+    if (lines.length < 2 || Math.abs(pNow() - at) > 20) return;
     this.show(lines);
   },
   show(lines) {
@@ -439,7 +451,8 @@ const LastTime = {
     el.innerHTML = `<span class="lt-eye"><i data-lucide="history"></i>Last time</span><div class="lt-lines">${lines.map((c) => `<p>${esc(c.t)}</p>`).join('')}</div>
       <div class="inrow"><button class="btn btn-prime btn-sm" type="button" data-nav id="ltGo"><i data-lucide="play"></i>Carry on</button><button class="btn btn-ghost btn-sm" type="button" data-nav id="ltBack"><i data-lucide="rewind"></i>Rewind 1 min</button></div>`;
     icons(); el.hidden = false; requestAnimationFrame(() => el.classList.add('on'));
-    const go = (back) => { if (back) pSeek(Math.max(0, pNow() - 60)); this.hide(); video.play().catch(() => {}); wakeHud(); };
+    // playback starts again only if the card was what paused it
+    const go = (back) => { if (back) pSeek(Math.max(0, pNow() - 60)); this.hide(); if (was || back) video.play().catch(() => {}); wakeHud(); };
     $('#ltGo').onclick = () => go(false); $('#ltBack').onclick = () => go(true);
     if (IS_TV) setTimeout(() => Nav.focus($('#ltGo'), true), 60);
     this.t = setTimeout(() => { if ($('#lastTime') && !$('#lastTime').hidden) go(false); }, 25000);
@@ -638,7 +651,7 @@ const Couch = {
 
 /* ---------------- 8 Kids episode allowance ---------------- */
 const Allowance = {
-  day: () => new Date(Date.now() - 4 * 3600e3).toISOString().slice(0, 10), // the day turns over at 4 am
+  day: () => { const d = new Date(Date.now() - 4 * 3600e3); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }, // the day turns over at 4 am local time
   limit() { if (!Seats.kids()) return 0; const n = Number(Seats.cur().epLimit) || 0; return n > 0 ? n : 0; },
   state() { const s = Store.raw.get(`allow:${SEAT}`, null); return s && s.day === this.day() ? s : { day: this.day(), ids: [], extra: 0 }; },
   count() { return this.state().ids.length; },

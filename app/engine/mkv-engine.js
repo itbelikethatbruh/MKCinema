@@ -82,9 +82,10 @@
     ok: !!(MSEC && window.Worker && window.ReadableStream && window.AbortController),
     managed: MANAGED, tok: 0, active: false, stream: null, w: null, ms: null, url: '', info: null, gen: 0,
     sb: { v: null, a: null }, q: { v: [], a: [] }, busy: { v: false, a: false }, eos: false, aIdx: -1, aMode: 'none',
-    reqT: 0, reason: new WeakMap(), label: '', timer: 0, hold: false, prevRemote: null, lastEvict: 0,
+    reqT: 0, reason: new WeakMap(), peeked: new WeakMap(), label: '', timer: 0, hold: false, prevRemote: null, lastEvict: 0,
 
     wants(s) {
+      if (window.MkNative && MkNative.wants(s)) return false; // 2.70: the native player plays it as it is
       if (!this.ok || CFG.engine === false || !s || s._local || !s.url || s._engNo || IS_TV) return false;
       const bh = s.behaviorHints || {};
       if (bh.proxyHeaders || CFG.alwaysProxy || s._cors === 'proxy' || s._audioTry) return false;
@@ -101,6 +102,8 @@
     /* which audio track plays first: the file's default track (Chromium itself always plays the first one) */
     defAudio(info) {
       const a = info.audio.filter((x) => !x.enc); if (!a.length) return -1;
+      // a language picked in the player wins (2.72)
+      const mine = P.stream && P.stream._engAudio; if (mine != null && info.audio[mine] && !info.audio[mine].enc) return mine;
       // your audio language (2.62.6: Preferred audio language first, codes like en / eng / en-US compare equal)
       const want = window.MkAudioWant ? MkAudioWant() : (CFG.audioOnly && CFG.audioOnly !== 'any' ? CFG.audioOnly : '');
       const is = (x) => (window.MkAudioMatch ? MkAudioMatch(x.lang, x.name, want) : (x.lang === want || (want === 'eng' && x.lang === 'en')));
@@ -184,6 +187,7 @@
       const r = this.route(info, force);
       if (!r.go) {
         w.terminate(); this.reason.set(stream, r.native ? 'not needed: the browser plays this file by itself' : r.why);
+        if (r.native) this.peeked.set(stream, info); // its track list stays known for the audio menu
         if (r.hard) stream._engHard = r.why;
         return false;
       }
@@ -593,6 +597,31 @@
     };
   }
 
+  /* mkc-272-file-audio: the browser plays only a file's first sound track, and pages can't switch it. The engine reads the
+     file's own track list (kept from its start, or read once here) so any track can be picked and played through it. */
+  E.canPeek = (s) => {
+    if (!E.ok || CFG.engine === false || IS_TV || !s || s._local || !s.url || s._audioTry || s.ytId) return false;
+    if (window.MkNative && MkNative.active) return false; // the Windows app's player lists its own tracks
+    const bh = s.behaviorHints || {};
+    if (bh.proxyHeaders || !/^https?:/i.test(s.url) || /\.m3u8(\?|#|$)/i.test(s.url) || Hosts.blocked(s.url)) return false;
+    return true;
+  };
+  E.peek = (s) => {
+    if (E.peeked.has(s)) return Promise.resolve(E.peeked.get(s));
+    if (!s._peekP) {
+      s._peekP = new Promise((res) => {
+        let w; try { w = new Worker(new URL('engine/mkv-engine.worker.js', location.href)); } catch (e) { res(null); return; }
+        const done = (v) => { clearTimeout(t); try { w.terminate(); } catch (e) { /* gone */ } if (v) E.peeked.set(s, v); res(v); };
+        const t = setTimeout(() => done(null), 9000);
+        w.onmessage = (ev) => { const m = ev.data || {}; if (m.op === 'info') done(m.info); if (m.op === 'fail') done(null); };
+        w.onerror = () => done(null);
+        w.postMessage({ op: 'open', url: s.url, headers: {} });
+      });
+    }
+    return s._peekP;
+  };
+  // which track the browser itself plays: Chromium always the first, others the file's default
+  const nativeAudio = (info) => { const a = info.audio.filter((x) => !x.enc); if (!a.length) return -1; return CHROMIUM ? a[0].i : (a.find((x) => x.def) || a[0]).i; };
   // the audio language menu lists the file's own tracks and switches them here
   if (typeof AudioLang !== 'undefined') {
     const probe = AudioLang.probe.bind(AudioLang), pick = AudioLang.pick.bind(AudioLang);
@@ -600,7 +629,20 @@
       if (E.active && E.stream === s && E.info && E.info.audio.length) {
         const st = { state: E.info.audio.length > 1 ? 'ok' : 'none', via: 'eng', cur: E.aIdx,
           tracks: E.info.audio.map((a) => ({ i: a.i, label: this.label({ language: a.lang, title: a.name, channels: a.ch, codec: NAMES[a.kind] || a.kind }, a.i), def: a.def })) };
-        this.info.set(s, st); if (P.stream === s && !$('#optMenu').hidden) renderOptMenu(); return st;
+        this.info.set(s, st); if (this.repaint) this.repaint(s); else if (P.stream === s && !$('#optMenu').hidden) renderOptMenu(); return st;
+      }
+      // the browser plays this file itself: the engine reads its sound tracks so any of them can be picked
+      if (!(E.active && E.stream === s) && E.canPeek(s) && !(video.audioTracks && video.audioTracks.length > 1) && !P.hls) {
+        const st0 = { state: 'loading' }; this.info.set(s, st0);
+        const info = await E.peek(s);
+        if (this.info.get(s) !== st0) return this.info.get(s) || st0;
+        if (info && info.audio && info.audio.length) {
+          const st = { state: info.audio.length > 1 ? 'ok' : 'none', via: 'file', cur: s._audio != null ? s._audio : nativeAudio(info),
+            tracks: info.audio.map((a) => ({ i: a.i, lang: a.lang || '', name: a.name || '', def: !!a.def, bad: E.audioMode(a) === 'none',
+              label: this.label({ language: a.lang, title: a.name, channels: a.ch, codec: NAMES[a.kind] || a.kind }, a.i) })) };
+          this.info.set(s, st); this.repaint(s); return st;
+        }
+        this.info.delete(s);
       }
       return probe(s);
     };
@@ -610,6 +652,24 @@
         if (st.cur === i) return;
         const t = st.tracks.find((x) => x.i === i);
         if (E.setAudio(i)) { st.cur = i; s._audio = i; toast(`Audio: ${t ? t.label : `track ${i + 1}`}`, 'info', 2200); }
+        return;
+      }
+      // a track the browser can't play by itself: playback moves into the engine with that track, at the same moment
+      if (st && st.via === 'file' && P.stream === s) {
+        if (st.cur === i) return;
+        const t = st.tracks.find((x) => x.i === i), name = t ? t.label : `Audio track ${i + 1}`;
+        if (t && t.bad) { toast('That sound track can’t play here', 'err', 4000); return; }
+        if (!E.base) { toast('Couldn’t switch the language here', 'err', 5000); return; }
+        const at = pNow(), wasPaused = video.paused, prev = s._engAudio;
+        s._engAudio = i; s._engForce = true; s._mkAudUser = true;
+        toast(`Audio: ${name}…`, 'info', 2600);
+        let took = false;
+        try { took = await E.start(s, at, E.base, true); } catch (e) { took = false; }
+        s._engForce = false;
+        if (took) { s._audio = i; log('info', `engine: audio track ${i + 1} picked in the player`); if (wasPaused) setTimeout(() => video.pause(), 0); this.repaint(s); return; }
+        s._engAudio = prev;
+        const why = E.reason.get(s);
+        toast(why ? `Couldn’t switch the language here: ${why}` : 'Couldn’t switch the language here', 'err', 6000);
         return;
       }
       return pick(i);

@@ -8,6 +8,152 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.83.1', date: '2026-11-17', items: [
+    ['better', 'TVs always use MKCinema\'s own player', 'On a TV, films always play in MKCinema\'s own player with every sound format, even if a phone on your account opens films in another app.'],
+    ['better', 'Torrents on your computer', 'Torrent sources now get the time they need to find peers, show how many peers they found while they start, and tell you plainly when nobody is sharing a torrent. The Mac app also saves .m3u playlists again.'],
+  ] },
+  { v: '2.83.0', date: '2026-11-17', items: [
+    ['new', 'Music', 'Charts, artists, albums, live radio and lyrics that follow the song. Your own music plays in full from Plex, Jellyfin, Emby, Navidrome or files on your device, and keeps playing while you browse.'],
+    ['new', 'Scores and tables', '22 leagues with game pages, league tables, your teams first and score alerts. Hide scores keeps it spoiler-free.'],
+    ['new', 'Your own Ambient Mode', 'Ambient Studio turns the screensaver into yours: your own photos from your phone or computer (send them to the TV with a code), slow drift or 3D depth, dust, fog or embers, colour, film grain and the clock. Try it full screen before you save. And a few secrets are hidden around the app.'],
+    ['new', 'Continue watching on your home screen', 'MKCinema for Android has a home-screen widget: what you were watching, how much is left, and Resume. Home can also show small cards for your next episode, tonight’s game and party invites. Switch them on in Settings › Home.'],
+    ['better', 'A simpler video player', 'The player now has four buttons on the right: Share, Audio & subtitles, Settings and Full screen. Settings has four tabs (Playback, Picture, Sound, More), nothing shows up in two places, and subtitles are grouped by language with your own languages on top.'],
+    ['new', 'Rate what you watch', 'Rate films and shows with half stars. Ratings go to Trakt and Simkl too. Continue watching shows how many episodes are left.'],
+    ['new', 'Playback info', 'Press I while watching for playback info, and see what this device plays in Settings › Help. Update all your playlists at once and pick which show on each seat; the guide shows episode titles.'],
+    ['better', 'More room on phones', 'Pages on phones breathe more: more space under the menu bar, and the Library filters fit on two rows.'],
+  ] },
+  { v: '2.82.0', date: '2026-11-17', items: [
+    ['new', 'Screen mirroring', 'Show your Android phone or your computer on any MKCinema screen. Open Phone › Screen mirroring on the TV, type the code on your phone, and your screen and its sound appear.'],
+    ['new', 'Xbox and PlayStation', 'Open app.mkcinema.app in Microsoft Edge on Xbox, or in the PlayStation\'s built-in browser, and MKCinema switches to the TV layout. The controller is the remote: the D-pad moves, A picks, B goes back.'],
+    ['new', 'Updates, all in one place', 'Settings › Updates shows the version on this device next to the newest one, with one Update button for MKCinema, the Android or TV app and the Windows or Mac app. A dot on the ☰ menu tells you when an update is waiting.'],
+  ] },
+  { v: '2.81.0', date: '2026-11-17', items: [
+    ['new', 'MK Remote on iPhone', 'iPhone and iPad can keep the remote on the Home Screen, where it opens full screen like an app. Scan your TV’s code, and the remote shows you how in three taps. Buttons now give a small tap you can feel on iPhone, the screen stays on while you use the remote, and the keyboard no longer covers what you type.'],
+    ['better', 'One menu on every screen', 'TVs, phones, tablets and computers now share the same floating menu at the top, so everything is in the same place wherever you watch. On a TV, press Up to reach it and Back to close its menu.'],
+  ] },
+  { v: '2.80.2', date: '2026-11-17', items: [
+    ['improved', 'Menu and Miko, your way', 'The menu has a close button and the page behind it stays still. In Settings › Appearance you can take Miko off the Home screen or switch her off completely.'],
+  ] },
+  { v: '2.80.1', date: '2026-11-17', items: [
+    ['better', 'Smoother with a keyboard', 'Arrow keys on a keyboard, or on a TV box that works like a tablet, now move like a TV remote: you start on Play, the row you\'re on stays in view, holding a key moves straight through and drop-downs no longer catch the arrows.'],
+  ] },
+  { v: '2.80.0', date: '2026-11-17', items: [
+    ['new', 'A simpler MKCinema', 'One floating bar with Home, Movies, Series, Anime, Live TV and Library, plus Search and a menu that names everything else. Films have one Play button with Watchlist and More beside it, and sources open when you press Choose a source. First open goes straight to Home.'],
+    ['new', 'Live TV and Sports, one page', 'The next big game sits on top with a countdown and the games coming up beside it. If your channels show it, Watch on takes you there. Channels and the sports in your sources are one tap apart.'],
+  ] },
+  { v: '2.79.0', date: '2026-11-17', items: [
+    ['better', 'Lite mode for slower TVs', 'Fire TV Sticks and other TVs with little memory now get Lite mode: every feature and the same look, but nothing animates, rows start shorter and the banner stays put, so the remote stays quick. Settings › Performance on a TV.'],
+  ] },
+  { v: '2.78.1', date: '2026-11-17', items: [
+    ['new', 'Guests by link', 'Send a party link to anyone. They join in one tap with camera and microphone, no account or setup, and if they have no streams of their own they see your screen. You can remove people or close the door any time.'],
+  ] },
+  { v: '2.78.0', date: '2026-11-17', items: [
+    ['better', 'Split Screen on phones', 'Split Screen now stays sideways when you start it from a film on your phone or tablet, with a layout that fits. Each screen has its own subtitles button, so you can read along in every one.'],
+  ] },
+  { v: '2.77.0', date: '2026-11-17', items: [
+    ['new', 'Layout Studio: make Home yours', 'Pick a look, a top or side menu, small, medium or large cards and a full, short or no banner, then move and hide rows. A live preview shows it on a computer, a TV and a phone before you save. It syncs to all your devices. Build it on your computer and press Send layout to TV to put it on a Fire TV or smart TV with a short code, or share a link so anyone can try it, with Undo one press away.'],
+  ] },
+  { v: '2.75.5', date: '2026-11-17', items: [
+    ['new', 'MKCinema Player on Android phones and tablets', 'Every film plays in our own engine inside the normal player, so every audio language and subtitle in the file shows in Audio & subtitles and switches instantly.'],
+    ['better', 'Whole descriptions on Home', 'The text under the featured title now shows in full, with no waiting for it to scroll.'],
+  ] },
+  { v: '2.75.0', date: '2026-11-17', items: [
+    ['new', 'Collections on Home', 'Folders on Home can have a cover picture, a description and rows of their own. Add one from a code or a link in Settings › Home, or make your own at mkcinema.app/collections.'],
+    ['new', 'Films in the Calendar', 'The Calendar now shows films from your watchlist on the day they reach cinemas and homes in your region, with a new 90 days view.'],
+    ['new', 'Live TV in a corner', 'Leave a channel and it keeps playing in a small window while you browse the guide. Press it to go back to full screen.'],
+    ['new', 'Sports on your channels', 'Sports now finds games in your own TV guide, on now and coming up, and tunes the channel that shows them.'],
+    ['better', 'Remembers your pick', 'Choose a source yourself and the same addon and quality are tried first next time for that show.'],
+  ] },
+  { v: '2.73.6', date: '2026-11-16', items: [
+    ['better', 'Addons install on more networks', 'Addons kept on GitHub now load even where a network or blocker stops GitHub’s file address, and when an addon can’t be added, MKCinema says why and what to try.'],
+  ] },
+  { v: '2.73.5', date: '2026-11-15', items: [
+    ['new', 'Remove Peak Cinema from Home', 'Don\'t use Peak Cinema? Remove it from Home with one press, or switch it off in Settings › Home. The rows below move up to fill the space.'],
+  ] },
+  { v: '2.73.4', date: '2026-11-15', items: [
+    ['new', 'Add your streams', 'New here? Home now points you to the addon manager, where you add your sources in about a minute, with a link to the Get started guide.'],
+  ] },
+  { v: '2.73.3', date: '2026-11-15', items: [
+    ['better', 'Faster on TVs', 'Home opens sooner and the remote feels snappier. The TV now builds only the rows you are about to reach, and the page starts up with less work.'],
+  ] },
+  { v: '2.73.2', date: '2026-11-15', items: [
+    ['new', 'Simkl sign-in with a QR code', 'Scan a code on the TV with your phone and say yes on Simkl. No keys to paste.'],
+    ['new', 'Light looks: Daylight and Linen', 'Two light looks for bright rooms, next to the dark ones. Settings › Appearance › Dark or light.'],
+    ['better', 'Every catalog on Home', 'Home now shows every catalog your addons list, not only the first 16, including ones that need a genre. Extra rows load a few at a time so Home stays quick.'],
+  ] },
+  { v: '2.73.1', date: '2026-11-15', items: [
+    ['better', 'Side menu on TVs', 'On TVs, the menu now sits down the left side by default, the way TV apps do. Prefer it on top? Settings › Appearance.'],
+  ] },
+  { v: '2.73.0', date: '2026-11-15', items: [
+    ['new', 'Live TV made for the remote', 'Switch channels with Up/Down or Channel +/-, type a channel number, press 0 for the last channel, and see what is on now and next. The guide shows channel numbers, looks back and ahead, keeps Recently watched, and lets you hide channels or whole groups. Guides match more channels, and playlist films and series get their own tabs.'],
+  ] },
+  { v: '2.72.1', date: '2026-11-15', items: [
+    ['fixed', 'Pick the language on any file', 'In the Android app, files whose languages can’t be read in the player now open in the Android player at the same moment, with every language in the file to choose from. Subtitles with the same name are numbered.'],
+  ] },
+  { v: '2.72.0', date: '2026-11-15', items: [
+    ['new', 'Audio and subtitles together', 'One button now shows the sound tracks and subtitles side by side. Files with several languages can switch to any of them right in the player.'],
+    ['new', 'MK Remote for Android', 'MK Remote is a small, free app for Android phones: open it and you are on the remote. The phone’s volume buttons turn the TV’s volume while a film plays, the screen stays on, and scanning the TV’s code opens it straight away. Get it at mkcinema.app/remote-app.'],
+  ] },
+  { v: '2.71.4', date: '2026-11-13', items: [
+    ['new', 'Native player for Windows', 'Windows app 1.6.0: a true native player. Films play in mpv\'s engine with hardware decoding, HDR, and DTS, TrueHD and Dolby sound without converting, under the same MKCinema controls.'],
+  ] },
+  { v: '2.71.3', date: '2026-11-13', items: [
+    ['better', 'Debrid, explained', 'Settings › Debrid now says when you still need a stream addon, with a button to the addon manager. Your debrid account turns what stream addons find into fast, direct streams.'],
+  ] },
+  { v: '2.71.2', date: '2026-11-13', items: [
+    ['better', 'Two screens, stacked', 'In Split Screen, two screens now sit one above the other, each using the full width. Prefer left and right? Pick it under Layout and MKCinema remembers.'],
+    ['fixed', 'Full screen in the Windows app', 'Windows app: full screen now keeps the film on screen with the built-in player.'],
+  ] },
+  { v: '2.71.1', date: '2026-11-13', items: [
+    ['fixed', 'Tablet side menu', 'Tablet side menu: every button responds to a tap again.'],
+  ] },
+  { v: '2.71.0', date: '2026-11-13', items: [
+    ['new', 'Split Screen, rebuilt', 'Press Split Screen in the player, pick 2, 3 or 4 screens and place a film, episode, channel or link in each. Move them around as you like. Every title loads as soon as it is placed, so Start all starts them together.'],
+  ] },
+  { v: '2.70.5', date: '2026-11-13', items: [
+    ['better', 'Steadier everyday', 'Steadier everyday behaviour across Home, the player, Live TV, recordings, Social Hub, Peak Cinema, the phone remote and Miko, faster recovery from slow connections, and smoother remote control on TVs.'],
+  ] },
+  { v: '2.70.4', date: '2026-11-13', items: [
+    ['better', 'Smoother playback and sources', 'Smart Play continues where you are, source switches keep your place, AI captions and Peak Cinema run steadier, channel search is faster, and recordings, watch parties and the phone remote are steadier.'],
+  ] },
+  { v: '2.70.3', date: '2026-11-13', items: [
+    ['better', 'Steadier playback and recording', 'Progress saves reliably after skipped intros, episode sources stay in step, Peak Cinema reopens cleanly, back-to-back recordings work, and older TVs and iPhones are better supported.'],
+  ] },
+  { v: '2.70.2', date: '2026-11-13', items: [
+    ['fixed', 'Live TV on Android phones', 'On Android phones, live TV and sports now play in the Android app\'s own player.'],
+  ] },
+  { v: '2.70.1', date: '2026-11-13', items: [
+    ['better', 'Every debrid key at once', 'Add keys for more than one debrid service and MKCinema uses them all: each film plays from whichever service already has it.'],
+  ] },
+  { v: '2.70.0', date: '2026-11-13', items: [
+    ['new', 'More for the whole house', 'Hold a Continue watching card to mark it watched or take it off the row. Your Jellyfin and Emby libraries now show up as rows and in search, and what you finish is marked watched on your server too. Anime episodes find more sources, with more intro skips. A new option: sources grouped by addon. The Android app can now update by itself.'],
+  ] },
+  { v: '2.69.11', date: '2026-11-13', items: [
+    ['new', 'Android player', 'Phone player: play every film in the Android app\'s own video player. Pick it in Settings › Playback › Phone player.'],
+  ] },
+  { v: '2.69.10', date: '2026-11-13', items: [
+    ['better', 'Tablets', 'Tablets: bigger text and cards, and the side menu slides away until you need it.'],
+    ['fixed', 'Phone player', 'On Android phones and tablets, films always open in the MKCinema player again.'],
+  ] },
+  { v: '2.69.9', date: '2026-11-13', items: [
+    ['better', 'Simple phone remote', 'The pairing code appears instantly, and the remote on your phone is simpler: one screen, a big D-pad, and everything extra in the menu.'],
+  ] },
+  { v: '2.69.8', date: '2026-11-13', items: [
+    ['better', 'Every TV from Android', 'Send to TV in the Android app lists every TV it finds, and you can add a TV that is not listed by its address.'],
+  ] },
+  { v: '2.69.7', date: '2026-11-13', items: [
+    ['better', 'Google sign-in on iPhone and iPad', 'Continue with Google in the iPhone and iPad home-screen app now signs in right inside the app.'],
+  ] },
+  { v: '2.69.6', date: '2026-11-13', items: [
+    ['new', 'Apple TV from Android', 'The Android app sends films to your Apple TV with AirPlay. Pick it from Send to TV and type the code it shows the first time.'],
+    ['better', 'Addons note', 'The Enter password button on the addons note works again.'],
+  ] },
+  { v: '2.69.5', date: '2026-11-13', items: [
+    ['better', 'Smoother Google sign-in', 'Google sign-in is quicker and simpler, ready for the next Android, Windows and Mac apps.'],
+  ] },
+  { v: '2.69.4', date: '2026-11-13', items: [
+    ['better', 'Google sign-in everywhere', 'Continue with Google now works in the iPhone and iPad home-screen app, the Android, Windows and Mac apps, and on TVs through your phone.'],
+  ] },
   { v: '2.69.3', date: '2026-11-13', items: [
     ['new', 'Sign in with Google', 'One tap on the Account page, no password to remember.'],
     ['new', 'Watch on your TV', 'A TV button at the top of the main page connects to your TV before you press play, so the film goes straight to the big screen.'],

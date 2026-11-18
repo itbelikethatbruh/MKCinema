@@ -68,7 +68,7 @@
   const MSG = 'Addons and keys from your other devices are locked on this one. Enter your password once to bring them here.';
   const SNOOZE = 'mkc:addonLockSnooze';
   let shown = false;
-  const unlockNow = () => { $$('#toasts .as-lock').forEach((x) => x.remove()); try { closeLayer('addons'); } catch (e) { /* not open */ } openSettings('debrid'); setTimeout(() => { const p = $('#sk-pass'); if (p) { try { p.scrollIntoView({ block: 'center' }); } catch (e) { /* old browser */ } p.focus(); } }, 120); };
+  const unlockNow = async () => { $$('#toasts .as-lock').forEach((x) => x.remove()); try { if (!$('#player').hidden) await closePlayer(); } catch (e) { /* no player */ } try { closeLayer('addons'); } catch (e) { /* not open */ } openSettings('debrid'); setTimeout(() => { const p = $('#sk-pass'); if (p) { try { p.scrollIntoView({ block: 'center' }); } catch (e) { /* old browser */ } p.focus(); } }, 120); };
   const showLock = () => {
     const on = A.addonsLocked();
     if (!on) { $$('.as-lock').forEach((x) => x.remove()); return; }

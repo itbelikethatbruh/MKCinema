@@ -114,7 +114,7 @@ const Tour240 = {
       const apps = () => playersHere().filter((p) => !p.m3u && p.id !== 'android').map((p) => playerName(p)).filter((x, i, a) => a.indexOf(x) === i);
       PlayerAsk.html = () => { const n = apps(); return ph()
         .replace('and VLC is always one tap away.', 'and a player app is always one tap away.')
-        .replace('Opens streams in VLC, Infuse or MX Player. VLC is free and plays nearly everything.', n.length ? `Opens streams in ${n.length > 1 ? `${n.slice(0, -1).join(', ')} or ${n[n.length - 1]}` : n[0]}, which play nearly every file.` : 'Opens streams in the player app you already use. Most play nearly every file.'); };
+        .replace('Opens streams in VLC. VLC is free and plays nearly everything.', n.length ? `Opens streams in ${n.length > 1 ? `${n.slice(0, -1).join(', ')} or ${n[n.length - 1]}` : n[0]}, which plays nearly every file.` : 'Opens streams in the player app you already use. Most play nearly every file.'); };
     }
     const tour = $('#tour'); if (!tour) return;
     if (!$('.t4-glow', tour)) tour.insertAdjacentHTML('afterbegin', '<div class="t4-glow" aria-hidden="true"></div>');
@@ -189,12 +189,6 @@ const Guide240 = {
   ],
   // where to get each outside player (an app store page or the maker's own site); VLC uses the store badges
   GET: {
-    mx: 'https://play.google.com/store/apps/details?id=com.mxtech.videoplayer.ad',
-    'mx-pro': 'https://play.google.com/store/apps/details?id=com.mxtech.videoplayer.pro',
-    just: 'https://play.google.com/store/apps/details?id=com.brouken.player',
-    'mpv-android': 'https://play.google.com/store/apps/details?id=is.xyz.mpv',
-    infuse: 'https://firecore.com/infuse',
-    iina: 'https://iina.io',
   },
   track() { return Store.get('guideTrack', 'new') === 'pro' ? 'pro' : 'new'; },
   native() { try { return typeof PlayerAsk !== 'undefined' && PlayerAsk.native(); } catch (e) { return false; } },

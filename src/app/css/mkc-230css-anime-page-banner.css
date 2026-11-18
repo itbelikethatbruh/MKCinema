@@ -2,7 +2,7 @@
 /* ===== 2.30.0 Anime page banner: tactical HUD, puppet-rig kitsune, dialogue cassette =====
    Only transform and opacity animate. No filter, drop-shadow, backdrop-filter or blur. The rim light is a static
    gradient. Loops pause off screen (.hud-off), and TV / Calm keep only breathing and sway. */
-html[data-look="anime"]{--hud-red:#ff2d55;--hud-red-c:255,45,85;--hud-gold:#d9b26a;--hud-ink:#0d0410;--hud-ease:cubic-bezier(.22,1,.36,1);
+html[data-look="anime"]{--hud-red:#ff2d55;--hud-red-c:255,45,85;--hud-gold:#d9b26a;--hud-ink:var(--k0d0410,#0d0410);--hud-ease:cubic-bezier(.22,1,.36,1);
   --hud-cut:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)}
 html[data-look="anime"] .an-splash.hud{height:clamp(200px,21vw,290px)}
 html[data-look="anime"] .an-splash.hud .an-logo.big{width:min(44%,520px)}
@@ -22,7 +22,7 @@ html.an-fx .hud-ring-spin{animation:hudSpin 40s linear infinite;will-change:tran
 /* chamfered cyber plates: a crimson-to-gold 1px edge (outer layer) around an obsidian face (inner layer) */
 .hud-plate{position:absolute;display:flex;align-items:center;gap:8px;padding:5px 12px 5px 13px;clip-path:var(--hud-cut);
   background:linear-gradient(90deg,var(--hud-red),var(--hud-gold));isolation:isolate}
-.hud-plate::before{content:"";position:absolute;inset:1px;z-index:-1;clip-path:var(--hud-cut);background:linear-gradient(180deg,rgba(28,8,22,.94),rgba(12,4,12,.94))}
+.hud-plate::before{content:"";position:absolute;inset:1px;z-index:-1;clip-path:var(--hud-cut);background:linear-gradient(180deg,rgba(var(--k1c0816-c,28,8,22),.94),rgba(var(--k0c040c-c,12,4,12),.94))}
 .hud-t{font:600 9.5px/1 ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;letter-spacing:.16em;color:#ffc2d2;white-space:nowrap}
 .hud-t b{font-weight:600;color:var(--hud-gold)}
 .hud-stripe{display:block;height:5px;min-width:42px;background:repeating-linear-gradient(115deg,var(--hud-gold) 0 5px,transparent 5px 10px);opacity:.85}
@@ -64,17 +64,17 @@ html[data-look="anime"] .rig-blink.ready{animation:rigBlink 5.9s steps(1,end) in
 /* the dialogue cassette */
 .an-cass{position:absolute;left:0;top:19%;width:min(50%,330px);z-index:2}
 .cass-tab{position:relative;display:inline-flex;align-items:center;gap:7px;margin:0 0 -1px 14px;padding:4px 12px 4px 9px;
-  font:700 9.5px/1 ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;letter-spacing:.16em;color:#fff;background:var(--hud-red);
+  font:700 9.5px/1 ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;letter-spacing:.16em;color:var(--kffffff,#fff);background:var(--hud-red);
   clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)}
 /* the nameplate glow: a static gradient behind the tab (a shadow would be clipped) */
 .an-cass::before{content:"";position:absolute;left:-6px;top:-12px;width:190px;height:44px;z-index:-1;background:radial-gradient(closest-side,rgba(var(--hud-red-c),.55),transparent)}
 .cass-tab b{font-weight:700;color:#ffe2a8}
-.cass-dot{width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.25)}
+.cass-dot{width:6px;height:6px;border-radius:50%;background:var(--kffffff,#fff);box-shadow:0 0 0 2px rgba(var(--kffffff-c,255,255,255),.25)}
 .cass-body{position:relative;display:flex;align-items:center;gap:12px;height:62px;padding:0 18px 0 16px;isolation:isolate;
   clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);background:linear-gradient(100deg,var(--hud-red),#7a1030 55%,var(--hud-gold))}
 .cass-body::before{content:"";position:absolute;inset:1px;z-index:-1;clip-path:polygon(13.5px 0,100% 0,100% calc(100% - 13.5px),calc(100% - 13.5px) 100%,0 100%,0 13.5px);
-  background:linear-gradient(180deg,#1a0812,#0b0309 70%),var(--hud-ink)}
-.cass-body::after{content:"";position:absolute;left:1px;right:1px;top:1px;height:40%;z-index:-1;background:linear-gradient(180deg,rgba(255,255,255,.05),transparent)}
+  background:linear-gradient(180deg,var(--k1a0812,#1a0812),var(--k0b0309,#0b0309) 70%),var(--hud-ink)}
+.cass-body::after{content:"";position:absolute;left:1px;right:1px;top:1px;height:40%;z-index:-1;background:linear-gradient(180deg,rgba(var(--kffffff-c,255,255,255),.05),transparent)}
 .cass-tick{position:absolute;width:10px;height:10px;border:solid var(--hud-gold);opacity:.8}
 .cass-tick.a{right:7px;top:6px;border-width:1px 1px 0 0}
 .cass-tick.b{left:7px;bottom:6px;border-width:0 0 1px 1px}
@@ -84,7 +84,7 @@ html[data-look="anime"] .rig-blink.ready{animation:rigBlink 5.9s steps(1,end) in
 .an-cass.talk .cass-wave i:nth-child(2){animation-duration:.3s}
 .an-cass.talk .cass-wave i:nth-child(3){animation-duration:.53s}
 @keyframes cassWave{from{transform:scaleY(.2)}to{transform:scaleY(1)}}
-.cass-q{position:relative;flex:1;min-width:0;height:2.6em;overflow:hidden;font:600 clamp(13px,1.15vw,16px)/1.3 var(--f-body);color:#fff}
+.cass-q{position:relative;flex:1;min-width:0;height:2.6em;overflow:hidden;font:600 clamp(13px,1.15vw,16px)/1.3 var(--f-body);color:var(--kffffff,#fff)}
 .cass-q .q{position:absolute;left:0;right:0;top:50%;transform:translate3d(0,-50%,0);opacity:1;transition:transform .5s var(--hud-ease),opacity .35s ease-out;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .cass-q .q.nxt{opacity:0;transform:translate3d(0,60%,0)}
@@ -94,7 +94,7 @@ html[data-look="anime"] .rig-blink.ready{animation:rigBlink 5.9s steps(1,end) in
 
 /* entrance: a mechanical shutter opens, then the cassette snaps in */
 .hud-shutter{position:absolute;inset:0;z-index:3;overflow:hidden}
-.hud-shutter i{position:absolute;left:0;right:0;height:51%;background:linear-gradient(180deg,#14050f,#22081a);will-change:transform}
+.hud-shutter i{position:absolute;left:0;right:0;height:51%;background:linear-gradient(180deg,var(--k14050f,#14050f),var(--k22081a,#22081a));will-change:transform}
 .hud-shutter i:first-child{top:0;border-bottom:1px solid var(--hud-red);animation:hudShutUp .75s .1s var(--hud-ease) both}
 .hud-shutter i:last-child{bottom:0;border-top:1px solid var(--hud-gold);animation:hudShutDn .75s .1s var(--hud-ease) both}
 @keyframes hudShutUp{from{transform:translate3d(0,0,0)}to{transform:translate3d(0,-103%,0)}}

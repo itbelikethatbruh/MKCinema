@@ -43,7 +43,7 @@ const PlayerAsk = {
       ? [opt('native', 'TV player', 'Uses your TV’s own video hardware. MKCinema still picks the source, sends your subtitles and remembers where you stopped.'),
         opt('builtin', 'MKCinema player', 'Keeps subtitle styling and X-Ray, but plays fewer kinds of files than the TV player.')]
       : [opt('builtin', 'MKCinema player', 'Plays right here, with watch party and skip intro. Some MKV or HEVC files may not play.'),
-        ...(IS_TV ? [] : [opt('ext', 'Another player app', 'Opens streams in VLC, Infuse or MX Player. VLC is free and plays nearly everything.')])];
+        ...(IS_TV ? [] : [opt('ext', 'Another player app', 'Opens streams in VLC. VLC is free and plays nearly everything.')])];
     const app = this.appId();
     const apps = IS_TV ? '' : `<div class="pc-apps"${cur === 'ext' ? '' : ' hidden'}><span class="pc-lab">Open streams in</span><div class="pc-chips" role="radiogroup" aria-label="Player app">${playersHere().map((p) => `<button type="button" class="pc-chip" role="radio" data-app="${p.id}" aria-checked="${p.id === app}">${esc(p.name)}</button>`).join('')}</div><small class="pc-note">${this.NOTE[PLATFORM === 'android' || PLATFORM === 'ios' ? PLATFORM : 'desktop']}</small><div class="pc-get">${vlcButtons()}</div></div>`;
     const bo = nat ? '' : `<div class="pc-bo"${cur === 'builtin' ? '' : ' hidden'}><div class="pc-txt"><b>Only sources that play here</b><small>Hides files this browser can’t play. Fewer sources, but they all work.</small>${r.bo ? '<em class="pc-rec">Best for this device</em>' : ''}</div><button type="button" class="pc-sw" role="switch" aria-checked="${!!CFG.browserOnly}" aria-label="Only sources that play here"><i aria-hidden="true"></i></button></div>`;

@@ -257,8 +257,10 @@ const MyCloud = {
   },
   async play(it, f) {
     toast('Getting the file from your cloud…', 'info', 2600, 'cloud');
+    const tok = this.playTok = (this.playTok || 0) + 1, pr = playReq;   // a newer press, or another film started meanwhile, wins
+    const gone = () => tok !== this.playTok || pr !== playReq;
     try {
-      const u = await Vault.within(this.url(it, f), 30000); if (!u || !u.url) throw new Error('Your service did not give a link');
+      const u = await Vault.within(this.url(it, f), 30000); if (gone()) return; if (!u || !u.url) throw new Error('Your service did not give a link');
       const name = String(f.name || it.name).split('/').pop();
       const meta = { id: `cloud:${this.svc}:${it.id}:${f.id != null ? f.id : 0}`, type: 'movie', name: name.replace(/\.[^.]+$/, '').replace(/[._]+/g, ' '), description: `${f.size ? fmtBytes(f.size) : ''} · from your ${Vault.label(this.svc)} cloud` };
       const stream = { name: 'Your cloud', title: `${name}${f.size ? `\n${fmtBytes(f.size)}` : ''}`, url: u.url, _addon: 'Your cloud', behaviorHints: { filename: name, videoSize: f.size || undefined } };
@@ -266,7 +268,7 @@ const MyCloud = {
       stream._tel = Telemetry.parse(stream);
       X8.close('myCloud');
       playStream({ meta, video: null, streams: [stream] }, stream, { startAt: 0 });
-    } catch (e) { toast(`Could not play it: ${e.message}`, 'err', 6000); }
+    } catch (e) { if (!gone()) toast(`Could not play it: ${e.message}`, 'err', 6000); }
   },
   async open() {
     if (!Vault.service()) { toast('Add a debrid key in Settings › Debrid first', 'err', 4200); openSettings('debrid'); return; }
@@ -296,7 +298,9 @@ const MyCloud = {
   },
   async pick(it) {
     if (!it) return;
-    let files; try { files = await Vault.within(this.files(it), 20000); } catch (e) { toast(`Could not open it: ${e.message}`, 'err', 5000); return; }
+    const tok = this.pickTok = (this.pickTok || 0) + 1;
+    let files; try { files = await Vault.within(this.files(it), 20000); } catch (e) { if (tok === this.pickTok) toast(`Could not open it: ${e.message}`, 'err', 5000); return; }
+    if (tok !== this.pickTok || !$('#mkClList')) return;   // another pick, or the window was closed
     if (!files.length) { toast('No video file in that one', 'err'); return; }
     if (files.length === 1) { this.play(it, files[0]); return; }
     const b = X8.body('myCloud');
@@ -373,7 +377,7 @@ const Folders = {
     Object.keys(f).forEach((id) => { f[id] = { ...f[id], keys: (f[id].keys || []).filter((x) => x !== k) }; });
     if (fid === 'new') { fid = `f${Date.now().toString(36)}`; f[fid] = { name: String(name || 'Folder').slice(0, 30), keys: [] }; }
     if (fid && f[fid]) f[fid].keys.push(k);
-    Object.keys(f).forEach((id) => { if (!f[id].keys.length) delete f[id]; });
+    Object.keys(f).forEach((id) => { if (!f[id].keys.length && !(f[id].lists || []).length) delete f[id]; });
     this.save(f);
   },
   /* the row of folder tiles at the top of Home; rows inside a folder stay off the page until it is opened */
@@ -388,34 +392,92 @@ const Folders = {
       const cw = $('#cwRow', rows); if (cw) cw.after(sec); else rows.prepend(sec);
     }
     const art = (keys) => { for (const k of keys) { const s = $$('#homeRows section.row').find((x) => x.dataset.arrK === k); const im = s && s.querySelector('.card img:not([data-fb="1"])'); if (im) return im.dataset.lsrc || im.getAttribute('src'); } return ''; };
-    const html = ids.map((id) => { const a = art(f[id].keys); return `<button type="button" class="card wide mk-fold" data-nav data-fold="${esc(id)}" aria-label="${esc(f[id].name)}"><div class="card-inner"><div class="layer l0">${a ? `<img src="${esc(a)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ''}</div><div class="mk-fold-t"><i data-lucide="folder"></i><b translate="no">${esc(f[id].name)}</b></div></div></button>`; }).join('');
+    const html = ids.map((id) => { const a = Folders.cover(f[id].cover) || art(f[id].keys || []); return `<button type="button" class="card wide mk-fold${Folders.cover(f[id].cover) ? ' mk-fold-cv' : ''}" data-nav data-fold="${esc(id)}" aria-label="${esc(f[id].name)}"><div class="card-inner"><div class="layer l0">${a ? `<img src="${esc(a)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ''}</div><div class="mk-fold-t"><i data-lucide="folder"></i><b translate="no">${esc(f[id].name)}</b></div></div></button>`; }).join('');
     const rail = $('.rail', sec); if (rail.dataset.h !== html) { rail.dataset.h = html; rail.innerHTML = html; icons(); $$('[data-fold]', rail).forEach((b) => { b.onclick = (e) => { e.stopPropagation(); this.open(b.dataset.fold); }; }); }
   },
   open(fid) {
     const f = this.get()[fid]; if (!f) return;
     const el = X8.layer('mkFold', { label: 'Folder', icon: 'folder', eyebrow: 'Folder', wide: true }); el.classList.add('mk-fold-ov');
-    const b = X8.body('mkFold'); b.innerHTML = `<h2 class="x8-h" translate="no">${esc(f.name)}</h2><div class="mk-fold-rows"></div>`;
+    const b = X8.body('mkFold'), cv = this.cover(f.cover);
+    b.innerHTML = `${cv ? `<div class="mk-col-hero"><img src="${esc(cv)}" alt="" decoding="async" referrerpolicy="no-referrer" data-gone="hide"></div>` : ''}<h2 class="x8-h" translate="no">${esc(f.name)}</h2>${f.desc ? `<p class="sub mk-col-desc" translate="no">${esc(f.desc)}</p>` : ''}
+      <div class="actions mk-col-acts"><button class="btn btn-ghost btn-sm" type="button" data-nav data-fedit><i data-lucide="pencil"></i>Edit</button><button class="btn btn-ghost btn-sm" type="button" data-nav data-fshare><i data-lucide="share-2"></i>Share</button></div>
+      <div class="mk-fold-rows"></div>${(f.lists || []).map((l) => `<section class="row mk-col-row"><div class="row-head"><h2 class="row-title" translate="no">${esc(l.name || 'Titles')}</h2></div><div class="rail">${(l.items || []).map((m) => cardHTML({ id: m.id, type: m.type === 'series' ? 'series' : 'movie', name: m.name || '', poster: m.poster || undefined })).join('')}</div></section>`).join('')}`;
+    $('[data-fedit]', b).onclick = () => this.edit(fid);
+    $('[data-fshare]', b).onclick = () => copyText(this.code(fid), 'Folder code copied. Others paste it in Settings › Home › Add a shared folder');
     const box = $('.mk-fold-rows', b), rows = $('#homeRows');
     const secs = (f.keys || []).map((k) => $$('#homeRows section.row').find((x) => x.dataset.arrK === k)).filter(Boolean);
-    if (!secs.length) box.innerHTML = '<p class="tour-note">These rows have not loaded yet. Try again in a moment.</p>';
+    if (!secs.length && !(f.lists || []).length) box.innerHTML = '<p class="tour-note">These rows have not loaded yet. Try again in a moment.</p>';
     this.moved = secs.map((s) => { const mark = document.createComment('mk-fold'); s.before(mark); s.classList.add('mk-in-fold-open'); box.appendChild(s); return [s, mark]; });
     X8.onClose.mkFold = () => { (this.moved || []).forEach(([s, mark]) => { s.classList.remove('mk-in-fold-open'); if (mark.isConnected) { mark.replaceWith(s); } else if (rows) rows.appendChild(s); }); this.moved = []; Arrange.apply(true); };
     X8.open('mkFold'); icons(); queueWall();
     if (IS_TV) setTimeout(() => { const c = $('#mkFold [data-card]'); if (c) Nav.focus(c, true); }, 60);
   },
   /* a folder travels as a short code: its name and the rows in it */
-  code(fid) { const f = this.get()[fid]; return f ? `mkfold:${X8.b64e({ v: 1, name: f.name, keys: f.keys })}` : ''; },
-  importCode(text) {
-    const m = String(text || '').trim().match(/mkfold:([\w-]+)/); if (!m) { toast('That is not a folder code', 'err'); return false; }
-    let d; try { d = X8.b64d(m[1]); } catch (e) { toast('That folder code is damaged', 'err'); return false; }
-    const keys = (Array.isArray(d.keys) ? d.keys : []).filter((k) => typeof k === 'string' && k.length < 200).slice(0, 40);
-    if (!keys.length) { toast('That folder is empty', 'err'); return false; }
+  code(fid) { const f = this.get()[fid]; return f ? `mkfold:${X8.b64e({ v: 2, name: f.name, keys: f.keys || [], cover: f.cover || undefined, desc: f.desc || undefined, lists: (f.lists || []).length ? f.lists : undefined })}` : ''; },
+  /* 2.75 collections: a cover picture and a description, and rows of their own titles that need no addon */
+  cover(u) { const s = String(u || '').trim(); return /^https:\/\/[^\s"'<>]{4,600}$/.test(s) ? s : ''; },
+  clean(d) {
+    const txt = (v, n) => String(v || '').replace(/[<>]/g, '').trim().slice(0, n);
+    const item = (x) => {
+      const o = typeof x === 'string' ? { id: x } : x && typeof x === 'object' ? x : null;
+      if (!o || !/^tt\d{5,10}$/.test(String(o.id || o.imdb_id || ''))) return null;
+      return { id: String(o.id || o.imdb_id), type: /^(series|tv|show)$/.test(o.type) ? 'series' : 'movie', name: txt(o.name || o.title, 120) || undefined, poster: this.cover(o.poster) || undefined };
+    };
+    const rows = Array.isArray(d.lists) ? d.lists : Array.isArray(d.rows) ? d.rows : [];
+    const lists = rows.filter((r) => r && Array.isArray(r.items || r.titles)).slice(0, 20)
+      .map((r) => ({ name: txt(r.name || r.title, 60) || 'Titles', items: (r.items || r.titles).map(item).filter(Boolean).slice(0, 100) })).filter((r) => r.items.length);
+    const keys = [...(Array.isArray(d.keys) ? d.keys : []), ...rows.filter((r) => r && typeof r.key === 'string').map((r) => r.key)].filter((k) => typeof k === 'string' && k.length < 200).slice(0, 40);
+    return { name: txt(d.name, 30) || 'Collection', cover: this.cover(d.cover || d.image || d.backdrop) || undefined, desc: txt(d.desc || d.description, 300) || undefined, keys, lists };
+  },
+  add(d) {
+    const c = this.clean(d);
+    if (!c.keys.length && !c.lists.length) { toast('That folder is empty', 'err'); return false; }
     const f = { ...this.get() }, id = `f${Date.now().toString(36)}`;
-    Object.keys(f).forEach((x) => { f[x] = { ...f[x], keys: f[x].keys.filter((k) => !keys.includes(k)) }; if (!f[x].keys.length) delete f[x]; });
-    f[id] = { name: String(d.name || 'Folder').replace(/[<>]/g, '').slice(0, 30), keys }; this.save(f);
-    const have = new Set($$('#homeRows section.row').map((s) => s.dataset.arrK)), miss = keys.filter((k) => !have.has(k)).length;
-    toast(`Folder “${f[id].name}” added${miss ? `. ${miss} of its rows need an addon you don’t have` : ''}`, 'ok', 5000);
+    Object.keys(f).forEach((x) => { f[x] = { ...f[x], keys: (f[x].keys || []).filter((k) => !c.keys.includes(k)) }; if (!f[x].keys.length && !(f[x].lists || []).length) delete f[x]; });
+    f[id] = JSON.parse(JSON.stringify(c)); this.save(f);
+    const have = new Set($$('#homeRows section.row').map((s) => s.dataset.arrK)), miss = c.keys.filter((k) => !have.has(k)).length;
+    toast(`“${c.name}” added to Home${miss ? `. ${miss} of its rows need an addon you don’t have` : ''}`, 'ok', 5000);
+    if (S.view === 'home') this.paint();
     return true;
+  },
+  importCode(text) {
+    const raw = String(text || '').trim();
+    if (/^\{[\s\S]*\}$/.test(raw)) { try { return this.add(JSON.parse(raw)); } catch (e) { toast('That collection text is damaged', 'err'); return false; } }
+    if (/^https:\/\/\S+$/.test(raw) && !/mkfold:/.test(raw)) { this.importLink(raw); return true; }
+    const m = raw.match(/mkfold:([\w-]+)/); if (!m) { toast('That is not a folder code or a collection link', 'err'); return false; }
+    let d; try { d = X8.b64d(m[1]); } catch (e) { toast('That folder code is damaged', 'err'); return false; }
+    return this.add(d || {});
+  },
+  async importLink(url) {
+    toast('Opening the collection…');
+    try {
+      const r = await netFetch(url, { headers: { accept: 'application/json' } }, 12000);
+      if (!r.ok) throw new Error(`answered ${r.status}`);
+      const t = await r.text(); if (t.length > 400000) throw new Error('too big');
+      return this.add(JSON.parse(t));
+    } catch (e) { toast(`That collection link did not open (${String((e && e.message) || e).slice(0, 60)})`, 'err', 6000); return false; }
+  },
+  edit(fid) {
+    const f = this.get()[fid]; if (!f) return;
+    const b = X8.body('mkFold'); if (!b) return;
+    b.innerHTML = `<h2 class="x8-h">Edit folder</h2>
+      <form class="mk-col-form"><div class="field"><label for="fcName">Name</label><input class="inp" id="fcName" maxlength="30" value="${esc(f.name || '')}"></div>
+      <div class="field"><label for="fcCover">Cover picture link</label><input class="inp mono" id="fcCover" inputmode="url" placeholder="https://…jpg" value="${esc(f.cover || '')}"><small>Any picture link that starts with https. Leave empty to use the first poster.</small></div>
+      <div class="field"><label for="fcDesc">Description</label><textarea class="inp" id="fcDesc" maxlength="300" rows="3">${esc(f.desc || '')}</textarea></div>
+      <div class="actions"><button class="btn btn-prime" type="submit" data-nav><i data-lucide="check"></i>Save</button><button class="btn btn-ghost" type="button" data-nav data-fcancel>Cancel</button><button class="btn btn-ghost" type="button" data-nav data-fdel><i data-lucide="trash-2"></i>Remove folder</button></div></form>`;
+    icons();
+    const form = $('form', b);
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const all = { ...this.get() }; if (!all[fid]) return;
+      const cv = $('#fcCover', b).value.trim();
+      if (cv && !this.cover(cv)) { toast('The cover link must start with https://', 'err'); return; }
+      all[fid] = { ...all[fid], name: $('#fcName', b).value.replace(/[<>]/g, '').trim().slice(0, 30) || all[fid].name, cover: cv || undefined, desc: $('#fcDesc', b).value.replace(/[<>]/g, '').trim().slice(0, 300) || undefined };
+      this.save(JSON.parse(JSON.stringify(all))); X8.close('mkFold'); this.paint(); this.open(fid);
+    });
+    $('[data-fcancel]', b).onclick = () => { X8.close('mkFold'); this.open(fid); };
+    $('[data-fdel]', b).onclick = () => { const all = { ...this.get() }; delete all[fid]; this.save(all); X8.close('mkFold'); this.paint(); toast('Folder removed. Its rows are back on Home.', 'info'); };
+    const n = $('#fcName', b); if (n) n.focus();
   },
 };
 window.MkFolders = Folders;
@@ -540,10 +602,29 @@ const HeroText = {
   set() {
     clearTimeout(this.t); if (this.anim) { try { this.anim.cancel(); } catch (e) { /* gone */ } this.anim = null; }
     const p = document.getElementById('heroDesc'); if (!p) return;
-    p.classList.remove('mk-hs');
+    p.classList.remove('mk-hs'); p.style.height = '';   // a glide cut short leaves no fixed height behind
+    this.fit(p);
     if (CFG.heroScroll === false || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     this.t = setTimeout(() => this.go(p), 3000);
   },
+  /* 2.75.7 hero fit */
+  fit(p, tries) {
+    const full = (p.dataset.mkFull !== undefined && p.dataset.mkShown === p.textContent) ? p.dataset.mkFull : p.textContent;
+    p.dataset.mkFull = full; p.textContent = full; p.dataset.mkShown = full;
+    if (!full) return;
+    if (!p.clientHeight) { if ((tries || 0) < 30) requestAnimationFrame(() => this.fit(p, (tries || 0) + 1)); return; }
+    const over = () => p.scrollHeight > p.clientHeight + 1;
+    if (!over()) return;
+    const put = (t) => { p.textContent = t; return !over(); };
+    const parts = full.match(/[^.!?]+[.!?]+["')\]]*\s*|[^.!?]+$/g) || [full];
+    let sent = '';
+    for (let i = parts.length - 1; i >= 1; i--) { const c = parts.slice(0, i).join('').trim(); if (put(c)) { sent = c; break; } }
+    const words = full.split(/\s+/); let lo = 1, hi = words.length - 1, best = '';
+    while (lo <= hi) { const mid = (lo + hi) >> 1, c = words.slice(0, mid).join(' ').replace(/[,;:\s-]+$/, '') + '…'; if (put(c)) { best = c; lo = mid + 1; } else hi = mid - 1; }
+    const out = (sent && sent.length >= best.length * 0.6) ? sent : (best || sent || full);
+    p.textContent = out; p.dataset.mkShown = out;
+  },
+  init() { let rt = 0; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { const p = document.getElementById('heroDesc'); if (p && !this.anim) { p.textContent = p.dataset.mkFull || p.textContent; this.fit(p); } else this.set(); }, 250); }, { passive: true }); if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { const p = document.getElementById('heroDesc'); if (p && !this.anim) { p.textContent = p.dataset.mkFull || p.textContent; this.fit(p); } }); },
   go(p) {
     if (!p.isConnected || !p.textContent || p.scrollHeight <= p.clientHeight + 4) return;
     const h = p.clientHeight, txt = p.textContent; p.classList.add('mk-hs'); p.style.height = `${h}px`;
@@ -554,7 +635,7 @@ const HeroText = {
     this.anim.onfinish = () => { this.anim = null; if (p.isConnected && p.firstChild === inner) { p.classList.remove('mk-hs'); p.style.height = ''; p.textContent = txt; } };
   },
 };
-window.MkHeroText = HeroText;
+window.MkHeroText = HeroText; HeroText.init();
 
 /* ---------------- Settings, commands and start-up ---------------- */
 (() => {
@@ -584,7 +665,7 @@ window.MkHeroText = HeroText;
     scAddRows('home', 'arrHome', [
       { key: 'instantHome', label: 'Open Home instantly', help: 'Home shows the rows from your last visit straight away and refreshes them in the background.', type: 'toggle', get: () => CFG.instantHome !== false, set: (v) => setCfg('instantHome', v) },
       { key: 'heroScroll', label: 'Scroll long descriptions', help: 'The text under the featured title glides slowly to show the rest instead of being cut off.', type: 'toggle', get: () => CFG.heroScroll !== false, set: (v) => { setCfg('heroScroll', v); HeroText.set(); } },
-      { key: 'foldCode', label: 'Add a shared folder', help: 'Paste a folder code someone shared with you.', type: 'text', get: () => '', set: (v) => { if (v) Folders.importCode(v); } },
+      { key: 'foldCode', label: 'Add a shared folder or collection', help: 'Paste a folder code, a collection link (a .json file on GitHub or any https site) or the collection text. Make your own at mkcinema.app/collections.', type: 'text', get: () => '', set: (v) => { if (v) Folders.importCode(v); } },
     ]);
   });
   safe('commands', () => {

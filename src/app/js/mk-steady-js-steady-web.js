@@ -219,15 +219,19 @@
     hold.setAttribute('aria-hidden', 'true');
     hold.style.cssText = 'position:absolute;left:-9999px;top:0;width:8px;height:8px;overflow:hidden;opacity:0;pointer-events:none';
     document.body.appendChild(hold);
+    // one pending warm-up at a time, and none at all on a connection flagged slow (it would wait forever)
+    let warmT = 0;
     const warmSides = () => {
-      if (window.MK_WARM_OK === false) { setTimeout(warmSides, 1500); return; }
+      clearTimeout(warmT);
+      if (window.MK_LITE) return; // 2.79: Lite TVs keep the memory for the page
+      if (window.MK_WARM_OK === false) { if (!window.MK_WARM_SLOW) warmT = setTimeout(warmSides, 1500); return; }
       const n = S.hero.length; if (n < 2) return;
       const ms = [S.hero[(S.heroIdx + 1) % n], S.hero[(S.heroIdx - 1 + n) % n]];
       hold.innerHTML = ms.map((m) => { const lg = metaLogo(m); return imgTag(metaBg(m), m.name, m.id, { wide: true, lazy: false }) + (lg ? imgTag(lg, m.name, m.id, { nofb: true, lazy: false }) : ''); }).join('');
     };
     const sh = showHero;
-    showHero = function () { const r = sh.apply(this, arguments); setTimeout(warmSides, 600); return r; };
-    if (S.hero.length > 1) setTimeout(warmSides, 1500);
+    showHero = function () { const r = sh.apply(this, arguments); clearTimeout(warmT); warmT = setTimeout(warmSides, 600); return r; };
+    if (S.hero.length > 1) warmT = setTimeout(warmSides, 1500);
     // the arrows move the same way
     const pv = $('#heroPrev'), nx = $('#heroNext');
     if (pv) pv.onclick = () => fling(-1); if (nx) nx.onclick = () => fling(1);

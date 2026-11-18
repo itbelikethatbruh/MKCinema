@@ -66,6 +66,9 @@ const Vault = {
   cached: new Map(),
   cfg() { return Store.get('vault', {}); },
   service() { const v = this.cfg(); if (v.off) return null; return [...(v.order || []), 'ad', 'pm', 'rd', 'tb'].find((k) => DEBRID[k] && v[k]) || null; },
+  // 2.70.1: every service with a key, first one first; a file is asked from each until one has it
+  services() { const v = this.cfg(); if (v.off) return []; return [...new Set([...(v.order || []), 'ad', 'pm', 'rd', 'tb'])].filter((k) => DEBRID[k] && v[k]); },
+  cachedBy: new Map(),
   label(k = this.service()) { return k ? DEBRID[k].label : ''; },
   save(k, key) { const v = this.cfg(); const o = (v.order || []).filter((x) => x !== k); if (key) { v[k] = key.trim(); o.push(k); } else delete v[k]; v.order = o; Store.set('vault', v); engine.clearCache(); this.cached.clear(); },
   async call(url, { method = 'GET', headers = {}, body, timeout = 15000 } = {}) {
@@ -167,9 +170,19 @@ const Vault = {
   },
   within(p, ms, msg = 'Timed out') { let t; return Promise.race([p, new Promise((_, rej) => { t = setTimeout(() => rej(new Error(msg)), ms); })]).finally(() => clearTimeout(t)); },
   // a stalled debrid API or relay ends in a clear error (and failover) instead of an endless loader
-  resolve(s, ctx) { return this.within(this.resolveNow(s, ctx), 45000); },
-  async resolveNow(s, ctx) {
-    const k = this.service(), key = this.cfg()[k], hash = String(s.infoHash).toLowerCase(), mag = magnetOf(s);
+  async resolve(s, ctx) {
+    const all = this.services(); if (!all.length) throw new Error('No debrid service is set up');
+    const have = this.cachedBy.get(String(s.infoHash).toLowerCase()) || new Set();
+    const order = [...all.filter((k) => have.has(k)), ...all.filter((k) => !have.has(k))], errs = [];
+    for (const k of order) {
+      try { const url = await this.within(this.resolveNow(s, ctx, k), 45000); s._via = k; return url; }
+      catch (e) { errs.push([k, (e && e.message) || String(e)]); }
+    }
+    if (errs.length === 1) throw new Error(errs[0][1]);
+    const err = new Error(errs.map(([k, m]) => `${DEBRID[k].label}: ${m}`).join(' · ')); err.multi = true; throw err;
+  },
+  async resolveNow(s, ctx, k = this.service()) {
+    const key = this.cfg()[k], hash = String(s.infoHash).toLowerCase(), mag = magnetOf(s);
     if (k === 'rd') {
       const H = { Authorization: `Bearer ${key}` }, base = 'https://api.real-debrid.com/rest/1.0';
       const add = await this.call(`${base}/torrents/addMagnet`, { method: 'POST', headers: H, body: this.form({ magnet: mag }) });
@@ -230,18 +243,29 @@ const Vault = {
   },
   /* Which of these hashes your service already has (TorBox and Premiumize can tell without adding them) */
   async mark(streams) {
-    const k = this.service(); if (!k || (k !== 'tb' && k !== 'pm')) return false;
-    const key = this.cfg()[k], hashes = [...new Set(streams.filter((s) => s.infoHash && !this.cached.has(String(s.infoHash).toLowerCase())).map((s) => String(s.infoHash).toLowerCase()))].slice(0, 80);
+    const ks = this.services().filter((k) => k === 'tb' || k === 'pm'); if (!ks.length) return false;
+    const hashes = [...new Set(streams.filter((s) => s.infoHash && !this.cached.has(String(s.infoHash).toLowerCase())).map((s) => String(s.infoHash).toLowerCase()))].slice(0, 80);
     if (!hashes.length) return false;
+    const got = new Map(hashes.map((h) => [h, false])); let any = false, all = true;
+    for (const k of ks) {
+    const key = this.cfg()[k];
+    const C = { set: (h, yes) => { if (yes) { got.set(h, true); if (!this.cachedBy.has(h)) this.cachedBy.set(h, new Set()); this.cachedBy.get(h).add(k); } } };
     try {
       if (k === 'tb') {
         const r = await this.call(`https://api.torbox.app/v1/api/torrents/checkcached?hash=${hashes.join(',')}&format=object&list_files=false`, { headers: { Authorization: `Bearer ${key}` } });
-        const have = new Set(Object.keys(r.data || {}).map((h) => h.toLowerCase())); hashes.forEach((h) => this.cached.set(h, have.has(h)));
+        const have = new Set(Object.keys(r.data || {}).map((h) => h.toLowerCase())); hashes.forEach((h) => C.set(h, have.has(h)));
       } else {
         const r = await this.call(`https://www.premiumize.me/api/cache/check?apikey=${encodeURIComponent(key)}&${hashes.map((h) => `items[]=${h}`).join('&')}`);
-        hashes.forEach((h, i) => this.cached.set(h, !!(r.response || [])[i]));
+        hashes.forEach((h, i) => C.set(h, !!(r.response || [])[i]));
       }
-    } catch (e) { return false; }
+      any = true;
+    } catch (e) { all = false; /* this service did not answer; the others still count */ }
+    }
+    if (!any) return false;
+    // with Real-Debrid or AllDebrid also set up (they cannot be asked first), a miss here is not a miss there
+    // and a service that did not answer may well have it: "not cached" is kept only when every service answered
+    const sure = all && ks.length === this.services().length;
+    got.forEach((v, h) => { if (v || sure) this.cached.set(h, v); });
     streams.forEach((s) => { if (s.infoHash && !s.url) s._tel = Telemetry.parse(s); });
     streams.sort((a, b) => b._tel.score - a._tel.score);
     return true;
@@ -250,7 +274,7 @@ const Vault = {
   async testNow(k) {
     const key = this.cfg()[k]; if (!key) throw new Error('Paste a key first');
     if (k === 'rd') { const u = await this.call('https://api.real-debrid.com/rest/1.0/user', { headers: { Authorization: `Bearer ${key}` } }); return `${u.username} · ${u.type}${u.expiration ? ` until ${fmtDate(u.expiration)}` : ''}`; }
-    if (k === 'tb') { const u = await this.call('https://api.torbox.app/v1/api/user/me', { headers: { Authorization: `Bearer ${key}` } }); return `${(u.data || {}).email || 'Account'} · plan ${(u.data || {}).plan ?? '?'}`; }
+    if (k === 'tb') { const u = await this.call('https://api.torbox.app/v1/api/user/me', { headers: { Authorization: `Bearer ${key}` } }); return `${(u.data || {}).email || 'Account'} · plan ${qq((u.data || {}).plan, '?')}`; }
     if (k === 'ad') { const u = await this.call(`https://api.alldebrid.com/v4/user?agent=mkcinema&apikey=${encodeURIComponent(key)}`), us = (u.data || {}).user || {}; return `${us.username || 'Account'}${us.isPremium ? ' · premium' : ''}`; }
     const u = await this.call(`https://www.premiumize.me/api/account/info?apikey=${encodeURIComponent(key)}`); if (u.status !== 'success') throw new Error(u.message || 'Rejected'); return `Customer ${u.customer_id} · premium until ${new Date(u.premium_until * 1000).toLocaleDateString(appLocale())}`;
   },
@@ -294,14 +318,14 @@ const Vault = {
     if (stream && stream.infoHash && !stream.url && stream._tel && stream._tel.debrid) {
       const k = stream._tel.debrid;
       if ($('#player').hidden) openLayer('player');
-      P.ctx = ctx; Loader.show(ctx.meta); const tok = Vault.playTok = (Vault.playTok || 0) + 1;
+      P.ctx = ctx; Loader.show(ctx.meta); const tok = Vault.playTok = (Vault.playTok || 0) + 1, req = typeof playReq === 'number' ? ++playReq : 0;
       try {
         const url = await Vault.resolve(stream, ctx);
-        if (tok !== Vault.playTok || $('#player').hidden) return; // another source was picked, or the player closed, meanwhile
-        stream._infoHash = stream.infoHash; delete stream.infoHash; stream.url = url; stream._debrid = k; stream._tel = Telemetry.parse(stream);
+        if (tok !== Vault.playTok || (req && req !== playReq) || $('#player').hidden) return; // another source was picked, or the player closed, meanwhile
+        stream._infoHash = stream.infoHash; delete stream.infoHash; stream.url = url; stream._debrid = stream._via || k; stream._tel = Telemetry.parse(stream);
       } catch (e) {
-        if (tok !== Vault.playTok || $('#player').hidden) return;
-        Loader.hide(); toast(`${DEBRID[k].label}: ${e.message}`, 'err', 7000);
+        if (tok !== Vault.playTok || (req && req !== playReq) || $('#player').hidden) return;
+        Loader.hide(); toast(e && e.multi ? e.message : `${DEBRID[k].label}: ${e.message}`, 'err', 7000);
         Failover.tried.add(stream);
         if (CFG.failover && Failover.next(stream, 'is not cached', opts && opts.startAt)) return;
         // say what the debrid service said, not the "peer-to-peer torrent" notice
@@ -407,26 +431,126 @@ const Trakt = {
     return tt.length;
   },
 };
+/* Simkl signs in with a QR code: the screen shows a code, the phone scans it and says yes on Simkl, and MKCinema
+   waits for the answer (Simkl's device sign-in, the same one TV apps use). No keys to paste. A client ID someone
+   pasted before keeps working through Simkl's older PIN sign-in. */
+const SIMKL_APP = '8c67d0aebed0a9d6fe2d2d5c5fc8aee3edf80a3c3a92180a286e4c30663d6cac';
 const Simkl = {
   base: 'https://api.simkl.com',
+  app() { return /^[0-9a-f]{32,}$/i.test(SIMKL_APP) ? SIMKL_APP : ''; },
   cfg() { return Store.get('simkl', {}); }, save(v) { Store.set('simkl', { ...this.cfg(), ...v }); },
-  on() { const c = this.cfg(); return !!(c.token && c.clientId); },
-  async api(path, { method = 'GET', body } = {}) {
+  // a QR sign-in belongs to MKCinema's Simkl app; an older sign-in to the client ID that was pasted for it
+  cid() { const c = this.cfg(); return c.v2 ? this.app() : (c.clientId || ''); },
+  on() { const c = this.cfg(); return !!(c.token && this.cid()); },
+  own() { return !!this.cfg().clientId || !this.app(); },
+  async api(path, { method = 'GET', body } = {}, again) {
     const c = this.cfg();
-    const r = await netFetch(this.base + path, { method, headers: { 'Content-Type': 'application/json', 'simkl-api-key': c.clientId, ...(c.token ? { Authorization: `Bearer ${c.token}` } : {}) }, body: body ? JSON.stringify(body) : undefined });
+    if (c.v2 && c.refresh && c.expires && Date.now() > c.expires - 3600e3) await this.renew().catch(() => false);
+    const tok = this.cfg().token;
+    const r = await netFetch(this.base + path, { method, headers: { 'Content-Type': 'application/json', 'simkl-api-key': this.cid(), ...(tok ? { Authorization: `Bearer ${tok}` } : {}) }, body: body ? JSON.stringify(body) : undefined });
+    if (r.status === 401 && !again && this.cfg().v2 && this.cfg().refresh && await this.renew().catch(() => false)) return this.api(path, { method, body }, true);
     if (!r.ok) throw await svcError('Simkl', r);
     const t = await r.text(); return t ? JSON.parse(t) : null;
   },
-  async connect(onCode) {
-    const c = this.cfg(); if (!c.clientId) throw new Error('Paste your Simkl client ID first');
-    const d = await this.api(`/oauth/pin?client_id=${encodeURIComponent(c.clientId)}`); onCode(d.user_code, d.verification_url);
-    const until = Date.now() + (d.expires_in || 900) * 1000;
+  async auth(path, body) {
+    const r = await netFetch(this.base + path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'simkl-api-key': this.app() }, body: JSON.stringify({ client_id: this.app(), ...body }) });
+    let j = null; try { j = await r.json(); } catch (e) { j = null; }
+    return { ok: r.ok, status: r.status, j: j && typeof j === 'object' ? j : {} };
+  },
+  keep(j) { this.save({ token: j.access_token, refresh: j.refresh_token || this.cfg().refresh || '', expires: Date.now() + (Number(j.expires_in) || 7 * 86400) * 1000, v2: true }); },
+  async renew() {
+    if (this._renewing) return this._renewing;
+    this._renewing = (async () => {
+      const c = this.cfg(); if (!c.refresh) return false;
+      const { ok, j } = await this.auth('/oauth2/token', { grant_type: 'refresh_token', refresh_token: c.refresh });
+      if (ok && j.access_token) { this.keep(j); return true; }
+      if (/^(invalid_grant|expired_token|access_denied)$/.test(j.error || '')) this.save({ token: '', refresh: '' });
+      return false;
+    })().finally(() => { this._renewing = null; });
+    return this._renewing;
+  },
+  run: 0,
+  stop() { this.run++; },
+  /* QR sign-in: onCode(code, address to type, address in the QR, seconds left) */
+  async connectQR(onCode) {
+    if (!this.app()) throw new Error('Simkl sign-in is not ready in this version yet');
+    const run = ++this.run;
+    const { ok, status, j: d } = await this.auth('/oauth2/device', { scope: 'media:read media:write' });
+    if (!ok || !d.device_code || !d.user_code) throw new Error(`Simkl did not give a code (${d.error_description || d.error || status}). Try again in a minute.`);
+    const url = /^https:\/\//.test(d.verification_uri || '') ? d.verification_uri : 'https://simkl.com/pin';
+    const full = /^https:\/\//.test(d.verification_uri_complete || '') ? d.verification_uri_complete : `${url}${url.includes('?') ? '&' : '?'}user_code=${encodeURIComponent(d.user_code)}`;
+    const life = Number(d.expires_in) || 900, until = Date.now() + life * 1000;
+    onCode(String(d.user_code), url, full, life);
+    let gap = Math.max(5, Number(d.interval) || 5);
     while (Date.now() < until) {
-      await new Promise((res) => setTimeout(res, (d.interval || 5) * 1000));
-      const t = await this.api(`/oauth/pin/${encodeURIComponent(d.user_code)}?client_id=${encodeURIComponent(c.clientId)}`);
-      if (t && t.access_token) { this.save({ token: t.access_token }); return true; }
+      await sleep(gap * 1000);
+      if (run !== this.run) return false;
+      let res; try { res = await this.auth('/oauth2/token', { grant_type: 'urn:ietf:params:oauth:grant-type:device_code', device_code: d.device_code }); } catch (e) { continue; }
+      if (run !== this.run) return false;
+      if (res.j.access_token) { this.keep(res.j); await this.whoami(); return true; }
+      const e = String(res.j.error || '');
+      if (e === 'authorization_pending' || res.status >= 500 || res.status === 429) continue;
+      if (e === 'slow_down') { gap += 5; continue; }
+      if (e === 'access_denied') throw new Error('You said no on Simkl, so nothing was connected.');
+      if (e === 'expired_token') break;
+      throw new Error(`Simkl stopped the sign-in (${res.j.error_description || e || res.status}). Try again.`);
     }
     throw new Error('The code expired. Try again.');
+  },
+  /* the older PIN sign-in, for a client ID someone made themselves */
+  async connect(onCode) {
+    const c = this.cfg(); if (!c.clientId) throw new Error('Paste your Simkl client ID first');
+    const run = ++this.run;
+    const d = await this.api(`/oauth/pin?client_id=${encodeURIComponent(c.clientId)}`);
+    const url = /^https:\/\//.test(d.verification_url || '') ? d.verification_url : 'https://simkl.com/pin/';
+    onCode(String(d.user_code), url, url, d.expires_in || 900);
+    const until = Date.now() + (d.expires_in || 900) * 1000;
+    while (Date.now() < until) {
+      await sleep((d.interval || 5) * 1000);
+      if (run !== this.run) return false;
+      const t = await this.api(`/oauth/pin/${encodeURIComponent(d.user_code)}?client_id=${encodeURIComponent(c.clientId)}`).catch(() => null);
+      if (t && t.access_token) { this.save({ token: t.access_token, v2: false }); await this.whoami(); return true; }
+    }
+    throw new Error('The code expired. Try again.');
+  },
+  async whoami() { try { const u = await this.api('/users/settings', { method: 'POST' }); const n = u && u.user && u.user.name; if (n) this.save({ user: String(n).slice(0, 60) }); } catch (e) { /* the name is only shown, not needed */ } },
+  async out() {
+    const c = this.cfg(); this.stop();
+    if (c.v2 && c.token) this.auth('/oauth2/revoke', { token: c.refresh || c.token }).catch(() => {});
+    Store.set('simkl', c.clientId ? { clientId: c.clientId } : {});
+  },
+  rowHTML() {
+    const c = this.cfg();
+    if (this.on()) return `<div class="set-row"><div><b>Connected</b><small id="smk-st">${c.user ? `<span translate="no">${esc(c.user)}</span> · ` : ''}<span>Finished titles are added to your Simkl history.</span></small></div><div class="set-ctl"><button class="btn btn-ghost btn-sm" type="button" id="smk-in"><i data-lucide="download"></i>Import watchlist</button><button class="btn btn-ghost btn-sm" type="button" id="smk-out"><i data-lucide="upload"></i>Export watchlist</button><button class="btn btn-ghost btn-sm danger" type="button" id="smk-x">Disconnect</button></div></div>`;
+    const qr = !this.own();
+    return `<div class="set-row"><div><b>Not connected</b><small id="smk-st">${qr ? 'Scan a QR code with your phone and say yes on Simkl. Nothing to type or paste.' : 'Save the client ID, then connect.'}</small></div><div class="set-ctl"><button class="btn btn-prime btn-sm" type="button" id="smk-go"><i data-lucide="${qr ? 'qr-code' : 'link'}"></i>Connect Simkl</button></div></div><div class="smk-pin" id="smk-pin" hidden></div>`;
+  },
+  pinHTML(code, url, full) {
+    let qr = ''; try { qr = QR.svg(full, { margin: 2 }); } catch (e) { qr = ''; }
+    return `${qr ? `<div class="qr-wrap sm">${qr}</div>` : ''}<div class="smk-pin-t"><small>Scan with your phone camera</small><b class="mono smk-code" translate="no">${esc(code)}</b><span>No camera? Type this code at ${esc(url.replace(/^https?:\/\//, '').replace(/\/$/, ''))}, then say yes on Simkl.</span><span class="smk-wait"><i data-lucide="loader-circle"></i><span>Waiting for Simkl…</span> <em class="tnum" id="smk-left"></em></span><button class="btn btn-ghost btn-sm" type="button" id="smk-cancel">Cancel</button></div>`;
+  },
+  bind(run) {
+    const go = $('#smk-go');
+    if (go) go.onclick = async () => {
+      const st = $('#smk-st'), box = $('#smk-pin'); let tick = 0;
+      go.disabled = true;
+      const done = () => { clearInterval(tick); go.disabled = false; if (box) { box.hidden = true; box.innerHTML = ''; } };
+      try {
+        const ok = await (this.own() ? this.connect.bind(this) : this.connectQR.bind(this))((code, url, full, life) => {
+          if (!box || !box.isConnected) return;
+          box.innerHTML = this.pinHTML(code, url, full); box.hidden = false; icons();
+          const end = Date.now() + life * 1000, left = () => { const e = $('#smk-left'); if (!e) return clearInterval(tick); const s = Math.max(0, Math.round((end - Date.now()) / 1000)); e.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+          left(); tick = setInterval(left, 1000);
+          const x = $('#smk-cancel'); if (x) x.onclick = () => { this.stop(); done(); if (st) st.textContent = 'Cancelled.'; go.focus(); };
+          if (IS_TV) { const b = $('#smk-cancel'); if (b) b.focus({ preventScroll: true }); }
+          box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        });
+        done();
+        if (ok) { toast(this.cfg().user ? `Connected to Simkl as ${this.cfg().user}` : 'Connected to Simkl', 'ok'); if (!$('#settings').hidden) renderSettingsBody(); }
+      } catch (e) { done(); if (st && st.isConnected) st.textContent = e.message; else toast(e.message, 'err'); }
+    };
+    run('#smk-in', async () => toast(`Added ${await this.importList()} titles from Simkl`, 'ok')); run('#smk-out', async () => toast(`Sent ${await this.exportList()} titles to Simkl`, 'ok'));
+    run('#smk-x', async () => { await this.out(); renderSettingsBody(); });
   },
   async history(ctx) {
     const x = Trakt.ids(ctx); if (!x) return; const id = x.id;
@@ -480,23 +604,69 @@ const Calendar = {
     continueItems().filter((p) => p.type === 'series').forEach((p) => { if (!seen.has(p.metaId)) seen.set(p.metaId, { id: p.metaId, type: 'series', name: p.name, poster: p.poster }); });
     return [...seen.values()].slice(0, 40);
   },
+  /* 2.75: films on the watchlist (and in Continue watching) that are not out at home yet, or came out lately */
+  films() {
+    const seen = new Map();
+    S.watchlist.filter((m) => m.type === 'movie' && /^tt\d+$/.test(m.id)).forEach((m) => seen.set(m.id, m));
+    return [...seen.values()].slice(0, 60);
+  },
+  fdates: new Map(),
+  /* a film's release dates in the viewer's region: cinemas (TMDB type 3) and at home (digital 4, disc 5).
+     The viewer's own TMDB key first, then MKCinema's lookup, then the catalog's release date. */
+  async filmDates(m) {
+    const region = WhereToWatch.region(), k = `${m.id}:${region}`;
+    if (this.fdates.has(k)) return this.fdates.get(k);
+    const p = (async () => {
+      const pick = (list) => {
+        const rows = list || [], mine = rows.find((x) => x.iso_3166_1 === region) || rows.find((x) => x.iso_3166_1 === 'US');
+        const ds = ((mine && mine.release_dates) || []).map((d) => ({ t: Number(d.type), at: Date.parse(d.release_date || '') })).filter((d) => d.at);
+        const first = (types) => ds.filter((d) => types.includes(d.t)).sort((a, b) => a.at - b.at)[0];
+        const c = first([3, 2]), h = first([4, 5]);
+        return [c && { kind: 'cinema', at: c.at }, h && { kind: 'home', at: h.at }].filter(Boolean);
+      };
+      try {
+        if (TMDB.key()) {
+          const f = await TMDB.find(m.id), mv = f && (f.movie_results || [])[0];
+          if (mv) { const d = await TMDB.get(`movie/${mv.id}/release_dates`); const out = pick(d && d.results); if (out.length) return out; }
+        } else {
+          const j = await MetaBackup.relay('release', { tt: m.id, region });
+          if (j && Array.isArray(j.dates)) return j.dates.filter((d) => d && /^(cinema|home)$/.test(d.kind) && Date.parse(d.date)).map((d) => ({ kind: d.kind, at: Date.parse(d.date) }));
+        }
+      } catch (e) { /* falls back to the catalog date */ }
+      const meta = await engine.fetchMeta('movie', m.id).catch(() => null);
+      const at = Date.parse((meta && meta.released) || '');
+      return at ? [{ kind: 'release', at }] : [];
+    })();
+    this.fdates.set(k, p); p.catch(() => this.fdates.delete(k));
+    return p;
+  },
   async render() {
-    const body = $('#calBody'), token = ++this.token, shows = this.shows();
+    const body = $('#calBody'), token = ++this.token, shows = this.shows(), films = this.films();
     $$('#calRange [data-days]').forEach((b) => { const on = Number(b.dataset.days) === this.days; b.classList.toggle('on', on); b.setAttribute('aria-checked', on); });
-    if (!shows.length) { body.innerHTML = '<div class="empty-state"><i data-lucide="calendar-days"></i><h3>No series to follow yet</h3><p>Add series to your watchlist, or start watching one, and their new episodes show up here.</p></div>'; icons(); return; }
-    body.innerHTML = `<div class="status-line"><span class="spin"></span>Checking ${shows.length} series…</div>`;
+    if (!shows.length && !films.length) { body.innerHTML = '<div class="empty-state"><i data-lucide="calendar-days"></i><h3>Nothing to follow yet</h3><p>Add series or upcoming films to your watchlist, or start watching a series. New episodes and release days show up here.</p></div>'; icons(); return; }
+    body.innerHTML = `<div class="status-line"><span class="spin"></span>Checking ${shows.length} series and ${films.length} film${films.length === 1 ? '' : 's'}…</div>`;
     const now = Date.now(), from = now - 3 * 86400e3, to = now + this.days * 86400e3, eps = [];
-    await Promise.allSettled(shows.map(async (s) => {
+    await Promise.allSettled([...shows.map(async (s) => {
       const meta = remember({ ...s, ...((await engine.fetchMeta('series', s.id)) || {}) });
       (meta.videos || []).forEach((v) => { const at = Date.parse(v.released || v.firstAired || ''); if (at >= from && at <= to && Number(v.season) !== 0) eps.push({ meta, v, at }); });
-    }));
+    }), ...films.map(async (f) => {
+      const ds = await this.filmDates(f);
+      ds.forEach((d) => { if (d.at >= from && d.at <= to) eps.push({ meta: remember({ ...f }), film: d.kind, at: d.at }); });
+    })]);
     if (token !== this.token) return;
     eps.sort((a, b) => a.at - b.at);
-    $('#calNote').textContent = `${eps.length} episode${eps.length === 1 ? '' : 's'} · ${shows.length} series`;
-    if (!eps.length) { body.innerHTML = `<div class="empty">Nothing airing in the next ${this.days} days for your series.</div>`; return; }
+    const nEp = eps.filter((e) => !e.film).length, nFilm = eps.length - nEp;
+    $('#calNote').textContent = [`${nEp} episode${nEp === 1 ? '' : 's'}`, nFilm ? `${nFilm} film date${nFilm === 1 ? '' : 's'}` : '', `${shows.length} series`, films.length ? `${films.length} film${films.length === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ');
+    if (!eps.length) { body.innerHTML = `<div class="empty">Nothing airing or coming out in the next ${this.days} days.</div>`; return; }
     const day = (t) => { const d = new Date(t), today = new Date(); today.setHours(0, 0, 0, 0); const diff = Math.round((new Date(d).setHours(0, 0, 0, 0) - today) / 86400e3); return diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff === -1 ? 'Yesterday' : d.toLocaleDateString(appLocale(), { weekday: 'long', month: 'short', day: 'numeric' }); };
     const groups = []; eps.forEach((e) => { const k = day(e.at); const g = groups[groups.length - 1]; if (g && g.k === k) g.list.push(e); else groups.push({ k, list: [e] }); });
+    const KIND = { cinema: ['clapperboard', 'In cinemas'], home: ['tv', 'At home'], release: ['calendar', 'Release'] };
     body.innerHTML = groups.map((g) => `<section class="cal-day"><h3>${esc(g.k)}</h3>${g.list.map((e) => {
+      if (e.film) {
+        const out = e.at <= now, k = KIND[e.film] || KIND.release;
+        return `<div class="cal-ep cal-film ${out ? 'aired' : ''}">${imgTag(metaPoster(e.meta), e.meta.name, e.meta.id)}<div class="cal-t"><b>${esc(e.meta.name)}</b><small><span class="cal-kind"><i data-lucide="${k[0]}"></i>${esc(k[1])}</span>Film</small><span class="cal-when tnum" data-at="${e.at}"></span></div>
+        <button class="btn btn-ghost btn-sm" type="button" data-cinfo="${esc(e.meta.id)}"><i data-lucide="info"></i>Details</button></div>`;
+      }
       const id = videoIdFor(e.meta, e.v), aired = e.at <= now;
       return `<div class="cal-ep ${aired ? 'aired' : ''}">${imgTag(metaPoster(e.meta), e.meta.name, e.meta.id)}<div class="cal-t"><b>${esc(e.meta.name)}</b><small>S${esc(e.v.season)} · E${esc(e.v.episode)}${e.v.name || e.v.title ? ` · ${esc(e.v.name || e.v.title)}` : ''}</small><span class="cal-when tnum" data-at="${e.at}"></span></div>
         ${aired ? `<button class="btn btn-prime btn-sm" type="button" data-cplay="${esc(id)}" data-meta="${esc(e.meta.id)}"><i data-lucide="play"></i>${isWatched(id) ? 'Watch again' : 'Play'}</button>` : `<button class="btn btn-ghost btn-sm" type="button" data-cinfo="${esc(e.meta.id)}"><i data-lucide="info"></i>Details</button>`}</div>`;
@@ -511,13 +681,17 @@ const Calendar = {
     $$('#calBody [data-at]').forEach((el) => {
       const d = Number(el.dataset.at) - now, a = Math.abs(d), dd = Math.floor(a / 86400e3), hh = Math.floor(a % 86400e3 / 3600e3), mm = Math.floor(a % 3600e3 / 60e3);
       const span = dd ? `${dd}d ${hh}h` : hh ? `${hh}h ${mm}m` : `${mm}m`;
-      el.textContent = d > 0 ? `in ${span}` : `aired ${span} ago`;
+      el.textContent = d > 0 ? `in ${span}` : el.closest('.cal-film') ? `out ${span} ago` : `aired ${span} ago`;
     });
   },
   async play(metaId, vid, btn) {
     const meta = S.metas.get(metaId); if (!meta) return;
     btn.disabled = true; const v = (meta.videos || []).find((x) => videoIdFor(meta, x) === vid) || null;
-    const { streams } = await engine.fetchStreams('series', vid); const pick = pickBest(streams); btn.disabled = false;
+    const req = typeof playReq === 'number' ? ++playReq : 0;
+    let streams = []; try { ({ streams } = await engine.fetchStreams('series', vid)); } finally { btn.disabled = false; }
+    // the person left the calendar, pressed another Play, or started something else meanwhile
+    if ((req && req !== playReq) || S.view !== 'calendar' || !btn.isConnected) return;
+    const pick = pickBest(streams);
     if (!pick) { openDetail(meta, { videoId: vid }); return; }
     playStream({ meta, video: v, streams }, pick, { startAt: 0 });
   },
@@ -536,8 +710,8 @@ const Governor = {
     let sampling = false, slow = 0;
     addEventListener('scroll', () => {
       if (sampling || this.done || CFG.quality === 'low' || !CFG.governor) return; sampling = true;
-      let n = 0, last = performance.now(), sum = 0;
-      const f = (now) => { sum += now - last; last = now; n++; if (n < 60) requestAnimationFrame(f); else { const avg = sum / n; slow = avg > 26 ? slow + 1 : 0; if (slow >= 2) this.saver('Scrolling was dropping frames'); setTimeout(() => { sampling = false; }, 4000); } };
+      let n = 0, last = performance.now(), sum = 0, best = 1e9;
+      const f = (now) => { const d = now - last; sum += d; if (n && d > 4) best = Math.min(best, d); last = now; n++; if (n < 60) requestAnimationFrame(f); else { const avg = sum / n; slow = avg > Math.max(26, (best < 1e9 ? best : 16.7) * 1.6) ? slow + 1 : 0; if (slow >= 2) this.saver('Scrolling was dropping frames'); setTimeout(() => { sampling = false; }, 4000); } };
       requestAnimationFrame(f);
     }, { passive: true });
   },
@@ -574,7 +748,7 @@ const PWA = {
 const HOME_ROWS = [['cw', 'Continue watching'], ['picks', 'Your Picks'], ['watchlist', 'My watchlist'], ['catalogs', 'Catalogs from your addons']];
 const Layout = {
   get() { return { start: 'home', focus: 'both', hidden: [], traktLists: false, ...(Store.get('homeLayout', {}) || {}) }; },
-  set(patch) { Store.set('homeLayout', { ...this.get(), ...patch }); if (S.view === 'home') renderHome(); },
+  set(patch) { Store.set('homeLayout', { ...this.get(), ...patch }); if (typeof Account !== 'undefined' && Account.schedule) Account.schedule(); if (S.view === 'home') renderHome(); },
   shows(row) { return !this.get().hidden.includes(row); },
   /* catalogs filtered and ordered by the movies / series focus */
   catalogs(list) {

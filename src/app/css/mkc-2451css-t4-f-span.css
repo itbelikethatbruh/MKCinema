@@ -29,5 +29,5 @@
    The same soft edge now sits on the panel itself, so it stays put. */
 @media (min-width:761px){
   html.nav-side:not(.tv):not([data-look="anime"]) .dock::before{display:none}
-  html.nav-side:not(.tv):not([data-look="anime"]) .dock{border:1px solid rgba(255,255,255,.07);border-top-color:rgba(255,255,255,.16)}
+  html.nav-side:not(.tv):not([data-look="anime"]) .dock{border:1px solid rgba(var(--kffffff-c,255,255,255),.07);border-top-color:rgba(var(--kffffff-c,255,255,255),.16)}
 }

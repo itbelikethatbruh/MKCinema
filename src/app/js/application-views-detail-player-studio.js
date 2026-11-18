@@ -52,7 +52,7 @@ function cardHTML(m, { wide = false, progress = null, sub = '' } = {}) {
       <div class="layer l1"></div>
       <div class="layer l2">
         ${q ? `<span class="badge-q">${esc(q)}</span>` : ''}${CFG.ratingBadges && !art && m.imdbRating ? `<span class="badge-r ${rateTier(m.imdbRating)}"><i><svg class="st-ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.4L12 17.4l-5.8 3 1.1-6.4L2.6 9.4l6.5-.9z"/></svg></i>${esc(m.imdbRating)}</span>` : ''}
-        <button class="orb" type="button" data-quickplay tabindex="-1" aria-label="Play ${esc(m.name)}"><i data-lucide="play"></i></button>
+        ${IS_TV ? '<!--orb-->' /*tv-fast-orb*/ : `<button class="orb" type="button" data-quickplay tabindex="-1" aria-label="Play ${esc(m.name)}"><i data-lucide="play"></i></button>`}
         <div class="info">
           <div class="pills">${m.imdbRating && !(CFG.ratingBadges && !art) ? `<span class="imdb ${rateTier(m.imdbRating)}"><b>IMDb</b>${esc(m.imdbRating)}</span>` : ''}${yearOf(m) ? `<span class="pill">${esc(yearOf(m))}</span>` : ''}${genresOf(m).slice(0, 1).map((g) => `<span class="pill">${esc(g)}</span>`).join('')}</div>
           <div class="card-title">${esc(m.name)}</div>
@@ -121,8 +121,36 @@ function progressSub(p) {
   const left = Math.max(0, p.d - p.t);
   return `${p.season != null && p.type === 'series' ? `S${p.season} · E${p.episode} · ` : ''}${fmtTime(left)} left`;
 }
+/* Every catalog an addon lists gets its Home row (2.73.2). Before, Home stopped at 16 rows and left out catalogs that
+   need a genre. The first rows load at once as before; the rest load a few at a time behind them, so a long list of
+   addons never floods the network or a TV. A catalog that needs a genre shows its first one (for Cinemeta's New, this year). */
+const AllRows = {
+  NOW: 16, MAX: 3, busy: 0, q: [],
+  list() {
+    const out = [];
+    for (const c of engine.catalogs({ includeRequired: true })) {
+      const req = c.required || [];
+      if (!req.length) { out.push(c); continue; }
+      if (!req.every((r) => r === 'genre' || r === 'skip')) continue;          // search-only and similar stay in Discover and Search
+      if (req.includes('genre')) { const g = (c.genres || []).find(Boolean); if (g) out.push({ ...c, name: /^\d{4}$/.test(String(g)) ? c.name : `${c.name} · ${g}`, _fix: { genre: g } }); }
+      else out.push({ ...c, _fix: { skip: 0 } });
+    }
+    return out;
+  },
+  slot() { if (this.busy < this.MAX) { this.busy++; return Promise.resolve(); } return new Promise((r) => this.q.push(r)); },
+  free() { const n = this.q.shift(); if (n) n(); else this.busy = Math.max(0, this.busy - 1); },
+  after() {
+    clearTimeout(this.t);
+    this.t = setTimeout(() => {
+      if (typeof SimpleHome !== 'undefined' && SimpleHome.tidy) SimpleHome.tidy();
+      if (typeof KidsAge !== 'undefined' && typeof Seats !== 'undefined' && Seats.kids && Seats.kids()) KidsAge.prune();
+      icons();
+    }, 120);
+  },
+};
 async function renderHome() {
   const rows = $('#homeRows'); rows.innerHTML = '';
+  if (typeof HomeCards !== 'undefined') HomeCards.mount(rows); // 2.82
   const cw = Layout.shows('cw') ? continueItems() : [];
   if (cw.length) {
     const sec = rowShell('Continue watching', `${cw.length} in progress`, { id: 'cwRow' }); rows.appendChild(sec);
@@ -135,19 +163,22 @@ async function renderHome() {
   }
   // Settings › Home: movies or series first (or only), and whether addon catalogs show at all
   const lay = Layout.get();
-  const cats = Layout.shows('catalogs') ? Layout.catalogs(engine.catalogs().filter((c) => c.type !== 'tv' && (lay.traktLists || !Layout.traktList(c)) && (typeof AddonUI === 'undefined' || AddonUI.place(c) === 'home'))).slice(0, 16) : [];
+  const cats = Layout.shows('catalogs') ? Layout.catalogs(AllRows.list().filter((c) => c.type !== 'tv' && (lay.traktLists || !Layout.traktList(c)) && (typeof AddonUI === 'undefined' || AddonUI.place(c) === 'home'))) : [];
   let heroSet = false;
   if (!cats.length && Layout.shows('catalogs')) rows.insertAdjacentHTML('beforeend', `<div class="empty-state"><i data-lucide="${engine.offline ? 'cloud-off' : 'library'}"></i><h3>${engine.offline ? 'Cinemeta is unreachable' : 'No catalogs installed'}</h3><p>${engine.offline ? 'MKCinema has no titles of its own. Once Cinemeta answers, your catalogs appear here.' : 'Open the addon manager to add a catalog addon.'}</p></div>`);
-  await Promise.allSettled(cats.map(async (cat, i) => {
-    const sec = rowShell(cat.name, `${cat.type} · ${cat.addon.manifest.name}`, { more: () => openCatalog(cat) }); sec.dataset.rk = `cat:${cat.addon.manifest.id}/${cat.type}/${cat.id}`; rows.appendChild(sec);
+  const jobs = (cats.map(async (cat, i) => {
+    const sec = rowShell(cat.name, `${cat.type} · ${cat.addon.manifest.name}`, { more: () => openCatalog(cat) }); sec.dataset.rk = `cat:${cat.addon.manifest.id}/${cat.type}/${cat.id}${cat._fix && cat._fix.genre ? `/${cat._fix.genre}` : ''}`; rows.appendChild(sec);
+    const late = i >= AllRows.NOW; if (late) { await AllRows.slot(); if (!sec.isConnected) { AllRows.free(); return; } }
     try {
       const metas = await engine.fetchCatalog(cat);
       // Home only shows rows that have something in them; empty or failing catalogs stay in Discover and the addon manager
       if (!metas.length) { sec.remove(); return; }
-      { const shown = IS_TV ? 24 : (typeof HomeLazy !== 'undefined' ? HomeLazy.first() : 40); const ax = typeof AddonUI === 'undefined' ? 'poster' : AddonUI.layout(cat, metas); sec._ax = ax; if (ax !== 'poster') sec.classList.add(`ax-${ax}`); fillRail(sec, metas.slice(0, shown).map((m, k) => (ax === 'poster' ? cardHTML(m) : AddonUI.card(m, ax, k))).join('')); if (typeof Endless !== 'undefined') Endless.attach(sec, cat, metas, Math.min(shown, metas.length)); }
+      { const shown = IS_TV ? (window.MK_LITE ? 12 : 24) : (typeof HomeLazy !== 'undefined' ? HomeLazy.first() : 40); const ax = typeof AddonUI === 'undefined' ? 'poster' : AddonUI.layout(cat, metas); sec._ax = ax; if (ax !== 'poster') sec.classList.add(`ax-${ax}`); fillRail(sec, metas.slice(0, shown).map((m, k) => (ax === 'poster' ? cardHTML(m) : AddonUI.card(m, ax, k))).join('')); if (typeof Endless !== 'undefined') Endless.attach(sec, cat, metas, Math.min(shown, metas.length)); }
       if (!heroSet && i <= 2) { heroSet = true; setHeroList(metas.filter((m) => m.background || m.poster).slice(0, 8)); }
     } catch (e) { sec.remove(); console.warn('Home row skipped:', cat.name, e.message); }
+    finally { if (late) { AllRows.free(); AllRows.after(); } }
   }));
+  await Promise.allSettled(jobs.slice(0, AllRows.NOW));
   $('#hero').hidden = !heroSet;
   icons(); queueWall();
 }
@@ -164,7 +195,7 @@ function setHeroList(list) {
 // The billboard only advances while it can be seen, so nothing repaints under an open panel or in a background tab
 let TV_KEY_AT = 0; if (IS_TV) addEventListener('keydown', () => { TV_KEY_AT = performance.now(); }, true);
 function nextHero() {
-  if (document.hidden || document.body.classList.contains('layer-open') || document.body.classList.contains('saver-on') || S.view !== 'home' || scrollY > innerHeight || (IS_TV && performance.now() - TV_KEY_AT < 8000)) { S.heroTimer = setTimeout(nextHero, 3000); return; }
+  if (CFG.banner === 'off' || document.hidden || document.body.classList.contains('layer-open') || document.body.classList.contains('saver-on') || S.view !== 'home' || scrollY > innerHeight || (IS_TV && performance.now() - TV_KEY_AT < 8000)) { S.heroTimer = setTimeout(nextHero, 3000); return; }
   showHero(S.heroIdx + 1, 1);
 }
 function showHero(i, dir = 1) {
@@ -185,7 +216,7 @@ function showHero(i, dir = 1) {
   $$('#heroDots button').forEach((b, k) => b.classList.toggle('on', k === S.heroIdx));
   $('#heroList').innerHTML = inWatchlist(m.id) ? '<i data-lucide="check"></i>In watchlist' : '<i data-lucide="plus"></i>Watchlist';
   icons();
-  clearTimeout(S.heroTimer); S.heroTimer = setTimeout(nextHero, IS_TV ? 14000 : 9000);
+  clearTimeout(S.heroTimer); if (!window.MK_LITE) S.heroTimer = setTimeout(nextHero, IS_TV ? 14000 : 9000); // 2.79: Lite TVs keep one title
 }
 
 /* =====================================================================
@@ -212,9 +243,11 @@ function saveProgress(force) {
       videoId: key, metaId: ctx.meta.id, type: ctx.meta.type, name: ctx.meta.name, poster: metaPoster(ctx.meta), background: metaBg(ctx.meta), genres: genresOf(ctx.meta).slice(0, 2),
       thumb: ctx.video && ctx.video.thumbnail, epTitle: ctx.video && (ctx.video.name || ctx.video.title), season: ctx.video && ctx.video.season, episode: ctx.video && ctx.video.episode,
       t: cur, d: dur, at: now, bingeGroup: P.stream.behaviorHints && P.stream.behaviorHints.bingeGroup, addon: P.stream._addon,
+      left: typeof Gap283 !== 'undefined' ? Gap283.left(ctx) : undefined,   // 2.83 episodes left
     };
   }
   Store.set('progress', S.progress);
+  if (typeof HomeWidget !== 'undefined') HomeWidget.soon(); // 2.82
 }
 
 /* =====================================================================
@@ -245,6 +278,8 @@ function discoverCatalogs(type) {
   return engine.catalogs({ type, includeRequired: true }).filter((c) => !c.required.length || c.required.every((r) => r === 'genre'));
 }
 function renderDiscover(type, { catalog } = {}) {
+  // a row of another type (anime, tv...) opens under its own type, so the chosen catalog is the one shown
+  if (catalog && catalog.type && catalog.type !== type && discoverCatalogs(catalog.type).length) type = catalog.type;
   const D = S.disc; D.type = type;
   const cats = discoverCatalogs(type);
   $('#discTitle').textContent = type === 'series' ? 'Series' : 'Movies';
@@ -275,14 +310,21 @@ async function loadDiscover(cat, fresh) {
     D.skip += metas.length; D.done = !metas.length || !cat.extras.some((e) => e.name === 'skip');
     $('#discMore').hidden = D.done; icons();
   } catch (e) {
-    if (token === D.token) $('#discGrid').insertAdjacentHTML('beforeend', `<div class="empty">Could not load the catalog (${esc(e.message)}).</div>`);
+    if (token === D.token) {
+      // the placeholders give way to the error, with a way to try again
+      const grid = $('#discGrid'); if (fresh) grid.innerHTML = ''; else { const old = $('#discRetry'); if (old) old.parentElement.remove(); }
+      grid.insertAdjacentHTML('beforeend', `<div class="empty">Could not load the catalog (${esc(e.message)}). <button class="btn btn-ghost btn-sm" type="button" data-nav id="discRetry">Try again</button></div>`);
+      $('#discRetry').onclick = () => { if (fresh) $('#discGrid').innerHTML = skeletons(12); else $('#discRetry').parentElement.remove(); D.loading = false; loadDiscover(cat, fresh); };
+    }
   } finally { if (token === D.token) D.loading = false; }
 }
 
 /* =====================================================================
    Live TV + EPG
    ===================================================================== */
+let tvTok = 0;
 async function renderTV() {
+  const tok = ++tvTok;
   const cats = engine.catalogs({ type: 'tv' }).concat(engine.catalogs({ type: 'channel' }));
   const providers = [...new Set(cats.map((c) => c.addon))];
   $('#tvSources').innerHTML = [['', 'All sources'], ...providers.map((a) => [a.baseUrl, a.manifest.name])].map(([v, l]) => {
@@ -298,8 +340,10 @@ async function renderTV() {
   epg.innerHTML = '<div style="padding:22px" class="status-line"><span class="spin"></span>Tuning channels…</div>';
   const use = cats.filter((c) => !S.tvFilter || c.addon.baseUrl === S.tvFilter);
   const res = await Promise.allSettled(use.map((c) => engine.fetchCatalog(c)));
+  if (tok !== tvTok) return;   // another source was picked meanwhile
   let channels = res.flatMap((r) => (r.status === 'fulfilled' ? r.value : [])).slice(0, 60);
   channels = await Promise.all(channels.map(async (ch) => { if (ch.videos) return remember(ch); try { return remember((await engine.fetchMeta(ch.type, ch.id)) || ch); } catch (e) { return remember(ch); } }));
+  if (tok !== tvTok) return;
   const PX = 8, now = Date.now(), t0 = Math.floor((now - 30 * 60000) / (30 * 60000)) * 30 * 60000, span = 180, t1 = t0 + span * 60000;
   const x = (t) => ((t - t0) / 60000) * PX;
   const times = Array.from({ length: span / 30 }, (_, i) => `<span style="width:${30 * PX}px">${new Date(t0 + i * 30 * 60000).toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' })}</span>`).join('');
@@ -318,8 +362,9 @@ async function renderTV() {
 }
 async function tuneChannel(ch) {
   if (!ch) return;
-  toast(`Tuning ${ch.name}…`);
+  toast(`Tuning ${ch.name}…`); const req = ++playReq;
   const { streams } = await engine.fetchStreams(ch.type || 'tv', ch.id);
+  if (req !== playReq) return;
   const best = pickBest(streams);
   if (!best) { toast(`No playable stream for ${ch.name}`, 'err'); return; }
   playStream({ meta: ch, video: null, streams }, best);
@@ -347,12 +392,14 @@ function renderLibrary() {
 const D = { meta: null, season: null, video: null, streams: [], filter: 'all', token: 0, status: null };
 function seasonsOf(meta) {
   const map = new Map();
-  for (const v of (meta.videos || [])) { const s = Number(v.season ?? 1); if (!map.has(s)) map.set(s, []); map.get(s).push(v); }
+  for (const v of (meta.videos || [])) { const s = Number(qq(v.season, 1)); if (!map.has(s)) map.set(s, []); map.get(s).push(v); }
   for (const list of map.values()) list.sort((a, b) => (a.episode || 0) - (b.episode || 0));
   return [...map.entries()].sort((a, b) => (a[0] === 0) - (b[0] === 0) || a[0] - b[0]);
 }
 function orderedEpisodes(meta) { return seasonsOf(meta).filter(([s]) => s !== 0).flatMap(([, l]) => l); }
 function nextVideo(meta, video) { if (window.MkShuffle && MkShuffle.on(meta)) return MkShuffle.next(meta, video); const list = orderedEpisodes(meta); const i = list.findIndex((v) => v.id === video.id); return i >= 0 ? list[i + 1] || null : null; }
+/* a series that lists no season numbers has everything in season 1 (seasonsOf files it there too) */
+function seasonNo(v) { return Number(qq(v && v.season, 1)); }
 function videoIdFor(meta, v) { return v.id || StremioEngine.seriesId(meta.id, v.season, v.episode); }
 
 const MENU_LAYERS = ['epSheet', 'detail', 'addons', 'palette', 'settings', 'tastePick', 'askLayer', 'tour', 'stremioImport', 'trailer', 'partyLayer', 'castLayer'];
@@ -409,7 +456,7 @@ const EpSheet = {
     icons();
     $('#esPlay').onclick = () => smartPlayDetail();
     $('#esClose').onclick = () => this.close();
-    const go = (to) => { if (!to) return; D.video = to; D.season = Number(to.season); markEpisodes(); this.head(); loadDetailStreams(); };
+    const go = (to) => { if (!to) return; D.video = to; D.season = seasonNo(to); markEpisodes(); this.head(); loadDetailStreams(); };
     $('#esPrev').onclick = () => go(prev); $('#esNext').onclick = () => go(next);
   },
 };
@@ -418,7 +465,7 @@ function markEpisodes() {
   if (!D.meta || !$('#dEps')) return;
   const cur = D.video ? videoIdFor(D.meta, D.video) : '';
   const shown = Number(($('#dSeasons .chip.on') || {}).dataset ? $('#dSeasons .chip.on').dataset.season : NaN);
-  if (D.video && shown !== Number(D.video.season)) { renderDetail(false); return; }
+  if (D.video && shown !== seasonNo(D.video)) { renderDetail(false); return; }
   $$('#dEps [data-vid]').forEach((b) => b.classList.toggle('on', b.dataset.vid === cur));
 }
 $('#epSheet').addEventListener('click', (e) => { if (e.target.id === 'epSheet' || e.target.closest('.es-grab')) EpSheet.close(); });
@@ -438,7 +485,7 @@ async function openDetail(seed, { videoId } = {}) {
     const resumeV = !target && continueItems().find((p) => p.metaId === meta.id);
     const rv = resumeV && meta.videos.find((v) => videoIdFor(meta, v) === resumeV.videoId);
     D.video = target || rv || null;
-    const ss = seasonsOf(meta); D.season = D.video ? Number(D.video.season) : (ss.find(([s]) => s !== 0) || ss[0])[0];
+    const ss = seasonsOf(meta); D.season = D.video ? seasonNo(D.video) : (ss.find(([s]) => s !== 0) || ss[0])[0];
   }
   renderDetail(false);
   if (meta.type !== 'series' || D.video) loadDetailStreams();
@@ -451,13 +498,14 @@ function detailStreamTarget() {
 }
 async function loadDetailStreams() {
   const tgt = detailStreamTarget(); if (!tgt) return;
-  const token = D.token; D.streams = []; D.status = { pending: true, answered: 0, total: 0, errors: [] };
+  // each load gets its own number, so an older episode's answers never land under a newer episode
+  const token = D.token, load = (D.streamLoad = (D.streamLoad || 0) + 1); D.streams = []; D.status = { pending: true, answered: 0, total: 0, errors: [] };
   renderStreamsPanel();
   const r = await engine.fetchStreams(tgt.type, tgt.id, (all, info) => {
-    if (token !== D.token) return; D.streams = all.slice().sort((a, b) => b._tel.score - a._tel.score);
+    if (token !== D.token || load !== D.streamLoad) return; D.streams = all.slice().sort((a, b) => b._tel.score - a._tel.score);
     D.status.answered++; if (!info.ok) D.status.errors.push(`${info.addon.manifest.name}: ${info.error}`); renderStreamsPanel();
   });
-  if (token !== D.token) return;
+  if (token !== D.token || load !== D.streamLoad) return;
   D.streams = r.streams; D.status = { pending: false, answered: r.addons, total: r.addons, errors: r.errors.map((e) => `${e.addon.manifest.name}: ${e.error}`) };
   renderStreamsPanel();
 }
@@ -501,6 +549,8 @@ function renderDetail(loading) {
   if (renderDetail.popId !== m.id) { renderDetail.popId = m.id; renderDetail.popAt = performance.now(); }
   const t0 = ((performance.now() - renderDetail.popAt) / 1000).toFixed(3);
   const keepImgs = DetailImgs.take(panel);
+  // the highlighted control (a season, Watchlist, Spoiler Guard) keeps the highlight after the page is redrawn
+  const fa = document.activeElement, keepF = fa && fa !== panel && panel.contains(fa) ? (fa.id ? `#${fa.id}` : fa.dataset && fa.dataset.season != null ? `[data-season="${fa.dataset.season}"]` : '') : '';
   panel.innerHTML = `
     <button class="ibtn panel-close" type="button" data-close aria-label="Close"><i data-lucide="x"></i></button>
     <div class="d-hero">
@@ -535,6 +585,7 @@ function renderDetail(loading) {
     </div>`;
   DetailImgs.settle(panel, keepImgs);
   icons();
+  if (keepF) { const f = panel.querySelector(keepF); if (f) { if (typeof Nav !== 'undefined' && (IS_TV || f.classList.contains('nav-focus') || fa.classList.contains('nav-focus'))) Nav.focus(f, true); else f.focus({ preventScroll: true }); } }
   panel.querySelector('[data-close]').onclick = () => { closeLayer('detail'); };
   $('#dSmart').onclick = () => smartPlayDetail();
   const sg = $('#dSpoil'); if (sg) sg.onclick = () => { setCfg('spoilerGuard', !CFG.spoilerGuard); renderDetail(false); $$('#toasts .toast').forEach((t) => { if (/^Spoiler Guard/.test(t.dataset.msg || '')) t.remove(); }); toast(CFG.spoilerGuard ? 'Spoiler Guard on: unwatched episodes are hidden' : 'Spoiler Guard off', 'info', 2200); };
@@ -545,7 +596,7 @@ function renderDetail(loading) {
   if (window.MkReviews && !loading) MkReviews.place(m);
   $('#dList').onclick = () => { toggleWatchlist(m); renderDetail(false); renderStreamsPanel(); };
   $$('#dSeasons [data-season]').forEach((b) => b.addEventListener('click', () => { D.season = Number(b.dataset.season); renderDetail(false); renderStreamsPanel(); }));
-  bindEpisodes($('#dEps'), m, (v) => { D.video = v; D.season = Number(v.season); markEpisodes(); EpSheet.open(); loadDetailStreams(); });
+  bindEpisodes($('#dEps'), m, (v) => { D.video = v; D.season = seasonNo(v); markEpisodes(); EpSheet.open(); loadDetailStreams(); });
   renderStreamsPanel();
 }
 function episodesHTML(meta, season, cur) {
@@ -600,6 +651,7 @@ const BrowserPlay = {
     if (t.isTrailer || t.kind === 'yt') return true;
     if (t.kind === 'ext' || t.kind === 'none') return false;
     if (t.kind === 'p2p' ? !t.debrid : !t.webReady) return false;   // a torrent needs your debrid service to become a web link
+    if (window.MkNative && MkNative.ready()) return true; // 2.70: the native player reads every container and codec
     const T = [s.name, s.title, s.description, bh.filename].filter(Boolean).join(' ').toLowerCase();
     if (t.codec === 'HEVC' && !this.can('video/mp4; codecs="hvc1.1.6.L120.90"')) return false;
     if (t.codec === 'AV1' && !this.can('video/mp4; codecs="av01.0.08M.08"')) return false;
@@ -641,6 +693,21 @@ function visibleStreams(streams) {
   return streams.filter((s) => !(CFG.hideP2P && s._tel.kind === 'p2p') && !(!CFG.showTrailers && s._tel.isTrailer) && (!CFG.browserOnly || BrowserPlay.ok(s)) && AudioPref.ok(s));
 }
 const pickBest = (streams, opts) => engine.pickBest(visibleStreams(streams), opts);
+/* 2.75 Remember my pick: a source chosen by hand for a show (addon, quality, source group) is tried first next time,
+   for the next episode, a resume, Smart Play and the Best match badge. Per seat, on this device; Settings › Playback. */
+const PickMemo = {
+  all() { return Store.get('pickMemo', {}); },
+  get(meta) { if (!meta || !meta.id || CFG.pickMemo === false) return null; return this.all()[meta.id] || null; },
+  opts(meta, group) { const m = this.get(meta); return { bingeGroup: group || (m && m.g) || undefined, memo: m || undefined }; },
+  set(meta, s) {
+    if (!meta || !meta.id || !s || !s._tel || CFG.pickMemo === false || s._tel.isTrailer || s.ytId) return;
+    const all = this.all(), bh = s.behaviorHints || {};
+    all[meta.id] = { a: s._addon || '', r: s._tel.res || '', g: bh.bingeGroup || '', at: Date.now() };
+    const keys = Object.keys(all);
+    if (keys.length > 300) keys.sort((x, y) => all[x].at - all[y].at).slice(0, keys.length - 300).forEach((k) => { all[k] = undefined; });
+    Store.set('pickMemo', JSON.parse(JSON.stringify(all)));
+  },
+};
 function filterStreams(streams, f) {
   streams = visibleStreams(streams);
   if (f === '4k') return streams.filter((s) => s._tel.res === '4K UHD');
@@ -677,7 +744,7 @@ function renderStreamsPanel() {
   if (!tgt) { box.innerHTML = '<div class="empty">Pick an episode to see its streams, or press Smart Play to start from the first unwatched one.</div>'; return; }
   const st = D.status || { pending: true, answered: 0, total: 0, errors: [] };
   const total = engine.addons.filter((a) => engine.supports(a, 'stream', tgt.type, tgt.id)).length;
-  const list = filterStreams(D.streams, D.filter), best = pickBest(D.streams);
+  const list = filterStreams(D.streams, D.filter), best = pickBest(D.streams, PickMemo.opts(D.meta));
   box.innerHTML = `
     <div class="status-line">${st.pending ? '<span class="spin"></span>' : '<i data-lucide="radar"></i>'}<span>${st.pending ? `Asking ${total} addon${total === 1 ? '' : 's'} in parallel · ${st.answered} answered` : `${total} addon${total === 1 ? '' : 's'} answered`} · ${D.streams.length} stream${D.streams.length === 1 ? '' : 's'}</span></div>
     ${CFG.browserOnly && D.streams.length ? `<div class="status-line bo-line"><i data-lucide="globe"></i><span>Only sources that play here: ${D.streams.length - visibleStreams(D.streams).length} source${D.streams.length - visibleStreams(D.streams).length === 1 ? '' : 's'} that need VLC or another player are hidden. Change it in Settings › Playback.</span></div>` : ''}
@@ -688,29 +755,33 @@ function renderStreamsPanel() {
   icons();
   $$('[data-filter]', box).forEach((b) => b.addEventListener('click', () => { D.filter = b.dataset.filter; renderStreamsPanel(); }));
   if (window.MkAgain) MkAgain.mount(box, st);
-  $$('[data-si]', box).forEach((b) => b.addEventListener('click', () => { playStream({ meta: D.meta, video: D.video, streams: D.streams }, D.streams[Number(b.dataset.si)]); }));
+  $$('[data-si]', box).forEach((b) => b.addEventListener('click', () => { const s = D.streams[Number(b.dataset.si)]; PickMemo.set(D.meta, s); playStream({ meta: D.meta, video: D.video, streams: D.streams }, s); }));
 }
+/* every play start and every close counts here, so a slow lookup started earlier never takes over what came after it */
+let playReq = 0;
 async function smartPlayDetail() {
-  const m = D.meta;
+  const m = D.meta, req = ++playReq;
   if (m.type === 'series' && !D.video) {
     const eps = orderedEpisodes(m); if (!eps.length) { toast('This series lists no episodes yet', 'err'); return; }
     const resumeP = continueItems().find((p) => p.metaId === m.id);
-    D.video = (resumeP && m.videos.find((v) => videoIdFor(m, v) === resumeP.videoId)) || eps.find((v) => !S.progress[videoIdFor(m, v)]) || eps[0];
-    D.season = Number(D.video.season); renderDetail(false);
+    D.video = (resumeP && m.videos.find((v) => videoIdFor(m, v) === resumeP.videoId)) || eps.find((v) => !S.progress[videoIdFor(m, v)] && !isWatched(videoIdFor(m, v))) || eps[0];
+    D.season = seasonNo(D.video); renderDetail(false);
   }
   if (!D.streams.length || (D.status && D.status.pending)) await loadDetailStreams();
-  const best = pickBest(D.streams);
+  if (req !== playReq || D.meta !== m || $('#detail').hidden) return;
+  const best = pickBest(D.streams, PickMemo.opts(D.meta));
   if (!best) { toast('No browser-playable stream yet. Pick a source to hand off to an external player.', 'err'); return; }
   playStream({ meta: D.meta, video: D.video, streams: D.streams }, best);
 }
 async function quickPlay(seed) {}
 async function resume(videoId) {
-  const p = S.progress[videoId]; if (!p) return;
+  const p = S.progress[videoId]; if (!p) return; const req = ++playReq;
   let meta = { id: p.metaId, type: p.type, name: p.name, poster: p.poster };
   try { meta = remember({ ...meta, ...((await engine.fetchMeta(p.type, p.metaId)) || {}) }); } catch (e) { /* keep saved data */ }
   const video = p.type === 'series' && meta.videos ? meta.videos.find((v) => videoIdFor(meta, v) === videoId) || null : null;
   const { streams } = await engine.fetchStreams(p.type, videoId);
-  const pick = pickBest(streams, { bingeGroup: p.bingeGroup });
+  if (req !== playReq) return;
+  const pick = pickBest(streams, PickMemo.opts(meta, p.bingeGroup));
   if (!pick) { openDetail(meta, { videoId }); return; }
   playStream({ meta, video, streams }, pick, { startAt: p.t });
 }
@@ -791,12 +862,16 @@ function closeTrailer(silent) {
   $('#trSlot').innerHTML = ''; TR.drag = null;
   if (document.fullscreenElement && document.fullscreenElement.closest && document.fullscreenElement.closest('#trailer')) document.exitFullscreen().catch(() => {});
   clearTimeout(TR.hideT); document.body.classList.remove('tr-on');
+  { const tb = $('#trailer .tr-box'); if (tb && tb.classList.contains('tr-win')) { tb.classList.remove('tr-win'); trIcon('#trFull', 'maximize'); } }
   if (!silent) closeLayer('trailer');
 }
 $('#trClose').onclick = () => closeTrailer();
 $('#trPlay').onclick = () => { const y = TR.yt; if (!y || !y.getPlayerState) return; const st = y.getPlayerState(); if (st === 1 || st === 3) y.pauseVideo(); else y.playVideo(); setTimeout(trSync, 60); };
 $('#trMute').onclick = () => { const y = TR.yt; if (!y || !y.isMuted) return; if (y.isMuted()) y.unMute(); else y.mute(); setTimeout(trSync, 60); };
-$('#trFull').onclick = () => { const box = $('#trailer .tr-box'); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else if (box.requestFullscreen) box.requestFullscreen().then(() => { if (TOUCH_UI && screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); }).catch(() => {}); };
+$('#trFull').onclick = () => { const box = $('#trailer .tr-box');
+  // iPhone has no full screen for page elements: the trailer fills the window instead, like the main player
+  if (!box.requestFullscreen) { if (box.webkitRequestFullscreen && !/iPhone|iPod/.test(navigator.userAgent)) { try { if (document.webkitFullscreenElement) document.webkitExitFullscreen(); else box.webkitRequestFullscreen(); return; } catch (e) { /* fall through */ } } const on = box.classList.toggle('tr-win'); trIcon('#trFull', on ? 'minimize' : 'maximize'); return; }
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else if (box.requestFullscreen) box.requestFullscreen().then(() => { if (TOUCH_UI && screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); }).catch(() => {}); };
 document.addEventListener('fullscreenchange', () => trIcon('#trFull', document.fullscreenElement && document.fullscreenElement.matches('#trailer .tr-box') ? 'minimize' : 'maximize'));
 (() => {
   const seek = $('#trSeek'), at = (e) => { const r = seek.getBoundingClientRect(); return clamp((e.clientX - r.left) / r.width, 0, 1); };
@@ -894,20 +969,11 @@ const enc = encodeURIComponent;
 const PLAYERS = [
   { id: 'android', os: 'android', name: 'Ask every time (Android app picker)', short: 'your video app', link: (u, t) => intentUrl(u, t) },
   { id: 'vlc-android', os: 'android', name: 'VLC', link: (u, t) => intentUrl(u, t, 'org.videolan.vlc') },
-  { id: 'mx', os: 'android', name: 'MX Player', link: (u, t) => intentUrl(u, t, 'com.mxtech.videoplayer.ad') },
-  { id: 'mx-pro', os: 'android', name: 'MX Player Pro', link: (u, t) => intentUrl(u, t, 'com.mxtech.videoplayer.pro') },
-  { id: 'just', os: 'android', name: 'Just Player', link: (u, t) => intentUrl(u, t, 'com.brouken.player') },
-  { id: 'mpv-android', os: 'android', name: 'mpv', link: (u, t) => intentUrl(u, t, 'is.xyz.mpv') },
   { id: 'vlc-ios', os: 'ios', name: 'VLC', link: (u) => `vlc-x-callback://x-callback-url/stream?url=${enc(u)}` },
-  { id: 'infuse', os: 'ios mac', name: 'Infuse', link: (u) => `infuse://x-callback-url/play?url=${enc(u)}` },
-  { id: 'outplayer', os: 'ios', name: 'Outplayer', link: (u) => `outplayer://${u}` },
-  { id: 'nplayer', os: 'ios', name: 'nPlayer', link: (u) => `nplayer-${u}` },
-  { id: 'iina', os: 'mac', name: 'IINA', link: (u) => `iina://weblink?url=${enc(u)}` },
-  { id: 'potplayer', os: 'windows', name: 'PotPlayer', link: (u) => `potplayer://${u}` },
-  { id: 'm3u', os: 'mac windows linux android', name: 'Playlist file (.m3u) for VLC, mpv or any player', short: 'a playlist file', m3u: true },
+  { id: 'm3u', os: 'mac windows linux android', name: 'Playlist file (.m3u) for VLC', short: 'a playlist file', m3u: true },
 ];
 const playersHere = () => PLAYERS.filter((p) => p.os.split(' ').includes(PLATFORM));
-const extPlayerId = () => (CFG.extPlayers || {})[PLATFORM] || 'builtin';
+const extPlayerId=()=>IS_TV?'builtin':(CFG.extPlayers||{})[PLATFORM]||'builtin';
 const extPlayer = () => playersHere().find((p) => p.id === extPlayerId()) || null;
 /* The URL an outside app can fetch. Header-bound streams go through the MKCinema proxy, which only works when that app can reach it. */
 function handoffUrl(s) {
@@ -978,14 +1044,17 @@ function showMsg(title, body, actions = '') {
   $$('[data-m3u]', m).forEach((b) => b.addEventListener('click', () => downloadM3U(b.dataset.m3u, b.dataset.title)));
   $$('[data-act]', m).forEach((b) => b.addEventListener('click', () => playerAct(b.dataset.act)));
 }
+// where a switch to another source starts: the current spot when this source really played, else the saved resume point
+function switchAt() { return isFinite(pDur()) && pNow() > 1 ? pNow() : undefined; }
 function hideMsg() { $('#pMsg').hidden = true; $('#pMsg').innerHTML = ''; }
 function playerAct(a) {
-  if (a === 'next-src') { const list = P.ctx.streams.filter((s) => (s._tel.webReady && !s._tel.isTrailer && !s.ytId) || s === P.stream); const i = list.indexOf(P.stream); const n = list[i + 1]; if (n) playStream(P.ctx, n, { startAt: 0 }); else toast('No other playable sources', 'err'); }
+  if (a === 'next-src') { const list = P.ctx.streams.filter((s) => (s._tel.webReady && !s._tel.isTrailer && !s.ytId) || s === P.stream); const i = list.indexOf(P.stream); const n = list[i + 1]; if (n) playStream(P.ctx, n, { startAt: switchAt() }); else toast('No other playable sources', 'err'); }
   if (a === 'sources') openDrawer('src');
   if (a === 'close') closePlayer();
-  if (a === 'force') { P.force = true; playStream(P.ctx, P.stream, { startAt: 0 }); }
+  if (a === 'force') { P.force = true; playStream(P.ctx, P.stream, { startAt: switchAt() }); }
 }
 function teardown() {
+  if (window.MkNative && MkNative.active) MkNative.stop();
   if (P.hls) { try { P.hls.destroy(); } catch (e) { /* ignore */ } P.hls = null; }
   video.pause(); video.removeAttribute('src'); video.srcObject = null;
   $$('track', video).forEach((t) => t.remove()); video.load();
@@ -994,6 +1063,7 @@ function teardown() {
 }
 async function playStream(ctx, stream, { startAt } = {}) {
   if (!stream) return;
+  playReq++;
   if (stream.ytId) { if (!$('#player').hidden) closePlayer(); openTrailer(stream.ytId); return; }
   stream._tel = stream._tel || Telemetry.parse(stream);
   if (stream._tel.kind !== 'ext' && stream._tel.kind !== 'p2p' && extPlayer() && handoffUrl(stream) && !P.force) {
@@ -1016,7 +1086,7 @@ async function playStream(ctx, stream, { startAt } = {}) {
   { const pr = S.progress[key], d0 = pr && pr.d, pct = startAt && d0 > 0 ? clamp(startAt / d0 * 100, 0, 100) : 0; MkSeekPaint.cur(pct / 100); MkSeekPaint.buf(0); $('#pTime').textContent = d0 > 0 ? `${fmtTime(startAt || 0)} / ${fmtTime(d0)}` : fmtTime(startAt || 0); }
   Loader.show(ctx.meta);
   renderSourceDrawer();
-  if (ctx.meta.type === 'series' && (!prevCtx || prevCtx.meta.id !== ctx.meta.id)) P.epSeason = ctx.video ? Number(ctx.video.season) : null;
+  if (ctx.meta.type === 'series' && (!prevCtx || prevCtx.meta.id !== ctx.meta.id)) P.epSeason = ctx.video ? seasonNo(ctx.video) : null;
   renderEpisodeDrawer();
   wakeHud();
   const t = stream._tel;
@@ -1024,7 +1094,7 @@ async function playStream(ctx, stream, { startAt } = {}) {
   if (t.kind === 'ext') { showMsg('This source opens outside MKCinema', 'The addon gave a web page or app link instead of a video stream.', handoffHTML(stream) + '<button class="btn btn-ghost" type="button" data-act="sources"><i data-lucide="layers"></i>Other sources</button>'); }
   else if (t.kind === 'p2p') {
     showMsg('This is a peer-to-peer torrent stream', 'Browsers cannot play BitTorrent info hashes directly. Hand it to a torrent-capable player, or pick a web-ready source.', handoffHTML(stream) + '<button class="btn btn-ghost" type="button" data-act="sources"><i data-lucide="layers"></i>Other sources</button>');
-  } else if (stream.url && (stream.behaviorHints || {}).notWebReady && !(stream.behaviorHints || {}).proxyHeaders && !P.force) {
+  } else if (stream.url && (stream.behaviorHints || {}).notWebReady && !(stream.behaviorHints || {}).proxyHeaders && !P.force && !(window.MkNative && MkNative.wants(stream))) {
     showMsg('The addon marked this stream as not web-ready', 'It may use a container or codec browsers cannot decode. An external player is the safer choice, or you can try it here anyway.', `<button class="btn btn-prime" type="button" data-act="force"><i data-lucide="play"></i>Try in browser</button>${handoffHTML(stream)}<button class="btn btn-ghost" type="button" data-act="sources"><i data-lucide="layers"></i>Other sources</button>`);
   } else if (stream.url) {
     await DSP.prepare(stream); if (P.stream !== stream) return;
@@ -1046,7 +1116,7 @@ const HlsLoad = {
     return this.p || (this.p = new Promise((res, rej) => {
       const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js'; s.async = true;
       s.integrity = 'sha384-w6Gb3fXHb5e1LUYa/hYA5Q41bEDglN5ZPCG7Jvnoo8/X90oGnlPqBlBJCe38mEMm'; s.crossOrigin = 'anonymous';
-      s.onload = () => res(window.Hls); s.onerror = () => { this.p = null; this.failed = true; s.remove(); rej(new Error('hls.js did not load')); };
+      s.onload = () => res(window.Hls); s.onerror = () => { this.p = null; s.remove(); rej(new Error('hls.js did not load')); };
       document.head.appendChild(s);
     }));
   },
@@ -1054,7 +1124,10 @@ const HlsLoad = {
 };
 function loadUrl(stream, startAt) {
   const hlsTok = ++HlsLoad.tok;
-  if (!window.Hls && !HlsLoad.failed && !stream._local && /\.m3u8(\?|$)/i.test(stream.url || '')) {
+  if (window.MkNative && MkNative.wants(stream)) { MkNative.open(stream, startAt); return; } // 2.70: the Windows app's native player
+  // one failed download of hls.js is tried again for the next stream (once per stream, never in a loop)
+  if (!window.Hls && !HlsLoad.failed && !stream._hlsTried && !stream._local && /\.m3u8(\?|$)/i.test(stream.url || '')) {
+    stream._hlsTried = true;
     HlsLoad.get().catch(() => {}).then(() => { if (hlsTok === HlsLoad.tok && P.stream === stream && !$('#player').hidden) loadUrl(stream, startAt); });
     return;
   }
@@ -1100,14 +1173,61 @@ async function proxyOnline() {
   catch (e) { proxyCheck = { t: Date.now(), ok: false }; }
   return proxyCheck.ok;
 }
+/* 2.75 Live TV mini-player: closing a playlist channel's player while it plays keeps it going in a small window over
+   the guide, so the guide can be browsed while watching. Press it to go back to full screen. Settings › Playback. */
+const LiveMini = {
+  cur: null, hls: null, t: 0,
+  grab() {
+    try {
+      const m = P.ctx && P.ctx.meta, st = P.stream;
+      if (CFG.liveMini === false || !m || !m._iptv || !st || !st.url || S.view !== 'tv') return null;
+      if (!(video.readyState >= 2 && !video.paused)) return null;   // only a channel that was really playing in this page
+      return { c: m._iptv, url: st.url, muted: video.muted, vol: video.volume };
+    } catch (e) { return null; }
+  },
+  show(g) {
+    this.close(); if (!g) return;
+    const el = document.createElement('div'); el.id = 'liveMini'; el.className = 'live-mini'; el.setAttribute('role', 'region'); el.setAttribute('aria-label', 'Live TV mini-player');
+    el.innerHTML = `<video playsinline autoplay></video><div class="lm-bar"><b translate="no">${esc(g.c.name || 'Live TV')}</b><span class="lm-live">LIVE</span>
+      <button type="button" class="lm-b" data-nav data-lmsnd aria-label="Sound"><i data-lucide="${g.muted ? 'volume-x' : 'volume-2'}"></i></button>
+      <button type="button" class="lm-b" data-nav data-lmfull aria-label="Full screen"><i data-lucide="maximize-2"></i></button>
+      <button type="button" class="lm-b" data-nav data-lmx aria-label="Close"><i data-lucide="x"></i></button></div>`;
+    document.body.appendChild(el); icons();
+    const v = el.querySelector('video'); v.muted = !!g.muted; v.volume = g.vol == null ? 1 : g.vol;
+    this.cur = { ...g, v };
+    const hlsUrl = /\.m3u8(\?|$)/i.test(g.url) && !v.canPlayType('application/vnd.apple.mpegurl');
+    if (hlsUrl) HlsLoad.get().then((Hls) => { if (!this.cur || this.cur.v !== v || !Hls || !Hls.isSupported()) return; this.hls = new Hls({ lowLatencyMode: true, maxBufferLength: 20 }); this.hls.loadSource(g.url); this.hls.attachMedia(v); }).catch(() => this.close());
+    else v.src = g.url;
+    v.play().catch(() => { v.muted = true; v.play().catch(() => {}); });
+    v.addEventListener('error', () => this.close(), { once: true });
+    el.querySelector('[data-lmsnd]').onclick = (e) => { e.stopPropagation(); v.muted = !v.muted; e.currentTarget.innerHTML = `<i data-lucide="${v.muted ? 'volume-x' : 'volume-2'}"></i>`; icons(); };
+    el.querySelector('[data-lmx]').onclick = (e) => { e.stopPropagation(); this.close(); };
+    const full = () => { const c = g.c; this.close(); Channels.tune(c); };
+    el.querySelector('[data-lmfull]').onclick = (e) => { e.stopPropagation(); full(); };
+    v.addEventListener('click', full);
+    // leaving Live TV, or any other playback, ends it
+    clearInterval(this.t); this.t = setInterval(() => { if (!this.cur) return clearInterval(this.t); if (S.view !== 'tv' || !$('#player').hidden || document.hidden) this.close(); }, 800);
+  },
+  close() {
+    clearInterval(this.t);
+    if (this.hls) { try { this.hls.destroy(); } catch (e) { /* gone */ } this.hls = null; }
+    const el = $('#liveMini');
+    if (el) { const v = el.querySelector('video'); if (v) { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) { /* gone */ } } el.remove(); }
+    this.cur = null;
+  },
+};
 async function closePlayer() {
+  if (typeof PartyGuest !== 'undefined') PartyGuest.closed();
+  playReq++; // a next episode or Smart Play still loading must not reopen the player
+  const liveKeep = LiveMini.grab();
   saveProgress(true); teardown(); closeLayer('player');
-  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  if (document.fullscreenElement && !window.MkKeepFull) document.exitFullscreen().catch(() => {});
   $('#player').classList.remove('full'); cancelAnimationFrame(P.raf);
   closeDrawers(); $('#subMenu').hidden = true; $('#optMenu').hidden = true; P.aspect = 'fit'; P.zoom = 1; applyPicture(); setLock(false); releaseWake();
   P.ctx = null; P.stream = null; if (window.MkRec) MkRec.playing(null);
   if (S.view === 'home') renderHome(); if (S.view === 'library') renderLibrary();
   if (!$('#detail').hidden && D.meta) renderDetail(false);
+  if (liveKeep) setTimeout(() => { if ($('#player').hidden && S.view === 'tv') LiveMini.show(liveKeep); }, 60);
 }
 
 /* Ambilight: draw live frames into a tiny canvas, then blur it across the theatre */
@@ -1164,6 +1284,7 @@ $('#pmBack').onclick = () => { seekBy(-step()); seekFx(-1); }; $('#pmFwd').oncli
 const ASPECTS = [['fit', 'Fit'], ['fill', 'Fill'], ['stretch', 'Stretch'], ['16:9', '16:9'], ['4:3', '4:3'], ['21:9', '21:9']];
 P.aspect = 'fit'; P.zoom = 1;
 function applyPicture() {
+  if (window.MkNative && MkNative.active) MkNative.picture();
   const v = video, a = P.aspect || 'fit';
   v.style.width = ''; v.style.height = ''; v.style.margin = '';
   if (a === 'fit' || a === 'fill' || a === 'stretch') v.style.objectFit = { fit: 'contain', fill: 'cover', stretch: 'fill' }[a];
@@ -1273,10 +1394,11 @@ function showUpNext() {
 }
 async function playEpisode(v) {
   const meta = P.ctx.meta, group = P.stream && P.stream.behaviorHints && P.stream.behaviorHints.bingeGroup;
-  const id = videoIdFor(meta, v);
+  const id = videoIdFor(meta, v), req = ++playReq;
   toast(`Loading S${v.season} · E${v.episode}${group ? ' from the same source group' : ''}…`);
   const { streams } = await engine.fetchStreams('series', id);
-  const pick = pickBest(streams, { bingeGroup: group });
+  if (req !== playReq) return;
+  const pick = pickBest(streams, PickMemo.opts(meta, group));
   if (!pick) { toast('No playable stream for that episode', 'err'); return; }
   playStream({ meta, video: v, streams }, pick);
 }
@@ -1293,12 +1415,13 @@ $$('[data-dclose]').forEach((b) => b.addEventListener('click', closeDrawers));
 $('#pSrcBtn').onclick = () => ($('#srcDrawer').classList.contains('open') ? closeDrawers() : openDrawer('src'));
 $('#pEpsBtn').onclick = () => ($('#epDrawer').classList.contains('open') ? closeDrawers() : openDrawer('ep'));
 function renderSourceDrawer() {
-  const streams = P.ctx.streams || [], best = pickBest(streams);
+  const streams = P.ctx.streams || [], best = pickBest(streams, PickMemo.opts(P.ctx.meta));
   $('#srcFilters').innerHTML = filterChips(streams, P.filter);
   $$('#srcFilters [data-filter]').forEach((b) => b.addEventListener('click', () => { P.filter = b.dataset.filter; renderSourceDrawer(); }));
   $('#srcList').innerHTML = filterStreams(streams, P.filter).map((s) => streamRowHTML(s, streams.indexOf(s), { best: s === best, current: s === P.stream })).join('') || '<div class="empty">No sources for this filter.</div>';
   $$('#srcList [data-si]').forEach((b) => b.addEventListener('click', () => {
-    const s = streams[Number(b.dataset.si)]; const at = isFinite(pDur()) ? pNow() : 0;
+    const s = streams[Number(b.dataset.si)]; const at = switchAt();
+    PickMemo.set(P.ctx.meta, s);
     closeDrawers(); playStream(P.ctx, s, { startAt: at });
     if (at) toast(`Switched source at ${fmtTime(at)}`, 'ok');
   }));
@@ -1334,9 +1457,10 @@ async function loadSubtitles(ctx, stream) {
   P.subsLoading = false; renderSubMenu(); autoPickSub(); SubAuto.offer();
 }
 function addEmbeddedSubs() {
-  P.subs = P.subs.filter((s) => s.kind !== 'hls' && s.kind !== 'native');
+  P.subs = P.subs.filter((s) => s.kind !== 'hls' && s.kind !== 'native' && s.kind !== 'mpv');
+  if (window.MkNative && MkNative.active) { P.subs.push(...MkNative.fileSubs()); renderSubMenu(); autoPickSub(); return; }
   if (P.hls && P.hls.subtitleTracks) P.hls.subtitleTracks.forEach((t, i) => P.subs.push({ kind: 'hls', idx: i, lang: t.lang, _label: `${t.name || langName(t.lang)} · in stream` }));
-  else Array.from(video.textTracks).forEach((t, i) => { if (!t._mkc && (t.kind === 'subtitles' || t.kind === 'captions')) P.subs.push({ kind: 'native', idx: i, lang: t.language, _label: `${t.label || langName(t.language)} · in file` }); });
+  else Array.from(video.textTracks).forEach((t, i) => { if (!t._mkc && (t.kind === 'subtitles' || t.kind === 'captions')) P.subs.push({ kind: 'native', idx: i, track: t, lang: t.language, _label: `${t.label || langName(t.language)} · in file` }); });
   renderSubMenu(); autoPickSub();
 }
 function autoPickSub() {
@@ -1350,45 +1474,156 @@ function autoPickSub() {
   if (i >= 0) selectSub(i, { auto: true }); else { if (typeof SubForced !== 'undefined') SubForced.pick(); SubAuto.offer(); }
 }
 const subLabel = (s) => s._label || `${langName(s.lang)}${s._addon ? ` · ${s._addon}` : ''}`;
+/* ---------------- Audio & subtitles, side by side ----------------
+   One button in the player opens both lists: the film's sound tracks on the left, its subtitles on the right.
+   The sound list comes from whichever part of the player can switch tracks for this stream:
+   - hls.js streams with several audio groups,
+   - players that list the file's tracks themselves (Safari, the Windows and Mac apps' players),
+   - AudioLang: MKCinema's engine (it reads MKV, MP4 and TS files itself and can play any of their tracks),
+     your debrid service's own stream, or your MKCinema server.
+   Subtitle timing, size and the subtitle tools sit under "Subtitle settings", folded away until asked for. */
+const AvTracks = {
+  /* the sound tracks: { how, rows: [{ i, label, on, bad }], wait, note } */
+  list() {
+    const s = P.stream; if (!s) return { how: 'none', rows: [] };
+    if (P.hls && P.hls.audioTracks && P.hls.audioTracks.length > 1) return { how: 'hls', rows: P.hls.audioTracks.map((t, i) => ({ i, label: AudioLang.hls(t), on: P.hls.audioTrack === i })) };
+    const at = video.audioTracks;
+    if (at && at.length > 1) return { how: 'media', rows: Array.from(at).map((t, i) => ({ i, label: t.label || (t.language ? langName(t.language) : `Audio track ${i + 1}`), on: !!t.enabled })) };
+    if (typeof AudioLang === 'undefined') return { how: 'none', rows: [] };
+    let st = AudioLang.info.get(s);
+    if (!st) { AudioLang.probe(s); st = AudioLang.info.get(s); }
+    if (!st || st.state === 'loading') return { how: 'al', rows: [], wait: true };
+    if (st.state === 'ok' && st.hlsOnly) return { how: 'al', rows: [{ i: -1, label: s._audioTry ? 'Every language loaded' : 'Load every language', on: !!s._audioTry }] };
+    if (st.state === 'ok') return { how: 'al', rows: st.tracks.map((t) => ({ i: t.i, label: t.label, on: st.cur === t.i, bad: !!t.bad })) };
+    if (st.tracks && st.tracks.length === 1) return { how: 'one', rows: [{ i: st.tracks[0].i, label: st.tracks[0].label, on: true }] };
+    return { how: 'one', rows: [], note: true, err: st.err || '' };
+  },
+  html() {
+    const r = this.list();
+    if (r.wait) return '<p class="av-note"><span class="spin"></span>Checking the languages in this file…</p>';
+    if (!r.rows.length) {
+      // mkc-2721-av: nothing in this page could read the file's tracks. The Android app's own player reads every track
+      // itself, so there it takes over at the same moment and shows the file's languages.
+      if (r.note && this.native()) return `<button type="button" class="on av-fixed" tabindex="-1"><i data-lucide="audio-lines"></i>Original audio</button><button type="button" data-avnative><i data-lucide="languages"></i>Choose the language</button><p class="av-note">This host doesn’t let the MKCinema player read the file’s languages, so MKCinema’s Android player opens at this moment and lists every language in the file.</p>`;
+      // nothing could read the file's tracks: say what plays, and where another language can be picked
+      let xp = null;
+      try { xp = r.note && P.stream && handoffUrl(P.stream) ? (extPlayer() || playersHere().find((p) => !p.m3u)) : null; } catch (e) { xp = null; }
+      return `<button type="button" class="on av-fixed" tabindex="-1"><i data-lucide="audio-lines"></i>Original audio</button>${xp ? `<p class="av-note">Other languages in this file can’t be switched in this browser.</p><button type="button" data-avxp="${esc(xp.id)}"><i data-lucide="external-link"></i>${esc(`Open in ${playerName(xp)}`)}</button>` : ''}`;
+    }
+    if (r.how === 'one') return r.rows.map((t) => `<button type="button" class="on av-fixed" tabindex="-1"><i data-lucide="audio-lines"></i>${esc(t.label)}</button>`).join('');
+    return r.rows.map((t) => `<button type="button" class="${t.on ? 'on' : ''}${t.bad ? ' av-bad' : ''}" data-avaudio="${t.i}" data-avhow="${r.how}" aria-pressed="${t.on}"><i data-lucide="${t.on ? 'check' : 'audio-lines'}"></i>${esc(t.label)}</button>`).join('');
+  },
+  native() { if (IS_TV) return false; try { return !!(window.MKAndroid && typeof MKAndroid.play === 'function'); } catch (e) { return false; } },
+  pick(how, i) {
+    const s = P.stream; if (!s) return;
+    s._mkAudUser = true; // a language picked by hand always wins over "your audio language"
+    if (how === 'hls' && P.hls) { P.hls.audioTrack = i; const t = P.hls.audioTracks[i]; toast(`Audio: ${t ? AudioLang.hls(t) : `Audio track ${i + 1}`}`, 'info', 2200); }
+    else if (how === 'media' && video.audioTracks) {
+      const at = video.audioTracks; for (let k = 0; k < at.length; k++) at[k].enabled = k === i;
+      const t = at[i]; toast(`Audio: ${t ? t.label || langName(t.language) : `Audio track ${i + 1}`}`, 'info', 2200);
+    } else if (how === 'al') { AudioLang.pick(i); }
+    setTimeout(() => { if (!$('#subMenu').hidden) renderSubMenu(); }, 60);
+  },
+  bind(m) {
+    $$('[data-avaudio]', m).forEach((b) => b.addEventListener('click', () => this.pick(b.dataset.avhow, Number(b.dataset.avaudio))));
+    const xp = $('[data-avxp]', m);
+    if (xp) xp.onclick = () => { const p = PLAYERS.find((x) => x.id === xp.dataset.avxp), ctx = P.ctx, st = P.stream; if (!p) return; m.hidden = true; closePlayer(); Handoff.launch(p, ctx, st); };
+    const snd = $('[data-avsound]', m); if (snd) snd.onclick = () => { m.hidden = true; PxMenu.open('audio'); };
+    const nat = $('[data-avnative]', m);
+    if (nat) nat.onclick = () => { const s = P.stream, ctx = P.ctx; if (!s || !ctx) return; const at = pNow(); s._avNative = true; s._mkAudUser = true; m.hidden = true; P.force = true; playStream(ctx, s, { startAt: at }); };
+    const more = $('[data-avmore]', m);
+    if (more) more.onclick = () => { P.avMore = !P.avMore; renderSubMenu(); if (P.avMore) { const h = $('.av-foot', m); if (h) h.scrollIntoView({ block: 'start', behavior: 'smooth' }); } };
+  },
+};
+/* 2.84 Subtitles grouped by language: your languages (and anything in the file or picked) on top with the best few,
+   every other language folded under "Other languages", one row per language that opens its versions. Nothing is dropped. */
+function subRowsHTML(list) {
+  if (P._avOpenFor !== P.stream) { P._avOpenFor = P.stream; P.avOpen = {}; }
+  const open = P.avOpen, seen = {};
+  const row = ([s, i], cls) => { const l = subLabel(s), n = seen[l] = (seen[l] || 0) + 1; return `<button type="button" class="${P.curSub === i ? 'on' : ''}${cls ? ` ${cls}` : ''}" data-sub="${i}"><i data-lucide="${P.curSub === i ? 'check' : s._tr ? 'languages' : s.kind === 'file' ? 'file-text' : s.kind === 'url' ? 'captions' : 'film'}"></i><span translate="no">${esc(l)}</span>${n > 1 ? `<em class="av-n">${n}</em>` : ''}</button>`; };
+  const fold = (k, label, n, on) => `<button type="button" class="av-lang${on ? ' av-more' : ''}" data-avfold="${esc(k)}" aria-expanded="${!!on}"><span><i data-lucide="${on ? 'chevron-up' : 'chevron-down'}"></i> <span translate="no">${esc(label)}</span></span><em>${n}</em></button>`;
+  const groups = new Map();
+  list.slice(0, 200).forEach((e) => { const k = langName(e[0].lang) || 'Other'; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(e); });
+  const mine = [], other = [];
+  groups.forEach((g, k) => { const own = g.some(([s, i]) => i === P.curSub || /^(file|mkv|native|hls|mpv)$/.test(s.kind) || (typeof SubRank !== 'undefined' && SubRank.tier(s) <= 2)); (own ? mine : other).push([k, g]); });
+  let h = '';
+  mine.forEach(([k, g]) => {
+    const all = open[k] || g.length <= 4, cur = g.findIndex(([, i]) => i === P.curSub), show = all ? g : g.slice(0, 3);
+    if (!all && cur >= 3) show.push(g[cur]);
+    h += show.map((e) => row(e)).join('');
+    if (g.length > 4) h += `<button type="button" class="av-more" data-avfold="${esc(k)}" aria-expanded="${!!open[k]}"><i data-lucide="${open[k] ? 'chevron-up' : 'chevron-down'}"></i>${open[k] ? 'Fewer versions' : `More versions <em class="av-n">${g.length - show.length}</em>`}</button>`;
+  });
+  if (other.length) {
+    other.sort((a, b) => a[0].localeCompare(b[0]));
+    const shut = mine.length && !open.__other;
+    if (mine.length) h += fold('__other', 'Other languages', other.length, open.__other);
+    if (!shut) other.forEach(([k, g]) => {
+      if (g.length === 1) { h += row(g[0]); return; }
+      h += fold(k, k, g.length, open[k]);
+      if (open[k]) h += g.map((e) => row(e, 'av-ver')).join('');
+    });
+  }
+  return h;
+}
+function subRowsBind(m) {
+  $$('[data-avfold]', m).forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation(); const k = b.dataset.avfold; P.avOpen[k] = !P.avOpen[k]; renderSubMenu();
+    const again = $(`[data-avfold="${CSS.escape(k)}"]`, m); if (again) { if (IS_TV) Nav.focus(again, true); else again.focus({ preventScroll: true }); }
+  }));
+}
 function renderSubMenu() {
   const m = $('#subMenu'); if (!P.subs) return;
   const byLang = SubRank.order(P.subs).filter(([s, i]) => !(typeof SubSdh !== 'undefined' && SubSdh.hide() && SubSdh.is(s)) || i === P.curSub);
   const subAddons = engine.addons.filter((a) => a.enabled && StremioEngine.resources(a.manifest).some((r) => r.name === 'subtitles')).length;
   const hasOS = engine.addons.some((a) => /opensubtitles/i.test(a.baseUrl) && !a.error);
-  m.innerHTML = `<h5>Subtitles · ${P.subsLoading ? 'searching…' : `${P.subs.length} found`}</h5>
-    <div class="seg-row"><button type="button" data-delay="-0.25">−0.25s</button><button type="button" data-delay="0" title="Reset delay">${P.subDelay >= 0 ? '+' : ''}${P.subDelay.toFixed(2)}s</button><button type="button" data-delay="0.25">+0.25s</button></div>
-    <h5>Size · position</h5><div class="seg-row"><button type="button" data-ssize="-10" aria-label="Smaller subtitles">A−</button><button type="button" data-ssize="0" title="Reset size">${CFG.subSize}%</button><button type="button" data-ssize="10" aria-label="Larger subtitles">A+</button>${[['bottom', 'Low'], ['higher', 'Raised'], ['top', 'Top']].map(([v, l]) => `<button type="button" class="${CFG.subPos === v ? 'on' : ''}" data-spos="${v}">${l}</button>`).join('')}</div>
-    <button type="button" class="${P.curSub < 0 ? 'on' : ''}" data-sub="-1"><i data-lucide="captions-off"></i>Off</button>
-    ${byLang.slice(0, 120).map(([s, i]) => `<button type="button" class="${P.curSub === i ? 'on' : ''}" data-sub="${i}"><i data-lucide="${s._tr ? 'languages' : s.kind === 'file' ? 'file-text' : s.kind === 'url' ? 'captions' : 'film'}"></i>${esc(subLabel(s))}</button>`).join('')}
-    ${!P.subs.length && !P.subsLoading ? `<p style="color:var(--mute);font-size:calc(12.5px * var(--ts,1));margin:6px 12px 8px;max-width:30ch">${subAddons ? 'Your subtitle addons had nothing for this title.' : 'No subtitle addon is installed or reachable.'}${hasOS ? '' : ' Add OpenSubtitles v3 to search thousands of languages.'}</p>` : ''}
+  m.classList.add('av-on'); m.toggleAttribute('data-avmin', !P.avMore);
+  m.innerHTML = `<div class="av-cols">
+    <section class="av-col av-a"><h5>Audio</h5>${AvTracks.html()}</section>
+    <section class="av-col av-s"><h5>${P.subsLoading ? 'Subtitles · searching…' : 'Subtitles'}</h5>
+    <button type="button" class="${P.curSub < 0 ? 'on' : ''}" data-sub="-1"><i data-lucide="${P.curSub < 0 ? 'check' : 'captions-off'}"></i>Off</button>
+    ${subRowsHTML(byLang)}
+    ${!P.subs.length && !P.subsLoading ? `<p class="av-note">${subAddons ? 'Your subtitle addons had nothing for this title.' : 'No subtitle addon is installed or reachable.'}${hasOS ? '' : ' Add OpenSubtitles v3 to search thousands of languages.'}</p>` : ''}
     <button type="button" data-subfile><i data-lucide="file-up"></i>Load subtitle file…</button>
-    ${hasOS ? '' : '<button type="button" data-addos><i data-lucide="plus"></i>Add OpenSubtitles v3</button>'}`;
+    ${hasOS ? '' : '<button type="button" data-addos><i data-lucide="plus"></i>Add OpenSubtitles v3</button>'}</section></div>
+    <div class="av-foot"><button type="button" data-avsound><i data-lucide="sliders-horizontal"></i>Sound settings</button>${typeof Tools !== 'undefined' && P.subs.length ? '<button type="button" data-avsub2><i data-lucide="languages"></i>Second subtitles</button>' : ''}<button type="button" data-avmore aria-expanded="${!!P.avMore}"><i data-lucide="${P.avMore ? 'chevron-up' : 'chevron-down'}"></i>Subtitle settings</button></div>
+    <h5>Subtitle delay</h5><div class="seg-row"><button type="button" data-delay="-0.25">−0.25s</button><button type="button" data-delay="0" title="Reset delay">${P.subDelay >= 0 ? '+' : ''}${P.subDelay.toFixed(2)}s</button><button type="button" data-delay="0.25">+0.25s</button></div>
+    <h5>Size · position</h5><div class="seg-row"><button type="button" data-ssize="-10" aria-label="Smaller subtitles">A−</button><button type="button" data-ssize="0" title="Reset size">${CFG.subSize}%</button><button type="button" data-ssize="10" aria-label="Larger subtitles">A+</button>${[['bottom', 'Low'], ['higher', 'Raised'], ['top', 'Top']].map(([v, l]) => `<button type="button" class="${CFG.subPos === v ? 'on' : ''}" data-spos="${v}">${l}</button>`).join('')}</div>`;
+  AvTracks.bind(m); subRowsBind(m);
   $$('[data-sub]', m).forEach((b) => b.addEventListener('click', () => { P.subUserChoice = true; if (typeof SubMem !== 'undefined') SubMem.save(Number(b.dataset.sub)); selectSub(Number(b.dataset.sub)); }));
   $$('[data-ssize]', m).forEach((b) => b.addEventListener('click', () => { const k = Number(b.dataset.ssize); setCfg('subSize', k ? clamp(CFG.subSize + k, 50, 220) : 100); renderSubMenu(); }));
   $$('[data-spos]', m).forEach((b) => b.addEventListener('click', () => { setCfg('subPos', b.dataset.spos); renderSubMenu(); }));
   $$('[data-delay]', m).forEach((b) => b.addEventListener('click', () => setSubDelay(Number(b.dataset.delay) === 0 ? 0 : P.subDelay + Number(b.dataset.delay))));
   const f = $('[data-subfile]', m); if (f) f.onclick = () => $('#fileSubs').click();
+  const s2 = $('[data-avsub2]', m); if (s2) s2.onclick = (e) => { e.stopPropagation(); m.hidden = true; PxMenu.open('more'); const t = $('#optMenu [data-tl="sub2"]'); if (t) { t.click(); t.scrollIntoView({ block: 'center' }); } };
   const os = $('[data-addos]', m); if (os) os.onclick = async () => { await installAddon(OPENSUBS); if (P.ctx) loadSubtitles(P.ctx, P.stream); };
   icons();
 }
 function clearSubTracks() {
+  if (window.MkNative && MkNative.active) MkNative.subOff();
   $$('track', video).forEach((t) => { if (t.src.startsWith('blob:')) URL.revokeObjectURL(t.src); t.remove(); });
   for (const tt of video.textTracks) tt.mode = 'disabled';
   if (P.hls) { P.hls.subtitleDisplay = false; P.hls.subtitleTrack = -1; }
 }
 async function selectSub(i, { auto = false } = {}) {
   clearSubTracks();
-  const pick = P.subPick = (P.subPick || 0) + 1;
+  const pick = P.subPick = (P.subPick || 0) + 1, st0 = P.stream;
   P.curSub = i; renderSubMenu(); if (i < 0) return;
   const s = P.subs[i];
   try {
-    if (s.kind === 'hls') { P.hls.subtitleTrack = s.idx; P.hls.subtitleDisplay = true; setTimeout(styleCues, 400); }
-    else if (s.kind === 'native') { video.textTracks[s.idx].mode = 'showing'; styleCues(); }
+    if (window.MkNative && MkNative.active) {
+      let text = s.text;
+      if (s.kind !== 'mpv' && text == null) { const res = await fetch(s.url); if (!res.ok) throw new Error(`HTTP ${res.status}`); text = await res.text(); }
+      if (pick !== P.subPick) return;
+      await MkNative.subOn(s, text); MkNative.subStyle();
+    }
+    else if (s.kind === 'hls') { P.hls.subtitleTrack = s.idx; P.hls.subtitleDisplay = true; setTimeout(styleCues, 400); }
+    // the track itself is kept: Safari renumbers the list when other tracks come and go
+    else if (s.kind === 'native') { const t = s.track && Array.from(video.textTracks).includes(s.track) ? s.track : video.textTracks[s.idx]; if (!t) throw new Error('the track is gone'); t.mode = 'showing'; styleCues(); }
     else {
       let text = s.text;
       if (text == null) { const res = await fetch(s.url); if (!res.ok) throw new Error(`HTTP ${res.status}`); text = await res.text(); }
-      // another subtitle was picked while this one downloaded: two tracks would both stay on screen
-      if (pick !== P.subPick) return;
+      // another subtitle (or another source) was picked while this one downloaded: two tracks would both stay on screen
+      if (pick !== P.subPick || P.stream !== st0) return;
       clearSubTracks();
       const vtt = StremioEngine.toVtt(text, s.fileName || s.url || '');
       const tr = document.createElement('track'); tr.kind = 'subtitles'; tr.label = subLabel(s); tr.srclang = String(s.lang || 'und').slice(0, 3); tr.default = true;
@@ -1398,16 +1633,18 @@ async function selectSub(i, { auto = false } = {}) {
       tr.addEventListener('load', show); setTimeout(show, 80);
     }
     if (!auto) toast(`Subtitles: ${subLabel(s)}`, 'ok'); else toast(`${langName(s.lang)} subtitles on`, 'info', 2400, 'subs');
-  } catch (e) { P.curSub = -1; renderSubMenu(); toast(`Could not load those subtitles (${e.message}). The host may block cross-origin requests.`, 'err'); }
+  } catch (e) { if (pick !== P.subPick || P.stream !== st0) return; P.curSub = -1; renderSubMenu(); toast(`Could not load those subtitles (${e.message}). The host may block cross-origin requests.`, 'err'); }
 }
 function activeTrack() { return Array.from(video.textTracks).find((t) => t.mode === 'showing'); }
 /* Delay shifts every cue of the showing track; originals are kept so it never drifts. */
 function applySubDelay() {
+  if (window.MkNative && MkNative.active) { MkNative.subStyle(); return; }
   const t = activeTrack(); if (!t || !t.cues) return;
   for (const c of t.cues) { if (c._s == null) { c._s = c.startTime; c._e = c.endTime; } c.startTime = Math.max(0, c._s + P.subDelay); c.endTime = Math.max(0, c._e + P.subDelay); }
 }
 function setSubDelay(v) {}
 function styleCues() {
+  if (window.MkNative && MkNative.active) { MkNative.subStyle(); return; }
   const line = { bottom: 'auto', higher: -4, top: 1 }[CFG.subPos];
   const t = activeTrack(); if (!t || !t.cues) return;
   for (const c of t.cues) { try { c.line = line; if (CFG.subPos === 'top') c.snapToLines = true; } catch (e) { /* read-only cue */ } }
@@ -1419,7 +1656,7 @@ async function loadSubFile(file) {
   P.subUserChoice = true; selectSub(0);
 }
 $('#fileSubs').addEventListener('change', (e) => { const f = e.target.files[0]; if (f && P.ctx) loadSubFile(f); e.target.value = ''; });
-$('#pSubs').onclick = () => { const m = $('#subMenu'); $('#optMenu').hidden = true; $('#dspPop').hidden = true; m.hidden = !m.hidden; wakeHud(true); };
+$('#pSubs').onclick = () => { const m = $('#subMenu'); $('#optMenu').hidden = true; $('#dspPop').hidden = true; m.hidden = !m.hidden; if (!m.hidden) renderSubMenu(); wakeHud(true); };
 
 /* Player options: speed, HLS quality levels, audio tracks, picture fit, ambilight */
 function renderOptMenu() {
@@ -1487,6 +1724,21 @@ function renderAddons() {
   $('#proxyUrl').value = S.proxy;
   if (typeof AddonHealth !== 'undefined') AddonHealth.draw();
 }
+/* 2.73.6: why an addon did not load, in plain words, with what to try */
+async function addonWhy(e, url) {
+  const m = String((e && e.message) || e || '');
+  if (m === 'Timed out') return 'The addon took too long to answer. Try again in a moment.';
+  if (!/Failed to fetch|NetworkError|Load failed|network connection was lost/i.test(m)) return m;
+  if (navigator.onLine === false) return 'This device is offline. Connect to the internet and try again.';
+  let net = false;   // any answer from MKCinema's own page (even a 404 in a desktop app) means the internet works
+  try { const r = await fetch(`version.json?ping=${Date.now()}`, { cache: 'no-store', signal: AbortSignal.timeout ? AbortSignal.timeout(5000) : undefined }); net = !!r; } catch (x) { net = false; }
+  if (!net) return 'Your internet connection dropped. Try again in a moment.';
+  let host = ''; try { host = new URL(StremioEngine.normalize(url)).hostname.toLowerCase(); } catch (x) { /* not a link */ }
+  // hosts that always allow web apps: no answer from them means something on the way stopped it
+  if (/(^|\.)(githubusercontent\.com|github\.io|jsdelivr\.net|strem\.io|stremio\.com|elfhosted\.com|baby-beamup\.club|vercel\.app|netlify\.app|pages\.dev|workers\.dev)$/.test(host))
+    return 'Something on this device or network is blocking the addon’s address. Turn off any ad blocker, VPN or Private DNS, or switch between Wi‑Fi and mobile data, then try again.';
+  return 'The addon’s server did not answer. It may be down, or it may not allow web apps. If it works for others, an ad blocker, VPN, Private DNS or this network may be blocking it.';
+}
 async function installAddon(url, retry) {
   try {
     const a = await engine.install(url, { builtin: url.startsWith('https://v3-cinemeta') || url.startsWith(OPENSUBS.replace('/manifest.json', '')) });
@@ -1494,8 +1746,7 @@ async function installAddon(url, retry) {
     toast(`${retry ? 'Reconnected' : 'Installed'} ${a.manifest.name}`, 'ok'); $('#addonUrl').value = '';
     return a;
   } catch (e) {
-    const msg = /Failed to fetch|NetworkError|Load failed/i.test(e.message) ? 'the server did not answer or blocks browser requests (CORS)' : e.message;
-    toast(`Could not install: ${msg}`, 'err', 6000);
+    toast(`Could not install: ${await addonWhy(e, url)}`, 'err', 9000);
   }
 }
 $('#addonForm').addEventListener('submit', (e) => { e.preventDefault(); installAddon($('#addonUrl').value); });
@@ -1518,7 +1769,7 @@ let studioTab = 'code';
 const saveStudio = debounce(() => Store.set('studio', S.studio), 300);
 function renderStudio() {
   const p = S.studio;
-  const bind = (sel, key) => { const el = $(sel); el.value = p[key] ?? ''; el.oninput = () => { p[key] = el.value; studioChanged(); }; };
+  const bind = (sel, key) => { const el = $(sel); el.value = qq(p[key], ''); el.oninput = () => { p[key] = el.value; studioChanged(); }; };
   bind('#st-id', 'id'); bind('#st-version', 'version'); bind('#st-name', 'name'); bind('#st-desc', 'description'); bind('#st-prefixes', 'prefixes'); bind('#st-catname', 'catalogName'); bind('#st-port', 'port');
   $('#st-types').innerHTML = STUDIO_TYPES.map((t) => `<label class="check"><input type="checkbox" id="st-type-${t}" value="${t}" ${p.types.includes(t) ? 'checked' : ''}>${t}</label>`).join('');
   $$('#st-types input').forEach((cb) => cb.addEventListener('change', () => { p.types = $$('#st-types input:checked').map((x) => x.value); renderStudioLists(); studioChanged(); }));
@@ -1737,13 +1988,13 @@ const Nav = {
   },
   mem: new WeakMap(), auto: null, settleT: 0,
   focus(el, fast) {
-    $$('.nav-focus').forEach((x) => x.classList.remove('nav-focus'));
+    for (const x of [...document.getElementsByClassName('nav-focus')]) x.classList.remove('nav-focus');
     el.classList.add('nav-focus'); el.focus({ preventScroll: true });
     this.mem.set(this.root(), el); const rail = el.closest('.rail'); if (rail) { rail._navLast = el; if (rail._inf) Endless.near(rail, el); }
-    if (!IS_TV) { el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' }); return; }
+    if (!IS_TV) { if (this.kb) this.kbShow(el, rail, fast ? 'auto' : 'smooth'); else el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' }); return; }
     // TV: holding a direction scrolls instantly (smooth scrolls would queue up), the focused row sits mid-screen,
     // and the billboard comes fully back into view when you return to it
-    const behavior = fast ? 'auto' : 'smooth';
+    const behavior = fast || window.MK_LITE ? 'auto' : 'smooth';
     if (el.closest('#hero') && this.root().id === 'app') { scrollTo({ top: 0, behavior }); return; }
     if (el.closest('#hud')) return;
     const dk = el.closest('.dock'); /* 2.38.2: the rail scrolls inside itself; keep the focused item in view */
@@ -1754,6 +2005,25 @@ const Nav = {
     const lay = !rail && el.closest('.layer-ov');
     if (lay && lay.scrollTop > 0) { const y = el.getBoundingClientRect().bottom - lay.getBoundingClientRect().top + lay.scrollTop; if (y < lay.clientHeight * .7) { lay.scrollTo({ top: 0, behavior }); return; } }
     el.scrollIntoView({ block: rail ? 'center' : 'nearest', inline: 'nearest', behavior });
+  },
+  /* 2.79.1 keyboard mode: arrow keys on a non-TV device move like the TV remote until the next tap or click */
+  kb: false,
+  kbOn() { if (IS_TV || this.kb) return; this.kb = true; document.documentElement.classList.add('kbnav'); },
+  kbOff() { if (!this.kb) return; this.kb = false; document.documentElement.classList.remove('kbnav'); },
+  // the focused row sits mid-screen; anything else just comes clear of the top bar (or a bottom bar) and the screen edge
+  kbShow(el, rail, behavior) {
+    if (el.closest('#hud')) return;
+    const lay = el.closest('.layer-ov');
+    if (lay) {
+      if (!rail && lay.scrollTop > 0) { const y = el.getBoundingClientRect().bottom - lay.getBoundingClientRect().top + lay.scrollTop; if (y < lay.clientHeight * .7) { lay.scrollTo({ top: 0, behavior }); return; } }
+      el.scrollIntoView({ block: rail ? 'center' : 'nearest', inline: 'nearest', behavior }); return;
+    }
+    if (el.closest('#hero') && this.root().id === 'app') { scrollTo({ top: 0, behavior }); return; }
+    if (rail || el.closest('.dock-wrap, #mtabs')) { el.scrollIntoView({ block: rail ? 'center' : 'nearest', inline: 'nearest', behavior }); return; }
+    // the top bar and the phone's bottom tabs float over the page
+    const r = el.getBoundingClientRect(), mid = innerHeight / 2; let top = 16, bot = innerHeight - 16;
+    for (const b of [$('.dock-wrap'), $('#mtabs')]) { const q = b && b.getBoundingClientRect(); if (!q || !(q.height > 0) || q.bottom <= 0 || q.top >= innerHeight) continue; if (q.bottom < mid) top = Math.max(top, q.bottom + 16); else if (q.top > mid) bot = Math.min(bot, q.top - 16); }
+    if (r.top < top) scrollBy({ top: r.top - top, behavior }); else if (r.bottom > bot) scrollBy({ top: Math.min(r.bottom - bot, r.top - top), behavior });
   },
   /* where the remote lands when nothing in the open panel has focus yet */
   start(root, list) {
@@ -1769,7 +2039,7 @@ const Nav = {
   },
   /* TV: after a panel opens or closes, put the focus somewhere visible (the last item used there, or its main button) */
   settle() {
-    if (!IS_TV) return; clearTimeout(this.settleT);
+    if (!IS_TV && !this.kb) return; clearTimeout(this.settleT);
     const run = (again) => {
       if (!$('#player').hidden) return;
       const root = this.root(), a = document.activeElement, inside = a && a !== document.body && root.contains(a) && !a.closest('[hidden]');
@@ -1784,7 +2054,7 @@ const Nav = {
     const cur = root.contains(document.activeElement) && document.activeElement !== document.body ? document.activeElement : null;
     if (cur && (dir === 'left' || dir === 'right')) { const n = this.step(cur, dir); if (n) { this.focus(n, fast); return; } }
     const list = this.items(root); if (!list.length) return;
-    if (!cur) { if (IS_TV) this.restore(fast); else this.focus(list[0]); return; }
+    if (!cur) { if (IS_TV || this.kb) this.restore(fast); else this.focus(list[0]); return; }
     // 2.67.1 tv-playback: a lane (a film's cast and crew names) is one stop going up or down; Left and Right walk its names
     const lane = cur.closest('[data-nav-lane]'), vert = dir === 'up' || dir === 'down';
     if (lane && !vert) { const m = list.filter((x) => lane.contains(x)), n = m[m.indexOf(cur) + (dir === 'right' ? 1 : -1)]; if (n) { this.rects.clear(); this.focus(n, fast); return; } }
@@ -1803,7 +2073,7 @@ const Nav = {
       if (root.id === 'xray' && (dir === 'left' || dir === 'right') && !overlap) continue;
       const score = main + cross * (overlap ? .6 : 2.6);
       // TV: the dock floats over the page, so from the page it is only picked when nothing else lies that way
-      if (IS_TV && root.id === 'app' && el.closest('.dock-wrap') && !cur.closest('.dock-wrap')) { if (1e6 + score < bestScore) { bestScore = 1e6 + score; best = el; } continue; }
+      if ((IS_TV || this.kb) && root.id === 'app' && el.closest('.dock-wrap, #mtabs') && !cur.closest('.dock-wrap, #mtabs')) { if (1e6 + score < bestScore) { bestScore = 1e6 + score; best = el; } continue; }
       if (score < bestScore) { bestScore = score; best = el; }
     }
     // Moving up or down into another row returns to the poster you last had in it, if it is still on screen
@@ -1858,6 +2128,9 @@ function handleKey(e) {
     if (open) back(); else if (/Web0S|webOS/.test(navigator.userAgent)) window.close();
     return;
   }
+  // 2.79.1: Down on a drop-down picked its next choice (Top 10's region box rebuilt the row and lost the focus); Enter or Space opens it
+  if (/^Arrow/.test(k) && tag === 'SELECT' && !e.target.multiple && !e.altKey && !e.defaultPrevented) { e.preventDefault(); Nav.kbOn(); Nav.move(k.slice(5).toLowerCase(), e.repeat); return; }
+  if (typing && !IS_TV && Nav.kb && !e.defaultPrevented && (k === 'ArrowUp' || k === 'ArrowDown') && e.target.tagName === 'INPUT' && /^(text|search|email|url|tel|password)$/.test(e.target.type)) { e.preventDefault(); Nav.move(k === 'ArrowUp' ? 'up' : 'down', e.repeat); return; }
   if (typing && IS_TV && !e.defaultPrevented && /^Arrow/.test(k) && e.target.tagName === 'INPUT') {
     // A remote has no Tab key: Up/Down always leave a text box, Left/Right leave it at either end of the text
     let edge = k === 'ArrowUp' || k === 'ArrowDown';
@@ -1875,7 +2148,9 @@ function handleKey(e) {
   }
   if (playerOpen && !drawer) {
     const map = { ' ': togglePlay, k: togglePlay, j: () => seekBy(-step()), l: () => seekBy(step()), ArrowLeft: () => seekBy(-step()), ArrowRight: () => seekBy(step()), g: () => setSubDelay(P.subDelay - .25), h: () => setSubDelay(P.subDelay + .25), v: cycleSub, b: cycleAudio, '[': () => nudgeSpeed(-.25), ']': () => nudgeSpeed(.25), '=': () => nudgeSpeed(0), o: () => $('#pOpts').click(), ArrowUp: () => { video.volume = clamp(video.volume + .1, 0, 1); }, ArrowDown: () => { video.volume = clamp(video.volume - .1, 0, 1); }, f: toggleFull, m: () => { video.muted = !video.muted; }, n: playNext, s: () => openDrawer('src'), e: () => !$('#pEpsBtn').hidden && openDrawer('ep'), c: () => $('#pSubs').click(), a: () => DSP.toggle(), p: () => Party.openPanel(), Backspace: back };
-    if (map[k] && !(k === ' ' && e.target.tagName === 'BUTTON' && e.target !== document.body)) { e.preventDefault(); map[k](); wakeHud(); return; }
+    // browser shortcuts (Ctrl, Cmd or Alt held) are left alone, and letters work with Caps Lock on
+    const kk = k.length === 1 ? k.toLowerCase() : k, mod = e.ctrlKey || e.metaKey || e.altKey;
+    if (!mod && map[kk] && !(k === ' ' && e.target.tagName === 'BUTTON' && e.target !== document.body)) { e.preventDefault(); map[kk](); wakeHud(); return; }
     if (k === 'Enter' && Skip.visible()) { e.preventDefault(); Skip.go(); return; }
     if (k === 'Enter' && document.activeElement === document.body) { togglePlay(); return; }
   }
@@ -1884,9 +2159,9 @@ function handleKey(e) {
     e.preventDefault();
     // 2.67.1 tv-playback: a held arrow repeats faster than a slow TV box draws; a repeat that comes before the last move
     // reached the screen is dropped, so the highlight never runs ahead of what you see and OK opens what is shown
-    if (IS_TV && e.repeat && Nav.drawing) return;
-    Nav.move(dirs[k], e.repeat);
-    if (IS_TV) { Nav.drawing = true; requestAnimationFrame(() => setTimeout(() => { Nav.drawing = false; }, 0)); }
+    if (e.repeat && Nav.drawing) return;
+    Nav.kbOn(); Nav.move(dirs[k], e.repeat);
+    Nav.drawing = true; requestAnimationFrame(() => setTimeout(() => { Nav.drawing = false; }, 0));
     return;
   }
   if (IS_TV && k === 'Enter' && !playerOpen && (document.activeElement === document.body || !document.activeElement)) { e.preventDefault(); Nav.restore(true); return; }
@@ -1894,16 +2169,21 @@ function handleKey(e) {
   if (k === '/' && $('#palette').hidden) { e.preventDefault(); openPalette(); }
 }
 document.addEventListener('keydown', handleKey);
-document.addEventListener('pointerdown', () => $$('.nav-focus').forEach((x) => x.classList.remove('nav-focus')), { passive: true });
+document.addEventListener('pointerdown', () => { if (Pad.echo()) return; $$('.nav-focus').forEach((x) => x.classList.remove('nav-focus')); Nav.kbOff(); }, { passive: true });
 
 const Pad = {
-  prev: {}, repeat: {}, active: false,
+  prev: {}, repeat: {}, active: false, at: 0, last: '',
+  // Xbox (Edge) and PlayStation browsers: the controller also moves the browser's own cursor
+  console: /Xbox|PlayStation/i.test(navigator.userAgent),
+  echo(k) { return this.console && performance.now() - this.at < (k === 'b' ? 600 : 350) && (!k || this.last === k); },
   start() { if (this.active) return; this.active = true; const loop = () => { if (!this.poll()) { this.active = false; return; } requestAnimationFrame(loop); }; requestAnimationFrame(loop); },
   press(name) {
+    this.at = performance.now(); this.last = name;
     const fake = (key) => handleKey({ key, target: document.activeElement || document.body, preventDefault() {}, ctrlKey: false, metaKey: false });
     const playerOpen = !$('#player').hidden;
     switch (name) {
       case 'up': case 'down': case 'left': case 'right':
+        Nav.kbOn();
         if (playerOpen && !$('#player .drawer.open')) { Nav.move(name); wakeHud(); } else Nav.move(name); break;
       case 'a': { if (playerOpen && Skip.visible()) { Skip.go(); break; } const el = document.activeElement; if (el && el !== document.body) el.click(); else if (playerOpen) togglePlay(); break; }
       case 'b': back(); break;
@@ -1923,10 +2203,10 @@ const Pad = {
     if (!pads.length) return false;
     const gp = pads[0], now = performance.now();
     const st = {
-      up: gp.buttons[12]?.pressed || gp.axes[1] < -.55, down: gp.buttons[13]?.pressed || gp.axes[1] > .55,
-      left: gp.buttons[14]?.pressed || gp.axes[0] < -.55, right: gp.buttons[15]?.pressed || gp.axes[0] > .55,
-      a: gp.buttons[0]?.pressed, b: gp.buttons[1]?.pressed, x: gp.buttons[2]?.pressed, y: gp.buttons[3]?.pressed,
-      lb: gp.buttons[4]?.pressed, rb: gp.buttons[5]?.pressed, start: gp.buttons[9]?.pressed,
+      up: (gp.buttons[12] || {}).pressed || gp.axes[1] < -.55, down: (gp.buttons[13] || {}).pressed || gp.axes[1] > .55,
+      left: (gp.buttons[14] || {}).pressed || gp.axes[0] < -.55, right: (gp.buttons[15] || {}).pressed || gp.axes[0] > .55,
+      a: (gp.buttons[0] || {}).pressed, b: (gp.buttons[1] || {}).pressed, x: (gp.buttons[2] || {}).pressed, y: (gp.buttons[3] || {}).pressed,
+      lb: (gp.buttons[4] || {}).pressed, rb: (gp.buttons[5] || {}).pressed, start: (gp.buttons[9] || {}).pressed,
     };
     for (const [k, v] of Object.entries(st)) {
       if (v && !this.prev[k]) { this.press(k); this.repeat[k] = now + 380; }
@@ -1936,6 +2216,14 @@ const Pad = {
     return true;
   },
 };
+if (Pad.console) {
+  try { navigator.gamepadInputEmulation = 'gamepad'; } catch (e) {}
+  // A also clicks under the browser's cursor: drop that click, the Pad already pressed the focused item
+  addEventListener('click', (e) => { if (e.isTrusted && Pad.echo('a')) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
+  // B (or Circle) is the browser's Back: keep one page of history so it never leaves MKCinema, and run our Back
+  try { history.pushState({ mkpad: 1 }, ''); } catch (e) {}
+  addEventListener('popstate', () => { try { history.pushState({ mkpad: 1 }, ''); } catch (e) {} if (!Pad.echo('b')) back(); });
+}
 addEventListener('gamepadconnected', (e) => { toast(`Controller connected: ${e.gamepad.id.split('(')[0].trim()}. D-pad moves, A selects, B goes back.`, 'ok', 5000); Pad.start(); });
 
 /* =====================================================================
@@ -2029,7 +2317,7 @@ $('#discMore').onclick = () => { const cat = discoverCatalogs(S.disc.type)[S.dis
   el.addEventListener('pointermove', (e) => {
     if (!st || e.pointerId !== st.id) return;
     const dx = e.clientX - st.x, dy = e.clientY - st.y;
-    if (!st.lock && Math.hypot(dx, dy) > 8) st.lock = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'x' : 'y';
+    if (!st.lock && Math.hypot(dx, dy) > 8) { st.lock = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'x' : 'y'; if (st.lock === 'x') { try { el.setPointerCapture(e.pointerId); } catch (x) { /* gone */ } } }   // the release reaches the banner even off it
     if (st.lock !== 'x') return;
     moved = true; st.dx = dx; clearTimeout(S.heroTimer); el.classList.add('dragging');
     body.style.transform = `translate3d(${(dx * .45).toFixed(1)}px,0,0)`; body.style.opacity = String(1 - Math.min(.65, Math.abs(dx) / 420));
@@ -2040,7 +2328,7 @@ $('#discMore').onclick = () => { const cat = discoverCatalogs(S.disc.type)[S.dis
     if (Math.abs(dx) > Math.min(70, w * .12)) showHero(S.heroIdx + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1);
     else if (moved) S.heroTimer = setTimeout(nextHero, 9000);
   };
-  el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+  el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end); el.addEventListener('lostpointercapture', end);
   // a swipe that started on a button is not a tap on it
   el.addEventListener('click', (e) => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
   $('#heroPrev').onclick = () => showHero(S.heroIdx - 1, -1);
@@ -2060,7 +2348,8 @@ $('#heroTrailer').onclick = async () => {
 };
 $('#heroList').onclick = () => { const m = S.hero[S.heroIdx]; if (m) { toggleWatchlist(m); showHero(S.heroIdx); renderHome(); } };
 $$('[data-close]').forEach((b) => b.addEventListener('click', () => { const ov = b.closest('.layer-ov'); if (ov) { closeLayer(ov.id); if (ov.id === 'addons' && S.view === 'home') renderHome(); } }));
-$$('.layer-ov').forEach((ov) => ov.addEventListener('click', (e) => { if (e.target === ov) back(); }));
+// only a press that starts and ends on the dark background closes it (not a text selection dragged out of the box)
+$$('.layer-ov').forEach((ov) => { ov.addEventListener('pointerdown', (e) => { ov._downBg = e.target === ov; }); ov.addEventListener('click', (e) => { if (e.target === ov && ov._downBg !== false) back(); ov._downBg = null; }); });
 $('#retryCinemeta').onclick = () => installAddon(CINEMETA, true);
 // Infinite scroll for Movies and Series: one check per frame at most, and only on those views
 let moreRaf = 0;
@@ -2119,7 +2408,7 @@ async function boot() {
   icons();
   S.booted = true;
   const views = ['movie', 'series', 'tv', 'library', 'studio', 'calendar'], first = Layout.get().start;
-  if (views.includes(start)) go(start); else if (views.includes(first) && !/^(play\?|remote=|party=|login=)/.test(start)) go(first); else renderHome();
+  if (views.includes(start)) go(start); else if (views.includes(first) && !/^(play\?|resume\?|remote=|party=|mirror=|login=)/.test(start)) go(first); else renderHome();
   if (!/^login=/.test(start)) maybeTour();
   Deep.handle(); Governor.init(); PWA.init(); Support.maybe();
   setTimeout(() => Layout.ask(), 1500);

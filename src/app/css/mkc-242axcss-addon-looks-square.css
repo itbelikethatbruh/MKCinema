@@ -3,7 +3,7 @@
 .rail>.card.ax-sq{width:clamp(150px,15vw,208px)}
 .card.ax-sq .card-inner{aspect-ratio:1/1}
 .axb{position:absolute;left:10px;bottom:10px;display:flex;flex-wrap:wrap;gap:4px;max-width:calc(100% - 20px);z-index:2;pointer-events:none}
-.axb-i{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 7px;border-radius:calc(var(--r-s) * 0.875);font-family:var(--f-body);font-size:calc(12px * var(--ts,1));font-weight:700;letter-spacing:.01em;white-space:nowrap;color:#f4f1ea;background:rgba(10,10,12,.78);border:1px solid rgba(255,255,255,.14)}
+.axb-i{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 7px;border-radius:calc(var(--r-s) * 0.875);font-family:var(--f-body);font-size:calc(12px * var(--ts,1));font-weight:700;letter-spacing:.01em;white-space:nowrap;color:var(--kf4f1ea,#f4f1ea);background:rgba(var(--k0a0a0c-c,10,10,12),.78);border:1px solid rgba(var(--kffffff-c,255,255,255),.14)}
 .axb-i svg,.axb-i i{width:12px;height:12px;flex:none}
 .axb-i.t-gold svg{color:var(--gold,#cdb47e)}.axb-i.t-gold{border-color:color-mix(in srgb,var(--gold,#cdb47e) 45%,transparent)}
 .axb-i.t-green svg{color:#7fcf9a}.axb-i.t-green{border-color:rgba(127,207,154,.4)}
@@ -20,7 +20,7 @@ body.ci-below .card .axb{opacity:1}
 .axp-text{margin:0;color:var(--mute);max-width:68ch;line-height:1.6;font-size:calc(14px * var(--ts,1))}
 .axp-facts{margin-bottom:0}
 .axp-rates{display:flex;flex-wrap:wrap;gap:8px}
-.axp-rate{display:flex;flex-direction:column;gap:2px;min-width:88px;padding:8px 12px;border-radius:calc(var(--r-m) * 1.2);border:1px solid var(--line);background:rgba(255,255,255,.03)}
+.axp-rate{display:flex;flex-direction:column;gap:2px;min-width:88px;padding:8px 12px;border-radius:calc(var(--r-m) * 1.2);border:1px solid var(--line);background:rgba(var(--kffffff-c,255,255,255),.03)}
 .axp-rate small{font-family:var(--f-mono);font-size:calc(10px * var(--ts,1));letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
 .axp-rate b{font-size:calc(16px * var(--ts,1));color:var(--ink);font-weight:700}
 .axp-rail{padding-top:10px}

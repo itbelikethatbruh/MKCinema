@@ -79,6 +79,8 @@
   };
   const lu = loadUrl;
   loadUrl = function (stream) {
+    // every load of a source picks the language again (the same source played again later included)
+    if (stream && typeof stream === 'object') { stream._mkAud = false; stream._mkAudProbe = false; }
     const r = lu.apply(this, arguments);
     const h = P.hls;
     if (h && !h._mkAud && window.Hls && Hls.Events) {

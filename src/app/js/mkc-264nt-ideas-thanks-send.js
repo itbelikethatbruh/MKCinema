@@ -59,6 +59,7 @@ const Notes = {
     if (this.kids()) { toast('Ask a grown-up to send notes from their own seat'); return null; }
     if (kind && this.KINDS[kind]) this.kind = kind;
     const el = X8.layer('notesLayer', { label: 'Ideas and thanks', icon: 'lightbulb', eyebrow: 'Ideas & thanks' });
+    this.forUser();
     this.paint(); X8.open('notesLayer');
     if (this.onMk()) this.loadMine();
     if (IS_TV) setTimeout(() => Nav.focus($('#ntBody') || $('#ntSend')), 60);
@@ -106,12 +107,13 @@ const Notes = {
     const body = ta.value.trim();
     if (body.length < 3) { toast('Write a few words first', 'err'); if (IS_TV) Nav.focus(ta); else ta.focus(); return; }
     btn.disabled = true; const lbl = btn.querySelector('span'), was = lbl.textContent; lbl.textContent = 'Sending…';
+    const kind = this.kind;
     try {
-      await this.rpc('mkc_note_send', { p_kind: this.kind, p_body: body, p_name: (nm && nm.value.trim()) || null, p_version: APP_VERSION, p_platform: this.platform() });
-      Store.set(this.draftKey(this.kind), ''); ta.value = ''; ta.dispatchEvent(new Event('input'));
-      const out = $('#ntOut'); out.hidden = false;
-      out.innerHTML = `<i data-lucide="${this.kind === 'thanks' ? 'heart' : 'check'}"></i><div><b>${this.kind === 'thanks' ? 'Thank you. It means a lot.' : 'Thanks, your idea is in.'}</b><small>${esc(this.who())} reads every note${this.onMk() ? '. Any reply shows up under Your notes.' : '.'}</small></div>`;
-      icons(); try { MKLog.add('info', `note sent (${this.kind})`); } catch (e) { /* log not ready */ }
+      await this.rpc('mkc_note_send', { p_kind: kind, p_body: body, p_name: (nm && nm.value.trim()) || null, p_version: APP_VERSION, p_platform: this.platform() });
+      Store.set(this.draftKey(kind), ''); if (this.kind === kind && ta.isConnected) { ta.value = ''; ta.dispatchEvent(new Event('input')); }
+      const out = $('#ntOut'); if (!out) return; out.hidden = false;
+      out.innerHTML = `<i data-lucide="${kind === 'thanks' ? 'heart' : 'check'}"></i><div><b>${kind === 'thanks' ? 'Thank you. It means a lot.' : 'Thanks, your idea is in.'}</b><small>${esc(this.who())} reads every note${this.onMk() ? '. Any reply shows up under Your notes.' : '.'}</small></div>`;
+      icons(); try { MKLog.add('info', `note sent (${kind})`); } catch (e) { /* log not ready */ }
       if (this.onMk()) this.loadMine();
     } catch (e) {
       toast(e.message || 'The note was not sent. Try again.', 'err', 6000);
@@ -119,9 +121,13 @@ const Notes = {
   },
 
   /* ---------- the sender's own notes ---------- */
+  uid() { try { return (typeof Account !== 'undefined' && Account.user && Account.user.id) || ''; } catch (e) { return ''; } },
+  forUser() { const u = this.uid(); if (this.mineFor !== u) { this.mine = null; this.mineFor = u; } },
   async loadMine() {
-    try { this.mine = (await this.rpc('mkc_notes_mine', {}, true)) || []; } catch (e) { this.mine = e.off ? null : this.mine; }
-    this.paintMine();
+    const u = this.uid(); this.forUser();
+    let l; try { l = (await this.rpc('mkc_notes_mine', {}, true)) || []; } catch (e) { l = e.off ? null : this.mine; }
+    if (u !== this.uid()) return;   // signed out or switched account meanwhile
+    this.mine = l; this.paintMine();
   },
   paintMine() {
     const s = $('#ntMine'); if (!s) return;
@@ -163,17 +169,19 @@ const Notes = {
   async loadBox(more) {
     const list = $('#nbList'); if (!list) return;
     if (!more) list.innerHTML = '<p class="sub">Loading…</p>';
+    const tok = this.boxTok = (this.boxTok || 0) + 1;
     try {
       const before = more && this.box && this.box.length ? this.box[this.box.length - 1].id : null;
       const rows = (await this.rpc('mkc_notes_inbox', { p_status: this.boxFilter === 'all' ? null : this.boxFilter, p_before: before, p_limit: 50 }, true)) || [];
+      if (tok !== this.boxTok) return;
       this.box = more ? [...(this.box || []), ...rows] : rows; this.boxMore = rows.length === 50;
       this.paintBox();
-    } catch (e) { list.innerHTML = `<p class="sub">${esc(e.message)}</p>`; }
+    } catch (e) { if (tok !== this.boxTok) return; if (!more) this.box = []; list.innerHTML = `<p class="sub">${esc(e.message)}</p>`; }
   },
   paintBox() {
     const list = $('#nbList'); if (!list) return;
     const more = $('#nbMore'); if (more) more.hidden = !this.boxMore;
-    if (!this.box.length) { list.innerHTML = '<p class="sub">Nothing here.</p>'; return; }
+    if (!this.box || !this.box.length) { list.innerHTML = '<p class="sub">Nothing here.</p>'; return; }
     list.innerHTML = this.box.map((n) => `<article class="nt-item${n.status === 'new' ? ' is-new' : ''}" data-id="${+n.id}">
         <header><i data-lucide="${n.kind === 'thanks' ? 'heart' : 'lightbulb'}"></i><span>${esc(n.name || (n.signed_in ? 'Signed-in user' : 'Guest'))} · ${esc(this.date(n.created_at))}${n.app_version ? ` · ${esc(n.app_version)}` : ''}${n.platform ? ` · ${esc(n.platform)}` : ''}</span>
           <select class="inp nt-sel" data-nbst="${+n.id}" aria-label="Status">${Object.entries(this.STATUS).map(([v, l]) => `<option value="${v}"${v === n.status ? ' selected' : ''}>${v === 'new' ? 'New' : l}</option>`).join('')}</select>

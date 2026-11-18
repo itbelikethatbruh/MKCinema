@@ -69,7 +69,7 @@ const Troubleshoot = {
     ['wontplay', 'circle-alert', 'A stream won’t start, or shows a black screen', 'error black screen wont play fails codec hevc mkv format unsupported loading forever',
       ['Pick another source from the list. One broken link doesn’t mean the title is broken.',
         'Browsers can’t decode every file. HEVC/x265, some MKV files, and DTS or TrueHD audio often fail in a browser but play fine in a video player app.',
-        'Hand the stream to an outside player in <b>Settings › Playback › Play streams in</b>. On Android that can be VLC, MX Player, Just Player or mpv; on a Mac, Infuse or IINA; on Windows, PotPlayer or any player through an .m3u file.',
+        'Hand the stream to an outside player in <b>Settings › Playback › Play streams in</b>. VLC is the one we recommend: on Android and iPhone it opens straight from MKCinema, and on a Mac or Windows PC the .m3u playlist opens in it.',
         'Turn on <b>Only sources that play here</b> so the list shows files this device can play.',
         'Run the Diagnostic. It tests which video this device decodes and sets things up to match.'],
       [['Run Diagnostic', 'activity', 'diag'], ['Play streams in', 'external-link', 'row:playback:extPlayer'], ['Only sources that play here', 'filter', 'row:playback:browserOnly']]],

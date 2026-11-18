@@ -121,6 +121,8 @@ const AMBIENT_STYLES = {
   fog: { re: /horror|sci-?fi|science fiction|thriller|mystery|fantasy/i, colors: [[120, 150, 190], [70, 80, 120]] },
   embers: { re: /action|crime|war|adventure|western/i, colors: [[255, 150, 70], [210, 70, 40]] },
   dust: { re: null, colors: [[245, 210, 150], [190, 150, 100]] },
+  snow: { re: null, colors: [[235, 240, 250], [190, 205, 230]] },   // 2.82 Ambient Studio (found by searching rosebud)
+  none: { re: null, colors: [[245, 210, 150], [190, 150, 100]] },   // 2.82 no particles
 };
 const ambientStyle = (m) => { const g = genresOf(m).join(' '); return AMBIENT_STYLES.fog.re.test(g) ? 'fog' : AMBIENT_STYLES.embers.re.test(g) ? 'embers' : 'dust'; };
 
@@ -141,7 +143,7 @@ const AmbientFx = {
     g.addColorStop(0, `rgba(${rgb},1)`); g.addColorStop(soft ? .25 : .45, `rgba(${rgb},${soft ? .45 : .8})`); g.addColorStop(1, `rgba(${rgb},0)`);
     x.fillStyle = g; x.fillRect(0, 0, px, px); this.sprites.set(k, c); return c;
   },
-  target() { const n = { fog: 46, embers: 82, dust: 96 }[this.style] || 60; return Math.round(n * (this.level >= 2 ? 1 : .5)); },
+  target() { const n = this.style === 'none' ? 0 : ({ fog: 46, embers: 82, dust: 96, snow: 90 }[this.style] || 60); return Math.round(n * (this.level >= 2 ? 1 : .5)); },
   spawn(fresh) {
     const W = this.w, H = this.h, st = this.style, c = this.colors || AMBIENT_STYLES[st].colors, r = Math.random;
     const p = { st, a: 0, life: 0 };
@@ -152,6 +154,10 @@ const AmbientFx = {
     } else if (st === 'embers') {
       if (r() < .14) Object.assign(p, { x: r() * W, y: r() * H, sz: (18 + r() * 34) * this.s, vx: (r() - .5) * 4 * this.s, vy: -4 * this.s, max: .06 + r() * .1, img: this.sprite(c[0].join(','), true, 64), dur: 10 + r() * 8 });
       else Object.assign(p, { x: r() * W, y: H * (.55 + r() * .5), sz: (2 + r() * 3.6) * this.s, vx: (r() - .5) * 10 * this.s, vy: -(18 + r() * 42) * this.s, max: .5 + r() * .5, img: this.sprite(r() < .5 ? '255,190,110' : '255,120,60', false, 16), dur: 5 + r() * 6, flick: 3 + r() * 6, sway: r() * 6 });
+    } else if (st === 'snow') {
+      // flakes fall and sway; a few big, soft ones drift close to the screen
+      if (r() < .08) Object.assign(p, { x: r() * W, y: fresh ? r() * H : r() * H * .3, sz: (10 + r() * 10) * this.s, vx: (r() - .5) * 8 * this.s, vy: (26 + r() * 20) * this.s, max: .18 + r() * .2, img: this.sprite('245,248,255', true, 32), dur: 10 + r() * 8, sway: 6 + r() * 10 });
+      else Object.assign(p, { x: r() * W, y: fresh ? r() * H : r() * H * .3, sz: (2 + r() * 4) * this.s, vx: (r() - .5) * 6 * this.s, vy: (14 + r() * 26) * this.s, max: .5 + r() * .45, img: this.sprite('245,248,255', false, 16), dur: 12 + r() * 14, sway: 4 + r() * 10 });
     } else {
       Object.assign(p, { x: r() * W, y: r() * H, sz: (1.2 + r() * 2.4) * this.s, vx: (r() - .4) * 5 * this.s, vy: (r() - .5) * 4 * this.s, max: .3 + r() * .55, img: this.sprite(c[0].map((v) => Math.min(255, v + 30)).join(','), false, 16), dur: 10 + r() * 12, sway: r() * 6, beam: true });
     }
@@ -317,7 +323,7 @@ const Saver = {
     const add = (m) => { if (!m || !m.id || seen.has(m.id) || !metaBg(m)) return; seen.add(m.id); out.push(m); };
     (S.hero || []).forEach(add); (S.watchlist || []).forEach(add);
     try { continueItems().forEach((p) => add({ id: p.metaId, type: p.type, name: p.name, background: p.background, genres: p.genres })); } catch (e) { /* no progress yet */ }
-    return out;
+    return typeof AmbStudio !== 'undefined' ? AmbStudio.pool(out) : out;   // 2.82 your photos, films, or both
   },
   build() {
     const el = document.createElement('div'); el.id = 'saver'; el.hidden = true; el.setAttribute('aria-hidden', 'true');
@@ -348,17 +354,19 @@ const Saver = {
     $('.sv-front', el).innerHTML = ''; $$('.sv-b', el).forEach((b) => b.remove());
     el.hidden = false; document.body.classList.add('saver-on');
     if (IS_TV && !$('#remote')) $('.sv-back-key', el).id = 'remote';
-    this.applyLevel(2);
+    this.applyLevel(window.MK_LITE ? 0 : 2);
+    if (typeof AmbStudio !== 'undefined') AmbStudio.dress(this, el);   // 2.82 timing, colour, grain, clock
     if (AmbientGL.ok === null && this.level > 0) AmbientGL.init($('.sv-gl', el));
     requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on')));
     clearTimeout(this.fullT); this.fullT = setTimeout(() => { if (this.isOpen) document.body.classList.add('saver-full'); }, 1200);
-    const clock = $('.sv-clock', el), tickClock = () => { clock.textContent = new Date().toLocaleTimeString(appLocale(), { hour: 'numeric', minute: '2-digit' }); };
+    const clock = $('.sv-clock', el), tickClock = () => { clock.textContent = new Date().toLocaleTimeString(appLocale(), { hour: 'numeric', minute: '2-digit' }); if (typeof AmbStudio !== 'undefined') AmbStudio.midnight(el); };
     tickClock(); clearInterval(this.clk); this.clk = setInterval(tickClock, 15000);
     this.frames = []; this.slow = 0; this.lastF = 0; cancelAnimationFrame(this.raf); this.raf = requestAnimationFrame((t) => this.frame(t));
     this.go(0, false);
   },
   // Fetch art, decode it and build both halves of a scene, ready to swap in
   async prep(m) {
+    if (m.photo) return AmbStudio.prepPhoto(m, this);   // 2.82 a photo from Ambient Studio
     const b = await AmbientArt.bundle(m);
     let img = null, cors = b.bgCors;
     let titled = !!b.bgText;
@@ -367,8 +375,8 @@ const Saver = {
     const colors0 = cors ? AmbientArt.colors(img) : null;
     img = AmbientArt.shrink(img, AmbientArt.px());
     const [cut, logo] = await Promise.all([b.cut && this.level > 0 ? AmbientArt.load(b.cut, false, 7000).catch(() => null) : null, b.logo && !titled && !(b.cut && b.cutTitled && this.level > 0) ? AmbientArt.load(b.logo, false, 6000).catch(() => null) : null]);
-    const mode = cut ? 'A' : cors && this.level > 0 && AmbientGL.ok !== false && (AmbientGL.ok || AmbientGL.init($('.sv-gl', this.el))) ? 'B' : 'C';
-    const style = ambientStyle(m), colors = colors0 || AMBIENT_STYLES[style].colors;
+    const mode = cut ? 'A' : cors && this.level > 0 && (typeof AmbStudio === 'undefined' || AmbStudio.depthOK()) && AmbientGL.ok !== false && (AmbientGL.ok || AmbientGL.init($('.sv-gl', this.el))) ? 'B' : 'C';
+    const style = typeof AmbStudio !== 'undefined' ? AmbStudio.styleFor(m) : ambientStyle(m), colors = colors0 || AMBIENT_STYLES[style].colors;
     const side = mode === 'A' ? 0 : (this.side ^= 1);
     const back = document.createElement('div'); back.className = `sv-b ${mode.toLowerCase()}${side ? ' r' : ''}`;
     img.className = 'sv-bg'; if (mode !== 'B') back.appendChild(img);
@@ -413,6 +421,8 @@ const Saver = {
   swap(sc, fast) {
     const el = this.el, dur = fast ? 700 : this.XF, old = this.cur;
     el.style.setProperty('--xf', `${dur}ms`);
+    // a scene made for the shader while the shader went away (lost context, dropped to the light mode): show its plain image
+    if (sc.mode === 'B' && !(AmbientGL.ok && this.level > 0) && sc.img) { sc.mode = 'C'; sc.back.classList.remove('b'); sc.back.classList.add('c'); sc.front.classList.remove('b'); sc.front.classList.add('c'); sc.back.prepend(sc.img); }
     if (sc.mode === 'B') { this.slot ^= 1; sc.slot = this.slot; AmbientGL.upload(sc.slot, sc.img); }
     if (old) {
       old.back.classList.remove('on'); old.front.classList.remove('on'); old.back.classList.add('out'); old.front.classList.add('out');
@@ -446,12 +456,13 @@ const Saver = {
     if (!settling && dt > 0) { this.slow = dt * 1000 > 18.5 ? this.slow + 1 : Math.max(0, this.slow - 2); if (this.slow > 90 && this.level > 0) { this.slow = 0; this.applyLevel(this.level - 1); } }
   },
   watch() {
-    const m = this.cur && this.cur.m; this.close();
+    const m = this.cur && this.cur.m; if (m && m.photo) { this.skip(1); return; } this.close();
     if (m) setTimeout(() => openDetail(m), 300);
   },
   close() {
     if (!this.isOpen) return;
     this.isOpen = false; this.tok++; this.last = Date.now(); this.dropPre();
+    if (typeof AmbStudio !== 'undefined') AmbStudio.closed();   // 2.82 a Try it ends here
     clearTimeout(this.tPre); clearTimeout(this.tNext); clearInterval(this.clk); clearTimeout(this.fullT); cancelAnimationFrame(this.raf);
     const el = this.el; document.body.classList.remove('saver-full'); el.classList.remove('on');
     const b = $('#remote', el); if (b) b.removeAttribute('id');

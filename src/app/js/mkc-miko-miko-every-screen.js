@@ -271,7 +271,7 @@ const MikoSoul = (() => {
       this.stop(); const my = this.gen;
       await this.load();
       // her first sentence on its own, so she starts talking fast; then fuller phrases, so she reads with a person's flow
-      const sents = []; (spoken(text).match(/[^.!?]+[.!?]*/g) || []).forEach((s) => { s = s.trim(); if (!s) return; if (s.length > 220) s.split(/(?<=[,;:])\s+/).forEach((x) => x.trim() && sents.push(x.trim())); else sents.push(s); });
+      const sents = []; (spoken(text).match(/[^.!?]+[.!?]*/g) || []).forEach((s) => { s = s.trim(); if (!s) return; if (s.length > 220) s.replace(/([,;:])\s+/g, '$1\n').split('\n').forEach((x) => x.trim() && sents.push(x.trim())); else sents.push(s); });
       const parts = []; sents.forEach((s, i) => { const L = parts.length; if (i > 0 && L > 1 && (parts[L - 1] + ' ' + s).length <= 220) parts[L - 1] += ' ' + s; else parts.push(s); });
       for (const s of parts.slice(0, 6)) {
         if (my !== this.gen) return;
@@ -356,9 +356,12 @@ const Miko = {
     icons();
   },
   // she steps aside for anything that fills the screen or sits in her corner
-  BUSY: ['player', 'trailer', 'tour', 'palette', 'epSheet', 'castLayer', 'partyLayer', 'stremioImport', 'tastePick'],
+  BUSY: ['player', 'trailer', 'tour', 'palette', 'epSheet', 'castLayer', 'partyLayer', 'stremioImport', 'tastePick', 'splitLayer'],
+  // Settings › Appearance › Miko on Home off: no button while Home itself is on screen (a film page or panel over Home still shows her)
+  homeOff() { return CFG.mikoHome === false && !this.on && typeof S !== 'undefined' && S.view === 'home' && !document.body.classList.contains('locked'); },
   blocked() {
     const b = document.body.classList;
+    if (document.documentElement.classList.contains('ezb-menu-open') || this.homeOff()) return true;
     if (b.contains('mk-player-on') || b.contains('tr-on') || b.contains('saver-on') || b.contains('sd-open') || b.contains('booting')) return true;
     if (document.documentElement.classList.contains('booting')) return true;
     if (this.BUSY.some((id) => { const el = document.getElementById(id); return el && !el.hidden; })) return true;
@@ -378,6 +381,7 @@ const Miko = {
     const mo = new MutationObserver(later);
     mo.observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true });
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    const hv = document.getElementById('view-home'); if (hv) mo.observe(hv, { attributes: true, attributeFilter: ['class'] });   // Home on/off screen
     this.BUSY.forEach((id) => { const el = document.getElementById(id); if (el) mo.observe(el, { attributes: true, attributeFilter: ['hidden'] }); });
     const lab = () => { const el = $('#mkLab'); if (el && !el._mk) { el._mk = 1; mo.observe(el, { attributes: true, attributeFilter: ['hidden'] }); } };
     new MutationObserver(lab).observe(document.body, { childList: true }); lab();
@@ -457,6 +461,8 @@ const Miko = {
     else setTimeout(() => { if (this.on && !matchMedia('(pointer:coarse)').matches) $('#mikoQ').focus(); }, 260);
   },
   close(quiet) {
+    if (!quiet) this.gen = (this.gen || 0) + 1;   // closed by the person: whatever she was still doing is dropped
+    this.hush();
     if (!this.on) return; this.on = false; this.stopMic(); this.settings(false);
     const box = $('#mikoBox'); box.classList.remove('on'); box.setAttribute('aria-hidden', 'true'); $('#mikoQ').blur();
     clearTimeout(this.hideT); this.hideT = setTimeout(() => { if (!this.on) box.hidden = true; }, CFG.reduceMotion ? 0 : 260);
@@ -525,11 +531,14 @@ const Miko = {
   and: (a) => (a.length < 2 ? a.join('') : `${a.slice(0, -1).join(', ')} and ${a[a.length - 1]}`),
   pplHtml(list, role) { const E = this.E; return `<div class="mk-ppl">${list.map((p) => `<button type="button" class="chip mk-pp" data-name="${E(p.name)}" data-role="${E(role || p.role || 'cast')}">${E(p.name)}${p.as ? `<small>${E(p.as)}</small>` : ''}</button>`).join('')}</div>`; },
   async ask(text) {
-    text = String(text || '').trim().slice(0, 300); if (!text || this.busy) return;
-    this.stopMic(); this.me(text); this.busy = true; this.mode(); const w = this.think();
+    text = String(text || '').trim().slice(0, 300); if (!text) return;
+    // sent while she is still answering: it waits its turn instead of vanishing
+    if (this.busy) { this.queued = text; return; }
+    this.stopMic(); this.me(text); this.busy = true; this.runGen = this.gen || 0; this.mode(); const w = this.think();
     if (Store.raw.get('rm.akSpeak', false) && MikoSoul.Natural.on()) MikoSoul.Natural.unlock();
     try { await this.run(text); } catch (e) { this.say(e && e.message ? e.message : 'Something went wrong. Try again.'); }
     w.remove(); this.busy = false; if (this.on) this.chips(); this.mode();
+    if (this.queued) { const q = this.queued; this.queued = ''; this.ask(q); }
   },
   async run(text) {
     if (this.askName) {
@@ -537,8 +546,11 @@ const Miko = {
       if (/^[\p{L}][\p{L}'-]{1,19}$/u.test(nm) && !this.parse(nm) && !/^(no|nope|nah|skip|later|yes|yeah|hi|hey|hello|thanks|help|home|settings)$/i.test(nm)) { MikoSoul.setName(nm.charAt(0).toUpperCase() + nm.slice(1)); await this.pause(20); this.say(MikoSoul.line('nicetomeet', { n: MikoSoul.name() })); return; }
     }
     const fu = this.follow(text); if (fu) { await fu(); return; }
-    const c = MikoSoul.chat(text);
-    if (c) { await this.pause(c.say.length); this.say(c.say, c.help ? { html: this.helpHtml() } : {}); if (c.picks && typeof showAsk === 'function' && !this.kids()) setTimeout(() => this.picks(c.picks), 700); return; }
+    // she only offers picks where she can show them (not on a kids seat, not without Your Picks), and fetches them
+    // while still answering, so they never land under the next question
+    const canPick = typeof showAsk === 'function' && typeof Recs !== 'undefined' && !this.kids();
+    const c = MikoSoul.chat(text, canPick ? {} : { picks: false });
+    if (c) { await this.pause(c.say.length); this.say(c.say, c.help ? { html: this.helpHtml() } : {}); if (c.picks && canPick) { await this.pause(40); await this.picks(c.picks); } return; }
     if (this.wantsPicks(text)) return this.picks(text);
     let local = this.parse(text);
     if (!local) { const f = MikoSoul.fix(text); if (f !== text) local = this.parse(f); }
@@ -610,17 +622,20 @@ const Miko = {
   async full(x) { try { return remember({ ...x, ...((await engine.fetchMeta(x.type, x.id)) || {}) }); } catch (e) { return x; } },
   seed(x) { return S.metas.get(x.id) || { id: x.id, type: x.type, name: x.name, poster: x.poster || undefined }; },
   // play, show its page, or its trailer, here in the app
+  stale() { return (this.runGen || 0) !== (this.gen || 0); },
   async act(act, x) {
+    if (this.stale()) return false;
     if (!this.kidOk(S.metas.get(x.id) || x)) { this.say(`${x.name || 'That'} isn’t on the kids seat.`); return false; }
     this.mark(x);
     const nm = `${x.name || 'it'}${x.ep ? ` S${x.ep[0]} · E${x.ep[1]}` : ''}`;
     if (act === 'trailer') {
-      const m = await this.full(this.seed(x));
+      const m = await this.full(this.seed(x)); if (this.stale()) return false;
       if (!((m.trailerStreams || []).length || (m.trailers || []).length)) { this.say(`There’s no official trailer listed for ${x.name}.`); return false; }
       this.did(`Trailer for ${x.name}`); this.close(true); playTrailer(m); return true;
     }
     this.leave();
     await openDetail(this.seed(x), x.vid ? { videoId: x.vid } : {});
+    if (this.stale()) return false;
     if (act === 'play' && typeof smartPlayDetail === 'function' && !$('#detail').hidden && D.meta && D.meta.id === x.id) {
       this.did(`Finding the best source for ${nm}…`);
       try { await smartPlayDetail(); } catch (e) { /* the page shows why */ }
@@ -658,7 +673,9 @@ const Miko = {
   },
   async title(act, q, kind, ep) {
     const pre = S.metas && S.metas.size < 20000 ? new Set(S.metas.keys()) : null;
-    const res = await this.find(q, ep ? 'series' : kind);
+    let res = null;
+    if (this.cut && !ep && !/\b(please|thanks|thank you|miko)\b/.test(this.cut)) { const r0 = await this.find(`${q} ${this.cut}`, kind); if (r0.length && r0[0].score >= 100) res = r0; }
+    if (!res) res = await this.find(q, ep ? 'series' : kind);
     if (!res.length) { if (this.cfg()) return 'defer'; this.say(MikoSoul.line('notfound', { q })); return; }
     let x = res[0]; const close = res[1] && res[1].score >= x.score - 5, sure = !close && (x.score >= 100 || (res.length === 1 && x.score >= 25) || (x.score >= 60 && (!res[1] || res[1].score < x.score - 30)));
     // same exact name (Dune the film, Dune the series): pick the one you most likely mean, like a friend would,
@@ -776,7 +793,9 @@ const Miko = {
   clean(text) {
     let t = String(text).toLowerCase().replace(/[’‘]/g, "'").replace(/[“”"]/g, '').replace(/[.!?,;]+/g, ' ').replace(/\s+/g, ' ').trim();
     for (let i = 0; i < 3; i++) t = t.replace(/^(hey|hi|ok|okay|so|um|uh|miko|mkcinema|please|can you|could you|would you|will you|can we|could we|i want you to|go ahead and|just|now|quickly)\b\s*/, '');
-    for (let i = 0; i < 2; i++) t = t.replace(/\s*\b(please|for me|now|thanks|thank you|right now|miko)$/, '');
+    // the words cut from the end are kept: a title can end in them ("Apocalypse Now"), and is searched in full first
+    this.cut = '';
+    for (let i = 0; i < 2; i++) t = t.replace(/\s*\b(please|for me|now|thanks|thank you|right now|miko)$/, (x) => { this.cut = `${x.trim()} ${this.cut}`.trim(); return ''; });
     return t.trim();
   },
   parse(text) {
@@ -801,21 +820,23 @@ const Miko = {
     if (/^(play|watch|start|resume|put on|play (it|this|that|this one)|watch (it|this|that)|start (it|this))$/.test(t)) return async () => { const x = this.needHere(); if (x) await this.act('play', x); };
     if (/^(details|more (info|details)|tell me (more|about (it|this))|info)$/.test(t)) return async () => { const x = this.needHere(); if (x) await this.about(x, 'plot'); };
     // who is in it, who made it
+    // "play The Score", "watch Plot Against America": a leading play or watch means a title, not a question about the open page
+    const playLead = /^(?:can we |let's |lets |i want to |i wanna |i'd like to |i would like to )?(?:play|watch|put on|start|stream|throw on) (?!(?:the |a )?trailer\b)\S/.test(t);
     if ((m = t.match(/^who(?:'s| is) (?:playing|the actor (?:playing|who plays)) (.+)$|^who plays (.+?)(?: in (?:this|it))?$/)) && !/^(in )?(this|it|that)$/.test(m[1] || m[2])) {
       let role = (m[1] || m[2]).replace(/^the /, ''), inT = role.match(/^(.+?) in (.+)$/); if (inT && target(inT[2])) role = inT[1]; else inT = null;
       return async () => { if (inT) { const r = await this.find(inT[2]); if (!r.length) { this.say(`I couldn’t find “${inT[2]}”.`); return; } await this.whoPlays(r[0], role); return; } const x = this.needHere(); if (x) await this.whoPlays(x, role); };
     }
     if ((m = t.match(/^(?:who(?:'s| is| are)(?: in| starring in| the (?:cast|actors) (?:of|in))|cast (?:of|for)|who stars in|who acts in|actors (?:in|of)) (.+)$/)) && target(m[1])) { const q = target(m[1]); return () => this.title('cast', q); }
-    if (/\b(who(?:'s| is| are)? (in (it|this|that)|starring|acting)|who stars|the cast|cast list|^cast$|the actors)\b/.test(t)) return async () => { const x = this.needHere(); if (x) await this.castOf(x); };
+    if (!playLead && /\b(who(?:'s| is| are)? (in (it|this|that)|starring|acting)|who stars|the cast|cast list|^cast$|the actors)\b/.test(t)) return async () => { const x = this.needHere(); if (x) await this.castOf(x); };
     if ((m = t.match(/^who directed (.+)$/)) && target(m[1])) { const q = target(m[1]); return () => this.title('crew', q); }
-    if (/\b(who directed|director|who made (it|this))\b/.test(t)) return async () => { const x = this.needHere(); if (x) await this.crewOf(x, false); };
-    if (/\b(who wrote|writer|screenplay)\b/.test(t)) return async () => { const x = this.needHere(); if (x) await this.crewOf(x, true); };
+    if (!playLead && /\b(who directed|director|who made (it|this))\b/.test(t)) return async () => { const x = this.needHere(); if (x) await this.crewOf(x, false); };
+    if (!playLead && /\b(who wrote|writer|screenplay)\b/.test(t)) return async () => { const x = this.needHere(); if (x) await this.crewOf(x, true); };
     if ((m = t.match(/^what(?:'s| is) (.+?) about$/)) && target(m[1])) { const q = target(m[1]); return () => this.title('about', q); }
-    if (/\b(what('s| is) (it|this|that|the (film|movie|show|story|episode)) about|plot|summary|synopsis|premise|the story)\b/.test(t) && !/\b(with|starring)\b/.test(t)) return async () => { const x = this.needHere(); if (x) await this.about(x, 'plot'); };
-    if (/\b(rating|rated|is it (any )?good|reviews?|imdb|score)\b/.test(t)) return async () => { const x = this.needHere(); if (x) await this.about(x, 'rating'); };
-    if (/\b(what year|when was (it|this) (made|released|out)|release date|how old is (it|this))\b/.test(t)) return async () => { const x = this.needHere(); if (x) await this.about(x, 'year'); };
-    if (/\b(how long is (it|this|the (film|movie|episode))|runtime|run time)\b/.test(t)) return async () => { const x = this.needHere(); if (x) await this.about(x, 'runtime'); };
-    if (/\b(what (kind|type|sort|genre) of|genre)\b/.test(t)) return async () => { const x = this.needHere(); if (x) await this.about(x, 'genre'); };
+    if (!playLead && /\b(what('s| is) (it|this|that|the (film|movie|show|story|episode)) about|plot|summary|synopsis|premise|the story)\b/.test(t) && !/\b(with|starring)\b/.test(t)) return async () => { const x = this.needHere(); if (x) await this.about(x, 'plot'); };
+    if (!playLead && /\b(rating|rated|is it (any )?good|reviews?|imdb|score)\b/.test(t)) return async () => { const x = this.needHere(); if (x) await this.about(x, 'rating'); };
+    if (!playLead && /\b(what year|when was (it|this) (made|released|out)|release date|how old is (it|this))\b/.test(t)) return async () => { const x = this.needHere(); if (x) await this.about(x, 'year'); };
+    if (!playLead && /\b(how long is (it|this|the (film|movie|episode))|runtime|run time)\b/.test(t)) return async () => { const x = this.needHere(); if (x) await this.about(x, 'runtime'); };
+    if (!playLead && /\b(what (kind|type|sort|genre) of|genre)\b/.test(t)) return async () => { const x = this.needHere(); if (x) await this.about(x, 'genre'); };
     // people
     if ((m = t.match(/^(?:show me |find |list |any |what are |what )?(?:all |other |more |some )?(?:the )?(?:films?|movies?|shows?|series|tv shows?|tv|everything|stuff|things|work)(?: else)? (with|starring|featuring|by|from|directed by|made by|written by) (.+)$/))) { const role = /directed|made|^by$/.test(m[1]) ? 'Director' : /written/.test(m[1]) ? 'Writer' : 'cast'; const who = m[2]; return async () => this.person(who, role); }
     if ((m = t.match(/^what else (?:has|is|was|did) (.+?) (?:been in|in|done|made|directed|starred in|appeared in|do)$/)) || (m = t.match(/^(.+?)'s (?:films|movies|shows|filmography)$/))) { const who = m[1]; return async () => this.person(who, 'cast'); }
@@ -1108,14 +1129,20 @@ Rules:
     if (b.classList.contains('mk-pp')) { this.person(b.dataset.name || '', b.dataset.role || 'cast'); return; }
     const act = b.dataset.mk; if (!act) return;
     const x = this.item(Number(b.dataset.i)); if (!x) return;
-    this.act(act, x);
+    // a tap is the person's own choice (it counts even after an earlier close), and a double tap acts once
+    if (this.acting) return; this.acting = true; this.runGen = this.gen || 0;
+    Promise.resolve().then(() => this.act(act, x)).catch(() => {}).then(() => { this.acting = false; });
   },
+  // her voice stops when she closes and when the microphone opens (so she never hears herself)
+  hush() { try { MikoSoul.Natural.stop(); } catch (e) { /* no voice */ } try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) { /* none */ } },
   mic() {
+    this.hush();
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SR) return;
     if (this.rec) { this.stopMic(); return; }
     const r = this.rec = new SR(); r.lang = navigator.language || 'en-US'; r.interimResults = true; r.maxAlternatives = 1;
     $('#mikoMic').classList.add('live'); this.mode(); $('#mikoQ').placeholder = 'Listening…';
-    r.onresult = (e) => { let s = ''; for (const res of e.results) s += res[0].transcript; $('#mikoQ').value = s.trim(); if (e.results[e.results.length - 1].isFinal) { const q = s.trim(); this.stopMic(); $('#mikoQ').value = ''; if (q) this.ask(q); } };
+    // results that arrive after the microphone was cancelled (Miko closed, mic tapped off) are dropped
+    r.onresult = (e) => { if (this.rec !== r) return; let s = ''; for (const res of e.results) s += res[0].transcript; $('#mikoQ').value = s.trim(); if (e.results[e.results.length - 1].isFinal) { const q = s.trim(); this.stopMic(); $('#mikoQ').value = ''; if (q) this.ask(q); } };
     r.onerror = (e) => { this.stopMic(); if (e.error === 'not-allowed') this.say('Allow the microphone for this page to talk to Miko.', { quiet: true }); };
     r.onend = () => this.stopMic();
     try { r.start(); } catch (e) { this.stopMic(); }
@@ -1131,7 +1158,9 @@ Rules:
     if (IS_TV) return;
     if (!('miko' in CFG_DEFAULTS)) CFG_DEFAULTS.miko = true;
     if (CFG.miko === undefined) CFG.miko = true;
-    CFG_HOOKS.push((k) => { if (k === 'miko') this.sync(); });
+    if (!('mikoHome' in CFG_DEFAULTS)) CFG_DEFAULTS.mikoHome = true;
+    if (CFG.mikoHome === undefined) CFG.mikoHome = true;
+    CFG_HOOKS.push((k) => { if (k === 'miko' || k === 'mikoHome') this.sync(); });
     // Back and Esc close Miko first
     const b0 = back; this.back0 = () => b0();
     back = function () { if (Miko.on) { if (!$('#mikoSet').hidden) Miko.settings(false); else Miko.close(); return; } return b0.apply(this, arguments); };
@@ -1143,13 +1172,16 @@ Rules:
         ap.rows = function () {
           const r = typeof rows === 'function' ? rows.apply(this, arguments) : rows;
           if (!Array.isArray(r) || r.some((d) => d && d.key === 'miko')) return r;
-          const row = { key: 'miko', label: 'Miko', help: 'Your assistant, in the bottom-right corner of every screen. Tap her and say or type what you want, like “play Dune” or “films with Zendaya”. She steps aside while a film plays.', type: 'toggle', get: () => CFG.miko !== false, set: (v) => setCfg('miko', !!v) };
+          const row = [
+            { key: 'miko', label: 'Miko', help: 'Your assistant, in the bottom-right corner. Tap her and say or type what you want, like “play Dune” or “films with Zendaya”. Turn this off to switch Miko off completely, on every screen.', type: 'toggle', get: () => CFG.miko !== false, set: (v) => setCfg('miko', !!v) },
+            { key: 'mikoHome', label: 'Miko on Home', help: 'Show Miko on the Home screen. Turn this off to keep the Home screen clear. She still shows on film pages and other screens.', type: 'toggle', get: () => CFG.mikoHome !== false, set: (v) => setCfg('mikoHome', !!v) },
+          ];
           const i = r.findIndex((d) => d && d.group === 'Layout');
-          return i < 0 ? [...r, row] : [...r.slice(0, i + 1), row, ...r.slice(i + 1)];
+          return i < 0 ? [...r, ...row] : [...r.slice(0, i + 1), ...row, ...r.slice(i + 1)];
         };
       }
     } catch (e) { /* the switch in Miko's own settings still works */ }
-    if (typeof COMMANDS !== 'undefined') COMMANDS.push({ label: 'Ask Miko', icon: 'sparkles', run: () => { if (CFG.miko === false) setCfg('miko', true); setTimeout(() => Miko.open(), 60); } });
+    if (typeof COMMANDS !== 'undefined') COMMANDS.push({ get label() { return CFG.miko === false ? '' : 'Ask Miko'; }, icon: 'sparkles', run: () => { setTimeout(() => Miko.open(), 60); } });
     this.watch(); this.sync();
   },
 };

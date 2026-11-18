@@ -8,7 +8,9 @@ const LOOKS = {
   noir: { label: 'Noir', blurb: 'Matte black, platinum type and fine hairlines. The original.', l0: '#000000', lb: '#111113', li: '#f2f2f3', la: '#d9d4c7', meta: '#000000' },
   midnight: { label: 'Midnight', blurb: 'Ink blue blacks and ice silver type, like a cinema before the lights go down.', l0: '#05070c', lb: '#0f1625', li: '#f0f2f5', la: '#bccde4', meta: '#05070c' },
   velvet: { label: 'Velvet', blurb: 'Deep oxblood and soft ivory, with rose gold for the small highlights.', l0: '#0a0506', lb: '#221014', li: '#f4f1f2', la: '#e3c8bd', meta: '#0a0506' },
-  sepia: { label: 'Sepia', blurb: 'Warm umber blacks, cream type and amber highlights, like old film stock.', l0: '#0a0805', lb: '#211912', li: '#f5f2f0', la: '#e8d7b8', meta: '#0a0805' }
+  sepia: { label: 'Sepia', blurb: 'Warm umber blacks, cream type and amber highlights, like old film stock.', l0: '#0a0805', lb: '#211912', li: '#f5f2f0', la: '#e8d7b8', meta: '#0a0805' },
+  daylight: { label: 'Daylight', blurb: 'Bright paper white and deep ink, for sunny rooms and daytime watching.', l0: '#f5f6f7', lb: '#dcdee1', li: '#21242d', la: '#886746', meta: '#f5f6f7', light: true },
+  linen: { label: 'Linen', blurb: 'Warm ivory and espresso type with bronze highlights, soft on the eyes in daylight.', l0: '#f5f2ec', lb: '#e6decf', li: '#352922', la: '#8f5935', meta: '#f5f2ec', light: true }
 };
 
 /* Effects presets. High adds depth: raised, shimmering buttons, posters that lift and tilt, the 3D logo pulse, and
@@ -23,6 +25,8 @@ const PRESET_ORDER = ['high', 'balanced', 'low'];
 const CFG_DEFAULTS = {
   // appearance
   look: 'noir', cardInfo: 'hover', uiScale: 100, reduceMotion: false, contrast: 'high',
+  cardSize: 'm', banner: 'full', lsMenu: null,   // 2.77 Layout Studio
+  ambient: null, eggs: null,   // 2.82 Ambient Studio recipe (photos stay on each device) and secrets found
   // performance
   quality: 'high', qualityChosen: false, blur: 18, showFps: false,
   // playback
@@ -31,7 +35,7 @@ const CFG_DEFAULTS = {
   // posters
   ratingBadges: true, rpdb: false,
   // watch party
-  partyName: '', partyShareLink: false, governor: true, syncKeys: true, anonStats: true,
+  partyName: '', partyShareLink: false, governor: true, syncKeys: true, anonStats: true, pickMemo: true, liveMini: true,
   ambilight: true, ambIntensity: 85, rememberVolume: true, extPlayers: {},
   // subtitles
   subAuto: true, subDubSigns: true, subLang: 'eng', subSize: 100, subColor: '#ffffff', subBg: 65, subPos: 'bottom', subFont: 'sans', subOutline: true,
@@ -89,7 +93,7 @@ if (CFG.quality !== 'custom') CFG.quality = applyPreset(CFG.quality);
 const NO_HOVER = matchMedia('(hover: none)');
 /* Smart TVs (the MKCinema Android TV / Fire TV app, LG webOS, TV browsers): a D-pad remote, sofa distance and a slow GPU */
 const PUBLIC_ORIGIN = location.hostname === 'mkcinema.pages.dev' ? 'https://app.mkcinema.app' : location.origin;
-const IS_TV = document.documentElement.classList.contains('tv') || /MKCinemaTV|Android TV|GoogleTV|AFT[A-Z]|SMART-TV|SmartTV|Web0S|webOS|Tizen|BRAVIA/i.test(navigator.userAgent);
+const IS_TV = document.documentElement.classList.contains('tv') || /MKCinemaTV|Android TV|GoogleTV|AFT[A-Z]|SMART-TV|SmartTV|Web0S|webOS|Tizen|BRAVIA|Xbox|PlayStation/i.test(navigator.userAgent);
 if (IS_TV) document.documentElement.classList.add('tv');
 /* Phones and tablets: Chrome on Android can black out tiles of backdrop-filtered or 3D-layered elements while scrolling, so these get a flat, unblurred UI */
 const TOUCH_UI = IS_TV || matchMedia('(pointer: coarse)').matches || NO_HOVER.matches;
