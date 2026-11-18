@@ -26,6 +26,8 @@ RULES = [
     (r"MKCinema-([0-9.]+)-mac\.zip", "macos", "zip"),
     (r"mkcinema_([0-9.]+)_amd64\.deb", "linux", "deb"),
     (r"mkcinema-([0-9.]+)-linux-x86_64\.tar\.gz", "linux", "tar.gz"),
+    (r"mkcinema_([0-9.]+)_arm64\.deb", "linux-arm64", "deb"),
+    (r"mkcinema-([0-9.]+)-linux-arm64\.tar\.gz", "linux-arm64", "tar.gz"),
     (r"com\.mkcinema\.app_([0-9.]+)_all\.ipk", "webos", "ipk"),
 ]
 
@@ -35,6 +37,7 @@ NEEDS = {
     "windows": "Windows 10 or 11, 64-bit, Microsoft Edge WebView2",
     "macos": "macOS 11 or later, Apple silicon and Intel",
     "linux": "x86-64, WebKitGTK 4.1 (2.40 or newer)",
+    "linux-arm64": "64-bit ARM such as Raspberry Pi 4 or 5 (64-bit Raspberry Pi OS Bookworm or newer, Ubuntu 22.04 or newer), WebKitGTK 4.1 (2.40 or newer)",
     "webos": "LG webOS (beta)",
 }
 
@@ -45,6 +48,7 @@ SIGNING = {
     "windows": "none",
     "macos": "none (not notarized)",
     "linux": "none",
+    "linux-arm64": "none",
     "webos": "none",
 }
 
@@ -111,7 +115,8 @@ def main():
         else:
             print(f"manifest.py: {p.name} matches no platform, left out", file=sys.stderr)
             continue
-        src = "android" if plat == "android-tv" else plat
+        # the TV APK is the Android app; the ARM Linux build is the Linux app (same source, same version)
+        src = {"android-tv": "android", "linux-arm64": "linux"}.get(plat, plat)
         entry = platforms.setdefault(plat, {
             "version": (versions.get(src) or {}).get("version"),
             "needs": NEEDS[plat],

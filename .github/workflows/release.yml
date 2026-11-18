@@ -10,6 +10,7 @@ name: Release
 #   MKCinema-engine-windows-x64.zip   the Windows native player's engine (libmpv), downloaded by MKCinema.exe itself
 #   MKCinema-<v>-mac.zip, .dmg        macOS 11+, Apple silicon and Intel (not notarized, see docs/releases.md)
 #   mkcinema_<v>_amd64.deb, mkcinema-<v>-linux-x86_64.tar.gz   Linux x86-64
+#   mkcinema_<v>_arm64.deb, mkcinema-<v>-linux-arm64.tar.gz    Linux 64-bit ARM (Raspberry Pi 4 and 5)
 #   com.mkcinema.app_<v>_all.ipk      LG webOS (beta), copied from the website (no webOS build in CI yet)
 #   release.json                      the machine-readable list of all of the above, for updaters
 #   SHA256SUMS                        the SHA-256 of every file, also printed in the notes
@@ -194,8 +195,16 @@ jobs:
   linux:
     needs: plan
     if: needs.plan.outputs.build == 'true'
-    # the oldest supported runner, so the binary runs on older glibc (Ubuntu 22.04, Debian 12 and newer)
-    runs-on: ubuntu-22.04
+    # the oldest supported runners, so the binary runs on older glibc (Ubuntu 22.04, Debian 12 and newer). The ARM
+    # runner builds the 64-bit ARM files (Raspberry Pi 4 and 5 on 64-bit Raspberry Pi OS, other ARM Linux boards).
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-22.04
+          - arch: arm64
+            runner: ubuntu-22.04-arm
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
     steps:
@@ -216,9 +225,12 @@ jobs:
           OUT="$RUNNER_TEMP/build" sh linux/package.sh
           mkdir -p "$RUNNER_TEMP/out" && cp "$RUNNER_TEMP"/build/*.deb "$RUNNER_TEMP"/build/*.tar.gz "$RUNNER_TEMP/out/"
           dpkg-deb --info "$RUNNER_TEMP"/out/*.deb
+          # the files must be for this matrix entry's machine (amd64 or arm64)
+          file "$RUNNER_TEMP/build/mkcinema" "$RUNNER_TEMP/build/mkp2p"
+          [ "$(dpkg-deb --field "$RUNNER_TEMP"/out/*.deb Architecture)" = "${{ matrix.arch }}" ]
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: app-linux
+          name: app-linux-${{ matrix.arch }}
           path: ${{ runner.temp }}/out/
           retention-days: 3
           if-no-files-found: error

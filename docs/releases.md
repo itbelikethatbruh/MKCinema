@@ -23,6 +23,7 @@ The **Release** workflow then runs five jobs side by side and publishes when all
 | android | ubuntu-latest | `MKCinema.apk` (also attached as `MKCinema-TV.apk`), signed with the release key; fails if the certificate is not the one in SECURITY.md |
 | windows | ubuntu-latest | `MKCinema.exe` (cross-compiled), after `go vet` and `go test`, and `MKCinema-engine-windows-x64.zip` (the native player's engine, pinned in `tools/release/libmpv.sh`; the exe downloads it from this release and checks its SHA-256) |
 | linux | ubuntu-22.04 | `mkcinema_<v>_amd64.deb` and `mkcinema-<v>-linux-x86_64.tar.gz`, built on the oldest supported Ubuntu so the binary runs on older systems |
+| linux (ARM) | ubuntu-22.04-arm | `mkcinema_<v>_arm64.deb` and `mkcinema-<v>-linux-arm64.tar.gz` for Raspberry Pi 4 and 5 (64-bit Raspberry Pi OS) and other 64-bit ARM boards; release.json lists them under `linux-arm64` |
 | macos | macos-15 | `MKCinema-<v>-mac.zip` and `MKCinema-<v>.dmg` (universal: Apple silicon and Intel) |
 | publish | ubuntu-latest | `release.json`, `SHA256SUMS`, attestations and the GitHub release |
 
