@@ -69,8 +69,8 @@ public class MainActivity extends Activity {
         page) open in the app on HOST, where the sign-in and settings live. */
     static final String[] APP_HOSTS = { HOST, "app.mkcinema.app" };
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
-    static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6;
-    static final String VER = "1.15.4";
+    static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6, REQ_MIRROR = 7, REQ_MIRROR_MIC = 8;
+    static final String VER = "1.16.0";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -120,6 +120,15 @@ public class MainActivity extends Activity {
     /** 1.12.0: the open MKCinema screen, so services (AirPlay) can answer the page */
     static volatile MainActivity liveAct;
     static void toPage(String code) { MainActivity a = liveAct; if (a != null && a.web != null) a.js(code); }
+    /** 1.16.0: screen mirroring events (offer, candidates, state) for the page, which carries them to the other screen */
+    static void mirrorEvent(String json) { toPage("window.MKMirrorNative&&MKMirrorNative.ev(" + JSONObject.quote(json) + ")"); }
+    /** 1.16.0: Android's "start recording or casting?" question; the sound question comes first when it is still open */
+    void mirrorAsk() {
+        try {
+            android.media.projection.MediaProjectionManager m = (android.media.projection.MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
+            startActivityForResult(m.createScreenCaptureIntent(), REQ_MIRROR);
+        } catch (Exception e) { mirrorEvent("{\"t\":\"error\",\"why\":\"no screen capture on this device\"}"); }
+    }
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
@@ -396,6 +405,14 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onActivityResult(int req, int res, Intent data) {
+        if (req == REQ_MIRROR) {
+            if (res != RESULT_OK || data == null) { mirrorEvent("{\"t\":\"denied\"}"); return; }
+            MirrorService.consent = data; MirrorService.consentCode = res;
+            Intent i = new Intent(this, MirrorService.class);
+            try { if (Build.VERSION.SDK_INT >= 26) startForegroundService(i); else startService(i); }
+            catch (Exception e) { mirrorEvent("{\"t\":\"error\",\"why\":\"could not start\"}"); }
+            return;
+        }
         if (req == REQ_PLAY) {
             int pos = data != null ? data.getIntExtra("pos", -1) : -1, dur = data != null ? data.getIntExtra("dur", -1) : -1;
             boolean ended = data != null && data.getBooleanExtra("ended", false), next = data != null && data.getBooleanExtra("next", false);
@@ -424,6 +441,7 @@ public class MainActivity extends Activity {
             web.evaluateJavascript("window.MKEpPerm&&MKEpPerm(" + ok + ")", null);
             return;
         }
+        if (req == REQ_MIRROR_MIC) { mirrorAsk(); return; } // refused: the picture still goes, without sound
         if (req == REQ_VOICE_MIC) {
             if (g.length > 0 && g[0] == PackageManager.PERMISSION_GRANTED) listen(voiceLang); else voiceDone(null, "denied");
             return;
@@ -501,6 +519,20 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public void voiceStop(String k) { if (ok(k)) runOnUiThread(() -> { if (recognizer != null) recognizer.cancel(); }); }
         @JavascriptInterface public String version(String k) { return ok(k) ? VER : ""; }
+        /* 1.16.0: screen mirroring. json: {ice:[…], to, maxSide, fps, kbps, sound}. Events come back on MKMirrorNative.ev */
+        @JavascriptInterface public boolean mirrorStart(String k, String json) {
+            if (!ok(k) || tv || json == null || json.length() > 20000 || Build.VERSION.SDK_INT < 21 || MirrorService.running()) return false;
+            MirrorService.config = json;
+            boolean sound = Build.VERSION.SDK_INT >= 29 && json.contains("\"sound\":true");
+            runOnUiThread(() -> {
+                if (sound && checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQ_MIRROR_MIC);
+                else mirrorAsk();
+            });
+            return true;
+        }
+        @JavascriptInterface public void mirrorSignal(String k, String json) { if (ok(k) && json != null && json.length() < 100000) MirrorService.signal(json); }
+        @JavascriptInterface public void mirrorStop(String k) { if (ok(k)) MirrorService.stopNow(getApplicationContext()); }
+        @JavascriptInterface public boolean mirrorOn(String k) { return ok(k) && MirrorService.running(); }
         @JavascriptInterface public boolean signIn(String k, String url) { if (!ok(k) || url == null || url.length() > 4000) return false; runOnUiThread(() -> openSignIn(url)); return true; }
         /** 1.6.0: frame-rate matching for the in-app player on TVs (the page measures the film's fps; 0 restores the TV's mode) */
         @JavascriptInterface public void fps(String k, float f) { if (!tv || !ok(k)) return; runOnUiThread(() -> TvExtras.matchFrameRate(MainActivity.this, f)); }
@@ -678,7 +710,8 @@ public class MainActivity extends Activity {
     static final String[] BRIDGE_METHODS = { "voice", "voiceStop", "version", "fps", "watchNext", "watchNextRemove", "p2pStart", "p2pStop",
         "p2pAvailable", "dlStart", "dlSpace", "setSlow", "epEnable", "epOn", "epSync", "dlList", "dlRemove", "dlPlay", "pipState", "pip", "play",
         "setEngine", "update", "youtube", "exit", "iptvHosts", "recStart", "recStop", "recPlan", "recUnplan",
-        "apScan", "apPlay", "apPin", "apCtl", "apForget", "apState", "signIn", "apAdd", "apDiag", "updateAuto", "updateInstall", "mpv" };
+        "apScan", "apPlay", "apPin", "apCtl", "apForget", "apState", "signIn", "apAdd", "apDiag", "updateAuto", "updateInstall", "mpv",
+        "mirrorStart", "mirrorSignal", "mirrorStop", "mirrorOn" };
 
     static String newKey() {
         byte[] b = new byte[24]; new SecureRandom().nextBytes(b);

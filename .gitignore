@@ -13,6 +13,7 @@ android/libs/*.jar
 android/libs/ass-jni/
 # 1.14.0: libmpv native libraries, also from fetch.sh
 android/libs/mpv-jni/
+android/libs/webrtc-jni/
 **/password.txt
 **/keystore/
 *.p12
