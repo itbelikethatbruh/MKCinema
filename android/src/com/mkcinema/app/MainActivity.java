@@ -70,7 +70,7 @@ public class MainActivity extends Activity {
     static final String[] APP_HOSTS = { HOST, "app.mkcinema.app" };
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6, REQ_MIRROR = 7, REQ_MIRROR_MIC = 8;
-    static final String VER = "1.17.0";
+    static final String VER = "1.17.1";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -250,7 +250,10 @@ public class MainActivity extends Activity {
             @Override public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> cb, FileChooserParams p) {
                 if (fileCb != null) fileCb.onReceiveValue(null);
                 fileCb = cb;
-                try { startActivityForResult(p.createIntent(), REQ_FILE); }
+                Intent pick = p.createIntent();
+                // 1.17.1: a page that asks for several files (Ambient Studio's Add photos) gets a gallery that lets you pick several
+                if (p.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE) pick.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                try { startActivityForResult(pick, REQ_FILE); }
                 catch (ActivityNotFoundException e) { fileCb = null; return false; }
                 return true;
             }
@@ -437,9 +440,22 @@ public class MainActivity extends Activity {
             return;
         }
         if (req == REQ_FILE && fileCb != null) {
-            fileCb.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(res, data));
+            fileCb.onReceiveValue(pickedFiles(res, data));
             fileCb = null;
         } else super.onActivityResult(req, res, data);
+    }
+
+    /** The files picked for the page. Several picked at once arrive in the intent's ClipData, which parseResult ignores
+        (it reads one data URI only), so a multi-select gave the page one photo or none before 1.17.1. */
+    static Uri[] pickedFiles(int res, Intent data) {
+        if (res != RESULT_OK || data == null) return null;
+        android.content.ClipData clip = data.getClipData();
+        if (clip != null && clip.getItemCount() > 0) {
+            ArrayList<Uri> out = new ArrayList<>();
+            for (int i = 0; i < clip.getItemCount(); i++) { Uri u = clip.getItemAt(i).getUri(); if (u != null) out.add(u); }
+            if (!out.isEmpty()) return out.toArray(new Uri[0]);
+        }
+        return WebChromeClient.FileChooserParams.parseResult(res, data);
     }
 
     @Override public void onRequestPermissionsResult(int req, String[] p, int[] g) {

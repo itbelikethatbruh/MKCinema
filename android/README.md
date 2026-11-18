@@ -29,6 +29,13 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.17.1 (versionCode 43): pick several photos at once
+
+- The file picker now honours a page's multiple-file request (EXTRA_ALLOW_MULTIPLE when the WebView asks for
+  MODE_OPEN_MULTIPLE) and hands every picked file back: `pickedFiles()` reads the result's ClipData, which
+  `FileChooserParams.parseResult` ignores. Before, Ambient Studio's Add photos gave the page only one photo per pick.
+- Single-file pickers (subtitles, local files) work as before.
+
 ## 1.17.0 (versionCode 42): Continue watching widget (phones and tablets)
 
 - A home-screen widget (`ContinueWidget`, layout `res/layout/widget_cw.xml`, info `res/xml/widget_cw_info.xml`): the newest
