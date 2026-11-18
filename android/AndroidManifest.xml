@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mkcinema.app" android:versionCode="39" android:versionName="1.15.3">
+    package="com.mkcinema.app" android:versionCode="40" android:versionName="1.15.4">
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -46,6 +46,9 @@
     <!-- 1.2.7: on TVs (UI mode television) the launcher icon resolves to drawable-television-*/ic_launcher.png, a SQUARE
          monogram-and-wordmark tile. Fire OS draws sideloaded apps' icons in a square box on a grey tile; the 16:9 banner
          used from 1.2.3 was squeezed into that square. The 16:9 banner stays as android:banner for Android TV / Google TV. -->
+    <!-- 1.15.4: phones and tablets on Android 8+ resolve the icon to drawable-anydpi-v26/ic_launcher.xml, an adaptive icon
+         (full-bleed black, MK disc in the safe zone, monochrome layer for themed icons). The square PNG was shrunk into a
+         white circle by Pixel-style launchers. TVs still get the PNG: the television folders outrank anydpi-v26. -->
     <application android:label="MKCinema" android:icon="@drawable/ic_launcher"
         android:banner="@drawable/banner" android:theme="@style/Noir" android:hardwareAccelerated="true" android:allowBackup="false" android:supportsRtl="true" android:networkSecurityConfig="@xml/network_security_config" android:extractNativeLibs="true" android:largeHeap="true">
         <activity android:name=".MainActivity" android:exported="true" android:icon="@drawable/ic_launcher" android:banner="@drawable/banner" android:launchMode="singleTask"
