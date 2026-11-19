@@ -2036,7 +2036,10 @@ const Nav = {
     return list.find((el) => el.matches('.btn-prime')) || list.find((el) => !/close|back/i.test(`${el.getAttribute('aria-label') || ''} ${el.className}`)) || list[0];
   },
   restore(fast = true) {
-    const root = this.root(), list = this.items(root); if (!list.length) return false;
+    const root = this.root(), was = this.mem.get(root);
+    // the item used last is still there and visible: go straight back without measuring the whole page
+    if (was && was.isConnected && root.contains(was) && !was.disabled && was.tabIndex >= 0 && was.style.visibility !== 'hidden' && !was.closest('[hidden]') && (() => { const r = was.getBoundingClientRect(); return r.width > 0 && r.height > 0; })()) { this.focus(was, fast); return was; }
+    const list = this.items(root); if (!list.length) return false;
     let el = this.mem.get(root); if (!el || !el.isConnected || !list.includes(el)) el = this.start(root, list);
     this.focus(el, fast); return el;
   },

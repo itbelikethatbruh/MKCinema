@@ -206,7 +206,8 @@
         let t = 0; const later = () => { if (!t) t = requestAnimationFrame(() => { t = 0; if (!tv()) { this.detail(); this.relabel(q('#hero')); } }); };
         if (dp) new MutationObserver(later).observe(dp, { childList: true, subtree: true });
         const hero = q('#hero'); if (hero) new MutationObserver(later).observe(hero, { childList: true, subtree: true, characterData: true });
-        new MutationObserver(() => this.mode()).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        // only when another script took away this bar's own classes (any other <html> class change, like a scroll, costs nothing)
+        new MutationObserver(() => { const de = document.documentElement; if (!de.classList.contains('ezb-bar') || de.classList.contains('ezb-lean') === tv()) this.mode(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
         const tools = q('.dock-tools'); if (tools) new MutationObserver(() => { if (document.documentElement.classList.contains('ezb-bar')) this.build(); }).observe(tools, { childList: true });
         const tabs = q('#tabs'); if (tabs) new MutationObserver(() => { if (document.documentElement.classList.contains('ezb-bar')) this.build(); }).observe(tabs, { childList: true });
         document.addEventListener('click', (e) => {
