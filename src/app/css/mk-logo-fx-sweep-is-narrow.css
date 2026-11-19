@@ -1,0 +1,26 @@
+
+@keyframes mkLfxIn{from{transform:translate3d(0,12px,0) scale(.93)}to{transform:none}}
+html.mk-lfx #heroLogoWrap{position:relative}
+html.mk-lfx #heroLogoWrap>.hero-logo,html.mk-lfx #heroLogoWrap>.hero-title{transform-origin:left bottom;animation:mkLfxIn .9s cubic-bezier(.16,1,.3,1) both}
+.mk-lfx-sh{display:none}
+html.mk-lfx .mk-lfx-sh{display:block;position:absolute;bottom:0;pointer-events:none}
+/* The sweep is a narrow slanted window that slides across a brightened copy of the logo. Window and copy move in
+   opposite directions (set from script, in px), so the copy stands still and only the lit band travels. No CSS mask
+   on the logo file: most logo hosts do not allow that, and the band would simply never show. */
+.mk-lfx-w{position:absolute;left:0;top:-12px;overflow:hidden;transform-origin:0 0;animation:mkLfxW 8s ease-in-out 1s infinite both;-webkit-mask:linear-gradient(90deg,transparent,#000 38%,#000 62%,transparent);mask:linear-gradient(90deg,transparent,#000 38%,#000 62%,transparent)}
+.mk-lfx-w img{position:absolute;left:0;top:12px;max-width:none;max-height:none;margin:0;transform-origin:0 -12px;animation:mkLfxI 8s ease-in-out 1s infinite both;filter:brightness(1.7) drop-shadow(0 0 9px rgba(var(--kffffff-c,255,255,255),.6))}
+.mk-lfx-w img.dk{filter:brightness(0) invert(1) drop-shadow(0 0 9px rgba(var(--kffffff-c,255,255,255),.7))}
+/* The window is 30% of the logo wide, so the copy's counter-move is always -0.3 x the window's move: fixed keyframes,
+   no variables, plain CSS animations (they stop by themselves when Home is not shown). */
+@keyframes mkLfxW{0%{transform:translateX(-180%) skewX(-16deg)}19%,to{transform:translateX(420%) skewX(-16deg)}}
+@keyframes mkLfxI{0%{transform:skewX(16deg) translateX(54%)}19%,to{transform:skewX(16deg) translateX(-126%)}}
+@keyframes mkLfxW1{from{transform:translateX(-180%) skewX(-16deg)}to{transform:translateX(420%) skewX(-16deg)}}
+@keyframes mkLfxI1{from{transform:skewX(16deg) translateX(54%)}to{transform:skewX(16deg) translateX(-126%)}}
+html.tv .mk-lfx-w{animation:mkLfxW1 1.5s ease-in-out 1s 1 both}
+html.tv .mk-lfx-w img{animation:mkLfxI1 1.5s ease-in-out 1s 1 both}
+@media (prefers-reduced-motion:reduce){.mk-lfx-w,.mk-lfx-w img{animation:none}.mk-lfx-sh{display:none!important}}
+/* Title page: float and sweep follow the switch too (they used to follow Graphics only) */
+html.mk-lfx:not(.tv) .logo3d.pop.mk-popped{animation:logoFloat 7s ease-in-out infinite}
+html.mk-lfx:not(.tv) .lg-sheen{display:block;position:absolute;inset:0;overflow:hidden;pointer-events:none;-webkit-mask:var(--logo) left bottom/contain no-repeat;mask:var(--logo) left bottom/contain no-repeat}
+html.mk-nolfx .logo3d.pop.mk-popped.mk-popped{animation:none}
+html.mk-nolfx .lg-sheen.lg-sheen{display:none!important}

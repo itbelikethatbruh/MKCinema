@@ -559,7 +559,7 @@ function renderDetail(loading) {
         <div class="logo3d pop${logo ? ' has-logo' : ''}" style="--t0:${t0}s${logo ? `;--logo:url(&quot;${esc(logo)}&quot;)` : ''}">${logo ? imgTag(logo, m.name, m.id, { nofb: true, cls: 'hero-logo', lazy: false }) : ''}<h1 class="hero-title" data-logo-alt ${logo ? 'hidden' : ''}>${esc(m.name)}</h1>${logo ? '<span class="lg-sheen" aria-hidden="true"><i></i></span>' : ''}</div>
         <div class="metaline${loading ? ' ml-wait' : ''}">${[m.imdbRating ? `<span class="imdb ${rateTier(m.imdbRating)}"><b>IMDb</b>${esc(m.imdbRating)}</span>` : '', yearOf(m) ? `<span>${esc(yearOf(m))}</span>` : '', m.runtime ? `<span>${esc(m.runtime)}</span>` : '', genresOf(m).slice(0, 4).map(esc).join(' · '), `<span class="tag-s">${esc(m.type)}</span>`, m._addon ? `<span class="tag-s v">${esc(m._addon)}</span>` : ''].filter(Boolean).join('')}</div>
         <div class="actions">
-          <button class="btn btn-bolt cta" type="button" id="dSmart" data-nav><span class="cta-ring" aria-hidden="true"></span><i data-lucide="play"></i><span class="sp-l">Smart Play<small>Best stream, picked for you</small></span></button>
+          <button class="btn btn-bolt cta" type="button" id="dSmart" data-nav><span class="cta-ring" aria-hidden="true"></span><i data-lucide="play"></i><span class="sp-l">Smart Play<small>Best stream</small></span></button>
           <button class="btn btn-ghost" type="button" id="dTrailer" data-nav><i data-lucide="clapperboard"></i>Trailer</button>
           ${m.type === 'series' && seasons.length ? `<button class="btn btn-ghost" type="button" id="dShuffle" data-nav aria-pressed="${!!(window.MkShuffle && MkShuffle.on(m))}"><i data-lucide="shuffle"></i>Shuffle</button>` : ''}
           <button class="btn btn-ghost" type="button" id="dList" data-nav>${inWatchlist(m.id) ? '<i data-lucide="check"></i>In watchlist' : '<i data-lucide="plus"></i>Watchlist'}</button>
@@ -785,6 +785,8 @@ async function resume(videoId) {
   if (!pick) { openDetail(meta, { videoId }); return; }
   playStream({ meta, video, streams }, pick, { startAt: p.t });
 }
+// 2.83.7: trailers play without YouTube's subtitles
+function MkTrClean(pl) { try { if (pl && pl.unloadModule) { if (pl.setOption) pl.setOption('captions', 'track', {}); pl.unloadModule('captions'); pl.unloadModule('cc'); } } catch (e) { /* picture still plays */ } }
 async function playTrailer(meta) {
   const local = window.MkLangArt ? await MkLangArt.trailer(meta).catch(() => '') : '';
   const t = local ? { ytId: local } : (meta.trailerStreams || [])[0] || ((meta.trailers || [])[0] && { ytId: meta.trailers[0].source, title: meta.name });
@@ -847,9 +849,10 @@ async function openTrailer(id) {
       host: 'https://www.youtube-nocookie.com', videoId: id, width: '100%', height: '100%',
       playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, rel: 0, playsinline: 1, iv_load_policy: 3, cc_load_policy: 0, origin: location.origin, widget_referrer: location.origin },
       events: {
-        onReady: (e) => { try { e.target.playVideo(); } catch (err) { /* autoplay may need a tap */ } trSync(); },
+        onReady: (e) => { MkTrClean(e.target); try { e.target.playVideo(); } catch (err) { /* autoplay may need a tap */ } trSync(); },
+        onApiChange: (e) => MkTrClean(e.target),
         // closing at the end means YouTube's grid of suggested videos never appears
-        onStateChange: (e) => { trSync(); if (e.data === 0) closeTrailer(); },
+        onStateChange: (e) => { if (e.data === 1 || e.data === 3) MkTrClean(e.target); trSync(); if (e.data === 0) closeTrailer(); },
         onError: () => trMsg(`<p>YouTube will not play this trailer inside other sites.</p>${link}`),
       },
     });

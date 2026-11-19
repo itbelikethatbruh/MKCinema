@@ -8,6 +8,12 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.83.7', date: '2026-11-17', items: [
+    ['new', 'Logo effects', 'On Home, the logo of the featured title now rises into place and a light sweep crosses it. It is on by default where your device keeps up. You can turn it off in Settings under Performance.'],
+    ['better', 'Simpler Play button', 'The Play button on a title page is shorter and shows the episode and the time it continues from.'],
+    ['better', 'Tidier network pages', 'Network and universe pages now have one dropdown instead of a long row of buttons, and the network logo is larger.'],
+    ['better', 'Film trailers without subtitles', 'Film trailers now start without subtitles.'],
+  ] },
   { v: '2.83.6', date: '2026-11-17', items: [
     ['better', 'Lighter and faster', 'Loading placeholders and the title page logo no longer keep the page busy, so pages open and scroll more smoothly, especially on phones.'],
     ['fix', 'More MKV files play', 'Some MKV files that would not start now play.'],

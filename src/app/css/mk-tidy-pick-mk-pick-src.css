@@ -24,3 +24,6 @@
   html:not(.tv) .segc.lh-sw{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);width:100%;box-sizing:border-box}
   html:not(.tv) .segc.lh-sw button{height:auto;min-height:58px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;white-space:normal;text-align:center;line-height:1.2;font-size:calc(12.5px * var(--ts,1))}
 }
+/* 2.83.7: the logo at the top of a network page is the page title: sized like one (the artwork has its own margin) */
+#netBody .net-title .net-logo{height:clamp(112px,13vw,168px);max-width:min(420px,80vw);margin:-22px 0 -18px 0}
+#netBody .toolbar .mk-pick-btn{margin-top:0;margin-bottom:0}
