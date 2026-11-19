@@ -1,0 +1,23 @@
+
+@media (max-width:760px){
+html.ezb-bar.mk-pm:not(.tv) #tabs{overflow:hidden!important;justify-content:space-between}
+html.ezb-bar.mk-pm:not(.tv) #tabs .tab{flex:0 0 auto;padding:8px 7px}
+html.ezb-bar.mk-pm:not(.tv) #tabs .tab.mk-pm-out{display:none!important}
+}
+#tabs .mk-pm-btn{all:unset;box-sizing:border-box;display:none;align-items:center;gap:4px;flex:0 0 auto;min-height:36px;padding:8px 8px 8px 10px;border-radius:999px;font-size:calc(13px * var(--ts,1));font-weight:500;font-family:inherit;white-space:nowrap;cursor:pointer;color:#ffffffb8;transition:background-color .2s ease,color .2s ease}
+@media (max-width:760px){
+html.ezb-bar.mk-pm:not(.tv) #tabs .mk-pm-btn.mk-pm-show{display:flex}
+}
+#tabs .mk-pm-btn svg{width:16px;height:16px;opacity:.75;transition:transform .2s ease}
+#tabs .mk-pm-btn[aria-expanded="true"]{background:#ffffff1f;color:#fff}
+#tabs .mk-pm-btn[aria-expanded="true"] svg{transform:rotate(180deg)}
+#tabs .mk-pm-btn:focus-visible{outline:3px solid #f3efe7;outline-offset:2px}
+#mkPmShade{position:fixed;inset:0;z-index:58;background:#0000008c;opacity:0;transition:opacity .18s ease}
+#mkPmMenu{position:fixed;z-index:60;min-width:200px;max-width:calc(100vw - 32px);padding:8px;border-radius:24px;border:1px solid #ffffff1f;box-shadow:0 24px 60px #0000008c;display:flex;flex-direction:column;gap:2px;opacity:0;transform:translateY(-6px) scale(.98);transform-origin:top right;transition:opacity .18s ease,transform .18s ease}
+#mkPmShade.in,#mkPmMenu.in{opacity:1}
+#mkPmMenu.in{transform:none}
+#mkPmMenu button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;min-height:52px;padding:12px 16px 12px 14px;border-radius:16px;font-size:calc(15px * var(--ts,1));font-weight:500;font-family:inherit;cursor:pointer;color:inherit}
+#mkPmMenu button svg{width:22px;height:22px;flex:0 0 auto;display:block!important}
+#mkPmMenu button:active,#mkPmMenu button:focus-visible{background:#ffffff14}
+#mkPmMenu button:focus-visible{outline:3px solid #f3efe7;outline-offset:-3px}
+@media (prefers-reduced-motion:reduce){#mkPmShade,#mkPmMenu,#tabs .mk-pm-btn svg{transition:none}}

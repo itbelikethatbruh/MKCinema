@@ -852,7 +852,7 @@ const Party = {
   mediaInfo() {
     if (!P.ctx || !P.stream) return null; const m = P.ctx.meta, s = P.stream;
     // only the host shares a link, only when they chose to, and never one that carries a server key or a login
-    const url = ''; // 2.78 (owner's call): a party never hands out the host's stream link; guests without a source see the host's screen
+    const url = ''; // 2.78 (Owner: do what's best): a party never hands out the host's stream link; guests without a source see the host's screen
     return { type: m.type, metaId: m.id, videoId: P.ctx.video ? P.ctx.video.id : '', name: m.name, url, headers: url && s.behaviorHints && s.behaviorHints.proxyHeaders ? s.behaviorHints.proxyHeaders.request : null, local: !!s._local };
   },
   shareable(s) {
