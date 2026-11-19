@@ -11,22 +11,32 @@ const SetX = {
   HUE: { '': [40, 38], You: [38, 40], 'Look and feel': [332, 32], Watching: [212, 36], Connected: [152, 30], More: [262, 28], 'Help and legal': [24, 40], Other: [0, 0] },
   HELP: ['help', 'legal', 'privacy', 'terms', 'troubleshoot', 'whatsnew', 'about'],
   idx: null, hit: null,
+  // 2.85: the whole list in one place. A section a module adds that is not named here keeps the group the module put
+  // it in (renamed where that group is gone), so nothing is ever lost.
+  PLAN: [
+    ['', ['start', 'updates']],
+    ['You', ['account', 'seats', 'friends', 'picks']],
+    ['Look and feel', ['home', 'appearance', 'performance', 'plugins']],
+    ['Watching', ['playback', 'subtitles', 'together', 'media']],
+    ['Sources', ['streams', 'rules', 'debrid', 'servers']],
+    ['Devices and data', ['devices', 'sync', 'keys', 'sound', 'data']],
+    ['Help and legal', ['help', 'whatsnew', 'ideas', 'support', 'legal', 'privacy', 'terms', 'troubleshoot', 'about']],
+  ],
+  MOVE: { Connected: 'Devices and data', More: 'Devices and data', Other: 'Devices and data' },
+  gmap: null,
   groups() {
-    // Help, legal and About read as one block at the end of the list
-    let g = SET_GROUPS.find(([n]) => n === 'Help and legal');
-    if (!g) { g = ['Help and legal', []]; SET_GROUPS.push(g); }
-    for (const id of this.HELP) {
-      if (!secById(id)) continue;
-      SET_GROUPS.forEach((x) => { if (x !== g) { const i = x[1].indexOf(id); if (i >= 0) x[1].splice(i, 1); } });
-      if (!g[1].includes(id)) g[1].push(id);
+    const out = this.PLAN.map(([n, ids]) => [n, ids.filter((id) => secById(id))]);
+    const used = new Set(out.flatMap(([, ids]) => ids));
+    for (const sec of SECTIONS) {
+      if (used.has(sec.id)) continue;
+      const old = SET_GROUPS.find(([, ids]) => ids.includes(sec.id)); let n = old ? old[0] : 'Other'; n = this.MOVE[n] || n;
+      let g = out.find(([x]) => x === n); if (!g) out.push((g = [n, []]));
+      g[1].push(sec.id); used.add(sec.id);
     }
-    g[1].sort((a, b) => this.HELP.indexOf(a) - this.HELP.indexOf(b));
-    const used = new Set(SET_GROUPS.flatMap(([, ids]) => ids));
-    const out = SET_GROUPS.map(([n, ids]) => [n, ids.map(secById).filter(Boolean)]).filter(([, l]) => l.length);
-    const rest = SECTIONS.filter((s) => !used.has(s.id)); if (rest.length) out.push(['Other', rest]);
-    return out;
+    this.gmap = {}; out.forEach(([n, ids]) => ids.forEach((id) => { this.gmap[id] = n; }));
+    return out.map(([n, ids]) => [n, ids.map(secById)]).filter(([, l]) => l.length);
   },
-  groupOf(id) { const g = SET_GROUPS.find(([, ids]) => ids.includes(id)); return g ? g[0] : 'Other'; },
+  groupOf(id) { if (!this.gmap || !(id in this.gmap)) this.groups(); return id in this.gmap ? this.gmap[id] : 'Other'; },
   hue(name) { const h = this.HUE[name] || this.HUE.Other; return `--gh:${h[0]};--gs:${h[1]}%`; },
   tr(t) { try { return (typeof I18N !== 'undefined' && I18N.map && I18N.map.get(t)) || ''; } catch { return ''; } },
   plain(h) { return String(h || '').replace(/<[^>]*>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim(); },

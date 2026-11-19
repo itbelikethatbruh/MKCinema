@@ -10982,10 +10982,12 @@ const SET_GROUPS = [
 ];
 const SET_BLURB = {
   start: 'VLC, debrid and your first sources', account: 'Sign in and sync', picks: 'Recommendations made on this device', home: 'Start page and rows',
-  appearance: 'Contrast, posters, ratings', performance: 'Effects and smoothness', playback: 'Player, VLC, skip intro, audio', subtitles: 'Size, colour, language',
-  streams: 'Addons and how sources load', debrid: 'AllDebrid, Premiumize, Real-Debrid, TorBox', sync: 'Scrobble and watchlists', devices: 'Phone remote, watch party, install',
+  appearance: 'Contrast, posters, ratings', performance: 'Effects and smoothness', playback: 'Player, skips, audio, trailers', subtitles: 'Size, colour, language',
+  streams: 'Addons and how sources load', debrid: 'AllDebrid, Premiumize, Real-Debrid, TorBox', sync: 'Scrobble and watchlists', devices: 'Phone remote, screen mirroring, install',
   sound: 'Volume and interface sounds', keys: 'Keyboard and gamepad', data: 'Setup Cloner, backup, restore', support: 'Keep MKCinema going',
   about: 'Version, credits, third-party licenses',
+  help: 'Fix a problem, test this device', ideas: 'Suggest a feature or say thanks', friends: 'Friends, sharing and calls',
+  media: 'Playlists, sports scores and your music',
 };
 const SET_PHONE = matchMedia('(max-width: 760px)');
 let setPhoneHome = false;
@@ -11000,9 +11002,9 @@ const SetTidy = {
   PLAN: {
     playback: [
       ['The player', ['extPlayer', 'engine', 'swHevc', 'pxUp', 'resume', 'speed', 'seekStep', 'rememberVolume', 'seekPreview']],
-      ['Choosing a source', ['srSlow', 'maxQuality', 'preferFormat', 'audioOnly', 'browserOnly', 'failover']],
-      ['Episodes and skips', ['autoNext', 'upNextAt', 'skipAuto', 'introDb', 'addonSkips', 'contentSkips', 'contentSkipLevel']],
-      ['On screen', ['xray', 'spoilerGuard', 'ambilight', 'ambIntensity', 'sensory']],
+      ['Choosing a source', ['srSlow', 'maxQuality', 'preferFormat', 'audioOnly', 'browserOnly', 'failover', 'pickMemo']],
+      ['Episodes and skips', ['autoNext', 'upNextAt', 'skipAuto', 'introDb', 'addonSkips', 'contentSkips', 'contentSkipLevel', 'rateAsk']],
+      ['On screen', ['xray', 'spoilerGuard', 'ambilight', 'ambIntensity', 'sensory', 'playInfoBtn']],
       ['Trailers', ['trailerMode', 'trailerSource']],
       ['Sleep and channels', ['sleepSmart', 'mkChannelBtn']],
       ['Addons as they are', ['infoRows', 'addonNotice']],
@@ -11015,7 +11017,7 @@ const SetTidy = {
       ['Keepsakes', ['stubs', 'stubsBtn', 'watchStatsBtn']],
     ],
     subtitles: [
-      ['Turning them on', ['subAuto', 'subLang', 'subAutoTranslate', 'subAutoSync', 'subDubSigns']],
+      ['Turning them on', ['subAuto', 'subLang', 'subWait', 'subMemory', 'forcedSubs', 'hideSDH', 'subAutoTranslate', 'subAutoSync', 'subDubSigns']],
       ['How they look', ['subSize', 'subColor', 'subBg', 'subFont', 'subOutline', 'subPos']],
       ['While watching', ['lineSnap', 'lastTime', 'margins', 'phoneSubs']],
       ['Anime and styled subtitles', ['assMode', 'mkvSubs']],
@@ -11036,6 +11038,10 @@ const SetTidy = {
       ['Tidy the list', ['sourceCheck', 'dedupeStreams', 'hideP2P', 'showTrailers']],
       ['Proxy', ['proxy', 'alwaysProxy']],
     ],
+    media: [
+      ['Live TV', ['mdLists', 'mdAdd', 'liveMini', 'mdScores']],
+      ['Music', ['mdMusic']],
+    ],
     rules: [
       ['Quality', ['srMinRes', 'srHdr', 'srNoCam']],
       ['File size', ['srMaxGB', 'srMinGB']],
@@ -11043,7 +11049,7 @@ const SetTidy = {
     ],
   },
   // a page that shows rows another section's modules add
-  FROM: { together: 'playback' },
+  FROM: { together: 'playback', media: 'playback' },
   find(plan, key) {
     for (let g = 0; g < plan.length; g++) {
       const keys = plan[g][1];
@@ -11110,6 +11116,17 @@ const SetTidy = {
 const secRows = (sec) => SetTidy.arrange(sec.id, sec.rows());
 SET_BLURB.together = 'Watch party, film night, ticket stubs';
 SECTIONS.push({ id: 'together', icon: 'users', label: 'Watch together', intro: 'Watch parties, film nights and the keepsakes you collect along the way.', rows: () => { const pb = secById('playback'); return pb ? pb.rows() : []; } });
+// 2.85 Music and Live TV in Settings: where their sources live (the pages themselves stay in Live TV and Music)
+SECTIONS.push({ id: 'media', icon: 'radio-tower', label: 'Music and Live TV', intro: 'Your TV playlists, sports scores and where your music comes from.', rows: () => {
+  const away = (f) => () => { closeLayer('settings'); setTimeout(f, 250); };
+  const own = [
+    { key: 'mdLists', label: 'Your playlists', help: 'Update them and choose which ones show on this seat.', type: 'button', text: 'Open', icon: 'list-video', run: away(() => { if (typeof ListsMgr !== 'undefined') ListsMgr.open(); }) },
+    { key: 'mdAdd', label: 'Add a playlist', help: 'M3U, Xtream or XMLTV from a TV service you subscribe to.', type: 'button', text: 'Add', icon: 'plus', run: away(() => { go('tv'); if (typeof Channels !== 'undefined') Channels.openAdd(); }) },
+    { key: 'mdScores', label: 'Scores and tables', help: 'Live games, standings and fixtures for the sports you follow.', type: 'button', text: 'Open', icon: 'trophy', run: away(() => { if (typeof SportsPlus !== 'undefined') SportsPlus.open(); }) },
+    { key: 'mdMusic', label: 'Where full songs come from', help: 'Your music server, files on this device, live radio or a music addon.', type: 'button', text: 'Open', icon: 'music', run: away(() => { go('music'); if (typeof Music !== 'undefined') Music.goTab('sources'); }) },
+  ];
+  const pb = secById('playback'); return [...own, ...(pb ? pb.rows() : [])];
+} });
 /* 2.64-settidy:end */
 renderSettingsNav = function () {
   const used = new Set(SET_GROUPS.flatMap(([, ids]) => ids));
@@ -11163,7 +11180,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.83.4';
+const APP_VERSION = '2.83.5';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -23957,6 +23974,10 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.83.5', date: '2026-11-17', items: [
+    ['better', 'Settings, redone', 'Settings now look like Home and are easier to find your way around: six clear groups, and a new Music and Live TV page for your playlists, sports scores and music sources.'],
+    ['better', 'Sharper Top 10', 'The Top 10 numbers have a finer look and are fully visible on every screen.'],
+  ] },
   { v: '2.83.4', date: '2026-11-17', items: [
     ['better', 'Fewer buttons, simpler pages', 'Long rows of genre and mood buttons in Music, Movies and Series are now tidy dropdowns, and the music bar at the bottom of phones lines up properly.'],
   ] },
@@ -27394,22 +27415,32 @@ const SetX = {
   HUE: { '': [40, 38], You: [38, 40], 'Look and feel': [332, 32], Watching: [212, 36], Connected: [152, 30], More: [262, 28], 'Help and legal': [24, 40], Other: [0, 0] },
   HELP: ['help', 'legal', 'privacy', 'terms', 'troubleshoot', 'whatsnew', 'about'],
   idx: null, hit: null,
+  // 2.85: the whole list in one place. A section a module adds that is not named here keeps the group the module put
+  // it in (renamed where that group is gone), so nothing is ever lost.
+  PLAN: [
+    ['', ['start', 'updates']],
+    ['You', ['account', 'seats', 'friends', 'picks']],
+    ['Look and feel', ['home', 'appearance', 'performance', 'plugins']],
+    ['Watching', ['playback', 'subtitles', 'together', 'media']],
+    ['Sources', ['streams', 'rules', 'debrid', 'servers']],
+    ['Devices and data', ['devices', 'sync', 'keys', 'sound', 'data']],
+    ['Help and legal', ['help', 'whatsnew', 'ideas', 'support', 'legal', 'privacy', 'terms', 'troubleshoot', 'about']],
+  ],
+  MOVE: { Connected: 'Devices and data', More: 'Devices and data', Other: 'Devices and data' },
+  gmap: null,
   groups() {
-    // Help, legal and About read as one block at the end of the list
-    let g = SET_GROUPS.find(([n]) => n === 'Help and legal');
-    if (!g) { g = ['Help and legal', []]; SET_GROUPS.push(g); }
-    for (const id of this.HELP) {
-      if (!secById(id)) continue;
-      SET_GROUPS.forEach((x) => { if (x !== g) { const i = x[1].indexOf(id); if (i >= 0) x[1].splice(i, 1); } });
-      if (!g[1].includes(id)) g[1].push(id);
+    const out = this.PLAN.map(([n, ids]) => [n, ids.filter((id) => secById(id))]);
+    const used = new Set(out.flatMap(([, ids]) => ids));
+    for (const sec of SECTIONS) {
+      if (used.has(sec.id)) continue;
+      const old = SET_GROUPS.find(([, ids]) => ids.includes(sec.id)); let n = old ? old[0] : 'Other'; n = this.MOVE[n] || n;
+      let g = out.find(([x]) => x === n); if (!g) out.push((g = [n, []]));
+      g[1].push(sec.id); used.add(sec.id);
     }
-    g[1].sort((a, b) => this.HELP.indexOf(a) - this.HELP.indexOf(b));
-    const used = new Set(SET_GROUPS.flatMap(([, ids]) => ids));
-    const out = SET_GROUPS.map(([n, ids]) => [n, ids.map(secById).filter(Boolean)]).filter(([, l]) => l.length);
-    const rest = SECTIONS.filter((s) => !used.has(s.id)); if (rest.length) out.push(['Other', rest]);
-    return out;
+    this.gmap = {}; out.forEach(([n, ids]) => ids.forEach((id) => { this.gmap[id] = n; }));
+    return out.map(([n, ids]) => [n, ids.map(secById)]).filter(([, l]) => l.length);
   },
-  groupOf(id) { const g = SET_GROUPS.find(([, ids]) => ids.includes(id)); return g ? g[0] : 'Other'; },
+  groupOf(id) { if (!this.gmap || !(id in this.gmap)) this.groups(); return id in this.gmap ? this.gmap[id] : 'Other'; },
   hue(name) { const h = this.HUE[name] || this.HUE.Other; return `--gh:${h[0]};--gs:${h[1]}%`; },
   tr(t) { try { return (typeof I18N !== 'undefined' && I18N.map && I18N.map.get(t)) || ''; } catch { return ''; } },
   plain(h) { return String(h || '').replace(/<[^>]*>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim(); },
@@ -51927,5 +51958,112 @@ html.ezb-bar.mk-pm:not(.tv) #tabs .mk-pm-btn.mk-pm-show{display:flex}
   poke();
 })();
 </script>
+<style id="mk-t10-num">
+.t10x{--t10f:calc(clamp(80px,9vw,140px) * var(--ts,1))}
+.t10x .t10c.t10c{margin-left:calc(var(--t10f) * .52);scroll-margin-left:calc(var(--t10f) * .52);overflow:visible}
+.t10x .t10c.t10c[data-rank="10"]{margin-left:calc(var(--t10f) * 1.02);scroll-margin-left:calc(var(--t10f) * 1.02)}
+.t10x .t10c.t10c::before{font-size:var(--t10f);font-weight:400;letter-spacing:-.04em;line-height:.8;right:calc(100% - 2px);padding-right:.05em;color:transparent;-webkit-text-stroke:0;background:linear-gradient(180deg,rgba(var(--kf6f6f8-c,246,246,248),.98) 0%,rgba(var(--kceced4-c,206,206,212),.75) 55%,rgba(var(--k787880-c,120,120,128),.28) 100%);-webkit-background-clip:text;background-clip:text;font-variant-numeric:lining-nums}
+.t10x .rail{padding-left:2px}
+</style>
+<style id="mk-285-set">
+/* 2.85 Settings in the Home look: the open page is the same cream pill as the Home bar, groups and page names use
+   Home's eyebrow ("— YOU") and title type, one neutral icon style instead of a colour per group, pill controls,
+   larger rounded cards. Transform/opacity only, no blur, no 3D. The Anime look keeps its own styling. */
+html:not([data-look="anime"]) #settings .modal{border-radius:28px;border:1px solid rgba(var(--kffffff-c,255,255,255),.1);background:var(--n000000,#000);box-shadow:0 40px 120px -40px rgba(var(--k000000-c,0,0,0),.9)}
+html:not([data-look="anime"]) #settings .set-nav{background:var(--n050505,#050505);border-right:1px solid rgba(var(--kffffff-c,255,255,255),.07)}
+html:not([data-look="anime"]) #settings .set-body{background:var(--n000000,#000)}
+#settings .set-nav h2{font-family:var(--f-display);font-weight:800;letter-spacing:-.03em}
+
+/* search: a pill like Home's */
+#settings .sn-search{border-radius:999px;padding:0 16px;background:var(--n0a0a0b,#0a0a0b);border-color:rgba(var(--kffffff-c,255,255,255),.12)}
+
+/* group names: Home's eyebrow */
+html:not([data-look="anime"]) #settings .sn-h{display:flex;align-items:center;gap:10px;color:var(--champ,var(--kd9d4c7,#d9d4c7));opacity:1;font-family:var(--f-body);font-size:calc(11px * var(--ts,1));font-weight:600;letter-spacing:.2em;margin:20px 12px 8px}
+html:not([data-look="anime"]) #settings .sn-h::before{content:"";width:18px;height:1px;background:currentColor;opacity:.7;flex:none}
+#settings .sn-group{margin-bottom:4px}
+
+/* the list: neutral round icons, the open page is the Home bar's cream pill */
+#settings .set-nav button::before{display:none}
+#settings .sn-list{gap:3px}
+html:not([data-look="anime"]) #settings .set-nav button{border-radius:999px;padding:5px 16px 5px 5px;min-height:44px;transition:background-color .2s ease,color .2s ease}
+html:not([data-look="anime"]) #settings .sn-ic,html:not([data-look="anime"]) #settings .set-nav button.on .sn-ic{width:34px;height:34px;border-radius:50%;color:var(--ne9e9ec,#e9e9ec);background:rgba(var(--kffffff-c,255,255,255),.06);box-shadow:inset 0 0 0 1px rgba(var(--kffffff-c,255,255,255),.08)}
+@media (hover:hover){html:not([data-look="anime"]) #settings .set-nav button:not(.on):hover{background:rgba(var(--kffffff-c,255,255,255),.05)}}
+html:not([data-look="anime"]) #settings .set-nav button.on{color:#0b0b0b;background:linear-gradient(180deg,#fbf8f2,#e6e0d4);box-shadow:0 2px 12px rgba(255,240,210,.16)}
+html:not([data-look="anime"]) #settings .set-nav button.on .sn-t b{color:#0b0b0b;font-weight:600}
+html:not([data-look="anime"]) #settings .set-nav button.on .sn-ic{color:#0b0b0b;background:rgba(0,0,0,.07);box-shadow:none}
+html:not([data-look="anime"]) #settings .sn-results .sn-hit .sn-ic{color:var(--ne9e9ec,#e9e9ec);background:rgba(var(--kffffff-c,255,255,255),.06)}
+
+/* page header: Home's eyebrow over Home's title type, no tinted glow, the icon stays in the list */
+#settings .set-hd::before{display:none!important}
+html:not([data-look="anime"]) #settings .set-hd-ic{display:none}
+#settings .set-hd{padding:6px 0 24px;margin-bottom:4px;border-bottom:1px solid rgba(var(--kffffff-c,255,255,255),.07)}
+#settings .set-eb{color:var(--champ,var(--kd9d4c7,#d9d4c7));font-size:calc(12px * var(--ts,1));letter-spacing:.2em;margin-bottom:10px}
+#settings .set-eb::before{width:18px}
+html:not([data-look="anime"]) #settings .set-hd h3{font-family:var(--f-display);font-weight:800;font-size:calc(40px * var(--ts,1));letter-spacing:-.035em;line-height:1.05;margin:0 0 10px}
+#settings .set-hd p{color:var(--nb9b9c0,#b9b9c0)}
+
+/* groups of rows: larger rounded cards with a hairline edge; group names are Home eyebrows */
+html:not([data-look="anime"]) #settings .set-card{border-radius:24px;background:linear-gradient(180deg,var(--n0c0c0d,#0c0c0d),var(--n080809,#080809));border:1px solid rgba(var(--kffffff-c,255,255,255),.08);box-shadow:inset 0 1px 0 rgba(var(--kffffff-c,255,255,255),.05)}
+html:not([data-look="anime"]) #settings .set-group{gap:10px;color:var(--champ,var(--kd9d4c7,#d9d4c7));font-size:calc(11px * var(--ts,1));letter-spacing:.2em}
+html:not([data-look="anime"]) #settings .set-group::after{display:none}
+html:not([data-look="anime"]) #settings .set-group::before{content:"";width:18px;height:1px;background:currentColor;opacity:.7;flex:none}
+
+/* controls: pills, like the Home bar and the hero buttons */
+html:not([data-look="anime"]) #settings .set-ctl .btn,html:not([data-look="anime"]) #settings .set-card .btn{border-radius:999px}
+html:not([data-look="anime"]) #settings select.sel{border-radius:999px;padding-left:18px}
+html:not([data-look="anime"]) #settings .set-ctl .inp{border-radius:999px;padding-inline:18px}
+html:not([data-look="anime"]) #settings .segc{border-radius:999px;padding:4px;gap:2px;border:1px solid rgba(var(--kffffff-c,255,255,255),.12)}
+html:not([data-look="anime"]) #settings .segc button{border-radius:999px;padding-inline:16px}
+html:not([data-look="anime"]):not(.tv) #settings .segc button.on{color:#0b0b0b;background:linear-gradient(180deg,#fbf8f2,#e6e0d4);box-shadow:0 2px 10px rgba(255,240,210,.14)}
+html:not([data-look="anime"]) #settings .switch.on{background:linear-gradient(180deg,#fbf8f2,#e6e0d4)}
+#settings .sn-foot{opacity:.8}
+
+/* phones: the list of pages in rounded cards, no pill there (it is a list, not a choice) */
+@media (max-width:760px){
+  html:not([data-look="anime"]) #settings .modal{border-radius:24px}
+  #settings .set-nav h2{font-size:calc(34px * var(--ts,1));margin:12px 6px 16px}
+  html:not([data-look="anime"]) #settings .sn-h{margin:22px 8px 10px}
+  html:not([data-look="anime"]) #settings .sn-list{gap:0;border-radius:22px;background:linear-gradient(180deg,var(--n0c0c0d,#0c0c0d),var(--n080809,#080809));border:1px solid rgba(var(--kffffff-c,255,255,255),.08)}
+  html:not([data-look="anime"]) #settings .set-nav button,html:not([data-look="anime"]) #settings .set-nav button.on{border-radius:0;padding:11px 14px;min-height:60px;background:transparent;color:var(--ink);box-shadow:none}
+  html:not([data-look="anime"]) #settings .set-nav button.on .sn-t b{color:var(--ink);font-weight:500}
+  html:not([data-look="anime"]) #settings .set-nav button.on .sn-ic{color:var(--ne9e9ec,#e9e9ec);background:rgba(var(--kffffff-c,255,255,255),.06);box-shadow:inset 0 0 0 1px rgba(var(--kffffff-c,255,255,255),.08)}
+  html:not([data-look="anime"]) #settings .set-nav button:active{background:rgba(var(--kffffff-c,255,255,255),.05)}
+  #settings .sn-t small{font-size:calc(13px * var(--ts,1))}
+  #settings .set-eb{display:flex;font-size:calc(11px * var(--ts,1));margin-bottom:8px}
+  #settings .set-hd{display:block;padding:4px 0 16px}
+  #settings .set-hd>div:not(.set-hd-ic){display:block}
+  html:not([data-look="anime"]) #settings .set-hd h3{font-size:calc(30px * var(--ts,1));margin:0 0 6px}
+  html:not([data-look="anime"]) #settings .set-card{border-radius:22px}
+  #settings .set-back{border-bottom:0}
+  #settings .set-back-b{border-radius:999px;padding:0 14px 0 8px;background:rgba(var(--kffffff-c,255,255,255),.06);height:40px}
+}
+
+/* phones held sideways and other short screens: two panes, sized down so a page fits */
+@media (min-width:761px) and (max-height:540px){
+  #settings .modal{max-width:none;width:calc(100vw - 16px);height:calc(100dvh - 12px);grid-template-columns:236px minmax(0,1fr)}
+  #settings .set-nav{padding:12px 10px 12px}
+  #settings .set-nav h2{font-size:calc(22px * var(--ts,1));margin:4px 8px 10px}
+  #settings .sn-search{height:38px;margin:0 2px 6px}
+  html:not([data-look="anime"]) #settings .sn-h{margin:12px 10px 6px;font-size:calc(10px * var(--ts,1))}
+  html:not([data-look="anime"]) #settings .set-nav button{min-height:38px;padding:3px 12px 3px 3px;gap:10px}
+  html:not([data-look="anime"]) #settings .sn-ic,html:not([data-look="anime"]) #settings .set-nav button.on .sn-ic{width:30px;height:30px}
+  #settings .sn-t b{font-size:calc(14px * var(--ts,1))}
+  #settings .set-body{padding:16px 64px 40px 24px}
+  #settings .set-hd{padding:0 0 12px}
+  #settings .set-eb{margin-bottom:6px}
+  html:not([data-look="anime"]) #settings .set-hd h3{font-size:calc(26px * var(--ts,1));margin:0 0 4px}
+  #settings .set-hd p{font-size:calc(14px * var(--ts,1));line-height:1.45;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+  #settings .panel-close{top:10px;right:10px}
+}
+
+/* TVs: the remote's focus ring must stay readable on the cream pill */
+html.tv #settings .set-nav button.on.nav-focus,html.tv #settings .set-nav button.on:focus-visible{outline:2px solid var(--kffffff,#fff);outline-offset:3px}
+html.tv:not([data-look="anime"]) #settings .set-hd h3{font-size:calc(36px * var(--ts,1))}
+
+/* Daylight and Linen: the cream pill and switch need a dark edge and knob to read on a light page */
+html[data-look="daylight"] #settings .set-nav button.on,html[data-look="linen"] #settings .set-nav button.on,html[data-look="daylight"] #settings .segc button.on,html[data-look="linen"] #settings .segc button.on{box-shadow:0 0 0 1px rgba(0,0,0,.14),0 2px 10px rgba(0,0,0,.08)}
+html[data-look="daylight"] #settings .switch.on,html[data-look="linen"] #settings .switch.on{box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)}
+html[data-look="daylight"] #settings .switch.on::after,html[data-look="linen"] #settings .switch.on::after{background:#1a1a1a}
+</style>
 </body>
 </html>

@@ -8,6 +8,10 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.83.5', date: '2026-11-17', items: [
+    ['better', 'Settings, redone', 'Settings now look like Home and are easier to find your way around: six clear groups, and a new Music and Live TV page for your playlists, sports scores and music sources.'],
+    ['better', 'Sharper Top 10', 'The Top 10 numbers have a finer look and are fully visible on every screen.'],
+  ] },
   { v: '2.83.4', date: '2026-11-17', items: [
     ['better', 'Fewer buttons, simpler pages', 'Long rows of genre and mood buttons in Music, Movies and Series are now tidy dropdowns, and the music bar at the bottom of phones lines up properly.'],
   ] },
