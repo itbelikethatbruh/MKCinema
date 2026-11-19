@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.83.4', date: '2026-11-17', items: [
+    ['better', 'Fewer buttons, simpler pages', 'Long rows of genre and mood buttons in Music, Movies and Series are now tidy dropdowns, and the music bar at the bottom of phones lines up properly.'],
+  ] },
   { v: '2.83.3', date: '2026-11-17', items: [
     ['better', 'Tidier sections on phones', 'On phones the sections bar now shows the main sections in full and keeps the rest under More, so nothing is cut off at the edges.'],
   ] },
