@@ -1,0 +1,8 @@
+
+@keyframes mkSkP{from{opacity:.5}to{opacity:1}}
+html:not(.tv) .skeleton.skeleton{animation:none;background:rgba(var(--kffffff-c,255,255,255),.065);background-size:auto}
+html:not(.tv) .skeleton.skeleton:nth-child(-n+6){animation:mkSkP .9s ease-in-out infinite alternate}
+@media (prefers-reduced-motion:reduce){html:not(.tv) .skeleton.skeleton:nth-child(-n+6){animation:none}}
+/* Title page: once the logo's pop-in has finished it is dropped from the animation list, so the slow float is the
+   only transform animation on the logo and the compositor can run it. With both listed, Chrome restyled every frame. */
+html:not(.tv) body.fx .logo3d.pop.mk-popped{animation:logoFloat 7s ease-in-out infinite}

@@ -905,5 +905,15 @@ html:not(.tv):not([data-look="anime"]) .card-inner{transition:transform .3s cubi
 <script id="mk-tidy-pick-js">@@src:js/mk-tidy-pick-js-long-rows-choice.js@@</script>
 <style id="mk-t10-num">@@src:css/mk-t10-num-t10x-t10f-calc.css@@</style>
 <style id="mk-285-set">@@src:css/mk-285-set-settings-home-look.css@@</style>
+<style id="mk-calm-sk">@@src:css/mk-calm-sk-title-page-once.css@@</style>
+<script id="mk-calm-js">
+document.addEventListener('animationend', (e) => { const t = e.target; if (e.animationName === 'logoPop' && t && t.classList && t.classList.contains('logo3d')) t.classList.add('mk-popped'); }, true);
+</script>
+<script id="mk-home-retry">@@src:js/mk-home-retry-if-typeof-renderhome.js@@</script>
+<style id="mk-zoom-lock">
+#player{touch-action:pan-x pan-y}
+html.mk-nozoom,html.mk-nozoom body{touch-action:pan-x pan-y}
+</style>
+<script id="mk-zoom-lock-js">@@src:js/mk-zoom-lock-js-stays-browser-tab.js@@</script>
 </body>
 </html>

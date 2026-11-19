@@ -236,7 +236,7 @@ function parseTracks(u, p, end) {
         case ID.Video: for (const v of children(u, s, s + n)) { const x = readUint(u, v.start, v.size); if (v.id === ID.PixelWidth) t.w = x; else if (v.id === ID.PixelHeight) t.h = x; else if (v.id === ID.DisplayWidth) t.dw = x; else if (v.id === ID.DisplayHeight) t.dh = x; else if (v.id === 0x55B0) for (const c of children(u, v.start, v.start + v.size)) { const y = readUint(u, c.start, c.size); if (c.id === 0x55B1) t.matrix = y; else if (c.id === 0x55BA) t.trc = y; else if (c.id === 0x55BB) t.prim = y; else if (c.id === 0x55B9) t.range = y; } } break;
         case ID.Audio: for (const a of children(u, s, s + n)) { if (a.id === ID.SamplingFrequency) t.rate = readFloat(u, a.start, a.size); else if (a.id === ID.OutputSamplingFrequency) t.orate = readFloat(u, a.start, a.size); else if (a.id === ID.Channels) t.ch = readUint(u, a.start, a.size); else if (a.id === ID.BitDepth) t.bits = readUint(u, a.start, a.size); } break;
         case ID.ContentEncodings:
-          for (const ce of children(u, s, s + n)) for (const x of children(u, ce.start, ce.start + ce.size)) {
+          for (const ce of children(u, s, s + n)) if (ce.id === ID.ContentEncoding) for (const x of children(u, ce.start, ce.start + ce.size)) {
             if (x.id === ID.ContentEncryption) t.enc = true;
             if (x.id === ID.ContentCompression) {
               let algo = 0, set = null; for (const y of children(u, x.start, x.start + x.size)) { if (y.id === ID.ContentCompAlgo) algo = readUint(u, y.start, y.size); if (y.id === ID.ContentCompSettings) set = u.slice(y.start, y.start + y.size); }
@@ -334,7 +334,7 @@ async function probe(url, headers) {
     if (i[0] === ID.Cluster) { File.firstCluster = p; break; }
     if (size === UNKNOWN) break;
     if (d + size <= n) {
-      if (i[0] === ID.SeekHead) for (const sk of children(u, d, d + size)) { let sid = 0, pos = -1; for (const x of children(u, sk.start, sk.start + sk.size)) { if (x.id === ID.SeekID) sid = readUint(u, x.start, x.size); if (x.id === ID.SeekPosition) pos = readUint(u, x.start, x.size); } if (pos >= 0) File.seek[sid] = File.segData + pos; }
+      if (i[0] === ID.SeekHead) for (const sk of children(u, d, d + size)) { if (sk.id !== ID.Seek) continue; /* mk-2851-crc: skip CRC-32 and Void */ let sid = 0, pos = -1; for (const x of children(u, sk.start, sk.start + sk.size)) { if (x.id === ID.SeekID) sid = readUint(u, x.start, x.size); if (x.id === ID.SeekPosition) pos = readUint(u, x.start, x.size); } if (pos >= 0) File.seek[sid] = File.segData + pos; }
       if (i[0] === ID.Info) { infoAt = p; let dur = 0; for (const c of children(u, d, d + size)) { if (c.id === ID.TimecodeScale) File.scale = readUint(u, c.start, c.size); if (c.id === ID.Duration) dur = readFloat(u, c.start, c.size); } File.durRaw = dur; }
       if (i[0] === ID.Tracks) { tracksAt = p; File.tracks = parseTracks(u, d, d + size); }
       if (i[0] === ID.Cues) { cuesAt = p; File.cuesRaw = [u, d, d + size]; }
