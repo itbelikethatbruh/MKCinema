@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.84.3', date: '2026-11-17', items: [
+    ['better', 'Quicker menus on TVs', 'Moving around Home, film pages and the menu with the remote is quicker, mostly on Fire TV Sticks.'],
+  ] },
   { v: '2.84.2', date: '2026-11-17', items: [
     ['better', 'Updates wait for your film', 'The message about a new version no longer appears over a film or show that is playing. It shows when you close the player.'],
   ] },
