@@ -7,6 +7,8 @@
     { sel: '.mu-chips', ok: (c) => !!c.querySelector(':scope > .mu-lab'), label: (c) => c.querySelector(':scope > .mu-lab').textContent.trim() },
     { sel: '.mu-chips', ok: (c) => !!c.querySelector(':scope > [data-mrtag]'), label: () => 'Category' },
     { sel: '#discGenres', ok: () => true, label: () => 'Genre' },
+    // 2.83.7: the network and universe pages had a sideways-scrolling row of names
+    { sel: '.net-switch', ok: () => true, label: (c) => (c.querySelector('[data-nsw]') ? 'Network' : 'Category') },
   ];
   const CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
   let menu = null, owner = null;
