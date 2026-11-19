@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.84.1', date: '2026-11-17', items: [
+    ['better', 'Network pages line up', 'On a network page, the large logo no longer sits under the menu or over the text.'],
+  ] },
   { v: '2.84.0', date: '2026-11-17', items: [
     ['new', 'Link a phone, TV or computer without a password', 'A new device can now get your synced keys and addons from one that already has them. It shows a code, you scan or type it on the other device, and it is done. Accounts that sign in with Google now sync keys and addon links too.'],
     ['better', 'No more sliding menus', 'Tab and chip rows in Music, Library, Live TV and Anime now show what fits and keep the rest under More. On TVs, long rows wrap onto a second line, so nothing is cut off at the edge.'],
