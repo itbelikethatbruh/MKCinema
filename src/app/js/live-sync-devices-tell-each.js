@@ -13,7 +13,7 @@
     if (playing()) { L.held = true; return; }
     Account.pull({ quiet: true });
   };
-  const drop = () => { const c = L.ch; L.ch = null; L.key = ''; if (c) { try { Account.client.removeChannel(c); } catch (e) { /* gone */ } } };
+  const drop = () => { const c = L.ch; L.ch = null; L.key = ''; L.up = false; if (c) { try { Account.client.removeChannel(c); } catch (e) { /* gone */ } } };
   const ensure = () => {
     const c = Account.client, u = Account.user, want = c && u && CFG.cloudSync !== false && typeof c.channel === 'function' ? `${u.id}` : '';
     if (want === L.key) return;
@@ -21,7 +21,8 @@
     try {
       const ch = c.channel(`mkc-sync:${want}`, { config: { private: true, broadcast: { self: false } } });
       ch.on('broadcast', { event: 'row' }, (m) => { const p = m && m.payload; if (p && p.d !== dev) nudged(typeof p.at === 'string' ? p.at : ''); });
-      ch.subscribe((st) => { if (st === 'SUBSCRIBED') Account.pull({ quiet: true, soon: true, every: 5000 }); });
+      ch.on('broadcast', { event: 'link' }, (m) => { if (typeof DevLink !== 'undefined') DevLink.onMsg(m && m.payload); }); // 2.86 Link a device
+      ch.subscribe((st) => { L.up = st === 'SUBSCRIBED'; if (st === 'SUBSCRIBED') Account.pull({ quiet: true, soon: true, every: 5000 }); });
       L.ch = ch; L.key = want;
     } catch (e) { L.ch = null; L.key = ''; }
   };
@@ -68,6 +69,8 @@
     }
     return r;
   };
+  // other features talk to the account's own devices on the same private channel (2.86 Link a device)
+  Account.liveSend = (event, payload) => { ensure(); if (!L.ch || !L.up) return false; try { L.ch.send({ type: 'broadcast', event, payload }).catch(() => {}); return true; } catch (e) { return false; } };
   setInterval(() => { ensure(); if (L.held && !playing()) { L.held = false; nudged(''); } }, 3000);
   ensure();
 })();

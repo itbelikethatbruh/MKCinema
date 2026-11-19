@@ -20,7 +20,8 @@ const isSecretKey = (k) => {
    The row keeps the top-level keys older apps read. `_sync` adds the format version, a timestamp per section and per
    setting, and tombstones for removed watchlist, progress and watched entries, so devices merge instead of overwriting.
    `secrets` is sealed with AES-GCM under a key derived from the account password (PBKDF2-SHA256, per-user salt kept in
-   the sealed box). The key never leaves the device except inside the already sealed "Sign in with your phone" hand-off. */
+   the sealed box). The key never leaves the device except inside the already sealed "Sign in with your phone" hand-off,
+   or sealed to a new device's one-time key by Link a device (DevLink). */
 const SYNC_V = 4, SYNC_V_OLD = 3, SYNC_AV_MAX = 40000;
 const SYNC_SECTIONS = ['cfg', 'watchlist', 'progress', 'watched', 'addons', 'disabled', 'studio', 'taste', 'homeLayout', 'homeArrange', 'avatar', 'lists', 'channels', 'seats', 'secrets'];
 const SYNC_ITEMS = ['watchlist', 'progress', 'watched'];
@@ -184,10 +185,10 @@ const Kdf2 = {
     return out.length >= 16 ? new Uint8Array(out.slice(0, 16)) : null;
   },
   async codeKey(code) { const b = this.codeBytes(code); return b ? this.hkdf(b, 'mkc-recovery') : null; },
-  /* a fresh vault: new vault key, wrapped by the password and by a new recovery code */
+  /* a fresh vault: new vault key, wrapped by the password (when the account has one) and by a new recovery code */
   async newVault(uid, wrap) {
     const vault = crypto.getRandomValues(new Uint8Array(32)), code = this.newCode();
-    const wraps = { at: Date.now(), pw: { it: this.ITER, ...(await this.wrapWith(wrap, vault, uid)) }, rc: await this.wrapWith(await this.codeKey(code), vault, uid) };
+    const wraps = { at: Date.now(), ...(wrap ? { pw: { it: this.ITER, ...(await this.wrapWith(wrap, vault, uid)) } } : {}), rc: await this.wrapWith(await this.codeKey(code), vault, uid) };
     return { vault, code, wraps, vid: this.b64(crypto.getRandomValues(new Uint8Array(9))) };
   },
   /* the device keeps the vault key (exportable, so it can be re-wrapped after a password change or handed to a TV) */
@@ -441,6 +442,8 @@ const Account = {
       if (lk === 'watchlist') b.forEach((id) => { if (!was.has(id)) { m.add[id] = ts; delete del[id]; } });
     }
     this.saveMeta(); this.schedule();
+    // a Google account's first key makes its vault (2.86)
+    if ((s === 'secrets' || s === 'addons' || s === 'channels') && typeof this.ownVault === 'function') this.ownVault();
   },
   markCfg() {
     let cur; try { cur = JSON.parse(JSON.stringify(CFG)); } catch (e) { return; }
@@ -458,9 +461,10 @@ const Account = {
   },
   canWriteSecrets() { const rec = this.keyRec, r = this.remoteSecrets; return !!rec && (this.forceSeal || !SyncCrypt.isBox(r) || (r.salt === rec.salt && !this.boxLocked)); },
   keysSync() { return !!(this.user && CFG.cloudSync !== false && CFG.syncKeys !== false && this.canWriteSecrets()); },
+  /* signs in with a password; Google accounts have none to unlock keys with, so they link devices or use the code */
+  pwUser() { const u = this.user, prov = u && u.app_metadata && u.app_metadata.provider; return !!(u && u.email && (!prov || prov === 'email')); },
   needsUnlock() {
-    const u = this.user, prov = u && u.app_metadata && u.app_metadata.provider;
-    return !!(u && u.email && (!prov || prov === 'email') && this.keyChecked && CFG.cloudSync !== false && CFG.syncKeys !== false && !this.canWriteSecrets());
+    return !!(this.user && (this.pwUser() || (typeof Kdf2 !== 'undefined' && Kdf2.isBox(this.remoteSecrets))) && this.keyChecked && CFG.cloudSync !== false && CFG.syncKeys !== false && !this.canWriteSecrets());
   },
   dirty() {
     const m = this.m();
@@ -811,7 +815,7 @@ const Account = {
   },
   /* Settings › Debrid: a device that has no key for the sealed keys (restored session, older phone sign-in) asks for the password once */
   unlockHTML() {
-    if (!this.needsUnlock()) return '';
+    if (!this.needsUnlock() || !this.pwUser()) return '';
     return `<div class="set-row" id="sk-row"><div><b>Unlock synced keys</b><small>Enter your password to unlock synced keys on this device.</small></div><div class="set-ctl"><input class="inp" type="password" id="sk-pass" autocomplete="current-password" placeholder="Password" aria-label="Account password" style="width:min(200px,100%)"><button class="btn btn-ghost btn-sm" type="button" id="sk-go" data-nav>Unlock</button></div></div>`;
   },
   bindUnlock() {
@@ -889,9 +893,9 @@ const Account = {
         <div class="acct-who"><button type="button" class="av-pick" id="acc-avatar" aria-label="Change profile picture">${this.avatarHTML(true)}<span class="av-edit"><i data-lucide="camera"></i></span></button><div><b>${esc(this.name())}</b><small>${esc(u.email || '')} · signed in with ${esc(prov)}</small><span class="av-acts"><button type="button" class="linkish" id="acc-avatar2">${Store.get('avatar', null) ? 'Change photo' : 'Add a profile photo'}</button>${Store.get('avatar', null) ? ' · <button type="button" class="linkish" id="acc-avatar-rm">Remove</button>' : ''}</span></div></div>
         <input type="file" id="acc-avatar-file" accept="image/*" hidden>
         <p class="acct-note">${syncLine}</p>
-        ${this.needsUnlock() ? '<p class="acct-note">Synced keys are locked on this device. Unlock them in Settings › Debrid.</p>' : ''}
+        ${this.needsUnlock() ? `<p class="acct-note">Synced keys are locked on this device. Unlock them in Settings › Debrid.</p>${typeof DevLink !== 'undefined' && Kdf2.isBox(this.remoteSecrets) ? '<div class="inrow"><button class="btn btn-prime" type="button" id="acc-link-take"><i data-lucide="link"></i>Link this device</button></div>' : ''}` : ''}
         ${this.recovering ? `<label class="fld"><span>New password</span><input class="inp" id="acc-newpass" type="password" autocomplete="new-password"></label><div class="inrow"><button class="btn btn-prime" type="button" id="acc-setpass">Save new password</button></div>` : ''}
-        <div class="inrow"><button class="btn btn-ghost" type="button" id="acc-sync"><i data-lucide="refresh-cw"></i>Sync now</button><button class="btn btn-ghost" type="button" id="acc-out"><i data-lucide="log-out"></i>Sign out</button><button class="btn btn-ghost" type="button" id="acc-outall">Sign out everywhere</button></div>
+        <div class="inrow"><button class="btn btn-ghost" type="button" id="acc-sync"><i data-lucide="refresh-cw"></i>Sync now</button>${typeof DevLink !== 'undefined' && DevLink.canGive() ? '<button class="btn btn-ghost" type="button" id="acc-link-give"><i data-lucide="link"></i>Link a new device</button>' : ''}<button class="btn btn-ghost" type="button" id="acc-out"><i data-lucide="log-out"></i>Sign out</button><button class="btn btn-ghost" type="button" id="acc-outall">Sign out everywhere</button></div>
       </div>`;
     }
     const web = this.canRedirect();
@@ -916,6 +920,7 @@ const Account = {
     on('#acc-save', () => this.saveProject()); on('#acc-forget', () => this.forgetProject());
     on('#acc-in', () => this.signIn()); on('#acc-up', () => this.signUp()); on('#acc-reset', () => this.reset());
     on('#acc-out', () => this.signOut()); on('#acc-outall', () => this.signOut(true)); on('#acc-sync', () => this.pull({ force: true }).then(() => this.push({ force: true }))); on('#acc-setpass', () => this.newPassword());
+    on('#acc-link-take', () => DevLink.openTake()); on('#acc-link-give', () => DevLink.openGive());
     const pass = $('#acc-pass'); if (pass) pass.addEventListener('keydown', (e) => { if (e.key === 'Enter') this.signIn(); });
     if (typeof TvLogin !== 'undefined') TvLogin.bind();
   },

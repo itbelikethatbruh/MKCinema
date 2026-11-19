@@ -66,6 +66,8 @@
 
   /* ---- the note on a locked device ---- */
   const MSG = 'Addons and keys from your other devices are locked on this one. Enter your password once to bring them here.';
+  const MSG_LINK = 'Addons and keys from your other devices are locked on this one. Link it from a device that has them.';
+  const viaLink = () => !A.pwUser() && typeof DevLink !== 'undefined';
   const SNOOZE = 'mkc:addonLockSnooze';
   let shown = false;
   const unlockNow = async () => { $$('#toasts .as-lock').forEach((x) => x.remove()); try { if (!$('#player').hidden) await closePlayer(); } catch (e) { /* no player */ } try { closeLayer('addons'); } catch (e) { /* not open */ } openSettings('debrid'); setTimeout(() => { const p = $('#sk-pass'); if (p) { try { p.scrollIntoView({ block: 'center' }); } catch (e) { /* old browser */ } p.focus(); } }, 120); };
@@ -78,9 +80,10 @@
     shown = true;
     const box = $('#toasts'); if (!box) return;
     const el = document.createElement('div'); el.className = 'toast glass-solid t-info as-lock'; el.dataset.key = 'mkc-addon-lock'; el.setAttribute('role', 'status');
-    el.innerHTML = `<i data-lucide="lock"></i><span>${esc(MSG)}</span><span class="as-b"><button class="btn btn-prime btn-sm" type="button" data-nav data-as="go">Enter password</button><button class="btn btn-ghost btn-sm" type="button" data-nav data-as="later">Not now</button></span>`;
+    const lk = viaLink();
+    el.innerHTML = `<i data-lucide="lock"></i><span>${esc(lk ? MSG_LINK : MSG)}</span><span class="as-b"><button class="btn btn-prime btn-sm" type="button" data-nav data-as="go">${lk ? 'Link this device' : 'Enter password'}</button><button class="btn btn-ghost btn-sm" type="button" data-nav data-as="later">Not now</button></span>`;
     box.appendChild(el); icons();
-    el.querySelector('[data-as="go"]').onclick = unlockNow;
+    el.querySelector('[data-as="go"]').onclick = lk ? () => { el.remove(); DevLink.openTake(); } : unlockNow;
     el.querySelector('[data-as="later"]').onclick = () => { try { localStorage.setItem(SNOOZE, String(Date.now() + 3 * 864e5)); } catch (e) { /* blocked */ } el.remove(); };
     setTimeout(() => el.remove(), 20000);
   };
@@ -90,9 +93,10 @@
     if (!A.addonsLocked()) { if (n) n.remove(); return; }
     if (n) return;
     n = document.createElement('div'); n.className = 'as-lock';
-    n.innerHTML = `<i data-lucide="lock"></i><span>${esc(MSG)}</span><span class="as-b"><button class="btn btn-ghost btn-sm" type="button" data-nav data-as="go">Enter password</button></span>`;
+    const lk = viaLink();
+    n.innerHTML = `<i data-lucide="lock"></i><span>${esc(lk ? MSG_LINK : MSG)}</span><span class="as-b"><button class="btn btn-ghost btn-sm" type="button" data-nav data-as="go">${lk ? 'Link this device' : 'Enter password'}</button></span>`;
     list.parentNode.insertBefore(n, list); icons();
-    n.querySelector('[data-as="go"]').onclick = unlockNow;
+    n.querySelector('[data-as="go"]').onclick = lk ? () => DevLink.openTake() : unlockNow;
   };
   if (typeof renderAddons === 'function') {
     const ra = renderAddons;

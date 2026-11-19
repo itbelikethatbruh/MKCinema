@@ -1159,6 +1159,7 @@ const Deep = {
     if (h.startsWith('play?')) { history.replaceState(null, '', location.pathname); const q = new URLSearchParams(h.slice(5)); if (await this.askPlay(q)) await this.play(q); }
     else if (h.startsWith('remote=')) { const c = h.slice(7).toUpperCase(); if (RM_CODE.test(c)) { location.replace(Remote.link(c)); return; } history.replaceState(null, '', location.pathname); }
     else if (h.startsWith('login=')) { history.replaceState(null, '', location.pathname); const [code, key, ver] = h.slice(6).split('.'); TvLogin.join((code || '').toUpperCase(), key, ver); }
+    else if (h.startsWith('keylink=')) { history.replaceState(null, '', location.pathname); if (typeof DevLink !== 'undefined') DevLink.fromLink(h.slice(8)); }
     else if (h.startsWith('lssend=')) { history.replaceState(null, '', location.pathname); LayStudio.sendLink(h.slice(7)); }
     else if (h.startsWith('ambsend=')) { history.replaceState(null, '', location.pathname); AmbStudio.sendLink(h.slice(8)); }
     else if (h === 'ambient') { history.replaceState(null, '', location.pathname); const t = (n) => { if ((document.body.classList.contains('intro-on') || !S.booted) && n < 40) setTimeout(() => t(n + 1), 500); else AmbStudio.open(); }; t(0); }
@@ -1187,7 +1188,7 @@ const Deep = {
   },
   async play(q) {},
 };
-addEventListener('hashchange', () => { if (/^#(play\?|resume\?|remote=|party=|mirror=|login=|layout=|lssend=|ambsend=|ambient$|studio$)/.test(location.hash)) Deep.handle(); });
+addEventListener('hashchange', () => { if (/^#(play\?|resume\?|remote=|party=|mirror=|login=|keylink=|layout=|lssend=|ambsend=|ambient$|studio$)/.test(location.hash)) Deep.handle(); });
 
 COMMANDS.push(
   { label: 'Start or join a watch party', icon: 'users', run: () => Party.openPanel() },

@@ -2,6 +2,30 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.84.0 (2026-11-19)
+
+- **Link a phone, TV or computer without a password:** a new device shows a code, you scan or type it on a device that already has your synced keys and addons, and it is done. Accounts that sign in with Google now sync keys and addon links too.
+- **No more sliding menus:** tab and chip rows in Music, Library, Live TV and Anime show what fits and keep the rest under More. On TVs, long rows wrap onto a second line.
+
+## Web app 2.83.1 to 2.83.8 (2026-11-18 and 2026-11-19)
+
+- **Sliders work with the remote:** Left and Right move a slider in Settings, Up and Down go to the next setting.
+- **Film trailers stay in MKCinema on TVs,** so Back returns to the title. Trailers start without subtitles.
+- **Logo effects:** on Home, the logo of the featured title rises into place and a light sweep crosses it. On by default where the device keeps up; the switch is in Settings under Performance.
+- **Simpler Play button** that shows the episode and the time it continues from.
+- **Settings in the Home look,** in six groups, with a new Music and Live TV page.
+- **Fewer buttons:** genre, mood, radio and network rows are dropdowns. Phones show the main sections in full and the rest under More.
+- **Finer Top 10 numbers,** fully visible on every screen.
+- **Lighter and smoother:** calmer loading placeholders, smoother scrolling on computers, and Home reloads by itself if it opens empty.
+- **TVs play in the built-in player,** and more MKV files play in the browser.
+- What's new is shown in all 31 languages.
+
+## Web app 2.83.0 (2026-11-18)
+
+- **Music:** charts, artists, albums, live radio and synced lyrics, with a mini player on every screen and your own music from your media server.
+- **Scores and tables** for 22 leagues, **Ambient Studio** for your own photos on the screensaver, a **simpler video player**, half-star ratings and playback info.
+- **Game consoles and Raspberry Pi:** Xbox and PlayStation browsers get the TV layout, and Linux builds for 64-bit ARM.
+
 ## Mac app 1.3.1 (2026-11-17)
 
 - **Faster start on Apple silicon:** the Mac app now always runs natively on M-series Macs, even when Rosetta is installed, so it opens straight to MKCinema instead of stalling at launch.

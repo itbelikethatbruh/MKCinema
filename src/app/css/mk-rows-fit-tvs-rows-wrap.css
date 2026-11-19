@@ -1,0 +1,21 @@
+
+html:not(.tv) .mk-rf-on{overflow:hidden!important;flex-wrap:nowrap!important}
+html:not(.tv) .mk-rf-on .mk-rf-out{display:none!important}
+.mk-rf-btn{display:none}
+html:not(.tv) .mk-rf-on>.mk-rf-btn.mk-rf-show{display:inline-flex;align-items:center;gap:4px;flex:0 0 auto;white-space:nowrap;cursor:pointer;font-family:inherit;margin:0}
+.mk-rf-btn svg{width:16px;height:16px;opacity:.75;transition:transform .2s ease}
+.mk-rf-btn[aria-expanded="true"] svg{transform:rotate(180deg)}
+.mk-rf-btn:focus-visible{outline:3px solid #f3efe7;outline-offset:2px}
+/* TVs: rows wrap onto a second line instead of sliding (the remote reaches every chip) */
+html.tv #discGenres,html.tv #dStreams .chips,html.tv .mu-tabs,html.tv .lib-tabs,html.tv #tvSources,html.tv #view-anime .segc{flex-wrap:wrap!important;overflow:visible!important;row-gap:10px}
+#mkRfShade{position:fixed;inset:0;z-index:58;background:#0000008c;opacity:0;transition:opacity .18s ease}
+#mkRfMenu{position:fixed;z-index:60;min-width:200px;max-width:calc(100vw - 32px);max-height:calc(100vh - 120px);overflow:auto;padding:8px;border-radius:24px;border:1px solid #ffffff1f;background:#0e0e0f;color:#f2f2f2;box-shadow:0 24px 60px #0000008c;display:flex;flex-direction:column;gap:2px;opacity:0;transform:translateY(-6px) scale(.98);transform-origin:top right;transition:opacity .18s ease,transform .18s ease}
+#mkRfShade.in,#mkRfMenu.in{opacity:1}
+#mkRfMenu.in{transform:none}
+#mkRfMenu button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;min-height:52px;padding:12px 16px 12px 14px;border-radius:16px;font-size:calc(15px * var(--ts,1));font-weight:500;font-family:inherit;cursor:pointer;color:inherit}
+#mkRfMenu button.on{background:#ffffff1a}
+#mkRfMenu button svg{width:22px;height:22px;flex:0 0 auto;display:block!important}
+#mkRfMenu button .rec-dot{flex:0 0 auto}
+#mkRfMenu button:active,#mkRfMenu button:focus-visible{background:#ffffff14}
+#mkRfMenu button:focus-visible{outline:3px solid #f3efe7;outline-offset:-3px}
+@media (prefers-reduced-motion:reduce){#mkRfShade,#mkRfMenu,.mk-rf-btn svg{transition:none}}

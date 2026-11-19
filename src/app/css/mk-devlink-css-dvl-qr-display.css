@@ -1,0 +1,10 @@
+
+.dvl-qr{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.dvl-qr .qr-wrap{flex:none;margin:0}
+.dvl-qr>div:last-child{flex:1 1 200px;min-width:0}
+.dvl-code{font:700 calc(26px * var(--ts,1))/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.12em;margin:2px 0 8px;overflow-wrap:anywhere}
+.dvl-in{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.dvl-in .inp{flex:1 1 170px;min-width:0;text-transform:uppercase;letter-spacing:.08em}
+.dvl-cam{display:block;width:100%;max-height:46vh;border-radius:12px;background:#000;object-fit:cover;margin-top:12px}
+.dvl-hint{flex-wrap:wrap}
+.dvl-hint span:first-of-type{flex:1 1 220px;min-width:0}
