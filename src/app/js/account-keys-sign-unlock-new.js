@@ -14,9 +14,11 @@
 
   /* ---- recovery code dialog ---- */
   const showCode = (code) => {
+    // accounts without a password (Google) keep the code for the day no linked device is left
+    const sub = $('#rcLayer .sub'); if (sub) sub.textContent = emailUser() ? 'If you ever forget your password, this code brings back your synced keys. Keep it somewhere safe, like a password manager. It can\'t be shown again, and nobody else can recover it for you.' : 'If you ever lose every device that has your keys, this code brings them back. Keep it somewhere safe, like a password manager. It can\'t be shown again, and nobody else can recover it for you.';
     $('#rcCode').innerHTML = String(code).replace(/[^A-Z0-9-]/g, '').split('-').join('-<wbr>'); openLayer('rcLayer');
     $('#rcCopy').onclick = () => { try { navigator.clipboard.writeText(code).then(() => toast('Recovery code copied', 'ok')); } catch (e) { toast('Select the code and copy it', 'info'); } };
-    $('#rcSave').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([`MKCinema recovery code\n\n${code}\n\nAccount: ${(A.user && A.user.email) || ''}\nKeep this safe. It brings back your synced keys if you forget your password.\n`], { type: 'text/plain' })); a.download = 'MKCinema-recovery-code.txt'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); };
+    $('#rcSave').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([`MKCinema recovery code\n\n${code}\n\nAccount: ${(A.user && A.user.email) || ''}\nKeep this safe. It brings back your synced keys ${emailUser() ? 'if you forget your password' : 'if no device that has them is left'}.\n`], { type: 'text/plain' })); a.download = 'MKCinema-recovery-code.txt'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); };
     $('#rcDone').onclick = () => closeLayer('rcLayer');
     $$('#rcLayer [data-close]').forEach((b) => { b.onclick = () => closeLayer('rcLayer'); });
     setTimeout(() => { try { $('#rcDone').focus(); } catch (e) { /* gone */ } }, 60);
@@ -71,7 +73,7 @@
     this.kdfLost = { uid, d };
   };
   const pull1 = A.pull;
-  A.pull = function () { return pull1.apply(this, arguments).then((r) => (this.kdfUp && !this.kdfBusy ? this.upgrade().then(() => r) : r)); };
+  A.pull = function () { return pull1.apply(this, arguments).then((r) => (this.kdfUp && !this.kdfBusy ? this.upgrade().then(() => r) : r)).then((r) => { try { this.ownVault(); } catch (e) { /* next pull */ } return r; }); };
 
   /* ---- move an account to format 2: new vault, saved first, then the login key replaces the password ---- */
   A.upgrade = async function () {
@@ -96,6 +98,27 @@
       await Kdf2.markKnown(up.d.email);
       if (code) showCode(code);
     } catch (e) { /* tried again at the next sign-in */ } finally { this.kdfBusy = false; rerenderSettings(); }
+  };
+
+  /* ---- accounts without a password (Google): the first device with keys makes the vault, wrapped only by a recovery
+     code; the account's other devices get it with Link this device, or with the code (2.86) ---- */
+  const hasKeys = () => {
+    const full = (k) => { const v = Store.get(k, null); return !!(v && typeof v === 'object' && Object.keys(v).some((x) => x !== 'order' && x !== 'off' && v[x])); };
+    const ch = Store.get('channels', null);
+    return full('vault') || full('keys') || (Store.get('addons', []) || []).some((u) => typeof u === 'string' && keyedAddon(u)) || !!(ch && Array.isArray(ch.lists) && ch.lists.some((l) => l && l.pass));
+  };
+  A.ownVault = function () {
+    if (this.vaultBusy || this.kdfBusy || !this.user || emailUser() || !this.loadedOnce || !this.keyChecked || this.newer || this.applying) return;
+    if (CFG.cloudSync === false || CFG.syncKeys === false || this.keyRec || SyncCrypt.isBox(this.remoteSecrets) || !(window.crypto && crypto.subtle) || !hasKeys()) return;
+    this.vaultBusy = true; const uid = this.user.id;
+    (async () => {
+      await this.pull({ force: true, quiet: true }); // another device may have made one a moment ago
+      if (!this.user || this.user.id !== uid || this.keyRec || SyncCrypt.isBox(this.remoteSecrets)) return;
+      const v = await Kdf2.newVault(uid, null);
+      this.keyRec = await Kdf2.keep(uid, v.vid, v.vault, v.wraps); this.secCache = null; this.forceSeal = true; this.keyChecked = true; bump();
+      await this.push({ force: true });
+      if (Kdf2.isBox(this.remoteSecrets) && this.remoteSecrets.vid === v.vid) showCode(v.code);
+    })().catch(() => {}).finally(() => { this.vaultBusy = false; rerenderSettings(); try { this.render(); } catch (e) { /* closed */ } });
   };
 
   /* ---- unlock on a device with a restored session ---- */
@@ -128,8 +151,8 @@
   };
   /* ---- start over: a new vault with this device's keys (keys only the old vault held are gone) ---- */
   A.startFresh = async function () {
-    const lost = this.kdfLost, uid = this.user && this.user.id; if (!uid || !lost || !lost.d) throw new Error('Enter your password first');
-    const v = await Kdf2.newVault(uid, lost.d.wrap);
+    const lost = this.kdfLost, uid = this.user && this.user.id; if (!uid || (emailUser() && !(lost && lost.d))) throw new Error('Enter your password first');
+    const v = await Kdf2.newVault(uid, lost && lost.d ? lost.d.wrap : null);
     this.keyRec = await Kdf2.keep(uid, v.vid, v.vault, v.wraps); this.secCache = null; this.kdfLost = null; this.forceSeal = true; this.keyChecked = true; bump();
     await this.push({ force: true });
     showCode(v.code);
@@ -186,14 +209,15 @@
   const row = (title, sub, ctl) => `<div class="set-row"><div><b>${title}</b><small>${sub}</small></div><div class="set-ctl">${ctl}</div></div>`;
   const uh1 = A.unlockHTML, bu1 = A.bindUnlock;
   A.unlockHTML = function () {
-    const v2box = Kdf2.isBox(this.remoteSecrets);
+    const v2box = Kdf2.isBox(this.remoteSecrets), link = typeof DevLink !== 'undefined';
     if (this.user && (this.kdfLost || (v2box && this.needsUnlock()))) {
-      const pw = this.kdfLost ? '' : uh1.call(this);
-      return `${pw}${row('Use your recovery code', 'Changed your password? Your recovery code brings your synced keys back.', '<input class="inp" type="text" id="rc-in" autocomplete="off" spellcheck="false" placeholder="MKC-…" aria-label="Recovery code" style="width:min(240px,100%)"><button class="btn btn-ghost btn-sm" type="button" id="rc-go" data-nav>Bring back</button>')}${this.kdfLost ? row('No recovery code?', 'Start fresh with the keys on this device. Keys saved only in your account are removed.', '<button class="btn btn-ghost btn-sm" type="button" id="rc-fresh" data-nav>Start fresh</button>') : ''}`;
+      const pw = this.kdfLost ? '' : uh1.call(this), pwu = emailUser();
+      const ln = link && v2box ? row('Link this device', 'Get your keys from a phone or computer that already has them. No password needed.', '<button class="btn btn-ghost btn-sm" type="button" id="dvl-take" data-nav>Show code</button>') : '';
+      return `${pw}${ln}${row('Use your recovery code', pwu ? 'Changed your password? Your recovery code brings your synced keys back.' : 'No other device has your keys? Your recovery code brings them back.', '<input class="inp" type="text" id="rc-in" autocomplete="off" spellcheck="false" placeholder="MKC-…" aria-label="Recovery code" style="width:min(240px,100%)"><button class="btn btn-ghost btn-sm" type="button" id="rc-go" data-nav>Bring back</button>')}${this.kdfLost || !pwu ? row('No recovery code?', 'Start fresh with the keys on this device. Keys saved only in your account are removed.', '<button class="btn btn-ghost btn-sm" type="button" id="rc-fresh" data-nav>Start fresh</button>') : ''}`;
     }
     const base = uh1.call(this); if (base) return base;
     const rec = this.keyRec;
-    if (rec && rec.v === 2 && this.keysSync()) return row('Recovery code', 'Lost your code? Make a new one. The old code stops working.', '<button class="btn btn-ghost btn-sm" type="button" id="rc-new" data-nav>New recovery code</button>');
+    if (rec && rec.v === 2 && this.keysSync()) return (link ? row('Link a new device', 'Send your synced keys to a new phone, TV or computer, with no password to type there.', '<button class="btn btn-ghost btn-sm" type="button" id="dvl-give" data-nav>Link a device</button>') : '') + row('Recovery code', 'Lost your code? Make a new one. The old code stops working.', '<button class="btn btn-ghost btn-sm" type="button" id="rc-new" data-nav>New recovery code</button>');
     return '';
   };
   A.bindUnlock = function () {
@@ -202,6 +226,8 @@
     act('#rc-go', () => this.recover(($('#rc-in') || {}).value || ''));
     act('#rc-fresh', () => (confirm('Start fresh? Keys saved only in your account (not on this device) will be removed.') ? this.startFresh() : ''));
     act('#rc-new', () => this.newRecoveryCode());
+    const lt = $('#dvl-take'); if (lt) lt.onclick = () => DevLink.openTake();
+    const lg = $('#dvl-give'); if (lg) lg.onclick = () => DevLink.openGive();
     const i = $('#rc-in'); if (i) i.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('#rc-go').click(); } });
   };
 })();

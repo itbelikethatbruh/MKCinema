@@ -8,6 +8,10 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.84.0', date: '2026-11-17', items: [
+    ['new', 'Link a phone, TV or computer without a password', 'A new device can now get your synced keys and addons from one that already has them. It shows a code, you scan or type it on the other device, and it is done. Accounts that sign in with Google now sync keys and addon links too.'],
+    ['better', 'No more sliding menus', 'Tab and chip rows in Music, Library, Live TV and Anime now show what fits and keep the rest under More. On TVs, long rows wrap onto a second line, so nothing is cut off at the edge.'],
+  ] },
   { v: '2.83.8', date: '2026-11-17', items: [
     ['better', 'Sliders work with the remote', 'On a TV, Left and Right now move a slider in Settings. Up and Down go to the next setting.'],
     ['better', 'Film trailers stay in MKCinema on TVs', 'Film trailers now play inside MKCinema on every TV, so the Back button closes the film trailer and returns you to where you were.'],

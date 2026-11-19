@@ -27,7 +27,7 @@
   <a href="CHANGELOG.md">What's new</a>
 </p>
 
-<p align="center"><img src="docs/screenshots/app-side-menu.webp" width="100%" alt="MKCinema Home with the featured banner and Top 10 films today"></p>
+<p align="center"><img src="docs/screenshots/app-home.webp" width="100%" alt="MKCinema Home with the featured banner and Top 10 films today"></p>
 
 MKCinema brings everything you watch into one place and turns the evening into an event. It finds something everyone likes, plays it with a player made for films, gives every person in the house their own seat, and connects every screen you own, from the TV in the living room to the phone in your pocket. Friends on other sofas can join with voice and cameras. Grandparents can get help from across town.
 
@@ -112,15 +112,19 @@ Web, Android, Android TV and Fire TV, Windows, Mac, Linux, and LG and Samsung TV
 </tr>
 <tr>
 <td width="50%" align="center"><img src="docs/screenshots/app-seats.webp" alt="Seats"><br><sub>A seat for everyone in the house, with PINs and kids seats</sub></td>
-<td width="50%" align="center"><img src="site/shots/tv.webp" alt="MKCinema on a TV"><br><sub>On a TV, built for the remote</sub></td>
+<td width="50%" align="center"><img src="site/shots/tv-home.webp" alt="MKCinema on a TV"><br><sub>On a TV, built for the remote</sub></td>
 </tr>
 <tr>
-<td width="50%" align="center"><img src="docs/screenshots/app-home.webp" alt="Home with the floating menu bar"><br><sub>One floating bar: Home, Movies, Series, Anime, Live TV, Library</sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/app-music.webp" alt="Music with the top song, charts and albums"><br><sub>Music beside your films: charts, albums, live radio and synced lyrics</sub></td>
 <td width="50%" align="center"><img src="docs/screenshots/app-live-hub.webp" alt="Live TV and Sports on one page"><br><sub>Live TV and Sports on one page, with the next big game on top</sub></td>
 </tr>
 <tr>
 <td width="50%" align="center"><img src="docs/screenshots/app-split-screen.webp" alt="Split Screen playing three Blender open movies"><br><sub>Split Screen: up to four streams, the sound follows your pick</sub></td>
 <td width="50%" align="center"><img src="site/shots/anime-home.webp" alt="Home in the Anime look"><br><sub>The Anime look</sub></td>
+</tr>
+<tr>
+<td width="50%" align="center"><img src="docs/screenshots/app-settings.webp" alt="Settings with its six groups and the Appearance page"><br><sub>Settings in six clear groups, with search</sub></td>
+<td width="50%"></td>
 </tr>
 </table>
 
@@ -135,7 +139,7 @@ Web, Android, Android TV and Fire TV, Windows, Mac, Linux, and LG and Samsung TV
 <td width="25%" align="center"><img src="docs/screenshots/app-phone-home.webp" alt="Home on a phone"><br><sub>Home on your phone</sub></td>
 <td width="25%" align="center"><img src="docs/screenshots/app-phone-live-hub.webp" alt="Live TV and Sports on a phone"><br><sub>Live TV and Sports</sub></td>
 <td width="25%" align="center"><img src="docs/screenshots/app-menu.webp" alt="The menu naming every tool"><br><sub>A menu that names everything</sub></td>
-<td width="25%"></td>
+<td width="25%" align="center"><img src="docs/screenshots/app-phone-more.webp" alt="The phone sections bar with More open"><br><sub>Sections that fit, the rest under More</sub></td>
 </tr>
 </table>
 
@@ -201,6 +205,15 @@ We've looked, and we haven't found these in other apps. Every one is live today.
 </details>
 
 <details>
+<summary><b>Music and scores</b></summary>
+
+- **Music** next to your films: charts, artists, albums and live radio, with lyrics that follow the song and a mini player on every screen.
+- **Your own music in full** from Plex, Jellyfin, Emby, Navidrome or files on your device.
+- **Scores and tables** for 22 leagues, with game pages, your teams first and score alerts.
+
+</details>
+
+<details>
 <summary><b>Together</b></summary>
 
 - **Friends.** Choose a username and the name friends see, add friends by username, and see who's online and, if they share it, what they're watching. Requests need their OK, and Remove, Block and Report are one tap away.
@@ -242,7 +255,8 @@ We've looked, and we haven't found these in other apps. Every one is live today.
 <summary><b>Library and sync</b></summary>
 
 - **Library** with watchlist, in progress, watched and your own lists, plus an **airing calendar** and **new-episode alerts** checked on your device.
-- **Sync everywhere** with an optional email account: library, progress, addons, settings and Home layout. A change on your phone shows on your TV almost at once, and offline changes go up the moment you're back.
+- **Sync everywhere** with an optional account: library, progress, addons, settings and Home layout. A change on your phone shows on your TV almost at once, and offline changes go up the moment you're back.
+- **Link a device with a code.** A new phone, TV or computer shows a code, you scan or type it on a device you already use, and your synced keys and addons arrive without typing a password.
 - **Trakt and Simkl** scrobbling, **AniList and MyAnimeList** progress, and **Import from Stremio** in one step.
 - **Downloads** on phones, tablets, Windows and TVs, and a **backup code** that carries everything in one line.
 
@@ -264,9 +278,11 @@ We've looked, and we haven't found these in other apps. Every one is live today.
 
 - **Five looks:** Noir (default), Midnight, Velvet, Sepia and Anime, plus a **colour wheel** that tints everything.
 - **The Anime look** with manga frames, a comic edition and Kitsune, the mascot.
-- **Nine fonts**, text size, top or side menu, and **Ambient Mode**, a screensaver of film art.
+- **Light looks**, Daylight and Linen, for bright rooms, and **Layout Studio** to pick card size, banner and rows and share the layout with a link.
+- **Nine fonts**, text size, **logo effects** on the featured title, and **Ambient Mode**, a screensaver of film art that **Ambient Studio** fills with your own photos and effects.
+- **Menus that fit every screen:** one floating bar, dropdowns instead of long button rows, and whatever does not fit sits under More.
 - **Plugins and themes** from a reviewed, signed gallery.
-- **Twelve languages:** English, Español, Português (Brasil), Français, Deutsch, Italiano, हिन्दी, தமிழ், తెలుగు, বাংলা, മലയാളം and Gagana Samoa.
+- **Thirty-one languages**, from English, Español, Português, Français and Deutsch to हिन्दी, தமிழ், 日本語, العربية and Gagana Samoa. Every seat can have its own.
 
 </details>
 

@@ -6316,7 +6316,8 @@ const isSecretKey = (k) => {
    The row keeps the top-level keys older apps read. `_sync` adds the format version, a timestamp per section and per
    setting, and tombstones for removed watchlist, progress and watched entries, so devices merge instead of overwriting.
    `secrets` is sealed with AES-GCM under a key derived from the account password (PBKDF2-SHA256, per-user salt kept in
-   the sealed box). The key never leaves the device except inside the already sealed "Sign in with your phone" hand-off. */
+   the sealed box). The key never leaves the device except inside the already sealed "Sign in with your phone" hand-off,
+   or sealed to a new device's one-time key by Link a device (DevLink). */
 const SYNC_V = 4, SYNC_V_OLD = 3, SYNC_AV_MAX = 40000;
 const SYNC_SECTIONS = ['cfg', 'watchlist', 'progress', 'watched', 'addons', 'disabled', 'studio', 'taste', 'homeLayout', 'homeArrange', 'avatar', 'lists', 'channels', 'seats', 'secrets'];
 const SYNC_ITEMS = ['watchlist', 'progress', 'watched'];
@@ -6480,10 +6481,10 @@ const Kdf2 = {
     return out.length >= 16 ? new Uint8Array(out.slice(0, 16)) : null;
   },
   async codeKey(code) { const b = this.codeBytes(code); return b ? this.hkdf(b, 'mkc-recovery') : null; },
-  /* a fresh vault: new vault key, wrapped by the password and by a new recovery code */
+  /* a fresh vault: new vault key, wrapped by the password (when the account has one) and by a new recovery code */
   async newVault(uid, wrap) {
     const vault = crypto.getRandomValues(new Uint8Array(32)), code = this.newCode();
-    const wraps = { at: Date.now(), pw: { it: this.ITER, ...(await this.wrapWith(wrap, vault, uid)) }, rc: await this.wrapWith(await this.codeKey(code), vault, uid) };
+    const wraps = { at: Date.now(), ...(wrap ? { pw: { it: this.ITER, ...(await this.wrapWith(wrap, vault, uid)) } } : {}), rc: await this.wrapWith(await this.codeKey(code), vault, uid) };
     return { vault, code, wraps, vid: this.b64(crypto.getRandomValues(new Uint8Array(9))) };
   },
   /* the device keeps the vault key (exportable, so it can be re-wrapped after a password change or handed to a TV) */
@@ -6737,6 +6738,8 @@ const Account = {
       if (lk === 'watchlist') b.forEach((id) => { if (!was.has(id)) { m.add[id] = ts; delete del[id]; } });
     }
     this.saveMeta(); this.schedule();
+    // a Google account's first key makes its vault (2.86)
+    if ((s === 'secrets' || s === 'addons' || s === 'channels') && typeof this.ownVault === 'function') this.ownVault();
   },
   markCfg() {
     let cur; try { cur = JSON.parse(JSON.stringify(CFG)); } catch (e) { return; }
@@ -6754,9 +6757,10 @@ const Account = {
   },
   canWriteSecrets() { const rec = this.keyRec, r = this.remoteSecrets; return !!rec && (this.forceSeal || !SyncCrypt.isBox(r) || (r.salt === rec.salt && !this.boxLocked)); },
   keysSync() { return !!(this.user && CFG.cloudSync !== false && CFG.syncKeys !== false && this.canWriteSecrets()); },
+  /* signs in with a password; Google accounts have none to unlock keys with, so they link devices or use the code */
+  pwUser() { const u = this.user, prov = u && u.app_metadata && u.app_metadata.provider; return !!(u && u.email && (!prov || prov === 'email')); },
   needsUnlock() {
-    const u = this.user, prov = u && u.app_metadata && u.app_metadata.provider;
-    return !!(u && u.email && (!prov || prov === 'email') && this.keyChecked && CFG.cloudSync !== false && CFG.syncKeys !== false && !this.canWriteSecrets());
+    return !!(this.user && (this.pwUser() || (typeof Kdf2 !== 'undefined' && Kdf2.isBox(this.remoteSecrets))) && this.keyChecked && CFG.cloudSync !== false && CFG.syncKeys !== false && !this.canWriteSecrets());
   },
   dirty() {
     const m = this.m();
@@ -7107,7 +7111,7 @@ const Account = {
   },
   /* Settings › Debrid: a device that has no key for the sealed keys (restored session, older phone sign-in) asks for the password once */
   unlockHTML() {
-    if (!this.needsUnlock()) return '';
+    if (!this.needsUnlock() || !this.pwUser()) return '';
     return `<div class="set-row" id="sk-row"><div><b>Unlock synced keys</b><small>Enter your password to unlock synced keys on this device.</small></div><div class="set-ctl"><input class="inp" type="password" id="sk-pass" autocomplete="current-password" placeholder="Password" aria-label="Account password" style="width:min(200px,100%)"><button class="btn btn-ghost btn-sm" type="button" id="sk-go" data-nav>Unlock</button></div></div>`;
   },
   bindUnlock() {
@@ -7185,9 +7189,9 @@ const Account = {
         <div class="acct-who"><button type="button" class="av-pick" id="acc-avatar" aria-label="Change profile picture">${this.avatarHTML(true)}<span class="av-edit"><i data-lucide="camera"></i></span></button><div><b>${esc(this.name())}</b><small>${esc(u.email || '')} · signed in with ${esc(prov)}</small><span class="av-acts"><button type="button" class="linkish" id="acc-avatar2">${Store.get('avatar', null) ? 'Change photo' : 'Add a profile photo'}</button>${Store.get('avatar', null) ? ' · <button type="button" class="linkish" id="acc-avatar-rm">Remove</button>' : ''}</span></div></div>
         <input type="file" id="acc-avatar-file" accept="image/*" hidden>
         <p class="acct-note">${syncLine}</p>
-        ${this.needsUnlock() ? '<p class="acct-note">Synced keys are locked on this device. Unlock them in Settings › Debrid.</p>' : ''}
+        ${this.needsUnlock() ? `<p class="acct-note">Synced keys are locked on this device. Unlock them in Settings › Debrid.</p>${typeof DevLink !== 'undefined' && Kdf2.isBox(this.remoteSecrets) ? '<div class="inrow"><button class="btn btn-prime" type="button" id="acc-link-take"><i data-lucide="link"></i>Link this device</button></div>' : ''}` : ''}
         ${this.recovering ? `<label class="fld"><span>New password</span><input class="inp" id="acc-newpass" type="password" autocomplete="new-password"></label><div class="inrow"><button class="btn btn-prime" type="button" id="acc-setpass">Save new password</button></div>` : ''}
-        <div class="inrow"><button class="btn btn-ghost" type="button" id="acc-sync"><i data-lucide="refresh-cw"></i>Sync now</button><button class="btn btn-ghost" type="button" id="acc-out"><i data-lucide="log-out"></i>Sign out</button><button class="btn btn-ghost" type="button" id="acc-outall">Sign out everywhere</button></div>
+        <div class="inrow"><button class="btn btn-ghost" type="button" id="acc-sync"><i data-lucide="refresh-cw"></i>Sync now</button>${typeof DevLink !== 'undefined' && DevLink.canGive() ? '<button class="btn btn-ghost" type="button" id="acc-link-give"><i data-lucide="link"></i>Link a new device</button>' : ''}<button class="btn btn-ghost" type="button" id="acc-out"><i data-lucide="log-out"></i>Sign out</button><button class="btn btn-ghost" type="button" id="acc-outall">Sign out everywhere</button></div>
       </div>`;
     }
     const web = this.canRedirect();
@@ -7212,6 +7216,7 @@ const Account = {
     on('#acc-save', () => this.saveProject()); on('#acc-forget', () => this.forgetProject());
     on('#acc-in', () => this.signIn()); on('#acc-up', () => this.signUp()); on('#acc-reset', () => this.reset());
     on('#acc-out', () => this.signOut()); on('#acc-outall', () => this.signOut(true)); on('#acc-sync', () => this.pull({ force: true }).then(() => this.push({ force: true }))); on('#acc-setpass', () => this.newPassword());
+    on('#acc-link-take', () => DevLink.openTake()); on('#acc-link-give', () => DevLink.openGive());
     const pass = $('#acc-pass'); if (pass) pass.addEventListener('keydown', (e) => { if (e.key === 'Enter') this.signIn(); });
     if (typeof TvLogin !== 'undefined') TvLogin.bind();
   },
@@ -9647,6 +9652,7 @@ const Deep = {
     if (h.startsWith('play?')) { history.replaceState(null, '', location.pathname); const q = new URLSearchParams(h.slice(5)); if (await this.askPlay(q)) await this.play(q); }
     else if (h.startsWith('remote=')) { const c = h.slice(7).toUpperCase(); if (RM_CODE.test(c)) { location.replace(Remote.link(c)); return; } history.replaceState(null, '', location.pathname); }
     else if (h.startsWith('login=')) { history.replaceState(null, '', location.pathname); const [code, key, ver] = h.slice(6).split('.'); TvLogin.join((code || '').toUpperCase(), key, ver); }
+    else if (h.startsWith('keylink=')) { history.replaceState(null, '', location.pathname); if (typeof DevLink !== 'undefined') DevLink.fromLink(h.slice(8)); }
     else if (h.startsWith('lssend=')) { history.replaceState(null, '', location.pathname); LayStudio.sendLink(h.slice(7)); }
     else if (h.startsWith('ambsend=')) { history.replaceState(null, '', location.pathname); AmbStudio.sendLink(h.slice(8)); }
     else if (h === 'ambient') { history.replaceState(null, '', location.pathname); const t = (n) => { if ((document.body.classList.contains('intro-on') || !S.booted) && n < 40) setTimeout(() => t(n + 1), 500); else AmbStudio.open(); }; t(0); }
@@ -9675,7 +9681,7 @@ const Deep = {
   },
   async play(q) {},
 };
-addEventListener('hashchange', () => { if (/^#(play\?|resume\?|remote=|party=|mirror=|login=|layout=|lssend=|ambsend=|ambient$|studio$)/.test(location.hash)) Deep.handle(); });
+addEventListener('hashchange', () => { if (/^#(play\?|resume\?|remote=|party=|mirror=|login=|keylink=|layout=|lssend=|ambsend=|ambient$|studio$)/.test(location.hash)) Deep.handle(); });
 
 COMMANDS.push(
   { label: 'Start or join a watch party', icon: 'users', run: () => Party.openPanel() },
@@ -11197,7 +11203,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.83.8';
+const APP_VERSION = '2.84.0';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -23991,6 +23997,10 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.84.0', date: '2026-11-17', items: [
+    ['new', 'Link a phone, TV or computer without a password', 'A new device can now get your synced keys and addons from one that already has them. It shows a code, you scan or type it on the other device, and it is done. Accounts that sign in with Google now sync keys and addon links too.'],
+    ['better', 'No more sliding menus', 'Tab and chip rows in Music, Library, Live TV and Anime now show what fits and keep the rest under More. On TVs, long rows wrap onto a second line, so nothing is cut off at the edge.'],
+  ] },
   { v: '2.83.8', date: '2026-11-17', items: [
     ['better', 'Sliders work with the remote', 'On a TV, Left and Right now move a slider in Settings. Up and Down go to the next setting.'],
     ['better', 'Film trailers stay in MKCinema on TVs', 'Film trailers now play inside MKCinema on every TV, so the Back button closes the film trailer and returns you to where you were.'],
@@ -36549,7 +36559,7 @@ MkTidy.init();
     if (playing()) { L.held = true; return; }
     Account.pull({ quiet: true });
   };
-  const drop = () => { const c = L.ch; L.ch = null; L.key = ''; if (c) { try { Account.client.removeChannel(c); } catch (e) { /* gone */ } } };
+  const drop = () => { const c = L.ch; L.ch = null; L.key = ''; L.up = false; if (c) { try { Account.client.removeChannel(c); } catch (e) { /* gone */ } } };
   const ensure = () => {
     const c = Account.client, u = Account.user, want = c && u && CFG.cloudSync !== false && typeof c.channel === 'function' ? `${u.id}` : '';
     if (want === L.key) return;
@@ -36557,7 +36567,8 @@ MkTidy.init();
     try {
       const ch = c.channel(`mkc-sync:${want}`, { config: { private: true, broadcast: { self: false } } });
       ch.on('broadcast', { event: 'row' }, (m) => { const p = m && m.payload; if (p && p.d !== dev) nudged(typeof p.at === 'string' ? p.at : ''); });
-      ch.subscribe((st) => { if (st === 'SUBSCRIBED') Account.pull({ quiet: true, soon: true, every: 5000 }); });
+      ch.on('broadcast', { event: 'link' }, (m) => { if (typeof DevLink !== 'undefined') DevLink.onMsg(m && m.payload); }); // 2.86 Link a device
+      ch.subscribe((st) => { L.up = st === 'SUBSCRIBED'; if (st === 'SUBSCRIBED') Account.pull({ quiet: true, soon: true, every: 5000 }); });
       L.ch = ch; L.key = want;
     } catch (e) { L.ch = null; L.key = ''; }
   };
@@ -36604,6 +36615,8 @@ MkTidy.init();
     }
     return r;
   };
+  // other features talk to the account's own devices on the same private channel (2.86 Link a device)
+  Account.liveSend = (event, payload) => { ensure(); if (!L.ch || !L.up) return false; try { L.ch.send({ type: 'broadcast', event, payload }).catch(() => {}); return true; } catch (e) { return false; } };
   setInterval(() => { ensure(); if (L.held && !playing()) { L.held = false; nudged(''); } }, 3000);
   ensure();
 })();
@@ -36819,9 +36832,11 @@ MkTidy.init();
 
   /* ---- recovery code dialog ---- */
   const showCode = (code) => {
+    // accounts without a password (Google) keep the code for the day no linked device is left
+    const sub = $('#rcLayer .sub'); if (sub) sub.textContent = emailUser() ? 'If you ever forget your password, this code brings back your synced keys. Keep it somewhere safe, like a password manager. It can\'t be shown again, and nobody else can recover it for you.' : 'If you ever lose every device that has your keys, this code brings them back. Keep it somewhere safe, like a password manager. It can\'t be shown again, and nobody else can recover it for you.';
     $('#rcCode').innerHTML = String(code).replace(/[^A-Z0-9-]/g, '').split('-').join('-<wbr>'); openLayer('rcLayer');
     $('#rcCopy').onclick = () => { try { navigator.clipboard.writeText(code).then(() => toast('Recovery code copied', 'ok')); } catch (e) { toast('Select the code and copy it', 'info'); } };
-    $('#rcSave').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([`MKCinema recovery code\n\n${code}\n\nAccount: ${(A.user && A.user.email) || ''}\nKeep this safe. It brings back your synced keys if you forget your password.\n`], { type: 'text/plain' })); a.download = 'MKCinema-recovery-code.txt'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); };
+    $('#rcSave').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([`MKCinema recovery code\n\n${code}\n\nAccount: ${(A.user && A.user.email) || ''}\nKeep this safe. It brings back your synced keys ${emailUser() ? 'if you forget your password' : 'if no device that has them is left'}.\n`], { type: 'text/plain' })); a.download = 'MKCinema-recovery-code.txt'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); };
     $('#rcDone').onclick = () => closeLayer('rcLayer');
     $$('#rcLayer [data-close]').forEach((b) => { b.onclick = () => closeLayer('rcLayer'); });
     setTimeout(() => { try { $('#rcDone').focus(); } catch (e) { /* gone */ } }, 60);
@@ -36876,7 +36891,7 @@ MkTidy.init();
     this.kdfLost = { uid, d };
   };
   const pull1 = A.pull;
-  A.pull = function () { return pull1.apply(this, arguments).then((r) => (this.kdfUp && !this.kdfBusy ? this.upgrade().then(() => r) : r)); };
+  A.pull = function () { return pull1.apply(this, arguments).then((r) => (this.kdfUp && !this.kdfBusy ? this.upgrade().then(() => r) : r)).then((r) => { try { this.ownVault(); } catch (e) { /* next pull */ } return r; }); };
 
   /* ---- move an account to format 2: new vault, saved first, then the login key replaces the password ---- */
   A.upgrade = async function () {
@@ -36901,6 +36916,27 @@ MkTidy.init();
       await Kdf2.markKnown(up.d.email);
       if (code) showCode(code);
     } catch (e) { /* tried again at the next sign-in */ } finally { this.kdfBusy = false; rerenderSettings(); }
+  };
+
+  /* ---- accounts without a password (Google): the first device with keys makes the vault, wrapped only by a recovery
+     code; the account's other devices get it with Link this device, or with the code (2.86) ---- */
+  const hasKeys = () => {
+    const full = (k) => { const v = Store.get(k, null); return !!(v && typeof v === 'object' && Object.keys(v).some((x) => x !== 'order' && x !== 'off' && v[x])); };
+    const ch = Store.get('channels', null);
+    return full('vault') || full('keys') || (Store.get('addons', []) || []).some((u) => typeof u === 'string' && keyedAddon(u)) || !!(ch && Array.isArray(ch.lists) && ch.lists.some((l) => l && l.pass));
+  };
+  A.ownVault = function () {
+    if (this.vaultBusy || this.kdfBusy || !this.user || emailUser() || !this.loadedOnce || !this.keyChecked || this.newer || this.applying) return;
+    if (CFG.cloudSync === false || CFG.syncKeys === false || this.keyRec || SyncCrypt.isBox(this.remoteSecrets) || !(window.crypto && crypto.subtle) || !hasKeys()) return;
+    this.vaultBusy = true; const uid = this.user.id;
+    (async () => {
+      await this.pull({ force: true, quiet: true }); // another device may have made one a moment ago
+      if (!this.user || this.user.id !== uid || this.keyRec || SyncCrypt.isBox(this.remoteSecrets)) return;
+      const v = await Kdf2.newVault(uid, null);
+      this.keyRec = await Kdf2.keep(uid, v.vid, v.vault, v.wraps); this.secCache = null; this.forceSeal = true; this.keyChecked = true; bump();
+      await this.push({ force: true });
+      if (Kdf2.isBox(this.remoteSecrets) && this.remoteSecrets.vid === v.vid) showCode(v.code);
+    })().catch(() => {}).finally(() => { this.vaultBusy = false; rerenderSettings(); try { this.render(); } catch (e) { /* closed */ } });
   };
 
   /* ---- unlock on a device with a restored session ---- */
@@ -36933,8 +36969,8 @@ MkTidy.init();
   };
   /* ---- start over: a new vault with this device's keys (keys only the old vault held are gone) ---- */
   A.startFresh = async function () {
-    const lost = this.kdfLost, uid = this.user && this.user.id; if (!uid || !lost || !lost.d) throw new Error('Enter your password first');
-    const v = await Kdf2.newVault(uid, lost.d.wrap);
+    const lost = this.kdfLost, uid = this.user && this.user.id; if (!uid || (emailUser() && !(lost && lost.d))) throw new Error('Enter your password first');
+    const v = await Kdf2.newVault(uid, lost && lost.d ? lost.d.wrap : null);
     this.keyRec = await Kdf2.keep(uid, v.vid, v.vault, v.wraps); this.secCache = null; this.kdfLost = null; this.forceSeal = true; this.keyChecked = true; bump();
     await this.push({ force: true });
     showCode(v.code);
@@ -36991,14 +37027,15 @@ MkTidy.init();
   const row = (title, sub, ctl) => `<div class="set-row"><div><b>${title}</b><small>${sub}</small></div><div class="set-ctl">${ctl}</div></div>`;
   const uh1 = A.unlockHTML, bu1 = A.bindUnlock;
   A.unlockHTML = function () {
-    const v2box = Kdf2.isBox(this.remoteSecrets);
+    const v2box = Kdf2.isBox(this.remoteSecrets), link = typeof DevLink !== 'undefined';
     if (this.user && (this.kdfLost || (v2box && this.needsUnlock()))) {
-      const pw = this.kdfLost ? '' : uh1.call(this);
-      return `${pw}${row('Use your recovery code', 'Changed your password? Your recovery code brings your synced keys back.', '<input class="inp" type="text" id="rc-in" autocomplete="off" spellcheck="false" placeholder="MKC-…" aria-label="Recovery code" style="width:min(240px,100%)"><button class="btn btn-ghost btn-sm" type="button" id="rc-go" data-nav>Bring back</button>')}${this.kdfLost ? row('No recovery code?', 'Start fresh with the keys on this device. Keys saved only in your account are removed.', '<button class="btn btn-ghost btn-sm" type="button" id="rc-fresh" data-nav>Start fresh</button>') : ''}`;
+      const pw = this.kdfLost ? '' : uh1.call(this), pwu = emailUser();
+      const ln = link && v2box ? row('Link this device', 'Get your keys from a phone or computer that already has them. No password needed.', '<button class="btn btn-ghost btn-sm" type="button" id="dvl-take" data-nav>Show code</button>') : '';
+      return `${pw}${ln}${row('Use your recovery code', pwu ? 'Changed your password? Your recovery code brings your synced keys back.' : 'No other device has your keys? Your recovery code brings them back.', '<input class="inp" type="text" id="rc-in" autocomplete="off" spellcheck="false" placeholder="MKC-…" aria-label="Recovery code" style="width:min(240px,100%)"><button class="btn btn-ghost btn-sm" type="button" id="rc-go" data-nav>Bring back</button>')}${this.kdfLost || !pwu ? row('No recovery code?', 'Start fresh with the keys on this device. Keys saved only in your account are removed.', '<button class="btn btn-ghost btn-sm" type="button" id="rc-fresh" data-nav>Start fresh</button>') : ''}`;
     }
     const base = uh1.call(this); if (base) return base;
     const rec = this.keyRec;
-    if (rec && rec.v === 2 && this.keysSync()) return row('Recovery code', 'Lost your code? Make a new one. The old code stops working.', '<button class="btn btn-ghost btn-sm" type="button" id="rc-new" data-nav>New recovery code</button>');
+    if (rec && rec.v === 2 && this.keysSync()) return (link ? row('Link a new device', 'Send your synced keys to a new phone, TV or computer, with no password to type there.', '<button class="btn btn-ghost btn-sm" type="button" id="dvl-give" data-nav>Link a device</button>') : '') + row('Recovery code', 'Lost your code? Make a new one. The old code stops working.', '<button class="btn btn-ghost btn-sm" type="button" id="rc-new" data-nav>New recovery code</button>');
     return '';
   };
   A.bindUnlock = function () {
@@ -37007,11 +37044,264 @@ MkTidy.init();
     act('#rc-go', () => this.recover(($('#rc-in') || {}).value || ''));
     act('#rc-fresh', () => (confirm('Start fresh? Keys saved only in your account (not on this device) will be removed.') ? this.startFresh() : ''));
     act('#rc-new', () => this.newRecoveryCode());
+    const lt = $('#dvl-take'); if (lt) lt.onclick = () => DevLink.openTake();
+    const lg = $('#dvl-give'); if (lg) lg.onclick = () => DevLink.openGive();
     const i = $('#rc-in'); if (i) i.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('#rc-go').click(); } });
   };
 })();
 </script>
 <!-- mk-kdf2:end -->
+<!-- mk-devlink:start -->
+<style id="mk-devlink-css">
+.dvl-qr{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.dvl-qr .qr-wrap{flex:none;margin:0}
+.dvl-qr>div:last-child{flex:1 1 200px;min-width:0}
+.dvl-code{font:700 calc(26px * var(--ts,1))/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.12em;margin:2px 0 8px;overflow-wrap:anywhere}
+.dvl-in{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.dvl-in .inp{flex:1 1 170px;min-width:0;text-transform:uppercase;letter-spacing:.08em}
+.dvl-cam{display:block;width:100%;max-height:46vh;border-radius:12px;background:#000;object-fit:cover;margin-top:12px}
+.dvl-hint{flex-wrap:wrap}
+.dvl-hint span:first-of-type{flex:1 1 220px;min-width:0}
+</style>
+<script id="mk-devlink">
+'use strict';
+/* ---------------- Link a device (2.86) ----------------
+   A device that already holds the account's synced keys hands them to a new one, so nobody types a password on a TV
+   and accounts that sign in with Google (they have no password to unlock keys with) get their keys everywhere.
+   1. The new device makes a one-time key pair and shows a code: the first 40 bits of a hash of its public key, as
+      8 letters and digits, plus a QR code of the same code.
+   2. It asks on the account's private sync channel, which only devices signed in to the same account can join.
+   3. The device that has the keys gets the code from the person (typed, scanned in the app, or from the QR link),
+      finds the request whose public key matches it, and sends the vault key sealed to that public key
+      (ECDH P-256 -> HKDF-SHA256 -> AES-GCM). The server only carries public keys and sealed bytes.
+   4. The new device keeps the key only after it has opened the account's sealed keys with it. */
+const DevLink = {
+  TTL: 10 * 60000,
+  me: null, // this device, asking: { id, uid, priv, pub, code, until, t, busy }
+  asks: new Map(), // requests heard from the account's other devices: code -> { id, pub, name, at }
+  give: null, // this device, giving: { id, done }
+  hinted: new Set(), cam: null, mode: '',
+  ok: () => !!(window.crypto && crypto.subtle && typeof Kdf2 !== 'undefined' && typeof Account !== 'undefined'),
+  b32(bytes) { let bits = 0, n = 0, out = ''; for (const x of bytes) { n = ((n << 8) | x) & 0xffff; bits += 8; while (bits >= 5) { out += Kdf2.ALPHA[(n >> (bits - 5)) & 31]; bits -= 5; } } return out; },
+  async codeOf(pub) { return this.b32((await Kdf2.hash(`mkc-link|${pub}`)).slice(0, 5)); },
+  norm(s) { s = String(s || ''); const m = /keylink=([0-9A-Za-z-]+)/.exec(s); if (m) s = m[1]; return s.toUpperCase().replace(/[^0-9A-Z]/g, '').replace(/[IL]/g, '1').replace(/O/g, '0'); },
+  fmt: (c) => `${c.slice(0, 4)}-${c.slice(4)}`,
+  name() {
+    const ua = navigator.userAgent;
+    if (IS_TV) return 'TV';
+    if (/iPhone/.test(ua)) return 'iPhone';
+    if (/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'iPad';
+    if (/Android/.test(ua)) return /Mobile/.test(ua) ? 'Android phone' : 'Android tablet';
+    if (/Macintosh|Mac OS X/.test(ua)) return 'Mac';
+    if (/Windows/.test(ua)) return 'Windows computer';
+    if (/CrOS/.test(ua)) return 'Chromebook';
+    if (/Linux/.test(ua)) return 'Linux computer';
+    return 'Browser';
+  },
+  /* this device holds the account's vault key and can hand it on */
+  canGive() { const A = Account, rec = A.keyRec; return !!(A.user && rec && rec.v === 2 && A.keysSync()); },
+  /* the account has sealed keys this device cannot open */
+  needs() { const A = Account; return !!(A.user && Kdf2.isBox(A.remoteSecrets) && CFG.cloudSync !== false && CFG.syncKeys !== false && !A.canWriteSecrets()); },
+  send(m) { return typeof Account.liveSend === 'function' && Account.liveSend('link', m); },
+  async secret(priv, peer, askPub, givePub, uid, id) {
+    const pk = await crypto.subtle.importKey('raw', b64url.dec(peer), { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+    const bits = new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: pk }, priv, 256));
+    return Kdf2.aes(await Kdf2.hkdf(bits, `mkc-link|${uid}|${id}|${askPub}|${givePub}`));
+  },
+  async pair() {
+    const kp = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, false, ['deriveBits']);
+    return { priv: kp.privateKey, pub: b64url.enc(new Uint8Array(await crypto.subtle.exportKey('raw', kp.publicKey))) };
+  },
+  /* messages on the account's private channel (live sync block) */
+  onMsg(p) {
+    if (!p || typeof p !== 'object' || typeof p.id !== 'string' || p.id.length > 40) return;
+    if (p.t === 'ask') this.heard(p).catch(() => {});
+    else if (p.t === 'key' && this.me && p.id === this.me.id) this.take(p);
+    else if ((p.t === 'ok' || p.t === 'fail') && this.give && p.id === this.give.id) this.give.done(p);
+  },
+  async heard(p) {
+    if (typeof p.pub !== 'string' || p.pub.length < 80 || p.pub.length > 120 || !this.ok()) return;
+    const code = await this.codeOf(p.pub), now = Date.now();
+    for (const [c, a] of this.asks) if (now - a.at > this.TTL) this.asks.delete(c);
+    this.asks.set(code, { id: p.id, pub: p.pub, name: typeof p.name === 'string' ? p.name.slice(0, 40) : '', at: now });
+    // a device that could answer says so once per request, unless the linking screen is already open
+    if (!this.hinted.has(p.id) && this.canGive() && !this.give && !this.open()) { this.hinted.add(p.id); this.hint(); }
+  },
+  open() { const el = $('#dvlLayer'); return !!(el && !el.hidden); },
+  hint() {
+    const box = $('#toasts'); if (!box || $('#toasts .dvl-hint')) return;
+    const el = document.createElement('div'); el.className = 'toast glass-solid t-info dvl-hint'; el.setAttribute('role', 'status');
+    el.innerHTML = '<i data-lucide="link"></i><span>Another device wants to link to your account.</span><span class="as-b"><button class="btn btn-prime btn-sm" type="button" data-nav data-dvl="go">Link it</button><button class="btn btn-ghost btn-sm" type="button" data-nav data-dvl="no">Not now</button></span>';
+    box.appendChild(el); icons();
+    el.querySelector('[data-dvl="go"]').onclick = () => { el.remove(); this.openGive(); };
+    el.querySelector('[data-dvl="no"]').onclick = () => el.remove();
+    setTimeout(() => el.remove(), 20000);
+  },
+
+  /* ---- the new device ---- */
+  layer() {
+    $$('#toasts .dvl-hint, #toasts .as-lock').forEach((x) => x.remove()); // the screen itself says it now
+    X8.layer('dvlLayer', { label: 'Link a device', icon: 'link', eyebrow: 'Your devices' });
+    X8.onClose.dvlLayer = () => { this.stop(); this.camStop(); this.mode = ''; };
+    return X8.body('dvlLayer');
+  },
+  openTake() {
+    if (!Account.user) { toast('Sign in first', 'err'); return; }
+    this.layer(); this.mode = 'take'; X8.open('dvlLayer'); this.start();
+  },
+  async start() {
+    this.stop();
+    if (!this.ok()) { this.paintTake('nocrypto'); return; }
+    let kp; try { kp = await this.pair(); } catch (e) { this.paintTake('nocrypto'); return; }
+    const me = this.me = { id: rid(12), uid: Account.user.id, ...kp, code: await this.codeOf(kp.pub), until: Date.now() + this.TTL, t: 0, busy: false };
+    const tick = () => {
+      if (this.me !== me) return;
+      if (Date.now() > me.until) { this.stop(); this.paintTake('expired'); return; }
+      if (!me.busy && !this.needs() && Account.canWriteSecrets()) { this.stop(); this.paintTake('done'); return; } // unlocked another way
+      this.send({ t: 'ask', id: me.id, pub: me.pub, name: this.name() });
+      me.t = setTimeout(tick, 3000);
+    };
+    this.paintTake(); tick();
+  },
+  stop() { if (this.me) clearTimeout(this.me.t); this.me = null; },
+  paintTake(st) {
+    const b = X8.body('dvlLayer'); if (!b || this.mode !== 'take') return;
+    const me = this.me, rc = '<p class="tour-note">No other device has your keys? <button class="linkish" type="button" data-nav id="dvl-rc">Use your recovery code</button></p>';
+    let h = '<h2 class="x8-h">Link this device</h2>';
+    if (st === 'nocrypto') h += `<p class="sc-p">This browser can’t link devices. Use your recovery code in Settings › Debrid instead.</p>${rc}`;
+    else if (st === 'expired') h += `<p class="sc-p">That code expired.</p><div class="inrow"><button class="btn btn-prime" type="button" data-nav id="dvl-again"><i data-lucide="refresh-cw"></i>New code</button></div>`;
+    else if (st === 'done') h += '<p class="sc-p">This device is linked. Your keys and addons are here now.</p><div class="inrow"><button class="btn btn-prime" type="button" data-nav data-x8close>Done</button></div>';
+    else if (st === 'fail') h += `<p class="sc-p">That didn’t work. The other device may have older keys. Sync it, then try again.</p><div class="inrow"><button class="btn btn-prime" type="button" data-nav id="dvl-again"><i data-lucide="refresh-cw"></i>New code</button></div>${rc}`;
+    else if (!me) h += '<p class="sc-p">Getting a code ready…</p>';
+    else {
+      let qr = ''; const link = appLink(`keylink=${me.code}`); if (link) { try { qr = `<div class="qr-wrap sm">${QR.svg(link)}</div>`; } catch (e) { qr = ''; } }
+      h += `<p class="sc-p">Use a phone or computer that already has your keys and is signed in to the same account. Scan this code with it, or choose Link a new device in Settings › Account and type the code.</p>
+        <div class="dvl-qr">${qr}<div><div class="dvl-code" translate="no">${esc(this.fmt(me.code))}</div><p class="tour-note">The code works for 10 minutes. Your keys travel sealed, and only this device can open them.</p></div></div>${rc}`;
+    }
+    b.innerHTML = h; icons();
+    const again = $('#dvl-again'); if (again) again.onclick = () => this.start();
+    const r = $('#dvl-rc'); if (r) r.onclick = () => { X8.close('dvlLayer'); openSettings('debrid'); setTimeout(() => { const i = $('#rc-in'); if (i) { try { i.scrollIntoView({ block: 'center' }); } catch (e) { /* old browser */ } i.focus(); } }, 150); };
+    if (IS_TV) { try { Nav.settle(); } catch (e) { /* no remote focus here */ } }
+  },
+  async take(p) {
+    const me = this.me, A = Account; if (!me || me.busy || !A.user || A.user.id !== me.uid) return;
+    me.busy = true;
+    try {
+      if (typeof p.pub !== 'string' || typeof p.iv !== 'string' || typeof p.ct !== 'string') throw new Error('incomplete');
+      const key = await this.secret(me.priv, p.pub, me.pub, p.pub, me.uid, me.id);
+      const got = JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64url.dec(p.iv), additionalData: Kdf2.aad(me.uid, 'link') }, key, b64url.dec(p.ct))));
+      if (!got || typeof got.vid !== 'string' || typeof got.r !== 'string') throw new Error('incomplete');
+      const raw = b64url.dec(got.r);
+      // only a key that opens this account's sealed keys is kept
+      if (!Kdf2.isBox(A.remoteSecrets) || A.remoteSecrets.vid !== got.vid) await A.pull({ force: true, quiet: true });
+      const box = A.remoteSecrets;
+      if (!Kdf2.isBox(box) || box.vid !== got.vid) throw new Error('older keys');
+      if (!(await SyncCrypt.open({ uid: me.uid, v: 2, vid: got.vid, salt: `v2:${got.vid}`, wraps: box.wraps, key: await Kdf2.aes(raw) }, box))) throw new Error('wrong key');
+      // a password reset left the vault wrapped by the old password: the new one (typed here earlier) wraps it again
+      const lost = A.kdfLost; let wraps = box.wraps, rewrap = false;
+      if (lost && lost.d && lost.uid === me.uid) { wraps = { ...box.wraps, at: SyncClock.now(), pw: { it: Kdf2.ITER, ...(await Kdf2.wrapWith(lost.d.wrap, raw, me.uid)) } }; rewrap = true; }
+      A.keyRec = await Kdf2.keep(me.uid, got.vid, raw, wraps); A.secCache = null; A.kdfLost = null; A.keyChecked = true; A.boxLocked = false;
+      this.send({ t: 'ok', id: me.id }); this.stop();
+      A.unlocking = true; try { await A.pull({ force: true, quiet: true }); } finally { A.unlocking = false; }
+      if (rewrap) { A.forceSeal = true; const m = A.m(); m.at.secrets = Math.max(SyncClock.now(), (m.rat.secrets || 0) + 1); A.saveMeta(); await A.push({ force: true }); }
+      this.paintTake('done'); if (!this.open()) toast('This device is linked. Your keys and addons are here now', 'ok', 6000);
+      try { A.render(); if (!$('#settings').hidden && typeof renderSettingsBody === 'function') renderSettingsBody(); } catch (e) { /* closed */ }
+    } catch (e) {
+      this.send({ t: 'fail', id: me.id }); if (this.me === me) { this.stop(); this.paintTake('fail'); }
+    }
+  },
+
+  /* ---- the device that has the keys ---- */
+  openGive(code, ask) {
+    this.layer(); this.mode = 'give'; X8.open('dvlLayer'); this.paintGive(code || '');
+    if (code && ask) this.confirm(code);
+  },
+  paintGive(code) {
+    const b = X8.body('dvlLayer'); if (!b || this.mode !== 'give') return;
+    const scan = 'BarcodeDetector' in window && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && !IS_TV;
+    b.innerHTML = `<h2 class="x8-h">Link a new device</h2><p class="sc-p">On the new phone, TV or computer, sign in to the same account and choose Link this device. Then type the code it shows${scan ? ', or scan its QR code' : ''}.</p>
+      <div class="dvl-in" id="dvl-row"><input class="inp mono" id="dvl-code" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX" aria-label="Code on the new device" value="${esc(code ? this.fmt(this.norm(code)) : '')}"><button class="btn btn-prime" type="button" data-nav id="dvl-go"><i data-lucide="link"></i>Link</button>${scan ? '<button class="btn btn-ghost" type="button" data-nav id="dvl-scan"><i data-lucide="scan-line"></i>Scan</button>' : ''}</div>
+      <p class="tour-note" id="dvl-msg" role="status"></p>`;
+    icons();
+    const inp = $('#dvl-code'), go = () => this.confirm(inp.value);
+    $('#dvl-go').onclick = go;
+    inp.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); go(); } });
+    const sc = $('#dvl-scan'); if (sc) sc.onclick = () => this.scan();
+    setTimeout(() => { try { inp.focus(); } catch (e) { /* gone */ } }, 60);
+  },
+  say(t) { const el = $('#dvl-msg'); if (el) el.textContent = t; },
+  async find(code) {
+    if (code.length !== 8) throw new Error('Type the 8 letters and numbers shown on the new device.');
+    if (!this.canGive()) throw new Error(Account.keyRec && Account.keyRec.v !== 2 ? 'This device keeps your keys in an older format. Sign out and in again here, then try once more.' : 'This device has no synced keys to share. Unlock them here first.');
+    let a = this.asks.get(code);
+    // the new device asks every 3 s: a code no request matches fails after 3.5 s once others are heard, else after 12 s
+    for (let i = 0; i < 24 && !(a && Date.now() - a.at < 15000) && !(i >= 7 && this.asks.size); i++) { await sleep(500); a = this.asks.get(code); }
+    if (!a || Date.now() - a.at > this.TTL) throw new Error('No device is showing that code right now. Check the code, and keep the new device on its Link this device screen. Both need to be signed in to the same account.');
+    return a;
+  },
+  async confirm(raw) {
+    const code = this.norm(raw), btn = $('#dvl-go'); if (btn) btn.disabled = true;
+    this.say('Looking for the new device…');
+    try {
+      const a = await this.find(code);
+      const b = X8.body('dvlLayer'); if (!b || this.mode !== 'give') return;
+      b.innerHTML = `<h2 class="x8-h">Send your keys to this device?</h2><p class="sc-p">Your synced keys and addons go to the device showing this code. Only continue if it is in front of you.</p>
+        <div class="dvl-code" translate="no">${esc(this.fmt(code))}</div>${a.name ? `<p class="tour-note" translate="no">${esc(a.name)}</p>` : ''}
+        <div class="inrow"><button class="btn btn-prime" type="button" data-nav id="dvl-yes"><i data-lucide="link"></i>Link it</button><button class="btn btn-ghost" type="button" data-nav id="dvl-no">Cancel</button></div><p class="tour-note" id="dvl-msg" role="status"></p>`;
+      icons();
+      $('#dvl-no').onclick = () => X8.close('dvlLayer');
+      $('#dvl-yes').onclick = async () => {
+        $('#dvl-yes').disabled = true; this.say('Sending…');
+        try {
+          const r = await this.hand(a);
+          if (!r) throw new Error('The new device did not answer. Keep its code on screen and try again.');
+          if (r.t !== 'ok') throw new Error('The new device could not use the keys. Sync this device, then try again.');
+          this.asks.delete(code);
+          b.innerHTML = '<h2 class="x8-h">Linked</h2><p class="sc-p">The new device has your keys and addons now.</p><div class="inrow"><button class="btn btn-prime" type="button" data-nav data-x8close>Done</button></div>';
+        } catch (e) { this.say(e.message || String(e)); const y = $('#dvl-yes'); if (y) y.disabled = false; }
+      };
+      setTimeout(() => { try { $('#dvl-yes').focus(); } catch (e) { /* gone */ } }, 60);
+    } catch (e) { this.say(e.message || String(e)); if (btn) btn.disabled = false; }
+  },
+  async hand(a) {
+    const A = Account, uid = A.user.id, rec = A.keyRec, kp = await this.pair();
+    const key = await this.secret(kp.priv, a.pub, a.pub, kp.pub, uid, a.id), iv = crypto.getRandomValues(new Uint8Array(12));
+    const body = new TextEncoder().encode(JSON.stringify({ vid: rec.vid, r: b64url.enc(await Kdf2.raw(rec)) }));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: Kdf2.aad(uid, 'link') }, key, body));
+    const answer = new Promise((res) => { this.give = { id: a.id, done: res }; setTimeout(() => res(null), 20000); });
+    if (!this.send({ t: 'key', id: a.id, pub: kp.pub, iv: b64url.enc(iv), ct: b64url.enc(ct) })) { this.give = null; throw new Error('Could not reach your account. Check the connection and try again.'); }
+    try { return await answer; } finally { this.give = null; }
+  },
+  async scan() {
+    if (this.cam) return;
+    let stream; try { stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }); } catch (e) { this.say('MKCinema could not use the camera. Type the code instead.'); return; }
+    const row = $('#dvl-row'); if (!row || this.mode !== 'give') { stream.getTracks().forEach((t) => t.stop()); return; }
+    this.cam = stream;
+    const v = document.createElement('video'); v.className = 'dvl-cam'; v.muted = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.srcObject = stream;
+    row.after(v); v.play().catch(() => {});
+    let det; try { det = new BarcodeDetector({ formats: ['qr_code'] }); } catch (e) { this.camStop(); this.say('This browser can’t scan codes. Type the code instead.'); return; }
+    this.say('Point the camera at the code on the new device.');
+    const loop = async () => {
+      if (this.cam !== stream) return;
+      try { const hit = (await det.detect(v)).map((x) => /keylink=([0-9A-Za-z-]{8,9})/.exec(x.rawValue || '')).find(Boolean); if (hit) { this.camStop(); const i = $('#dvl-code'); if (i) i.value = this.fmt(this.norm(hit[1])); this.confirm(hit[1]); return; } } catch (e) { /* not ready yet */ }
+      setTimeout(loop, 250);
+    };
+    loop();
+  },
+  camStop() { const s = this.cam; this.cam = null; if (s) s.getTracks().forEach((t) => t.stop()); $$('.dvl-cam').forEach((v) => v.remove()); },
+  /* opened from the QR code with the phone's camera app */
+  async fromLink(raw) {
+    const code = this.norm(raw);
+    if (code.length !== 8) { toast('That link code isn’t complete. Scan it again.', 'err'); return; }
+    try { if (!Account.client && Account.ensure) await Account.ensure(); } catch (e) { /* not set up */ }
+    for (let i = 0; i < 30 && Account.user && !Account.loadedOnce; i++) await sleep(300);
+    if (Account.user && this.canGive()) { this.openGive(code, true); return; }
+    this.layer(); this.mode = 'info'; X8.open('dvlLayer');
+    X8.body('dvlLayer').innerHTML = `<h2 class="x8-h">Link a new device</h2><p class="sc-p">${Account.user ? 'This copy of MKCinema doesn’t have your keys either.' : 'MKCinema isn’t signed in here.'} Open MKCinema where you are signed in and your keys work, choose Link a new device in Settings › Account, and type this code:</p><div class="dvl-code" translate="no">${esc(this.fmt(code))}</div><div class="inrow"><button class="btn btn-prime" type="button" data-nav data-x8close>OK</button></div>`;
+  },
+};
+</script>
+<!-- mk-devlink:end -->
 <!-- mk-smartpick:start -->
 <script id="mkc-smartpick">
 'use strict';
@@ -37632,6 +37922,8 @@ const WebCap = {
 
   /* ---- the note on a locked device ---- */
   const MSG = 'Addons and keys from your other devices are locked on this one. Enter your password once to bring them here.';
+  const MSG_LINK = 'Addons and keys from your other devices are locked on this one. Link it from a device that has them.';
+  const viaLink = () => !A.pwUser() && typeof DevLink !== 'undefined';
   const SNOOZE = 'mkc:addonLockSnooze';
   let shown = false;
   const unlockNow = async () => { $$('#toasts .as-lock').forEach((x) => x.remove()); try { if (!$('#player').hidden) await closePlayer(); } catch (e) { /* no player */ } try { closeLayer('addons'); } catch (e) { /* not open */ } openSettings('debrid'); setTimeout(() => { const p = $('#sk-pass'); if (p) { try { p.scrollIntoView({ block: 'center' }); } catch (e) { /* old browser */ } p.focus(); } }, 120); };
@@ -37644,9 +37936,10 @@ const WebCap = {
     shown = true;
     const box = $('#toasts'); if (!box) return;
     const el = document.createElement('div'); el.className = 'toast glass-solid t-info as-lock'; el.dataset.key = 'mkc-addon-lock'; el.setAttribute('role', 'status');
-    el.innerHTML = `<i data-lucide="lock"></i><span>${esc(MSG)}</span><span class="as-b"><button class="btn btn-prime btn-sm" type="button" data-nav data-as="go">Enter password</button><button class="btn btn-ghost btn-sm" type="button" data-nav data-as="later">Not now</button></span>`;
+    const lk = viaLink();
+    el.innerHTML = `<i data-lucide="lock"></i><span>${esc(lk ? MSG_LINK : MSG)}</span><span class="as-b"><button class="btn btn-prime btn-sm" type="button" data-nav data-as="go">${lk ? 'Link this device' : 'Enter password'}</button><button class="btn btn-ghost btn-sm" type="button" data-nav data-as="later">Not now</button></span>`;
     box.appendChild(el); icons();
-    el.querySelector('[data-as="go"]').onclick = unlockNow;
+    el.querySelector('[data-as="go"]').onclick = lk ? () => { el.remove(); DevLink.openTake(); } : unlockNow;
     el.querySelector('[data-as="later"]').onclick = () => { try { localStorage.setItem(SNOOZE, String(Date.now() + 3 * 864e5)); } catch (e) { /* blocked */ } el.remove(); };
     setTimeout(() => el.remove(), 20000);
   };
@@ -37656,9 +37949,10 @@ const WebCap = {
     if (!A.addonsLocked()) { if (n) n.remove(); return; }
     if (n) return;
     n = document.createElement('div'); n.className = 'as-lock';
-    n.innerHTML = `<i data-lucide="lock"></i><span>${esc(MSG)}</span><span class="as-b"><button class="btn btn-ghost btn-sm" type="button" data-nav data-as="go">Enter password</button></span>`;
+    const lk = viaLink();
+    n.innerHTML = `<i data-lucide="lock"></i><span>${esc(lk ? MSG_LINK : MSG)}</span><span class="as-b"><button class="btn btn-ghost btn-sm" type="button" data-nav data-as="go">${lk ? 'Link this device' : 'Enter password'}</button></span>`;
     list.parentNode.insertBefore(n, list); icons();
-    n.querySelector('[data-as="go"]').onclick = unlockNow;
+    n.querySelector('[data-as="go"]').onclick = lk ? () => DevLink.openTake() : unlockNow;
   };
   if (typeof renderAddons === 'function') {
     const ra = renderAddons;
@@ -52251,5 +52545,169 @@ try { MkPlayLabel.init(); } catch (e) { console.warn('play label:', e.message); 
 <style id="mk-range-focus">
 html.tv input[type=range].nav-focus,html.kbnav input[type=range].nav-focus,html.tv input[type=range]:focus,html.kbnav input[type=range]:focus-visible{outline:2px solid var(--kffffff,#fff);outline-offset:6px;border-radius:999px}
 </style>
+<style id="mk-rows-fit">
+html:not(.tv) .mk-rf-on{overflow:hidden!important;flex-wrap:nowrap!important}
+html:not(.tv) .mk-rf-on .mk-rf-out{display:none!important}
+.mk-rf-btn{display:none}
+html:not(.tv) .mk-rf-on>.mk-rf-btn.mk-rf-show{display:inline-flex;align-items:center;gap:4px;flex:0 0 auto;white-space:nowrap;cursor:pointer;font-family:inherit;margin:0}
+.mk-rf-btn svg{width:16px;height:16px;opacity:.75;transition:transform .2s ease}
+.mk-rf-btn[aria-expanded="true"] svg{transform:rotate(180deg)}
+.mk-rf-btn:focus-visible{outline:3px solid #f3efe7;outline-offset:2px}
+/* TVs: rows wrap onto a second line instead of sliding (the remote reaches every chip) */
+html.tv #discGenres,html.tv #dStreams .chips,html.tv .mu-tabs,html.tv .lib-tabs,html.tv #tvSources,html.tv #view-anime .segc{flex-wrap:wrap!important;overflow:visible!important;row-gap:10px}
+#mkRfShade{position:fixed;inset:0;z-index:58;background:#0000008c;opacity:0;transition:opacity .18s ease}
+#mkRfMenu{position:fixed;z-index:60;min-width:200px;max-width:calc(100vw - 32px);max-height:calc(100vh - 120px);overflow:auto;padding:8px;border-radius:24px;border:1px solid #ffffff1f;background:#0e0e0f;color:#f2f2f2;box-shadow:0 24px 60px #0000008c;display:flex;flex-direction:column;gap:2px;opacity:0;transform:translateY(-6px) scale(.98);transform-origin:top right;transition:opacity .18s ease,transform .18s ease}
+#mkRfShade.in,#mkRfMenu.in{opacity:1}
+#mkRfMenu.in{transform:none}
+#mkRfMenu button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;min-height:52px;padding:12px 16px 12px 14px;border-radius:16px;font-size:calc(15px * var(--ts,1));font-weight:500;font-family:inherit;cursor:pointer;color:inherit}
+#mkRfMenu button.on{background:#ffffff1a}
+#mkRfMenu button svg{width:22px;height:22px;flex:0 0 auto;display:block!important}
+#mkRfMenu button .rec-dot{flex:0 0 auto}
+#mkRfMenu button:active,#mkRfMenu button:focus-visible{background:#ffffff14}
+#mkRfMenu button:focus-visible{outline:3px solid #f3efe7;outline-offset:-3px}
+@media (prefers-reduced-motion:reduce){#mkRfShade,#mkRfMenu,.mk-rf-btn svg{transition:none}}
+</style>
+<script id="mk-rows-fit-js">
+// Tab and chip rows never slide sideways: whatever doesn't fit goes under "More" (phones, tablets, computers).
+// TVs wrap these rows onto a second line instead (CSS above). The open tab/chip is never moved under More.
+(() => {
+  const de = document.documentElement;
+  const ROWS = ['.mu-tabs', '.lib-tabs', '#tvSources', '#view-anime .segc'];
+  const isOn = b => b.classList.contains('on') || b.getAttribute('aria-selected') === 'true' || b.getAttribute('aria-checked') === 'true';
+  const chev = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+  const rows = new Map();   // row element -> state
+  let menu = null, shade = null, menuRow = null;
+
+  function itemsOf(row) {
+    // the row's buttons, including buttons inside a nested tablist (Library), in screen order
+    const out = [];
+    for (const k of row.children) {
+      if (k.classList.contains('mk-rf-btn')) continue;
+      if (k.tagName === 'BUTTON' || k.tagName === 'A') out.push(k);
+      else k.querySelectorAll(':scope > button, :scope > a').forEach(b => out.push(b));
+    }
+    return out.filter(b => b.classList.contains('mk-rf-out') || getComputedStyle(b).display !== 'none');
+  }
+  const fits = row => row.scrollWidth <= row.clientWidth + 1;
+
+  function styleLike(btn, ref) {
+    const c = getComputedStyle(ref);
+    for (const k of ['fontSize', 'fontWeight', 'lineHeight', 'paddingTop', 'paddingBottom', 'paddingLeft', 'paddingRight', 'borderRadius', 'minHeight', 'height', 'color', 'letterSpacing'])
+      btn.style[k] = c[k];
+    btn.style.background = 'transparent';
+    btn.style.border = c.borderTopWidth !== '0px' ? `${c.borderTopWidth} ${c.borderTopStyle} ${c.borderTopColor}` : '0';
+  }
+
+  function fit(row) {
+    const st = rows.get(row); if (!st) return;
+    st.mo.disconnect();
+    try {
+      const items = itemsOf(row);
+      items.forEach(b => b.classList.remove('mk-rf-out'));
+      st.btn.classList.remove('mk-rf-show');
+      row.classList.remove('mk-rf-on');
+      if (de.classList.contains('tv') || !row.isConnected || !row.clientWidth) return;
+      if (fits(row)) return;
+      row.classList.add('mk-rf-on');
+      st.btn.classList.add('mk-rf-show');
+      const ref = items.find(b => !isOn(b)) || items[0];
+      if (ref) styleLike(st.btn, ref);
+      for (const b of items.slice().reverse()) {
+        if (fits(row)) break;
+        if (isOn(b)) continue;
+        b.classList.add('mk-rf-out');
+      }
+      if (menuRow === row) build();
+    } finally { st.mo.takeRecords(); st.mo.observe(row, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class', 'aria-selected', 'aria-checked'] }); }
+  }
+
+  function attach(row) {
+    if (rows.has(row)) return;
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'mk-rf-btn'; btn.setAttribute('data-nav', '');
+    btn.setAttribute('aria-haspopup', 'menu'); btn.setAttribute('aria-expanded', 'false'); btn.setAttribute('aria-label', 'More');
+    btn.innerHTML = '<span>More</span>' + chev;
+    btn.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); menuRow === row ? close() : open(row); });
+    row.appendChild(btn);
+    let raf = 0;
+    const st = { btn, mo: new MutationObserver(() => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; fit(row); }); }) };
+    rows.set(row, st);
+    if (window.ResizeObserver) new ResizeObserver(() => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; fit(row); }); }).observe(row);
+    fit(row);
+  }
+
+  function build() {
+    const row = menuRow; if (!row || !menu) return;
+    const out = itemsOf(row).filter(b => b.classList.contains('mk-rf-out'));
+    if (!out.length) { close(); return; }
+    menu.innerHTML = '';
+    out.forEach(t => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.setAttribute('role', 'menuitem'); b.setAttribute('data-nav', '');
+      if (isOn(t)) b.classList.add('on');
+      [...t.childNodes].forEach(n => {
+        if (n.nodeType === 3) { if (n.textContent.trim()) b.appendChild(document.createTextNode(n.textContent.trim() + ' ')); }
+        else if (n.nodeType === 1) b.appendChild(n.cloneNode(true));
+      });
+      b.addEventListener('click', () => { close(); t.click(); });
+      menu.appendChild(b);
+    });
+    const r = rows.get(row).btn.getBoundingClientRect();
+    const below = r.bottom + 10;
+    menu.style.top = Math.round(Math.min(below, innerHeight - 140)) + 'px';
+    menu.style.right = Math.max(16, Math.round(innerWidth - r.right)) + 'px';
+  }
+  function open(row) {
+    close(true);
+    menuRow = row;
+    shade = document.createElement('div'); shade.id = 'mkRfShade';
+    menu = document.createElement('div'); menu.id = 'mkRfMenu'; menu.setAttribute('role', 'menu'); menu.setAttribute('aria-label', 'More');
+    shade.addEventListener('click', () => close());
+    shade.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+    document.body.append(shade, menu);
+    build();
+    if (!menu) return;
+    rows.get(row).btn.setAttribute('aria-expanded', 'true');
+    requestAnimationFrame(() => { shade && shade.classList.add('in'); menu && menu.classList.add('in'); });
+    if (de.classList.contains('kbnav')) { const f = menu.querySelector('button'); f && f.focus(); }
+  }
+  function close(now) {
+    if (!menu) return;
+    const m = menu, s = shade, row = menuRow; menu = shade = menuRow = null;
+    if (row && rows.get(row)) rows.get(row).btn.setAttribute('aria-expanded', 'false');
+    m.classList.remove('in'); s.classList.remove('in');
+    if (now) { m.remove(); s.remove(); } else setTimeout(() => { m.remove(); s.remove(); }, 200);
+  }
+  addEventListener('keydown', e => {
+    if (!menu) return;
+    if (e.key === 'Escape' || e.key === 'GoBack' || e.key === 'BrowserBack') { const r = menuRow; e.preventDefault(); e.stopPropagation(); close(); r && rows.get(r) && rows.get(r).btn.focus(); return; }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      const items = [...menu.querySelectorAll('button')]; const i = items.indexOf(document.activeElement);
+      const n = items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length];
+      if (n) { e.preventDefault(); n.focus(); }
+    }
+  }, true);
+  addEventListener('resize', () => close());
+  addEventListener('scroll', () => close(), { passive: true });
+
+  // rows are drawn by their pages (often again on every visit), so look for new ones whenever the page changes
+  let scanRaf = 0;
+  let refitAll = false;
+  function scan() {
+    scanRaf = 0;
+    for (const [row] of rows) if (!row.isConnected) rows.delete(row);
+    ROWS.forEach(sel => document.querySelectorAll(sel).forEach(attach));   // new rows fit as they attach
+    if (refitAll) { refitAll = false; for (const [row] of rows) fit(row); }
+  }
+  new MutationObserver(recs => {
+    if (scanRaf) return;
+    if (recs.every(r => r.target.closest && r.target.closest('#mkRfMenu'))) return;
+    scanRaf = requestAnimationFrame(scan);
+  }).observe(document.body, { childList: true, subtree: true });
+  new MutationObserver(() => { refitAll = true; if (!scanRaf) scanRaf = requestAnimationFrame(scan); }).observe(de, { attributes: true, attributeFilter: ['class', 'lang', 'style'] });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { refitAll = true; if (!scanRaf) scanRaf = requestAnimationFrame(scan); });
+  scan();
+})();
+</script>
 </body>
 </html>
