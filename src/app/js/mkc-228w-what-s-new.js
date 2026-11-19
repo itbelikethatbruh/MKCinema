@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.83.3', date: '2026-11-17', items: [
+    ['better', 'Tidier sections on phones', 'On phones the sections bar now shows the main sections in full and keeps the rest under More, so nothing is cut off at the edges.'],
+  ] },
   { v: '2.83.2', date: '2026-11-17', items: [
     ['better', 'Smoother scrolling on computers', 'Posters no longer tilt and flicker as they slide under the pointer while you scroll, so Library, Home and Discover scroll smoothly, most of all on a Mac.'],
     ['better', 'MKCinema for Mac 1.3.2', 'Runs on the newest macOS, finds torrent peers faster and saves .m3u playlists to Downloads. Settings › Updates offers it.'],

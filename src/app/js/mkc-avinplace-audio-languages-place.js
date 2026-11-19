@@ -10,7 +10,7 @@
   const can = () => droid() && MkNative.ok && CFG.nativePlayer !== false && !MkNative.bad;
   try { MkNative.probe(); } catch (e) { /* ignore */ }
 
-  /* The owner confirmed MKCinema Player plays on a phone (Android 1.15.3, 2026-11-17 4 PM ET): in the Android app it is ON unless switched off, with the fallback below as the safety net */
+  /* Owner confirmed MKCinema Player plays on his phone (Android 1.15.3, 2026-11-17 4 PM ET): in the Android app it is ON unless switched off, with the fallback below as the safety net */
   const baseWants = MkNative.wants.bind(MkNative);
   MkNative.wants = function (s) {
     if (baseWants(s)) return true;

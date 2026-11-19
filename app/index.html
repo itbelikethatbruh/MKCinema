@@ -9323,7 +9323,7 @@ const Party = {
   mediaInfo() {
     if (!P.ctx || !P.stream) return null; const m = P.ctx.meta, s = P.stream;
     // only the host shares a link, only when they chose to, and never one that carries a server key or a login
-    const url = ''; // 2.78 (owner's call): a party never hands out the host's stream link; guests without a source see the host's screen
+    const url = ''; // 2.78 (Owner: do what's best): a party never hands out the host's stream link; guests without a source see the host's screen
     return { type: m.type, metaId: m.id, videoId: P.ctx.video ? P.ctx.video.id : '', name: m.name, url, headers: url && s.behaviorHints && s.behaviorHints.proxyHeaders ? s.behaviorHints.proxyHeaders.request : null, local: !!s._local };
   },
   shareable(s) {
@@ -11163,7 +11163,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.83.2';
+const APP_VERSION = '2.83.3';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -23957,6 +23957,9 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.83.3', date: '2026-11-17', items: [
+    ['better', 'Tidier sections on phones', 'On phones the sections bar now shows the main sections in full and keeps the rest under More, so nothing is cut off at the edges.'],
+  ] },
   { v: '2.83.2', date: '2026-11-17', items: [
     ['better', 'Smoother scrolling on computers', 'Posters no longer tilt and flicker as they slide under the pointer while you scroll, so Library, Home and Discover scroll smoothly, most of all on a Mac.'],
     ['better', 'MKCinema for Mac 1.3.2', 'Runs on the newest macOS, finds torrent peers faster and saves .m3u playlists to Downloads. Settings › Updates offers it.'],
@@ -51053,7 +51056,7 @@ const StreamsNudge = {
   const can = () => droid() && MkNative.ok && CFG.nativePlayer !== false && !MkNative.bad;
   try { MkNative.probe(); } catch (e) { /* ignore */ }
 
-  /* The owner confirmed MKCinema Player plays on a phone (Android 1.15.3, 2026-11-17 4 PM ET): in the Android app it is ON unless switched off, with the fallback below as the safety net */
+  /* Owner confirmed MKCinema Player plays on his phone (Android 1.15.3, 2026-11-17 4 PM ET): in the Android app it is ON unless switched off, with the fallback below as the safety net */
   const baseWants = MkNative.wants.bind(MkNative);
   MkNative.wants = function (s) {
     if (baseWants(s)) return true;
@@ -51684,6 +51687,132 @@ html:not(.tv):not([data-look="anime"]) .card-inner{transition:transform .3s cubi
   };
   addEventListener('scroll', poke, { capture: true, passive: true });
   addEventListener('wheel', poke, { capture: true, passive: true });
+})();
+</script>
+<style id="mk-phone-more">
+@media (max-width:760px){
+html.ezb-bar.mk-pm:not(.tv) #tabs{overflow:hidden!important;justify-content:space-between}
+html.ezb-bar.mk-pm:not(.tv) #tabs .tab{flex:0 0 auto;padding:8px 7px}
+html.ezb-bar.mk-pm:not(.tv) #tabs .tab.mk-pm-out{display:none!important}
+}
+#tabs .mk-pm-btn{all:unset;box-sizing:border-box;display:none;align-items:center;gap:4px;flex:0 0 auto;min-height:36px;padding:8px 8px 8px 10px;border-radius:999px;font-size:calc(13px * var(--ts,1));font-weight:500;font-family:inherit;white-space:nowrap;cursor:pointer;color:#ffffffb8;transition:background-color .2s ease,color .2s ease}
+@media (max-width:760px){
+html.ezb-bar.mk-pm:not(.tv) #tabs .mk-pm-btn.mk-pm-show{display:flex}
+}
+#tabs .mk-pm-btn svg{width:16px;height:16px;opacity:.75;transition:transform .2s ease}
+#tabs .mk-pm-btn[aria-expanded="true"]{background:#ffffff1f;color:#fff}
+#tabs .mk-pm-btn[aria-expanded="true"] svg{transform:rotate(180deg)}
+#tabs .mk-pm-btn:focus-visible{outline:3px solid #f3efe7;outline-offset:2px}
+#mkPmShade{position:fixed;inset:0;z-index:58;background:#0000008c;opacity:0;transition:opacity .18s ease}
+#mkPmMenu{position:fixed;z-index:60;min-width:200px;max-width:calc(100vw - 32px);padding:8px;border-radius:24px;border:1px solid #ffffff1f;box-shadow:0 24px 60px #0000008c;display:flex;flex-direction:column;gap:2px;opacity:0;transform:translateY(-6px) scale(.98);transform-origin:top right;transition:opacity .18s ease,transform .18s ease}
+#mkPmShade.in,#mkPmMenu.in{opacity:1}
+#mkPmMenu.in{transform:none}
+#mkPmMenu button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;min-height:52px;padding:12px 16px 12px 14px;border-radius:16px;font-size:calc(15px * var(--ts,1));font-weight:500;font-family:inherit;cursor:pointer;color:inherit}
+#mkPmMenu button svg{width:22px;height:22px;flex:0 0 auto;display:block!important}
+#mkPmMenu button:active,#mkPmMenu button:focus-visible{background:#ffffff14}
+#mkPmMenu button:focus-visible{outline:3px solid #f3efe7;outline-offset:-3px}
+@media (prefers-reduced-motion:reduce){#mkPmShade,#mkPmMenu,#tabs .mk-pm-btn svg{transition:none}}
+</style>
+<script id="mk-phone-more-js">
+// Phones: the sections pill shows as many sections as fit, the rest go under "More". Nothing is ever cut off.
+// TVs, tablets and computers are untouched (the class mk-pm only applies below 761 px and never on TVs).
+(() => {
+  const de = document.documentElement;
+  const tabsEl = document.getElementById('tabs');
+  if (!tabsEl) return;
+  const mq = matchMedia('(max-width: 760px)');
+  const OUT_FIRST = ['music', 'anime', 'library', 'tv', 'series', 'movie'];   // first to move under More
+  const btn = document.createElement('button');
+  btn.type = 'button'; btn.className = 'mk-pm-btn'; btn.setAttribute('data-nav', '');
+  btn.setAttribute('aria-haspopup', 'menu'); btn.setAttribute('aria-expanded', 'false');
+  btn.setAttribute('aria-label', 'More sections');
+  btn.innerHTML = '<span>More</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+  tabsEl.appendChild(btn);
+  let menu = null, shade = null, busy = false;
+  const live = () => mq.matches && de.classList.contains('ezb-bar') && !de.classList.contains('tv');
+  const sections = () => [...tabsEl.querySelectorAll('.tab')].filter(t => !t.classList.contains('ezb-off') && (t.classList.contains('mk-pm-out') || getComputedStyle(t).display !== 'none'));
+  const fits = () => tabsEl.scrollWidth <= tabsEl.clientWidth + 1;
+  const watch = new MutationObserver(() => schedule());
+  const observe = () => watch.observe(tabsEl, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class'] });
+  function fit() {
+    busy = false;
+    watch.disconnect();
+    try {
+      const on = live();
+      de.classList.toggle('mk-pm', on);
+      const all = [...tabsEl.querySelectorAll('.tab')];
+      all.forEach(t => t.classList.remove('mk-pm-out'));
+      btn.classList.remove('mk-pm-show');
+      if (!on) { close(); return; }
+      if (fits()) { close(); return; }
+      btn.classList.add('mk-pm-show');
+      const list = sections();
+      const cur = list.find(t => t.classList.contains('on'));
+      const order = OUT_FIRST.map(v => list.find(t => t.dataset.view === v)).filter(Boolean)
+        .concat(list.slice().reverse()).filter((t, i, a) => a.indexOf(t) === i && t !== cur);
+      for (const t of order) { if (fits()) break; t.classList.add('mk-pm-out'); }
+      if (menu) build();
+    } finally { watch.takeRecords(); observe(); }
+  }
+  function schedule() { if (!busy) { busy = true; requestAnimationFrame(fit); } }
+  function build() {
+    const out = sections().filter(t => t.classList.contains('mk-pm-out'));
+    if (!out.length) { close(); return; }
+    const bar = getComputedStyle(tabsEl);
+    const rgb = (bar.backgroundColor.match(/[\d.]+/g) || [10, 10, 10]).slice(0, 3).map(Number);
+    menu.style.background = `rgb(${rgb.map(Math.round).join(',')})`;
+    menu.style.color = getComputedStyle(btn).color;
+    menu.innerHTML = '';
+    out.forEach(t => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.setAttribute('role', 'menuitem'); b.setAttribute('data-nav', '');
+      const ic = t.querySelector('svg'); if (ic) b.appendChild(ic.cloneNode(true));
+      const sp = document.createElement('span'); sp.textContent = (t.querySelector('.lbl') || t).textContent.trim(); b.appendChild(sp);
+      b.addEventListener('click', () => { close(); t.click(); });
+      menu.appendChild(b);
+    });
+    const r = tabsEl.getBoundingClientRect();
+    menu.style.top = Math.round(r.bottom + 10) + 'px';
+    menu.style.right = Math.max(16, Math.round(innerWidth - r.right)) + 'px';
+  }
+  function open() {
+    if (menu) return;
+    shade = document.createElement('div'); shade.id = 'mkPmShade';
+    menu = document.createElement('div'); menu.id = 'mkPmMenu'; menu.setAttribute('role', 'menu'); menu.setAttribute('aria-label', 'More sections');
+    shade.addEventListener('click', close);
+    shade.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+    document.body.append(shade, menu);
+    build();
+    if (!menu) return;
+    btn.setAttribute('aria-expanded', 'true');
+    requestAnimationFrame(() => { shade && shade.classList.add('in'); menu && menu.classList.add('in'); });
+    if (de.classList.contains('kbnav')) { const f = menu.querySelector('button'); f && f.focus(); }
+  }
+  function close() {
+    if (!menu) return;
+    const m = menu, s = shade; menu = shade = null;
+    btn.setAttribute('aria-expanded', 'false');
+    m.classList.remove('in'); s.classList.remove('in');
+    setTimeout(() => { m.remove(); s.remove(); }, 200);
+    schedule();
+  }
+  btn.addEventListener('click', e => { e.stopPropagation(); menu ? close() : open(); });
+  addEventListener('keydown', e => {
+    if (!menu) return;
+    if (e.key === 'Escape' || e.key === 'GoBack' || e.key === 'BrowserBack') { e.preventDefault(); close(); btn.focus(); return; }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      const items = [...menu.querySelectorAll('button')]; const i = items.indexOf(document.activeElement);
+      const n = items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length];
+      if (n) { e.preventDefault(); n.focus(); }
+    }
+  }, true);
+  addEventListener('resize', () => { close(); schedule(); });
+  if (mq.addEventListener) mq.addEventListener('change', schedule);
+  new MutationObserver(schedule).observe(de, { attributes: true, attributeFilter: ['class', 'lang', 'style'] });
+  if (window.ResizeObserver) new ResizeObserver(schedule).observe(tabsEl);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedule);
+  observe();
+  schedule();
 })();
 </script>
 </body>
