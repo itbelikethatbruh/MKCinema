@@ -827,12 +827,12 @@ function trSync() {
 }
 async function openTrailer(id) {
   const link = `<a class="btn btn-ghost" href="https://www.youtube.com/watch?v=${esc(id)}" target="_blank" rel="noopener"><i data-lucide="external-link"></i>Open the trailer in a new tab</a>`;
-  if (CFG.trailerMode === 'link') { window.open(`https://www.youtube.com/watch?v=${encodeURIComponent(id)}`, '_blank', 'noopener'); return; }
-  // TVs: the YouTube app decodes with the TV's video hardware, so trailers play smoothly where a web player stutters
-  if (CFG.trailerMode !== 'embed' && IS_TV && window.MKAndroid && typeof MKAndroid.youtube === 'function') {
+  if (CFG.trailerMode === 'link' && IS_TV && window.MKAndroid && typeof MKAndroid.youtube === 'function') {
     let ok = false; try { ok = MKAndroid.youtube(String(id)); } catch (e) { ok = false; }
     if (ok) return;
   }
+  if (CFG.trailerMode === 'link') { window.open(`https://www.youtube.com/watch?v=${encodeURIComponent(id)}`, '_blank', 'noopener'); return; }
+  // 2.83.8: trailers play inside MKCinema on every device, so Back closes the trailer and never leaves the app
   closeTrailer(true);
   TR.id = id; openLayer('trailer'); trMsg('');
   clearTimeout(TR.hideT); TR.hideT = setTimeout(() => { if (!$('#trailer').hidden) document.body.classList.add('tr-on'); }, 300);
@@ -2121,6 +2121,18 @@ function tvBackHook() {
   const el = $('.focus-ask, .sup-ask') || (typeof Remote !== 'undefined' && Remote.hintEl && Remote.hintEl.isConnected ? Remote.hintEl : null);
   if (el) el.id = 'remote';
 }
+const MkRange = {
+  nudge(el, dir) {
+    try { if (getComputedStyle(el).direction === 'rtl') dir = -dir; } catch (e) { /* keep */ }
+    const lo = Number(el.min) || 0, hi = el.max === '' ? 100 : Number(el.max), st = Number(el.step) || 1, was = el.value;
+    // long fine-grained sliders move in about twenty presses end to end
+    const n = (hi - lo) / st > 40 ? Math.round((hi - lo) / st / 20) : 1;
+    try { if (dir > 0) el.stepUp(n); else el.stepDown(n); } catch (e) { el.value = String(Math.min(hi, Math.max(lo, Number(el.value) + dir * st * n))); }
+    if (el.value === was) return;
+    el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true }));
+    if (!el.isConnected && el.id) { const again = document.getElementById(el.id); if (again) { try { again.focus({ preventScroll: true }); again.classList.add('nav-focus'); } catch (e) { /* gone */ } } }
+  },
+};
 function handleKey(e) {
   const k = e.key, tag = (e.target && e.target.tagName) || '', typing = /INPUT|TEXTAREA|SELECT/.test(tag) && e.target.type !== 'checkbox' && e.target.type !== 'range';
   if ((e.ctrlKey || e.metaKey) && k.toLowerCase() === 'k') { e.preventDefault(); $('#palette').hidden ? openPalette() : closePalette(); return; }
@@ -2141,6 +2153,8 @@ function handleKey(e) {
     if (edge) { e.preventDefault(); Nav.move(k.slice(5).toLowerCase(), e.repeat); return; }
   }
   if (typing) return;
+  // 2.83.8: Left and Right on a slider change its value (a remote has no other way to do it); Up and Down move on
+  if ((k === 'ArrowLeft' || k === 'ArrowRight') && tag === 'INPUT' && e.target.type === 'range' && !e.defaultPrevented && !e.target.disabled && !e.target.closest('#hud')) { e.preventDefault(); Nav.kbOn(); MkRange.nudge(e.target, k === 'ArrowRight' ? 1 : -1); return; }
   const playerOpen = !$('#player').hidden, drawer = $('#player .drawer.open') || !$('#dspPop').hidden || !$('#subMenu').hidden || !$('#optMenu').hidden || !$('#pMsg').hidden;
   if (playerOpen && !drawer && IS_TV) {
     // TV remote in the player: Up/Down reach the controls, Left/Right seek unless a control has focus, OK plays/pauses

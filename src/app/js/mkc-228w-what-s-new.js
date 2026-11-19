@@ -8,6 +8,10 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.83.8', date: '2026-11-17', items: [
+    ['better', 'Sliders work with the remote', 'On a TV, Left and Right now move a slider in Settings. Up and Down go to the next setting.'],
+    ['better', 'Film trailers stay in MKCinema on TVs', 'Film trailers now play inside MKCinema on every TV, so the Back button closes the film trailer and returns you to where you were.'],
+  ] },
   { v: '2.83.7', date: '2026-11-17', items: [
     ['new', 'Logo effects', 'On Home, the logo of the featured title now rises into place and a light sweep crosses it. It is on by default where your device keeps up. You can turn it off in Settings under Performance.'],
     ['better', 'Simpler Play button', 'The Play button on a title page is shorter and shows the episode and the time it continues from.'],
