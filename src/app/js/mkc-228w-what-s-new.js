@@ -8,6 +8,12 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.83.6', date: '2026-11-17', items: [
+    ['better', 'Lighter and faster', 'Loading placeholders and the title page logo no longer keep the page busy, so pages open and scroll more smoothly, especially on phones.'],
+    ['fix', 'More MKV files play', 'Some MKV files that would not start now play.'],
+    ['fix', 'Player controls stay in place', 'Two fingers on the player no longer zoom the controls.'],
+    ['fix', 'Home reloads by itself', 'If Home opens empty, it now loads again by itself.'],
+  ] },
   { v: '2.83.5', date: '2026-11-17', items: [
     ['better', 'Settings, redone', 'Settings now look like Home and are easier to find your way around: six clear groups, and a new Music and Live TV page for your playlists, sports scores and music sources.'],
     ['better', 'Sharper Top 10', 'The Top 10 numbers have a finer look and are fully visible on every screen.'],

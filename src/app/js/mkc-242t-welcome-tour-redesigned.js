@@ -197,7 +197,7 @@ const Guide240 = {
   steps() {
     const xp = (CFG.extPlayers || {})[PLATFORM];
     return {
-      player: (IS_TV && !this.native()) || !!xp || !!CFG.browserOnly || (IS_TV && !!CFG.tvPlayer) || !!Store.get('guidePlayer', false) || !!Store.get('guideVlc', false),
+      player: !this.native() || !!xp || !!CFG.browserOnly || (IS_TV && !!CFG.tvPlayer) || !!Store.get('guidePlayer', false) || !!Store.get('guideVlc', false),
       addons: engine.addons.filter((a) => !a.error && (a.manifest.resources || []).some((r) => (r.name || r) === 'stream')).length > 1,
       debrid: !!Vault.service() || !!Store.get('guideNoDebrid', false),
       account: !!Account.user,
@@ -222,9 +222,10 @@ const Guide240 = {
       ? [card('native', 'tv', 'TV player', 'Your TV’s own video hardware: MKV, HEVC, HDR and Dolby Vision play smoothly. MKCinema still picks the source and sends your subtitles.', ''),
         card('builtin', 'monitor-play', 'MKCinema player', 'Subtitle styling, X-Ray, skip intro and watch party.', 'Plays fewer kinds of files than the TV player.')]
       : [card('builtin', 'monitor-play', 'MKCinema player', 'Plays right here, with watch party, skip intro, subtitle styling and X-Ray. Nothing to install.', 'Browsers cannot open some MKV and HEVC files. Smart Play moves to a source that plays.'),
-        ...(IS_TV ? [] : [card('ext', 'external-link', 'A player app', 'Plays nearly every file and sound format. MKCinema still finds the source and remembers where you stopped.', 'Watch party and X-Ray stay in the MKCinema player.')])];
+      ];
     const app = this.appId();
-    const apps = IS_TV ? '' : `<div class="g4-apps"${cur === 'ext' ? '' : ' hidden'}><span class="g4-lab">Open streams in</span><div class="pc-chips" role="radiogroup" aria-label="Player app">${playersHere().map((p) => `<button type="button" class="pc-chip" role="radio" data-g4app="${p.id}" aria-checked="${p.id === app}" data-nav>${esc(p.id === 'android' ? 'Ask every time' : p.m3u ? 'Playlist file' : playerName(p))}</button>`).join('')}</div><div class="g4-get">${this.getHTML(app)}</div></div>`;
+    const apps = '' && `<div class="g4-apps"${cur === 'ext' ? '' : ' hidden'}><span class="g4-lab">Open streams in</span><div class="pc-chips" role="radiogroup" aria-label="Player app">${playersHere().map((p) => `<button type="button" class="pc-chip" role="radio" data-g4app="${p.id}" aria-checked="${p.id === app}" data-nav>${esc(p.id === 'android' ? 'Ask every time' : p.m3u ? 'Playlist file' : playerName(p))}</button>`).join('')}</div><div class="g4-get">${this.getHTML(app)}</div></div>`;
+    if (!nat) return '<p>Everything plays right here in the MKCinema player, with watch party, skip intro, subtitle styling and X-Ray. Nothing to install.</p>';
     return `<p>Both work with every addon. Pick what suits this ${IS_TV ? 'TV' : 'device'}; you can switch any time in Settings › Playback.</p>
       <div class="g4-opts" role="radiogroup" aria-label="Player">${opts.join('')}</div>${apps}`;
   },
@@ -279,7 +280,7 @@ const Guide240 = {
       ${pro ? this.proHTML() : `
       <div class="gs-prog" role="progressbar" aria-label="Setup progress" aria-valuemin="0" aria-valuemax="4" aria-valuenow="${done}"><i style="transform:scaleX(${done / 4})"></i></div>
       <p class="gs-count">${done === 4 ? 'All set. Enjoy the show.' : `${done} of 4 done`}</p>
-      ${step(1, 'player', 'Choose your player', this.playerStep())}
+      ${step(1, 'player', this.native() ? 'Choose your player' : 'Your player', this.playerStep())}
       ${step(2, 'addons', 'Add your addons', this.addonStep())}
       ${step(3, 'debrid', 'Connect a debrid service', this.debridStep(), true)}
       ${step(4, 'account', 'Sign in everywhere', `<p>One account carries your library, progress, addons and keys to every phone, computer and TV you sign in on.</p>
