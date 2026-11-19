@@ -1,0 +1,26 @@
+
+.mk-pick-src{display:none!important}
+.mk-pick-btn{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 12px 0 16px;margin:10px 8px 10px 0;border-radius:999px;border:1px solid var(--line-soft,#ffffff24);font-family:inherit;font-size:calc(13.5px * var(--ts,1));white-space:nowrap;cursor:pointer;color:inherit;vertical-align:middle;max-width:100%;-webkit-tap-highlight-color:transparent;transition:background-color .2s ease}
+.mk-pick-btn small{font-size:inherit;color:var(--mute,#a1a1aa)}
+.mk-pick-btn b{font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.mk-pick-btn svg{width:16px;height:16px;flex:none;opacity:.7;transition:transform .2s ease}
+.mk-pick-btn[aria-expanded="true"] svg{transform:rotate(180deg)}
+.mk-pick-btn:hover,.mk-pick-btn[aria-expanded="true"]{background:#8881}
+.mk-pick-btn:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+#mkPickMenu{position:fixed;z-index:70;min-width:200px;max-width:calc(100vw - 24px);padding:8px;border-radius:22px;border:1px solid var(--line-soft,#ffffff24);box-shadow:0 24px 60px #0000008c;display:flex;flex-direction:column;gap:2px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;opacity:0;transform:translateY(-6px);transition:opacity .18s ease,transform .18s ease}
+#mkPickMenu.in{opacity:1;transform:none}
+#mkPickMenu button{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:44px;padding:8px 14px;border-radius:14px;font-family:inherit;font-size:calc(14.5px * var(--ts,1));cursor:pointer;color:inherit;flex:none;-webkit-tap-highlight-color:transparent}
+#mkPickMenu button:hover,#mkPickMenu button:focus-visible{background:#8882}
+#mkPickMenu button[aria-checked="true"]{font-weight:600}
+#mkPickMenu button[aria-checked="true"]::after{content:"";width:6px;height:11px;margin-right:4px;border:solid currentColor;border-width:0 2px 2px 0;transform:rotate(45deg)}
+@media (prefers-reduced-motion:reduce){#mkPickMenu,.mk-pick-btn,.mk-pick-btn svg{transition:none}}
+/* Music bar at the bottom of phones: full width and centred; Miko moves up while it shows */
+@media (max-width:760px){
+  html:not(.tv) .mu-mini{left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));width:auto}
+  html.mk-mini-on:not(.tv) #mikoFab{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+}
+/* Live TV tabs on portrait phones: three equal tabs on one row instead of a ragged wrap */
+@media (max-width:600px) and (orientation:portrait){
+  html:not(.tv) .segc.lh-sw{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);width:100%;box-sizing:border-box}
+  html:not(.tv) .segc.lh-sw button{height:auto;min-height:58px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;white-space:normal;text-align:center;line-height:1.2;font-size:calc(12.5px * var(--ts,1))}
+}
