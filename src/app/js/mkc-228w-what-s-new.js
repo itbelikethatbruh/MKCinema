@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.84.2', date: '2026-11-17', items: [
+    ['better', 'Updates wait for your film', 'The message about a new version no longer appears over a film or show that is playing. It shows when you close the player.'],
+  ] },
   { v: '2.84.1', date: '2026-11-17', items: [
     ['better', 'Network pages line up', 'On a network page, the large logo no longer sits under the menu or over the text.'],
   ] },
