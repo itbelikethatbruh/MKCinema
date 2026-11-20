@@ -2076,6 +2076,12 @@ const TvType = {
     }, true);
     el.addEventListener('blur', () => { if (!el.dataset.tvArmed) setTimeout(() => { if (document.activeElement !== el) arm(); }, 60); });
   },
+  /* 2.84.4: a box the viewer opened in order to type (Search) is ready at once, keyboard up, without a second OK */
+  open(el) {
+    if (!el) return; this.guard(el);
+    delete el.dataset.tvArmed; el.readOnly = false; el.setAttribute('inputmode', 'search');
+    el.blur(); setTimeout(() => { el.focus({ preventScroll: true }); try { el.click(); } catch (x) { /* none */ } }, 30);
+  },
 };
 /* ---------------- 2.41.0 Addon Finder ----------------
    Search the community addon lists and install in one press. The list is a small copy that ships with the app
@@ -2435,7 +2441,7 @@ const Networks = {
   },
   row() {
     const sec = document.createElement('section'); sec.className = 'row net-row'; sec.id = 'netRow';
-    sec.innerHTML = `<div class="row-head"><h2 class="row-title">Networks <small>What's on each service</small></h2></div><div class="rail net-rail">${this.LIST.map((n) => this.tile(n)).join('')}</div>`;
+    sec.innerHTML = `<div class="row-head"><h2 class="row-title">Streaming services</h2></div><div class="rail net-rail">${this.LIST.map((n) => this.tile(n)).join('')}</div>`;
     $$('[data-net]', sec).forEach((b, i) => { b.style.setProperty('--i', i); b.addEventListener('click', () => this.open(b.dataset.net)); });
     this.parallax(sec);
     return sec;
@@ -2470,6 +2476,53 @@ const Networks = {
       t.addEventListener('pointerleave', () => { t._hov = false; img.style.setProperty('--py', '0px'); ask(); });
     });
   },
+  /* 2.85 TV channels: a second logo row (ABC, BBC One, HBO...). Each channel's popular series ship with the app in
+     networks.json, rebuilt at every release, so this needs no key and no addon. */
+  CH: null, chBusy: null,
+  chLoad() {
+    return this.chBusy || (this.chBusy = fetch('networks.json').then((r) => (r.ok ? r.json() : Promise.reject(new Error(`networks.json ${r.status}`)))).then((d) => {
+      this.CH = (d.list || []).filter((c) => c && c.id && c.shows && c.shows.length);
+      COMMANDS.push(...this.CH.map((c) => ({ label: `Browse ${c.name}`, icon: 'tv', run: () => this.open(`ch:${c.id}`) })));
+      return this.CH;
+    }).catch((e) => { this.chBusy = null; throw e; }));
+  },
+  chTile(c) {
+    return `<button type="button" class="net-tile net-ch${c.f ? ' net-ch-inv' : ''}" data-nav data-ch="${esc(c.id)}" style="--nc:${esc(c.c)}" aria-label="${esc(c.name)}"><span class="net-shade"></span><img class="net-logo" src="net/ch/${esc(c.logo)}" alt="" loading="lazy" decoding="async" draggable="false"></button>`;
+  },
+  chRow() {
+    const sec = document.createElement('section'); sec.className = 'row net-row'; sec.id = 'chRow';
+    sec.innerHTML = `<div class="row-head"><h2 class="row-title">Networks</h2></div><div class="rail net-rail">${this.CH.map((c) => this.chTile(c)).join('')}</div>`;
+    $$('[data-ch]', sec).forEach((b, i) => { b.style.setProperty('--i', i); b.addEventListener('click', () => this.open(`ch:${b.dataset.ch}`)); });
+    this.parallax(sec);
+    return sec;
+  },
+  chPlace() {
+    const net = $('#netRow'); if (!net || !net.isConnected) return;
+    if (!this.CH) { this.chLoad().then(() => { if (S.view === 'home') this.place(); }).catch(() => { /* the row stays away until the list loads */ }); return; }
+    if (!this.CH.length) return;
+    const sec = $('#chRow') || this.chRow(); if (net.nextElementSibling !== sec) net.after(sec);
+  },
+  async chRender(box) {
+    const tok = ++this.token;
+    box.innerHTML = `<div class="grid" id="netGrid">${skeletons(12)}</div>`;
+    try { await this.chLoad(); } catch (e) { if (tok === this.token && box.isConnected) box.innerHTML = '<div class="empty">The list did not load. Try again in a moment.</div>'; return; }
+    if (tok !== this.token || !box.isConnected) return;
+    const c = this.CH.find((x) => `ch:${x.id}` === this.cur) || this.CH[0];
+    if (!c) { box.innerHTML = '<div class="empty">Nothing listed for this network right now.</div>'; return; }
+    box.style.setProperty('--nc', c.c);
+    box.innerHTML = `<div class="net-head"><h1 class="page-title net-title" aria-label="${esc(c.name)}"><img class="net-logo net-ch-logo${c.f ? ' net-ch-inv' : ''}" src="net/ch/${esc(c.logo)}" alt="" decoding="async"></h1><p class="page-sub">Popular series from this network. Playing still uses your own addons.</p>
+        <div class="toolbar"><div class="net-switch">${this.CH.map((x) => `<button type="button" class="chip ${x.id === c.id ? 'on' : ''}" data-nav data-nsw="ch:${esc(x.id)}" style="--nc:${esc(x.c)}">${esc(x.name)}</button>`).join('')}</div></div></div>
+      <div class="grid" id="netGrid"></div>
+      <div class="actions" style="justify-content:center"><button class="btn btn-ghost" type="button" data-nav id="netMore" hidden>Show more</button></div>`;
+    $$('[data-nsw]', box).forEach((b) => b.addEventListener('click', () => { this.cur = b.dataset.nsw; this.render(); }));
+    const grid = $('#netGrid'), more = $('#netMore'); let n = 0;
+    const add = () => {
+      const part = c.shows.slice(n, n + 30); n += part.length;
+      grid.insertAdjacentHTML('beforeend', part.map((x) => cardHTML({ id: x.id, type: 'series', name: x.n, releaseInfo: x.y, poster: `https://image.tmdb.org/t/p/w342${x.p}` })).join(''));
+      more.hidden = n >= c.shows.length; icons(); if (typeof queueWall === 'function') queueWall();
+    };
+    more.onclick = add; add(); if (IS_TV) Nav.settle();
+  },
   place() {
     const rows = $('#homeRows'); if (!rows) return;
     if (typeof Seats !== 'undefined' && Seats.kids()) return; // the lists are not filtered for kids
@@ -2477,10 +2530,12 @@ const Networks = {
     const t10 = $('#homeRows .t10c'), after = t10 && t10.closest('#homeRows > section');
     const sec = $('#netRow') || this.row();
     if (after) { if (after.nextElementSibling !== sec) after.after(sec); } else if (!sec.isConnected) { const first = rows.firstElementChild; if (first) first.after(sec); else rows.append(sec); }
+    this.chPlace();
   },
   open(id, type) { this.cur = id || this.cur; if (type) this.type = type; go('network'); },
   render() {
     const box = $('#netBody'); if (!box) return;
+    if (/^ch:/.test(this.cur)) { this.chRender(box); return; }
     const [id, name, c] = this.net(this.cur);
     box.style.setProperty('--nc', c);
     box.innerHTML = `<div class="net-head"><h1 class="page-title net-title" aria-label="${esc(name)}"><img class="net-logo" src="net/${id}.svg" alt="" decoding="async"></h1><p class="page-sub">Popular on ${esc(name)} in ${esc(this.country())} right now. Lists from the community Streaming Catalogs addon; playing still uses your own addons.</p>
@@ -2651,6 +2706,7 @@ const SimpleHome = {
     if (/^My watchlist/.test(window.i18nEn ? i18nEn(sec.querySelector('.row-title')) : ((sec.querySelector('.row-title') || {}).textContent || ''))) return 1;
     if (c === 'top10') return 2;
     if (sec.id === 'netRow') return 3;
+    if (sec.id === 'chRow') return 3.2;
     if (sec.id === 'uniRow') return 3.5;
     if (k === 'movie:top') return seriesFirst ? 5 : 4;
     if (k === 'series:top') return seriesFirst ? 4 : 5;
@@ -2677,7 +2733,7 @@ const SimpleHome = {
   dedupe() {
     const seen = new Set();
     $$('#homeRows > section.row').forEach((sec) => {
-      if (sec.hidden || sec.id === 'cwRow' || sec.id === 'newEpRow' || sec.id === 'forYouRow' || sec.id === 'netRow') return;
+      if (sec.hidden || sec.id === 'cwRow' || sec.id === 'newEpRow' || sec.id === 'forYouRow' || sec.id === 'netRow' || sec.id === 'chRow') return;
       const cards = $$('.rail > [data-card]', sec), isTop = sec.dataset.curate === 'top10' || sec.classList.contains('ax-top10');
       if (!isTop && !/^My watchlist/.test(window.i18nEn ? i18nEn(sec.querySelector('.row-title')) : ((sec.querySelector('.row-title') || {}).textContent || ''))) {
         let left = cards.length;

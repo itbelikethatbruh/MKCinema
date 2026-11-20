@@ -206,7 +206,7 @@ const Top10 = {
     top.appendChild(sec);
     if (!(typeof Seats !== 'undefined' && Seats.kids && Seats.kids())) {
       const net = document.createElement('section'); net.className = 'row net-row';
-      net.innerHTML = `<div class="row-head"><h2 class="row-title">Networks</h2></div><div class="rail net-rail">${this.nets().map((n) => Networks.tile(n)).join('')}</div>`;
+      net.innerHTML = `<div class="row-head"><h2 class="row-title">Streaming services</h2></div><div class="rail net-rail">${this.nets().map((n) => Networks.tile(n)).join('')}</div>`;
       net.querySelectorAll('[data-net]').forEach((b, i) => { b.style.setProperty('--i', i); b.addEventListener('click', () => Networks.open(b.dataset.net, type)); });
       top.appendChild(net);
     }
