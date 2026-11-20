@@ -8,6 +8,13 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.85.0', date: '2026-11-17', items: [
+    ['new', 'Networks row', 'Home has a new row of TV networks such as ABC, NBC, CBS, HBO, FX, BBC One and Cartoon Network. Pick one to see its most popular series.'],
+    ['better', 'Streaming services row', 'The row with Netflix, Hulu, Prime Video and the others is now called Streaming services.'],
+  ] },
+  { v: '2.84.4', date: '2026-11-17', items: [
+    ['better', 'Search is ready to type on TVs', 'Opening Search on a TV brings up the keyboard right away, and nothing covers the search box.'],
+  ] },
   { v: '2.84.3', date: '2026-11-17', items: [
     ['better', 'Quicker menus on TVs', 'Moving around Home, film pages and the menu with the remote is quicker, mostly on Fire TV Sticks.'],
   ] },

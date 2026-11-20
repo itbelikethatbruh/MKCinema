@@ -598,7 +598,7 @@ const AnimeHub = {
       const other = $('#animeRow'); if (other && other !== sec) return;
       if (!$('#homeRows') || CFG.animeRow === false || this.kids()) return;
     }
-    const after = $('#netRow') || $('#homeRows .t10c') && $('#homeRows .t10c').closest('#homeRows > section');
+    const after = $('#chRow') || $('#netRow') || $('#homeRows .t10c') && $('#homeRows .t10c').closest('#homeRows > section');
     if (after && after.parentNode === rows) { if (after.nextElementSibling !== sec) after.after(sec); }
     else if (!sec.isConnected) { const kids = rows.children; if (kids[2]) kids[2].after(sec); else rows.append(sec); }
     if (typeof queueWall === 'function') queueWall();

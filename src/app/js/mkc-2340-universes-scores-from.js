@@ -27,7 +27,7 @@ const Universes = {
       $('#uniAll', sec).onclick = () => this.open(null); $('#uniAll2', sec).onclick = () => this.open(null);
       icons();
     }
-    const net = $('#netRow');
+    const ch = $('#chRow'), net = ch && ch.isConnected ? ch : $('#netRow');
     if (net && net.isConnected) { if (net.nextElementSibling !== sec) net.after(sec); }
     else if (!sec.isConnected) { const k = rows.children; if (k[2]) k[2].after(sec); else rows.append(sec); }
   },

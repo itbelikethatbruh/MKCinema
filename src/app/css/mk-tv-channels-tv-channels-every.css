@@ -1,0 +1,8 @@
+/* 2.85 TV channels: every channel logo shows in white so the row reads as one set */
+.net-tile.net-ch .net-logo{filter:brightness(0) invert(1) drop-shadow(0 2px 0 rgba(0,0,0,.7)) drop-shadow(0 16px 14px rgba(0,0,0,.85))}
+.net-tile.net-ch.net-ch-inv .net-logo{filter:invert(1) grayscale(1) brightness(1.6) drop-shadow(0 2px 0 rgba(0,0,0,.7)) drop-shadow(0 16px 14px rgba(0,0,0,.85))}
+.net-rail .net-tile.net-ch .net-logo{height:44%;left:19%;right:19%;width:62%}
+#netBody .net-title img.net-logo.net-ch-logo{filter:brightness(0) invert(1);object-fit:contain;height:clamp(64px,8vw,112px);max-width:min(300px,62vw)}
+#netBody .net-title .net-ch-logo.net-ch-inv{filter:invert(1) grayscale(1) brightness(1.6)}
+html[data-look="daylight"] #netBody .net-title .net-ch-logo,html[data-look="linen"] #netBody .net-title .net-ch-logo{filter:brightness(0)}
+html[data-look="daylight"] #netBody .net-title .net-ch-logo.net-ch-inv,html[data-look="linen"] #netBody .net-title .net-ch-logo.net-ch-inv{filter:grayscale(1) brightness(.5)}

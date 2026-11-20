@@ -1874,7 +1874,7 @@ function openPalette(q = '', { ask = false } = {}) {
   openLayer('palette'); PAL.ask = ask;
   $('#palInput').value = typeof q === 'string' ? q : '';
   $('#palInput').placeholder = ask ? 'Describe it: “funny crime series”, “something like Arrival”…' : 'Search movies, series, channels, addons…';
-  renderPalette($('#palInput').value); setTimeout(() => $('#palInput').focus(), 30);
+  renderPalette($('#palInput').value); setTimeout(() => { $('#palInput').focus(); if (IS_TV && typeof TvType !== 'undefined') TvType.open($('#palInput')); }, 30);
 }
 function closePalette() { closeLayer('palette'); }
 const recentSearches = () => Store.get('recentSearches', []);
