@@ -2261,6 +2261,48 @@ html[data-look="daylight"] #netBody .net-title .net-ch-logo.net-ch-inv,html[data
 
 <!-- ============ App ============ -->
 <style id="mk-seatgate">html.seat-gate #app{visibility:hidden}</style><script>/* 2.48 seat-first: Home stays hidden until a seat is picked */(function(){try{var d=document.documentElement,c=window.__CFG0||JSON.parse(localStorage.getItem("mkc:cfg")||"{}")||{},l=JSON.parse(localStorage.getItem("mkc:seats")||"[]"),ok=false;try{ok=sessionStorage.getItem("mkc:seatOk")==="1"}catch(e){}if(Array.isArray(l)&&l.length&&c.seatAsk!==false&&!ok){d.classList.add("seat-gate");setTimeout(function(){var p=document.getElementById("seatPick");if(!p||p.hidden)d.classList.remove("seat-gate")},15000)}}catch(e){}})();</script>
+<script id="mk-289-fast-show">
+/* 2.89 instant Home (TVs). While the app loads, show a picture of the Home screen as it looked last time, in place
+   of the plain start cover. It is drawn from a small saved list of positions, pictures and titles, cannot be clicked,
+   and fades away at the moment the start cover would have. It is used once and saved again when Home is ready. */
+(function () {
+  try {
+    var de = document.documentElement, K = 'mkc:fastHome';
+    if (!de.classList.contains('tv') || de.classList.contains('seat-gate') || location.hash.length > 1 || location.search.length > 1) return;
+    var raw = localStorage.getItem(K); if (!raw) return; localStorage.removeItem(K);
+    var s = JSON.parse(raw); if (!s || s.v !== 1 || s.w !== innerWidth || s.h !== innerHeight || !s.i || !s.i.length) return;
+    var esc = function (t) { return String(t).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); };
+    var url = function (u) { return /^(https?:|\/|data:image\/)/i.test(u) ? esc(u) : ''; };
+    var box = function (o) { return 'position:absolute;left:' + (+o.x) + 'px;top:' + (+o.y) + 'px;width:' + (+o.w) + 'px;height:' + (+o.h) + 'px;' + (o.r ? 'border-radius:' + esc(o.r) + ';' : ''); };
+    var h = '';
+    for (var n = 0; n < s.i.length; n++) {
+      var o = s.i[n];
+      if (o.k === 'hero') {
+        h += '<div style="' + box(o) + 'overflow:hidden;background:#0b0b0d">' + (url(o.src) ? '<img alt="" src="' + url(o.src) + '" style="position:absolute;left:' + (+o.ix) + 'px;top:' + (+o.iy) + 'px;width:' + (+o.iw) + 'px;height:' + (+o.ih) + 'px;object-fit:cover;object-position:' + esc(o.op || '50% 50%') + ';opacity:' + (+o.io || 1) + (o.fl ? ';filter:' + esc(o.fl) : '') + '">' : '') +
+          (o.sc ? o.sc.split('|').map(function (g) { return '<div style="position:absolute;inset:0;background:' + esc(g) + '"></div>'; }).join('') + (o.bd ? '<div style="position:absolute;inset:0;border-radius:inherit;box-sizing:border-box;border:' + esc(o.bd) + '"></div>' : '') + '</div>' :
+          '<div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.88) 0%,rgba(0,0,0,.55) 38%,rgba(0,0,0,0) 72%),linear-gradient(0deg,rgba(0,0,0,.7) 0%,rgba(0,0,0,0) 45%)"></div></div>');
+      } else if (o.k === 'img') {
+        if (url(o.src)) h += '<img alt="" src="' + url(o.src) + '" style="' + box(o) + 'object-fit:' + (o.fit === 'contain' ? 'contain;object-position:left bottom' : 'cover') + '">';
+      } else if (o.k === 'box') {
+        h += '<div style="' + box(o) + 'background:' + esc(o.bg || 'transparent') + ';' + (o.bd ? 'border:' + esc(o.bd) + ';box-sizing:border-box;' : '') + '"></div>';
+      } else if (o.k === 'txt') {
+        h += '<div style="' + box(o) + 'box-sizing:border-box;overflow:hidden;font:' + esc(o.f) + ';color:' + esc(o.c) + ';' + (o.wr ? 'white-space:normal;line-height:' + esc(o.wr) + ';' : 'display:flex;align-items:center;white-space:nowrap;justify-content:' + (o.ce ? 'center' : 'flex-start') + ';') + (o.ls ? 'letter-spacing:' + esc(o.ls) + ';' : '') + (o.tt ? 'text-transform:' + esc(o.tt) + ';' : '') + (o.bd ? 'border:' + esc(o.bd) + ';' : '') + (o.bg ? 'background:' + esc(o.bg) + ';' : '') + '">' + esc(o.t) + '</div>';
+      }
+    }
+    var el = document.createElement('div'); el.id = 'mkFast'; el.setAttribute('aria-hidden', 'true');
+    el.style.cssText = 'position:fixed;inset:0;z-index:80;background:' + esc(s.bg || '#000') + ';overflow:hidden;pointer-events:none;transition:opacity .35s ease';
+    el.innerHTML = h; document.body.appendChild(el);
+    var t0 = Date.now(), gone = false;
+    var out = function () { if (gone) return; gone = true; clearInterval(iv); el.style.opacity = '0'; setTimeout(function () { el.remove(); }, 400); };
+    var iv = setInterval(function () {
+      if (Date.now() - t0 > 9000) return out();
+      if (document.readyState === 'loading') return;
+      if (!de.classList.contains('booting') || de.classList.contains('seat-gate')) setTimeout(out, 200);
+    }, 100);
+    window.addEventListener('error', function () { setTimeout(out, 800); });
+  } catch (e) { /* the normal start cover shows instead */ }
+})();
+</script>
 <div id="app" class="pre">
   <div class="dock-wrap">
     <nav class="dock glass" aria-label="Main">
@@ -11303,7 +11345,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.88.1';
+const APP_VERSION = '2.89.0';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -24203,6 +24245,12 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.89.0', date: '2026-11-21', items: [
+    ['new', 'Home appears at once on TVs', 'When you open MKCinema on a TV or Fire TV stick, Home is drawn straight away as you last saw it, then the fresh rows take over a moment later. No more waiting on a blank screen.'],
+    ['new', '4K first where your device plays it', 'Smart Play now starts with 4K in the MKCinema player when your device plays 4K smoothly, and always in the Windows and Android apps\' own player. Other devices still start with 1080p, so films keep starting on the first try.'],
+    ['new', 'Track what you watch on MDBList', 'Add your MDBList key in Settings and turn tracking on: playback is scrobbled and your watched history syncs both ways.'],
+    ['new', 'Subtitle background in any colour', 'Subtitles can have a background in any colour, such as white words on a solid black box.'],
+  ] },
   { v: '2.88.1', date: '2026-11-21', items: [
     ['better', 'Quicker start', 'While the app starts it no longer re-measures the whole page over and over, so Home is ready to use sooner. The difference is biggest on TVs, Fire TV sticks and older phones.'],
   ] },
@@ -38063,12 +38111,35 @@ const WebCap = {
   on() {
     try {
       if (IS_TV) return !(typeof TvPlayer !== 'undefined' && TvPlayer.on());
-      return extPlayerId() === 'builtin';
+      if (extPlayerId() !== 'builtin') return false;
+      /* mk-289-4k: the native player decodes everything, so it gets the full setting */
+      if (typeof MkNative !== 'undefined' && MkNative.ready()) return false;
+      return true;
     } catch (e) { return false; }
   },
-  above(s) { const t = s && s._tel; return !!(t && t.res && (this.RANK[t.res] || 0) > 3); },
+  cap: null,
+  /* does this browser decode 4K smoothly in hardware? (asked once at start; null until answered) */
+  probe() {
+    const mc = navigator.mediaCapabilities; if (IS_TV || !mc || !mc.decodingInfo) return;
+    const ask = (codec, extra) => mc.decodingInfo({ type: 'media-source', video: { contentType: `video/mp4; codecs="${codec}"`, width: 3840, height: 2160, bitrate: 40e6, framerate: 24, ...(extra || {}) } })
+      .then((r) => !!(r && r.supported && r.smooth && r.powerEfficient)).catch(() => false);
+    Promise.all([ask('hvc1.2.4.L153.B0'), ask('hvc1.2.4.L153.B0', { transferFunction: 'pq', colorGamut: 'rec2020' }), ask('dvh1.05.06'), ask('av01.0.12M.10')])
+      .then(([sdr, hdr, dv, av1]) => { this.cap = { hevc: sdr && hdr, dv, av1 }; }).catch(() => {});
+  },
+  plays4k(s) {
+    const c = this.cap, t = s && s._tel; if (!c || !c.hevc || !t) return false;
+    if (t.codec === 'AV1') return c.av1;
+    if (t.hdr === 'Dolby Vision' && !c.dv) {
+      // Dolby Vision plays only when the file also carries plain HDR
+      const T = [s.name, s.title, s.description, (s.behaviorHints || {}).filename].filter(Boolean).join(' ').toLowerCase();
+      return /\bhdr(10)?(\+|plus)?\b/.test(T);
+    }
+    return true;
+  },
+  above(s) { const t = s && s._tel; return !!(t && t.res && (this.RANK[t.res] || 0) > 3) && !this.plays4k(s); },
   usable(s) { return !!(s && s._tel && s._tel.cached !== false); },
 };
+try { WebCap.probe(); } catch (e) { /* stays 1080p first */ }
 (() => {
   if (typeof engine === 'undefined' || typeof engine.pickBest !== 'function') return;
   const pick = engine.pickBest;
@@ -38097,7 +38168,7 @@ const WebCap = {
       const rows = pb.rows;
       pb.rows = function () {
         const out = rows.apply(this, arguments);
-        if (!Array.isArray(out) || !WebCap.on() || CFG.maxQuality === '1080' || CFG.maxQuality === '720') return out;
+        if (!Array.isArray(out) || !WebCap.on() || (WebCap.cap && WebCap.cap.hevc) || CFG.maxQuality === '1080' || CFG.maxQuality === '720') return out;
         const i = out.findIndex((r) => r && r.key === 'maxQuality');
         if (i < 0) return out;
         const note = { html: () => '<div class="set-row mk-webcap-note"><div><small>In the MKCinema player, Smart Play starts with 1080p, because most 4K files won’t play in a browser. 4K is used when it is the only choice. VLC and the TV player use your full setting.</small></div></div>' };
@@ -55483,6 +55554,228 @@ Spot.init();
     last = k; return run.apply(this, arguments);
   };
   DockFit.run._qs = true; DockFit.run._ds = true;
+})();
+</script>
+<!-- mk-287f:start -->
+<script>
+'use strict';
+/* 2.87 wave 6: MDBList tracking, subtitle background colour */
+(() => {
+  const safe = (fn) => { try { return fn(); } catch (e) { console.warn('2.87f', e); } };
+  if (typeof CFG_DEFAULTS === 'object') Object.assign(CFG_DEFAULTS, { mdbTrack: false, subBgColor: '#000000' });
+  ['mdbTrack', 'subBgColor'].forEach((k) => { if (!(k in CFG)) CFG[k] = CFG_DEFAULTS[k]; });
+
+  /* ---- subtitles: the background box in any colour (the opacity slider still sets how solid it is) ---- */
+  const hex = (h) => (/^#[0-9a-f]{6}$/i.test(h || '') ? h : '#000000');
+  const subBg = () => safe(() => {
+    const c = hex(CFG.subBgColor), a = clamp((Number(CFG.subBg) || 0) / 100, 0, 1);
+    document.documentElement.style.setProperty('--sub-bg', `rgba(${parseInt(c.slice(1, 3), 16)},${parseInt(c.slice(3, 5), 16)},${parseInt(c.slice(5, 7), 16)},${a})`);
+  });
+  safe(() => { const aa = applyAll; applyAll = function () { const r = aa.apply(this, arguments); subBg(); return r; }; });
+  CFG_HOOKS.push((k) => { if (k === 'subBg' || k === 'subBgColor' || k === 'subColor') { subBg(); if (typeof styleCues === 'function') safe(() => styleCues()); } });
+
+  /* ---- MDBList tracking: what you watch is scrobbled to your MDBList account, and watched history syncs both ways ----
+     Your own free MDBList API key (the same one that reads MDBList rows and scores). Writes go straight to MDBList;
+     if the browser can't reach it that way, they go through MKCinema's MDBList relay (nothing is stored or logged there). */
+  const MdbT = {
+    B: 'https://api.mdblist.com', busy: false, q: new Map(), qT: 0,
+    key() { return (safe(() => Keys.get().mdblist) || '').trim(); },
+    on() { return CFG.mdbTrack === true && !!this.key(); },
+    how() { return safe(() => Store.get('mdbHow', '')) || ''; },
+    relay() {
+      const c = safe(() => Account.config()); if (!c || !c.url) return null;
+      return { u: `${String(c.url).replace(/\/+$/, '')}/functions/v1/mdblist-relay`, k: c.anonKey || '' };
+    },
+    err(r) { return new Error(r.status === 401 || r.status === 403 ? 'MDBList did not accept the API key' : r.status === 429 ? 'MDBList is busy. Try again in a few minutes.' : `MDBList ${r.status}`); },
+    async post(path, body) {
+      const k = this.key(); if (!k) throw new Error('Add your free MDBList API key first');
+      const txt = JSON.stringify(body);
+      if (this.how() !== 'relay') {
+        // a plain-text body needs no browser pre-check, which MDBList does not answer
+        let r = null; try { r = await fetch(`${this.B}${path}?apikey=${encodeURIComponent(k)}`, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: txt }); } catch (e) { r = null; }
+        if (r && r.ok) { safe(() => Store.set('mdbHow', 'direct')); return r.json().catch(() => ({})); }
+        if (r && (r.status === 401 || r.status === 403 || r.status === 429)) throw this.err(r);
+        if (r && r.status !== 400 && r.status !== 415) throw this.err(r);
+      }
+      const rl = this.relay(); if (!rl) throw new Error('MDBList could not be reached');
+      const r = await fetch(`${rl.u}?path=${encodeURIComponent(path)}`, { method: 'POST', headers: { apikey: rl.k, 'x-mdb-key': k, 'content-type': 'application/json' }, body: txt });
+      if (!r.ok) throw this.err(r);
+      safe(() => Store.set('mdbHow', 'relay'));
+      return r.json().catch(() => ({}));
+    },
+    async get(path, qs) {
+      const k = this.key(); if (!k) throw new Error('Add your free MDBList API key first');
+      const u = new URL(this.B + path); Object.entries(qs || {}).forEach(([a, b]) => { if (b != null && b !== '') u.searchParams.set(a, b); }); u.searchParams.set('apikey', k);
+      const r = await fetch(u.href); if (!r.ok) throw this.err(r); return r.json();
+    },
+    item(ctx) {
+      const x = safe(() => Trakt.ids(ctx)); if (!x || !x.id) return null;
+      return ctx.video ? { show: { ids: { imdb: x.id }, season: Number(x.season), episode: Number(x.episode) } } : { movie: { ids: { imdb: x.id } } };
+    },
+    scrobble(action, ctx, pct) {
+      if (!this.on() || !ctx) return;
+      const it = this.item(ctx); if (!it) return;
+      this.post(`/scrobble/${action}`, { ...it, progress: Number((pct || 0).toFixed(2)), app_name: 'MKCinema', app_version: typeof APP_VERSION === 'string' ? APP_VERSION : '' }).catch(() => {});
+    },
+    /* a title marked watched by hand goes up on its own (no date, so one already on MDBList is not counted twice) */
+    queue(id) {
+      if (!this.on() || !/^tt\d+(:\d+:\d+)?$/.test(String(id))) return;
+      this.q.set(id, 1); clearTimeout(this.qT); this.qT = setTimeout(() => { const ids = [...this.q.keys()]; this.q.clear(); this.push(ids, false).catch(() => {}); }, 3000);
+    },
+    body(ids, dated) {
+      const w = watchedMap(), movies = [], shows = new Map();
+      ids.forEach((id) => {
+        const at = dated && w[id] ? new Date(w[id]).toISOString() : undefined;
+        const m = /^(tt\d+)(?::(\d+):(\d+))?$/.exec(id); if (!m) return;
+        if (!m[2]) { movies.push(at ? { ids: { imdb: m[1] }, watched_at: at } : { ids: { imdb: m[1] } }); return; }
+        if (!shows.has(m[1])) shows.set(m[1], new Map());
+        const ss = shows.get(m[1]); if (!ss.has(m[2])) ss.set(m[2], []);
+        ss.get(m[2]).push(at ? { number: Number(m[3]), watched_at: at } : { number: Number(m[3]) });
+      });
+      return { movies, shows: [...shows].map(([imdb, ss]) => ({ ids: { imdb }, seasons: [...ss].map(([n, eps]) => ({ number: Number(n), episodes: eps })) })) };
+    },
+    async push(ids, dated) {
+      let n = 0;
+      for (let i = 0; i < ids.length; i += 400) {
+        const b = this.body(ids.slice(i, i + 400), dated);
+        for (let j = 0; j < Math.max(1, Math.ceil(b.shows.length / 150)); j++) {
+          const part = { movies: j ? [] : b.movies, shows: b.shows.slice(j * 150, (j + 1) * 150) };
+          if (!part.movies.length && !part.shows.length) continue;
+          await this.post('/sync/watched', part); n += part.movies.length + part.shows.reduce((a, s) => a + s.seasons.reduce((x, y) => x + y.episodes.length, 0), 0);
+        }
+      }
+      return n;
+    },
+    /* both ways: what MDBList has comes in, what only MKCinema has goes up with the day you watched it */
+    async sync(quiet) {
+      if (this.busy) return; if (!this.key()) { if (!quiet) toast('Add your free MDBList API key first', 'err'); return; }
+      this.busy = true; this.paint();
+      try {
+        const there = new Set(), got = {};
+        let cursor = '', pages = 0;
+        do {
+          const j = await this.get('/sync/watched', { limit: 1000, cursor });
+          (j.movies || []).forEach((x) => { const id = x.movie && x.movie.ids && x.movie.ids.imdb; if (id) { there.add(id); got[id] = Date.parse(x.watched_at || x.last_watched_at || '') || Date.now(); } });
+          (j.episodes || []).forEach((x) => { const e = x.episode || {}, sh = e.show || x.show || {}, id = sh.ids && sh.ids.imdb; if (id && e.season != null && e.number != null) { const k = `${id}:${e.season}:${e.number}`; there.add(k); got[k] = Date.parse(x.last_watched_at || x.watched_at || '') || Date.now(); } });
+          cursor = (j.pagination && j.pagination.next_cursor) || ''; pages++;
+        } while (cursor && pages < 30);
+        const w = watchedMap(); let inN = 0;
+        Object.entries(got).forEach(([k, t]) => { if (!w[k]) { w[k] = t; inN++; } });
+        if (inN) Store.set('watched', w);
+        const up = Object.keys(w).filter((k) => /^tt\d+(:\d+:\d+)?$/.test(k) && !there.has(k));
+        const upN = up.length ? await this.push(up, true) : 0;
+        Store.set('mdbSyncAt', Date.now());
+        if (!quiet || inN || upN) toast(inN || upN ? `MDBList synced: ${inN} watched brought in, ${upN} sent.` : 'MDBList and MKCinema already match.', 'ok', 5000, 'mdb');
+        if (inN && typeof rerender === 'function') safe(() => rerender());
+      } catch (e) { if (!quiet) toast(`MDBList sync didn’t finish: ${e.message}`, 'err', 6000, 'mdb'); }
+      finally { this.busy = false; this.paint(); }
+    },
+    paint() {
+      const st = document.getElementById('mdbT-st'), b = document.getElementById('mdbT-sync'); if (!st) return;
+      const at = Number(Store.get('mdbSyncAt', 0));
+      st.textContent = !this.key() ? 'Add your API key above.' : this.busy ? 'Syncing…' : at ? `Last synced ${new Date(at).toLocaleString(typeof appLocale === 'function' ? appLocale() : undefined, { dateStyle: 'medium', timeStyle: 'short' })}.` : 'Not synced yet.';
+      if (b) b.disabled = this.busy || !this.key();
+    },
+  };
+  window.MkMdbTrack = MdbT;
+  safe(() => {
+    const send = Scrobble.send;
+    Scrobble.send = function (action) { const r = send.apply(this, arguments); safe(() => MdbT.scrobble(action, this.ctx, this.pct())); return r; };
+    const mw = markWatched;
+    markWatched = function (id) { const had = isWatched(id), r = mw.apply(this, arguments); if (!had && isWatched(id)) safe(() => { const c = P.ctx, key = c ? (c.video ? c.video.id : c.meta.id) : ''; if (key !== id) MdbT.queue(id); }); return r; };
+  });
+  // a daily sync when tracking is on
+  setTimeout(() => safe(() => { if (MdbT.on() && Date.now() - Number(Store.get('mdbSyncAt', 0)) > 864e5) MdbT.sync(true); }), 25000);
+  CFG_HOOKS.push((k, v) => { if (k === 'mdbTrack' && v === true) safe(() => { if (MdbT.key()) MdbT.sync(false); }); });
+
+  /* ---- settings rows ---- */
+  safe(() => {
+    const sb = typeof secById === 'function' && secById('subtitles');
+    if (sb) {
+      const rows = sb.rows;
+      sb.rows = () => { const r = rows(), at = r.findIndex((x) => x.key === 'subBg'); r.splice(at >= 0 ? at + 1 : r.length, 0,
+        { key: 'subBgColor', label: 'Background color', help: 'The colour of the box behind the words. Set Background opacity to 100% for a solid box, such as white words on black.', type: 'color', get: () => hex(CFG.subBgColor) });
+        return r; };
+    }
+    const plan = typeof SetTidy === 'object' && SetTidy.PLAN && SetTidy.PLAN.subtitles;
+    if (plan) { const g = plan.find((x) => Array.isArray(x[1]) && x[1].includes('subBg')); if (g && !g[1].includes('subBgColor')) g[1].splice(g[1].indexOf('subBg') + 1, 0, 'subBgColor'); }
+    const sy = typeof secById === 'function' && secById('sync');
+    if (sy) {
+      sy.label = 'Trakt, Simkl & MDBList';
+      const rows = sy.rows, bind = sy.bind;
+      sy.rows = () => [...rows(),
+        { group: 'MDBList' },
+        { key: 'mdbKeySync', label: 'MDBList API key', help: 'Free at mdblist.com/preferences. The same key reads MDBList rows and scores. Syncs with your other keys.', type: 'secret', get: () => Keys.get().mdblist || '', set: (v) => setMdbKey(v) },
+        { key: 'mdbTrack', label: 'Track what you watch on MDBList', help: 'Films and episodes you play show up on MDBList as you watch, and count as watched past 80%. Your watched history syncs both ways once a day.', type: 'toggle' },
+        { html: () => `<div class="set-row"><div><b>Watched history</b><small id="mdbT-st"></small></div><div class="set-ctl"><button class="btn btn-ghost btn-sm" type="button" id="mdbT-sync"><i data-lucide="refresh-ccw"></i>Sync now</button></div></div>` }];
+      sy.bind = function () { const v = bind ? bind.apply(this, arguments) : undefined; safe(() => { const b = document.getElementById('mdbT-sync'); if (b) b.onclick = () => MdbT.sync(false); MdbT.paint(); }); return v; };
+    }
+  });
+  subBg();
+})();
+</script>
+<!-- mk-287f:end -->
+<script id="mk-289-fast-save">
+/* 2.89 instant Home (TVs): once Home is ready and untouched, save where its banner, menu, row titles and posters sit
+   so the next start can show them at once. Nothing is saved while a profile has to be picked first. */
+(() => {
+  if (typeof IS_TV === 'undefined' || !IS_TV) return;
+  const K = 'mkc:fastHome', de = document.documentElement;
+  const R = (e) => { const r = e.getBoundingClientRect(); return { x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height) }; };
+  const seen = (r) => r.w > 8 && r.h > 8 && r.y < innerHeight && r.y + r.h > 0 && r.x < innerWidth && r.x + r.w > 0;
+  const src = (i) => { const u = i.currentSrc || i.src || ''; return /^data:image\/gif/.test(u) ? (i.dataset.lsrc || '') : u; };
+  const font = (c) => `${c.fontStyle} ${c.fontWeight} ${c.fontSize}/1 ${c.fontFamily}`;
+  const shown = (e) => { const c = getComputedStyle(e); return c.visibility !== 'hidden' && c.display !== 'none' && +c.opacity > 0.2; };
+  const clear = () => { try { localStorage.removeItem(K); } catch (e) { /* storage is off */ } };
+  const take = () => {
+    try {
+      if (typeof S === 'undefined' || S.view !== 'home' || scrollY > 4 || de.classList.contains('seat-gate') || de.classList.contains('booting')) return false;
+      if (document.body.classList.contains('layer-open') || document.querySelector('.layer-ov.on, .modal.on, dialog[open]')) return false;
+      if (typeof Seats !== 'undefined' && Seats.list && Seats.list().length > 1) return false;
+      const out = [], hero = document.getElementById('hero');
+      if (hero && !hero.hidden) {
+        const r = R(hero), bg = document.querySelector('#heroBg img'), o = { k: 'hero', ...r, r: getComputedStyle(hero).borderRadius };
+        if (bg && bg.complete && bg.naturalWidth) { const b = R(bg); const bc = getComputedStyle(bg); Object.assign(o, { src: src(bg), ix: b.x - r.x, iy: b.y - r.y, iw: b.w, ih: b.h, op: bc.objectPosition, io: bc.opacity, fl: bc.filter === 'none' ? '' : bc.filter }); }
+        o.sc = [[hero, '::before'], [hero, '::after'], [document.getElementById('heroBg'), '::before'], [document.getElementById('heroBg'), '::after']].map(([e, p]) => { try { const c = getComputedStyle(e, p); return c.content !== 'none' && c.backgroundImage !== 'none' && c.display !== 'none' ? c.backgroundImage : ''; } catch (e2) { return ''; } }).filter(Boolean).join('|').slice(0, 1500);
+        o.bd = `${getComputedStyle(hero).borderTopWidth} solid ${getComputedStyle(hero).borderTopColor}`;
+        out.push(o);
+        const logo = document.querySelector('#heroLogoWrap img'), title = document.querySelector('#heroLogoWrap .hero-title');
+        if (logo && logo.complete && logo.naturalWidth && shown(logo)) out.push({ k: 'img', ...R(logo), src: src(logo), fit: 'contain' });
+        else if (title && shown(title)) { const c = getComputedStyle(title); out.push({ k: 'txt', ...R(title), t: title.textContent.trim().slice(0, 80), f: font(c), c: c.color }); }
+      }
+      if (hero && !hero.hidden) {
+        const line = (e, wrap) => { if (!e || !shown(e)) return; const r = R(e); if (!seen(r)) return; const c = getComputedStyle(e), t = e.textContent.replace(/\s+/g, ' ').trim().slice(0, 400); if (t) out.push({ k: 'txt', ...r, t, f: font(c), c: c.color, ls: c.letterSpacing === 'normal' ? '' : c.letterSpacing, tt: c.textTransform === 'none' ? '' : c.textTransform, wr: wrap ? c.lineHeight : '' }); };
+        line(document.getElementById('heroEyebrow')); line(document.getElementById('heroDesc'), true);
+        document.querySelectorAll('#heroMeta > *').forEach((e) => line(e));
+        document.querySelectorAll('#hero .actions .btn').forEach((e) => { if (!shown(e)) return; const r = R(e); if (!seen(r)) return; const c = getComputedStyle(e); const lab = e.querySelector('.sp-l') ? e.querySelector('.sp-l').firstChild.textContent : e.textContent;
+          out.push({ k: 'txt', ...r, t: lab.trim().slice(0, 30), f: font(c), c: c.color, ce: 1, r: c.borderRadius, bg: c.backgroundColor, bd: `${c.borderTopWidth} solid ${c.borderTopColor}` }); });
+      }
+      const dock = document.querySelector('.dock #tabs') || document.getElementById('tabs');
+      if (dock && shown(dock)) {
+        const c = getComputedStyle(dock); out.push({ k: 'box', ...R(dock), r: c.borderRadius, bg: c.backgroundColor, bd: `${c.borderTopWidth} solid ${c.borderTopColor}` });
+        dock.querySelectorAll('.tab').forEach((t) => { const r = R(t); if (!seen(r) || !shown(t)) return; const tc = getComputedStyle(t); const on = t.classList.contains('on');
+          let bg = ''; if (on) { bg = tc.backgroundColor; if (/rgba\(0, 0, 0, 0\)|transparent/.test(bg)) { for (const p of ['::before', '::after']) { const pc = getComputedStyle(t, p); if (pc.content !== 'none' && !/rgba\(0, 0, 0, 0\)/.test(pc.backgroundColor)) bg = pc.backgroundColor; else if (pc.content !== 'none' && pc.backgroundImage !== 'none') bg = pc.backgroundImage; } } if (/rgba\(0, 0, 0, 0\)|transparent/.test(bg)) bg = '#ece7dc'; }
+          out.push({ k: 'txt', ...r, t: t.textContent.trim().slice(0, 30), f: font(tc), c: tc.color, ce: 1, r: tc.borderRadius, bg }); });
+      }
+      document.querySelectorAll('#homeRows .row-title').forEach((t) => { const r = R(t); if (!seen(r) || !shown(t)) return; const c = getComputedStyle(t); out.push({ k: 'txt', ...r, t: t.textContent.trim().slice(0, 60), f: font(c), c: c.color, ls: c.letterSpacing === 'normal' ? '' : c.letterSpacing }); });
+      let pics = 0;
+      document.querySelectorAll('#homeRows img').forEach((i) => {
+        const r = R(i); if (!seen(r) || r.w < 40 || !src(i) || !i.complete || !shown(i)) return;
+        const card = i.closest('.card, .net-tile, .uni-card') || i; if (i !== card && R(i).w < R(card).w * 0.6) { out.push({ k: 'img', ...r, src: src(i), fit: 'contain' }); return; }
+        out.push({ k: 'img', ...r, src: src(i), r: getComputedStyle(card).borderRadius }); pics++;
+      });
+      if (pics < 3 && !(out[0] && out[0].k === 'hero' && out[0].src)) return false;
+      const json = JSON.stringify({ v: 1, w: innerWidth, h: innerHeight, bg: getComputedStyle(document.body).backgroundColor, i: out });
+      if (json.length > 24000) return false;
+      localStorage.setItem(K, json); return true;
+    } catch (e) { return false; }
+  };
+  let tries = 0;
+  const later = (ms) => setTimeout(() => { if (!take() && ++tries < 6) later(4000); }, ms);
+  const wait = setInterval(() => { if (!de.classList.contains('booting')) { clearInterval(wait); later(3500); } }, 300);
+  // a different account or profile must never see the last one's Home
+  try { if (typeof Account !== 'undefined' && Account.signedOut) { const so = Account.signedOut; Account.signedOut = function () { clear(); return so.apply(this, arguments); }; } } catch (e) { /* no accounts */ }
+  window.MkFastHome = { take, clear };
 })();
 </script>
 </body>
