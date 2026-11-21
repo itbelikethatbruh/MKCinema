@@ -71,8 +71,9 @@ function engineStop() {
   eng = null; engIn = null; engBase = '';
 }
 
-// Starts mkp2p with these arguments and returns [task, input pipe, the address it printed].
-function spawnHelper(args) {
+// Starts mkp2p with these arguments and returns [task, input pipe, the address it printed]. With want, the first
+// line must be exactly that instead of an address.
+function spawnHelper(args, want) {
   const t = $.NSTask.alloc.init;
   t.launchPath = engineBin;
   t.arguments = $(args);
@@ -89,7 +90,7 @@ function spawnHelper(args) {
     out += $.NSString.alloc.initWithDataEncoding(d, $.NSUTF8StringEncoding).js;
   }
   const line = out.split('\n')[0].trim();
-  if (line.indexOf('http://127.0.0.1:') !== 0) {
+  if (want ? line !== want : line.indexOf('http://127.0.0.1:') !== 0) {
     try { pin.fileHandleForWriting.closeFile; } catch (e) { /* already closed */ }
     throw new Error(line.replace(/^error:\s*/, '') || 'the helper closed');
   }
@@ -122,12 +123,27 @@ function passStart() {
   return pasBase;
 }
 
+// ---- Discord status (window.MKDesktop.setPresence) ----
+// The same mkp2p program with -discord: it shows "Watching" and the title on the person's Discord profile through
+// the Discord app's own local socket, nothing else. Started the first time the page sends a status (only after the
+// person turns it on in Settings); each status is one line on its input; closing the input clears it.
+let dsc = null, dscIn = null;
+function discordStop() {
+  if (dscIn) { try { dscIn.fileHandleForWriting.closeFile; } catch (e) { /* already closed */ } }
+  dsc = null; dscIn = null;
+}
+function discordSend(json) {
+  if (!(dsc && dsc.running)) { discordStop(); if (!json) return; [dsc, dscIn] = spawnHelper(['-discord'], 'ready'); }
+  const line = String(json || '').replace(/[\r\n]+/g, ' ').slice(0, 8000) + '\n';
+  dscIn.fileHandleForWriting.writeData($(line).dataUsingEncoding($.NSUTF8StringEncoding));
+}
+
 const bridgeJs = "(function(){if(location.protocol!=='https:'||" + JSON.stringify(HOSTS) + ".indexOf(location.hostname)<0)return;var h=window.webkit.messageHandlers.mkd,n=0,w={};"
   + "Object.defineProperty(window,'__mkdDone',{value:function(i,e,v){var p=w[i];delete w[i];if(p){if(e)p[1](new Error(e));else p[0](v)}}});"
   + "function call(c,x){return new Promise(function(a,b){var i=++n,m={id:i,cmd:c};for(var k in x)m[k]=String(x[k]);w[i]=[a,b];h.postMessage(m)})}"
   + "var d={platform:'mac',version:'" + VERSION + "'};"
   + "d.savePlaylist=function(name,text){return call('save-m3u',{name:name,text:text})};"
-  + (hasEngine ? "d.p2p={start:function(){return call('p2p-start')},stop:function(){return call('p2p-stop')}};d.pass={start:function(){return call('pass-start')}};" : '')
+  + (hasEngine ? "d.p2p={start:function(){return call('p2p-start')},stop:function(){return call('p2p-stop')}};d.pass={start:function(){return call('pass-start')}};d.setPresence=function(a){return call('presence',{json:a?JSON.stringify(a):''})};" : '')
   + "window.MKDesktop=d;" + (SELFTEST ? "var pg=function(){setTimeout(function(){call('ping')},1500)};if(document.readyState==='complete')pg();else addEventListener('load',pg,{once:true});" : '') + "})();";
 
 // Only MKCinema's own top-level page may use the bridge: not frames inside it (trailers and their ads), not other
@@ -182,6 +198,7 @@ function bridge(msg) {
     } else if (cmd === 'p2p-start') val = engineStart();
     else if (cmd === 'p2p-stop') engineStop();
     else if (cmd === 'pass-start') val = passStart();
+    else if (cmd === 'presence') { const v = body.objectForKey('json'); discordSend(v.isNil() ? '' : v.js); val = true; }
     else if (cmd === 'save-m3u') {
       const arg = (k) => { const v = body.objectForKey(k); return v.isNil() ? '' : v.js; };
       savePlaylist(arg('name'), arg('text')); val = true;
@@ -220,7 +237,7 @@ ObjC.registerSubclass({
     },
     'applicationWillTerminate:': {
       types: ['void', ['id']],
-      implementation: function () { engineStop(); passStop(); }
+      implementation: function () { engineStop(); passStop(); discordStop(); }
     },
     // Links that open a new window: MKCinema pages load here, everything else opens in the default browser.
     'webView:createWebViewWithConfiguration:forNavigationAction:windowFeatures:': {
