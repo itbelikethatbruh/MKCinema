@@ -165,6 +165,8 @@ async function renderHome() {
   const lay = Layout.get();
   const cats = Layout.shows('catalogs') ? Layout.catalogs(AllRows.list().filter((c) => c.type !== 'tv' && (lay.traktLists || !Layout.traktList(c)) && (typeof AddonUI === 'undefined' || AddonUI.place(c) === 'home'))) : [];
   let heroSet = false;
+  const bFrom = CFG.bannerFrom || 'auto', bType = bFrom === 'movies' ? 'movie' : bFrom === 'series' ? 'series' : '', bHas = bType && cats.some((c) => c.type === bType);
+  if (bFrom === 'mine') { const seen = new Set(), mine = []; for (const m of [...continueItems().map((p) => ({ ...(S.metas.get(p.metaId) || {}), id: p.metaId, type: p.type, name: p.name, poster: p.poster, background: p.background, genres: p.genres })), ...S.watchlist]) { if (m && m.id && !seen.has(m.id) && (m.background || m.poster)) { seen.add(m.id); mine.push(m); } } if (mine.length) { heroSet = true; setHeroList(mine.slice(0, 8)); } }
   if (!cats.length && Layout.shows('catalogs')) rows.insertAdjacentHTML('beforeend', `<div class="empty-state"><i data-lucide="${engine.offline ? 'cloud-off' : 'library'}"></i><h3>${engine.offline ? 'Cinemeta is unreachable' : 'No catalogs installed'}</h3><p>${engine.offline ? 'MKCinema has no titles of its own. Once Cinemeta answers, your catalogs appear here.' : 'Open the addon manager to add a catalog addon.'}</p></div>`);
   const jobs = (cats.map(async (cat, i) => {
     const sec = rowShell(cat.name, `${cat.type} · ${cat.addon.manifest.name}`, { more: () => openCatalog(cat) }); sec.dataset.rk = `cat:${cat.addon.manifest.id}/${cat.type}/${cat.id}${cat._fix && cat._fix.genre ? `/${cat._fix.genre}` : ''}`; rows.appendChild(sec);
@@ -174,7 +176,7 @@ async function renderHome() {
       // Home only shows rows that have something in them; empty or failing catalogs stay in Discover and the addon manager
       if (!metas.length) { sec.remove(); return; }
       { const shown = IS_TV ? (window.MK_LITE ? 12 : 24) : (typeof HomeLazy !== 'undefined' ? HomeLazy.first() : 40); const ax = typeof AddonUI === 'undefined' ? 'poster' : AddonUI.layout(cat, metas); sec._ax = ax; if (ax !== 'poster') sec.classList.add(`ax-${ax}`); fillRail(sec, metas.slice(0, shown).map((m, k) => (ax === 'poster' ? cardHTML(m) : AddonUI.card(m, ax, k))).join('')); if (typeof Endless !== 'undefined') Endless.attach(sec, cat, metas, Math.min(shown, metas.length)); }
-      if (!heroSet && i <= 2) { heroSet = true; setHeroList(metas.filter((m) => m.background || m.poster).slice(0, 8)); }
+      if (!heroSet && (bHas ? cat.type === bType : i <= 2)) { heroSet = true; setHeroList(metas.filter((m) => m.background || m.poster).slice(0, 8)); }
     } catch (e) { sec.remove(); console.warn('Home row skipped:', cat.name, e.message); }
     finally { if (late) { AllRows.free(); AllRows.after(); } }
   }));
@@ -2097,6 +2099,7 @@ const Nav = {
       if (dir === 'left' || dir === 'right') { main = dir === 'right' ? dx : -dx; cross = Math.abs(dy); overlap = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 0; }
       else { main = dir === 'down' ? dy : -dy; cross = Math.abs(dx); overlap = Math.min(a.right, b.right) - Math.max(a.left, b.left) > 0; }
       if (main <= 4) continue;
+      if (vert && !overlap) { const band = el.closest('.pk-strip, .sl-strip, [data-nav-band]'); if (band && !band.contains(cur)) { overlap = true; cross = 0; } }
       if (root.id === 'xray' && (dir === 'left' || dir === 'right') && !overlap) continue;
       const score = main + cross * (overlap ? .6 : 2.6);
       // TV: the dock floats over the page, so from the page it is only picked when nothing else lies that way
