@@ -29,6 +29,13 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.17.2 (versionCode 44): TV player returns to the same page
+
+- On TVs with 3 GB of memory or more, the page keeps its renderer priority while the TV player is open
+  (`keepPage`, `setRendererPriorityPolicy(IMPORTANT, false)`), and gets the normal rule back when the player closes.
+  Some 4 GB TVs dropped the hidden page within seconds, so leaving a film or pressing Next episode reloaded the app.
+  Smaller sticks keep the old rule, and a dropped page is still rebuilt as before (`onRenderProcessGone`).
+
 ## 1.17.1 (versionCode 43): pick several photos at once
 
 - The file picker now honours a page's multiple-file request (EXTRA_ALLOW_MULTIPLE when the WebView asks for

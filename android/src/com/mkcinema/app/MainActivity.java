@@ -70,7 +70,7 @@ public class MainActivity extends Activity {
     static final String[] APP_HOSTS = { HOST, "app.mkcinema.app" };
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6, REQ_MIRROR = 7, REQ_MIRROR_MIC = 8;
-    static final String VER = "1.17.1";
+    static final String VER = "1.17.2";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -289,6 +289,22 @@ public class MainActivity extends Activity {
         if (tv) web.requestFocus();
     }
 
+    /* 1.17.2: while the TV player is open the page is hidden, and Android dropped its renderer within seconds on some
+       4 GB TVs (Google TV Streamer, Android 14/15): every return from a film reloaded the whole app. On TVs with 3 GB
+       or more the page now keeps its priority while the TV player is open; small sticks keep the old rule, so the
+       film always gets the memory first there. */
+    void keepPage(boolean on) {
+        if (!tv || Build.VERSION.SDK_INT < 26 || web == null) return;
+        if (on) {
+            try {
+                android.app.ActivityManager am = (android.app.ActivityManager) getSystemService(ACTIVITY_SERVICE);
+                android.app.ActivityManager.MemoryInfo mi = new android.app.ActivityManager.MemoryInfo(); am.getMemoryInfo(mi);
+                if (mi.totalMem < 2900L * 1024 * 1024) return;
+            } catch (Exception e) { return; }
+        }
+        try { web.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, !on); } catch (Exception ignored) { }
+    }
+
     String startUrl(Intent i) {
         Uri d = i != null ? i.getData() : null;
         if (d != null && "stremio".equals(d.getScheme())) return HOME + (HOME.contains("#") ? "&" : "#") + "install=" + Uri.encode(d.toString());
@@ -425,6 +441,7 @@ public class MainActivity extends Activity {
             return;
         }
         if (req == REQ_PLAY) {
+            keepPage(false);
             int pos = data != null ? data.getIntExtra("pos", -1) : -1, dur = data != null ? data.getIntExtra("dur", -1) : -1;
             boolean ended = data != null && data.getBooleanExtra("ended", false), next = data != null && data.getBooleanExtra("next", false);
             String err = data != null ? data.getStringExtra("error") : null, act = data != null ? data.getStringExtra("action") : null;
@@ -653,7 +670,7 @@ public class MainActivity extends Activity {
                     .putExtra("hasNext", o.optBoolean("hasNext", false)).putExtra("autoSkip", o.optBoolean("autoSkip", false))
                     .putExtra("zap", o.optBoolean("zap", false)).putExtra("zapFlip", o.optBoolean("zapFlip", false))
                     .putExtra("ass", o.optBoolean("ass", true));
-                runOnUiThread(() -> { try { startActivityForResult(i, REQ_PLAY); } catch (Exception ignored) { } });
+                runOnUiThread(() -> { try { keepPage(true); startActivityForResult(i, REQ_PLAY); } catch (Exception ignored) { keepPage(false); } });
                 return true;
             } catch (Exception e) { return false; }
         }
