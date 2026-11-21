@@ -771,6 +771,10 @@ const Party = {
       case 'host': if (from === this.hostId && typeof m.to === 'string' && (m.to === this.me.id || this.peers.has(m.to))) { this.hostId = m.to; this.sysLine(m.to === this.me.id ? 'You are the host now' : `${(this.peers.get(m.to) || {}).name || 'Someone'} is the host now`); this.render(); if (this.isHost() && P.ctx) this.broadcastState('host'); } break;
       case 'chat': { const nm = (this.peers.get(from) || {}).name || String(m.name || 'Guest').slice(0, 40); this.chat.push({ name: nm, text: String(m.text).slice(0, 400), at: Date.now() }); this.renderChat(); if (!$('#player').hidden && !$('#partyDrawer').classList.contains('open')) toast(`${nm}: ${String(m.text).slice(0, 80)}`, 'info', 3000); break; }
       case 'react': this.float(m.e); break;
+      case 'goto': if (from === this.hostId && typeof m.id === 'string' && /^[\w:.-]{2,120}$/.test(m.id) && /^(movie|series)$/.test(m.type)) {
+        const nm = String(m.name || '').slice(0, 120), meta = S.metas.get(m.id) || { id: m.id, type: m.type, name: nm, poster: typeof m.poster === 'string' && /^https:\/\//.test(m.poster) ? m.poster.slice(0, 400) : '' };
+        if ($('#player').hidden) openDetail(meta); this.sysLine(`The host opened ${nm || 'a title'}`); toast(`${(this.peers.get(from) || {}).name || 'The host'} opened ${nm || 'a title'}`, 'info', 3200);
+      } break;
       case 'ping': this.send({ t: 'pong', a: m.a, b: Date.now(), _to: from }); break;
       case 'pong': if (m._to === this.me.id) { const now = Date.now(), rtt = now - m.a, off = m.b - (m.a + rtt / 2); const prev = this.offsets.get(from); this.offsets.set(from, prev == null ? off : prev * 0.7 + off * 0.3); const p = this.peers.get(from); if (p) { p.rtt = rtt; this.renderMembers(); } } break;
       default: if (typeof PartyGuest !== 'undefined') PartyGuest.onMsg(m, from); break;
@@ -778,7 +782,7 @@ const Party = {
   },
   stateOk(m) {
     const n = (v) => typeof v === 'number' && isFinite(v), md = m.media;
-    if (!n(m.pos) || m.pos < 0 || m.pos > 172800 || !n(m.at) || (m.rate != null && (!n(m.rate) || m.rate < 0.25 || m.rate > 4))) return false;
+    if (!n(m.pos) || m.pos < 0 || m.pos > 172800 || !n(m.at) || (m.rate != null && (!n(m.rate) || m.rate < 0.25 || m.rate > 5))) return false;
     if (!md || typeof md !== 'object' || typeof md.metaId !== 'string' || !md.metaId || md.metaId.length > 300 || (md.videoId != null && typeof md.videoId !== 'string')) return false;
     if (md.url && (typeof md.url !== 'string' || md.url.length > 4000 || !/^https?:\/\//i.test(md.url))) return false;
     if (md.headers != null && (typeof md.headers !== 'object' || Object.keys(md.headers).length > 20 || Object.values(md.headers).some((x) => typeof x !== 'string' || x.length > 2000))) return false;

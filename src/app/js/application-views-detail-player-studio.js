@@ -591,6 +591,9 @@ function renderDetail(loading) {
   const sg = $('#dSpoil'); if (sg) sg.onclick = () => { setCfg('spoilerGuard', !CFG.spoilerGuard); renderDetail(false); $$('#toasts .toast').forEach((t) => { if (/^Spoiler Guard/.test(t.dataset.msg || '')) t.remove(); }); toast(CFG.spoilerGuard ? 'Spoiler Guard on: unwatched episodes are hidden' : 'Spoiler Guard off', 'info', 2200); };
   Ratings.critics(m);
   $('#dTrailer').onclick = () => playTrailer(m);
+  { const ps = $('#dPartyGo'); if (ps) ps.remove(); if (typeof Party !== 'undefined' && Party.code && Party.isHost() && Party.peers.size && (m.type === 'movie' || m.type === 'series')) {
+    $('#dTrailer').insertAdjacentHTML('afterend', '<button class="btn btn-ghost" type="button" id="dPartyGo" data-nav><i data-lucide="users"></i>Show everyone</button>');
+    $('#dPartyGo').onclick = () => { Party.send({ t: 'goto', id: m.id, type: m.type, name: m.name, poster: metaPoster(m) || '' }); toast('Everyone in the party now sees this page', 'ok', 2600); }; icons(); } }
   { const sh = $('#dShuffle'); if (sh) sh.onclick = () => MkShuffle.start(m); }
   if (window.MkLangArt && MkLangArt.wants()) MkLangArt.detail(m);
   if (window.MkReviews && !loading) MkReviews.place(m);
@@ -787,11 +790,20 @@ async function resume(videoId) {
 }
 // 2.83.7: trailers play without YouTube's subtitles
 function MkTrClean(pl) { try { if (pl && pl.unloadModule) { if (pl.setOption) pl.setOption('captions', 'track', {}); pl.unloadModule('captions'); pl.unloadModule('cc'); } } catch (e) { /* picture still plays */ } }
-async function playTrailer(meta) {
+async function playTrailer(meta, pick) {
   const local = window.MkLangArt ? await MkLangArt.trailer(meta).catch(() => '') : '';
-  const t = local ? { ytId: local } : (meta.trailerStreams || [])[0] || ((meta.trailers || [])[0] && { ytId: meta.trailers[0].source, title: meta.name });
-  if (!t || !t.ytId) { toast('No official trailer is listed for this title', 'err'); return; }
-  openTrailer(t.ytId);
+  // 2.86: every trailer the title lists, once each; with more than one, a picker with each trailer's picture
+  const all = [], seen = new Set(), add = (id, title) => { id = String(id || '').trim(); if (/^[\w-]{6,20}$/.test(id) && !seen.has(id)) { seen.add(id); all.push({ ytId: id, title: String(title || '').trim() }); } };
+  if (local) add(local, 'Trailer in your language');
+  (meta.trailerStreams || []).forEach((t) => add(t.ytId, t.title && t.title !== meta.name ? t.title : ''));
+  (meta.trailers || []).forEach((t) => add(t.source, t.name || t.title || (t.type && t.type !== 'Trailer' ? t.type : '')));
+  if (!all.length) { toast('No official trailer is listed for this title', 'err'); return; }
+  if (all.length === 1 || pick === false) { openTrailer(all[0].ytId); return; }
+  const el = X8.layer('trPick', { label: 'Trailers', icon: 'clapperboard', eyebrow: 'Trailers', wide: true }); el.classList.add('trp-ov');
+  X8.body('trPick').innerHTML = `<h2 class="x8-h" translate="no">${esc(meta.name || '')}</h2><div class="trp-grid">${all.slice(0, 12).map((t, i) => `<button type="button" class="trp" data-nav data-trp="${i}"><span class="trp-th"><img src="https://i.ytimg.com/vi/${esc(t.ytId)}/mqdefault.jpg" alt="" loading="lazy" decoding="async"><i data-lucide="play"></i></span><b>${esc(t.title || (i ? `Trailer ${i + 1}` : 'Trailer'))}</b></button>`).join('')}</div>`;
+  $$('[data-trp]', X8.body('trPick')).forEach((b) => b.addEventListener('click', () => { const t = all[Number(b.dataset.trp)]; X8.close('trPick'); if (t) openTrailer(t.ytId); }));
+  icons(); X8.open('trPick');
+  setTimeout(() => { const f = $('[data-trp]', X8.body('trPick')); if (f) { if (IS_TV && typeof Nav !== 'undefined') Nav.focus(f, true); else f.focus({ preventScroll: true }); } }, 60);
 }
 
 /* =====================================================================
@@ -861,6 +873,7 @@ async function openTrailer(id) {
 }
 function closeTrailer(silent) {
   clearInterval(TR.tick); TR.tick = 0;
+  { const after = TR.after; if (!silent && after) { TR.after = null; setTimeout(after, 60); } }
   if (TR.yt) { try { TR.yt.destroy(); } catch (e) { /* already gone */ } TR.yt = null; }
   $('#trSlot').innerHTML = ''; TR.drag = null;
   if (document.fullscreenElement && document.fullscreenElement.closest && document.fullscreenElement.closest('#trailer')) document.exitFullscreen().catch(() => {});
@@ -1064,7 +1077,8 @@ function teardown() {
   $('#ytwrap').innerHTML = ''; hideMsg(); $('#upNext').hidden = true; P.upNextDismissed = false; clearInterval(P.upNextT);
   P.remux = null; video.playbackRate = CFG.speed || 1; PlayerPlus.reset();
 }
-async function playStream(ctx, stream, { startAt } = {}) {
+async function playStream(ctx, stream, { startAt, _cin } = {}) {
+  if (!_cin && typeof CinemaMode !== 'undefined' && await CinemaMode.hold(ctx, stream, startAt)) return;
   if (!stream) return;
   playReq++;
   if (stream.ytId) { if (!$('#player').hidden) closePlayer(); openTrailer(stream.ytId); return; }
@@ -1274,7 +1288,7 @@ video.addEventListener('timeupdate', () => {
   PlayerPlus.tick(t, d);
   if (!live && P.ctx && P.ctx.video && d > 120 && !P.upNextDismissed && (d - t < (Number(CFG.upNextAt) || 45) || Skip.inCredits(t))) showUpNext();
 });
-video.addEventListener('ended', () => { saveProgress(true); if (CFG.autoNext && P.ctx && P.ctx.video && nextVideo(P.ctx.meta, P.ctx.video)) playNext(); });
+video.addEventListener('ended', () => { saveProgress(true); if (CFG.autoNext && P.ctx && P.ctx.video && nextVideo(P.ctx.meta, P.ctx.video)) playNext(true); });
 video.addEventListener('volumechange', () => { if (P.ducking || Rescue.userMuted != null) return; $('#pMute').innerHTML = `<i data-lucide="${video.muted || video.volume === 0 ? 'volume-x' : 'volume-2'}"></i>`; $('#pVol').value = video.muted ? 0 : video.volume; icons(); Store.set('volume', video.volume); });
 video.volume = CFG.rememberVolume ? Store.get('volume', 1) : 1;
 const togglePlay = () => { if (video.srcObject || video.currentSrc) (video.paused ? video.play().catch(() => {}) : video.pause()); };
@@ -1405,7 +1419,7 @@ async function playEpisode(v) {
   if (!pick) { toast('No playable stream for that episode', 'err'); return; }
   playStream({ meta, video: v, streams }, pick);
 }
-function playNext() { if (!P.ctx || !P.ctx.video) return; const nv = nextVideo(P.ctx.meta, P.ctx.video); if (nv) playEpisode(nv); }
+function playNext(auto) { if (!P.ctx || !P.ctx.video) return; const nv = nextVideo(P.ctx.meta, P.ctx.video); if (!nv) return; if (auto && typeof StillAsk !== 'undefined' && StillAsk.hold(() => playEpisode(nv))) return; playEpisode(nv); }
 
 /* Drawers */
 function openDrawer(which) {
@@ -1692,7 +1706,7 @@ const cycleAudio = () => {
   if (P.hls && P.hls.audioTracks.length > 1) { P.hls.audioTrack = (P.hls.audioTrack + 1) % P.hls.audioTracks.length; toast(`Audio: ${P.hls.audioTracks[P.hls.audioTrack].name || langName(P.hls.audioTracks[P.hls.audioTrack].lang)}`); }
   else if (!(typeof AudioLang !== 'undefined' && AudioLang.cycle())) toast('This stream has a single audio track');
 };
-const nudgeSpeed = (d) => { video.playbackRate = d === 0 ? 1 : clamp(Math.round((video.playbackRate + d) * 100) / 100, 0.25, 3); toast(`Speed ${video.playbackRate}×`, 'info', 1200); };
+const nudgeSpeed = (d) => { video.playbackRate = d === 0 ? 1 : clamp(Math.round((video.playbackRate + d) * 100) / 100, 0.25, 5); toast(`Speed ${video.playbackRate}×`, 'info', 1200); };
 
 /* =====================================================================
    Addon manager

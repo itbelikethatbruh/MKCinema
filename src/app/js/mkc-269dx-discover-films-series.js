@@ -108,6 +108,7 @@ const DiscoverPage = {
       if (IS_TV) Nav.settle();
     }
     if (!shown) await this.fallback(tok, kind);
+    else if (typeof CriticsPick !== 'undefined') CriticsPick.place();
     if (IS_TV) Nav.settle();
   },
   /* no TMDB answer (offline, or a self-hosted copy without MKCinema's functions): this year's titles from Cinemeta */

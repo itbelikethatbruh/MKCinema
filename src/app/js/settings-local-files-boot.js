@@ -19,7 +19,9 @@ function applyAll() {
   { const de = document.documentElement.classList; de.toggle('ls-cs-s', CFG.cardSize === 's'); de.toggle('ls-cs-l', CFG.cardSize === 'l'); de.toggle('ls-hero-short', CFG.banner === 'short'); de.toggle('ls-hero-off', CFG.banner === 'off'); if (typeof LayStudio !== 'undefined') LayStudio.menuSync(); }
   root.setProperty('--sub-size', `${CFG.subSize}%`); root.setProperty('--sub-color', CFG.subColor);
   root.setProperty('--sub-bg', `rgba(0,0,0,${CFG.subBg / 100})`); root.setProperty('--sub-font', SUB_FONTS[CFG.subFont] || SUB_FONTS.sans);
-  root.setProperty('--sub-shadow', CFG.subOutline ? '0 0 3px #000,0 0 2px #000,1px 1px 2px #000' : 'none');
+  { const sh = { none: '', soft: '', strong: '2px 2px 4px #000,3px 3px 8px rgba(0,0,0,.85)', drop: '3px 3px 0 #000' }[CFG.subShadow] || '';
+    root.setProperty('--sub-shadow', [CFG.subOutline ? '0 0 3px #000,0 0 2px #000,1px 1px 2px #000' : '', sh].filter(Boolean).join(',') || 'none');
+    root.setProperty('--sub-weight', CFG.subBold ? '700' : '400'); }
   $('#fps').hidden = !CFG.showFps; FpsMeter.set(!!CFG.showFps);
   sfx.setVolume();
 }
@@ -220,7 +222,7 @@ const SECTIONS = [
     { key: 'cardInfo', label: 'Poster text', help: 'Posters already carry their own titles. "On hover" keeps them clean until you point at one. Phones and tablets cannot hover, so they show the title below.', type: 'seg', options: [['hover', 'On hover'], ['below', 'Below'], ['full', 'On poster']] },
     ...(TOUCH_UI ? [] : [{ key: 'wall', label: 'Curved IMAX wall', help: 'Bends catalog rows around you instead of flat rails. Desktop only, and heavier while scrolling.', type: 'toggle', get: () => S.wall, set: (v) => setWall(v) }]),
     { group: 'Layout' },
-    { key: 'uiScale', label: 'Interface size', help: 'Raise it for TVs and couch distance.', type: 'range', min: 80, max: 140, step: 5, fmt: pct },
+    { key: 'uiScale', label: 'Interface size', help: 'Raise it for TVs, couch distance or easier reading. Up to 200% makes every button and every line of text twice as big.', type: 'range', min: 80, max: 200, step: 5, fmt: pct },
     { key: 'reduceMotion', label: 'Reduce motion', help: 'Turns off animations and the intro.', type: 'toggle' },
   ] },
   { id: 'performance', icon: 'gauge', label: 'Performance', intro: 'High is the default: raised, shimmering buttons, posters with depth, the 3D logo while a film loads, and frosted glass on desktops. Phones get all of it except the glass. If scrolling ever stutters or the battery runs low, MKCinema drops to Low by itself. Video quality is never affected.', rows: () => [
@@ -242,18 +244,19 @@ const SECTIONS = [
     { key: 'xray', label: 'X-Ray when paused', help: 'A moment after you pause: who is on screen, the story, and quick actions for this moment.', type: 'toggle' },
     { key: 'spoilerGuard', label: 'Spoiler Guard', help: 'Blurs thumbnails and hides summaries of episodes you have not watched. Tap Reveal on any one.', type: 'toggle' },
     { key: 'autoNext', label: 'Play next episode automatically', help: 'Keeps the same source group (bingeGroup) when it can.', type: 'toggle' },
+    { key: 'stillAsk', label: 'Ask "Are you still watching?"', help: 'After 90 minutes with nobody pressing anything, the next episode waits for a yes instead of starting by itself. Saves data and your place if everyone fell asleep.', type: 'toggle', get: () => CFG.stillAsk !== false, set: (v) => setCfg('stillAsk', v) },
     { key: 'liveMini', label: 'Keep live TV playing in a corner', help: 'Leave a playlist channel’s player and it keeps playing in a small window over the guide. Press it to go back to full screen.', type: 'toggle' },
     { key: 'pickMemo', label: 'Remember the source I pick for each show', help: 'When you choose a source yourself, the same addon and quality are tried first next time: the next episode, Continue watching and Smart Play.', type: 'toggle' },
     { key: 'upNextAt', label: 'Show "Next episode" before the end', help: 'Also shows when the credits start, if the episode has a credits marker. With autoplay on, it counts down 10 s.', type: 'range', min: 10, max: 90, step: 5, fmt: (v) => `${v}s` },
     { key: 'seekStep', label: 'Skip step', type: 'select', num: true, options: [[5, '5 seconds'], [10, '10 seconds'], [15, '15 seconds'], [30, '30 seconds']] },
-    { key: 'speed', label: 'Default speed', type: 'select', num: true, options: [[0.75, '0.75×'], [1, '1×'], [1.25, '1.25×'], [1.5, '1.5×'], [2, '2×']] },
+    { key: 'speed', label: 'Default speed', type: 'select', num: true, options: [[0.75, '0.75×'], [1, '1×'], [1.25, '1.25×'], [1.5, '1.5×'], [2, '2×'], [3, '3×']] },
     { key: 'rememberVolume', label: 'Remember volume', type: 'toggle' },
     { key: 'ambilight', label: 'Ambilight', help: 'Projects the picture\'s colors around the player. Desktop only: on phones and tablets the video fills the screen.', type: 'toggle', set: (v) => { setCfg('ambilight', v); P.amb = v; $('#pAmb').classList.toggle('on', v); } },
     { key: 'ambIntensity', label: 'Ambilight strength', type: 'range', min: 10, max: 100, step: 5, fmt: pct, live: true },
     { key: 'trailerMode', label: 'Trailers', help: 'Trailers play inside MKCinema, and Back closes them. Open on YouTube hands them to YouTube instead. Embedded trailers use youtube-nocookie.com with YouTube controls, related videos and annotations switched off, and close by themselves at the end. YouTube still shows its title, share link and More videos while a trailer is paused or touched; its terms do not allow sites to cover those. Whether an ad runs is decided by YouTube and the uploader; MKCinema does not block ads.', type: 'select', options: [['auto', 'Best for this device'], ['embed', 'Play inside MKCinema'], ['link', 'Open on YouTube']] },
   ] },
   { id: 'subtitles', icon: 'captions', label: 'Subtitles', intro: 'OpenSubtitles v3 is installed by default. You can also load .srt, .vtt, .ass, .ssa or .sub files from your device in the player.', rows: () => [
-    { html: () => `<div style="margin:6px 0 10px;border-radius:14px;overflow:hidden;background:linear-gradient(120deg,#203040,#402030);aspect-ratio:21/6;display:grid;place-items:end center;padding-bottom:6%"><span style="background:var(--sub-bg);color:var(--sub-color);font-family:var(--sub-font);font-size:calc(var(--sub-size) * .2);text-shadow:var(--sub-shadow);padding:2px 8px;border-radius:3px">This is how subtitles will look.</span></div>` },
+    { html: () => `<div style="margin:6px 0 10px;border-radius:14px;overflow:hidden;background:linear-gradient(120deg,#203040,#402030);aspect-ratio:21/6;display:grid;place-items:end center;padding-bottom:6%"><span style="background:var(--sub-bg);color:var(--sub-color);font-family:var(--sub-font);font-size:calc(var(--sub-size) * .2);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:2px 8px;border-radius:3px">This is how subtitles will look.</span></div>` },
     { key: 'subAuto', label: 'Turn on subtitles automatically', help: 'Picks your language when a stream has it.', type: 'toggle' },
     { key: 'subDubSigns', label: 'Signs & Songs with dubs', help: 'When a dual-audio anime plays its dub in your subtitle language, picks the file\u2019s Signs & Songs track (on-screen text and lyrics) instead of full subtitles made for the original voices.', type: 'toggle' },
     { key: 'subLang', label: 'Preferred language', type: 'select', options: LANG_CHOICES },
@@ -262,6 +265,8 @@ const SECTIONS = [
     { key: 'subBg', label: 'Background opacity', type: 'range', min: 0, max: 100, step: 5, fmt: pct, live: true },
     { key: 'subFont', label: 'Font', type: 'select', options: [['sans', 'Onest (sans)'], ['system', 'System'], ['serif', 'Serif'], ['mono', 'Monospace'], ['display', 'Sora']] },
     { key: 'subOutline', label: 'Text outline', type: 'toggle' },
+    { key: 'subBold', label: 'Bold text', type: 'toggle' },
+    { key: 'subShadow', label: 'Shadow', help: 'A shadow behind the letters helps on bright scenes.', type: 'seg', options: [['none', 'None'], ['strong', 'Soft shadow'], ['drop', 'Hard shadow']] },
     { key: 'subPos', label: 'Position', type: 'select', options: [['bottom', 'Bottom'], ['higher', 'Raised (clears burned-in text)'], ['top', 'Top']] },
   ] },
   { id: 'streams', icon: 'layers', label: 'Streams & addons', intro: 'Control which sources show up and how MKCinema reaches them.', rows: () => [

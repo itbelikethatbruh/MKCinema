@@ -86,7 +86,7 @@
     const p = pane('play');
     if (p && touch) {
       const rate = video.playbackRate;
-      ['0.25', '1.75', '2.5', '3'].forEach((v) => { const b = $(`[data-speed="${v}"]`, p); if (b && Number(v) !== rate) b.remove(); });
+      ['0.25', '1.75', '2.5', '3', '4', '5'].forEach((v) => { const b = $(`[data-speed="${v}"]`, p); if (b && Number(v) !== rate) b.remove(); });
     }
     if (p && phone) $$('[data-tl="ab"]', p).forEach((b) => b.remove());
 

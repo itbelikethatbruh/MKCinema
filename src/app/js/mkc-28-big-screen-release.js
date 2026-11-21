@@ -337,13 +337,29 @@ const Channels = {
           ${l.kind !== 'xtream' ? `<label>TV guide (XMLTV, optional)<input class="inp mono" id="chEpg" value="${esc(l.epg || '')}" placeholder="https://…/guide.xml or .xml.gz" spellcheck="false" autocomplete="off"></label>` : '<p class="tour-note">The guide comes from your Xtream login automatically.</p>'}
         </div>
         <p class="tour-note" id="chMsg"></p>
-        <div class="actions"><button class="btn btn-prime" type="button" data-nav id="chSave"><i data-lucide="check"></i>${edit ? 'Save' : 'Add playlist'}</button>${edit ? '<button class="btn btn-ghost danger" type="button" data-nav id="chDel"><i data-lucide="trash-2"></i>Remove</button>' : ''}</div>`;
+        <div class="actions"><button class="btn btn-prime" type="button" data-nav id="chSave"><i data-lucide="check"></i>${edit ? 'Save' : 'Add playlist'}</button>${edit ? '<button class="btn btn-ghost" type="button" data-nav id="chExport"><i data-lucide="download"></i>Save as .m3u</button>' : ''}${edit ? '<button class="btn btn-ghost danger" type="button" data-nav id="chDel"><i data-lucide="trash-2"></i>Remove</button>' : ''}</div>`;
       icons();
       $$('[data-k]', b).forEach((x) => x.addEventListener('click', () => { Object.assign(l, this.readForm(b, l)); l.kind = x.dataset.k; paint(); }));
       $('#chSave').onclick = () => this.submit(b, l, !!edit);
+      { const ex = $('#chExport'); if (ex) ex.onclick = () => this.exportM3u(l); }
       const del = $('#chDel'); if (del) del.onclick = () => confirmTwice(del, () => { const d = this.get(); d.lists = d.lists.filter((x) => x.id !== l.id); d.favs = d.favs.filter((k) => !k.startsWith(`${l.id}|`)); this.save(d); this.data.delete(l.id); X8.close('chAdd'); S.tvFilter = ''; renderTV(); toast('Playlist removed'); });
     };
     paint(); X8.open('chAdd');
+  },
+  /* 2.86: the playlist as it is now (with its guide address and channel groups), as an .m3u file */
+  async exportM3u(l) {
+    let d = this.data.get(l.id); if (!d) { try { d = await this.load(l); } catch (e) { toast('The playlist did not load, so there is nothing to save yet', 'err'); return; } }
+    const q = (v) => String(v || '').replace(/["\r\n]/g, ' ').trim();
+    const lines = [`#EXTM3U${d.epgUrl ? ` url-tvg="${q(d.epgUrl)}"` : ''}`];
+    d.channels.forEach((c) => {
+      lines.push(`#EXTINF:-1${c.tvgId ? ` tvg-id="${q(c.tvgId)}"` : ''}${c.logo ? ` tvg-logo="${q(c.logo)}"` : ''}${c.group ? ` group-title="${q(c.group)}"` : ''}${c.catchup ? ` catchup="${q(c.catchup)}"` : ''},${q(c.name)}`);
+      if (c.headers) Object.entries(c.headers).forEach(([k, v]) => lines.push(`#EXTVLCOPT:http-${k.toLowerCase() === 'referer' ? 'referrer' : 'user-agent'}=${q(v)}`));
+      lines.push(c.url);
+    });
+    const blob = new Blob([`${lines.join('\n')}\n`], { type: 'audio/x-mpegurl' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${String(l.name || 'channels').replace(/[^\w\- ]+/g, '').trim() || 'channels'}.m3u`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+    toast(`Saved ${d.channels.length} channels`, 'ok', 2600);
   },
   readForm(b, l) {
     const v = (id) => { const el = $(`#${id}`, b); return el ? el.value.trim() : undefined; };
@@ -2531,6 +2547,7 @@ const Networks = {
     const sec = $('#netRow') || this.row();
     if (after) { if (after.nextElementSibling !== sec) after.after(sec); } else if (!sec.isConnected) { const first = rows.firstElementChild; if (first) first.after(sec); else rows.append(sec); }
     this.chPlace();
+    if (typeof Holiday !== 'undefined') Holiday.place();
   },
   open(id, type) { this.cur = id || this.cur; if (type) this.type = type; go('network'); },
   render() {
@@ -2765,7 +2782,7 @@ const SimpleHome = {
     if (typeof Networks !== 'undefined') { const pl = Networks.place.bind(Networks); Networks.place = function () { const r = pl.apply(this, arguments); SimpleHome.tidy(); return r; }; }
     // the banner says "Featured", without the addon's name
     const sh = showHero;
-    showHero = function () { const r = sh.apply(this, arguments); const e = $('#heroEyebrow'); if (e) e.innerHTML = '<i data-lucide="flame"></i>Featured'; icons(); return r; };
+    showHero = function () { const r = sh.apply(this, arguments); const e = $('#heroEyebrow'); if (e) e.innerHTML = '<i data-lucide="flame"></i>Featured'; icons(); if (typeof NewTag !== 'undefined') NewTag.hero(); return r; };
   },
 };
 SimpleHome.init();
@@ -2863,6 +2880,7 @@ const NewEps = {
     if (fresh.length) {
       const f = fresh[0], more = fresh.length - 1;
       toast(`New episode: ${f.name} S${f.s} · E${f.e}${more ? ` and ${more} more` : ''}`, 'info', 5200, 'newEps');
+      if (typeof Alerts !== 'undefined') Alerts.episodes(fresh);
     }
     if (S.view === 'home') this.row();
   },

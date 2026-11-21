@@ -8,6 +8,18 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.86.0', date: '2026-11-21', items: [
+    ['new', 'Swipe to choose', 'Swipe right to save a title to your watchlist, left to skip it. Open it from Discover or the command bar.'],
+    ['new', 'Critics\' Pick', 'One acclaimed film or series a day at the top of Discover.'],
+    ['new', 'Calendar countdown and reminders', 'The next episode or film counts down at the top of the Calendar, and Remind me tells you when it is out. At the end of the newest episode, the player says when the next one airs.'],
+    ['new', 'Alerts to Discord or Telegram', 'New episodes and your reminders can go to your own Discord channel or Telegram chat. Set it up in Settings, Devices.'],
+    ['new', 'Holiday row', 'Christmas, Halloween, Thanksgiving, Valentine\'s Day and New Year films on Home in season.'],
+    ['new', 'Pick a trailer', 'Titles with several trailers show them all, with pictures.'],
+    ['new', 'Are you still watching?', 'After 90 minutes with nobody pressing anything, the next episode waits for a yes.'],
+    ['new', 'Cinema mode', 'An official trailer for a new film before your film starts. It is off until you switch it on in Settings.'],
+    ['better', 'Title pages and Home', 'Reviews from TMDB join Trakt reviews. The Home banner says New film, New series, New season or New episodes. The watch party host can bring every guest to a title page with Show everyone.'],
+    ['better', 'More choices', 'Speeds up to 5x, interface sizes up to 200%, bold subtitles with a shadow choice, save a playlist as .m3u, and the screensaver can step aside so the TV sleeps.'],
+  ] },
   { v: '2.85.0', date: '2026-11-17', items: [
     ['new', 'Networks row', 'Home has a new row of TV networks such as ABC, NBC, CBS, HBO, FX, BBC One and Cartoon Network. Pick one to see its most popular series.'],
     ['better', 'Streaming services row', 'The row with Netflix, Hulu, Prime Video and the others is now called Streaming services.'],
