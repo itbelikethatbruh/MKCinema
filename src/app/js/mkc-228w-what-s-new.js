@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.88.1', date: '2026-11-21', items: [
+    ['better', 'Quicker start', 'While the app starts it no longer re-measures the whole page over and over, so Home is ready to use sooner. The difference is biggest on TVs, Fire TV sticks and older phones.'],
+  ] },
   { v: '2.88.0', date: '2026-11-21', items: [
     ['new', 'Spotlight Home', 'A new choice under Settings › Home › What the featured banner shows: The poster I highlight. On TVs and computers the banner stays at the top of Home and shows whichever poster you are on, with Play, Trailer and Details one press up.'],
   ] },

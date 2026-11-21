@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.88.1 (2026-11-21)
+
+- **Quicker start:** while the app starts it no longer re-measures the whole page over and over, so Home is ready to use sooner. The difference is biggest on TVs, Fire TV sticks and older phones.
+
 ## Web app 2.88.0 (2026-11-21)
 
 - **Spotlight Home:** a new choice for the featured banner (Settings, Home): it stays at the top of Home and shows the poster you highlight, with Play, Trailer and Details one press up. For TVs and computers.
