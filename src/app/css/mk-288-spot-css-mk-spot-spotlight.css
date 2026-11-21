@@ -1,0 +1,11 @@
+
+/* mk-288-spot: Spotlight Home. The banner stays at the top and shows the poster you highlight; rows move under it. */
+html.mk-spot #hero{position:sticky;top:0;z-index:6;min-height:clamp(260px,42vh,460px);max-height:clamp(260px,42vh,460px);margin-bottom:18px}
+html.mk-spot #heroDots,html.mk-spot #heroPrev,html.mk-spot #heroNext{display:none!important}
+html.mk-spot{scroll-padding-top:calc(clamp(260px,42vh,460px) + 24px)}
+@media (max-height:820px){html.mk-spot #hero .hero-desc,html.mk-spot #hero .hero-desc-slot{display:none}}
+html.mk-spot #hero{--hl:64px}
+html.mk-spot #hero .hero-body{padding-top:12px;padding-bottom:clamp(14px,2.2vw,26px)}
+html.mk-spot #hero #heroLogoWrap{margin-bottom:10px}
+html.mk-spot #heroEyebrow{display:none}
+html.mk-spot #hero .hero-desc{-webkit-line-clamp:2;height:3em;margin-bottom:14px}

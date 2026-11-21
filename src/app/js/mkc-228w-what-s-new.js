@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.88.0', date: '2026-11-21', items: [
+    ['new', 'Spotlight Home', 'A new choice under Settings › Home › What the featured banner shows: The poster I highlight. On TVs and computers the banner stays at the top of Home and shows whichever poster you are on, with Play, Trailer and Details one press up.'],
+  ] },
   { v: '2.87.2', date: '2026-11-21', items: [
     ['better', 'Faster on TVs', 'Snappy mode is now on for every TV, and network and channel logos are drawn flat on TVs, so each press of the remote has far less to redraw. Turn Snappy mode off in Settings › Performance if you prefer the full effects.'],
     ['fix', 'Remote reaches Peak Cinema', 'Pressing Down on Home now stops on the Peak Cinema button instead of jumping past it.'],
