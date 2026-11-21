@@ -1,6 +1,8 @@
 
 (() => {
   const vp = document.querySelector('meta[name="viewport"]'), pl = document.getElementById('player'); if (!vp || !pl) return;
+  // 2.86.2 (mk-tvnext-286): TVs have no pinch zoom, and their app sets its own 1280 px layout: leave it alone
+  if ((typeof IS_TV !== 'undefined' && IS_TV) || /MKCinemaTV\/|AFT|Android TV|GoogleTV|BRAVIA|SMART-TV|SmartTV|Web0S|Tizen|Xbox|PlayStation/i.test(navigator.userAgent) || document.documentElement.classList.contains('tv')) return;
   const FREE = vp.getAttribute('content'), LOCK = FREE + ', minimum-scale=1, maximum-scale=1, user-scalable=no';
   let app = false;
   try { app = /MKCinemaAndroid\//.test(navigator.userAgent) || navigator.standalone === true || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches; } catch (e) { /* stays a browser tab */ }
