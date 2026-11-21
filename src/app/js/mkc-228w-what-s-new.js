@@ -8,6 +8,13 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.87.1', date: '2026-11-21', items: [
+    ['new', 'Live TV remembers each channel', 'The audio language and subtitles you choose on a channel are there the next time you tune in.'],
+    ['new', 'Record new episodes only', 'Repeats of a show are skipped when the guide marks them. A New only switch for each show in Live TV › Recordings.'],
+    ['new', 'First-choice addon', 'Pick one addon and its sources are tried first for everything. Settings › Streams & addons.'],
+    ['new', 'Calendar by week or month', 'The Calendar now has List, Week and Month views.'],
+    ['fix', 'Recordings', 'Cancelling one planned recording no longer removes others planned at the same moment.'],
+  ] },
   { v: '2.87.0', date: '2026-11-21', items: [
     ['new', 'Snappy mode', 'The fastest MKCinema, on any device. Every feature stays, but nothing animates, glass and shadows are drawn flat and rows start shorter, so every press answers at once. It turns on by itself on Fire TV Sticks. Settings › Performance.'],
     ['fix', 'Very large films play through', '4K remux films and other very large files no longer stall a few seconds in or close the player, and skipping ahead in them lands where you asked.'],

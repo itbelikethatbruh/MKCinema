@@ -1,0 +1,33 @@
+
+#calView{margin-left:8px}
+.cal-grid-on .cal-day,.cal-grid-on>.empty{display:none}
+.cg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:14px 0 6px}
+.cg-h{font-family:var(--f-body);font-size:calc(11px * var(--ts,1));letter-spacing:.12em;text-transform:uppercase;color:var(--mute);text-align:center;padding:2px 0}
+.cg-d{min-height:96px;border:1px solid var(--line-soft);border-radius:calc(var(--r-m) * 1.1);padding:6px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.cg-week .cg-d{min-height:220px}
+.cg-d.past{opacity:.55}
+.cg-d.today{border-color:var(--gold)}
+.cg-n{display:flex;align-items:baseline;justify-content:space-between;gap:4px;background:none;border:0;color:inherit;font:inherit;padding:2px 2px 4px;cursor:pointer;border-radius:6px;text-align:left}
+.cg-n b{font-size:.95rem}
+.cg-n small{color:var(--mute);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em}
+.cg-n em{font-style:normal;font-size:.7rem;color:var(--gold);display:none}
+.cg-it{display:block;width:100%;text-align:left;background:var(--bg-2,rgba(255,255,255,.04));border:1px solid var(--line-soft);border-radius:6px;color:inherit;font:inherit;font-size:.78rem;line-height:1.25;padding:4px 6px;cursor:pointer;overflow:hidden}
+.cg-it b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cg-it small{display:block;color:var(--mute);font-size:.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cg-it.film{border-style:dashed}
+.cg-it:hover,.cg-it:focus-visible,.cg-it.nav-focus,.cg-n:hover,.cg-n:focus-visible,.cg-n.nav-focus{border-color:var(--gold)}
+.cg-more{font-size:.72rem;color:var(--mute);padding:0 2px}
+.cg-pick{margin:4px 0 18px}
+.cg-pick h3{margin:0 0 8px}
+@media (max-width:760px){
+  .cg-week{grid-template-columns:1fr}
+  .cg-week .cg-h{display:none}
+  .cg-week .cg-d{min-height:0}
+  .cg-month{gap:3px}
+  .cg-month .cg-d{min-height:54px;padding:3px}
+  .cg-month .cg-it,.cg-month .cg-more{display:none}
+  .cg-month .cg-n{flex-direction:column;align-items:center;gap:2px;width:100%}
+  .cg-month .cg-n small{display:none}
+  .cg-month .cg-n em{display:block}
+}
+.rs-new.on{border-color:var(--gold);color:var(--gold)}
