@@ -8,6 +8,12 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.89.0', date: '2026-11-21', items: [
+    ['new', 'Home appears at once on TVs', 'When you open MKCinema on a TV or Fire TV stick, Home is drawn straight away as you last saw it, then the fresh rows take over a moment later. No more waiting on a blank screen.'],
+    ['new', '4K first where your device plays it', 'Smart Play now starts with 4K in the MKCinema player when your device plays 4K smoothly, and always in the Windows and Android apps\' own player. Other devices still start with 1080p, so films keep starting on the first try.'],
+    ['new', 'Track what you watch on MDBList', 'Add your MDBList key in Settings and turn tracking on: playback is scrobbled and your watched history syncs both ways.'],
+    ['new', 'Subtitle background in any colour', 'Subtitles can have a background in any colour, such as white words on a solid black box.'],
+  ] },
   { v: '2.88.1', date: '2026-11-21', items: [
     ['better', 'Quicker start', 'While the app starts it no longer re-measures the whole page over and over, so Home is ready to use sooner. The difference is biggest on TVs, Fire TV sticks and older phones.'],
   ] },

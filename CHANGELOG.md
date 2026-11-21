@@ -2,6 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.89.0 (2026-11-21)
+
+- **Home appears at once on TVs:** when you open MKCinema on a TV or Fire TV stick, Home is drawn straight away as you last saw it, then the fresh rows take over a moment later.
+- **4K first where your device plays it:** Smart Play starts with 4K in the MKCinema player when the device plays 4K smoothly, and always in the Windows and Android apps' own player. Other devices still start with 1080p.
+- **MDBList tracking:** add your MDBList key in Settings and turn tracking on. Playback is scrobbled and your watched history syncs both ways.
+- **Subtitle background in any colour,** such as white words on a solid black box.
+
 ## Web app 2.88.1 (2026-11-21)
 
 - **Quicker start:** while the app starts it no longer re-measures the whole page over and over, so Home is ready to use sooner. The difference is biggest on TVs, Fire TV sticks and older phones.

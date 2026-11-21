@@ -12,12 +12,35 @@ const WebCap = {
   on() {
     try {
       if (IS_TV) return !(typeof TvPlayer !== 'undefined' && TvPlayer.on());
-      return extPlayerId() === 'builtin';
+      if (extPlayerId() !== 'builtin') return false;
+      /* mk-289-4k: the native player decodes everything, so it gets the full setting */
+      if (typeof MkNative !== 'undefined' && MkNative.ready()) return false;
+      return true;
     } catch (e) { return false; }
   },
-  above(s) { const t = s && s._tel; return !!(t && t.res && (this.RANK[t.res] || 0) > 3); },
+  cap: null,
+  /* does this browser decode 4K smoothly in hardware? (asked once at start; null until answered) */
+  probe() {
+    const mc = navigator.mediaCapabilities; if (IS_TV || !mc || !mc.decodingInfo) return;
+    const ask = (codec, extra) => mc.decodingInfo({ type: 'media-source', video: { contentType: `video/mp4; codecs="${codec}"`, width: 3840, height: 2160, bitrate: 40e6, framerate: 24, ...(extra || {}) } })
+      .then((r) => !!(r && r.supported && r.smooth && r.powerEfficient)).catch(() => false);
+    Promise.all([ask('hvc1.2.4.L153.B0'), ask('hvc1.2.4.L153.B0', { transferFunction: 'pq', colorGamut: 'rec2020' }), ask('dvh1.05.06'), ask('av01.0.12M.10')])
+      .then(([sdr, hdr, dv, av1]) => { this.cap = { hevc: sdr && hdr, dv, av1 }; }).catch(() => {});
+  },
+  plays4k(s) {
+    const c = this.cap, t = s && s._tel; if (!c || !c.hevc || !t) return false;
+    if (t.codec === 'AV1') return c.av1;
+    if (t.hdr === 'Dolby Vision' && !c.dv) {
+      // Dolby Vision plays only when the file also carries plain HDR
+      const T = [s.name, s.title, s.description, (s.behaviorHints || {}).filename].filter(Boolean).join(' ').toLowerCase();
+      return /\bhdr(10)?(\+|plus)?\b/.test(T);
+    }
+    return true;
+  },
+  above(s) { const t = s && s._tel; return !!(t && t.res && (this.RANK[t.res] || 0) > 3) && !this.plays4k(s); },
   usable(s) { return !!(s && s._tel && s._tel.cached !== false); },
 };
+try { WebCap.probe(); } catch (e) { /* stays 1080p first */ }
 (() => {
   if (typeof engine === 'undefined' || typeof engine.pickBest !== 'function') return;
   const pick = engine.pickBest;
@@ -46,7 +69,7 @@ const WebCap = {
       const rows = pb.rows;
       pb.rows = function () {
         const out = rows.apply(this, arguments);
-        if (!Array.isArray(out) || !WebCap.on() || CFG.maxQuality === '1080' || CFG.maxQuality === '720') return out;
+        if (!Array.isArray(out) || !WebCap.on() || (WebCap.cap && WebCap.cap.hevc) || CFG.maxQuality === '1080' || CFG.maxQuality === '720') return out;
         const i = out.findIndex((r) => r && r.key === 'maxQuality');
         if (i < 0) return out;
         const note = { html: () => '<div class="set-row mk-webcap-note"><div><small>In the MKCinema player, Smart Play starts with 1080p, because most 4K files won’t play in a browser. 4K is used when it is the only choice. VLC and the TV player use your full setting.</small></div></div>' };
