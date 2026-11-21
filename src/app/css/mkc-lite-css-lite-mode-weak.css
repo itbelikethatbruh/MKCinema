@@ -16,6 +16,10 @@ html.lite #pRec.on .rec-dot{animation:recPulse 1.6s ease-in-out infinite!importa
 html.lite .pal-mic.live,html.lite .qp-mic.live{animation:micPulse 1.2s ease-in-out infinite!important}
 html.lite .sv-hint{animation:svHint 8s ease 1.4s both!important}
 /* mk-287-snappy */
+/* mk-2872-tv: network and channel logos lie flat on TVs. The tilted logos each took a drawing layer of their own (71 on
+   Home), which every remote press had to rebuild. The highlighted tile still lifts. */
+html.tv .net-tile .net-logo{transform:none!important;animation:none!important;transition:none!important}
+html.tv .net-tile.nav-focus .net-logo,html.tv .net-tile:focus-visible .net-logo{transform:translateY(-6px) scale(1.1)!important}
 /* 2.87 Snappy: glass, blur and shadows are drawn flat, so a slow chip paints each frame in about half the time.
    The poster glow (its own ::before layer) and focus outlines stay. */
 html.lite *,html.lite *::after{box-shadow:none!important;text-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}

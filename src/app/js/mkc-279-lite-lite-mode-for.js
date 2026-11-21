@@ -10,7 +10,7 @@ const Lite = {
   mode() { try { const v = JSON.parse(localStorage.getItem(this.KEY) || '"auto"'); return v === 'on' || v === 'off' ? v : 'auto'; } catch (e) { return 'auto'; } },
   weak() {
     const ua = navigator.userAgent, m = navigator.deviceMemory, c = navigator.hardwareConcurrency;
-    return IS_TV ? (/\bAFT[A-Z0-9]*\b/.test(ua) || (m && m <= 2) || (c && c <= 2)) : (m && m <= 1);
+    return IS_TV ? true : (m && m <= 1);
   },
   on(v) { return v === 'on' || (v === 'auto' && !!this.weak()); },
   set(v) {
@@ -20,7 +20,7 @@ const Lite = {
     toast(this.on(v) ? 'Snappy mode on. Restarting MKCinema…' : 'Snappy mode off. Restarting MKCinema…', 'info', 2000);
     setTimeout(() => location.reload(), 900);
   },
-  HELP: 'The fastest MKCinema. Every feature stays, but nothing animates, glass and shadows are drawn flat, rows start shorter and the banner stays on one title, so every press answers at once. Automatic turns it on for Fire TV Sticks and devices with little memory.',
+  HELP: 'The fastest MKCinema. Every feature stays, but nothing animates, glass and shadows are drawn flat, rows start shorter and the banner stays on one title, so every press answers at once. Automatic turns it on for TVs and for devices with little memory.',
   init() {
     try { MKLog.add('info', `lite: ${window.MK_LITE || 'off'} (setting ${this.mode()}, ram ${navigator.deviceMemory || '?'} GB, cpus ${navigator.hardwareConcurrency || '?'})`); } catch (e) { /* log is optional */ }
     if (IS_TV && window.MK_LITE && window.MK_LITE !== 'on' && !Store.raw.get('liteTold', false)) {

@@ -8,6 +8,11 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.87.2', date: '2026-11-21', items: [
+    ['better', 'Faster on TVs', 'Snappy mode is now on for every TV, and network and channel logos are drawn flat on TVs, so each press of the remote has far less to redraw. Turn Snappy mode off in Settings › Performance if you prefer the full effects.'],
+    ['fix', 'Remote reaches Peak Cinema', 'Pressing Down on Home now stops on the Peak Cinema button instead of jumping past it.'],
+    ['new', 'Choose the featured banner', 'The big banner on Home can show films, series, or your own watchlist and what you\'re watching. Settings › Home.'],
+  ] },
   { v: '2.87.1', date: '2026-11-21', items: [
     ['new', 'Live TV remembers each channel', 'The audio language and subtitles you choose on a channel are there the next time you tune in.'],
     ['new', 'Record new episodes only', 'Repeats of a show are skipped when the guide marks them. A New only switch for each show in Live TV › Recordings.'],

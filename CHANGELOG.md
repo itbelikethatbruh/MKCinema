@@ -2,6 +2,12 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.87.2 (2026-11-21)
+
+- **Faster on TVs:** Snappy mode is now on for every TV, and network and channel logos are drawn flat on TVs, so each press of the remote has far less to redraw.
+- **Remote reaches Peak Cinema:** pressing Down on Home stops on the Peak Cinema button instead of jumping past it.
+- **Choose the featured banner:** the big banner on Home can show films, series, or your own watchlist and what you're watching (Settings, Home).
+
 ## Web app 2.87.1 (2026-11-21)
 
 - **Live TV remembers each channel:** the audio language and subtitles you choose on a channel are there the next time you tune in.
