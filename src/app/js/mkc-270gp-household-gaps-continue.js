@@ -470,16 +470,17 @@
   /* ================= 6. Sources grouped by addon ================= */
   const SrcGroups = {
     apply(listEl, streams) {
-      if (CFG.srcGroup !== true || !listEl || !streams) return;
+      if (!CFG.srcGroup || !listEl || !streams) return;
       const rows = [...listEl.children].filter((x) => x.matches && x.matches('.stream[data-si]')); if (rows.length < 2) return;
       const groups = new Map();
-      rows.forEach((r) => { const st = streams[Number(r.dataset.si)], a = (st && st._addon) || 'Other'; if (!groups.has(a)) groups.set(a, []); groups.get(a).push(r); });
+      rows.forEach((r) => { const st = streams[Number(r.dataset.si)], a = CFG.srcGroup === 'quality' ? SrcWhy.group(st) : (st && st._addon) || 'Other'; if (!groups.has(a)) groups.set(a, []); groups.get(a).push(r); });
       if (groups.size < 2) return;
       $$('.src-grp', listEl).forEach((x) => x.remove());
       const frag = document.createDocumentFragment();
       groups.forEach((list, name) => {
         const h = document.createElement('div'); h.className = 'src-grp'; h.setAttribute('role', 'heading'); h.setAttribute('aria-level', '4');
         const b = document.createElement('b'); b.textContent = name; h.appendChild(b);
+        if (CFG.srcGroup === 'quality') { const w = document.createElement('small'); w.className = 'src-why'; w.textContent = SrcWhy.why(name); h.appendChild(w); }
         const n = document.createElement('span'); n.textContent = String(list.length); h.appendChild(n);
         frag.appendChild(h); list.forEach((r) => frag.appendChild(r));
       });
@@ -493,12 +494,12 @@
       const list = $('#srcList');
       if (list && window.MutationObserver) {
         let busy = false;
-        new MutationObserver(() => { if (busy || CFG.srcGroup !== true || !P.ctx) return; busy = true; safe(() => SrcGroups.apply(list, P.ctx.streams)); Promise.resolve().then(() => { busy = false; }); }).observe(list, { childList: true });
+        new MutationObserver(() => { if (busy || !CFG.srcGroup || !P.ctx) return; busy = true; safe(() => SrcGroups.apply(list, P.ctx.streams)); Promise.resolve().then(() => { busy = false; }); }).observe(list, { childList: true });
       }
       const sec = typeof secById === 'function' && secById('streams');
       if (sec) {
         const rows = sec.rows;
-        sec.rows = () => { const r = rows(), at = r.findIndex((x) => x.key === 'showTrailers'); r.splice(at >= 0 ? at : r.length, 0, { key: 'srcGroup', label: 'Group sources by addon', help: 'The source list shows each addon’s sources together under its name, instead of one list with the best first.', type: 'toggle', get: () => CFG.srcGroup === true, set: (v) => setCfg('srcGroup', v) }); return r; };
+        sec.rows = () => { const r = rows(), at = r.findIndex((x) => x.key === 'showTrailers'); r.splice(at >= 0 ? at : r.length, 0, { key: 'srcGroup', label: 'Group sources', help: 'By addon puts each addon’s sources together under its name. By picture quality puts 4K, Full HD and smaller files in their own groups, each with a line on when to pick it.', type: 'select', options: [['', 'One list, best first'], ['addon', 'By addon'], ['quality', 'By picture quality']], get: () => (CFG.srcGroup === true ? 'addon' : CFG.srcGroup || ''), set: (v) => setCfg('srcGroup', v) }); return r; };
       }
     },
   };

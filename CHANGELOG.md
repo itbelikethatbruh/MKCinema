@@ -2,6 +2,18 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.86.1 (2026-11-21)
+
+- **Watch party tools:** point and draw on the picture, a 3-2-1 Start together countdown, a party PIN and party alerts.
+- **Make it yours:** your own font and background picture, six film page styles, five progress bar styles, a big Play button while paused, and look files to save or send.
+- **Award winners:** Oscars, Cannes, Venice, Berlin, BAFTA, Golden Globes, Emmys and anime awards.
+- **Keep playing in a corner** on computers, **crop bars**, **chapter marks**, hold Left or Right to skip further, and softer controls on HDR films.
+- **Library groups** by decade, genre or rating, sort by your own stars, and a letter strip on phones.
+- **Smart downloads:** the next episodes download on their own and watched ones are cleared away (Android, Windows and Mac apps).
+- **Live TV:** record every episode of a show from the guide, and rewind live TV on channels that allow it.
+- **TV keyboard and carousel rows** for the remote.
+- **Also:** sources grouped by picture quality, filler and recap labels on anime episodes, Calendar filters, most anticipated titles, similar addons, Top rows for your streaming apps, and sections per seat.
+
 ## Web app 2.86.0 (2026-11-21)
 
 - **Swipe to choose:** swipe right to save a title to your watchlist, left to skip it. Open it from Discover or the command bar.

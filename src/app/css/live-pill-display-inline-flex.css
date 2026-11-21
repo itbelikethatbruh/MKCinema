@@ -1,0 +1,7 @@
+
+.live-pill{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;margin-left:10px;border-radius:999px;border:1px solid var(--line-soft);background:rgba(var(--kffffff-c,255,255,255),.08);color:var(--ink);font-size:calc(13px * var(--ts,1));font-weight:700;letter-spacing:.02em;cursor:pointer;white-space:nowrap}
+.live-pill .ldot{width:8px;height:8px;border-radius:50%;background:var(--mute)}
+.live-pill.at{cursor:default;background:transparent}
+.live-pill.at .ldot{background:#e5484d}
+.live-pill:not(.at):hover,.live-pill:not(.at):focus-visible{background:var(--ink);color:var(--n000000,#000)}
+@media (max-width:620px){.live-pill{height:26px;padding:0 9px;margin-left:6px}}

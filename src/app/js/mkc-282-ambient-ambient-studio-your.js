@@ -441,7 +441,7 @@ const Eggs = {
     ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => document.addEventListener(t, () => clearTimeout(hold), true));
     document.addEventListener('contextmenu', (e) => { if (logo(e)) e.preventDefault(); }, true);
     const pal = $('#palInput');
-    if (pal) pal.addEventListener('input', () => { if (pal.value.trim().toLowerCase() === 'rosebud') this.rosebud(); });
+    if (pal) pal.addEventListener('input', () => { if (pal.value.trim().toLowerCase() === 'rosebud') this.rosebud(); else if (pal.value.trim().toLowerCase() === 'arcade' && window.MkArcade) { pal.value = ''; MkArcade.open(); } });
   },
   /* a film leader counts 3, 2, 1 in the middle of the screen */
   booth() {

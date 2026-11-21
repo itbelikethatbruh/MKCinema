@@ -341,10 +341,11 @@ const Diagnostic = {
 /* ---------------- Skip: TheIntroDB, MKV chapters, recaps ---------------- */
 const Marks = {
   ch: null, idb: null, tok: -1,
-  reset() { this.ch = null; this.idb = null; this.all = null; this.tok = Skip.token; },
+  reset() { this.ch = null; this.idb = null; this.all = null; this.tok = Skip.token; $$('#seek .ch-tick').forEach((x) => x.remove()); },
   live() { if (this.tok !== Skip.token) this.reset(); return this; },
   fromChapters(list) {
     this.live().all = (list || []).map((c) => ({ s: Number(c.s) || 0, e: Number(c.e) || 0, name: String(c.name || '') }));
+    Chapters.ticks();
     const m = {};
     for (const c of list) {
       const n = c.name.toLowerCase().trim();

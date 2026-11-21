@@ -762,7 +762,7 @@ class StremioEngine {
     }));
     all.sort((x, y) => y._tel.score - x._tel.score);
     const best = all.find((s) => s._tel.webReady && !s._tel.isTrailer);
-    if (best && best._tel.res) this.qualityCache.set(baseIdOf(id), [best._tel.res === '4K UHD' ? '4K' : best._tel.res, best._tel.hdr === 'Dolby Vision' ? 'DV' : best._tel.hdr ? 'HDR' : '', best._tel.audio.includes('Atmos') ? 'Atmos' : ''].filter(Boolean).join(' · '));
+    if (best && best._tel.res) (window.MkQualSet || ((mp, k, v) => mp.set(k, v)))(this.qualityCache, baseIdOf(id), [best._tel.res === '4K UHD' ? '4K' : best._tel.res, best._tel.hdr === 'Dolby Vision' ? 'DV' : best._tel.hdr ? 'HDR' : '', best._tel.audio.includes('Atmos') ? 'Atmos' : ''].filter(Boolean).join(' · '));
     return { streams: all, errors, addons: cands.length };
   }
   pickBest(streams, { bingeGroup, memo } = {}) {

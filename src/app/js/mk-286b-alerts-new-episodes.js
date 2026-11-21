@@ -184,8 +184,8 @@ const CriticsPick = {
     const m = X8.seeded(list, `cp${X8.dayKey()}`)[0]; if (!m || !$('#dxRows') || $('#dxPick')) return;
     const box = document.createElement('section'); box.className = 'dx-pick'; box.id = 'dxPick';
     box.innerHTML = `<div class="dxp-poster" style="background-image:url('${esc(String(metaPoster(m) || '').replace(/'/g, '%27'))}')"></div><div class="dxp-body"><span class="eyebrow"><i data-lucide="award"></i>Critics’ Pick · today</span><h3 translate="no">${esc(m.name)}</h3><small>${[yearOf(m), genresOf(m).slice(0, 2).join(', '), m.imdbRating ? `IMDb ${m.imdbRating}` : ''].filter(Boolean).map(esc).join(' · ')}</small><p>${esc(String(m.description).slice(0, 260))}${String(m.description).length > 260 ? '…' : ''}</p>
-      <div class="inrow"><button class="btn btn-prime btn-sm" type="button" data-nav id="dxpOpen"><i data-lucide="info"></i>Details</button><button class="btn btn-ghost btn-sm" type="button" data-nav id="dxpSwipe"><i data-lucide="layers"></i>Swipe to choose</button></div></div>`;
+      <div class="inrow"><button class="btn btn-prime btn-sm" type="button" data-nav id="dxpOpen"><i data-lucide="info"></i>Details</button><button class="btn btn-ghost btn-sm" type="button" data-nav id="dxpAwards"><i data-lucide="trophy"></i>Award winners</button><button class="btn btn-ghost btn-sm" type="button" data-nav id="dxpSwipe"><i data-lucide="layers"></i>Swipe to choose</button></div></div>`;
     rows.before(box); icons();
-    $('#dxpOpen').onclick = () => openDetail(remember(m)); $('#dxpSwipe').onclick = () => Swipe.open();
+    $('#dxpOpen').onclick = () => openDetail(remember(m)); $('#dxpSwipe').onclick = () => Swipe.open(); { const aw = $('#dxpAwards'); if (aw) aw.onclick = () => window.MkAwards && MkAwards.open(); }
   },
 };

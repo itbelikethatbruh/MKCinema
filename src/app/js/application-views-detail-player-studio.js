@@ -254,6 +254,7 @@ function saveProgress(force) {
    Navigation between views
    ===================================================================== */
 function go(view, opts = {}) {
+  if (typeof SeatHide !== 'undefined' && SeatHide.blocked(view)) { toast('This seat doesn’t show that section', 'info', 2200); return; }
   if (S.view === 'home' && view !== 'home' && window.MkHomePlace) MkHomePlace.leave();
   const backHome = view === 'home' && S.view !== 'home';
   S.view = view;
@@ -555,7 +556,7 @@ function renderDetail(loading) {
     <button class="ibtn panel-close" type="button" data-close aria-label="Close"><i data-lucide="x"></i></button>
     <div class="d-hero">
       ${imgTag(metaBg(m), m.name, m.id, { wide: true, cls: 'bg', lazy: false })}
-      <div class="d-body" style="padding-top:80px;width:100%">
+      ${window.MkLookKit ? MkLookKit.poster(m) : ''}<div class="d-body" style="padding-top:80px;width:100%">
         <div class="logo3d pop${logo ? ' has-logo' : ''}" style="--t0:${t0}s${logo ? `;--logo:url(&quot;${esc(logo)}&quot;)` : ''}">${logo ? imgTag(logo, m.name, m.id, { nofb: true, cls: 'hero-logo', lazy: false }) : ''}<h1 class="hero-title" data-logo-alt ${logo ? 'hidden' : ''}>${esc(m.name)}</h1>${logo ? '<span class="lg-sheen" aria-hidden="true"><i></i></span>' : ''}</div>
         <div class="metaline${loading ? ' ml-wait' : ''}">${[m.imdbRating ? `<span class="imdb ${rateTier(m.imdbRating)}"><b>IMDb</b>${esc(m.imdbRating)}</span>` : '', yearOf(m) ? `<span>${esc(yearOf(m))}</span>` : '', m.runtime ? `<span>${esc(m.runtime)}</span>` : '', genresOf(m).slice(0, 4).map(esc).join(' · '), `<span class="tag-s">${esc(m.type)}</span>`, m._addon ? `<span class="tag-s v">${esc(m._addon)}</span>` : ''].filter(Boolean).join('')}</div>
         <div class="actions">
@@ -599,6 +600,7 @@ function renderDetail(loading) {
   if (window.MkReviews && !loading) MkReviews.place(m);
   $('#dList').onclick = () => { toggleWatchlist(m); renderDetail(false); renderStreamsPanel(); };
   $$('#dSeasons [data-season]').forEach((b) => b.addEventListener('click', () => { D.season = Number(b.dataset.season); renderDetail(false); renderStreamsPanel(); }));
+  if (window.MkFiller) MkFiller.paint(m);
   bindEpisodes($('#dEps'), m, (v) => { D.video = v; D.season = seasonNo(v); markEpisodes(); EpSheet.open(); loadDetailStreams(); });
   renderStreamsPanel();
 }
@@ -1078,6 +1080,7 @@ function teardown() {
   P.remux = null; video.playbackRate = CFG.speed || 1; PlayerPlus.reset();
 }
 async function playStream(ctx, stream, { startAt, _cin } = {}) {
+  if (typeof MiniPlay !== 'undefined' && MiniPlay.on) MiniPlay.restore(true);
   if (!_cin && typeof CinemaMode !== 'undefined' && await CinemaMode.hold(ctx, stream, startAt)) return;
   if (!stream) return;
   playReq++;
@@ -1090,6 +1093,7 @@ async function playStream(ctx, stream, { startAt, _cin } = {}) {
   const wasOpen = !$('#player').hidden;
   if (!wasOpen) { openLayer('player'); }
   const prevCtx = P.ctx; P.ctx = ctx; P.stream = stream; P.retried = false;
+  $('#player').classList.toggle('is-hdr', CFG.hdrDim !== false && !!(stream._tel && stream._tel.hdr));
   if (window.MkShuffle && MkShuffle.id && MkShuffle.id !== (ctx.meta && ctx.meta.id)) MkShuffle.stop();
   if (window.MkSrcSpeed) MkSrcSpeed.note(stream);
   const key = ctx.video ? ctx.video.id : ctx.meta.id;
@@ -1234,6 +1238,7 @@ const LiveMini = {
   },
 };
 async function closePlayer() {
+  if (typeof MiniPlay !== 'undefined' && MiniPlay.on) MiniPlay.restore(true);
   if (typeof PartyGuest !== 'undefined') PartyGuest.closed();
   playReq++; // a next episode or Smart Play still loading must not reopen the player
   const liveKeep = LiveMini.grab();
@@ -1272,7 +1277,7 @@ function startAmbilight() {
 function wakeHud(stay) {
   if (P.locked) return;
   const hud = $('#hud'); hud.classList.remove('idle'); clearTimeout(P.idleT);
-  if (!stay) P.idleT = setTimeout(() => { if (!video.paused && !P.scrubbing && !$('#player .drawer.open') && $('#subMenu').hidden && $('#optMenu').hidden && $('#dspPop').hidden) hud.classList.add('idle'); }, 2800);
+  if (!stay) P.idleT = setTimeout(() => { if (!video.paused && !P.scrubbing && !$('#player .drawer.open') && $('#subMenu').hidden && $('#optMenu').hidden && $('#dspPop').hidden) hud.classList.add('idle'); }, (Number(CFG.hudHide) || 3) * 1000);
 }
 ['pointermove', 'pointerdown', 'touchstart'].forEach((ev) => $('#player').addEventListener(ev, () => wakeHud(), { passive: true }));
 function setPlayIcon() { const h = `<i data-lucide="${video.paused ? 'play' : 'pause'}"></i>`; $('#pPlay').innerHTML = h; $('#pmPlay').innerHTML = h; icons(); }
@@ -1281,7 +1286,7 @@ video.addEventListener('pause', () => { setPlayIcon(); wakeHud(true); saveProgre
 video.addEventListener('timeupdate', () => {
   const d = pDur(), t = pNow(), live = !isFinite(d);
   if (Number.isNaN(d)) return;
-  const pct = live ? 100 : (t / d) * 100 || 0;
+  const pct = live ? (window.MkLiveDvr ? MkLiveDvr.pct() : 100) : (t / d) * 100 || 0;
   if (!P.scrubbing) MkSeekPaint.cur(pct / 100);
   if (!live && video.buffered.length) MkSeekPaint.buf((video.buffered.end(video.buffered.length - 1) + (P.remux ? P.remux.offset : 0)) / d);
   saveProgress(false);
@@ -1293,26 +1298,28 @@ video.addEventListener('volumechange', () => { if (P.ducking || Rescue.userMuted
 video.volume = CFG.rememberVolume ? Store.get('volume', 1) : 1;
 const togglePlay = () => { if (video.srcObject || video.currentSrc) (video.paused ? video.play().catch(() => {}) : video.pause()); };
 const step = () => Number(CFG.seekStep) || 10;
-const seekBy = (s) => { if (isFinite(pDur())) { pSeek(pNow() + s); wakeHud(); } };
+const seekBy = (s) => { if (window.MkLiveDvr && MkLiveDvr.seek(s)) { wakeHud(); return; } if (isFinite(pDur())) { pSeek(pNow() + s); wakeHud(); } };
 $('#pPlay').onclick = togglePlay; $('#pmPlay').onclick = togglePlay;
 $('#pBack').onclick = () => seekBy(-step()); $('#pFwd').onclick = () => seekBy(step());
 $('#pmBack').onclick = () => { seekBy(-step()); seekFx(-1); }; $('#pmFwd').onclick = () => { seekBy(step()); seekFx(1); };
 /* Picture: aspect ratio (VLC-style forced ratios) and zoom */
-const ASPECTS = [['fit', 'Fit'], ['fill', 'Fill'], ['stretch', 'Stretch'], ['16:9', '16:9'], ['4:3', '4:3'], ['21:9', '21:9']];
+const ASPECTS = [['fit', 'Fit'], ['crop', 'Crop bars'], ['fill', 'Fill'], ['stretch', 'Stretch'], ['16:9', '16:9'], ['4:3', '4:3'], ['21:9', '21:9']];
 P.aspect = 'fit'; P.zoom = 1;
 function applyPicture() {
   if (window.MkNative && MkNative.active) MkNative.picture();
   const v = video, a = P.aspect || 'fit';
-  v.style.width = ''; v.style.height = ''; v.style.margin = '';
-  if (a === 'fit' || a === 'fill' || a === 'stretch') v.style.objectFit = { fit: 'contain', fill: 'cover', stretch: 'fill' }[a];
+  v.style.width = ''; v.style.height = ''; v.style.margin = ''; P.crop = 1;
+  if (a === 'crop') P.crop = CropBars.scale();
+  if (a === 'crop') v.style.objectFit = 'contain';
+  else if (a === 'fit' || a === 'fill' || a === 'stretch') v.style.objectFit = { fit: 'contain', fill: 'cover', stretch: 'fill' }[a];
   else {
     const [x, y] = a.split(':').map(Number), R = x / y, st = $('#stage').getBoundingClientRect();
     let w = st.width, h = w / R; if (h > st.height) { h = st.height; w = h * R; }
     v.style.objectFit = 'fill'; v.style.width = `${w}px`; v.style.height = `${h}px`; v.style.margin = `${(st.height - h) / 2}px auto 0`;
   }
-  v.style.transform = P.zoom !== 1 ? `scale(${P.zoom})` : '';
+  const z = (P.zoom || 1) * (P.crop || 1); v.style.transform = z !== 1 ? `scale(${z.toFixed(4)})` : '';
 }
-addEventListener('resize', () => { if (!$('#player').hidden && P.aspect.includes(':')) applyPicture(); });
+addEventListener('resize', () => { if (!$('#player').hidden && (P.aspect.includes(':') || P.aspect === 'crop')) applyPicture(); });
 /* Lock: hides every control so a pocket or a stray thumb can't pause or seek */
 function setLock(on) {
   P.locked = on; $('#player').classList.toggle('locked', on); $('#pUnlock').hidden = true;
@@ -1692,7 +1699,7 @@ function renderOptMenu() {
   $$('[data-speed]', m).forEach((b) => b.addEventListener('click', () => { video.playbackRate = Number(b.dataset.speed); renderOptMenu(); }));
   $$('[data-level]', m).forEach((b) => b.addEventListener('click', () => { P.hls.currentLevel = Number(b.dataset.level); renderOptMenu(); }));
   $$('[data-audio]', m).forEach((b) => b.addEventListener('click', () => { const i = Number(b.dataset.audio); if (P.hls && P.hls.audioTracks.length > 1) P.hls.audioTrack = i; else Array.from(video.audioTracks).forEach((t, k) => { t.enabled = k === i; }); renderOptMenu(); }));
-  $$('[data-fit]', m).forEach((b) => b.addEventListener('click', () => { P.aspect = b.dataset.fit; applyPicture(); renderOptMenu(); }));
+  $$('[data-fit]', m).forEach((b) => b.addEventListener('click', () => { P.aspect = b.dataset.fit; CropBars.m = null; applyPicture(); renderOptMenu(); if (P.aspect === 'crop') CropBars.chosen(); }));
   $$('[data-zoom]', m).forEach((b) => b.addEventListener('click', () => { P.zoom = Number(b.dataset.zoom); applyPicture(); renderOptMenu(); }));
   const lk = $('[data-lock]', m); if (lk) lk.onclick = () => { m.hidden = true; setLock(true); };
   const amb = $('[data-amb]', m); if (amb) amb.onclick = () => { $('#pAmb').click(); renderOptMenu(); };
@@ -2181,7 +2188,7 @@ function handleKey(e) {
     if (k === 'Enter' && !onCtl && !Skip.visible()) { e.preventDefault(); if (a && a !== document.body) a.blur(); togglePlay(); wakeHud(); return; }
   }
   if (playerOpen && !drawer) {
-    const map = { ' ': togglePlay, k: togglePlay, j: () => seekBy(-step()), l: () => seekBy(step()), ArrowLeft: () => seekBy(-step()), ArrowRight: () => seekBy(step()), g: () => setSubDelay(P.subDelay - .25), h: () => setSubDelay(P.subDelay + .25), v: cycleSub, b: cycleAudio, '[': () => nudgeSpeed(-.25), ']': () => nudgeSpeed(.25), '=': () => nudgeSpeed(0), o: () => $('#pOpts').click(), ArrowUp: () => { video.volume = clamp(video.volume + .1, 0, 1); }, ArrowDown: () => { video.volume = clamp(video.volume - .1, 0, 1); }, f: toggleFull, m: () => { video.muted = !video.muted; }, n: playNext, s: () => openDrawer('src'), e: () => !$('#pEpsBtn').hidden && openDrawer('ep'), c: () => $('#pSubs').click(), a: () => DSP.toggle(), p: () => Party.openPanel(), Backspace: back };
+    const map = { ' ': togglePlay, k: togglePlay, j: () => seekBy(-step()), l: () => seekBy(step()), ArrowLeft: () => seekBy(-HoldSeek.step(e)), ArrowRight: () => seekBy(HoldSeek.step(e)), g: () => setSubDelay(P.subDelay - .25), h: () => setSubDelay(P.subDelay + .25), v: cycleSub, b: cycleAudio, '[': () => nudgeSpeed(-.25), ']': () => nudgeSpeed(.25), '=': () => nudgeSpeed(0), o: () => $('#pOpts').click(), ArrowUp: () => { video.volume = clamp(video.volume + .1, 0, 1); }, ArrowDown: () => { video.volume = clamp(video.volume - .1, 0, 1); }, f: toggleFull, m: () => { video.muted = !video.muted; }, n: playNext, s: () => openDrawer('src'), e: () => !$('#pEpsBtn').hidden && openDrawer('ep'), c: () => $('#pSubs').click(), a: () => DSP.toggle(), p: () => Party.openPanel(), Backspace: back };
     // browser shortcuts (Ctrl, Cmd or Alt held) are left alone, and letters work with Caps Lock on
     const kk = k.length === 1 ? k.toLowerCase() : k, mod = e.ctrlKey || e.metaKey || e.altKey;
     if (!mod && map[kk] && !(k === ' ' && e.target.tagName === 'BUTTON' && e.target !== document.body)) { e.preventDefault(); map[kk](); wakeHud(); return; }

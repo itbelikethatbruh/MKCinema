@@ -51,7 +51,7 @@ const MkNative = {
     this.cmd('open', JSON.stringify({ url: stream.url, headers: h, start: startAt || 0, title: (P.ctx && P.ctx.meta && P.ctx.meta.name) || '', alang: this.alang(), slang: '' }))
       .then((j) => { try { this.gen = JSON.parse(j || '{}').gen || 0; } catch (e) { /* ignore */ } })
       .catch((e) => this.fail(String((e && e.message) || e)));
-    this.vol(); this.cmd('speed', CFG.speed || 1).catch(() => {});
+    this.vol(); this.cmd('speed', CFG.speed || 1).catch(() => {}); this.cmd('tonemap', CFG.hdrMap === 'sdr' ? 'sdr' : 'auto').catch(() => {});
     this.picture(); this.sound(); styleCues();
     this.fire('loadstart');
   },
