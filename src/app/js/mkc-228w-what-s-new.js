@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.86.2', date: '2026-11-21', items: [
+    ['fix', 'Next episode on TVs', 'Pressing Next episode or reaching the end of an episode now plays the next one, and the TV layout keeps its proper size.'],
+  ] },
   { v: '2.86.1', date: '2026-11-21', items: [
     ['new', 'Watch party tools', 'Tap the picture to point and drag to draw, and everyone sees it. The host can count 3-2-1 so the film starts for everyone at once, and add a 4-digit PIN to a party.'],
     ['new', 'Make it yours', 'Your own font and background picture, six film page styles, five progress bar styles and a big Play button while paused. Look files can be saved, opened on another screen or sent to a friend.'],

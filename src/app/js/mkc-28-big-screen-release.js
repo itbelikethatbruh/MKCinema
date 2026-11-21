@@ -3578,7 +3578,7 @@ const TvPlayer = {
       TvPlayer.cur = { ctx, stream, startAt };
       // kept on the device too: on low-memory TV sticks Android may rebuild this page while the TV player is open
       try { const pick = (o, ks) => { const x = {}; ks.forEach((k) => { if (o && o[k] != null) x[k] = o[k]; }); return x; };
-        localStorage.setItem('mkc:tvHandoff', JSON.stringify({ at: Date.now(), startAt, meta: pick(ctx.meta, ['id', 'type', 'name', 'poster', 'background', 'logo', 'genres', 'genre', 'year', 'releaseInfo', 'videos']), video: v ? pick(v, ['id', 'season', 'episode', 'title', 'name', 'thumbnail']) : null })); } catch (e) { /* storage full or off */ }
+        localStorage.setItem('mkc:tvHandoff', JSON.stringify({ at: Date.now(), startAt, group: bh.bingeGroup || null, meta: pick(ctx.meta, ['id', 'type', 'name', 'poster', 'background', 'logo', 'genres', 'genre', 'year', 'releaseInfo', 'videos']), video: v ? pick(v, ['id', 'season', 'episode', 'title', 'name', 'thumbnail']) : null })); } catch (e) { /* storage full or off */ }
       (async () => {
         const [subUrl, tvx] = await Promise.all([TvPlayer.subUrl(ctx), typeof TvParity !== 'undefined' ? TvParity.prep(ctx).catch(() => ({})) : Promise.resolve({})]);
         if (P.stream !== stream) return;
@@ -3596,7 +3596,26 @@ const TvPlayer = {
           if (!h || !h.meta || !h.meta.id || Date.now() - h.at > 12 * 3600e3) return;
           c = TvPlayer.cur = { ctx: { meta: h.meta, video: h.video, streams: [] }, stream: { _restored: true }, startAt: h.startAt };
           if (act === 'web' || err) act = 'sources';
-          err = null; next = false; ended = false; // the next episode needs its sources again, so it starts from the film's page
+          // 2.86.2: Next episode (or the end with autoplay on) still plays the next episode, with fresh sources
+          const wantNext = act !== 'sources' && (next || (ended && CFG.autoNext));
+          err = null; next = false; ended = false;
+          const nv0 = wantNext && h.video && nextVideo(h.meta, h.video);
+          if (nv0) {
+            try { localStorage.removeItem('mkc:tvHandoff'); } catch (e) { /* none */ }
+            TvPlayer.save(pos, dur); TvPlayer.cur = null;
+            const req = ++playReq;
+            (async () => {
+              let meta = h.meta;
+              try { meta = remember({ ...h.meta, ...((await engine.fetchMeta(h.meta.type || 'series', h.meta.id)) || {}) }); } catch (e) { /* the device copy */ }
+              const nv = (meta.videos && meta.videos.find((x) => x.id === nv0.id)) || nv0, id = videoIdFor(meta, nv);
+              let streams = [];
+              try { streams = (await engine.fetchStreams('series', id)).streams || []; } catch (e) { streams = []; }
+              if (req !== playReq) return;
+              const pick = pickBest(streams, PickMemo.opts(meta, h.group || undefined));
+              if (pick) playStream({ meta, video: nv, streams }, pick); else openDetail(meta, { videoId: id });
+            })();
+            return;
+          }
         }
         try { localStorage.removeItem('mkc:tvHandoff'); } catch (e) { /* none */ }
         if (act === 'web') {
