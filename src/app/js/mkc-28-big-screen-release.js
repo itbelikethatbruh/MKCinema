@@ -2650,7 +2650,8 @@ const TvHome = {
           if (sameRow) return; // along the row: the page stays still
           const lay = el.closest('.layer-ov'), r = el.getBoundingClientRect();
           const top = lay ? lay.getBoundingClientRect().top : 0, h = lay ? lay.clientHeight : innerHeight;
-          const d = r.top - top + r.height / 2 - h / 2;
+          const sp = !lay && document.documentElement.classList.contains('mk-spot') && el.closest('#homeRows') ? $('#hero').getBoundingClientRect().height : 0;
+          const d = r.top - top + r.height / 2 - (sp + (h - sp) / 2);
           if (Math.abs(d) > 6) (lay || window).scrollBy({ top: d, behavior: quick ? 'auto' : 'smooth' });
         };
         let r;
