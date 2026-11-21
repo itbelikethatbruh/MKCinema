@@ -86,6 +86,12 @@ const Chapters = {
     const t = pNow(); let cur = -1; l.forEach((c, i) => { if (t >= c.s - 0.5) cur = i; });
     return `<h5>Chapters</h5><div class="mk-chaps">${l.slice(0, 99).map((c, i) => `<button type="button" class="${i === cur ? 'on' : ''}" data-chap="${c.s}"><i data-lucide="bookmark"></i><span class="tnum">${fmtTime(c.s)}</span><b translate="no">${esc(String(c.name || '').trim() || `Chapter ${i + 1}`)}</b></button>`).join('')}</div>`;
   },
+  /* a thin mark on the progress bar where each chapter starts */
+  ticks() {
+    const seek = $('#seek'); if (!seek) return; $$('.ch-tick', seek).forEach((x) => x.remove());
+    const d = pDur(), l = this.list(); if (l.length < 2 || !isFinite(d) || !(d > 0)) return;
+    seek.insertAdjacentHTML('beforeend', l.filter((c) => c.s > 1 && c.s < d - 1).slice(0, 99).map((c) => `<span class="ch-tick" style="left:${(c.s / d * 100).toFixed(3)}%" aria-hidden="true"></span>`).join(''));
+  },
   bind(m) { $$('[data-chap]', m).forEach((b) => b.addEventListener('click', () => { pSeek(Number(b.dataset.chap), { user: true }); m.hidden = true; toast(b.querySelector('b').textContent, 'info', 1400); })); },
 };
 

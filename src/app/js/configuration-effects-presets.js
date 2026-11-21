@@ -30,7 +30,7 @@ const CFG_DEFAULTS = {
   // performance
   quality: 'high', qualityChosen: false, blur: 18, showFps: false,
   // playback
-  maxQuality: '4k', preferFormat: 'any', autoNext: true, upNextAt: 45, seekStep: 10, resume: true, speed: 1,
+  maxQuality: '4k', preferFormat: 'any', autoNext: true, upNextAt: 45, seekStep: 10, hudHide: 3, hdrDim: true, resume: true, speed: 1,
   failover: true, skipIntro: true, autoSkipIntro: false, xray: true, spoilerGuard: false, dsp: 'flat',
   // posters
   ratingBadges: true, rpdb: false,

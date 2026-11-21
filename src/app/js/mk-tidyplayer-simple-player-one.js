@@ -9,7 +9,7 @@
    New items added to #optMenu by later code land where PxMenu.tabify put them; add a rule in MkTidy.menu to move them. */
 const MkTidy = {
   /* the bar buttons that move into Share and screens: [id, label, icon] */
-  DEV: [['pTvCast', 'Send to TV', 'cast'], ['pCast', 'Your phone or remote', 'smartphone'], ['pParty', 'Watch party', 'users'], ['pSplit', 'Split Screen', 'layout-grid'], ['pPip', 'Picture in picture', 'picture-in-picture-2']],
+  DEV: [['pTvCast', 'Send to TV', 'cast'], ['pCast', 'Your phone or remote', 'smartphone'], ['pParty', 'Watch party', 'users'], ['pSplit', 'Split Screen', 'layout-grid'], ['pPip', 'Picture in picture', 'picture-in-picture-2'], ['pMini', 'Keep playing in a corner', 'minimize-2']],
   init() {
     const subs = $('#pSubs'), opts = $('#pOpts'); if (!subs || !opts) return;
     document.documentElement.classList.add('mk-tidy');

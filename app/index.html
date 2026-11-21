@@ -2494,6 +2494,7 @@ html[data-look="daylight"] #netBody .net-title .net-ch-logo.net-ch-inv,html[data
           <button class="ibtn" id="pMute" type="button" aria-label="Mute"><i data-lucide="volume-2"></i></button>
           <input type="range" class="vol" id="pVol" min="0" max="1" step="0.02" value="1" aria-label="Volume">
           <span class="time tnum" id="pTime">0:00 / 0:00</span>
+          <button class="live-pill" id="pLive" type="button" hidden aria-label="Go live"><i class="ldot"></i><span>LIVE</span></button>
           <span class="sp"></span>
           <button class="ibtn pp-desk" id="pDsp" type="button" title="Audio (A)" aria-label="Audio"><i data-lucide="audio-lines"></i></button>
           <button class="ibtn pp-desk" id="pParty" type="button" title="Watch party (P)" aria-label="Watch party"><i data-lucide="users"></i></button>
@@ -2502,6 +2503,7 @@ html[data-look="daylight"] #netBody .net-title .net-ch-logo.net-ch-inv,html[data
           <button class="ibtn" id="pOpts" type="button" title="Speed, quality and audio" aria-label="Playback options"><i data-lucide="settings-2"></i></button>
           <button class="ibtn on" id="pAmb" type="button" title="Ambilight" aria-label="Ambilight"><i data-lucide="sun"></i></button>
           <button class="ibtn" id="pPip" type="button" title="Picture in picture" aria-label="Picture in picture"><i data-lucide="picture-in-picture-2"></i></button>
+          <button class="ibtn" id="pMini" type="button" title="Keep playing in a corner" aria-label="Keep playing in a corner"><i data-lucide="minimize-2"></i></button>
           <button class="ibtn" id="pFull" type="button" title="Fullscreen (F)" aria-label="Fullscreen"><i data-lucide="maximize"></i></button>
         </div>
       </div>
@@ -2660,7 +2662,7 @@ const CFG_DEFAULTS = {
   // performance
   quality: 'high', qualityChosen: false, blur: 18, showFps: false,
   // playback
-  maxQuality: '4k', preferFormat: 'any', autoNext: true, upNextAt: 45, seekStep: 10, resume: true, speed: 1,
+  maxQuality: '4k', preferFormat: 'any', autoNext: true, upNextAt: 45, seekStep: 10, hudHide: 3, hdrDim: true, resume: true, speed: 1,
   failover: true, skipIntro: true, autoSkipIntro: false, xray: true, spoilerGuard: false, dsp: 'flat',
   // posters
   ratingBadges: true, rpdb: false,
@@ -3493,7 +3495,7 @@ class StremioEngine {
     }));
     all.sort((x, y) => y._tel.score - x._tel.score);
     const best = all.find((s) => s._tel.webReady && !s._tel.isTrailer);
-    if (best && best._tel.res) this.qualityCache.set(baseIdOf(id), [best._tel.res === '4K UHD' ? '4K' : best._tel.res, best._tel.hdr === 'Dolby Vision' ? 'DV' : best._tel.hdr ? 'HDR' : '', best._tel.audio.includes('Atmos') ? 'Atmos' : ''].filter(Boolean).join(' · '));
+    if (best && best._tel.res) (window.MkQualSet || ((mp, k, v) => mp.set(k, v)))(this.qualityCache, baseIdOf(id), [best._tel.res === '4K UHD' ? '4K' : best._tel.res, best._tel.hdr === 'Dolby Vision' ? 'DV' : best._tel.hdr ? 'HDR' : '', best._tel.audio.includes('Atmos') ? 'Atmos' : ''].filter(Boolean).join(' · '));
     return { streams: all, errors, addons: cands.length };
   }
   pickBest(streams, { bingeGroup, memo } = {}) {
@@ -4127,6 +4129,7 @@ function saveProgress(force) {
    Navigation between views
    ===================================================================== */
 function go(view, opts = {}) {
+  if (typeof SeatHide !== 'undefined' && SeatHide.blocked(view)) { toast('This seat doesn’t show that section', 'info', 2200); return; }
   if (S.view === 'home' && view !== 'home' && window.MkHomePlace) MkHomePlace.leave();
   const backHome = view === 'home' && S.view !== 'home';
   S.view = view;
@@ -4428,7 +4431,7 @@ function renderDetail(loading) {
     <button class="ibtn panel-close" type="button" data-close aria-label="Close"><i data-lucide="x"></i></button>
     <div class="d-hero">
       ${imgTag(metaBg(m), m.name, m.id, { wide: true, cls: 'bg', lazy: false })}
-      <div class="d-body" style="padding-top:80px;width:100%">
+      ${window.MkLookKit ? MkLookKit.poster(m) : ''}<div class="d-body" style="padding-top:80px;width:100%">
         <div class="logo3d pop${logo ? ' has-logo' : ''}" style="--t0:${t0}s${logo ? `;--logo:url(&quot;${esc(logo)}&quot;)` : ''}">${logo ? imgTag(logo, m.name, m.id, { nofb: true, cls: 'hero-logo', lazy: false }) : ''}<h1 class="hero-title" data-logo-alt ${logo ? 'hidden' : ''}>${esc(m.name)}</h1>${logo ? '<span class="lg-sheen" aria-hidden="true"><i></i></span>' : ''}</div>
         <div class="metaline${loading ? ' ml-wait' : ''}">${[m.imdbRating ? `<span class="imdb ${rateTier(m.imdbRating)}"><b>IMDb</b>${esc(m.imdbRating)}</span>` : '', yearOf(m) ? `<span>${esc(yearOf(m))}</span>` : '', m.runtime ? `<span>${esc(m.runtime)}</span>` : '', genresOf(m).slice(0, 4).map(esc).join(' · '), `<span class="tag-s">${esc(m.type)}</span>`, m._addon ? `<span class="tag-s v">${esc(m._addon)}</span>` : ''].filter(Boolean).join('')}</div>
         <div class="actions">
@@ -4472,6 +4475,7 @@ function renderDetail(loading) {
   if (window.MkReviews && !loading) MkReviews.place(m);
   $('#dList').onclick = () => { toggleWatchlist(m); renderDetail(false); renderStreamsPanel(); };
   $$('#dSeasons [data-season]').forEach((b) => b.addEventListener('click', () => { D.season = Number(b.dataset.season); renderDetail(false); renderStreamsPanel(); }));
+  if (window.MkFiller) MkFiller.paint(m);
   bindEpisodes($('#dEps'), m, (v) => { D.video = v; D.season = seasonNo(v); markEpisodes(); EpSheet.open(); loadDetailStreams(); });
   renderStreamsPanel();
 }
@@ -4951,6 +4955,7 @@ function teardown() {
   P.remux = null; video.playbackRate = CFG.speed || 1; PlayerPlus.reset();
 }
 async function playStream(ctx, stream, { startAt, _cin } = {}) {
+  if (typeof MiniPlay !== 'undefined' && MiniPlay.on) MiniPlay.restore(true);
   if (!_cin && typeof CinemaMode !== 'undefined' && await CinemaMode.hold(ctx, stream, startAt)) return;
   if (!stream) return;
   playReq++;
@@ -4963,6 +4968,7 @@ async function playStream(ctx, stream, { startAt, _cin } = {}) {
   const wasOpen = !$('#player').hidden;
   if (!wasOpen) { openLayer('player'); }
   const prevCtx = P.ctx; P.ctx = ctx; P.stream = stream; P.retried = false;
+  $('#player').classList.toggle('is-hdr', CFG.hdrDim !== false && !!(stream._tel && stream._tel.hdr));
   if (window.MkShuffle && MkShuffle.id && MkShuffle.id !== (ctx.meta && ctx.meta.id)) MkShuffle.stop();
   if (window.MkSrcSpeed) MkSrcSpeed.note(stream);
   const key = ctx.video ? ctx.video.id : ctx.meta.id;
@@ -5107,6 +5113,7 @@ const LiveMini = {
   },
 };
 async function closePlayer() {
+  if (typeof MiniPlay !== 'undefined' && MiniPlay.on) MiniPlay.restore(true);
   if (typeof PartyGuest !== 'undefined') PartyGuest.closed();
   playReq++; // a next episode or Smart Play still loading must not reopen the player
   const liveKeep = LiveMini.grab();
@@ -5145,7 +5152,7 @@ function startAmbilight() {
 function wakeHud(stay) {
   if (P.locked) return;
   const hud = $('#hud'); hud.classList.remove('idle'); clearTimeout(P.idleT);
-  if (!stay) P.idleT = setTimeout(() => { if (!video.paused && !P.scrubbing && !$('#player .drawer.open') && $('#subMenu').hidden && $('#optMenu').hidden && $('#dspPop').hidden) hud.classList.add('idle'); }, 2800);
+  if (!stay) P.idleT = setTimeout(() => { if (!video.paused && !P.scrubbing && !$('#player .drawer.open') && $('#subMenu').hidden && $('#optMenu').hidden && $('#dspPop').hidden) hud.classList.add('idle'); }, (Number(CFG.hudHide) || 3) * 1000);
 }
 ['pointermove', 'pointerdown', 'touchstart'].forEach((ev) => $('#player').addEventListener(ev, () => wakeHud(), { passive: true }));
 function setPlayIcon() { const h = `<i data-lucide="${video.paused ? 'play' : 'pause'}"></i>`; $('#pPlay').innerHTML = h; $('#pmPlay').innerHTML = h; icons(); }
@@ -5154,7 +5161,7 @@ video.addEventListener('pause', () => { setPlayIcon(); wakeHud(true); saveProgre
 video.addEventListener('timeupdate', () => {
   const d = pDur(), t = pNow(), live = !isFinite(d);
   if (Number.isNaN(d)) return;
-  const pct = live ? 100 : (t / d) * 100 || 0;
+  const pct = live ? (window.MkLiveDvr ? MkLiveDvr.pct() : 100) : (t / d) * 100 || 0;
   if (!P.scrubbing) MkSeekPaint.cur(pct / 100);
   if (!live && video.buffered.length) MkSeekPaint.buf((video.buffered.end(video.buffered.length - 1) + (P.remux ? P.remux.offset : 0)) / d);
   saveProgress(false);
@@ -5166,26 +5173,28 @@ video.addEventListener('volumechange', () => { if (P.ducking || Rescue.userMuted
 video.volume = CFG.rememberVolume ? Store.get('volume', 1) : 1;
 const togglePlay = () => { if (video.srcObject || video.currentSrc) (video.paused ? video.play().catch(() => {}) : video.pause()); };
 const step = () => Number(CFG.seekStep) || 10;
-const seekBy = (s) => { if (isFinite(pDur())) { pSeek(pNow() + s); wakeHud(); } };
+const seekBy = (s) => { if (window.MkLiveDvr && MkLiveDvr.seek(s)) { wakeHud(); return; } if (isFinite(pDur())) { pSeek(pNow() + s); wakeHud(); } };
 $('#pPlay').onclick = togglePlay; $('#pmPlay').onclick = togglePlay;
 $('#pBack').onclick = () => seekBy(-step()); $('#pFwd').onclick = () => seekBy(step());
 $('#pmBack').onclick = () => { seekBy(-step()); seekFx(-1); }; $('#pmFwd').onclick = () => { seekBy(step()); seekFx(1); };
 /* Picture: aspect ratio (VLC-style forced ratios) and zoom */
-const ASPECTS = [['fit', 'Fit'], ['fill', 'Fill'], ['stretch', 'Stretch'], ['16:9', '16:9'], ['4:3', '4:3'], ['21:9', '21:9']];
+const ASPECTS = [['fit', 'Fit'], ['crop', 'Crop bars'], ['fill', 'Fill'], ['stretch', 'Stretch'], ['16:9', '16:9'], ['4:3', '4:3'], ['21:9', '21:9']];
 P.aspect = 'fit'; P.zoom = 1;
 function applyPicture() {
   if (window.MkNative && MkNative.active) MkNative.picture();
   const v = video, a = P.aspect || 'fit';
-  v.style.width = ''; v.style.height = ''; v.style.margin = '';
-  if (a === 'fit' || a === 'fill' || a === 'stretch') v.style.objectFit = { fit: 'contain', fill: 'cover', stretch: 'fill' }[a];
+  v.style.width = ''; v.style.height = ''; v.style.margin = ''; P.crop = 1;
+  if (a === 'crop') P.crop = CropBars.scale();
+  if (a === 'crop') v.style.objectFit = 'contain';
+  else if (a === 'fit' || a === 'fill' || a === 'stretch') v.style.objectFit = { fit: 'contain', fill: 'cover', stretch: 'fill' }[a];
   else {
     const [x, y] = a.split(':').map(Number), R = x / y, st = $('#stage').getBoundingClientRect();
     let w = st.width, h = w / R; if (h > st.height) { h = st.height; w = h * R; }
     v.style.objectFit = 'fill'; v.style.width = `${w}px`; v.style.height = `${h}px`; v.style.margin = `${(st.height - h) / 2}px auto 0`;
   }
-  v.style.transform = P.zoom !== 1 ? `scale(${P.zoom})` : '';
+  const z = (P.zoom || 1) * (P.crop || 1); v.style.transform = z !== 1 ? `scale(${z.toFixed(4)})` : '';
 }
-addEventListener('resize', () => { if (!$('#player').hidden && P.aspect.includes(':')) applyPicture(); });
+addEventListener('resize', () => { if (!$('#player').hidden && (P.aspect.includes(':') || P.aspect === 'crop')) applyPicture(); });
 /* Lock: hides every control so a pocket or a stray thumb can't pause or seek */
 function setLock(on) {
   P.locked = on; $('#player').classList.toggle('locked', on); $('#pUnlock').hidden = true;
@@ -5565,7 +5574,7 @@ function renderOptMenu() {
   $$('[data-speed]', m).forEach((b) => b.addEventListener('click', () => { video.playbackRate = Number(b.dataset.speed); renderOptMenu(); }));
   $$('[data-level]', m).forEach((b) => b.addEventListener('click', () => { P.hls.currentLevel = Number(b.dataset.level); renderOptMenu(); }));
   $$('[data-audio]', m).forEach((b) => b.addEventListener('click', () => { const i = Number(b.dataset.audio); if (P.hls && P.hls.audioTracks.length > 1) P.hls.audioTrack = i; else Array.from(video.audioTracks).forEach((t, k) => { t.enabled = k === i; }); renderOptMenu(); }));
-  $$('[data-fit]', m).forEach((b) => b.addEventListener('click', () => { P.aspect = b.dataset.fit; applyPicture(); renderOptMenu(); }));
+  $$('[data-fit]', m).forEach((b) => b.addEventListener('click', () => { P.aspect = b.dataset.fit; CropBars.m = null; applyPicture(); renderOptMenu(); if (P.aspect === 'crop') CropBars.chosen(); }));
   $$('[data-zoom]', m).forEach((b) => b.addEventListener('click', () => { P.zoom = Number(b.dataset.zoom); applyPicture(); renderOptMenu(); }));
   const lk = $('[data-lock]', m); if (lk) lk.onclick = () => { m.hidden = true; setLock(true); };
   const amb = $('[data-amb]', m); if (amb) amb.onclick = () => { $('#pAmb').click(); renderOptMenu(); };
@@ -6054,7 +6063,7 @@ function handleKey(e) {
     if (k === 'Enter' && !onCtl && !Skip.visible()) { e.preventDefault(); if (a && a !== document.body) a.blur(); togglePlay(); wakeHud(); return; }
   }
   if (playerOpen && !drawer) {
-    const map = { ' ': togglePlay, k: togglePlay, j: () => seekBy(-step()), l: () => seekBy(step()), ArrowLeft: () => seekBy(-step()), ArrowRight: () => seekBy(step()), g: () => setSubDelay(P.subDelay - .25), h: () => setSubDelay(P.subDelay + .25), v: cycleSub, b: cycleAudio, '[': () => nudgeSpeed(-.25), ']': () => nudgeSpeed(.25), '=': () => nudgeSpeed(0), o: () => $('#pOpts').click(), ArrowUp: () => { video.volume = clamp(video.volume + .1, 0, 1); }, ArrowDown: () => { video.volume = clamp(video.volume - .1, 0, 1); }, f: toggleFull, m: () => { video.muted = !video.muted; }, n: playNext, s: () => openDrawer('src'), e: () => !$('#pEpsBtn').hidden && openDrawer('ep'), c: () => $('#pSubs').click(), a: () => DSP.toggle(), p: () => Party.openPanel(), Backspace: back };
+    const map = { ' ': togglePlay, k: togglePlay, j: () => seekBy(-step()), l: () => seekBy(step()), ArrowLeft: () => seekBy(-HoldSeek.step(e)), ArrowRight: () => seekBy(HoldSeek.step(e)), g: () => setSubDelay(P.subDelay - .25), h: () => setSubDelay(P.subDelay + .25), v: cycleSub, b: cycleAudio, '[': () => nudgeSpeed(-.25), ']': () => nudgeSpeed(.25), '=': () => nudgeSpeed(0), o: () => $('#pOpts').click(), ArrowUp: () => { video.volume = clamp(video.volume + .1, 0, 1); }, ArrowDown: () => { video.volume = clamp(video.volume - .1, 0, 1); }, f: toggleFull, m: () => { video.muted = !video.muted; }, n: playNext, s: () => openDrawer('src'), e: () => !$('#pEpsBtn').hidden && openDrawer('ep'), c: () => $('#pSubs').click(), a: () => DSP.toggle(), p: () => Party.openPanel(), Backspace: back };
     // browser shortcuts (Ctrl, Cmd or Alt held) are left alone, and letters work with Caps Lock on
     const kk = k.length === 1 ? k.toLowerCase() : k, mod = e.ctrlKey || e.metaKey || e.altKey;
     if (!mod && map[kk] && !(k === ' ' && e.target.tagName === 'BUTTON' && e.target !== document.body)) { e.preventDefault(); map[kk](); wakeHud(); return; }
@@ -9256,6 +9265,7 @@ const Party = {
   },
   leave(quiet) {
     if (!this.code) return;
+    if (typeof PartyPlus !== 'undefined') PartyPlus.reset();
     try { this.bus && this.bus.send({ t: 'bye' }); } catch (e) { /* ignore */ }
     this.peers.forEach((p) => this.dropPeer(p.id)); this.peers.clear();
     if (this.mic) { this.mic.getTracks().forEach((t) => t.stop()); this.mic = null; }
@@ -9275,10 +9285,12 @@ const Party = {
   },
   onMsg(m) {
     const from = m._from; if (!from || from === this.me.id) return;
+    if (typeof PartyPlus !== 'undefined' && PartyPlus.drop(m, from)) return;
     const seen = this.peers.get(from); if (seen) seen.seen = Date.now();
     switch (m.t) {
       case 'hello': {
         if (typeof PartyGuest !== 'undefined' && PartyGuest.gate(m, from)) break;
+        if (typeof PartyPlus !== 'undefined' && PartyPlus.gate(m, from)) break;
         m.name = String(m.name || 'Guest').slice(0, 40);
         this.peerFor(from, m.name).seen = Date.now();
         // the room's creator is its host; a claim counts only while no host is here, so nobody can take over
@@ -9292,12 +9304,13 @@ const Party = {
       // playback follows the host only, with sane values: members (or anyone who knows the code) can't drive the room
       case 'state': if (from === this.hostId && this.stateOk(m)) { if (typeof PartyLine !== 'undefined') PartyLine.lastSt = m; this.applyState(m); } break;
       case 'host': if (from === this.hostId && typeof m.to === 'string' && (m.to === this.me.id || this.peers.has(m.to))) { this.hostId = m.to; this.sysLine(m.to === this.me.id ? 'You are the host now' : `${(this.peers.get(m.to) || {}).name || 'Someone'} is the host now`); this.render(); if (this.isHost() && P.ctx) this.broadcastState('host'); } break;
-      case 'chat': { const nm = (this.peers.get(from) || {}).name || String(m.name || 'Guest').slice(0, 40); this.chat.push({ name: nm, text: String(m.text).slice(0, 400), at: Date.now() }); this.renderChat(); if (!$('#player').hidden && !$('#partyDrawer').classList.contains('open')) toast(`${nm}: ${String(m.text).slice(0, 80)}`, 'info', 3000); break; }
+      case 'chat': { const nm = (this.peers.get(from) || {}).name || String(m.name || 'Guest').slice(0, 40); this.chat.push({ name: nm, text: String(m.text).slice(0, 400), at: Date.now() }); if (typeof PartyPlus !== 'undefined') PartyPlus.alert(`${nm}: ${String(m.text).slice(0, 120)}`); this.renderChat(); if (!$('#player').hidden && !$('#partyDrawer').classList.contains('open')) toast(`${nm}: ${String(m.text).slice(0, 80)}`, 'info', 3000); break; }
       case 'react': this.float(m.e); break;
       case 'goto': if (from === this.hostId && typeof m.id === 'string' && /^[\w:.-]{2,120}$/.test(m.id) && /^(movie|series)$/.test(m.type)) {
         const nm = String(m.name || '').slice(0, 120), meta = S.metas.get(m.id) || { id: m.id, type: m.type, name: nm, poster: typeof m.poster === 'string' && /^https:\/\//.test(m.poster) ? m.poster.slice(0, 400) : '' };
         if ($('#player').hidden) openDetail(meta); this.sysLine(`The host opened ${nm || 'a title'}`); toast(`${(this.peers.get(from) || {}).name || 'The host'} opened ${nm || 'a title'}`, 'info', 3200);
       } break;
+      case 'st': case 'ptr': case 'ink': case 'count': case 'pinNeed': case 'admit': case 'lock': if (typeof PartyPlus !== 'undefined') PartyPlus.onMsg(m, from); break;
       case 'ping': this.send({ t: 'pong', a: m.a, b: Date.now(), _to: from }); break;
       case 'pong': if (m._to === this.me.id) { const now = Date.now(), rtt = now - m.a, off = m.b - (m.a + rtt / 2); const prev = this.offsets.get(from); this.offsets.set(from, prev == null ? off : prev * 0.7 + off * 0.3); const p = this.peers.get(from); if (p) { p.rtt = rtt; this.renderMembers(); } } break;
       default: if (typeof PartyGuest !== 'undefined') PartyGuest.onMsg(m, from); break;
@@ -9460,7 +9473,7 @@ const Party = {
     const s = document.createElement('span'); s.textContent = e; s.style.left = `${8 + Math.random() * 84}%`; s.style.setProperty('--dx', `${(Math.random() * 60 - 30).toFixed(0)}px`);
     box.appendChild(s); setTimeout(() => s.remove(), 2600);
   },
-  sysLine(text) { this.chat.push({ sys: true, text, at: Date.now() }); this.renderChat(); this.pill(); },
+  sysLine(text) { if (typeof PartyPlus !== 'undefined') PartyPlus.alert(text); this.chat.push({ sys: true, text, at: Date.now() }); this.renderChat(); this.pill(); },
   /* ---- UI ---- */
   pill() { const on = !!this.code; $('#partyPill').hidden = !on || !$('#player').hidden; if (on) $('#partyPillTxt').textContent = `Party ${this.code} · ${this.peers.size + 1}`; },
   html() {},
@@ -10403,6 +10416,7 @@ const Calendar = {
       const e = eps.find((x) => x.at === at && row.textContent.includes(x.meta.name)); if (!e) return;
       const ct = $('.cal-t', row) || row; ct.insertAdjacentHTML('beforeend', Remind.btn(e.film ? `f:${e.meta.id}:${e.film}` : videoIdFor(e.meta, e.v), e.meta.name, e.film ? '' : `S${e.v.season} · E${e.v.episode}`, e.at));
     });
+    if (window.MkCalPlus) MkCalPlus.after(body, eps);
     icons(); this.tick(); Remind.wire(body);
     $$('[data-cplay]', body).forEach((b) => b.addEventListener('click', () => this.play(b.dataset.meta, b.dataset.cplay, b)));
     $$('[data-cinfo]', body).forEach((b) => b.addEventListener('click', () => { const m = S.metas.get(b.dataset.cinfo); if (m) openDetail(m); }));
@@ -10766,6 +10780,8 @@ const SECTIONS = [
     { key: 'contrast', label: 'Text contrast', help: 'High makes every label and description brighter and a touch bolder, for bright rooms and small screens.', type: 'seg', options: [['standard', 'Standard'], ['high', 'High']] },
     { group: 'Posters' },
     { key: 'ratingBadges', label: 'IMDb rating on posters', help: 'A small star rating in the corner of each poster.', type: 'toggle', set: (v) => { setCfg('ratingBadges', v); rerender(); } },
+    { key: 'cardProg', label: 'Progress bars on posters', help: 'The thin bar that shows how far you got.', type: 'toggle', get: () => CFG.cardProg !== false, set: (v) => { setCfg('cardProg', v); document.documentElement.classList.toggle('mk-noprog', !v); } },
+    { key: 'qualTags', label: '4K and HDR labels on posters', help: 'Once MKCinema has looked for sources for a title, its best picture (4K, HDR, Dolby Vision, Atmos) shows on the poster, and is remembered.', type: 'toggle', get: () => CFG.qualTags !== false, set: (v) => { setCfg('qualTags', v); document.documentElement.classList.toggle('mk-noq', !v); } },
     { key: 'rpdb', label: 'Rating posters (RPDB)', help: 'Swaps posters for RatingPosterDB versions with ratings printed on them. Uses the free key unless you add your own. A poster RPDB does not have falls back to the normal one.', type: 'toggle', set: (v) => { setCfg('rpdb', v); rerender(); } },
     { key: 'rpdbKey', label: 'RPDB key (optional)', help: 'From ratingposterdb.com. Syncs with your account when Sync keys is on.', type: 'secret', placeholder: 't0-free-rpdb', get: () => Keys.get().rpdb || '', set: (v) => { Keys.set('rpdb', v); rerender(); } },
     { key: 'posterUrl', label: 'Custom poster URL', help: 'Paste a poster link from a poster service such as Pictorium (free, pictorium.elfhosted.com), made by Eful97, who suggested this feature. In Pictorium, open Install Hub, pick the tab whose link has {tmdb_id} in it, and copy that link. MKCinema fills in {type}, {imdb_id}, {tmdb_id} and {shape}, so wide cards get landscape art too. It takes over from RPDB while set, and any title it has no art for keeps the normal poster. Leave empty to turn it off.', type: 'text', get: () => Keys.get().posterUrl || '', set: (v) => { if (v && !/^https?:\/\/[^\s"'<>]+$/i.test(v)) { toast('Paste the full link, starting with https://', 'err'); return; } Keys.set('posterUrl', v); rerender(); if (v) toast('Custom posters on'); } },
@@ -10799,7 +10815,9 @@ const SECTIONS = [
     { key: 'liveMini', label: 'Keep live TV playing in a corner', help: 'Leave a playlist channel’s player and it keeps playing in a small window over the guide. Press it to go back to full screen.', type: 'toggle' },
     { key: 'pickMemo', label: 'Remember the source I pick for each show', help: 'When you choose a source yourself, the same addon and quality are tried first next time: the next episode, Continue watching and Smart Play.', type: 'toggle' },
     { key: 'upNextAt', label: 'Show "Next episode" before the end', help: 'Also shows when the credits start, if the episode has a credits marker. With autoplay on, it counts down 10 s.', type: 'range', min: 10, max: 90, step: 5, fmt: (v) => `${v}s` },
-    { key: 'seekStep', label: 'Skip step', type: 'select', num: true, options: [[5, '5 seconds'], [10, '10 seconds'], [15, '15 seconds'], [30, '30 seconds']] },
+    { key: 'seekStep', label: 'Skip step', help: 'Hold the arrow key or the remote button and each skip grows: 30 seconds, then 1 minute, then 3 minutes.', type: 'select', num: true, options: [[5, '5 seconds'], [10, '10 seconds'], [15, '15 seconds'], [30, '30 seconds']] },
+    { key: 'hudHide', label: 'Hide the controls after', type: 'select', num: true, options: [[2, '2 seconds'], [3, '3 seconds'], [5, '5 seconds'], [8, '8 seconds'], [15, '15 seconds']] },
+    { key: 'hdrDim', label: 'Softer controls on HDR films', help: 'On an HDR or Dolby Vision film the buttons and menus are drawn a little dimmer, so white text does not glare on a bright TV.', type: 'toggle' },
     { key: 'speed', label: 'Default speed', type: 'select', num: true, options: [[0.75, '0.75×'], [1, '1×'], [1.25, '1.25×'], [1.5, '1.5×'], [2, '2×'], [3, '3×']] },
     { key: 'rememberVolume', label: 'Remember volume', type: 'toggle' },
     { key: 'ambilight', label: 'Ambilight', help: 'Projects the picture\'s colors around the player. Desktop only: on phones and tablets the video fills the screen.', type: 'toggle', set: (v) => { setCfg('ambilight', v); P.amb = v; $('#pAmb').classList.toggle('on', v); } },
@@ -11071,7 +11089,7 @@ const secById = (id) => SECTIONS.find((x) => x.id === id);
 const SetTidy = {
   PLAN: {
     playback: [
-      ['The player', ['extPlayer', 'engine', 'swHevc', 'pxUp', 'resume', 'speed', 'seekStep', 'rememberVolume', 'seekPreview']],
+      ['The player', ['extPlayer', 'engine', 'swHevc', 'pxUp', 'resume', 'speed', 'seekStep', 'hudHide', 'hdrDim', 'rememberVolume', 'seekPreview']],
       ['Choosing a source', ['srSlow', 'maxQuality', 'preferFormat', 'audioOnly', 'browserOnly', 'failover', 'pickMemo']],
       ['Episodes and skips', ['autoNext', 'upNextAt', 'skipAuto', 'introDb', 'addonSkips', 'contentSkips', 'contentSkipLevel', 'rateAsk']],
       ['On screen', ['xray', 'spoilerGuard', 'ambilight', 'ambIntensity', 'sensory', 'playInfoBtn']],
@@ -11250,7 +11268,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.86.0';
+const APP_VERSION = '2.86.1';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -15520,7 +15538,7 @@ const SeatArt = {
 const Seats = {
   list() { return Store.raw.get('seats', []) || []; },
   saveList(l) { Store.raw.set('seats', l); Account.schedule(); },
-  owner() { return { id: '', name: Store.raw.get('ownerSeatName', '') || (Account.user ? Account.name().split('@')[0] : 'Main'), color: Store.raw.get('ownerColor', '') || '#d9d4c7', pin: Store.raw.get('ownerPin', ''), kids: false, av: Store.raw.get('ownerAv', '') }; },
+  owner() { return { id: '', name: Store.raw.get('ownerSeatName', '') || (Account.user ? Account.name().split('@')[0] : 'Main'), color: Store.raw.get('ownerColor', '') || '#d9d4c7', pin: Store.raw.get('ownerPin', ''), kids: false, av: Store.raw.get('ownerAv', ''), hide: Store.raw.get('ownerHide', []) || [] }; },
   all() { return [this.owner(), ...this.list()]; },
   cur() { return this.all().find((s) => s.id === SEAT) || this.owner(); },
   kids() { return !!this.cur().kids; },
@@ -15672,6 +15690,7 @@ const Seats = {
       <div class="seat-colors" role="radiogroup" aria-label="Colour" id="seCols"${s.av === 'letter' ? '' : ' hidden'}>${this.COLORS.map((c) => `<button type="button" data-nav data-col="${c}" class="${c === s.color ? 'on' : ''}" style="--sc:${c}" aria-label="Colour ${c}"></button>`).join('')}</div>
       ${s.id !== '' ? `<div class="set-row"><div><b>Kids seat</b><small>Only Animation and Family titles, no Live TV, and the grown-up PIN for Settings and Addons.</small></div><div class="set-ctl"><button class="switch ${s.kids ? 'on' : ''}" type="button" id="seKids" role="switch" aria-checked="${!!s.kids}" aria-label="Kids seat"></button></div></div>` : ''}
       ${s.id !== '' && !this.owner().pin ? '<label id="seGrownL">Grown-up PIN (4 digits). A kids seat needs one, so only a grown-up can leave it or open Settings<input class="inp mono" id="seGrown" inputmode="numeric" maxlength="4" placeholder="Set a grown-up PIN" autocomplete="off"></label>' : ''}
+      ${SeatHide.html(s)}
       <label>${s.id === '' ? 'Grown-up PIN (4 digits, guards kids seats too)' : 'PIN (4 digits, optional)'}<input class="inp mono" id="sePin" inputmode="numeric" maxlength="4" placeholder="${s.pin ? '•••• (leave empty to keep)' : 'No PIN'}" autocomplete="off"></label>
       ${s.pin ? '<button class="btn btn-ghost btn-sm" type="button" data-nav id="seNoPin"><i data-lucide="lock-open"></i>Remove the PIN</button>' : ''}</div>
       <div class="actions"><button class="btn btn-prime" type="button" data-nav id="seSave"><i data-lucide="check"></i>Save</button>${!isNew && s.id !== '' && s.id !== SEAT ? '<button class="btn btn-ghost danger" type="button" data-nav id="seDel"><i data-lucide="trash-2"></i>Remove seat</button>' : ''}</div>`;
@@ -15685,6 +15704,7 @@ const Seats = {
     $('#seRoll', b).onclick = () => { let r; do r = SeatArt.random(); while (r === s.av); rolled = r; s.av = r; paintAvs(); face(); };
     $('#seName', b).addEventListener('input', () => { if (s.av === 'letter') face(); });
     $$('[data-col]', b).forEach((x) => x.addEventListener('click', () => { s.color = x.dataset.col; $$('[data-col]', b).forEach((y) => y.classList.toggle('on', y === x)); face(); }));
+    SeatHide.bind(b, s);
     const k = $('#seKids', b); if (k) k.onclick = () => { s.kids = !s.kids; k.classList.toggle('on', s.kids); k.setAttribute('aria-checked', s.kids); };
     const np = $('#seNoPin', b); if (np) np.onclick = () => { s.pin = ''; np.remove(); toast('PIN will be removed when you save'); };
     $('#sePin', b).addEventListener('keydown', (e) => e.stopPropagation());
@@ -15700,8 +15720,8 @@ const Seats = {
         if (!/^\d{4}$/.test(grown)) { toast('Set a 4-digit grown-up PIN first, so kids can’t leave their seat', 'err', 4200); if (gEl) gEl.focus(); return; }
         Store.raw.set('ownerPin', await this.makePin('', grown)); Account.schedule();
       }
-      if (s.id === '') { Store.raw.set('ownerSeatName', s.name); Store.raw.set('ownerPin', s.pin || ''); Store.raw.set('ownerAv', s.av || ''); Store.raw.set('ownerColor', s.color || ''); Account.schedule(); }
-      else { const l = this.list(), i = l.findIndex((x) => x.id === s.id), row = { ...(i >= 0 ? l[i] : {}), id: s.id, name: s.name, color: s.color, kids: !!s.kids, pin: s.pin || '', av: s.av || '' }; if (i >= 0) l[i] = row; else l.push(row); this.saveList(l); }
+      if (s.id === '') { Store.raw.set('ownerSeatName', s.name); Store.raw.set('ownerPin', s.pin || ''); Store.raw.set('ownerAv', s.av || ''); Store.raw.set('ownerColor', s.color || ''); Store.raw.set('ownerHide', SeatHide.clean(s.hide)); Account.schedule(); }
+      else { const l = this.list(), i = l.findIndex((x) => x.id === s.id), row = { ...(i >= 0 ? l[i] : {}), id: s.id, name: s.name, color: s.color, kids: !!s.kids, pin: s.pin || '', av: s.av || '', hide: SeatHide.clean(s.hide) }; if (i >= 0) l[i] = row; else l.push(row); this.saveList(l); }
       { const cp = $('#seCopy'); if (isNew && cp && cp.value && window.MkSeatCopy) MkSeatCopy.copy(cp.value === '@main' ? '' : cp.value, s.id); }
       X8.close('seatEdit'); this.refresh(); toast(isNew ? `${s.name} has a seat` : 'Seat saved', 'ok');
     });
@@ -15734,7 +15754,7 @@ const Seats = {
       const d = ex.apply(this, arguments);
       if (SEAT) ['watchlist', 'progress', 'watched', 'taste'].forEach((k) => { d[k] = Store.raw.get(k, k === 'watchlist' ? [] : k === 'taste' ? null : {}); });
       const list = Seats.list();
-      d.seats = { list, ownerName: Store.raw.get('ownerSeatName', ''), ownerPin: Store.raw.get('ownerPin', ''), ownerAv: Store.raw.get('ownerAv', ''), ownerColor: Store.raw.get('ownerColor', ''), data: Object.fromEntries(list.map((s) => [s.id, Seats.seatData(s.id)])) };
+      d.seats = { list, ownerName: Store.raw.get('ownerSeatName', ''), ownerPin: Store.raw.get('ownerPin', ''), ownerAv: Store.raw.get('ownerAv', ''), ownerColor: Store.raw.get('ownerColor', ''), ownerHide: Store.raw.get('ownerHide', []), data: Object.fromEntries(list.map((s) => [s.id, Seats.seatData(s.id)])) };
       return d;
     };
     const ap = Account.applyRemote.bind(Account);
@@ -15744,7 +15764,7 @@ const Seats = {
       ap(d);
       Object.entries(lib).forEach(([k, v]) => Store.raw.set(k, v));
       const z = d.seats; if (!z || !Array.isArray(z.list)) return;
-      Store.raw.set('seats', z.list); if (z.ownerName != null) Store.raw.set('ownerSeatName', z.ownerName); if (z.ownerPin != null) Store.raw.set('ownerPin', z.ownerPin); if (z.ownerAv != null) Store.raw.set('ownerAv', z.ownerAv); if (z.ownerColor != null) Store.raw.set('ownerColor', z.ownerColor);
+      Store.raw.set('seats', z.list); if (z.ownerName != null) Store.raw.set('ownerSeatName', z.ownerName); if (z.ownerPin != null) Store.raw.set('ownerPin', z.ownerPin); if (z.ownerAv != null) Store.raw.set('ownerAv', z.ownerAv); if (z.ownerColor != null) Store.raw.set('ownerColor', z.ownerColor); if (Array.isArray(z.ownerHide)) Store.raw.set('ownerHide', z.ownerHide);
       Object.entries(z.data || {}).forEach(([id, v]) => {
         if (id === SEAT) { if (v.watchlist) { S.watchlist = v.watchlist; Store.set('watchlist', v.watchlist); } if (v.progress) { S.progress = v.progress; Store.set('progress', v.progress); } if (v.watched) { Store.set('watched', v.watched); WATCHED = null; } if (v.taste) Store.set('taste', v.taste); return; }
         Object.entries(v || {}).forEach(([k, x]) => { if (x != null) try { localStorage.setItem(`mkc:seat:${id}:${k}`, JSON.stringify(x)); } catch (e) { /* full */ } });
@@ -15909,7 +15929,7 @@ const TvType = {
     arm();
     el.addEventListener('keydown', (e) => {
       if ((e.key === 'Enter' || e.keyCode === 23) && el.dataset.tvArmed) {
-        e.preventDefault(); e.stopPropagation(); delete el.dataset.tvArmed; el.readOnly = false; el.setAttribute('inputmode', 'search');
+        e.preventDefault(); e.stopPropagation(); if (window.MkTvKb && MkTvKb.want()) { MkTvKb.open(el); return; } delete el.dataset.tvArmed; el.readOnly = false; el.setAttribute('inputmode', 'search');
         el.blur(); setTimeout(() => { el.focus({ preventScroll: true }); try { el.click(); } catch (x) { /* none */ } }, 30);
       }
     }, true);
@@ -15918,6 +15938,7 @@ const TvType = {
   /* 2.84.4: a box the viewer opened in order to type (Search) is ready at once, keyboard up, without a second OK */
   open(el) {
     if (!el) return; this.guard(el);
+    if (window.MkTvKb && MkTvKb.want()) { MkTvKb.open(el); return; }
     delete el.dataset.tvArmed; el.readOnly = false; el.setAttribute('inputmode', 'search');
     el.blur(); setTimeout(() => { el.focus({ preventScroll: true }); try { el.click(); } catch (x) { /* none */ } }, 30);
   },
@@ -16082,7 +16103,7 @@ const AddonDir = {
     return `<div class="mkd-row${open ? ' open' : ''}" data-mkx="${i}">${logo}
       <div class="mkd-t"><div class="mkd-name"><b>${esc(a.name)}</b>${a.ver ? `<span class="mkd-ver">v${esc(a.ver)}</span>` : ''}${a.adult ? '<span class="tag-s">18+</span>' : ''}${a.need ? '<span class="mkd-pill">Needs setup</span>' : ''}</div>
         ${a.desc ? `<p>${esc(a.desc)}</p>` : ''}${what ? `<div class="mkd-what">${esc(what)}</div>` : ''}</div>
-      <div class="mkd-act">${act}</div>${open ? this.setupHtml(a) : ''}</div>`;
+      <div class="mkd-act">${act}${window.MkAddonRel ? `<button class="mkd-link mkd-relb" type="button" data-nav data-mkr="${i}">Similar</button>` : ''}</div>${window.MkAddonRel && this.rel === i ? MkAddonRel.html(a, this) : ''}${open ? this.setupHtml(a) : ''}</div>`;
   },
   setupHtml(a) {
     const host = (() => { try { return new URL(a.url).host; } catch (e) { return 'its page'; } })();
@@ -16117,6 +16138,7 @@ const AddonDir = {
       setTimeout(() => this.paintList(i), 0);
     }));
     const more = $('#mkdMore', body); if (more) more.onclick = () => { const at = this.n; this.n += 30; this.paintList(at); };
+    if (window.MkAddonRel) MkAddonRel.bind(body, this);
     const box = $('.mkd-setup', body); if (box && !IS_TV) this.bindSetup(box, this.setup);
     // keep the remote where it was: the same row after an install, the first new row after Show more
     if (focusIdx != null || hadFocus) {
@@ -16371,6 +16393,7 @@ const Networks = {
     if (after) { if (after.nextElementSibling !== sec) after.after(sec); } else if (!sec.isConnected) { const first = rows.firstElementChild; if (first) first.after(sec); else rows.append(sec); }
     this.chPlace();
     if (typeof Holiday !== 'undefined') Holiday.place();
+    if (window.MkNetTop) MkNetTop.place();
   },
   open(id, type) { this.cur = id || this.cur; if (type) this.type = type; go('network'); },
   render() {
@@ -17236,7 +17259,7 @@ const Library = {
     let l = this.items().filter((m) => (s.type === 'all' || m.type === s.type) && (!q || String(m.name || '').toLowerCase().includes(q)));
     if (s.hide && s.tab !== 'watched') l = l.filter((m) => !(m.type === 'movie' && isWatched(m.id)));
     const yr = (m) => Number(String(m.releaseInfo || m.year || yearOf(m) || '').slice(0, 4)) || 0;
-    const by = { added: (a, b) => (b._added || 0) - (a._added || 0), az: (a, b) => String(a.name).localeCompare(String(b.name)), year: (a, b) => yr(b) - yr(a), rating: (a, b) => (parseFloat(b.imdbRating) || 0) - (parseFloat(a.imdbRating) || 0) }[s.sort];
+    const by = { added: (a, b) => (b._added || 0) - (a._added || 0), az: (a, b) => String(a.name).localeCompare(String(b.name)), year: (a, b) => yr(b) - yr(a), rating: (a, b) => (parseFloat(b.imdbRating) || 0) - (parseFloat(a.imdbRating) || 0), mine: (a, b) => LibGroups.mine(b) - LibGroups.mine(a) || String(a.name).localeCompare(String(b.name)) }[s.sort] || ((a, b) => (b._added || 0) - (a._added || 0));
     return l.sort(by);
   },
   render() {
@@ -17250,18 +17273,21 @@ const Library = {
     box.innerHTML = `<div class="lib-tabs"><div class="lib-tl" role="tablist" aria-label="Library">${tabs.map(([id, label, n]) => `<button type="button" class="chip${s.tab === id ? ' on' : ''}" role="tab" aria-selected="${s.tab === id}" data-nav data-ltab="${esc(id)}">${esc(label)}${n != null ? ` <span class="tnum">${n}</span>` : ''}</button>`).join('')}</div><button type="button" class="chip lib-new" data-nav id="libNew"><i data-lucide="plus"></i>New list</button></div>
       <div class="lib-bar">
         <div class="segc" role="radiogroup" aria-label="Type">${[['all', 'All'], ['movie', 'Films'], ['series', 'Series']].map(([v, t]) => `<button type="button" class="${s.type === v ? 'on' : ''}" role="radio" aria-checked="${s.type === v}" data-nav data-ltype="${v}">${t}</button>`).join('')}</div>
-        <select class="inp lib-sort" id="libSort" aria-label="Sort" data-nav>${[['added', 'Date added'], ['az', 'A to Z'], ['year', 'Newest first'], ['rating', 'Highest rated']].map(([v, t]) => `<option value="${v}"${s.sort === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
+        <select class="inp lib-sort" id="libSort" aria-label="Sort" data-nav>${[['added', 'Date added'], ['az', 'A to Z'], ['year', 'Newest first'], ['rating', 'Highest rated'], ['mine', 'My rating']].map(([v, t]) => `<option value="${v}"${s.sort === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
+        <select class="inp lib-sort" id="libGroup" aria-label="Group" data-nav>${LibGroups.OPTS.map(([v, t]) => `<option value="${v}"${(s.group || '') === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
         ${s.tab !== 'watched' ? `<button type="button" class="chip${s.hide ? ' on' : ''}" data-nav id="libHide" aria-pressed="${s.hide}">Hide watched</button>` : ''}
         <input class="inp lib-q" id="libQ" type="search" placeholder="Filter" value="${esc(s.q)}" autocomplete="off" aria-label="Filter by title">
         ${s.tab === 'progress' && continueItems().length ? '<button type="button" class="btn btn-ghost btn-sm" data-nav id="libClear"><i data-lucide="trash-2"></i>Clear progress</button>' : ''}
         ${lists.some((x) => x.id === s.tab) ? '<button type="button" class="btn btn-ghost btn-sm" data-nav id="libDel"><i data-lucide="trash-2"></i>Delete list</button>' : ''}
       </div>
-      <div class="grid lib-grid">${list.map((m) => cardHTML(m, m._p ? { progress: m._p, sub: progressSub(m._p) } : {})).join('') || `<div class="empty">${{ watchlist: 'Use the Watchlist button on any title to save it here.', progress: 'Start something and it shows up here.', watched: 'Finished films and episodes show up here.' }[s.tab] || 'Add titles from a film page with the Lists button.'}</div>`}</div>`;
+      <div class="grid lib-grid">${LibGroups.html(list, s) || `<div class="empty">${{ watchlist: 'Use the Watchlist button on any title to save it here.', progress: 'Start something and it shows up here.', watched: 'Finished films and episodes show up here.' }[s.tab] || 'Add titles from a film page with the Lists button.'}</div>`}</div>`;
     if (old) old.replaceWith(box); else root.prepend(box);
     icons();
     $$('[data-ltab]', box).forEach((b) => b.addEventListener('click', () => { s.tab = b.dataset.ltab; this.render(); }));
     $$('[data-ltype]', box).forEach((b) => b.addEventListener('click', () => { s.type = b.dataset.ltype; this.render(); }));
     $('#libSort', box).addEventListener('change', (e) => { s.sort = e.target.value; Store.set('libSort', s.sort); this.render(); });
+    $('#libGroup', box).addEventListener('change', (e) => { s.group = e.target.value; Store.set('libGroup', s.group); this.render(); });
+    LibGroups.az(box, s, list);
     const h = $('#libHide', box); if (h) h.addEventListener('click', () => { s.hide = !s.hide; Store.set('libHide', s.hide); this.render(); });
     const qi = $('#libQ', box); let qt = 0;
     qi.addEventListener('input', () => { clearTimeout(qt); qt = setTimeout(() => { s.q = qi.value; const pos = qi.selectionStart; this.render(); const n = $('#libQ'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) { /* ok */ } } }, 160); });
@@ -17298,7 +17324,7 @@ const Library = {
     const f = $('[data-lpick]', pop); if (f && IS_TV) Nav.focus(f, true);
   },
   init() {
-    this.st.sort = Store.get('libSort', 'added') || 'added'; this.st.hide = !!Store.get('libHide', false);
+    this.st.sort = Store.get('libSort', 'added') || 'added'; this.st.hide = !!Store.get('libHide', false); this.st.group = Store.get('libGroup', '') || '';
     const base = renderLibrary;
     renderLibrary = function () {
       base.apply(this, arguments);
@@ -17539,16 +17565,16 @@ try { video.setAttribute('autopictureinpicture', ''); } catch (e) { /* none */ }
       <div class="pz-ctl"><button class="btn ${this.mic ? 'btn-prime' : 'btn-ghost'} btn-sm" type="button" id="pyMic" data-nav aria-pressed="${!!this.mic}"><i data-lucide="${this.mic ? 'mic' : 'mic-off'}"></i>${this.mic ? 'Mic on' : 'Mic off'}</button>
         <div class="py-reacts" role="group" aria-label="Reactions">${['😂', '😮', '😍', '👏', '🔥', '😢', '😱', '🍿'].map((e) => `<button type="button" data-react="${e}" data-nav aria-label="React ${e}">${e}</button>`).join('')}</div>
         <button class="btn btn-ghost btn-sm danger" type="button" id="pyLeave" data-nav><i data-lucide="log-out"></i>Leave</button></div>
-      <div class="py-chat" id="pyChat" role="log" aria-live="polite"></div>
+      ${typeof PartyPlus !== 'undefined' ? PartyPlus.ctlHtml() : ''}<div class="py-chat" id="pyChat" role="log" aria-live="polite"></div>
       <form class="py-say" id="pySay"><input class="inp" id="pyText" maxlength="400" placeholder="Say something…" autocomplete="off" data-nav><button class="ibtn" type="submit" aria-label="Send" data-nav><i data-lucide="send"></i></button></form>
     </div>`;
   };
   Party.renderMembers = function () {
-    const rows = [{ id: this.me.id, name: this.name(), you: true, state: 'self' }, ...[...this.peers.values()].map((p) => ({ id: p.id, name: p.name, state: p.dc && p.dc.readyState === 'open' ? 'direct' : p.pc.connectionState === 'connecting' || p.pc.connectionState === 'new' ? 'connecting' : 'relay', rtt: p.rtt }))];
+    const rows = [{ id: this.me.id, name: this.name(), you: true, state: 'self' }, ...[...this.peers.values()].map((p) => ({ id: p.id, name: p.name, state: p.dc && p.dc.readyState === 'open' ? 'direct' : p.pc.connectionState === 'connecting' || p.pc.connectionState === 'new' ? 'connecting' : 'relay', rtt: p.rtt, st: p.st }))];
     $$('#pyMembers').forEach((box) => {
       box.innerHTML = rows.map((r) => {
         const note = r.state === 'self' ? (this.lastDrift != null && !this.isHost() ? `${Math.round(Math.abs(this.lastDrift) * 1000)} ms off` : 'You') : r.state === 'direct' ? `Direct${r.rtt ? ` · ${r.rtt} ms` : ''}` : r.state === 'relay' ? 'Via relay' : 'Connecting…';
-        return `<div class="pm-row ${this.speaking.has(r.id) ? 'talk' : ''}" data-pid="${esc(r.id)}"><span class="pm-av ${r.state}" aria-hidden="true">${esc(initials(r.name))}</span><span class="pm-txt"><b>${esc(r.name)}</b><small>${esc(note)}</small></span>${r.id === this.hostId ? '<span class="pm-host">Host</span>' : ''}${typeof PartyGuest !== 'undefined' ? PartyGuest.tags(r.id, r.you) : ''}</div>`;
+        return `<div class="pm-row ${this.speaking.has(r.id) ? 'talk' : ''}" data-pid="${esc(r.id)}"><span class="pm-av ${r.state}" aria-hidden="true">${esc(initials(r.name))}</span><span class="pm-txt"><b>${esc(r.name)}</b><small>${esc(note)}${r.st && typeof PartyPlus !== 'undefined' ? ` · ${esc(PartyPlus.stLabel(r.st))}` : ''}</small></span>${r.id === this.hostId ? '<span class="pm-host">Host</span>' : ''}${typeof PartyGuest !== 'undefined' ? PartyGuest.tags(r.id, r.you) : ''}</div>`;
       }).join('');
       if (typeof PartyGuest !== 'undefined') PartyGuest.wire(box);
     });
@@ -18370,7 +18396,7 @@ const Desktop = {
   /* ---- Settings › Desktop app ---- */
   confirming: false,
   section() {
-    return { id: 'desktop', icon: this.d.platform === 'windows' ? 'monitor' : 'magnet', label: this.d.platform === 'windows' ? 'Desktop app' : 'Torrents', intro: this.d.platform === 'windows' ? 'Extras that only the desktop app can do. Both are off until you turn them on.' : 'Play torrent sources without a debrid service. Off until you turn it on.', bind: () => this.bind(), rows: () => [{ html: () => this.html() }] };
+    return { id: 'desktop', icon: this.d.platform === 'windows' ? 'monitor' : 'magnet', label: this.d.platform === 'windows' || this.d.setPresence ? 'Desktop app' : 'Torrents', intro: this.d.platform === 'windows' || this.d.setPresence ? 'Extras that only the desktop app can do. Both are off until you turn them on.' : 'Play torrent sources without a debrid service. Off until you turn it on.', bind: () => this.bind(), rows: () => [{ html: () => this.html() }] };
   },
   html() {
     const on = this.p2pOn();
@@ -18431,7 +18457,7 @@ const Desktop = {
     }
     SECTIONS.push(this.section());
     const grp = SET_GROUPS.find(([n]) => /watching/i.test(n)); if (grp) grp[1].push('desktop');
-    SET_BLURB.desktop = this.d.platform === 'windows' ? 'Torrents on this PC, Discord status' : 'Torrents without debrid';
+    SET_BLURB.desktop = this.d.platform === 'windows' ? 'Torrents on this PC, Discord status' : this.d.setPresence ? 'Torrents, Discord status' : 'Torrents without debrid';
   },
 };
 Desktop.init();
@@ -19643,10 +19669,11 @@ const Diagnostic = {
 /* ---------------- Skip: TheIntroDB, MKV chapters, recaps ---------------- */
 const Marks = {
   ch: null, idb: null, tok: -1,
-  reset() { this.ch = null; this.idb = null; this.all = null; this.tok = Skip.token; },
+  reset() { this.ch = null; this.idb = null; this.all = null; this.tok = Skip.token; $$('#seek .ch-tick').forEach((x) => x.remove()); },
   live() { if (this.tok !== Skip.token) this.reset(); return this; },
   fromChapters(list) {
     this.live().all = (list || []).map((c) => ({ s: Number(c.s) || 0, e: Number(c.e) || 0, name: String(c.name || '') }));
+    Chapters.ticks();
     const m = {};
     for (const c of list) {
       const n = c.name.toLowerCase().trim();
@@ -24121,6 +24148,20 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.86.1', date: '2026-11-21', items: [
+    ['new', 'Watch party tools', 'Tap the picture to point and drag to draw, and everyone sees it. The host can count 3-2-1 so the film starts for everyone at once, and add a 4-digit PIN to a party.'],
+    ['new', 'Make it yours', 'Your own font and background picture, six film page styles, five progress bar styles and a big Play button while paused. Look files can be saved, opened on another screen or sent to a friend.'],
+    ['new', 'Award winners', 'Oscars, Cannes, Venice, Berlin, BAFTA, Golden Globes, Emmys and anime awards.'],
+    ['new', 'Keep playing in a corner', 'On computers, the Share menu can shrink the film into a small window while you browse.'],
+    ['new', 'Smart downloads', 'While you watch a series, the next episodes download on their own so they are ready offline, and the ones you have watched are cleared away. In the Android, Windows and Mac apps.'],
+    ['new', 'Live TV', 'Record every episode of a show from the TV guide. Rewind live TV and jump back to live with one press, on channels that allow it.'],
+    ['new', 'Library groups', 'Group your library by decade, genre or rating, sort by your own stars, and jump by letter on phones.'],
+    ['new', 'Crop bars and chapter marks', 'Crop bars fills the screen with the picture inside black bars. Chapters are marked on the progress bar.'],
+    ['new', 'TV keyboard and carousel rows', 'MKCinema\'s own A to Z or QWERTY keys for the remote, and rows that turn like a carousel.'],
+    ['better', 'Player', 'Holding Left or Right skips further the longer you hold. Controls are softer on HDR films, and you choose how soon they hide.'],
+    ['better', 'Finding things', 'Sources grouped by picture quality with a line on when to pick each, filler and recap labels on anime episodes, Calendar filters, the most anticipated titles, similar addons, and Top rows for the streaming apps you picked.'],
+    ['better', 'Household', 'Each seat can leave out Live TV, Sports, Music, Anime or Calendar. Party alerts tell you when someone joins or writes.'],
+  ] },
   { v: '2.86.0', date: '2026-11-21', items: [
     ['new', 'Swipe to choose', 'Swipe right to save a title to your watchlist, left to skip it. Open it from Discover or the command bar.'],
     ['new', 'Critics\' Pick', 'One acclaimed film or series a day at the top of Discover.'],
@@ -28161,6 +28202,7 @@ const Tour240 = {
       player,
       { id: 'inside', html: () => this.inside() },
       stremio,
+      { id: 'look', html: () => (window.MkLookKit ? MkLookKit.tourHtml() : ''), after: () => { if (window.MkLookKit) MkLookKit.tourBind(); } },
       { id: 'taste', html: () => this.taste(), after: async () => {
         this.page = 0; QP.onDone = () => tourGo(1);
         const root = $('#tourPick'); await quickPickHTML(root, { compact: true });
@@ -36558,7 +36600,7 @@ html.tv #player .ctl .mk-td-lb .mk-td-l{display:inline;font-size:calc(16px * var
    New items added to #optMenu by later code land where PxMenu.tabify put them; add a rule in MkTidy.menu to move them. */
 const MkTidy = {
   /* the bar buttons that move into Share and screens: [id, label, icon] */
-  DEV: [['pTvCast', 'Send to TV', 'cast'], ['pCast', 'Your phone or remote', 'smartphone'], ['pParty', 'Watch party', 'users'], ['pSplit', 'Split Screen', 'layout-grid'], ['pPip', 'Picture in picture', 'picture-in-picture-2']],
+  DEV: [['pTvCast', 'Send to TV', 'cast'], ['pCast', 'Your phone or remote', 'smartphone'], ['pParty', 'Watch party', 'users'], ['pSplit', 'Split Screen', 'layout-grid'], ['pPip', 'Picture in picture', 'picture-in-picture-2'], ['pMini', 'Keep playing in a corner', 'minimize-2']],
   init() {
     const subs = $('#pSubs'), opts = $('#pOpts'); if (!subs || !opts) return;
     document.documentElement.classList.add('mk-tidy');
@@ -44737,18 +44779,18 @@ body.mk-player-on .rec-pill,html.tv .rec-pill{bottom:auto;top:calc(14px + env(sa
     natList() { if (!this.nat()) return []; try { return JSON.parse(MKAndroid.dlList() || '[]').filter((d) => d && d.rec); } catch (e) { return []; } },
 
     /* ---------- planned from the guide: start a minute early, stop two minutes late ---------- */
-    plan(c, p) {
+    plan(c, p, quiet) {
       const st = C.stream(c);
       const h = st.behaviorHints && st.behaviorHints.proxyHeaders && st.behaviorHints.proxyHeaders.request;
       const l = this.plans();
-      if (l.some((x) => x.url === c.url && x.start === p.start)) return toast('That programme is already set to record.', 'info', 4000, 'rec');
-      if (!this.nat() && X8.mixedBlocked(c.url) && !window.MKDesktop && !S.proxy) return this.cant({ channel: c.name, name: p.title }, this.blockedWhy(c.url));
+      if (l.some((x) => x.url === c.url && x.start === p.start)) return quiet ? 0 : toast('That programme is already set to record.', 'info', 4000, 'rec');
+      if (!this.nat() && X8.mixedBlocked(c.url) && !window.MKDesktop && !S.proxy) return quiet ? 0 : this.cant({ channel: c.name, name: p.title }, this.blockedWhy(c.url));
       const x = { id: `p${now().toString(36)}`, url: c.url, headers: h && Object.keys(h).length ? h : null, name: p.title, channel: c.name, logo: c.logo || '', start: p.start, end: p.end };
       // the Android app starts it from an alarm, so it records with the app closed too
-      if (this.nat() && typeof MKAndroid.recPlan === 'function') { let okN = false; try { okN = !!MKAndroid.recPlan(JSON.stringify(x)); } catch (e) { okN = false; } if (!okN) return toast('The app couldn’t set that recording. Try again.', 'err', 5000, 'rec'); x.nat = true; }
+      if (this.nat() && typeof MKAndroid.recPlan === 'function') { let okN = false; try { okN = !!MKAndroid.recPlan(JSON.stringify(x)); } catch (e) { okN = false; } if (!okN) return quiet ? 0 : toast('The app couldn’t set that recording. Try again.', 'err', 5000, 'rec'); x.nat = true; }
       l.push(x);
       this.savePlans(l);
-      toast(`${p.title} will record ${day(p.start).toLowerCase() === 'today' ? 'at' : `${day(p.start)} at`} ${hm(p.start)}.${x.nat ? ' The app starts it even if it’s closed.' : ' Keep MKCinema open in a tab.'}`, 'ok', 6500, 'rec');
+      if (!quiet) toast(`${p.title} will record ${day(p.start).toLowerCase() === 'today' ? 'at' : `${day(p.start)} at`} ${hm(p.start)}.${x.nat ? ' The app starts it even if it’s closed.' : ' Keep MKCinema open in a tab.'}`, 'ok', 6500, 'rec');
       this.loop();
     },
     looping: false,
@@ -44783,10 +44825,11 @@ body.mk-player-on .rec-pill,html.tv .rec-pill{bottom:auto;top:calc(14px + env(sa
       if (prog && prog.start > t) {
         b.innerHTML = `<h3 class="x8-h">${esc(prog.title)}</h3><p class="rec-when">${esc(c.name)} · ${esc(day(prog.start))} ${esc(hm(prog.start))}–${esc(hm(prog.end))}</p>${prog.desc ? `<p class="sub">${esc(prog.desc)}</p>` : ''}
           <p class="tour-note">${this.nat() ? 'The app starts a minute early and stops two minutes late, even if it’s closed then.' :'MKCinema starts a minute early and stops two minutes late. Keep it open in a tab at that time.'}</p>
-          <div class="actions"><button class="btn btn-prime" type="button" data-nav id="recPlan"><span class="rec-dot"></span>Record when it starts</button><button class="btn btn-ghost" type="button" data-nav id="recWatch"><i data-lucide="play"></i>Watch ${esc(c.name)} now</button></div>`;
+          <div class="actions"><button class="btn btn-prime" type="button" data-nav id="recPlan"><span class="rec-dot"></span>Record when it starts</button><button class="btn btn-ghost" type="button" data-nav id="recWatch"><i data-lucide="play"></i>Watch ${esc(c.name)} now</button>${window.MkRecSeries ? `<button class="btn btn-ghost" type="button" data-nav id="recSeries"><i data-lucide="repeat"></i>${MkRecSeries.has(c, prog) ? 'Stop recording every episode' : 'Record every episode'}</button>` : ''}</div>`;
         icons(); X8.open('recNew');
         $('#recPlan').onclick = () => { X8.close('recNew'); this.plan(c, prog); };
         $('#recWatch').onclick = () => { X8.close('recNew'); C.tune(c); };
+        { const rs = $('#recSeries'); if (rs) rs.onclick = () => { X8.close('recNew'); MkRecSeries.toggle(c, prog); }; }
         return;
       }
       const opts = [];
@@ -44864,8 +44907,9 @@ body.mk-player-on .rec-pill,html.tv .rec-pill{bottom:auto;top:calc(14px + env(sa
       const html = `<h3 class="x8-h">Recordings</h3>
         ${live.length ? `<p class="rec-sec">Recording now</p>${live.join('')}` : ''}
         ${soon.length ? `<p class="rec-sec">Coming up</p>${soon.join('')}` : ''}
+        ${window.MkRecSeries ? MkRecSeries.html(row, btn) : ''}
         ${saved.length ? `<p class="rec-sec">${nat ? 'On this device' : 'In this browser'}</p>${saved.join('')}` : ''}
-        ${!live.length && !soon.length && !saved.length ? '<div class="empty" style="margin:12px 0">Nothing recorded yet. Press the red dot while a channel plays, or pick a programme later in the guide.</div>' : ''}
+        ${!live.length && !soon.length && !saved.length && !(window.MkRecSeries && MkRecSeries.all().length) ? '<div class="empty" style="margin:12px 0">Nothing recorded yet. Press the red dot while a channel plays, or pick a programme later in the guide.</div>' : ''}
         <p class="tour-note" style="margin-top:14px">${nat ? 'Recordings are saved on this device and play from Library › Downloads too. They are yours: MKCinema never sees or keeps them.' : 'Recordings stay in this browser until you save them as a file (they play in VLC) or delete them. They never leave your device.'}</p>`;
       // only the running numbers changed: update them in place, so focus, a half-confirmed Delete and presses survive
       const LV = /<small class="[^"]*" data-rlv="([^"]*)">([\s\S]*?)<\/small>/g, key = html.replace(LV, '<small data-rlv="$1"></small>');
@@ -44873,6 +44917,7 @@ body.mk-player-on .rec-pill,html.tv .rec-pill{bottom:auto;top:calc(14px + env(sa
       this.listKey = key; b.innerHTML = html;
       icons();
       $$('[data-rstop]', b).forEach((x) => x.addEventListener('click', () => { this.stop(x.dataset.rstop); setTimeout(() => this.paint(), 400); }));
+      if (window.MkRecSeries) MkRecSeries.bind(b, () => this.paint());
       $$('[data-rplan]', b).forEach((x) => x.addEventListener('click', () => { const id = x.dataset.rplan; if (nat) { try { MKAndroid.recUnplan(String(id)); } catch (e) { /* older app */ } } this.savePlans(this.plans().filter((p) => p.id !== id)); this.paint(); }));
       $$('[data-rsave]', b).forEach((x) => x.addEventListener('click', () => this.saveFile(x.dataset.rsave)));
       $$('[data-rplay]', b).forEach((x) => x.addEventListener('click', () => { try { MKAndroid.dlPlay(String(x.dataset.rplay), 0); } catch (e) { /* older app */ } }));
@@ -45094,6 +45139,12 @@ const Chapters = {
     const l = this.list(); if (l.length < 2) return '';
     const t = pNow(); let cur = -1; l.forEach((c, i) => { if (t >= c.s - 0.5) cur = i; });
     return `<h5>Chapters</h5><div class="mk-chaps">${l.slice(0, 99).map((c, i) => `<button type="button" class="${i === cur ? 'on' : ''}" data-chap="${c.s}"><i data-lucide="bookmark"></i><span class="tnum">${fmtTime(c.s)}</span><b translate="no">${esc(String(c.name || '').trim() || `Chapter ${i + 1}`)}</b></button>`).join('')}</div>`;
+  },
+  /* a thin mark on the progress bar where each chapter starts */
+  ticks() {
+    const seek = $('#seek'); if (!seek) return; $$('.ch-tick', seek).forEach((x) => x.remove());
+    const d = pDur(), l = this.list(); if (l.length < 2 || !isFinite(d) || !(d > 0)) return;
+    seek.insertAdjacentHTML('beforeend', l.filter((c) => c.s > 1 && c.s < d - 1).slice(0, 99).map((c) => `<span class="ch-tick" style="left:${(c.s / d * 100).toFixed(3)}%" aria-hidden="true"></span>`).join(''));
   },
   bind(m) { $$('[data-chap]', m).forEach((b) => b.addEventListener('click', () => { pSeek(Number(b.dataset.chap), { user: true }); m.hidden = true; toast(b.querySelector('b').textContent, 'info', 1400); })); },
 };
@@ -46833,7 +46884,7 @@ const MkNative = {
     this.cmd('open', JSON.stringify({ url: stream.url, headers: h, start: startAt || 0, title: (P.ctx && P.ctx.meta && P.ctx.meta.name) || '', alang: this.alang(), slang: '' }))
       .then((j) => { try { this.gen = JSON.parse(j || '{}').gen || 0; } catch (e) { /* ignore */ } })
       .catch((e) => this.fail(String((e && e.message) || e)));
-    this.vol(); this.cmd('speed', CFG.speed || 1).catch(() => {});
+    this.vol(); this.cmd('speed', CFG.speed || 1).catch(() => {}); this.cmd('tonemap', CFG.hdrMap === 'sdr' ? 'sdr' : 'auto').catch(() => {});
     this.picture(); this.sound(); styleCues();
     this.fire('loadstart');
   },
@@ -47467,16 +47518,17 @@ html.tv .cw-menu button:focus{background:rgba(var(--kffffff-c,255,255,255),.12);
   /* ================= 6. Sources grouped by addon ================= */
   const SrcGroups = {
     apply(listEl, streams) {
-      if (CFG.srcGroup !== true || !listEl || !streams) return;
+      if (!CFG.srcGroup || !listEl || !streams) return;
       const rows = [...listEl.children].filter((x) => x.matches && x.matches('.stream[data-si]')); if (rows.length < 2) return;
       const groups = new Map();
-      rows.forEach((r) => { const st = streams[Number(r.dataset.si)], a = (st && st._addon) || 'Other'; if (!groups.has(a)) groups.set(a, []); groups.get(a).push(r); });
+      rows.forEach((r) => { const st = streams[Number(r.dataset.si)], a = CFG.srcGroup === 'quality' ? SrcWhy.group(st) : (st && st._addon) || 'Other'; if (!groups.has(a)) groups.set(a, []); groups.get(a).push(r); });
       if (groups.size < 2) return;
       $$('.src-grp', listEl).forEach((x) => x.remove());
       const frag = document.createDocumentFragment();
       groups.forEach((list, name) => {
         const h = document.createElement('div'); h.className = 'src-grp'; h.setAttribute('role', 'heading'); h.setAttribute('aria-level', '4');
         const b = document.createElement('b'); b.textContent = name; h.appendChild(b);
+        if (CFG.srcGroup === 'quality') { const w = document.createElement('small'); w.className = 'src-why'; w.textContent = SrcWhy.why(name); h.appendChild(w); }
         const n = document.createElement('span'); n.textContent = String(list.length); h.appendChild(n);
         frag.appendChild(h); list.forEach((r) => frag.appendChild(r));
       });
@@ -47490,12 +47542,12 @@ html.tv .cw-menu button:focus{background:rgba(var(--kffffff-c,255,255,255),.12);
       const list = $('#srcList');
       if (list && window.MutationObserver) {
         let busy = false;
-        new MutationObserver(() => { if (busy || CFG.srcGroup !== true || !P.ctx) return; busy = true; safe(() => SrcGroups.apply(list, P.ctx.streams)); Promise.resolve().then(() => { busy = false; }); }).observe(list, { childList: true });
+        new MutationObserver(() => { if (busy || !CFG.srcGroup || !P.ctx) return; busy = true; safe(() => SrcGroups.apply(list, P.ctx.streams)); Promise.resolve().then(() => { busy = false; }); }).observe(list, { childList: true });
       }
       const sec = typeof secById === 'function' && secById('streams');
       if (sec) {
         const rows = sec.rows;
-        sec.rows = () => { const r = rows(), at = r.findIndex((x) => x.key === 'showTrailers'); r.splice(at >= 0 ? at : r.length, 0, { key: 'srcGroup', label: 'Group sources by addon', help: 'The source list shows each addon’s sources together under its name, instead of one list with the best first.', type: 'toggle', get: () => CFG.srcGroup === true, set: (v) => setCfg('srcGroup', v) }); return r; };
+        sec.rows = () => { const r = rows(), at = r.findIndex((x) => x.key === 'showTrailers'); r.splice(at >= 0 ? at : r.length, 0, { key: 'srcGroup', label: 'Group sources', help: 'By addon puts each addon’s sources together under its name. By picture quality puts 4K, Full HD and smaller files in their own groups, each with a line on when to pick it.', type: 'select', options: [['', 'One list, best first'], ['addon', 'By addon'], ['quality', 'By picture quality']], get: () => (CFG.srcGroup === true ? 'addon' : CFG.srcGroup || ''), set: (v) => setCfg('srcGroup', v) }); return r; };
       }
     },
   };
@@ -50212,7 +50264,7 @@ const Eggs = {
     ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => document.addEventListener(t, () => clearTimeout(hold), true));
     document.addEventListener('contextmenu', (e) => { if (logo(e)) e.preventDefault(); }, true);
     const pal = $('#palInput');
-    if (pal) pal.addEventListener('input', () => { if (pal.value.trim().toLowerCase() === 'rosebud') this.rosebud(); });
+    if (pal) pal.addEventListener('input', () => { if (pal.value.trim().toLowerCase() === 'rosebud') this.rosebud(); else if (pal.value.trim().toLowerCase() === 'arcade' && window.MkArcade) { pal.value = ''; MkArcade.open(); } });
   },
   /* a film leader counts 3, 2, 1 in the middle of the screen */
   booth() {
@@ -53146,9 +53198,9 @@ const CriticsPick = {
     const m = X8.seeded(list, `cp${X8.dayKey()}`)[0]; if (!m || !$('#dxRows') || $('#dxPick')) return;
     const box = document.createElement('section'); box.className = 'dx-pick'; box.id = 'dxPick';
     box.innerHTML = `<div class="dxp-poster" style="background-image:url('${esc(String(metaPoster(m) || '').replace(/'/g, '%27'))}')"></div><div class="dxp-body"><span class="eyebrow"><i data-lucide="award"></i>Critics’ Pick · today</span><h3 translate="no">${esc(m.name)}</h3><small>${[yearOf(m), genresOf(m).slice(0, 2).join(', '), m.imdbRating ? `IMDb ${m.imdbRating}` : ''].filter(Boolean).map(esc).join(' · ')}</small><p>${esc(String(m.description).slice(0, 260))}${String(m.description).length > 260 ? '…' : ''}</p>
-      <div class="inrow"><button class="btn btn-prime btn-sm" type="button" data-nav id="dxpOpen"><i data-lucide="info"></i>Details</button><button class="btn btn-ghost btn-sm" type="button" data-nav id="dxpSwipe"><i data-lucide="layers"></i>Swipe to choose</button></div></div>`;
+      <div class="inrow"><button class="btn btn-prime btn-sm" type="button" data-nav id="dxpOpen"><i data-lucide="info"></i>Details</button><button class="btn btn-ghost btn-sm" type="button" data-nav id="dxpAwards"><i data-lucide="trophy"></i>Award winners</button><button class="btn btn-ghost btn-sm" type="button" data-nav id="dxpSwipe"><i data-lucide="layers"></i>Swipe to choose</button></div></div>`;
     rows.before(box); icons();
-    $('#dxpOpen').onclick = () => openDetail(remember(m)); $('#dxpSwipe').onclick = () => Swipe.open();
+    $('#dxpOpen').onclick = () => openDetail(remember(m)); $('#dxpSwipe').onclick = () => Swipe.open(); { const aw = $('#dxpAwards'); if (aw) aw.onclick = () => window.MkAwards && MkAwards.open(); }
   },
 };
 </script>
@@ -53172,5 +53224,1116 @@ const CriticsPick = {
 .dxp-body{display:grid;gap:6px;min-width:0}.dxp-body h3{margin:0;font-size:1.3rem}.dxp-body p{margin:0;opacity:.85;line-height:1.45}.dxp-body small{opacity:.75}
 @media (max-width:600px){.dx-pick{grid-template-columns:84px 1fr;gap:12px}.dxp-body p{display:none}}
 </style>
+<script id="mk-286c">
+'use strict';
+/* 2.86 Player extras.
+   HoldSeek: holding Left or Right (keyboard or TV remote) skips further the longer it is held.
+   CropBars: "Crop bars" in Settings › Picture fills the screen with the picture inside black bars. It measures the bars
+   on the frame when the picture can be read; when the source does not allow that, it assumes a widescreen film.
+   MiniPlay: on computers, Share › Keep playing in a corner shrinks the film into a small window and the rest of
+   MKCinema can be used. The same video keeps playing (nothing reloads); Expand brings it back, X stops it. */
+const HoldSeek = {
+  n: 0,
+  step(e) {
+    if (!e || !e.repeat) { this.n = 0; return step(); }
+    this.n++;
+    return this.n > 24 ? 180 : this.n > 12 ? 60 : this.n > 4 ? Math.max(30, step()) : step();
+  },
+};
+const CropBars = {
+  m: null,
+  read() {
+    try {
+      if (!video.videoWidth) return null;
+      const w = 64, h = 36, c = document.createElement('canvas'); c.width = w; c.height = h;
+      const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(video, 0, 0, w, h);
+      const d = g.getImageData(0, 0, w, h).data;
+      const lum = (x, y) => { const i = (y * w + x) * 4; return d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11; };
+      const rowDark = (y) => { let t = 0; for (let x = 0; x < w; x++) t += lum(x, y); return t / w < 20; };
+      const colDark = (x) => { let t = 0; for (let y = 0; y < h; y++) t += lum(x, y); return t / h < 20; };
+      let top = 0, bot = 0, lef = 0, rig = 0;
+      while (top < h / 2 && rowDark(top)) top++;
+      while (bot < h / 2 && rowDark(h - 1 - bot)) bot++;
+      while (lef < w / 2 && colDark(lef)) lef++;
+      while (rig < w / 2 && colDark(w - 1 - rig)) rig++;
+      if (top >= h / 2 || lef >= w / 2) return null; // a dark scene: try again later
+      const y = Math.min(top, bot), x = Math.min(lef, rig);
+      return { fy: (h - 2 * y) / h, fx: (w - 2 * x) / w };
+    } catch (e) { return null; }   // the source does not let the picture be read
+  },
+  scale() {
+    const v = video, st = $('#stage'); if (!v.videoWidth || !st) return 1;
+    const r = st.getBoundingClientRect(), s0 = Math.min(r.width / v.videoWidth, r.height / v.videoHeight), W = v.videoWidth * s0, H = v.videoHeight * s0;
+    let m = this.m || this.read();
+    if (m) this.m = m;
+    else { const ar = v.videoWidth / v.videoHeight; m = { fx: 1, fy: ar < 2.2 ? Math.min(1, ar / 2.39) : 1 }; }   // a widescreen film inside a 16:9 file
+    const k = Math.min(r.width / (W * m.fx), r.height / (H * m.fy));
+    return isFinite(k) && k > 1.005 ? Math.min(k, 2) : 1;
+  },
+  chosen() {
+    clearTimeout(this.t);
+    // the first frame can be dark: look again a little later
+    this.t = setTimeout(() => { if (P.aspect === 'crop' && !$('#player').hidden) { this.m = null; applyPicture(); } }, 2500);
+  },
+};
+video.addEventListener('loadedmetadata', () => { CropBars.m = null; if (P.aspect === 'crop') { applyPicture(); CropBars.chosen(); } });
+video.addEventListener('loadedmetadata', () => setTimeout(() => Chapters.ticks(), 600));
+const MiniPlay = {
+  on: false, home: null, pic: null,
+  can() { return !IS_TV && !TOUCH_UI && !(window.MkNative && MkNative.active) && !!P.stream && !P.stream.ytId && video.videoWidth > 0; },
+  open() {
+    if (this.on) return;
+    if (!this.can()) { toast('This one can’t play in a corner', 'err'); return; }
+    if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {});
+    if (document.fullscreenElement && !window.MkKeepFull) document.exitFullscreen().catch(() => {});
+    closeDrawers(); $('#subMenu').hidden = true; $('#optMenu').hidden = true; $('#dspPop').hidden = true;
+    const m = P.ctx && P.ctx.meta, ep = P.ctx && P.ctx.video, title = m ? `${m.name || ''}${ep && ep.season != null ? ` · S${ep.season} E${ep.episode}` : ''}` : '';
+    const box = document.createElement('div'); box.id = 'miniPlay'; box.className = 'mini-play'; box.setAttribute('role', 'region'); box.setAttribute('aria-label', 'Mini player');
+    box.innerHTML = `<div class="mp-v"></div><div class="mp-bar"><b translate="no">${esc(title)}</b>
+      <button type="button" class="mp-b" data-nav data-mpp aria-label="Play or pause"><i data-lucide="${video.paused ? 'play' : 'pause'}"></i></button>
+      <button type="button" class="mp-b" data-nav data-mpfull aria-label="Back to full size"><i data-lucide="maximize-2"></i></button>
+      <button type="button" class="mp-b" data-nav data-mpx aria-label="Stop"><i data-lucide="x"></i></button></div>`;
+    document.body.appendChild(box);
+    const was = !video.paused;
+    this.home = { parent: video.parentNode, next: video.nextSibling };
+    this.pic = [P.aspect, P.zoom]; P.aspect = 'fit'; P.zoom = 1; applyPicture();
+    box.querySelector('.mp-v').appendChild(video);
+    if (was && video.paused) video.play().catch(() => {});
+    this.on = true; P.mini = true;
+    closeLayer('player');
+    icons();
+    const pp = box.querySelector('[data-mpp]');
+    this.paint = () => { pp.innerHTML = `<i data-lucide="${video.paused ? 'play' : 'pause'}"></i>`; icons(); };
+    video.addEventListener('play', this.paint); video.addEventListener('pause', this.paint);
+    pp.onclick = (e) => { e.stopPropagation(); togglePlay(); };
+    box.querySelector('[data-mpfull]').onclick = (e) => { e.stopPropagation(); this.expand(); };
+    box.querySelector('[data-mpx]').onclick = (e) => { e.stopPropagation(); this.restore(true); closePlayer(); };
+    box.querySelector('.mp-v').addEventListener('click', () => this.expand());
+  },
+  /* puts the video back in the player; quiet = the player is being closed or reused */
+  restore(quiet) {
+    if (!this.on) return;
+    const was = !video.paused, h = this.home;
+    if (h && h.parent) h.parent.insertBefore(video, h.next && h.next.parentNode === h.parent ? h.next : null);
+    if (this.paint) { video.removeEventListener('play', this.paint); video.removeEventListener('pause', this.paint); this.paint = null; }
+    const box = $('#miniPlay'); if (box) box.remove();
+    this.on = false; P.mini = false;
+    if (this.pic) { [P.aspect, P.zoom] = this.pic; this.pic = null; }
+    if (!quiet && was && video.paused) video.play().catch(() => {});
+  },
+  expand() {
+    if (!this.on) return;
+    const was = !video.paused; this.restore(true);
+    openLayer('player'); applyPicture(); if (was && video.paused) video.play().catch(() => {});
+    wakeHud();
+  },
+};
+$('#pMini').onclick = () => MiniPlay.open();
+COMMANDS.push({ label: 'Keep the film playing in a corner', icon: 'minimize-2', run: () => (!$('#player').hidden ? MiniPlay.open() : toast('Start a film first')) });
+</script>
+<style id="mk-286c-css">
+#player.is-hdr .hud:not(.idle){opacity:.74}
+#player.is-hdr .menu,#player.is-hdr .drawer{opacity:.9}
+.ch-tick{position:absolute;top:50%;width:2px;height:10px;margin:-5px 0 0 -1px;border-radius:1px;background:rgba(var(--k000000-c,0,0,0),.55);box-shadow:0 0 0 1px rgba(var(--kffffff-c,255,255,255),.35);pointer-events:none;z-index:2}
+html.tv #pMini{display:none!important}
+@media (pointer:coarse){#pMini{display:none!important}}
+.mini-play{position:fixed;right:max(18px,env(safe-area-inset-right,0px));bottom:max(96px,calc(env(safe-area-inset-bottom,0px) + 96px));z-index:65;width:clamp(260px,24vw,400px);border-radius:var(--r-m,14px);overflow:hidden;background:#000;box-shadow:0 18px 50px rgba(0,0,0,.55),0 0 0 1px rgba(var(--kffffff-c,255,255,255),.12);animation:mpIn .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes mpIn{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
+.mini-play .mp-v{aspect-ratio:16/9;cursor:pointer;background:#000}
+.mini-play .mp-v video{width:100%!important;height:100%!important;margin:0!important;object-fit:contain!important;transform:none!important;display:block}
+.mini-play .mp-bar{display:flex;align-items:center;gap:4px;padding:6px 6px 6px 12px;background:var(--n0b0b0c,#0b0b0c)}
+.mini-play .mp-bar b{flex:1;min-width:0;font-size:calc(12.5px * var(--ts,1));font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-play .mp-b{width:32px;height:32px;display:grid;place-items:center;border-radius:50%;color:var(--ink,#fff);background:transparent}
+.mini-play .mp-b:hover,.mini-play .mp-b:focus-visible{background:rgba(var(--kffffff-c,255,255,255),.12)}
+.mini-play .mp-b svg{width:17px;height:17px}
+</style>
+<script id="mk-286d">
+'use strict';
+/* 2.86 Library groups, poster labels, source reasons, filler labels and seat sections */
+const LibGroups = {
+  OPTS: [['', 'No groups'], ['decade', 'By decade'], ['genre', 'By genre'], ['rating', 'By rating']],
+  mine(m) { try { return typeof Rate !== 'undefined' ? Rate.get(Rate.imdb(m) || m.id) || 0 : 0; } catch (e) { return 0; } },
+  yr(m) { return Number(String(m.releaseInfo || m.year || yearOf(m) || '').slice(0, 4)) || 0; },
+  key(m, g) {
+    if (g === 'decade') { const y = this.yr(m); return y ? `${Math.floor(y / 10) * 10}s` : 'Year unknown'; }
+    if (g === 'genre') return genresOf(m)[0] || 'Other';
+    const r = parseFloat(m.imdbRating);
+    return !(r > 0) ? 'Not rated' : r >= 8 ? '8 and up' : r >= 7 ? '7 to 8' : r >= 6 ? '6 to 7' : 'Under 6';
+  },
+  card(m) { return cardHTML(m, m._p ? { progress: m._p, sub: progressSub(m._p) } : {}); },
+  html(list, s) {
+    const g = s.group;
+    if (!g || list.length < 2) return list.map((m) => this.card(m)).join('');
+    const map = new Map(); list.forEach((m) => { const k = this.key(m, g); if (!map.has(k)) map.set(k, []); map.get(k).push(m); });
+    let keys = [...map.keys()];
+    if (g === 'decade') keys.sort((a, b) => (parseInt(b, 10) || 0) - (parseInt(a, 10) || 0));
+    else if (g === 'genre') keys.sort((a, b) => (a === 'Other') - (b === 'Other') || map.get(b).length - map.get(a).length || a.localeCompare(b));
+    else { const o = ['8 and up', '7 to 8', '6 to 7', 'Under 6', 'Not rated']; keys.sort((a, b) => o.indexOf(a) - o.indexOf(b)); }
+    return keys.map((k) => `<h3 class="lib-gh">${esc(k)}</h3>${map.get(k).map((m) => this.card(m)).join('')}`).join('');
+  },
+  /* phones: a strip of letters down the side, sorted A to Z; touch or slide on it to jump */
+  az(box, s, list) {
+    if (!TOUCH_UI || IS_TV || s.sort !== 'az' || s.group || list.length < 24) return;
+    const L = ['#', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'];
+    const nav = document.createElement('nav'); nav.className = 'lib-az'; nav.setAttribute('aria-label', 'Jump to a letter');
+    nav.innerHTML = L.map((c) => `<button type="button" data-az="${c}" tabindex="-1">${c}</button>`).join('');
+    box.appendChild(nav);
+    const first = (c) => { const ch = String(c.getAttribute('aria-label') || '').trim().charAt(0).toUpperCase(); return /[A-Z]/.test(ch) ? ch : '#'; };
+    let last = '';
+    const jump = (x, y) => {
+      const el = document.elementFromPoint(x, y), b = el && el.closest && el.closest('[data-az]'); if (!b || b.dataset.az === last) return;
+      last = b.dataset.az; const want = L.indexOf(last), cards = $$('.lib-grid [data-card]', box);
+      const c = cards.find((k) => L.indexOf(first(k)) >= want) || cards[cards.length - 1]; if (!c) return;
+      $$('[data-az]', nav).forEach((z) => z.classList.toggle('on', z === b));
+      const top = c.getBoundingClientRect().top + scrollY - 90; scrollTo({ top, behavior: 'auto' });
+    };
+    nav.addEventListener('pointerdown', (e) => { e.preventDefault(); last = ''; nav.setPointerCapture(e.pointerId); jump(e.clientX, e.clientY); });
+    nav.addEventListener('pointermove', (e) => { if (nav.hasPointerCapture(e.pointerId)) jump(e.clientX, e.clientY); });
+    nav.addEventListener('pointerup', () => setTimeout(() => $$('[data-az].on', nav).forEach((z) => z.classList.remove('on')), 500));
+  },
+};
+/* the best picture found for a title is kept for 60 days, so its poster label is there on the next visit */
+const QualTags = {
+  K: 'qualTags', MAX: 800, DAYS: 60,
+  save(id, v) {
+    const all = Store.get(this.K, {}) || {}; all[id] = { v, t: Date.now() };
+    const keys = Object.keys(all); if (keys.length > this.MAX) keys.sort((a, b) => all[a].t - all[b].t).slice(0, keys.length - this.MAX).forEach((k) => delete all[k]);
+    Store.set(this.K, all);
+  },
+  load() {
+    const all = Store.get(this.K, {}) || {}, old = Date.now() - this.DAYS * 864e5;
+    Object.entries(all).forEach(([k, x]) => { if (x && typeof x.v === 'string' && x.t > old && !engine.qualityCache.has(k)) engine.qualityCache.set(k, x.v); });
+  },
+};
+window.MkQualSet = (map, id, v) => { map.set(id, v); try { QualTags.save(id, v); } catch (e) { /* storage full */ } };
+try { QualTags.load(); } catch (e) { /* nothing saved */ }
+const SrcWhy = {
+  group(st) { const r = st && st._tel && st._tel.res; return r === '4K UHD' ? '4K' : r === 'SD' ? 'Smaller files' : r || 'Quality not given'; },
+  why(g) {
+    return {
+      '4K': 'Sharpest picture. Needs a fast connection and a 4K screen.',
+      '1440p': 'Sharper than Full HD, lighter than 4K.',
+      '1080p': 'Full HD. Sharp on most TVs and starts quickly.',
+      '720p': 'Lighter. Good on phones or a slow connection.',
+      'Smaller files': 'Lowest picture. Pick it when nothing else plays.',
+      'Quality not given': 'The source doesn’t say how sharp it is.',
+    }[g] || '';
+  },
+};
+/* Anime: episodes that are filler (not from the original story) or recaps get a small label. Episode lists come
+   from MyAnimeList through Jikan, matched to seasons the same way skip markers are; kept for a week. */
+const Filler = {
+  K: 'fillerMap', busy: new Map(),
+  async list(mal) {
+    const all = Store.get(this.K, {}) || {}, x = all[mal];
+    if (x && Date.now() - x.t < 7 * 864e5) return x;
+    if (this.busy.has(mal)) return this.busy.get(mal);
+    const p = (async () => {
+      const f = [], r = []; let page = 1, more = true;
+      while (more && page <= 20) {
+        const res = await fetch(`https://api.jikan.moe/v4/anime/${Number(mal)}/episodes?page=${page}`); if (!res.ok) break;
+        const j = await res.json(); (j.data || []).forEach((e) => { if (e.filler) f.push(e.mal_id); if (e.recap) r.push(e.mal_id); });
+        more = !!(j.pagination && j.pagination.has_next_page); page++;
+        if (more) await new Promise((ok) => setTimeout(ok, 450));   // Jikan allows about 3 calls a second
+      }
+      const v = { t: Date.now(), f, r }; const a2 = Store.get(this.K, {}) || {}; a2[mal] = v;
+      const keys = Object.keys(a2); if (keys.length > 150) delete a2[keys[0]];
+      Store.set(this.K, a2); return v;
+    })().catch(() => null).finally(() => this.busy.delete(mal));
+    this.busy.set(mal, p); return p;
+  },
+  async paint(meta) {
+    if (CFG.fillerTags === false || !meta || meta.type !== 'series' || typeof AniSkip === 'undefined' || !AniSkip.animeish(meta)) return;
+    const imdb = String(meta.imdb_id || meta.id || '').split(':')[0]; if (!/^tt\d+$/.test(imdb)) return;
+    const season = D.season, eps = $$('#dEps [data-vid]'); if (!eps.length) return;
+    const tok = (this.tok = (this.tok || 0) + 1);
+    for (const b of eps) {
+      if (tok !== this.tok || !b.isConnected) return;
+      const v = (meta.videos || []).find((x) => videoIdFor(meta, x) === b.dataset.vid); if (!v || seasonNo(v) !== season) continue;
+      let hit; try { hit = await AniSkip.find(imdb, season, Number(v.episode)); } catch (e) { return; }
+      if (!hit) return;
+      const l = await this.list(hit.mal); if (!l || tok !== this.tok) return;
+      const kind = l.f.includes(hit.ep) ? 'Filler' : l.r.includes(hit.ep) ? 'Recap' : '';
+      const n = $('.num', b); if (kind && n && !$('.ep-fill', n)) n.insertAdjacentHTML('beforeend', ` <span class="ep-fill${kind === 'Recap' ? ' rc' : ''}">${kind}</span>`);
+    }
+  },
+};
+window.MkFiller = Filler;
+/* Each seat can leave out sections it never uses (Live TV, Sports, Music, Anime, Calendar). Changing it on another
+   seat takes that seat's PIN, like every other seat change. */
+const SeatHide = {
+  VIEWS: [['tv', 'Live TV'], ['sports', 'Sports'], ['music', 'Music'], ['anime', 'Anime'], ['calendar', 'Calendar']],
+  clean(l) { const ok = this.VIEWS.map(([v]) => v); return Array.isArray(l) ? l.filter((v) => ok.includes(v)) : []; },
+  cur() { try { return this.clean((Seats.cur() || {}).hide); } catch (e) { return []; } },
+  blocked(view) { return this.cur().includes(view); },
+  html(s) {
+    const h = this.clean(s.hide);
+    return `<div class="se-hide"><b>Sections this seat sees</b><small>Tap one to leave it out of the menu for this seat.</small><div class="se-hide-l">${this.VIEWS.map(([v, l]) => `<button type="button" class="chip${h.includes(v) ? '' : ' on'}" data-nav data-shv="${v}" aria-pressed="${!h.includes(v)}">${l}</button>`).join('')}</div></div>`;
+  },
+  bind(b, s) {
+    s.hide = this.clean(s.hide);
+    $$('[data-shv]', b).forEach((x) => x.addEventListener('click', () => {
+      const v = x.dataset.shv, off = s.hide.includes(v);
+      s.hide = off ? s.hide.filter((y) => y !== v) : [...s.hide, v];
+      x.classList.toggle('on', off); x.setAttribute('aria-pressed', String(off));
+    }));
+  },
+  apply() {
+    const h = this.cur(); let st = $('#seatHideCss');
+    if (!st) { st = document.createElement('style'); st.id = 'seatHideCss'; document.head.appendChild(st); }
+    st.textContent = h.map((v) => `[data-view="${v}"]:not(.view){display:none!important}`).join('\n');
+    if (h.includes(S.view)) go('home');
+  },
+};
+document.documentElement.classList.toggle('mk-noprog', CFG.cardProg === false);
+document.documentElement.classList.toggle('mk-noq', CFG.qualTags === false);
+try { SeatHide.apply(); } catch (e) { /* seats not ready */ }
+{
+  const sec = secById('player') || secById('playback');
+  if (sec && !sec.rows().some((r) => r.key === 'fillerTags')) {
+    const rows = sec.rows;
+    sec.rows = () => { const r = rows(), at = r.findIndex((x) => x.key === 'spoilerGuard'); r.splice(at >= 0 ? at + 1 : r.length, 0, { key: 'fillerTags', label: 'Filler and recap labels on anime', help: 'Marks anime episodes that are filler (not from the original story) or a recap, so you can skip them.', type: 'toggle', get: () => CFG.fillerTags !== false, set: (v) => setCfg('fillerTags', v) }); return r; };
+  }
+}
+</script>
+<style id="mk-286d-css">
+html.mk-noprog .card .prog{display:none!important}
+html.mk-noq .card .badge-q{display:none!important}
+.lib-grid>.lib-gh{grid-column:1/-1;margin:14px 0 2px;font-size:calc(15px * var(--ts,1));font-weight:650;letter-spacing:.01em;color:var(--ink)}
+.lib-grid>.lib-gh:first-child{margin-top:0}
+.lib-az{position:fixed;right:2px;top:50%;transform:translateY(-50%);z-index:30;display:flex;flex-direction:column;align-items:center;padding:6px 2px;border-radius:12px;background:rgba(var(--k000000-c,0,0,0),.35);touch-action:none;user-select:none}
+.lib-az button{width:22px;height:calc(min(2.9vh,20px));display:grid;place-items:center;font-size:calc(10.5px * var(--ts,1));font-weight:650;color:var(--mute);background:none;border:0;padding:0}
+.lib-az button.on{color:var(--ink);transform:scale(1.35)}
+#libX{position:relative}
+.src-grp .src-why{display:block;flex-basis:100%;margin-top:2px;font-size:calc(12px * var(--ts,1));font-weight:400;color:var(--mute)}
+.src-grp:has(.src-why){flex-wrap:wrap}
+.ep .ep-fill{display:inline-block;margin-left:4px;padding:1px 7px;border-radius:999px;font-size:calc(10.5px * var(--ts,1));font-weight:650;letter-spacing:.03em;color:#e8d7b8;background:rgba(205,180,126,.16);border:1px solid rgba(205,180,126,.35);vertical-align:1px}
+.ep .ep-fill.rc{color:var(--mute);background:transparent;border-color:var(--line-soft)}
+.se-hide{display:flex;flex-direction:column;gap:4px;margin:6px 0 4px}
+.se-hide small{color:var(--mute);font-size:calc(12.5px * var(--ts,1))}
+.se-hide-l{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+</style>
+<script id="mk-286e">
+'use strict';
+/* 2.86 Watch party extras
+   - Point and draw: a tap on the picture shows a dot with your name to everyone; drag to draw. Strokes fade in 4 s.
+   - Start together: the host counts 3-2-1 on every screen, then the film starts for everyone at once.
+   - Room PIN: the host can add a 4-digit PIN; someone who joins with the code is asked for it, and the room ignores
+     them until the host's device has checked it. A light lock like seat PINs: it keeps out people who only have the code.
+   - Alerts: a system notification when someone joins, leaves or writes while MKCinema is in the background.
+   - Status: each person's state (watching, paused, loading, browsing, away) shows next to their name. */
+const PartyPlus = {
+  drawing: false, locked: false, pin: '', admitted: new Set(), pending: new Map(), strokes: [], dots: new Map(), lastSt: '', stAt: 0, raf: 0,
+  COLORS: ['#e8d7b8', '#9ccfb0', '#bccde4', '#e5a3a3', '#c9b6e4', '#a3d3e5', '#f0c27b', '#f4a6c8'],
+  color(id) { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h % this.COLORS.length; },
+  hash(txt) { let h1 = 0xdeadbeef, h2 = 0x41c6ce57; for (let i = 0; i < txt.length; i++) { const c = txt.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); } h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909); return (h2 >>> 0).toString(36) + (h1 >>> 0).toString(36); },
+  pk(id, pin) { return this.hash(`mkc-party:${Party.code}:${pin}:${id}`); },
+  stLabel(s) { return { watching: 'Watching', paused: 'Paused', loading: 'Loading', browsing: 'Browsing', away: 'Away' }[s] || ''; },
+  ctlHtml() {
+    const host = Party.isHost();
+    return `<div class="pp-row" role="group" aria-label="Party tools">
+      <button type="button" class="chip${this.drawing ? ' on' : ''}" data-nav data-ppx="draw" aria-pressed="${this.drawing}"><i data-lucide="pen-line"></i>Point and draw</button>
+      ${host ? '<button type="button" class="chip" data-nav data-ppx="count"><i data-lucide="timer"></i>Start together</button>' : ''}
+      ${host ? `<button type="button" class="chip${this.locked ? ' on' : ''}" data-nav data-ppx="pin"><i data-lucide="${this.locked ? 'lock' : 'lock-open'}"></i>${this.locked ? 'PIN on' : 'Add a PIN'}</button>` : (this.locked ? '<span class="chip on pp-ro"><i data-lucide="lock"></i>PIN on</span>' : '')}
+      <button type="button" class="chip${CFG.partyAlerts ? ' on' : ''}" data-nav data-ppx="alerts" aria-pressed="${!!CFG.partyAlerts}"><i data-lucide="bell"></i>Alerts</button>
+    </div>`;
+  },
+  refresh() { if (Party.code) Party.render(); },
+  click(k) {
+    if (k === 'draw') { this.drawing = !this.drawing; this.pad(); this.refresh(); toast(this.drawing ? (!$('#player').hidden ? 'Tap the picture to point, drag to draw' : 'Open the film, then tap the picture to point or drag to draw') : 'Drawing off', 'info', 2600); return; }
+    if (k === 'count') { this.startTogether(); return; }
+    if (k === 'pin') { this.setPin(); return; }
+    if (k === 'alerts') {
+      const on = !CFG.partyAlerts;
+      if (on && 'Notification' in window && Notification.permission === 'default') Notification.requestPermission().then(() => this.refresh()).catch(() => {});
+      if (on && !('Notification' in window)) { toast('This browser can’t show alerts', 'err'); return; }
+      setCfg('partyAlerts', on); this.refresh(); toast(on ? 'You’ll get an alert when someone joins or writes while MKCinema is in the background' : 'Party alerts off', 'info', 3200);
+    }
+  },
+  alert(text) {
+    try { if (!CFG.partyAlerts || !document.hidden || !('Notification' in window) || Notification.permission !== 'granted') return; new Notification('Watch party', { body: String(text).slice(0, 160), tag: 'mk-party', silent: false }); } catch (e) { /* not allowed */ }
+  },
+  /* ---- status ---- */
+  myStatus() { if (document.hidden) return 'away'; if (!P.ctx || $('#player').hidden) return 'browsing'; if (!video.paused && video.readyState < 3) return 'loading'; return video.paused ? 'paused' : 'watching'; },
+  tick() {
+    if (!Party.code) { this.lastSt = ''; return; }
+    const s = this.myStatus(), now = Date.now();
+    if (s !== this.lastSt || now - this.stAt > 10000) { this.lastSt = s; this.stAt = now; Party.send({ t: 'st', s }); }
+  },
+  /* ---- room PIN ---- */
+  setPin() {
+    if (!Party.isHost()) return;
+    if (this.locked) { this.locked = false; this.pin = ''; this.admitted.clear(); Party.send({ t: 'lock', on: false }); this.refresh(); toast('PIN removed'); return; }
+    const pin = (prompt('Choose a 4-digit PIN for this party') || '').trim();
+    if (!/^\d{4}$/.test(pin)) { if (pin) toast('A PIN is 4 digits', 'err'); return; }
+    this.pin = pin; this.locked = true; this.admitted = new Set([Party.me.id, ...Party.peers.keys()]);
+    Party.send({ t: 'lock', on: true, ids: [...this.admitted] }); this.refresh();
+    toast(`PIN ${pin} is on. People joining with the code are asked for it.`, 'ok', 5000);
+  },
+  gate(m, from) {
+    if (!this.locked || this.admitted.has(from) || from === Party.hostId) return false;
+    if (Party.isHost()) {
+      if (typeof m.pk === 'string' && m.pk === this.pk(from, this.pin)) { this.admitted.add(from); setTimeout(() => { if (this.locked) Party.send({ t: 'admit', ids: [...this.admitted] }); }, 500); return false; }   // after the hello reply, so the new member knows the host
+      Party.bus && Party.bus.send({ t: 'pinNeed', _to: from, bad: typeof m.pk === 'string' });
+      return true;
+    }
+    this.pending.set(from, m); return true;   // the host's device decides
+  },
+  drop(m, from) { return this.locked && m.t !== 'hello' && m.t !== 'admit' && m.t !== 'lock' && from !== Party.hostId && !this.admitted.has(from); },
+  /* ---- drawing ---- */
+  pad() {
+    let pad = $('#ppPad'), cv = $('#ppInk');
+    const st = $('#stage'); if (!st) return;
+    if (!cv) { cv = document.createElement('canvas'); cv.id = 'ppInk'; cv.className = 'pp-ink'; cv.setAttribute('aria-hidden', 'true'); st.appendChild(cv); }
+    if (!pad) {
+      pad = document.createElement('div'); pad.id = 'ppPad'; pad.className = 'pp-pad'; st.appendChild(pad);
+      let cur = null, sent = 0, moved = false, t0 = 0;
+      const pt = (e) => { const r = st.getBoundingClientRect(); return [Math.round(((e.clientX - r.left) / r.width) * 1000) / 1000, Math.round(((e.clientY - r.top) / r.height) * 1000) / 1000]; };
+      const flush = () => { if (!cur || cur.pts.length - sent < 2) return; const part = cur.pts.slice(Math.max(0, sent - 1)); sent = cur.pts.length; Party.send({ t: 'ink', c: this.color(Party.me.id), pts: part.slice(0, 80) }); };
+      pad.addEventListener('pointerdown', (e) => { if (!Party.code) return; e.preventDefault(); e.stopPropagation(); pad.setPointerCapture(e.pointerId); cur = { c: this.color(Party.me.id), pts: [pt(e)], at: Date.now() }; this.strokes.push(cur); sent = 0; moved = false; t0 = Date.now(); this.loop(); });
+      pad.addEventListener('pointermove', (e) => { if (!cur) return; const p = pt(e), l = cur.pts[cur.pts.length - 1]; if (Math.hypot(p[0] - l[0], p[1] - l[1]) < 0.004) return; moved = true; cur.pts.push(p); cur.at = Date.now(); if (cur.pts.length - sent >= 12) flush(); });
+      const end = (e) => { if (!cur) return; if (!moved || (cur.pts.length < 3 && Date.now() - t0 < 300)) { const p = cur.pts[0]; this.strokes.pop(); this.dot(Party.me.id, Party.name(), p[0], p[1]); Party.send({ t: 'ptr', x: p[0], y: p[1] }); } else flush(); cur = null; };
+      pad.addEventListener('pointerup', end); pad.addEventListener('pointercancel', end);
+      pad.addEventListener('click', (e) => e.stopPropagation());
+    }
+    pad.hidden = !this.drawing || !Party.code;
+  },
+  ok(v) { return typeof v === 'number' && isFinite(v) && v >= 0 && v <= 1; },
+  dot(id, name, x, y) {
+    const st = $('#stage'); if (!st) return;
+    let d = this.dots.get(id);
+    if (!d || !d.isConnected) { d = document.createElement('div'); d.className = 'pp-dot'; d.innerHTML = '<i></i><span></span>'; st.appendChild(d); this.dots.set(id, d); }
+    d.style.setProperty('--pc', this.COLORS[this.color(id)]); d.querySelector('span').textContent = name;
+    d.style.left = `${x * 100}%`; d.style.top = `${y * 100}%`; d.classList.remove('go'); void d.offsetWidth; d.classList.add('go');
+    clearTimeout(d._t); d._t = setTimeout(() => d.remove(), 2600);
+  },
+  loop() {
+    if (this.raf) return;
+    const draw = () => {
+      const cv = $('#ppInk'); if (!cv) { this.raf = 0; return; }
+      const r = cv.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+      if (cv.width !== Math.round(r.width * dpr)) { cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); }
+      const g = cv.getContext('2d'); g.clearRect(0, 0, cv.width, cv.height);
+      const now = Date.now(); this.strokes = this.strokes.filter((k) => now - k.at < 4000);
+      g.lineCap = 'round'; g.lineJoin = 'round'; g.lineWidth = Math.max(3, cv.width / 260);
+      this.strokes.forEach((k) => {
+        g.globalAlpha = Math.max(0, Math.min(1, (4000 - (now - k.at)) / 1200)); g.strokeStyle = this.COLORS[k.c] || '#fff';
+        g.beginPath(); k.pts.forEach(([x, y], i) => (i ? g.lineTo(x * cv.width, y * cv.height) : g.moveTo(x * cv.width, y * cv.height))); g.stroke();
+      });
+      g.globalAlpha = 1;
+      if (this.strokes.length) this.raf = requestAnimationFrame(draw); else this.raf = 0;
+    };
+    this.raf = requestAnimationFrame(draw);
+  },
+  /* ---- 3-2-1 ---- */
+  startTogether() {
+    if (!Party.isHost()) return;
+    if (!P.ctx || $('#player').hidden) { toast('Start a film first, then press Start together'); return; }
+    if (!video.paused) video.pause();
+    const at = Date.now() + 3600; Party.send({ t: 'count', at }); this.count(at, true);
+  },
+  count(at, host) {
+    let o = $('#ppCount'); if (o) o.remove();
+    o = document.createElement('div'); o.id = 'ppCount'; o.className = 'pp-count'; o.setAttribute('aria-live', 'assertive');
+    ($('#player').hidden ? document.body : $('#player')).appendChild(o);
+    const show = () => {
+      const left = at - Date.now();
+      if (left <= 0) { o.remove(); if (host && video.paused) video.play().catch(() => {}); return; }
+      const n = String(Math.min(3, Math.ceil(left / 1000)));
+      if (o.textContent !== n) { o.textContent = n; o.classList.remove('go'); void o.offsetWidth; o.classList.add('go'); }
+      setTimeout(show, Math.min(120, left));
+    };
+    show();
+  },
+  onMsg(m, from) {
+    const p = Party.peers.get(from);
+    switch (m.t) {
+      case 'st': if (p && /^(watching|paused|loading|browsing|away)$/.test(m.s) && p.st !== m.s) { p.st = m.s; Party.renderMembers(); } break;
+      case 'ptr': if (this.ok(m.x) && this.ok(m.y) && !$('#player').hidden) this.dot(from, (p && p.name) || 'Guest', m.x, m.y); break;
+      case 'ink': if (Array.isArray(m.pts) && m.pts.length >= 2 && m.pts.length <= 80 && m.pts.every((q) => Array.isArray(q) && this.ok(q[0]) && this.ok(q[1])) && !$('#player').hidden) {
+        this.pad(); this.strokes.push({ c: Number.isInteger(m.c) && m.c >= 0 && m.c < this.COLORS.length ? m.c : 0, pts: m.pts, at: Date.now() }); if (this.strokes.length > 200) this.strokes.shift(); this.loop();
+      } break;
+      case 'count': if (from === Party.hostId && typeof m.at === 'number') { const off = Party.offsets.get(from) || 0, local = m.at - off; if (local - Date.now() < 8000 && local - Date.now() > -500) this.count(local, false); } break;
+      case 'pinNeed': if (m._to === Party.me.id) {
+        const pin = (prompt(m.bad ? 'That PIN didn’t match. Try again:' : 'This party has a PIN. Ask the host for it:') || '').trim();
+        if (!/^\d{4}$/.test(pin)) { toast('You need the party’s PIN to join', 'err', 4000); Party.leave(true); return; }
+        Party.bus && Party.bus.send({ t: 'hello', g: Party.guestFlag(), name: Party.name(), host: false, pk: this.pk(Party.me.id, pin) });
+      } break;
+      case 'lock': if (from === Party.hostId) { this.locked = !!m.on; this.admitted = new Set(Array.isArray(m.ids) ? m.ids.filter((x) => typeof x === 'string').slice(0, 64) : []); this.refresh(); } break;
+      case 'admit': if (from === Party.hostId && Array.isArray(m.ids)) {
+        this.locked = true; this.admitted = new Set(m.ids.filter((x) => typeof x === 'string').slice(0, 64));
+        this.pending.forEach((hello, id) => { if (this.admitted.has(id)) { this.pending.delete(id); Party.onMsg(hello); } });
+      } break;
+      default: break;
+    }
+  },
+  reset() { this.locked = false; this.pin = ''; this.admitted.clear(); this.pending.clear(); this.drawing = false; const pad = $('#ppPad'); if (pad) pad.hidden = true; },
+  init() {
+    document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('[data-ppx]'); if (b) { e.preventDefault(); this.click(b.dataset.ppx); } });
+    setInterval(() => { try { this.tick(); if (this.drawing) this.pad(); } catch (e) { /* party gone */ } }, 3000);
+    document.addEventListener('visibilitychange', () => { try { this.tick(); } catch (e) { /* ok */ } });
+  },
+};
+PartyPlus.init();
+</script>
+<style id="mk-286e-css">
+.pp-row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}
+.pp-row .chip{display:inline-flex;align-items:center;gap:6px}
+.pp-row .chip svg{width:15px;height:15px}
+.pp-row .pp-ro{cursor:default}
+.pp-pad{position:absolute;inset:0;z-index:2;cursor:crosshair;touch-action:none}
+.pp-ink{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+.pp-dot{position:absolute;z-index:4;pointer-events:none;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:4px;opacity:0}
+.pp-dot i{width:22px;height:22px;border-radius:50%;background:var(--pc);box-shadow:0 0 0 4px color-mix(in srgb,var(--pc) 35%,transparent),0 4px 14px rgba(0,0,0,.5)}
+.pp-dot span{padding:2px 8px;border-radius:999px;background:rgba(0,0,0,.7);color:#fff;font-size:calc(12px * var(--ts,1));font-weight:600;white-space:nowrap}
+.pp-dot.go{animation:ppDot 2.6s ease forwards}
+@keyframes ppDot{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}10%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
+.pp-count{position:fixed;inset:0;z-index:90;display:grid;place-items:center;pointer-events:none;font-size:min(34vw,34vh);font-weight:800;color:#fff;text-shadow:0 10px 60px rgba(0,0,0,.6)}
+.pp-count.go{animation:ppCount .9s cubic-bezier(.2,.8,.2,1)}
+@keyframes ppCount{from{opacity:0;transform:scale(1.4)}30%{opacity:1;transform:scale(1)}to{opacity:.85;transform:scale(.96)}}
+</style>
+<script id="mk-286f">
+'use strict';
+/* 2.86 Looks
+   - Appearance: your own font file (.woff2, .woff, .ttf, .otf, up to 900 KB) and a background picture (made smaller on this
+     device). Both stay on this device. A look file (.mklook) saves the Atelier theme, the film page style and the player
+     look, with the font and picture inside, so it can be opened on another device or sent to a friend.
+   - Film page styles: Classic, Tall, Short, Centred, Poster beside, Plain.
+   - Player look: progress bar Thin, Standard, Thick, Glow or Accent, and an optional big Play button while paused.
+   - First start: the walkthrough has a "Pick your look" step. */
+const LookKit = {
+  PAGES: [['classic', 'Classic'], ['tall', 'Tall'], ['short', 'Short'], ['center', 'Centred'], ['poster', 'Poster beside'], ['plain', 'Plain']],
+  BARS: [['std', 'Standard'], ['thin', 'Thin'], ['thick', 'Thick'], ['glow', 'Glow'], ['accent', 'Accent']],
+  K_FONT: 'mkc:lookFont', K_BG: 'mkc:lookBg',
+  ls(k, v) { try { if (v === undefined) return localStorage.getItem(k) || ''; if (v) localStorage.setItem(k, v); else localStorage.removeItem(k); return true; } catch (e) { return false; } },
+  apply() {
+    const de = document.documentElement, ps = this.PAGES.some(([k]) => k === CFG.pageStyle) ? CFG.pageStyle : 'classic', sb = this.BARS.some(([k]) => k === CFG.seekStyle) ? CFG.seekStyle : 'std';
+    this.PAGES.forEach(([k]) => de.classList.toggle(`dp-${k}`, k === ps && k !== 'classic'));
+    this.BARS.forEach(([k]) => de.classList.toggle(`sb-${k}`, k === sb && k !== 'std'));
+    de.classList.toggle('pd-bigplay', !!CFG.bigPlay); this.bigPlay();
+    // own font
+    const font = this.ls(this.K_FONT);
+    if (font && font !== this._font) {
+      this._font = font;
+      try { const ff = new FontFace('MKC Own', `url(${font})`); ff.load().then((f) => { document.fonts.add(f); de.classList.add('lk-font'); }).catch(() => { de.classList.remove('lk-font'); toast('That font file could not be read', 'err'); }); } catch (e) { /* no FontFace */ }
+    } else if (!font) { this._font = ''; de.classList.remove('lk-font'); }
+    // own background picture
+    const bg = this.ls(this.K_BG);
+    de.classList.toggle('lk-bg', !!bg);
+    if (bg) de.style.setProperty('--lk-bg', `url("${bg}")`); else de.style.removeProperty('--lk-bg');
+  },
+  poster(m) {
+    if (CFG.pageStyle !== 'poster' || !m) return '';
+    const src = metaPoster(m); return src ? `<div class="d-pst">${imgTag(src, m.name, m.id, { lazy: false })}</div>` : '';
+  },
+  bigPlay() {
+    let b = $('#pBigPlay');
+    if (!CFG.bigPlay) { if (b) b.hidden = true; return; }
+    if (!b) {
+      const hud = $('#hud'); if (!hud) return;
+      b = document.createElement('button'); b.id = 'pBigPlay'; b.type = 'button'; b.className = 'p-bigplay'; b.setAttribute('aria-label', 'Play'); b.setAttribute('data-nav', '');
+      b.innerHTML = '<i data-lucide="play"></i>'; hud.appendChild(b); icons();
+      b.addEventListener('click', (e) => { e.stopPropagation(); togglePlay(); });
+      const sync = () => { b.hidden = !CFG.bigPlay || !video.paused || !(video.currentSrc || video.srcObject); };
+      video.addEventListener('play', sync); video.addEventListener('pause', sync); video.addEventListener('emptied', sync);
+      this._sync = sync;
+    }
+    if (this._sync) this._sync();
+  },
+  /* ---- Atelier additions ---- */
+  atHtml() {
+    const font = !!this.ls(this.K_FONT), bg = !!this.ls(this.K_BG);
+    return `<div class="set-row"><div><b>Font and background</b><small>Use your own font file and a picture behind the app. Both stay on this device.</small></div></div>
+      <div class="inrow lk-own"><button class="btn btn-ghost btn-sm" type="button" data-nav data-lk="font"><i data-lucide="type"></i>${font ? 'Change font' : 'Use a font file'}</button>${font ? '<button class="btn btn-ghost btn-sm" type="button" data-nav data-lk="nofont"><i data-lucide="x"></i>Remove font</button>' : ''}
+        <button class="btn btn-ghost btn-sm" type="button" data-nav data-lk="bg"><i data-lucide="image"></i>${bg ? 'Change picture' : 'Background picture'}</button>${bg ? '<button class="btn btn-ghost btn-sm" type="button" data-nav data-lk="nobg"><i data-lucide="x"></i>Remove picture</button>' : ''}</div>
+      <div class="set-row"><div><b>Look files</b><small>A look file keeps your colour, font, picture, film page style and player look, so you can open it on another screen or send it to a friend.</small></div></div>
+      <div class="inrow lk-own"><button class="btn btn-ghost btn-sm" type="button" data-nav data-lk="save"><i data-lucide="download"></i>Save look file</button><button class="btn btn-ghost btn-sm" type="button" data-nav data-lk="open"><i data-lucide="folder-open"></i>Open a look file</button></div>`;
+  },
+  atBind(box) {
+    $$('[data-lk]', box).forEach((b) => b.addEventListener('click', () => {
+      const k = b.dataset.lk;
+      if (k === 'font') this.pick('.woff2,.woff,.ttf,.otf,font/woff2,font/woff,font/ttf,font/otf', (f) => this.setFont(f));
+      else if (k === 'bg') this.pick('image/*', (f) => this.setBg(f));
+      else if (k === 'nofont') { this.ls(this.K_FONT, ''); this.apply(); renderSettingsBody(); toast('Font removed'); }
+      else if (k === 'nobg') { this.ls(this.K_BG, ''); this.apply(); renderSettingsBody(); toast('Picture removed'); }
+      else if (k === 'save') this.save();
+      else if (k === 'open') this.pick('.mklook,application/json,.json', (f) => this.open(f));
+    }));
+  },
+  pick(accept, fn) { const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.onchange = () => { const f = i.files && i.files[0]; if (f) fn(f); }; i.click(); },
+  read(f) { return new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result)); r.onerror = () => no(r.error); r.readAsDataURL(f); }); },
+  async setFont(f) {
+    if (f.size > 900 * 1024) { toast('That font file is too big. Pick one under 900 KB (a .woff2 is smallest).', 'err', 5000); return; }
+    if (!/\.(woff2?|ttf|otf)$/i.test(f.name)) { toast('Pick a .woff2, .woff, .ttf or .otf file', 'err'); return; }
+    const url = (await this.read(f)).replace(/^data:[^;,]*/, `data:font/${f.name.split('.').pop().toLowerCase()}`);
+    if (!this.ls(this.K_FONT, url)) { toast('This device has no room left to keep the font', 'err'); return; }
+    this._font = ''; this.apply(); renderSettingsBody(); toast('Your font is on', 'ok');
+  },
+  async setBg(f) {
+    try {
+      const img = await createImageBitmap(f), s = Math.min(1, 1600 / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      const url = c.toDataURL('image/jpeg', 0.78);
+      if (!this.ls(this.K_BG, url)) { toast('This device has no room left to keep the picture', 'err'); return; }
+      this.apply(); renderSettingsBody(); toast('Background picture on', 'ok');
+    } catch (e) { toast('That picture could not be opened', 'err'); }
+  },
+  pack() {
+    return { kind: 'mklook', v: 1, atelier: typeof Atelier !== 'undefined' ? Atelier.get() : null, look: CFG.look || 'noir', pageStyle: CFG.pageStyle || 'classic', seekStyle: CFG.seekStyle || 'std', bigPlay: !!CFG.bigPlay, font: this.ls(this.K_FONT) || '', bg: this.ls(this.K_BG) || '' };
+  },
+  save() {
+    const blob = new Blob([JSON.stringify(this.pack())], { type: 'application/json' }), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'my-look.mklook'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast('Look file saved', 'ok');
+  },
+  async open(f) {
+    try {
+      if (f.size > 4 * 1024 * 1024) throw new Error('too big');
+      const d = JSON.parse(await f.text()); if (!d || d.kind !== 'mklook') throw new Error('not a look file');
+      const pick = (v, list, def) => (list.some(([k]) => k === v) ? v : def);
+      if (d.atelier && typeof d.atelier === 'object' && typeof Atelier !== 'undefined') {
+        const a = { ...Atelier.def(), ...d.atelier };
+        if (typeof a.hue === 'number' && isFinite(a.hue)) a.hue = ((Math.round(a.hue) % 360) + 360) % 360; else delete a.hue;
+        if (a.hue != null || (Atelier.SHADOWS.some((x) => x[0] === a.shadow) && Atelier.LIGHTS.some((x) => x[0] === a.light))) Atelier.apply(a, { select: d.look === 'atelier' });
+      }
+      if (d.look !== 'atelier' && LOOKS[d.look]) setCfg('look', d.look);
+      setCfg('pageStyle', pick(d.pageStyle, this.PAGES, 'classic')); setCfg('seekStyle', pick(d.seekStyle, this.BARS, 'std')); setCfg('bigPlay', !!d.bigPlay);
+      if (typeof d.font === 'string' && /^data:font\/(woff2?|ttf|otf);base64,[A-Za-z0-9+/=]+$/.test(d.font) && d.font.length < 1.3e6) this.ls(this.K_FONT, d.font);
+      if (typeof d.bg === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(d.bg) && d.bg.length < 2.5e6) this.ls(this.K_BG, d.bg);
+      this._font = ''; applyAll(); this.apply(); renderSettingsBody(); toast('Look applied', 'ok');
+    } catch (e) { toast(`That file didn’t work (${e.message})`, 'err'); }
+  },
+  /* ---- first start ---- */
+  tourHtml() {
+    const lk = LOOKS[CFG.look] ? CFG.look : 'noir', cs = CFG.cardSize || 'm', ps = CFG.pageStyle || 'classic';
+    const looks = Object.entries(LOOKS).filter(([k]) => k !== 'atelier');
+    return `<div class="tw-sec lk-tour"><span class="tw-kicker">Make it yours</span><h2 class="tw-h">Pick your look</h2>
+      <div class="lk-t-lab">Theme</div><div class="lk-looks">${looks.map(([k, v]) => `<button type="button" class="lk-lookb${k === lk ? ' on' : ''}" data-nav data-lkt="look" data-v="${k}" style="--l0:${v.l0};--lb:${v.lb};--li:${v.li};--la:${v.la}"><i></i><span>${esc(v.label)}</span></button>`).join('')}</div>
+      <div class="lk-t-lab">Posters</div><div class="segc">${[['s', 'Small'], ['m', 'Medium'], ['l', 'Large']].map(([k, l]) => `<button type="button" class="${k === cs ? 'on' : ''}" data-nav data-lkt="cards" data-v="${k}">${l}</button>`).join('')}</div>
+      <div class="lk-t-lab">Film pages</div><div class="segc lk-wrap">${this.PAGES.map(([k, l]) => `<button type="button" class="${k === ps ? 'on' : ''}" data-nav data-lkt="page" data-v="${k}">${l}</button>`).join('')}</div>
+      <p class="tour-note">You can change all of this later in Settings › Appearance.</p></div>`;
+  },
+  tourBind() {
+    $$('#tourBody [data-lkt]').forEach((b) => b.addEventListener('click', () => {
+      const k = b.dataset.lkt, v = b.dataset.v;
+      if (k === 'look' && LOOKS[v]) setCfg('look', v);
+      if (k === 'cards') { setCfg('cardSize', v); applyAll(); }
+      if (k === 'page') { setCfg('pageStyle', v); this.apply(); }
+      $$(`#tourBody [data-lkt="${k}"]`).forEach((x) => x.classList.toggle('on', x === b));
+    }));
+  },
+  init() {
+    if (typeof CFG_HOOKS !== 'undefined') CFG_HOOKS.push((k) => { if (k === 'look') applyAll(); });
+    const ap = secById('appearance');
+    if (ap && !ap.rows().some((r) => r.key === 'pageStyle')) {
+      const rows = ap.rows;
+      const bind = ap.bind; ap.bind = () => { if (bind) bind(); const b = $('#setBody'); if (b) this.atBind(b); };
+      ap.rows = () => [...rows(), { group: 'Your own look' }, { html: () => this.atHtml() }, { group: 'Film pages' }, { key: 'pageStyle', label: 'Film page style', help: 'How the top of a film or series page looks: a tall picture, a short one, everything centred, the poster beside the title, or no picture at all.', type: 'select', options: this.PAGES, get: () => CFG.pageStyle || 'classic', set: (v) => { setCfg('pageStyle', v); this.apply(); } }];
+    }
+    const pb = secById('playback');
+    if (pb && !pb.rows().some((r) => r.key === 'seekStyle')) {
+      const rows = pb.rows;
+      pb.rows = () => { const r = rows(), at = r.findIndex((x) => x.key === 'hdrDim'); r.splice(at >= 0 ? at + 1 : r.length, 0,
+        { key: 'seekStyle', label: 'Progress bar look', type: 'select', options: this.BARS, get: () => CFG.seekStyle || 'std', set: (v) => { setCfg('seekStyle', v); this.apply(); } },
+        { key: 'bigPlay', label: 'Big Play button while paused', help: 'A large Play button in the middle of the picture whenever the film is paused.', type: 'toggle', get: () => !!CFG.bigPlay, set: (v) => { setCfg('bigPlay', v); this.apply(); } }); return r; };
+    }
+    this.apply();
+  },
+};
+window.MkLookKit = LookKit;
+LookKit.init();
+</script>
+<style id="mk-286f-css">
+html.lk-font{--f-body:"MKC Own",system-ui,sans-serif;--f-display:"MKC Own",system-ui,sans-serif}
+html.lk-bg body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(rgba(var(--n000000-c,0,0,0),.72),rgba(var(--n000000-c,0,0,0),.9)),var(--lk-bg) center/cover no-repeat}
+html.lk-bg body{background:transparent}
+html.lk-bg{background:var(--n000000,#000)}
+.lk-own{flex-wrap:wrap;gap:8px}
+.lk-note{display:block;margin-top:6px;color:var(--mute);font-size:calc(12.5px * var(--ts,1))}
+/* film page styles */
+html.dp-tall .d-hero{min-height:calc(100dvh - 40px)}
+html.dp-short .d-hero{min-height:clamp(230px,32vh,340px)}
+html.dp-center .d-hero .d-body{text-align:center;display:flex;flex-direction:column;align-items:center}
+html.dp-center .d-hero .actions,html.dp-center .d-hero .metaline{justify-content:center}
+html.dp-center .d-hero .logo3d{margin-inline:auto}
+html.dp-plain .d-hero{min-height:clamp(200px,26vh,300px)}
+html.dp-plain .d-hero>.bg,html.dp-plain .d-hero>img,html.dp-plain .d-hero>picture{display:none}
+html.dp-poster .d-hero{align-items:flex-end}
+.d-pst{position:relative;z-index:1;flex:none;width:clamp(110px,15vw,220px);aspect-ratio:2/3;margin:0 0 36px clamp(18px,3vw,40px);border-radius:var(--r-m,10px);overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.6),0 0 0 1px rgba(var(--kffffff-c,255,255,255),.12)}
+.d-pst img{width:100%;height:100%;object-fit:cover;display:block}
+@media (max-width:600px){.d-pst{width:96px;margin-bottom:24px}}
+/* player look */
+html.sb-thin .seek .trk{height:2px}
+html.sb-thin .seek:hover .trk{height:4px}
+html.sb-thick .seek .trk{height:8px}
+html.sb-thick .seek:hover .trk{height:11px}
+html.sb-glow #seek .cur{box-shadow:0 0 12px 2px var(--accent,#d9d4c7)}
+html.sb-glow #seek .trk{overflow:visible}
+html.sb-accent #seek .cur{background:var(--accent,#d9d4c7)}
+.p-bigplay{position:absolute;left:50%;top:50%;width:clamp(72px,9vw,110px);height:clamp(72px,9vw,110px);margin:calc(clamp(72px,9vw,110px) / -2) 0 0 calc(clamp(72px,9vw,110px) / -2);border-radius:50%;display:grid;place-items:center;pointer-events:auto;color:#000;background:rgba(255,255,255,.92);box-shadow:0 18px 50px rgba(0,0,0,.5);border:0;cursor:pointer;transition:transform .2s ease,opacity .2s ease}
+.p-bigplay:hover,.p-bigplay:focus-visible{transform:scale(1.06)}
+.p-bigplay svg{width:44%;height:44%;margin-left:6%}
+.p-bigplay[hidden]{display:none}
+/* first start */
+.lk-tour .lk-t-lab{margin:14px 0 8px;font-size:calc(12px * var(--ts,1));letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.lk-looks{display:flex;flex-wrap:wrap;gap:10px}
+.lk-lookb{display:flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border-radius:999px;border:1px solid var(--line-soft);background:transparent;color:var(--ink)}
+.lk-lookb i{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--l0) 0 45%,var(--la) 45% 70%,var(--li) 70%);box-shadow:0 0 0 1px rgba(var(--kffffff-c,255,255,255),.25)}
+.lk-lookb.on{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.lk-wrap{flex-wrap:wrap}
+</style>
+<script id="mk-286g">
+'use strict';
+/* ---- Carousel rows: the highlighted poster stays near the left edge and grows, the rest of the row dims (made for TV remotes) ---- */
+const CarouselRows = {
+  on() { return CFG.rowStyle === 'carousel'; },
+  apply() { document.documentElement.classList.toggle('tv-carousel', this.on()); },
+  init() {
+    this.apply();
+    document.addEventListener('focusin', (e) => {
+      if (!this.on()) return;
+      const c = e.target && e.target.closest && e.target.closest('.rail > .card'); if (!c) return;
+      const rail = c.parentElement; setTimeout(() => { const x = Math.max(0, c.offsetLeft - rail.clientWidth * 0.06); rail.scrollTo({ left: x, behavior: CFG.reduceMotion ? 'auto' : 'smooth' }); }, 0);
+    });
+  },
+};
+/* ---- TV keyboard: the TV's own, or MKCinema's A to Z or QWERTY keys that work with the remote ---- */
+const TvKb = {
+  want() { return IS_TV && (CFG.tvKb === 'abc' || CFG.tvKb === 'qwerty'); },
+  open(el) {
+    this.el = el;
+    X8.layer('tvKb', { label: 'Keyboard', icon: 'keyboard', eyebrow: 'Type', wide: true });
+    const b = X8.body('tvKb'), rows = CFG.tvKb === 'qwerty' ? ['1234567890', 'qwertyuiop', 'asdfghjkl\'', 'zxcvbnm-.'] : ['abcdefghi', 'jklmnopqr', 'stuvwxyz\'', '1234567890'];
+    b.innerHTML = `<div class="kb-out" aria-live="polite"><span id="kbText"></span><i class="kb-caret"></i></div>
+      <div class="kb-keys">${rows.map((r) => `<div class="kb-row">${[...r].map((ch) => `<button type="button" class="kb-k" data-nav data-kk="${esc(ch)}">${esc(ch.toUpperCase())}</button>`).join('')}</div>`).join('')}
+      <div class="kb-row kb-wide"><button type="button" class="kb-k" data-nav data-kk=" "><i data-lucide="space"></i>Space</button><button type="button" class="kb-k" data-nav data-kb="del"><i data-lucide="delete"></i>Delete</button><button type="button" class="kb-k" data-nav data-kb="clear">Clear</button><button type="button" class="kb-k kb-done" data-nav data-kb="done"><i data-lucide="check"></i>Done</button></div></div>`;
+    const paint = () => { $('#kbText', b).textContent = el.value; };
+    const put = (v) => { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); paint(); };
+    $$('[data-kk]', b).forEach((k) => k.addEventListener('click', () => put(el.value + k.dataset.kk)));
+    $$('[data-kb]', b).forEach((k) => k.addEventListener('click', () => {
+      const a = k.dataset.kb;
+      if (a === 'del') put(el.value.slice(0, -1)); else if (a === 'clear') put('');
+      else { X8.close('tvKb'); el.dispatchEvent(new Event('change', { bubbles: true })); setTimeout(() => Nav.settle(), 60); }
+    }));
+    paint(); icons(); X8.open('tvKb');
+    setTimeout(() => { const f = $('[data-kk]', b); if (f) Nav.focus(f, true); }, 60);
+  },
+};
+window.MkTvKb = TvKb;
+/* ---- Award winners, from Wikidata (open data), kept for a week ---- */
+const Awards = {
+  LIST: [['picture', 'Q102427', 'Best Picture', 'Oscars', 'movie'], ['intl', 'Q105304', 'International Feature', 'Oscars', 'movie'], ['animated', 'Q106800', 'Animated Feature', 'Oscars', 'movie'],
+    ['palme', 'Q179808', 'Palme d’Or', 'Cannes', 'movie'], ['lion', 'Q209459', 'Golden Lion', 'Venice', 'movie'], ['bear', 'Q154590', 'Golden Bear', 'Berlin', 'movie'], ['bafta', 'Q139184', 'Best Film', 'BAFTA', 'movie'],
+    ['globe', 'Q1011509', 'Best Drama', 'Golden Globes', 'movie'], ['emmyd', 'Q989438', 'Drama Series', 'Emmys', 'series'], ['emmyc', 'Q2110156', 'Comedy Series', 'Emmys', 'series'], ['anime', 'Q2510955', 'Animation of the Year', 'Japan Academy', 'movie']],
+  cur: 'picture',
+  async get(a) {
+    const k = `award:${a[0]}`, c = Store.get(k, null); if (c && Date.now() - c.t < 7 * 864e5 && Array.isArray(c.l)) return c.l;
+    const lang = String(appLocale() || 'en').slice(0, 2);
+    const q = `SELECT ?imdb ?itemLabel (MAX(YEAR(?d)) AS ?y) WHERE { ?item p:P166 ?st. ?st ps:P166 wd:${a[1]}. OPTIONAL { ?st pq:P585 ?d } ?item wdt:P345 ?imdb. FILTER(STRSTARTS(?imdb, "tt")) SERVICE wikibase:label { bd:serviceParam wikibase:language "${lang},en". } } GROUP BY ?imdb ?itemLabel ORDER BY DESC(?y) LIMIT 150`;
+    const r = await fetch(`https://query.wikidata.org/sparql?format=json&query=${encodeURIComponent(q)}`, { headers: { Accept: 'application/sparql-results+json' } });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const seen = new Set(), l = ((await r.json()).results || {}).bindings.map((b) => ({ id: b.imdb.value, name: (b.itemLabel || {}).value || '', y: b.y ? Number(b.y.value) : 0 }))
+      .filter((x) => /^tt\d+$/.test(x.id) && !/^Q\d+$/.test(x.name) && !seen.has(x.id) && seen.add(x.id));
+    Store.set(k, { t: Date.now(), l }); return l;
+  },
+  open(id) {
+    if (id) this.cur = id;
+    X8.layer('awards', { label: 'Award winners', icon: 'trophy', eyebrow: 'Award winners', wide: true });
+    this.paint(); X8.open('awards');
+  },
+  async paint() {
+    const b = X8.body('awards'), a = this.LIST.find((x) => x[0] === this.cur) || this.LIST[0];
+    b.innerHTML = `<div class="aw-chips">${this.LIST.map(([k, , n, by]) => `<button type="button" class="chip${k === a[0] ? ' on' : ''}" data-nav data-aw="${k}"><b>${esc(by)}</b>&nbsp;${esc(n)}</button>`).join('')}</div><div class="grid aw-grid" id="awGrid">${skeletons(12)}</div>`;
+    $$('[data-aw]', b).forEach((x) => x.addEventListener('click', () => { this.cur = x.dataset.aw; this.paint(); }));
+    try {
+      const l = await this.get(a); if (this.cur !== a[0] || !$('#awGrid')) return;
+      $('#awGrid').innerHTML = l.map((x) => cardHTML({ id: x.id, type: a[4], name: x.name, releaseInfo: x.y ? String(x.y) : '' }, { sub: x.y ? String(x.y) : '' })).join('') || '<div class="empty">Nothing listed yet.</div>';
+      icons();
+    } catch (e) { if ($('#awGrid')) $('#awGrid').innerHTML = '<div class="empty">The list did not load. Try again in a moment.</div>'; }
+    if (IS_TV) { const f = $('[data-aw].on', b); if (f) Nav.focus(f, true); }
+  },
+};
+window.MkAwards = Awards;
+COMMANDS.push({ label: 'Award winners (Oscars, Cannes, Emmys and more)', icon: 'trophy', run: () => Awards.open() });
+/* ---- Similar addons in Find addons: same kind of content, and similar words in the description ---- */
+const AddonRel = {
+  words(a) { return new Set(String(a.kd || '').split(' ').filter((w) => w.length >= 5)); },
+  similar(a, dir) {
+    const aw = this.words(a), at = new Set([...a.types, ...a.res]);
+    return (dir.list || []).filter((x) => x !== a && x.url !== a.url && x.kn !== a.kn && (!x.adult || dir.adult)).map((x) => {
+      const xt = [...x.types, ...x.res], inter = xt.filter((t) => at.has(t)).length, uni = new Set([...xt, ...at]).size || 1;
+      let w = 0; this.words(x).forEach((t) => { if (aw.has(t)) w++; });
+      return { x, s: inter / uni + w * 0.5 };
+    }).filter((r) => r.s >= 1).sort((p, q) => q.s - p.s).slice(0, 6).map((r) => r.x);
+  },
+  html(a, dir) {
+    const l = this.similar(a, dir);
+    return `<div class="mkd-rel"><b>Similar addons</b>${l.length ? l.map((x) => `<button type="button" class="chip" data-nav data-mkq="${esc(x.name)}">${esc(x.name)}</button>`).join('') : '<span>Nothing close enough.</span>'}</div>`;
+  },
+  bind(body, dir) {
+    $$('[data-mkr]', body).forEach((x) => x.addEventListener('click', () => { const i = Number(x.dataset.mkr); dir.rel = dir.rel === i ? null : i; dir.paintList(i); }));
+    $$('[data-mkq]', body).forEach((x) => x.addEventListener('click', () => { dir.q = x.dataset.mkq; dir.rel = null; const q = $('#mkdQ'); if (q) q.value = dir.q; dir.n = 30; dir.paintList(0); }));
+  },
+};
+window.MkAddonRel = AddonRel;
+/* ---- Calendar: All / Episodes / Films filter with counts, and the most anticipated titles (with a Trakt app ID) ---- */
+const CalPlus = {
+  f: '',
+  after(body, eps) {
+    const nEp = eps.filter((e) => !e.film).length, nFilm = eps.length - nEp;
+    if (nEp && nFilm) {
+      const bar = document.createElement('div'); bar.className = 'segc cal-filter'; bar.setAttribute('role', 'radiogroup'); bar.setAttribute('aria-label', 'Show');
+      bar.innerHTML = [['', 'All', eps.length], ['ep', 'Episodes', nEp], ['film', 'Films', nFilm]].map(([k, l, n]) => `<button type="button" data-nav data-calf="${k}" class="${this.f === k ? 'on' : ''}" role="radio" aria-checked="${this.f === k}">${l} <span class="tnum">${n}</span></button>`).join('');
+      const nx = $('.cal-next', body); if (nx) nx.after(bar); else body.prepend(bar);
+      $$('[data-calf]', bar).forEach((x) => x.addEventListener('click', () => { this.f = x.dataset.calf; $$('[data-calf]', bar).forEach((y) => { const on = y === x; y.classList.toggle('on', on); y.setAttribute('aria-checked', on); }); this.filter(body); }));
+      this.filter(body);
+    }
+    this.anticipated(body);
+  },
+  filter(body) {
+    $$('.cal-ep', body).forEach((r) => { const film = r.classList.contains('cal-film'); r.hidden = (this.f === 'ep' && film) || (this.f === 'film' && !film); });
+    $$('.cal-day', body).forEach((d) => { d.hidden = !$$('.cal-ep', d).some((r) => !r.hidden); });
+  },
+  async anticipated(body) {
+    const c = typeof Trakt !== 'undefined' ? Trakt.cfg() : {}; if (!c.clientId) return;
+    let l = []; try {
+      const [mv, sh] = await Promise.all([Trakt.api('/movies/anticipated?limit=12'), Trakt.api('/shows/anticipated?limit=12')]);
+      const pick = (arr, k, type) => (arr || []).map((x) => x && x[k]).filter((x) => x && x.ids && /^tt\d+$/.test(x.ids.imdb || '')).map((x) => ({ id: x.ids.imdb, type, name: x.title, releaseInfo: x.year ? String(x.year) : '' }));
+      const a = pick(mv, 'movie', 'movie'), b = pick(sh, 'show', 'series');
+      for (let i = 0; i < Math.max(a.length, b.length); i++) { if (a[i]) l.push(a[i]); if (b[i]) l.push(b[i]); }
+    } catch (e) { return; }
+    if (!l.length || !body.isConnected || $('.cal-ant', body)) return;
+    const sec = rowShell('Most anticipated', ''); sec.classList.add('cal-ant'); body.appendChild(sec); fillRail(sec, l.map((m) => cardHTML(m)).join('')); icons();
+  },
+};
+window.MkCalPlus = CalPlus;
+/* ---- "Top on" rows for the streaming apps picked in Settings › Home › Your apps ---- */
+const NetTop = {
+  MAP: [[/netflix/i, 'nfx'], [/disney/i, 'dnp'], [/hbo|^max\b/i, 'hbm'], [/prime|amazon/i, 'amp'], [/apple tv/i, 'atp'], [/hulu/i, 'hlu'], [/paramount/i, 'pmp'], [/peacock/i, 'pcp'], [/crunchyroll/i, 'cru'], [/starz/i, 'stz']],
+  cache: new Map(),
+  ids() {
+    if (CFG.netTop === false || typeof YourApps === 'undefined' || typeof Networks === 'undefined') return [];
+    const out = []; YourApps.mine().forEach((x) => { const m = this.MAP.find(([re]) => re.test(String(x.name || ''))); if (m && !out.includes(m[1])) out.push(m[1]); });
+    return out.slice(0, 6);
+  },
+  async metas(id) {
+    const c = this.cache.get(id); if (c && Date.now() - c.t < 30 * 60e3) return c.l;
+    const ad = Networks.addon(), got = await Promise.allSettled(['movie', 'series'].map((t) => engine.call(ad, 'catalog', t, id, {}).then((r) => (r.metas || []).filter((m) => m && m.id).map((m) => ({ ...m, type: m.type || t })))));
+    const [a, b] = got.map((g) => (g.status === 'fulfilled' ? g.value : [])), l = [];
+    for (let i = 0; i < 20; i++) { if (a[i]) l.push(a[i]); if (b[i]) l.push(b[i]); }
+    this.cache.set(id, { t: Date.now(), l }); return l;
+  },
+  place() {
+    if (typeof Seats !== 'undefined' && Seats.kids()) return;
+    const ids = this.ids(), anchor = $('#holidayRow') || $('#netRow'); if (!anchor) return;
+    $$('#homeRows > section.ntop-row').forEach((s) => { if (!ids.includes(s.dataset.net)) s.remove(); });
+    let after = anchor;
+    ids.forEach((id) => {
+      let sec = $(`#ntop-${id}`);
+      if (!sec) {
+        sec = rowShell(`Top on ${Networks.net(id)[1]}`, '', { id: `ntop-${id}`, more: () => Networks.open(id) }); sec.classList.add('ntop-row'); sec.dataset.net = id;
+        fillRail(sec, skeletons(8));
+        this.metas(id).then((l) => { if (sec.isConnected) { fillRail(sec, l.slice(0, 24).map((m) => cardHTML(m)).join(''), ''); if (!l.length) sec.remove(); icons(); } }).catch(() => sec.remove());
+      }
+      if (after.nextElementSibling !== sec) after.after(sec);
+      after = sec;
+    });
+  },
+};
+window.MkNetTop = NetTop;
+/* ---- Hidden arcade: type "arcade" in the command bar. Two small games for the remote, a keyboard or a finger ---- */
+const Arcade = {
+  open() {
+    X8.layer('arcade', { label: 'Arcade', icon: 'gamepad-2', eyebrow: 'You found the arcade', wide: true });
+    const b = X8.body('arcade'), best = Store.get('arcadeBest', {}) || {};
+    b.innerHTML = `<h3 class="x8-h">The back-row arcade</h3><p class="tour-note">Two quick games while the popcorn pops.</p>
+      <div class="ar-cabs"><button type="button" class="ar-cab" data-nav data-ar="pop"><i data-lucide="popcorn"></i><b>Popcorn Catch</b><small>Catch the kernels. Left and Right move the bucket.${best.pop ? ` Best: ${best.pop}` : ''}</small></button>
+      <button type="button" class="ar-cab" data-nav data-ar="mem"><i data-lucide="layout-grid"></i><b>Poster Pairs</b><small>Find the matching posters.${best.mem ? ` Best: ${best.mem} turns` : ''}</small></button></div><div id="arStage"></div>`;
+    $$('[data-ar]', b).forEach((x) => x.addEventListener('click', () => (x.dataset.ar === 'pop' ? this.pop() : this.mem())));
+    icons(); X8.open('arcade'); X8.backHook.arcade = () => { this.stop(); return false; };
+    if (IS_TV) setTimeout(() => { const f = $('[data-ar]', b); if (f) Nav.focus(f, true); }, 60);
+  },
+  stop() { cancelAnimationFrame(this.raf); this.raf = 0; if (this.keyFn) { removeEventListener('keydown', this.keyFn, true); this.keyFn = null; } },
+  best(k, v, lower) { const b = Store.get('arcadeBest', {}) || {}; if (!b[k] || (lower ? v < b[k] : v > b[k])) { b[k] = v; Store.set('arcadeBest', b); return true; } return false; },
+  pop() {
+    this.stop();
+    const st = $('#arStage'); st.innerHTML = '<canvas class="ar-cv" id="arCv" width="640" height="400" aria-label="Popcorn Catch"></canvas><div class="ar-hud"><span id="arScore">0</span><span id="arLives">♥♥♥</span></div>';
+    const cv = $('#arCv'), g = cv.getContext('2d'), W = 640, H = 400;
+    let x = W / 2, vx = 0, score = 0, lives = 3, items = [], t0 = performance.now(), last = t0, spawn = 0, over = false;
+    const held = { l: false, r: false };
+    this.keyFn = (e) => {
+      if (!$('#arCv')) return this.stop();
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); x = Math.max(40, Math.min(W - 40, x + (e.key === 'ArrowLeft' ? -34 : 34))); held[e.key === 'ArrowLeft' ? 'l' : 'r'] = true; setTimeout(() => { held.l = held.r = false; }, 160); }
+      if ((e.key === 'Enter' || e.key === ' ') && over) { e.preventDefault(); e.stopPropagation(); this.pop(); }
+    };
+    addEventListener('keydown', this.keyFn, true);
+    cv.addEventListener('pointermove', (e) => { const r = cv.getBoundingClientRect(); x = ((e.clientX - r.left) / r.width) * W; });
+    cv.addEventListener('click', () => { if (over) this.pop(); });
+    const step = (now) => {
+      const dt = Math.min(50, now - last) / 1000; last = now; const el = (now - t0) / 1000;
+      vx = held.l ? -520 : held.r ? 520 : 0; x = Math.max(40, Math.min(W - 40, x + vx * dt));
+      spawn -= dt; if (spawn <= 0 && !over) { spawn = Math.max(0.35, 1.1 - el * 0.02); items.push({ x: 30 + Math.random() * (W - 60), y: -10, v: 120 + el * 4 + Math.random() * 60, bad: Math.random() < 0.15 }); }
+      items.forEach((k) => { k.y += k.v * dt; });
+      items = items.filter((k) => {
+        if (k.y > H - 46 && k.y < H - 20 && Math.abs(k.x - x) < 44) { if (k.bad) lives--; else score++; return false; }
+        if (k.y > H + 10) { if (!k.bad) lives--; return false; }
+        return true;
+      });
+      if (lives <= 0 && !over) { over = true; const nb = this.best('pop', score); items = []; $('#arScore').textContent = `${score}${nb ? ' · New best!' : ''} · OK to play again`; }
+      g.fillStyle = '#0b0b0c'; g.fillRect(0, 0, W, H);
+      items.forEach((k) => { g.fillStyle = k.bad ? '#5a3b2a' : '#f6eccf'; g.beginPath(); g.arc(k.x, k.y, k.bad ? 7 : 9, 0, 7); g.fill(); if (!k.bad) { g.fillStyle = '#f0c27b'; g.beginPath(); g.arc(k.x + 4, k.y - 3, 4, 0, 7); g.fill(); } });
+      g.fillStyle = '#c0392b'; g.fillRect(x - 36, H - 40, 72, 32); g.fillStyle = '#fff'; for (let i = 0; i < 4; i++) g.fillRect(x - 30 + i * 18, H - 40, 8, 32);
+      if (!over) { $('#arScore').textContent = String(score); $('#arLives').textContent = '♥'.repeat(Math.max(0, lives)); }
+      if ($('#arCv')) this.raf = requestAnimationFrame(step); else this.stop();
+    };
+    this.raf = requestAnimationFrame(step);
+  },
+  mem() {
+    this.stop();
+    const pool = [...S.metas.values()].filter((m) => m && metaPoster(m)).slice(0, 60), picks = X8.seeded(pool, `ar${Date.now()}`).slice(0, 6);
+    const st = $('#arStage'); if (picks.length < 6) { st.innerHTML = '<p class="tour-note">Browse a few rows first, so there are posters to match.</p>'; return; }
+    const deck = X8.seeded([...picks, ...picks].map((m, i) => ({ m, i })), `d${Date.now()}`);
+    let open = [], done = 0, turns = 0, lock = false;
+    st.innerHTML = `<div class="ar-mem">${deck.map((c, k) => `<button type="button" class="ar-card" data-nav data-mc="${k}" aria-label="Card ${k + 1}"><span class="ar-back"><i data-lucide="film"></i></span><span class="ar-face" style="background-image:url('${esc(String(metaPoster(c.m)).replace(/'/g, '%27'))}')"></span></button>`).join('')}</div><p class="tour-note" id="arMemNote">Turns: 0</p>`;
+    icons();
+    $$('[data-mc]', st).forEach((b) => b.addEventListener('click', () => {
+      if (lock || b.classList.contains('up')) return;
+      b.classList.add('up'); open.push(b);
+      if (open.length < 2) return;
+      turns++; $('#arMemNote').textContent = `Turns: ${turns}`;
+      const [p, q] = open, same = deck[p.dataset.mc].m.id === deck[q.dataset.mc].m.id; open = [];
+      if (same) { done++; p.classList.add('ok'); q.classList.add('ok'); if (done === 6) { const nb = this.best('mem', turns, true); $('#arMemNote').textContent = `All pairs in ${turns} turns${nb ? ' · New best!' : ''}`; } }
+      else { lock = true; setTimeout(() => { p.classList.remove('up'); q.classList.remove('up'); lock = false; }, 800); }
+    }));
+    if (IS_TV) setTimeout(() => { const f = $('[data-mc]', st); if (f) Nav.focus(f, true); }, 60);
+  },
+};
+window.MkArcade = Arcade;
+/* ---- settings ---- */
+{
+  const home = secById('home');
+  if (home && !home.rows().some((r) => r.key === 'rowStyle')) {
+    const rows = home.rows;
+    home.rows = () => [...rows(),
+      { key: 'rowStyle', label: 'Row style', help: 'Carousel keeps the highlighted poster near the left edge and makes it bigger. Made for the TV remote.', type: 'select', options: [['standard', 'Standard'], ['carousel', 'Carousel']], get: () => CFG.rowStyle || 'standard', set: (v) => { setCfg('rowStyle', v); CarouselRows.apply(); } },
+      { key: 'netTop', label: '"Top on" rows for your apps', help: 'A row of what is popular on each streaming app you picked under Your apps.', type: 'toggle', get: () => CFG.netTop !== false, set: (v) => { setCfg('netTop', v); NetTop.place(); } },
+      ...(IS_TV ? [{ key: 'tvKb', label: 'Keyboard', help: 'MKCinema’s own keys are easy to reach with the remote. The TV’s keyboard may offer voice typing.', type: 'select', options: [['system', 'The TV’s own keyboard'], ['abc', 'A to Z keys'], ['qwerty', 'QWERTY keys']], get: () => CFG.tvKb || 'system', set: (v) => setCfg('tvKb', v) }] : [])];
+  }
+}
+CarouselRows.init();
+</script>
+<style id="mk-286g-css">
+html.tv-carousel .rail>.card{transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .28s ease;transform-origin:30% 50%}
+html.tv-carousel .rail:focus-within>.card:not(:focus):not(.nav-focus){opacity:.5}
+html.tv-carousel .rail>.card:focus,html.tv-carousel .rail>.card.nav-focus{transform:scale(1.1);z-index:2}
+.kb-out{display:flex;align-items:center;min-height:56px;padding:10px 18px;margin-bottom:14px;border-radius:var(--r-m,10px);background:rgba(var(--kffffff-c,255,255,255),.06);font-size:calc(22px * var(--ts,1));font-weight:600}
+.kb-caret{width:2px;height:1.1em;margin-left:2px;background:var(--ink);animation:kbBlink 1s steps(1) infinite}
+@keyframes kbBlink{50%{opacity:0}}
+.kb-keys{display:flex;flex-direction:column;gap:8px}
+.kb-row{display:flex;gap:8px;justify-content:center}
+.kb-k{min-width:52px;height:52px;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:12px;border:1px solid var(--line-soft);background:transparent;color:var(--ink);font-size:calc(18px * var(--ts,1));font-weight:600}
+.kb-k:focus,.kb-k.nav-focus{background:var(--ink);color:var(--n000000,#000)}
+.kb-wide .kb-k{min-width:120px}
+.aw-chips{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 18px}
+.aw-chips .chip b{font-weight:700}
+.mkd-relb{background:none;border:0;padding:0;cursor:pointer}
+.mkd-rel{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 0 2px}
+.mkd-rel>b{margin-right:4px;font-size:calc(13px * var(--ts,1))}
+.mkd-rel>span{color:var(--mute);font-size:calc(13px * var(--ts,1))}
+.cal-filter{margin:0 0 16px}
+.cal-filter .tnum{opacity:.65;margin-left:4px}
+.cal-ant{margin-top:22px}
+.ar-cabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:14px 0}
+.ar-cab{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:16px;border-radius:var(--r-l,18px);border:1px solid var(--line-soft);background:rgba(var(--kffffff-c,255,255,255),.03);color:var(--ink);text-align:left}
+.ar-cab svg{width:26px;height:26px}
+.ar-cab small{color:var(--mute)}
+.ar-cv{width:100%;max-width:640px;display:block;margin:0 auto;border-radius:var(--r-m,10px);touch-action:none}
+.ar-hud{display:flex;justify-content:space-between;max-width:640px;margin:8px auto 0;font-weight:700}
+.ar-mem{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:560px;margin:0 auto}
+.ar-card{position:relative;aspect-ratio:2/3;border-radius:10px;border:1px solid var(--line-soft);background:rgba(var(--kffffff-c,255,255,255),.05);overflow:hidden;padding:0}
+.ar-card .ar-back,.ar-card .ar-face{position:absolute;inset:0;display:grid;place-items:center;transition:opacity .3s ease}
+.ar-card .ar-face{background-size:cover;background-position:center;opacity:0}
+.ar-card.up .ar-face{opacity:1}.ar-card.up .ar-back{opacity:0}
+.ar-card.ok{box-shadow:0 0 0 2px #9ccfb0}
+</style>
+<script id="mk-286h">
+'use strict';
+/* ---- Live rewind: on a live channel the arrows go back inside the channel's own rewind window; the pill shows how far behind you are and jumps back to live ---- */
+const LiveDvr = {
+  live() {
+    if (!P.stream || $('#player').hidden) return false;
+    try { const h = P.hls, l = h && h.levels && h.levels[Math.max(0, h.currentLevel)]; return !isFinite(video.duration) || !!(l && l.details && l.details.live); } catch (e) { return false; }
+  },
+  win() { const r = video.seekable; if (!r || !r.length) return null; const a = r.start(0), b = r.end(r.length - 1); return b - a > 30 ? [a, b] : null; },
+  edgeAt(w) { const h = P.hls, sp = h && h.liveSyncPosition; return isFinite(sp) && sp > 0 ? sp : w ? w[1] - 3 : null; },
+  seek(d) {
+    if (!this.live()) return false;
+    const w = this.win(); if (!w) return false;
+    video.currentTime = clamp(video.currentTime + d, w[0] + 1, Math.max(w[0] + 1, this.edgeAt(w))); this.paint(); return true;
+  },
+  edge() {
+    const t = this.edgeAt(this.win()); if (t != null) video.currentTime = t;
+    if (video.paused) video.play().catch(() => {});
+    this.paint();
+  },
+  behind() { const w = this.win(); return w ? Math.max(0, this.edgeAt(w) - video.currentTime) : 0; },
+  pct() { const w = this.win(); return w ? clamp((video.currentTime - w[0]) / (w[1] - w[0]), 0, 1) * 100 : 100; },
+  paint() {
+    const b = $('#pLive'); if (!b) return;
+    const on = this.live(); if (b.hidden === on) b.hidden = !on;
+    if (!on) return;
+    const lag = this.behind(), at = lag < 12 || !this.win();
+    b.classList.toggle('at', at); b.disabled = at;
+    const tx = at ? 'LIVE' : `−${fmtTime(lag)} · Go live`, sp = b.querySelector('span');
+    if (sp.textContent !== tx) sp.textContent = tx;
+  },
+  init() {
+    const b = $('#pLive'); if (!b) return;
+    b.addEventListener('click', () => { this.edge(); wakeHud(); });
+    video.addEventListener('timeupdate', () => this.paint());
+    video.addEventListener('emptied', () => { b.hidden = true; });
+  },
+};
+/* ---- Record every episode: a rule per show and channel; each new airing in the guide is set to record ---- */
+const RecSeries = {
+  K: 'mkc:recSeries',
+  all() { try { const v = JSON.parse(localStorage.getItem(this.K) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } },
+  save(l) { try { localStorage.setItem(this.K, JSON.stringify(l.slice(0, 60))); } catch (e) { /* storage full */ } },
+  norm(t) { return String(t || '').toLowerCase().replace(/\((new|live|repeat|hd|r)\)|\[[^\]]*\]/g, ' ').replace(/\bs\d+\s*e\d+\b.*$/, '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim(); },
+  find(c, prog) { const t = this.norm(prog && prog.title); return this.all().find((r) => r.url === c.url && r.t === t); },
+  has(c, prog) { return !!this.find(c, prog); },
+  toggle(c, prog) {
+    const r = this.find(c, prog), name = String(prog.title || '').replace(/\s*[([](new|live|repeat|hd|r)[)\]]/gi, '').trim() || prog.title;
+    if (r) { this.save(this.all().filter((x) => x.id !== r.id)); toast(`${name} on ${c.name} won’t record every episode any more. Recordings already set stay in Live TV › Recordings.`, 'info', 6500, 'recs'); return; }
+    const l = this.all(); l.push({ id: `s${Date.now().toString(36)}`, url: c.url, ch: c.name, logo: c.logo || '', t: this.norm(prog.title), title: name });
+    this.save(l);
+    this.scan(true);
+    toast(MkRec.nat() ? `Every episode of ${name} on ${c.name} will record.` : `Every episode of ${name} on ${c.name} will record. Keep MKCinema open in a tab when they’re on.`, 'ok', 7000, 'recs');
+  },
+  scan(quiet) {
+    if (!window.MkRec || typeof Channels === 'undefined' || (MkRec.oldApp && MkRec.oldApp())) return 0;
+    const rules = this.all(); if (!rules.length) return 0;
+    const t = Date.now(), chans = Channels.all(); let n = 0;
+    for (const r of rules) {
+      const c = chans.find((x) => x.url === r.url); if (!c) continue;
+      const d = Channels.data.get(c.list), progs = (d && d.epg && d.epg.get(Channels.key(c))) || [];
+      for (const p of progs) {
+        if (p.none || p.start <= t + 60e3 || p.start > t + 2 * 864e5 || this.norm(p.title) !== r.t) continue;
+        if (MkRec.plans().some((x) => x.url === c.url && x.start === p.start)) { n++; continue; }
+        MkRec.plan(c, p, true);
+        if (MkRec.plans().some((x) => x.url === c.url && x.start === p.start)) n++;
+      }
+    }
+    if (!quiet) MkRec.paint();
+    return n;
+  },
+  html(row, btn) {
+    const l = this.all(); if (!l.length) return '';
+    return `<p class="rec-sec">Every episode</p>${l.map((r) => row(r.logo, r.title, esc(r.ch), btn(`data-rser="${esc(r.id)}"`, 'x', 'Stop'))).join('')}`;
+  },
+  bind(b, again) {
+    $$('[data-rser]', b).forEach((x) => x.addEventListener('click', () => { this.save(this.all().filter((r) => r.id !== x.dataset.rser)); again(); }));
+  },
+  init() {
+    setTimeout(() => this.scan(true), 20000);
+    setInterval(() => { if (this.all().length) this.scan(true); }, 10 * 60e3);
+  },
+};
+/* ---- Smart downloads: while you watch a series, the next episodes download on their own; watched ones are removed ---- */
+const SmartDl = {
+  K: 'dlAutoIds',
+  n() { return Number(CFG.dlAuto) || 0; },
+  ids() { const v = Store.get(this.K, []); return Array.isArray(v) ? v : []; },
+  busy: false, done: new Set(), seen: '',
+  // only a source tagged with your audio language when one is set (an untagged one is never assumed), already cached on your debrid service
+  fits(s) {
+    if (!Offline.canGet(s) || !s._tel || s._tel.isTrailer || s._tel.cached === false) return false;
+    const want = CFG.audioOnly; if (!want || want === 'any') return true;
+    return AudioPref.langs(s).langs.has(want);
+  },
+  async ahead(ctx) {
+    const N = this.n(); if (!N || !Offline.api || this.busy || !ctx || !ctx.video || !ctx.meta || navigator.onLine === false) return;
+    const k = `${ctx.meta.id}|${ctx.video.id}`; if (this.done.has(k)) return; this.done.add(k);
+    this.busy = true;
+    try {
+      let meta = S.metas.get(ctx.meta.id) || ctx.meta;
+      if (!(meta.videos || []).length) { try { meta = (await engine.fetchMeta('series', meta.id)) || meta; } catch (e) { /* use what we have */ } }
+      const list = orderedEpisodes(meta), i = list.findIndex((v) => v.id === ctx.video.id || videoIdFor(meta, v) === videoIdFor(meta, ctx.video)); if (i < 0) return;
+      const now = Date.now(), want = list.slice(i + 1).filter((v) => !v.released || Date.parse(v.released) <= now).slice(0, N);
+      await Offline.refresh();
+      const ids = this.ids();
+      for (const v of want) {
+        const key = videoIdFor(meta, v);
+        if (isWatched(key) || Offline.recs.some((r) => r.meta && r.meta.key === key && r.state !== 'failed')) continue;
+        let streams = []; try { ({ streams } = await engine.fetchStreams('series', key)); } catch (e) { continue; }
+        const ok = streams.filter((x) => this.fits(x)); if (!ok.length) continue;
+        const pick = engine.pickBest(ok, PickMemo.opts(meta)) || ok[0];
+        await Offline.get({ meta, video: v }, pick);
+        if (Offline.recs.some((r) => r.meta && r.meta.key === key)) ids.push(key);
+      }
+      Store.set(this.K, [...new Set(ids)].slice(-300));
+    } finally { this.busy = false; }
+  },
+  async clean() {
+    if (CFG.dlAutoClean === false || !Offline.api) return;
+    const ids = this.ids(); if (!ids.length) return;
+    await Offline.refresh();
+    const keep = new Set(), playing = P.stream && P.stream._dl; let n = 0;
+    for (const k of ids) {
+      const r = Offline.recs.find((x) => x.meta && x.meta.key === k); if (!r) continue;
+      if (r.state === 'done' && isWatched(k) && String(playing) !== String(r.id)) { try { await Offline.api.remove(r.id); n++; continue; } catch (e) { /* keep it */ } }
+      keep.add(k);
+    }
+    Store.set(this.K, [...keep]);
+    if (n) { toast(n === 1 ? 'A watched episode that downloaded on its own was removed to free up space.' : `${n} watched episodes that downloaded on their own were removed to free up space.`, 'info', 5500, 'dlc'); Offline.refresh(); }
+  },
+  cur() {
+    if (P.ctx && P.ctx.video && !$('#player').hidden && !video.paused) return P.ctx;
+    if (typeof TvPlayer !== 'undefined' && TvPlayer.cur && TvPlayer.cur.ctx && TvPlayer.cur.ctx.video) return TvPlayer.cur.ctx;
+    return null;
+  },
+  tick: 0,
+  init() {
+    const sec = secById('playback');
+    if (sec) {
+      const rows = sec.rows;
+      sec.rows = () => [...rows(), ...(Offline.api ? [
+        { key: 'dlAuto', label: 'Download the next episodes', help: 'While you watch a series, the next episodes download on their own, so they’re ready with no connection. Only sources cached on your debrid service or direct links, in your audio language when you set one.', type: 'select', options: [['0', 'Off'], ['1', 'Next episode'], ['2', 'Next 2 episodes'], ['3', 'Next 3 episodes']], get: () => String(Number(CFG.dlAuto) || 0), set: (v) => setCfg('dlAuto', Number(v) || 0) },
+        { key: 'dlAutoClean', label: 'Remove watched episodes that downloaded on their own', help: 'Frees up space once you’ve watched them. Anything you downloaded yourself stays.', type: 'toggle', get: () => CFG.dlAutoClean !== false, set: (v) => setCfg('dlAutoClean', v) },
+      ] : [])];
+    }
+    // an episode counts once it has played for a minute
+    setInterval(() => {
+      this.tick++;
+      if (this.tick % 10 === 3) this.clean();
+      const c = this.n() ? this.cur() : null; if (!c) { this.seen = ''; return; }
+      const k = `${c.meta.id}|${c.video.id}`;
+      if (this.seen === k) this.ahead(c); else this.seen = k;
+    }, 60e3);
+  },
+};
+window.MkLiveDvr = LiveDvr; window.MkRecSeries = RecSeries; window.MkSmartDl = SmartDl;
+LiveDvr.init(); RecSeries.init(); SmartDl.init();
+</script>
+<style>
+.live-pill{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;margin-left:10px;border-radius:999px;border:1px solid var(--line-soft);background:rgba(var(--kffffff-c,255,255,255),.08);color:var(--ink);font-size:calc(13px * var(--ts,1));font-weight:700;letter-spacing:.02em;cursor:pointer;white-space:nowrap}
+.live-pill .ldot{width:8px;height:8px;border-radius:50%;background:var(--mute)}
+.live-pill.at{cursor:default;background:transparent}
+.live-pill.at .ldot{background:#e5484d}
+.live-pill:not(.at):hover,.live-pill:not(.at):focus-visible{background:var(--ink);color:var(--n000000,#000)}
+@media (max-width:620px){.live-pill{height:26px;padding:0 9px;margin-left:6px}}
+</style>
+<script id="mk-286i">
+'use strict';
+/* ---- HDR films in the Windows app's player: HDR on HDR screens (and converted on others), or always converted ---- */
+{
+  const sec = secById('playback'), win = () => !!(window.MKDesktop && MKDesktop.platform === 'windows' && window.MkNative && MkNative.bridge());
+  if (sec) {
+    const rows = sec.rows;
+    sec.rows = () => [...rows(), ...(win() ? [{ key: 'hdrMap', label: 'HDR films', help: 'Automatic shows HDR films in HDR on an HDR screen and converts them on others. If they look dim or washed out with Windows HDR on, pick Always normal colour.', type: 'select', options: [['auto', 'Automatic'], ['sdr', 'Always normal colour']], get: () => (CFG.hdrMap === 'sdr' ? 'sdr' : 'auto'), set: (v) => { setCfg('hdrMap', v); if (MkNative.active) MkNative.cmd('tonemap', v === 'sdr' ? 'sdr' : 'auto').catch(() => {}); } }] : [])];
+  }
+}
+</script>
 </body>
 </html>

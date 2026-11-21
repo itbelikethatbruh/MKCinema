@@ -733,6 +733,7 @@ const Party = {
   },
   leave(quiet) {
     if (!this.code) return;
+    if (typeof PartyPlus !== 'undefined') PartyPlus.reset();
     try { this.bus && this.bus.send({ t: 'bye' }); } catch (e) { /* ignore */ }
     this.peers.forEach((p) => this.dropPeer(p.id)); this.peers.clear();
     if (this.mic) { this.mic.getTracks().forEach((t) => t.stop()); this.mic = null; }
@@ -752,10 +753,12 @@ const Party = {
   },
   onMsg(m) {
     const from = m._from; if (!from || from === this.me.id) return;
+    if (typeof PartyPlus !== 'undefined' && PartyPlus.drop(m, from)) return;
     const seen = this.peers.get(from); if (seen) seen.seen = Date.now();
     switch (m.t) {
       case 'hello': {
         if (typeof PartyGuest !== 'undefined' && PartyGuest.gate(m, from)) break;
+        if (typeof PartyPlus !== 'undefined' && PartyPlus.gate(m, from)) break;
         m.name = String(m.name || 'Guest').slice(0, 40);
         this.peerFor(from, m.name).seen = Date.now();
         // the room's creator is its host; a claim counts only while no host is here, so nobody can take over
@@ -769,12 +772,13 @@ const Party = {
       // playback follows the host only, with sane values: members (or anyone who knows the code) can't drive the room
       case 'state': if (from === this.hostId && this.stateOk(m)) { if (typeof PartyLine !== 'undefined') PartyLine.lastSt = m; this.applyState(m); } break;
       case 'host': if (from === this.hostId && typeof m.to === 'string' && (m.to === this.me.id || this.peers.has(m.to))) { this.hostId = m.to; this.sysLine(m.to === this.me.id ? 'You are the host now' : `${(this.peers.get(m.to) || {}).name || 'Someone'} is the host now`); this.render(); if (this.isHost() && P.ctx) this.broadcastState('host'); } break;
-      case 'chat': { const nm = (this.peers.get(from) || {}).name || String(m.name || 'Guest').slice(0, 40); this.chat.push({ name: nm, text: String(m.text).slice(0, 400), at: Date.now() }); this.renderChat(); if (!$('#player').hidden && !$('#partyDrawer').classList.contains('open')) toast(`${nm}: ${String(m.text).slice(0, 80)}`, 'info', 3000); break; }
+      case 'chat': { const nm = (this.peers.get(from) || {}).name || String(m.name || 'Guest').slice(0, 40); this.chat.push({ name: nm, text: String(m.text).slice(0, 400), at: Date.now() }); if (typeof PartyPlus !== 'undefined') PartyPlus.alert(`${nm}: ${String(m.text).slice(0, 120)}`); this.renderChat(); if (!$('#player').hidden && !$('#partyDrawer').classList.contains('open')) toast(`${nm}: ${String(m.text).slice(0, 80)}`, 'info', 3000); break; }
       case 'react': this.float(m.e); break;
       case 'goto': if (from === this.hostId && typeof m.id === 'string' && /^[\w:.-]{2,120}$/.test(m.id) && /^(movie|series)$/.test(m.type)) {
         const nm = String(m.name || '').slice(0, 120), meta = S.metas.get(m.id) || { id: m.id, type: m.type, name: nm, poster: typeof m.poster === 'string' && /^https:\/\//.test(m.poster) ? m.poster.slice(0, 400) : '' };
         if ($('#player').hidden) openDetail(meta); this.sysLine(`The host opened ${nm || 'a title'}`); toast(`${(this.peers.get(from) || {}).name || 'The host'} opened ${nm || 'a title'}`, 'info', 3200);
       } break;
+      case 'st': case 'ptr': case 'ink': case 'count': case 'pinNeed': case 'admit': case 'lock': if (typeof PartyPlus !== 'undefined') PartyPlus.onMsg(m, from); break;
       case 'ping': this.send({ t: 'pong', a: m.a, b: Date.now(), _to: from }); break;
       case 'pong': if (m._to === this.me.id) { const now = Date.now(), rtt = now - m.a, off = m.b - (m.a + rtt / 2); const prev = this.offsets.get(from); this.offsets.set(from, prev == null ? off : prev * 0.7 + off * 0.3); const p = this.peers.get(from); if (p) { p.rtt = rtt; this.renderMembers(); } } break;
       default: if (typeof PartyGuest !== 'undefined') PartyGuest.onMsg(m, from); break;
@@ -937,7 +941,7 @@ const Party = {
     const s = document.createElement('span'); s.textContent = e; s.style.left = `${8 + Math.random() * 84}%`; s.style.setProperty('--dx', `${(Math.random() * 60 - 30).toFixed(0)}px`);
     box.appendChild(s); setTimeout(() => s.remove(), 2600);
   },
-  sysLine(text) { this.chat.push({ sys: true, text, at: Date.now() }); this.renderChat(); this.pill(); },
+  sysLine(text) { if (typeof PartyPlus !== 'undefined') PartyPlus.alert(text); this.chat.push({ sys: true, text, at: Date.now() }); this.renderChat(); this.pill(); },
   /* ---- UI ---- */
   pill() { const on = !!this.code; $('#partyPill').hidden = !on || !$('#player').hidden; if (on) $('#partyPillTxt').textContent = `Party ${this.code} · ${this.peers.size + 1}`; },
   html() {},

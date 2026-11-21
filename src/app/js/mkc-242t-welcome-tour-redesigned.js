@@ -99,6 +99,7 @@ const Tour240 = {
       player,
       { id: 'inside', html: () => this.inside() },
       stremio,
+      { id: 'look', html: () => (window.MkLookKit ? MkLookKit.tourHtml() : ''), after: () => { if (window.MkLookKit) MkLookKit.tourBind(); } },
       { id: 'taste', html: () => this.taste(), after: async () => {
         this.page = 0; QP.onDone = () => tourGo(1);
         const root = $('#tourPick'); await quickPickHTML(root, { compact: true });

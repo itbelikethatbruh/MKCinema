@@ -678,6 +678,7 @@ const Calendar = {
       const e = eps.find((x) => x.at === at && row.textContent.includes(x.meta.name)); if (!e) return;
       const ct = $('.cal-t', row) || row; ct.insertAdjacentHTML('beforeend', Remind.btn(e.film ? `f:${e.meta.id}:${e.film}` : videoIdFor(e.meta, e.v), e.meta.name, e.film ? '' : `S${e.v.season} · E${e.v.episode}`, e.at));
     });
+    if (window.MkCalPlus) MkCalPlus.after(body, eps);
     icons(); this.tick(); Remind.wire(body);
     $$('[data-cplay]', body).forEach((b) => b.addEventListener('click', () => this.play(b.dataset.meta, b.dataset.cplay, b)));
     $$('[data-cinfo]', body).forEach((b) => b.addEventListener('click', () => { const m = S.metas.get(b.dataset.cinfo); if (m) openDetail(m); }));

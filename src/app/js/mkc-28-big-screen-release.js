@@ -1697,7 +1697,7 @@ const SeatArt = {
 const Seats = {
   list() { return Store.raw.get('seats', []) || []; },
   saveList(l) { Store.raw.set('seats', l); Account.schedule(); },
-  owner() { return { id: '', name: Store.raw.get('ownerSeatName', '') || (Account.user ? Account.name().split('@')[0] : 'Main'), color: Store.raw.get('ownerColor', '') || '#d9d4c7', pin: Store.raw.get('ownerPin', ''), kids: false, av: Store.raw.get('ownerAv', '') }; },
+  owner() { return { id: '', name: Store.raw.get('ownerSeatName', '') || (Account.user ? Account.name().split('@')[0] : 'Main'), color: Store.raw.get('ownerColor', '') || '#d9d4c7', pin: Store.raw.get('ownerPin', ''), kids: false, av: Store.raw.get('ownerAv', ''), hide: Store.raw.get('ownerHide', []) || [] }; },
   all() { return [this.owner(), ...this.list()]; },
   cur() { return this.all().find((s) => s.id === SEAT) || this.owner(); },
   kids() { return !!this.cur().kids; },
@@ -1849,6 +1849,7 @@ const Seats = {
       <div class="seat-colors" role="radiogroup" aria-label="Colour" id="seCols"${s.av === 'letter' ? '' : ' hidden'}>${this.COLORS.map((c) => `<button type="button" data-nav data-col="${c}" class="${c === s.color ? 'on' : ''}" style="--sc:${c}" aria-label="Colour ${c}"></button>`).join('')}</div>
       ${s.id !== '' ? `<div class="set-row"><div><b>Kids seat</b><small>Only Animation and Family titles, no Live TV, and the grown-up PIN for Settings and Addons.</small></div><div class="set-ctl"><button class="switch ${s.kids ? 'on' : ''}" type="button" id="seKids" role="switch" aria-checked="${!!s.kids}" aria-label="Kids seat"></button></div></div>` : ''}
       ${s.id !== '' && !this.owner().pin ? '<label id="seGrownL">Grown-up PIN (4 digits). A kids seat needs one, so only a grown-up can leave it or open Settings<input class="inp mono" id="seGrown" inputmode="numeric" maxlength="4" placeholder="Set a grown-up PIN" autocomplete="off"></label>' : ''}
+      ${SeatHide.html(s)}
       <label>${s.id === '' ? 'Grown-up PIN (4 digits, guards kids seats too)' : 'PIN (4 digits, optional)'}<input class="inp mono" id="sePin" inputmode="numeric" maxlength="4" placeholder="${s.pin ? '•••• (leave empty to keep)' : 'No PIN'}" autocomplete="off"></label>
       ${s.pin ? '<button class="btn btn-ghost btn-sm" type="button" data-nav id="seNoPin"><i data-lucide="lock-open"></i>Remove the PIN</button>' : ''}</div>
       <div class="actions"><button class="btn btn-prime" type="button" data-nav id="seSave"><i data-lucide="check"></i>Save</button>${!isNew && s.id !== '' && s.id !== SEAT ? '<button class="btn btn-ghost danger" type="button" data-nav id="seDel"><i data-lucide="trash-2"></i>Remove seat</button>' : ''}</div>`;
@@ -1862,6 +1863,7 @@ const Seats = {
     $('#seRoll', b).onclick = () => { let r; do r = SeatArt.random(); while (r === s.av); rolled = r; s.av = r; paintAvs(); face(); };
     $('#seName', b).addEventListener('input', () => { if (s.av === 'letter') face(); });
     $$('[data-col]', b).forEach((x) => x.addEventListener('click', () => { s.color = x.dataset.col; $$('[data-col]', b).forEach((y) => y.classList.toggle('on', y === x)); face(); }));
+    SeatHide.bind(b, s);
     const k = $('#seKids', b); if (k) k.onclick = () => { s.kids = !s.kids; k.classList.toggle('on', s.kids); k.setAttribute('aria-checked', s.kids); };
     const np = $('#seNoPin', b); if (np) np.onclick = () => { s.pin = ''; np.remove(); toast('PIN will be removed when you save'); };
     $('#sePin', b).addEventListener('keydown', (e) => e.stopPropagation());
@@ -1877,8 +1879,8 @@ const Seats = {
         if (!/^\d{4}$/.test(grown)) { toast('Set a 4-digit grown-up PIN first, so kids can’t leave their seat', 'err', 4200); if (gEl) gEl.focus(); return; }
         Store.raw.set('ownerPin', await this.makePin('', grown)); Account.schedule();
       }
-      if (s.id === '') { Store.raw.set('ownerSeatName', s.name); Store.raw.set('ownerPin', s.pin || ''); Store.raw.set('ownerAv', s.av || ''); Store.raw.set('ownerColor', s.color || ''); Account.schedule(); }
-      else { const l = this.list(), i = l.findIndex((x) => x.id === s.id), row = { ...(i >= 0 ? l[i] : {}), id: s.id, name: s.name, color: s.color, kids: !!s.kids, pin: s.pin || '', av: s.av || '' }; if (i >= 0) l[i] = row; else l.push(row); this.saveList(l); }
+      if (s.id === '') { Store.raw.set('ownerSeatName', s.name); Store.raw.set('ownerPin', s.pin || ''); Store.raw.set('ownerAv', s.av || ''); Store.raw.set('ownerColor', s.color || ''); Store.raw.set('ownerHide', SeatHide.clean(s.hide)); Account.schedule(); }
+      else { const l = this.list(), i = l.findIndex((x) => x.id === s.id), row = { ...(i >= 0 ? l[i] : {}), id: s.id, name: s.name, color: s.color, kids: !!s.kids, pin: s.pin || '', av: s.av || '', hide: SeatHide.clean(s.hide) }; if (i >= 0) l[i] = row; else l.push(row); this.saveList(l); }
       { const cp = $('#seCopy'); if (isNew && cp && cp.value && window.MkSeatCopy) MkSeatCopy.copy(cp.value === '@main' ? '' : cp.value, s.id); }
       X8.close('seatEdit'); this.refresh(); toast(isNew ? `${s.name} has a seat` : 'Seat saved', 'ok');
     });
@@ -1911,7 +1913,7 @@ const Seats = {
       const d = ex.apply(this, arguments);
       if (SEAT) ['watchlist', 'progress', 'watched', 'taste'].forEach((k) => { d[k] = Store.raw.get(k, k === 'watchlist' ? [] : k === 'taste' ? null : {}); });
       const list = Seats.list();
-      d.seats = { list, ownerName: Store.raw.get('ownerSeatName', ''), ownerPin: Store.raw.get('ownerPin', ''), ownerAv: Store.raw.get('ownerAv', ''), ownerColor: Store.raw.get('ownerColor', ''), data: Object.fromEntries(list.map((s) => [s.id, Seats.seatData(s.id)])) };
+      d.seats = { list, ownerName: Store.raw.get('ownerSeatName', ''), ownerPin: Store.raw.get('ownerPin', ''), ownerAv: Store.raw.get('ownerAv', ''), ownerColor: Store.raw.get('ownerColor', ''), ownerHide: Store.raw.get('ownerHide', []), data: Object.fromEntries(list.map((s) => [s.id, Seats.seatData(s.id)])) };
       return d;
     };
     const ap = Account.applyRemote.bind(Account);
@@ -1921,7 +1923,7 @@ const Seats = {
       ap(d);
       Object.entries(lib).forEach(([k, v]) => Store.raw.set(k, v));
       const z = d.seats; if (!z || !Array.isArray(z.list)) return;
-      Store.raw.set('seats', z.list); if (z.ownerName != null) Store.raw.set('ownerSeatName', z.ownerName); if (z.ownerPin != null) Store.raw.set('ownerPin', z.ownerPin); if (z.ownerAv != null) Store.raw.set('ownerAv', z.ownerAv); if (z.ownerColor != null) Store.raw.set('ownerColor', z.ownerColor);
+      Store.raw.set('seats', z.list); if (z.ownerName != null) Store.raw.set('ownerSeatName', z.ownerName); if (z.ownerPin != null) Store.raw.set('ownerPin', z.ownerPin); if (z.ownerAv != null) Store.raw.set('ownerAv', z.ownerAv); if (z.ownerColor != null) Store.raw.set('ownerColor', z.ownerColor); if (Array.isArray(z.ownerHide)) Store.raw.set('ownerHide', z.ownerHide);
       Object.entries(z.data || {}).forEach(([id, v]) => {
         if (id === SEAT) { if (v.watchlist) { S.watchlist = v.watchlist; Store.set('watchlist', v.watchlist); } if (v.progress) { S.progress = v.progress; Store.set('progress', v.progress); } if (v.watched) { Store.set('watched', v.watched); WATCHED = null; } if (v.taste) Store.set('taste', v.taste); return; }
         Object.entries(v || {}).forEach(([k, x]) => { if (x != null) try { localStorage.setItem(`mkc:seat:${id}:${k}`, JSON.stringify(x)); } catch (e) { /* full */ } });
@@ -2086,7 +2088,7 @@ const TvType = {
     arm();
     el.addEventListener('keydown', (e) => {
       if ((e.key === 'Enter' || e.keyCode === 23) && el.dataset.tvArmed) {
-        e.preventDefault(); e.stopPropagation(); delete el.dataset.tvArmed; el.readOnly = false; el.setAttribute('inputmode', 'search');
+        e.preventDefault(); e.stopPropagation(); if (window.MkTvKb && MkTvKb.want()) { MkTvKb.open(el); return; } delete el.dataset.tvArmed; el.readOnly = false; el.setAttribute('inputmode', 'search');
         el.blur(); setTimeout(() => { el.focus({ preventScroll: true }); try { el.click(); } catch (x) { /* none */ } }, 30);
       }
     }, true);
@@ -2095,6 +2097,7 @@ const TvType = {
   /* 2.84.4: a box the viewer opened in order to type (Search) is ready at once, keyboard up, without a second OK */
   open(el) {
     if (!el) return; this.guard(el);
+    if (window.MkTvKb && MkTvKb.want()) { MkTvKb.open(el); return; }
     delete el.dataset.tvArmed; el.readOnly = false; el.setAttribute('inputmode', 'search');
     el.blur(); setTimeout(() => { el.focus({ preventScroll: true }); try { el.click(); } catch (x) { /* none */ } }, 30);
   },
@@ -2259,7 +2262,7 @@ const AddonDir = {
     return `<div class="mkd-row${open ? ' open' : ''}" data-mkx="${i}">${logo}
       <div class="mkd-t"><div class="mkd-name"><b>${esc(a.name)}</b>${a.ver ? `<span class="mkd-ver">v${esc(a.ver)}</span>` : ''}${a.adult ? '<span class="tag-s">18+</span>' : ''}${a.need ? '<span class="mkd-pill">Needs setup</span>' : ''}</div>
         ${a.desc ? `<p>${esc(a.desc)}</p>` : ''}${what ? `<div class="mkd-what">${esc(what)}</div>` : ''}</div>
-      <div class="mkd-act">${act}</div>${open ? this.setupHtml(a) : ''}</div>`;
+      <div class="mkd-act">${act}${window.MkAddonRel ? `<button class="mkd-link mkd-relb" type="button" data-nav data-mkr="${i}">Similar</button>` : ''}</div>${window.MkAddonRel && this.rel === i ? MkAddonRel.html(a, this) : ''}${open ? this.setupHtml(a) : ''}</div>`;
   },
   setupHtml(a) {
     const host = (() => { try { return new URL(a.url).host; } catch (e) { return 'its page'; } })();
@@ -2294,6 +2297,7 @@ const AddonDir = {
       setTimeout(() => this.paintList(i), 0);
     }));
     const more = $('#mkdMore', body); if (more) more.onclick = () => { const at = this.n; this.n += 30; this.paintList(at); };
+    if (window.MkAddonRel) MkAddonRel.bind(body, this);
     const box = $('.mkd-setup', body); if (box && !IS_TV) this.bindSetup(box, this.setup);
     // keep the remote where it was: the same row after an install, the first new row after Show more
     if (focusIdx != null || hadFocus) {
@@ -2548,6 +2552,7 @@ const Networks = {
     if (after) { if (after.nextElementSibling !== sec) after.after(sec); } else if (!sec.isConnected) { const first = rows.firstElementChild; if (first) first.after(sec); else rows.append(sec); }
     this.chPlace();
     if (typeof Holiday !== 'undefined') Holiday.place();
+    if (window.MkNetTop) MkNetTop.place();
   },
   open(id, type) { this.cur = id || this.cur; if (type) this.type = type; go('network'); },
   render() {
@@ -3413,7 +3418,7 @@ const Library = {
     let l = this.items().filter((m) => (s.type === 'all' || m.type === s.type) && (!q || String(m.name || '').toLowerCase().includes(q)));
     if (s.hide && s.tab !== 'watched') l = l.filter((m) => !(m.type === 'movie' && isWatched(m.id)));
     const yr = (m) => Number(String(m.releaseInfo || m.year || yearOf(m) || '').slice(0, 4)) || 0;
-    const by = { added: (a, b) => (b._added || 0) - (a._added || 0), az: (a, b) => String(a.name).localeCompare(String(b.name)), year: (a, b) => yr(b) - yr(a), rating: (a, b) => (parseFloat(b.imdbRating) || 0) - (parseFloat(a.imdbRating) || 0) }[s.sort];
+    const by = { added: (a, b) => (b._added || 0) - (a._added || 0), az: (a, b) => String(a.name).localeCompare(String(b.name)), year: (a, b) => yr(b) - yr(a), rating: (a, b) => (parseFloat(b.imdbRating) || 0) - (parseFloat(a.imdbRating) || 0), mine: (a, b) => LibGroups.mine(b) - LibGroups.mine(a) || String(a.name).localeCompare(String(b.name)) }[s.sort] || ((a, b) => (b._added || 0) - (a._added || 0));
     return l.sort(by);
   },
   render() {
@@ -3427,18 +3432,21 @@ const Library = {
     box.innerHTML = `<div class="lib-tabs"><div class="lib-tl" role="tablist" aria-label="Library">${tabs.map(([id, label, n]) => `<button type="button" class="chip${s.tab === id ? ' on' : ''}" role="tab" aria-selected="${s.tab === id}" data-nav data-ltab="${esc(id)}">${esc(label)}${n != null ? ` <span class="tnum">${n}</span>` : ''}</button>`).join('')}</div><button type="button" class="chip lib-new" data-nav id="libNew"><i data-lucide="plus"></i>New list</button></div>
       <div class="lib-bar">
         <div class="segc" role="radiogroup" aria-label="Type">${[['all', 'All'], ['movie', 'Films'], ['series', 'Series']].map(([v, t]) => `<button type="button" class="${s.type === v ? 'on' : ''}" role="radio" aria-checked="${s.type === v}" data-nav data-ltype="${v}">${t}</button>`).join('')}</div>
-        <select class="inp lib-sort" id="libSort" aria-label="Sort" data-nav>${[['added', 'Date added'], ['az', 'A to Z'], ['year', 'Newest first'], ['rating', 'Highest rated']].map(([v, t]) => `<option value="${v}"${s.sort === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
+        <select class="inp lib-sort" id="libSort" aria-label="Sort" data-nav>${[['added', 'Date added'], ['az', 'A to Z'], ['year', 'Newest first'], ['rating', 'Highest rated'], ['mine', 'My rating']].map(([v, t]) => `<option value="${v}"${s.sort === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
+        <select class="inp lib-sort" id="libGroup" aria-label="Group" data-nav>${LibGroups.OPTS.map(([v, t]) => `<option value="${v}"${(s.group || '') === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
         ${s.tab !== 'watched' ? `<button type="button" class="chip${s.hide ? ' on' : ''}" data-nav id="libHide" aria-pressed="${s.hide}">Hide watched</button>` : ''}
         <input class="inp lib-q" id="libQ" type="search" placeholder="Filter" value="${esc(s.q)}" autocomplete="off" aria-label="Filter by title">
         ${s.tab === 'progress' && continueItems().length ? '<button type="button" class="btn btn-ghost btn-sm" data-nav id="libClear"><i data-lucide="trash-2"></i>Clear progress</button>' : ''}
         ${lists.some((x) => x.id === s.tab) ? '<button type="button" class="btn btn-ghost btn-sm" data-nav id="libDel"><i data-lucide="trash-2"></i>Delete list</button>' : ''}
       </div>
-      <div class="grid lib-grid">${list.map((m) => cardHTML(m, m._p ? { progress: m._p, sub: progressSub(m._p) } : {})).join('') || `<div class="empty">${{ watchlist: 'Use the Watchlist button on any title to save it here.', progress: 'Start something and it shows up here.', watched: 'Finished films and episodes show up here.' }[s.tab] || 'Add titles from a film page with the Lists button.'}</div>`}</div>`;
+      <div class="grid lib-grid">${LibGroups.html(list, s) || `<div class="empty">${{ watchlist: 'Use the Watchlist button on any title to save it here.', progress: 'Start something and it shows up here.', watched: 'Finished films and episodes show up here.' }[s.tab] || 'Add titles from a film page with the Lists button.'}</div>`}</div>`;
     if (old) old.replaceWith(box); else root.prepend(box);
     icons();
     $$('[data-ltab]', box).forEach((b) => b.addEventListener('click', () => { s.tab = b.dataset.ltab; this.render(); }));
     $$('[data-ltype]', box).forEach((b) => b.addEventListener('click', () => { s.type = b.dataset.ltype; this.render(); }));
     $('#libSort', box).addEventListener('change', (e) => { s.sort = e.target.value; Store.set('libSort', s.sort); this.render(); });
+    $('#libGroup', box).addEventListener('change', (e) => { s.group = e.target.value; Store.set('libGroup', s.group); this.render(); });
+    LibGroups.az(box, s, list);
     const h = $('#libHide', box); if (h) h.addEventListener('click', () => { s.hide = !s.hide; Store.set('libHide', s.hide); this.render(); });
     const qi = $('#libQ', box); let qt = 0;
     qi.addEventListener('input', () => { clearTimeout(qt); qt = setTimeout(() => { s.q = qi.value; const pos = qi.selectionStart; this.render(); const n = $('#libQ'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) { /* ok */ } } }, 160); });
@@ -3475,7 +3483,7 @@ const Library = {
     const f = $('[data-lpick]', pop); if (f && IS_TV) Nav.focus(f, true);
   },
   init() {
-    this.st.sort = Store.get('libSort', 'added') || 'added'; this.st.hide = !!Store.get('libHide', false);
+    this.st.sort = Store.get('libSort', 'added') || 'added'; this.st.hide = !!Store.get('libHide', false); this.st.group = Store.get('libGroup', '') || '';
     const base = renderLibrary;
     renderLibrary = function () {
       base.apply(this, arguments);
@@ -3716,16 +3724,16 @@ try { video.setAttribute('autopictureinpicture', ''); } catch (e) { /* none */ }
       <div class="pz-ctl"><button class="btn ${this.mic ? 'btn-prime' : 'btn-ghost'} btn-sm" type="button" id="pyMic" data-nav aria-pressed="${!!this.mic}"><i data-lucide="${this.mic ? 'mic' : 'mic-off'}"></i>${this.mic ? 'Mic on' : 'Mic off'}</button>
         <div class="py-reacts" role="group" aria-label="Reactions">${['😂', '😮', '😍', '👏', '🔥', '😢', '😱', '🍿'].map((e) => `<button type="button" data-react="${e}" data-nav aria-label="React ${e}">${e}</button>`).join('')}</div>
         <button class="btn btn-ghost btn-sm danger" type="button" id="pyLeave" data-nav><i data-lucide="log-out"></i>Leave</button></div>
-      <div class="py-chat" id="pyChat" role="log" aria-live="polite"></div>
+      ${typeof PartyPlus !== 'undefined' ? PartyPlus.ctlHtml() : ''}<div class="py-chat" id="pyChat" role="log" aria-live="polite"></div>
       <form class="py-say" id="pySay"><input class="inp" id="pyText" maxlength="400" placeholder="Say something…" autocomplete="off" data-nav><button class="ibtn" type="submit" aria-label="Send" data-nav><i data-lucide="send"></i></button></form>
     </div>`;
   };
   Party.renderMembers = function () {
-    const rows = [{ id: this.me.id, name: this.name(), you: true, state: 'self' }, ...[...this.peers.values()].map((p) => ({ id: p.id, name: p.name, state: p.dc && p.dc.readyState === 'open' ? 'direct' : p.pc.connectionState === 'connecting' || p.pc.connectionState === 'new' ? 'connecting' : 'relay', rtt: p.rtt }))];
+    const rows = [{ id: this.me.id, name: this.name(), you: true, state: 'self' }, ...[...this.peers.values()].map((p) => ({ id: p.id, name: p.name, state: p.dc && p.dc.readyState === 'open' ? 'direct' : p.pc.connectionState === 'connecting' || p.pc.connectionState === 'new' ? 'connecting' : 'relay', rtt: p.rtt, st: p.st }))];
     $$('#pyMembers').forEach((box) => {
       box.innerHTML = rows.map((r) => {
         const note = r.state === 'self' ? (this.lastDrift != null && !this.isHost() ? `${Math.round(Math.abs(this.lastDrift) * 1000)} ms off` : 'You') : r.state === 'direct' ? `Direct${r.rtt ? ` · ${r.rtt} ms` : ''}` : r.state === 'relay' ? 'Via relay' : 'Connecting…';
-        return `<div class="pm-row ${this.speaking.has(r.id) ? 'talk' : ''}" data-pid="${esc(r.id)}"><span class="pm-av ${r.state}" aria-hidden="true">${esc(initials(r.name))}</span><span class="pm-txt"><b>${esc(r.name)}</b><small>${esc(note)}</small></span>${r.id === this.hostId ? '<span class="pm-host">Host</span>' : ''}${typeof PartyGuest !== 'undefined' ? PartyGuest.tags(r.id, r.you) : ''}</div>`;
+        return `<div class="pm-row ${this.speaking.has(r.id) ? 'talk' : ''}" data-pid="${esc(r.id)}"><span class="pm-av ${r.state}" aria-hidden="true">${esc(initials(r.name))}</span><span class="pm-txt"><b>${esc(r.name)}</b><small>${esc(note)}${r.st && typeof PartyPlus !== 'undefined' ? ` · ${esc(PartyPlus.stLabel(r.st))}` : ''}</small></span>${r.id === this.hostId ? '<span class="pm-host">Host</span>' : ''}${typeof PartyGuest !== 'undefined' ? PartyGuest.tags(r.id, r.you) : ''}</div>`;
       }).join('');
       if (typeof PartyGuest !== 'undefined') PartyGuest.wire(box);
     });
@@ -4547,7 +4555,7 @@ const Desktop = {
   /* ---- Settings › Desktop app ---- */
   confirming: false,
   section() {
-    return { id: 'desktop', icon: this.d.platform === 'windows' ? 'monitor' : 'magnet', label: this.d.platform === 'windows' ? 'Desktop app' : 'Torrents', intro: this.d.platform === 'windows' ? 'Extras that only the desktop app can do. Both are off until you turn them on.' : 'Play torrent sources without a debrid service. Off until you turn it on.', bind: () => this.bind(), rows: () => [{ html: () => this.html() }] };
+    return { id: 'desktop', icon: this.d.platform === 'windows' ? 'monitor' : 'magnet', label: this.d.platform === 'windows' || this.d.setPresence ? 'Desktop app' : 'Torrents', intro: this.d.platform === 'windows' || this.d.setPresence ? 'Extras that only the desktop app can do. Both are off until you turn them on.' : 'Play torrent sources without a debrid service. Off until you turn it on.', bind: () => this.bind(), rows: () => [{ html: () => this.html() }] };
   },
   html() {
     const on = this.p2pOn();
@@ -4608,7 +4616,7 @@ const Desktop = {
     }
     SECTIONS.push(this.section());
     const grp = SET_GROUPS.find(([n]) => /watching/i.test(n)); if (grp) grp[1].push('desktop');
-    SET_BLURB.desktop = this.d.platform === 'windows' ? 'Torrents on this PC, Discord status' : 'Torrents without debrid';
+    SET_BLURB.desktop = this.d.platform === 'windows' ? 'Torrents on this PC, Discord status' : this.d.setPresence ? 'Torrents, Discord status' : 'Torrents without debrid';
   },
 };
 Desktop.init();

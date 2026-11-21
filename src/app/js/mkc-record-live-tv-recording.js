@@ -402,18 +402,18 @@
     natList() { if (!this.nat()) return []; try { return JSON.parse(MKAndroid.dlList() || '[]').filter((d) => d && d.rec); } catch (e) { return []; } },
 
     /* ---------- planned from the guide: start a minute early, stop two minutes late ---------- */
-    plan(c, p) {
+    plan(c, p, quiet) {
       const st = C.stream(c);
       const h = st.behaviorHints && st.behaviorHints.proxyHeaders && st.behaviorHints.proxyHeaders.request;
       const l = this.plans();
-      if (l.some((x) => x.url === c.url && x.start === p.start)) return toast('That programme is already set to record.', 'info', 4000, 'rec');
-      if (!this.nat() && X8.mixedBlocked(c.url) && !window.MKDesktop && !S.proxy) return this.cant({ channel: c.name, name: p.title }, this.blockedWhy(c.url));
+      if (l.some((x) => x.url === c.url && x.start === p.start)) return quiet ? 0 : toast('That programme is already set to record.', 'info', 4000, 'rec');
+      if (!this.nat() && X8.mixedBlocked(c.url) && !window.MKDesktop && !S.proxy) return quiet ? 0 : this.cant({ channel: c.name, name: p.title }, this.blockedWhy(c.url));
       const x = { id: `p${now().toString(36)}`, url: c.url, headers: h && Object.keys(h).length ? h : null, name: p.title, channel: c.name, logo: c.logo || '', start: p.start, end: p.end };
       // the Android app starts it from an alarm, so it records with the app closed too
-      if (this.nat() && typeof MKAndroid.recPlan === 'function') { let okN = false; try { okN = !!MKAndroid.recPlan(JSON.stringify(x)); } catch (e) { okN = false; } if (!okN) return toast('The app couldn’t set that recording. Try again.', 'err', 5000, 'rec'); x.nat = true; }
+      if (this.nat() && typeof MKAndroid.recPlan === 'function') { let okN = false; try { okN = !!MKAndroid.recPlan(JSON.stringify(x)); } catch (e) { okN = false; } if (!okN) return quiet ? 0 : toast('The app couldn’t set that recording. Try again.', 'err', 5000, 'rec'); x.nat = true; }
       l.push(x);
       this.savePlans(l);
-      toast(`${p.title} will record ${day(p.start).toLowerCase() === 'today' ? 'at' : `${day(p.start)} at`} ${hm(p.start)}.${x.nat ? ' The app starts it even if it’s closed.' : ' Keep MKCinema open in a tab.'}`, 'ok', 6500, 'rec');
+      if (!quiet) toast(`${p.title} will record ${day(p.start).toLowerCase() === 'today' ? 'at' : `${day(p.start)} at`} ${hm(p.start)}.${x.nat ? ' The app starts it even if it’s closed.' : ' Keep MKCinema open in a tab.'}`, 'ok', 6500, 'rec');
       this.loop();
     },
     looping: false,
@@ -448,10 +448,11 @@
       if (prog && prog.start > t) {
         b.innerHTML = `<h3 class="x8-h">${esc(prog.title)}</h3><p class="rec-when">${esc(c.name)} · ${esc(day(prog.start))} ${esc(hm(prog.start))}–${esc(hm(prog.end))}</p>${prog.desc ? `<p class="sub">${esc(prog.desc)}</p>` : ''}
           <p class="tour-note">${this.nat() ? 'The app starts a minute early and stops two minutes late, even if it’s closed then.' :'MKCinema starts a minute early and stops two minutes late. Keep it open in a tab at that time.'}</p>
-          <div class="actions"><button class="btn btn-prime" type="button" data-nav id="recPlan"><span class="rec-dot"></span>Record when it starts</button><button class="btn btn-ghost" type="button" data-nav id="recWatch"><i data-lucide="play"></i>Watch ${esc(c.name)} now</button></div>`;
+          <div class="actions"><button class="btn btn-prime" type="button" data-nav id="recPlan"><span class="rec-dot"></span>Record when it starts</button><button class="btn btn-ghost" type="button" data-nav id="recWatch"><i data-lucide="play"></i>Watch ${esc(c.name)} now</button>${window.MkRecSeries ? `<button class="btn btn-ghost" type="button" data-nav id="recSeries"><i data-lucide="repeat"></i>${MkRecSeries.has(c, prog) ? 'Stop recording every episode' : 'Record every episode'}</button>` : ''}</div>`;
         icons(); X8.open('recNew');
         $('#recPlan').onclick = () => { X8.close('recNew'); this.plan(c, prog); };
         $('#recWatch').onclick = () => { X8.close('recNew'); C.tune(c); };
+        { const rs = $('#recSeries'); if (rs) rs.onclick = () => { X8.close('recNew'); MkRecSeries.toggle(c, prog); }; }
         return;
       }
       const opts = [];
@@ -529,8 +530,9 @@
       const html = `<h3 class="x8-h">Recordings</h3>
         ${live.length ? `<p class="rec-sec">Recording now</p>${live.join('')}` : ''}
         ${soon.length ? `<p class="rec-sec">Coming up</p>${soon.join('')}` : ''}
+        ${window.MkRecSeries ? MkRecSeries.html(row, btn) : ''}
         ${saved.length ? `<p class="rec-sec">${nat ? 'On this device' : 'In this browser'}</p>${saved.join('')}` : ''}
-        ${!live.length && !soon.length && !saved.length ? '<div class="empty" style="margin:12px 0">Nothing recorded yet. Press the red dot while a channel plays, or pick a programme later in the guide.</div>' : ''}
+        ${!live.length && !soon.length && !saved.length && !(window.MkRecSeries && MkRecSeries.all().length) ? '<div class="empty" style="margin:12px 0">Nothing recorded yet. Press the red dot while a channel plays, or pick a programme later in the guide.</div>' : ''}
         <p class="tour-note" style="margin-top:14px">${nat ? 'Recordings are saved on this device and play from Library › Downloads too. They are yours: MKCinema never sees or keeps them.' : 'Recordings stay in this browser until you save them as a file (they play in VLC) or delete them. They never leave your device.'}</p>`;
       // only the running numbers changed: update them in place, so focus, a half-confirmed Delete and presses survive
       const LV = /<small class="[^"]*" data-rlv="([^"]*)">([\s\S]*?)<\/small>/g, key = html.replace(LV, '<small data-rlv="$1"></small>');
@@ -538,6 +540,7 @@
       this.listKey = key; b.innerHTML = html;
       icons();
       $$('[data-rstop]', b).forEach((x) => x.addEventListener('click', () => { this.stop(x.dataset.rstop); setTimeout(() => this.paint(), 400); }));
+      if (window.MkRecSeries) MkRecSeries.bind(b, () => this.paint());
       $$('[data-rplan]', b).forEach((x) => x.addEventListener('click', () => { const id = x.dataset.rplan; if (nat) { try { MKAndroid.recUnplan(String(id)); } catch (e) { /* older app */ } } this.savePlans(this.plans().filter((p) => p.id !== id)); this.paint(); }));
       $$('[data-rsave]', b).forEach((x) => x.addEventListener('click', () => this.saveFile(x.dataset.rsave)));
       $$('[data-rplay]', b).forEach((x) => x.addEventListener('click', () => { try { MKAndroid.dlPlay(String(x.dataset.rplay), 0); } catch (e) { /* older app */ } }));

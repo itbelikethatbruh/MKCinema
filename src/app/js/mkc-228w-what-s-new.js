@@ -8,6 +8,20 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.86.1', date: '2026-11-21', items: [
+    ['new', 'Watch party tools', 'Tap the picture to point and drag to draw, and everyone sees it. The host can count 3-2-1 so the film starts for everyone at once, and add a 4-digit PIN to a party.'],
+    ['new', 'Make it yours', 'Your own font and background picture, six film page styles, five progress bar styles and a big Play button while paused. Look files can be saved, opened on another screen or sent to a friend.'],
+    ['new', 'Award winners', 'Oscars, Cannes, Venice, Berlin, BAFTA, Golden Globes, Emmys and anime awards.'],
+    ['new', 'Keep playing in a corner', 'On computers, the Share menu can shrink the film into a small window while you browse.'],
+    ['new', 'Smart downloads', 'While you watch a series, the next episodes download on their own so they are ready offline, and the ones you have watched are cleared away. In the Android, Windows and Mac apps.'],
+    ['new', 'Live TV', 'Record every episode of a show from the TV guide. Rewind live TV and jump back to live with one press, on channels that allow it.'],
+    ['new', 'Library groups', 'Group your library by decade, genre or rating, sort by your own stars, and jump by letter on phones.'],
+    ['new', 'Crop bars and chapter marks', 'Crop bars fills the screen with the picture inside black bars. Chapters are marked on the progress bar.'],
+    ['new', 'TV keyboard and carousel rows', 'MKCinema\'s own A to Z or QWERTY keys for the remote, and rows that turn like a carousel.'],
+    ['better', 'Player', 'Holding Left or Right skips further the longer you hold. Controls are softer on HDR films, and you choose how soon they hide.'],
+    ['better', 'Finding things', 'Sources grouped by picture quality with a line on when to pick each, filler and recap labels on anime episodes, Calendar filters, the most anticipated titles, similar addons, and Top rows for the streaming apps you picked.'],
+    ['better', 'Household', 'Each seat can leave out Live TV, Sports, Music, Anime or Calendar. Party alerts tell you when someone joins or writes.'],
+  ] },
   { v: '2.86.0', date: '2026-11-21', items: [
     ['new', 'Swipe to choose', 'Swipe right to save a title to your watchlist, left to skip it. Open it from Discover or the command bar.'],
     ['new', 'Critics\' Pick', 'One acclaimed film or series a day at the top of Discover.'],
