@@ -54,7 +54,7 @@ func TestSubs(t *testing.T) {
 func TestTranslateClampsAndRejects(t *testing.T) {
 	cases := map[[2]string]string{
 		{"volume", "500"}: "200", {"volume", "-3"}: "0", {"speed", "9"}: "4", {"aid", "2"}: "2", {"sid", "no"}: "no",
-		{"subscale", "1.25"}: "1.25", {"aspect", "16:9"}: "16:9", {"zoom", "2"}: "1",
+		{"subscale", "1.25"}: "1.25", {"aspect", "16:9"}: "16:9", {"zoom", "2"}: "1", {"tonemap", "sdr"}: "no", {"tonemap", "auto"}: "yes",
 	}
 	for in, want := range cases {
 		ops, err := Translate(in[0], in[1])
@@ -62,7 +62,7 @@ func TestTranslateClampsAndRejects(t *testing.T) {
 			t.Errorf("%v → %v %v, want %s", in, ops, err, want)
 		}
 	}
-	for _, in := range [][2]string{{"aid", "1;quit"}, {"seek", "NaN"}, {"aspect", "1:1,vf=x"}, {"sound", "lavfi=[x]"}, {"run", "calc"}, {"subremove", "auto"}, {"eq", "nope"}} {
+	for _, in := range [][2]string{{"aid", "1;quit"}, {"seek", "NaN"}, {"aspect", "1:1,vf=x"}, {"sound", "lavfi=[x]"}, {"run", "calc"}, {"subremove", "auto"}, {"eq", "nope"}, {"tonemap", "clip"}} {
 		if _, err := Translate(in[0], in[1]); err == nil {
 			t.Errorf("accepted %v", in)
 		}

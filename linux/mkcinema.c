@@ -2,6 +2,7 @@
 #include <gtk/gtk.h>
 #include <webkit2/webkit2.h>
 #include <string.h>
+#include <signal.h>
 
 /* G_APPLICATION_DEFAULT_FLAGS arrived in GLib 2.74; Ubuntu 22.04 (the release runner) has 2.72 */
 #if !GLIB_CHECK_VERSION(2, 74, 0)
@@ -119,7 +120,36 @@ static void engine_start(WebKitScriptMessageReply *r) {
   g_data_input_stream_read_line_async(eng_out, G_PRIORITY_DEFAULT, NULL, engine_line, eng);
 }
 
-/* window.webkit.messageHandlers.mkd.postMessage('<key>:p2p-start' | '<key>:p2p-stop') returns a promise */
+/* ---- Discord status (window.MKDesktop.setPresence) ----
+   The same mkp2p program with -discord: it shows "Watching" and the title on the person's Discord profile through the
+   Discord app's own local socket, nothing else. Started the first time the page sends a status (only after the person
+   turns it on in Settings); each status is one line on its input; closing the input clears it. */
+static GSubprocess *dsc;
+
+static void discord_stop(void) {
+  if (!dsc) return;
+  g_output_stream_close(g_subprocess_get_stdin_pipe(dsc), NULL, NULL);
+  g_subprocess_wait_async(dsc, NULL, NULL, NULL);
+  g_clear_object(&dsc);
+}
+
+static void discord_send(const char *json) {
+  if (!dsc) {
+    if (!*json) return;
+    g_autofree char *bin = engine_path();
+    if (!bin) return;
+    g_autoptr(GError) e = NULL;
+    dsc = g_subprocess_new(G_SUBPROCESS_FLAGS_STDIN_PIPE, &e, bin, "-discord", NULL);
+    if (!dsc) { g_warning("discord: %s", e->message); return; }
+  }
+  g_autofree char *line = g_strdup_printf("%.8000s\n", json);
+  g_strdelimit(line, "\r", ' ');
+  for (char *c = line; c[0] && c[1]; c++) if (*c == '\n') *c = ' ';
+  if (!g_output_stream_write_all(g_subprocess_get_stdin_pipe(dsc), line, strlen(line), NULL, NULL, NULL)) discord_stop(); /* it closed: start again next time */
+}
+
+/* window.webkit.messageHandlers.mkd.postMessage('<key>:p2p-start' | '<key>:p2p-stop' | '<key>:presence:<json>')
+   returns a promise */
 static gboolean on_desktop(WebKitUserContentManager *m, JSCValue *msg, WebKitScriptMessageReply *r, gpointer view) {
   g_autofree char *raw = jsc_value_is_string(msg) ? jsc_value_to_string(msg) : NULL;
   gsize kl = strlen(bridge_key);
@@ -130,6 +160,7 @@ static gboolean on_desktop(WebKitUserContentManager *m, JSCValue *msg, WebKitScr
   const char *cmd = raw + kl + 1;
   if (!g_strcmp0(cmd, "p2p-start")) { engine_start(r); return TRUE; }
   if (!g_strcmp0(cmd, "p2p-stop")) engine_stop();
+  if (g_str_has_prefix(cmd, "presence:")) discord_send(cmd + 9);
   g_autoptr(JSCContext) c = jsc_context_new();
   g_autoptr(JSCValue) v = jsc_value_new_null(c);
   webkit_script_message_reply_return_value(r, v);
@@ -139,7 +170,8 @@ static gboolean on_desktop(WebKitUserContentManager *m, JSCValue *msg, WebKitScr
 static void add_desktop(WebKitUserContentManager *m, WebKitWebView *view) {
   g_autofree char *bin = engine_path();
   for (int i = 0; i < 4; i++) g_snprintf(bridge_key + i * 8, 9, "%08x", g_random_int());
-  g_autofree char *p2p = bin ? g_strdup_printf("d.p2p={start:function(){return h.postMessage('%s:p2p-start')},stop:function(){return h.postMessage('%s:p2p-stop')}};", bridge_key, bridge_key) : g_strdup("");
+  g_autofree char *p2p = bin ? g_strdup_printf("d.p2p={start:function(){return h.postMessage('%s:p2p-start')},stop:function(){return h.postMessage('%s:p2p-stop')}};"
+                                                 "d.setPresence=function(a){return h.postMessage('%s:presence:'+(a?JSON.stringify(a):''))};", bridge_key, bridge_key, bridge_key) : g_strdup("");
   g_autofree char *js = g_strdup_printf(
     "(function(){if(location.protocol!=='https:'||(location.hostname!=='" HOST "'&&location.hostname!=='" HOST2 "'))return;var h=window.webkit.messageHandlers.mkd;"
     "var d={platform:'linux',version:'" VERSION "'};"
@@ -294,10 +326,12 @@ static void activate(GtkApplication *app, gpointer x) {
 
 int main(int argc, char **argv) {
   g_set_prgname("mkcinema");
+  signal(SIGPIPE, SIG_IGN); /* a helper that has quit must not take the app down with it */
   GtkApplication *app = gtk_application_new("dev.pages.mkcinema", G_APPLICATION_DEFAULT_FLAGS);
   g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
   int r = g_application_run(G_APPLICATION(app), argc, argv);
   engine_stop();
+  discord_stop();
   g_object_unref(app);
   return r;
 }

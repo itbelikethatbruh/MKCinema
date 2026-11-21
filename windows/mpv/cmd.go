@@ -269,6 +269,13 @@ func Translate(c, arg string) ([]Op, error) {
 		if n, err = strconv.Atoi(arg); err == nil && n >= 0 && n < 1000 {
 			return []Op{set("chapter", strconv.Itoa(n))}, nil
 		}
+	case "tonemap": // HDR films: "auto" sends HDR to HDR screens and converts on others; "sdr" always converts
+		switch arg {
+		case "auto":
+			return []Op{set("target-colorspace-hint", "yes"), set("tone-mapping", "auto"), set("hdr-compute-peak", "auto")}, nil
+		case "sdr":
+			return []Op{set("target-colorspace-hint", "no"), set("tone-mapping", "bt.2390"), set("hdr-compute-peak", "yes")}, nil
+		}
 	case "deband":
 		return []Op{set("deband", map[bool]string{true: "yes", false: "no"}[arg == "1"])}, nil
 	default:
