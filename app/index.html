@@ -6,10 +6,10 @@
 <script>/* settings are read and parsed once here and reused below and by CFG */window.__CFG0={};try{window.__CFG0=JSON.parse(localStorage.getItem('mkc:cfg')||'{}')||{}}catch(e){}try{window.__mkBoost=function(){var w=innerWidth;return w<=760&&matchMedia('(pointer:coarse)').matches&&!/AFT|Android TV|GoogleTV|BRAVIA|SMART-TV|SmartTV|Web0S|Tizen|MKCinemaTV|Xbox|PlayStation/i.test(navigator.userAgent)?Math.min(1.3,Math.max(1.06,w/390)):1};var _ts=+window.__CFG0.textScale;if(!(_ts>=85&&_ts<=130))_ts=100;var _v=_ts/100*window.__mkBoost();if(_v!==1)document.documentElement.style.setProperty('--ts',String(+_v.toFixed(3)))}catch(e){}</script>
 <script>try{var _ul=(window.__CFG0||{}).uiLang||'auto',_uc=_ul!=='auto'?_ul:((navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en']).map(function(x){x=String(x).toLowerCase().split('-')[0];return {fil:'tl','in':'id',iw:'he'}[x]||x}).filter(function(x){return /^(en|es|pt|fr|de|it|hi|ta|te|bn|ml|sm|zh|ar|ru|ur|id|ja|mr|tr|vi|ko|fa|tl|sw|pa|gu|th|pl|kn|ha)$/.test(x)})[0]||'en');if(/^(es|pt|fr|de|it|hi|ta|te|bn|ml|sm|zh|ar|ru|ur|id|ja|mr|tr|vi|ko|fa|tl|sw|pa|gu|th|pl|kn|ha)$/.test(_uc))window.__i18nP=fetch('i18n/'+_uc+'.json')}catch(e){}if (/MKCinemaTV|Android TV|GoogleTV|AFT[A-Z]|SMART-TV|SmartTV|Web0S|webOS|Tizen|BRAVIA|Xbox|PlayStation/i.test(navigator.userAgent)) document.documentElement.classList.add('tv');try{/*side-default*//*2.81 one menu: no side menu*/if(false){document.documentElement.classList.add('nav-side');if(document.documentElement.classList.contains('tv')||innerWidth<1200)document.documentElement.classList.add('side-mini')}}catch(e){}try{var _fn=(window.__CFG0||{}).font,_FF={"editorial":"Bodoni+Moda:opsz,wght@6..96,400..900&family=Manrope:wght@400..800","classic":"DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400..700","wide":"Unbounded:wght@400..800&family=Inter:opsz,wght@14..32,400..700","condensed":"Oswald:wght@400..700&family=Barlow:wght@400;500;600;700","rounded":"Nunito:wght@400..900","deco":"Josefin+Sans:wght@300..700&family=Jost:wght@400..700","slab":"Zilla+Slab:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700","techno":"Chakra+Petch:wght@400;600;700&family=Barlow:wght@400;500;600;700","groovy":"Shrikhand","bubble":"Bagel+Fat+One","graffiti":"Sedgwick+Ave+Display","gothic":"Pirata+One","street":"Bungee","outline":"Rampart+One","drip":"Rubik+Wet+Paint","heavy":"Climate+Crisis","brush":"Kaushan+Script"};if(_FF[_fn]){document.documentElement.setAttribute('data-font',_fn);var _fl=document.createElement('link');_fl.rel='stylesheet';_fl.id='mkcFont';_fl.href='https://fonts.googleapis.com/css2?family='+_FF[_fn]+'&display=swap';document.head.appendChild(_fl)}}catch(e){}try{var _lk=(window.__CFG0||{}).look;if(_lk&&_lk!=='noir'&&/^[a-z]+$/.test(_lk))document.documentElement.setAttribute('data-look',_lk);if(_lk==='atelier'){var _ac=JSON.parse(localStorage.getItem('mkc:atelierCss')||'null');if(typeof _ac==='string'){var _st=document.createElement('style');_st.id='atelier';_st.textContent=_ac;document.head.appendChild(_st);}}}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<script id="mkc-lite-head">/* 2.79 Lite mode: decided before the first paint, so a weak TV never builds the heavy page first.
-   Auto (default) turns it on for TVs with 1 GB of memory or 2 cores, and for the Fire TV models known to be slow
-   (Stick 1st/2nd/3rd gen, Stick Lite, Stick 4K 1st gen, Fire TV 1st gen box). On / Off in Settings › Performance. */
-(function(){try{var d=document.documentElement;if(!d.classList.contains('tv'))return;var v='auto';try{v=JSON.parse(localStorage.getItem('mkc:lite')||'"auto"')}catch(e){}if(v==='off')return;var why='';if(v==='on')why='on';else{var ua=navigator.userAgent,m=navigator.deviceMemory,c=navigator.hardwareConcurrency;if(/\bAFT(M|T|SS|SSS|MM|B)\b/.test(ua))why='model';else if(m&&m<=1)why='memory';else if(c&&c<=2)why='cores'}if(why){d.classList.add('lite');window.MK_LITE=why}}catch(e){}})();</script>
+<script id="mkc-lite-head">/* 2.87 Snappy mode (was Lite mode): decided before the first paint, so a slow device never builds the heavy page first.
+   Automatic (default) turns it on for every Fire TV, for TVs with 2 GB of memory or less or 2 cores, and for phones and
+   computers with 1 GB or less. On / Off for any device in Settings › Performance. */
+(function(){try{var d=document.documentElement,tv=d.classList.contains('tv');var v='auto';try{v=JSON.parse(localStorage.getItem('mkc:lite')||'"auto"')}catch(e){}if(v==='off')return;var why='';if(v==='on')why='on';else{var ua=navigator.userAgent,m=navigator.deviceMemory,c=navigator.hardwareConcurrency;if(tv){if(/\bAFT[A-Z0-9]*\b/.test(ua))why='model';else if(m&&m<=2)why='memory';else if(c&&c<=2)why='cores'}else if(m&&m<=1)why='memory'}if(why){d.classList.add('lite');window.MK_LITE=why}}catch(e){}})();</script>
 <style id="mkc-lite-css">
 /* 2.79 Lite mode (weak TVs only, html.lite): nothing moves on its own and nothing glides, so a slow chip only ever
    draws the frame the remote asked for. Colours, fonts, posters, the Noir look and every feature stay as they are. */
@@ -27,6 +27,17 @@ html.lite #mikoBox .mk-dots i{animation:mkDot 1s ease infinite!important}
 html.lite #pRec.on .rec-dot{animation:recPulse 1.6s ease-in-out infinite!important}
 html.lite .pal-mic.live,html.lite .qp-mic.live{animation:micPulse 1.2s ease-in-out infinite!important}
 html.lite .sv-hint{animation:svHint 8s ease 1.4s both!important}
+/* mk-287-snappy */
+/* 2.87 Snappy: glass, blur and shadows are drawn flat, so a slow chip paints each frame in about half the time.
+   The poster glow (its own ::before layer) and focus outlines stay. */
+html.lite *,html.lite *::after{box-shadow:none!important;text-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.lite :not(.card-inner)::before{box-shadow:none!important;text-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.lite:not(.mk-glow) .card-inner::before{box-shadow:none!important}
+html.lite:not(.mk-glow) .nav-focus .card-inner,html.lite:not(.mk-glow) .card:focus-visible .card-inner{outline:2px solid var(--kffffff,#fff);outline-offset:0}
+/* 2.87 layout sweep: the All / Films / Series switch in Library no longer breaks onto two lines on narrow phones,
+   and the Play / Artist / Radio buttons in Music fit one line */
+@media (max-width:480px){.lib-bar .segc{grid-column:1/-1;flex-wrap:nowrap;justify-self:start}}
+@media (max-width:400px){.inrow>[data-mi],.inrow>[data-mart],.inrow>[data-mradio]{padding-inline:12px}.inrow>[data-mradio],.inrow>[data-mart]{margin:0}}
 </style>
 <script id="mkc-fit-head">/* phones in portrait that report a wide screen get a 412px layout; big desktop windows scale up */(function(){try{var TV=/AFT|Android TV|GoogleTV|BRAVIA|SMART-TV|SmartTV|Web0S|Tizen|MKCinemaTV|Xbox|PlayStation/i.test(navigator.userAgent),m=document.querySelector('meta[name=viewport]'),base=m?m.getAttribute('content'):'';function phone(){if(TV||!matchMedia('(pointer:coarse)').matches)return 0;var a=screen.width,b=screen.height,sh=Math.min(a,b),lg=Math.max(a,b);if(!sh||lg/sh<1.6)return 0;var o=screen.orientation&&screen.orientation.type,pt=o?o.indexOf('portrait')===0:(typeof window.orientation!=='number'||window.orientation%180===0);return pt&&sh>430&&sh<=760?sh:0}function tab(){if(TV||!/Android/i.test(navigator.userAgent)||!matchMedia('(pointer:coarse)').matches)return'';var a=screen.width,b=screen.height,sh=Math.min(a,b),lg=Math.max(a,b);if(!sh||sh<600)return'';var o=screen.orientation&&screen.orientation.type,pt=o?o.indexOf('portrait')===0:(typeof window.orientation!=='number'||window.orientation%180===0);var cur=pt?sh:lg,w=pt?Math.max(762,Math.round(sh/1.3)):Math.max(960,Math.round(lg/1.3));return w<cur-8?'width='+w+', viewport-fit=cover':''}function fit(){if(!m||TV)return;var c=phone()?'width=412, viewport-fit=cover':(tab()||base);if(m.getAttribute('content')!==c)m.setAttribute('content',c)}fit();window.__mkFitPhone=phone;addEventListener('orientationchange',function(){setTimeout(fit,60)});if(screen.orientation&&screen.orientation.addEventListener)screen.orientation.addEventListener('change',fit);window.__mkFit=function(){var w=innerWidth;return!TV&&w>=1600&&matchMedia('(pointer:fine)').matches?Math.min(1.25,w/1600):1}}catch(e){window.__mkFit=window.__mkFit||function(){return 1}}})();</script>
 <script id="mkc-domain">
@@ -10794,7 +10805,7 @@ const SECTIONS = [
   ] },
   { id: 'performance', icon: 'gauge', label: 'Performance', intro: 'High is the default: raised, shimmering buttons, posters with depth, the 3D logo while a film loads, and frosted glass on desktops. Phones get all of it except the glass. If scrolling ever stutters or the battery runs low, MKCinema drops to Low by itself. Video quality is never affected.', rows: () => [
     { html: presetsHTML },
-    ...(IS_TV && typeof Lite !== 'undefined' ? [{ key: 'liteMode', label: 'Lite mode', help: Lite.HELP, type: 'seg', options: [['auto', 'Automatic'], ['on', 'On'], ['off', 'Off']], get: () => Lite.mode(), set: (v) => Lite.set(v) }] : []),
+    ...(typeof Lite !== 'undefined' ? [{ key: 'liteMode', label: 'Snappy mode', help: Lite.HELP, type: 'seg', options: [['auto', 'Automatic'], ['on', 'On'], ['off', 'Off']], get: () => Lite.mode(), set: (v) => Lite.set(v) }] : []),
     { key: 'blur', label: 'Glass blur', help: `0 gives solid black panels, the fastest option.${IS_TV ? ' TVs always use solid panels, which keeps the remote smooth at High.' : TOUCH_UI ? ' This device always uses solid panels, because Chrome on Android can black out parts of the screen under glass.' : ''}`, type: 'range', min: 0, max: 30, step: 2, fmt: (v) => (v ? `${v}px` : 'solid') },
     { key: 'showFps', label: 'Show frame rate', type: 'toggle' },
   ] },
@@ -11268,7 +11279,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.86.2';
+const APP_VERSION = '2.87.0';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -24167,6 +24178,22 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.87.0', date: '2026-11-21', items: [
+    ['new', 'Snappy mode', 'The fastest MKCinema, on any device. Every feature stays, but nothing animates, glass and shadows are drawn flat and rows start shorter, so every press answers at once. It turns on by itself on Fire TV Sticks. Settings › Performance.'],
+    ['fix', 'Very large films play through', '4K remux films and other very large files no longer stall a few seconds in or close the player, and skipping ahead in them lands where you asked.'],
+    ['new', 'Poster glow', 'A soft glow around the film or series you point at or reach with the remote. Pick its colour, take it from each film, or choose your own. Settings › Appearance › Posters.'],
+    ['new', 'Stream badges', 'Sources now show the edition, release type, the service a web release came from, 10-bit and 60 fps, audio languages and subtitles, and warn about camera copies and upscaled video. Nine badge styles, with a switch for each group of labels.'],
+    ['new', 'Rewind a little on resume', 'Picks up a few seconds before where you stopped, so you catch the last line again.'],
+    ['new', 'When it ends', 'The player shows the time the film or episode will finish.'],
+    ['better', 'Placeholder clips are skipped', 'A source that turns out to be a short "file removed" clip moves on to the next source by itself.'],
+    ['better', 'Subtitles', 'Softer subtitles on HDR films, an outline colour, and Thin, Thick or Glow outlines.'],
+    ['new', 'Warm screen', 'An orange tint for late nights. Settings › Playback.'],
+    ['new', 'Search and sort episodes', 'On a series page: first to last, newest first, highest rated or unwatched first.'],
+    ['new', 'Family night row', 'Popular films for the whole family on Home.'],
+    ['better', 'Home your way', 'Continue watching can open the title page instead of playing, and films you have watched can be dimmed or hidden in Home rows.'],
+    ['new', 'Live TV', 'Rename a channel or change its logo, tidy channel names, schedule a recording by time, a clock on screen, and a backup channel takes over when one won\'t play.'],
+    ['fix', 'Small phones', 'The Library filter and the Music buttons each stay on one line.'],
+  ] },
   { v: '2.86.2', date: '2026-11-21', items: [
     ['fix', 'Next episode on TVs', 'Pressing Next episode or reaching the end of an episode now plays the next one, and the TV layout keeps its proper size.'],
   ] },
@@ -30914,7 +30941,7 @@ body.mk-player-on #app,body.mk-player-on #app *{animation-play-state:paused!impo
       three screens' worth of posters (the rest join as you scroll along it, as endless rows already do). Not on TV,
       where every row stays built for the remote. */
 const ImgFit = {
-  dpr: window.MK_LITE ? 1 : Math.min(window.devicePixelRatio || 1, 2),
+  dpr: window.MK_LITE ? (document.documentElement.classList.contains('tv') ? 1 : Math.min(window.devicePixelRatio || 1, 1.5)) : Math.min(window.devicePixelRatio || 1, 2),
   RX: /^https:\/\/(image\.tmdb\.org\/t\/p\/|(images|live)\.metahub\.space\/(poster|background)\/|media\.kitsu\.(app|io)\/(anime|manga)\/poster_images\/)/,
   TMDB: [['w92', 92], ['w154', 154], ['w185', 185], ['w300', 300], ['w342', 342], ['w500', 500], ['w780', 780], ['w1280', 1280], ['original', 1e9]],
   MH_POSTER: [['small', 300], ['medium', 500], ['large', 780]],
@@ -48588,24 +48615,23 @@ const Lite = {
   mode() { try { const v = JSON.parse(localStorage.getItem(this.KEY) || '"auto"'); return v === 'on' || v === 'off' ? v : 'auto'; } catch (e) { return 'auto'; } },
   weak() {
     const ua = navigator.userAgent, m = navigator.deviceMemory, c = navigator.hardwareConcurrency;
-    return /\bAFT(M|T|SS|SSS|MM|B)\b/.test(ua) || (m && m <= 1) || (c && c <= 2);
+    return IS_TV ? (/\bAFT[A-Z0-9]*\b/.test(ua) || (m && m <= 2) || (c && c <= 2)) : (m && m <= 1);
   },
-  on(v) { return v === 'on' || (v === 'auto' && IS_TV && !!this.weak()); },
+  on(v) { return v === 'on' || (v === 'auto' && !!this.weak()); },
   set(v) {
     try { localStorage.setItem(this.KEY, JSON.stringify(v)); } catch (e) { /* storage blocked: nothing to keep */ }
     try { Store.raw.set('liteAsked', true); } catch (e) { /* optional */ }
     if (this.on(v) === !!window.MK_LITE) return;
-    toast(this.on(v) ? 'Lite mode on. Restarting MKCinema…' : 'Lite mode off. Restarting MKCinema…', 'info', 2000);
+    toast(this.on(v) ? 'Snappy mode on. Restarting MKCinema…' : 'Snappy mode off. Restarting MKCinema…', 'info', 2000);
     setTimeout(() => location.reload(), 900);
   },
-  HELP: 'Keeps every feature and the same look, but nothing animates, rows start shorter and the banner stays on one title, so the remote stays quick on slower TVs and sticks. Automatic turns it on for TVs known to be slow.',
+  HELP: 'The fastest MKCinema. Every feature stays, but nothing animates, glass and shadows are drawn flat, rows start shorter and the banner stays on one title, so every press answers at once. Automatic turns it on for Fire TV Sticks and devices with little memory.',
   init() {
-    if (!IS_TV) return;
     try { MKLog.add('info', `lite: ${window.MK_LITE || 'off'} (setting ${this.mode()}, ram ${navigator.deviceMemory || '?'} GB, cpus ${navigator.hardwareConcurrency || '?'})`); } catch (e) { /* log is optional */ }
-    if (window.MK_LITE && window.MK_LITE !== 'on' && !Store.raw.get('liteTold', false)) {
-      setTimeout(() => { Store.raw.set('liteTold', true); toast('Lite mode is on for this TV, so the remote stays quick. Settings › Performance.', 'info', 7000); }, 9000);
+    if (IS_TV && window.MK_LITE && window.MK_LITE !== 'on' && !Store.raw.get('liteTold', false)) {
+      setTimeout(() => { Store.raw.set('liteTold', true); toast('Snappy mode is on for this TV, so the remote stays quick. Settings › Performance.', 'info', 7000); }, 9000);
     }
-    if (!window.MK_LITE && this.mode() === 'auto' && !Store.raw.get('liteAsked', false)) this.watch();
+    if (IS_TV && !window.MK_LITE && this.mode() === 'auto' && !Store.raw.get('liteAsked', false)) this.watch();
   },
   /* a TV that was not recognised as weak but works hard anyway: long main-thread tasks in the first 40 s, or remote
      presses that take long to show, ask once whether to turn Lite mode on */
@@ -48627,8 +48653,8 @@ const Lite = {
     for (let n = 0; wait() && n < 60; n++) await new Promise((r) => setTimeout(r, 5000));
     if (wait() || Store.raw.get('liteAsked', false)) return;
     Store.raw.set('liteAsked', true);
-    const ok = await Gate.ask({ icon: 'gauge', eyebrow: 'Performance', title: 'Make MKCinema quicker on this TV?', yes: 'Turn on Lite mode', no: 'Not now',
-      html: 'This TV is working hard. Lite mode keeps every feature and the same look, but nothing animates and rows start shorter, so the remote stays quick. Change it any time in Settings › Performance.' });
+    const ok = await Gate.ask({ icon: 'gauge', eyebrow: 'Performance', title: 'Make MKCinema quicker on this TV?', yes: 'Turn on Snappy mode', no: 'Not now',
+      html: 'This TV is working hard. Snappy mode keeps every feature, but nothing animates and rows start shorter, so the remote stays quick. Change it any time in Settings › Performance.' });
     if (ok === true) this.set('on');
   },
 };
@@ -54359,5 +54385,656 @@ LiveDvr.init(); RecSeries.init(); SmartDl.init();
   }
 }
 </script>
+<!-- mk-287a:start -->
+<style id="mk-287a-css">
+/* poster glow: one pre-drawn shadow on a layer that only fades (opacity), so focus moves stay cheap */
+html.mk-glow .card-inner::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:4;opacity:0;transition:opacity .22s ease;
+  box-shadow:0 0 0 2px var(--glow,#4aa8ff),0 0 16px 2px rgba(var(--glow-c,74,168,255),.7),0 0 40px 8px rgba(var(--glow-c,74,168,255),.32)}
+html.mk-glow .card:is(:hover,:focus-visible,.nav-focus) .card-inner::before{opacity:1}
+html.mk-glow .card:is(:hover,:focus-visible,.nav-focus) .card-inner{box-shadow:0 22px 44px -22px var(--n000000,#000)!important;border-image:none!important}
+html.mk-glow .card:is(:hover,:focus-visible,.nav-focus) .card-inner::after{box-shadow:none!important}
+html.mk-glow.lite .card-inner::before,html.mk-glow body.reduce-motion .card-inner::before{transition:none}
+html.mk-glow.lite .card-inner::before{box-shadow:0 0 0 3px var(--glow,#4aa8ff),0 0 12px 1px rgba(var(--glow-c,74,168,255),.55)}
+.glw-sw{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.glw-sw button{width:34px;height:34px;border-radius:50%;border:2px solid rgba(var(--kffffff-c,255,255,255),.18);background:var(--c);cursor:pointer;padding:0;transition:transform .15s ease}
+.glw-sw button.on{border-color:var(--kffffff,#fff);transform:scale(1.12)}
+.glw-sw button:focus-visible,.glw-sw button.nav-focus{outline:2px solid var(--kffffff,#fff);outline-offset:3px}
+.glw-sw .clr{width:44px;height:34px}
+.glw-sw button.glw-art{background:conic-gradient(#ff5f6d,#ffc371,#3ee08f,#2ee6ff,#a66bff,#ff5f6d)}
+/* stream badges: label styles. "classic" keeps the original look */
+.tb.bx-hero{font-weight:700}
+html[data-bdg] .tb.tb{border:1px solid transparent;font-family:var(--f-body);letter-spacing:.02em}
+html[data-bdg="glass"] .tb.tb{color:#eef1f6;background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.16)}
+html[data-bdg="glass"] .tb.tb.bx-hero,html[data-bdg="glass"] .tb.tb.deb{color:#1a1406;background:linear-gradient(180deg,#f6e3a8,#d8b45c);border-color:#f0d58c}
+html[data-bdg="solid"] .tb.tb{color:#fff;background:#2b2e36;border-color:#2b2e36}
+html[data-bdg="solid"] .tb.tb.res{background:#e9e9ec;color:#0b0b0c;border-color:#e9e9ec}
+html[data-bdg="solid"] .tb.tb.hdr{background:#5b3fb8;border-color:#5b3fb8}
+html[data-bdg="solid"] .tb.tb.aud{background:#0f6d84;border-color:#0f6d84}
+html[data-bdg="solid"] .tb.tb.bx-ed{background:#8a5a12;border-color:#8a5a12}
+html[data-bdg="solid"] .tb.tb.bx-svc{background:#7a1f3d;border-color:#7a1f3d}
+html[data-bdg="solid"] .tb.tb.bx-lang{background:#1f5d3a;border-color:#1f5d3a}
+html[data-bdg="solid"] .tb.tb.bx-hero,html[data-bdg="solid"] .tb.tb.deb{background:#e3b341;color:#141005;border-color:#e3b341}
+html[data-bdg="neon"] .tb.tb{color:#bfe9ff;background:rgba(10,14,22,.6);border-color:#39b6ff;text-shadow:0 0 6px rgba(57,182,255,.8)}
+html[data-bdg="neon"] .tb.tb.hdr{color:#e6d2ff;border-color:#b06bff;text-shadow:0 0 6px rgba(176,107,255,.85)}
+html[data-bdg="neon"] .tb.tb.aud{color:#c9fff1;border-color:#2fe6b4;text-shadow:0 0 6px rgba(47,230,180,.8)}
+html[data-bdg="neon"] .tb.tb.bx-hero,html[data-bdg="neon"] .tb.tb.deb{color:#fff3c4;border-color:#ffc93c;text-shadow:0 0 6px rgba(255,201,60,.9)}
+html[data-bdg="outline"] .tb.tb{color:var(--ink);background:transparent;border-color:rgba(var(--kffffff-c,255,255,255),.45)}
+html[data-bdg="outline"] .tb.tb.bx-hero,html[data-bdg="outline"] .tb.tb.deb{color:var(--gold);border-color:var(--gold)}
+html[data-bdg="minimal"] .tb.tb{color:var(--mute);background:transparent;border-color:transparent;padding-inline:2px}
+html[data-bdg="minimal"] .tb.tb.bx-hero,html[data-bdg="minimal"] .tb.tb.res,html[data-bdg="minimal"] .tb.tb.deb{color:var(--ink)}
+html[data-bdg="light"] .tb.tb{color:#17181c;background:#f1f1f3;border-color:#f1f1f3}
+html[data-bdg="light"] .tb.tb.bx-hero,html[data-bdg="light"] .tb.tb.deb{background:#f3d27a;border-color:#f3d27a}
+html[data-bdg="mono"] .tb.tb{color:#fff;background:#000;border-color:#fff}
+html[data-bdg="mono"] .tb.tb.bx-hero,html[data-bdg="mono"] .tb.tb.deb,html[data-bdg="mono"] .tb.tb.res{color:#000;background:#fff}
+html[data-bdg="pastel"] .tb.tb{color:#2a2433;background:#e3dcf5;border-color:#e3dcf5}
+html[data-bdg="pastel"] .tb.tb.res{background:#d6ecf7;border-color:#d6ecf7}
+html[data-bdg="pastel"] .tb.tb.aud{background:#d5f2e6;border-color:#d5f2e6}
+html[data-bdg="pastel"] .tb.tb.bx-ed,html[data-bdg="pastel"] .tb.tb.bx-svc{background:#f7e0d2;border-color:#f7e0d2}
+html[data-bdg="pastel"] .tb.tb.bx-hero,html[data-bdg="pastel"] .tb.tb.deb{background:#f6e7b0;border-color:#f6e7b0}
+.bdg-prev{display:flex;flex-wrap:wrap;gap:6px;padding:12px 0 4px}
+</style>
+<script>
+'use strict';
+/* 2.87 Poster glow + stream badges */
+(() => {
+  const safe = (fn) => { try { return fn(); } catch (e) { console.warn('2.87a', e); } };
+  if (typeof CFG_DEFAULTS === 'object') Object.assign(CFG_DEFAULTS, { glow: true, glowColor: '#4aa8ff', bdgStyle: 'classic', bdgOff: [] });
+  ['glow', 'glowColor', 'bdgStyle', 'bdgOff'].forEach((k) => { if (!(k in CFG)) CFG[k] = CFG_DEFAULTS[k]; });
+
+  /* ---------------- Poster glow ---------------- */
+  const SW = [['#4aa8ff', 'Blue'], ['#2ee6ff', 'Cyan'], ['#ffffff', 'White'], ['#f5c451', 'Gold'], ['#ff8a3d', 'Orange'], ['#ff3b4e', 'Red'], ['#ff5fae', 'Pink'], ['#a66bff', 'Violet'], ['#3ee08f', 'Green']];
+  const rgb = (h) => { const m = /^#?([0-9a-f]{6})$/i.exec(String(h || '')); if (!m) return '74,168,255'; const n = parseInt(m[1], 16); return `${n >> 16 & 255},${n >> 8 & 255},${n & 255}`; };
+  const Glow = {
+    apply() {
+      const de = document.documentElement, on = CFG.glow !== false;
+      de.classList.toggle('mk-glow', on);
+      const c = /^#[0-9a-f]{6}$/i.test(CFG.glowColor || '') ? CFG.glowColor : '#4aa8ff';
+      de.style.setProperty('--glow', c); de.style.setProperty('--glow-c', rgb(c));
+    },
+    /* "From the poster": the poster's strongest colour, read once from a 24x36 copy and kept for the session */
+    memo: new Map(),
+    clear() { $$('.card').forEach((x) => { if (x._glw) { x._glw = 0; x.style.setProperty('--glow', ''); x.style.setProperty('--glow-c', ''); } }); },
+    tint(card) {
+      if (CFG.glow === false || CFG.glowColor !== 'poster' || !card || card._glw) return;
+      const img = card.querySelector('.card-inner img'); const src = img && (img.currentSrc || img.src); if (!src || !/^https:/.test(src)) return;
+      const put = (c) => { if (!c) return; card._glw = 1; card.style.setProperty('--glow', `rgb(${c})`); card.style.setProperty('--glow-c', c); };
+      if (this.memo.has(src)) { put(this.memo.get(src)); return; }
+      const t = new Image(); t.crossOrigin = 'anonymous'; t.decoding = 'async';
+      t.onload = () => { const c = safe(() => {
+        const cv = document.createElement('canvas'); cv.width = 24; cv.height = 36; const g = cv.getContext('2d'); g.drawImage(t, 0, 0, 24, 36);
+        const d = g.getImageData(0, 0, 24, 36).data; let best = null, bw = -1;
+        for (let i = 0; i < d.length; i += 4) { const r = d[i], gg = d[i + 1], b = d[i + 2], mx = Math.max(r, gg, b), mn = Math.min(r, gg, b), sat = mx ? (mx - mn) / mx : 0, w = sat * mx; if (mx > 70 && w > bw) { bw = w; best = [r, gg, b]; } }
+        if (!best || bw < 40) return '220,220,225';
+        const k = 255 / Math.max(...best); return best.map((v) => Math.round(Math.min(255, v * k * .95))).join(',');
+      }); if (c) { this.memo.set(src, c); if (this.memo.size > 400) this.memo.delete(this.memo.keys().next().value); put(c); } };
+      // art that may not be read (no CORS): the film's genre colour instead
+      t.onerror = () => { const c = safe(() => { const m = typeof S === 'object' && S.metas && S.metas.get(card.dataset.id); if (!m) return ''; const g = document.createElement('canvas').getContext('2d'); const gm = typeof GENRE_MOOD === 'object' ? GENRE_MOOD : {}; const k = (m.genres || m.genre || []).map((x) => gm[String(x).toLowerCase()]).find(Boolean); g.fillStyle = k ? k[0] : `hsl(${(typeof hash === 'function' ? hash(m.id || m.name) : 0) % 360}, 90%, 60%)`; return rgb(g.fillStyle); }); if (c) { this.memo.set(src, c); put(c); } };
+      t.src = src;
+    },
+    html() {
+      const cur = String(CFG.glowColor || '#4aa8ff').toLowerCase();
+      return `<div class="set-row" id="glwRow"${CFG.glow === false ? ' hidden' : ''}><div><b>Glow color</b><small>Pick a colour, take it from each film (the rainbow button), or choose any colour with the last button.</small></div><div class="set-ctl glw-sw">${SW.map(([c, n]) => `<button type="button" data-nav data-glw="${c}" class="${cur === c ? 'on' : ''}" style="--c:${c}" aria-label="${esc(n)}" title="${esc(n)}"></button>`).join('')}<button type="button" data-nav data-glw="poster" class="glw-art${cur === 'poster' ? ' on' : ''}" aria-label="From the poster" title="From the poster"></button><input class="clr" type="color" id="glwPick" value="${esc(/^#[0-9a-f]{6}$/.test(cur) ? cur : '#4aa8ff')}" aria-label="Your own colour"></div></div>`;
+    },
+    bind() {
+      const row = document.getElementById('glwRow'); if (!row) return;
+      const pick = (c) => { setCfg('glowColor', c); $$('[data-glw]', row).forEach((b) => b.classList.toggle('on', b.dataset.glw === c)); const i = $('#glwPick', row); if (i && c !== 'poster') i.value = c; Glow.clear(); };
+      $$('[data-glw]', row).forEach((b) => b.addEventListener('click', () => pick(b.dataset.glw)));
+      const i = $('#glwPick', row); if (i) i.addEventListener('input', () => pick(i.value.toLowerCase()));
+    },
+  };
+  window.MkGlow = Glow;
+  const near = (e) => e.target && e.target.closest && e.target.closest('.card');
+  document.addEventListener('pointerover', (e) => { if (CFG.glowColor === 'poster') Glow.tint(near(e)); }, { passive: true });
+  document.addEventListener('focusin', (e) => { if (CFG.glowColor === 'poster') Glow.tint(near(e)); });
+  CFG_HOOKS.push((k) => { if (k === 'glow' || k === 'glowColor') { Glow.apply(); if (k === 'glow') { const r = document.getElementById('glwRow'); if (r) r.hidden = CFG.glow === false; } } if (k === 'bdgStyle' || k === 'bdgOff') Bdg.apply(); });
+
+  /* ---------------- Stream badges ---------------- */
+  const Bdg = {
+    STYLES: [['classic', 'Classic'], ['glass', 'Glass'], ['solid', 'Solid'], ['neon', 'Neon'], ['outline', 'Outline'], ['minimal', 'Minimal'], ['light', 'Light'], ['mono', 'Black and white'], ['pastel', 'Pastel']],
+    GROUPS: [['ed', 'Editions', 'IMAX, Director’s Cut, Extended and others'], ['src', 'Release type', 'Remux, Blu-ray, WEB-DL, WEBRip, TV recording, camera copy'], ['svc', 'Streaming service', 'Where a web release came from'], ['vid', 'Video details', '10-bit, 12-bit, 60 fps, HLG'], ['lang', 'Audio language and subtitles', 'Audio languages, Multi audio, Dubbed, Subtitles']],
+    ED: [[/\bimax\b/, 'IMAX'], [/director'?s[\s._-]?cut/, 'Director’s Cut'], [/\bextended\b/, 'Extended'], [/\bunrated\b/, 'Unrated'], [/\buncut\b/, 'Uncut'], [/\bremaster(ed)?\b/, 'Remastered'], [/\bcriterion\b/, 'Criterion'], [/\btheatrical\b/, 'Theatrical'], [/\bopen[\s._-]?matte\b/, 'Open Matte'], [/\bfinal[\s._-]?cut\b/, 'Final Cut'], [/\bspecial[\s._-]?edition\b/, 'Special Edition'], [/\banniversary\b/, 'Anniversary'], [/\bdirectors?[\s._-]?edition\b/, 'Director’s Edition']],
+    SRC: [[/\bremux\b/, 'Remux'], [/\b(uhd[\s._-]?blu-?ray|blu-?ray|bdrip|brrip|bd25|bd50|bd-?rip)\b/, 'Blu-ray'], [/\bweb[\s._-]?dl\b|\bwebdl\b/, 'WEB-DL'], [/\bweb-?rip\b/, 'WEBRip'], [/\bhdtv\b|\bpdtv\b/, 'TV recording'], [/\bdvd(rip|5|9|r)?\b/, 'DVD'], [/\b(hd)?cam(rip)?\b|\btelesync\b|\bhdts\b|\bhd-ts\b/, 'Camera copy']],
+    SVC: [[/\b(nf|netflix)\b/, 'Netflix'], [/\b(amzn|amazon)\b/, 'Prime Video'], [/\b(dsnp|dsny|disney\+?)\b/, 'Disney+'], [/\b(atvp|aptv)\b/, 'Apple TV+'], [/\b(hmax|hbo[\s._-]?max)\b/, 'Max'], [/\bhulu\b/, 'Hulu'], [/\b(pmtp|paramount\+?)\b/, 'Paramount+'], [/\b(pcok|peacock)\b/, 'Peacock'], [/\bcrav\b/, 'Crave'], [/\bstan\b/, 'Stan'], [/\b(htsr|hotstar|jiohotstar)\b/, 'JioHotstar'], [/\bzee5\b/, 'ZEE5'], [/\bmubi\b/, 'MUBI'], [/\bcrunchyroll\b|\bcrunchy\b/, 'Crunchyroll'], [/\b(itunes)\b/, 'iTunes'], [/\bbbc[\s._-]?iplayer\b/, 'BBC iPlayer'], [/\btubi\b/, 'Tubi'], [/\bsho\b|\bshowtime\b/, 'Showtime'], [/\bstarz\b/, 'Starz'], [/\bvikiv?\b/, 'Viki']],
+    off(g) { return Array.isArray(CFG.bdgOff) && CFG.bdgOff.includes(g); },
+    extra(s, t) {
+      if (!t || t.isTrailer || t.kind === 'yt') return [];
+      const bh = s.behaviorHints || {};
+      const raw = [s.name, s.title, s.description, bh.filename].filter(Boolean).join(' ');
+      const T = raw.toLowerCase().replace(/[._]/g, ' ');
+      const out = [], one = (list) => { const f = list.find(([re]) => re.test(T)); return f && f[1]; };
+      if (!this.off('ed')) this.ED.forEach(([re, l]) => { if (re.test(T) && out.length < 3) out.push(['bx-ed', l]); });
+      if (!this.off('src') && !t.release) { const r = one(this.SRC); if (r) out.push([r === 'Remux' ? 'bx-src bx-hero' : r === 'Camera copy' ? 'bx-src warn' : 'bx-src', r]); }
+      if (!this.off('svc') && /\bweb\b|web[\s-]?(dl|rip)/.test(T)) { const v = one(this.SVC); if (v) out.push(['bx-svc', v]); }
+      if (!this.off('vid')) {
+        const b = (T.match(/\b(10|12)[\s-]?bit\b/) || [])[1]; if (b) out.push(['bx-vid', `${b}-bit`]);
+        const f = (T.match(/\b(50|60|120)\s?fps\b/) || [])[1]; if (f) out.push(['bx-vid', `${f} fps`]);
+        if (/\bhlg\b/.test(T) && !t.hdr) out.push(['bx-vid', 'HLG']);
+      }
+      // warnings: picture that may look wrong on many screens
+      if (t.hdr === 'Dolby Vision' && !/\bhdr(10)?\b|hdr10\+|\bhybrid\b/.test(T)) out.push(['warn bx-warn', 'Dolby Vision only']);
+      if (/\bupscaled?\b|\bai[\s-]?upscal/.test(T)) out.push(['warn bx-warn', 'Upscaled']);
+      if (!this.off('lang')) {
+        if (!(t.langs && t.langs.length) && typeof AudioPref === 'object') {
+          const r = safe(() => AudioPref.langs(s)) || { langs: new Set(), multi: false };
+          if (r.multi) out.push(['bx-lang', /\bdual\b/.test(T) ? 'Dual audio' : 'Multi audio']);
+          const ls = [...r.langs].filter((l) => /^[a-z]{2,3}$/.test(l)).slice(0, 3);
+          if (ls.length) out.push(['bx-lang', ls.map((l) => l.toUpperCase()).join(' · ')]);
+        }
+        if (/\bdub(bed)?\b/.test(T)) out.push(['bx-lang', 'Dubbed']);
+        if (/\b(e?subs?|subbed|subtitled|multi[\s-]?subs?)\b/.test(T)) out.push(['bx-lang', 'Subtitles']);
+      }
+      return out;
+    },
+    hero(h) {
+      return h.replace(/<span class="tb res k4">/g, '<span class="tb res k4 bx-hero">').replace(/<span class="tb hdr">Dolby Vision/g, '<span class="tb hdr bx-hero">Dolby Vision').replace(/<span class="tb aud">Atmos/g, '<span class="tb aud bx-hero">Atmos');
+    },
+    apply() { const de = document.documentElement; const v = this.STYLES.some(([k]) => k === CFG.bdgStyle) ? CFG.bdgStyle : 'classic'; if (v === 'classic') de.removeAttribute('data-bdg'); else de.setAttribute('data-bdg', v); },
+    sample() {
+      const s = { name: 'Sample', title: 'Film.2024.IMAX.2160p.AMZN.WEB-DL.DV.HDR10.DDP5.1.Atmos.10bit.MULTi.ESub', url: 'https://example.invalid/a.mp4' };
+      const t = Telemetry.parse(s); t.cached = true; return Telemetry.badges(s, t, '', true);
+    },
+    html() {
+      const off = Array.isArray(CFG.bdgOff) ? CFG.bdgOff : [];
+      return `<div class="set-group">Stream badges</div>
+        <div class="set-row"><div><b>Badge style</b><small>How the labels on each source look.</small><div class="tele bdg-prev" id="bdgPrev">${safe(() => this.sample()) || ''}</div></div><div class="set-ctl"><select class="sel" id="bdgStyle" aria-label="Badge style">${this.STYLES.map(([k, l]) => `<option value="${k}"${(CFG.bdgStyle || 'classic') === k ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></div></div>
+        ${this.GROUPS.map(([g, l, h]) => `<div class="set-row"><div><b>${esc(l)}</b><small>${esc(h)}</small></div><div class="set-ctl"><button class="switch ${off.includes(g) ? '' : 'on'}" type="button" role="switch" data-nav data-bdgg="${g}" aria-checked="${!off.includes(g)}" aria-label="${esc(l)}"></button></div></div>`).join('')}`;
+    },
+    bind() {
+      const sel = document.getElementById('bdgStyle'); if (!sel) return;
+      const prev = () => { const p = document.getElementById('bdgPrev'); if (p) p.innerHTML = safe(() => this.sample()) || ''; };
+      sel.addEventListener('change', () => { setCfg('bdgStyle', sel.value); prev(); });
+      $$('[data-bdgg]').forEach((b) => b.addEventListener('click', () => {
+        const on = !b.classList.contains('on'); b.classList.toggle('on', on); b.setAttribute('aria-checked', on);
+        const set = new Set(Array.isArray(CFG.bdgOff) ? CFG.bdgOff : []); if (on) set.delete(b.dataset.bdgg); else set.add(b.dataset.bdgg);
+        setCfg('bdgOff', [...set]); prev();
+      }));
+    },
+  };
+  window.MkBadges = Bdg;
+
+  safe(() => {
+    if (typeof Telemetry !== 'object' || typeof Telemetry.badges !== 'function') return;
+    const base = Telemetry.badges;
+    Telemetry.badges = function (s, tel) {
+      const h = base.apply(this, arguments);
+      return safe(() => { const x = Bdg.extra(s || {}, tel); return Bdg.hero(h) + x.map(([c, l]) => `<span class="tb ${c}">${esc(l)}</span>`).join(''); }) || h;
+    };
+  });
+
+  /* ---------------- Settings rows ---------------- */
+  safe(() => {
+    const ap = typeof secById === 'function' && secById('appearance');
+    if (ap) {
+      const rows = ap.rows, bind = ap.bind;
+      ap.rows = () => { const r = rows(); const at = r.findIndex((x) => x.key === 'cardInfo'); r.splice(at >= 0 ? at + 1 : r.length, 0,
+        { key: 'glow', label: 'Poster glow', help: 'A soft glow around the film or series you point at or reach with the remote.', type: 'toggle', get: () => CFG.glow !== false },
+        { html: () => Glow.html() }); return r; };
+      ap.bind = function () { const v = bind ? bind.apply(this, arguments) : undefined; safe(() => Glow.bind()); return v; };
+    }
+    const st = typeof secById === 'function' && secById('streams');
+    if (st) {
+      const rows = st.rows, bind = st.bind;
+      st.rows = () => [...rows(), { html: () => Bdg.html() }];
+      st.bind = function () { const v = bind ? bind.apply(this, arguments) : undefined; safe(() => Bdg.bind()); return v; };
+    }
+  });
+  Glow.apply(); Bdg.apply();
+})();
+</script>
+<!-- mk-287a:end -->
+<!-- mk-287b:start -->
+<style id="mk-287b-css">
+#pEnds{margin-left:10px;color:var(--mute);font-size:.9em;white-space:nowrap}
+#pEnds[hidden]{display:none}
+#player.is-hdr.mk-subdim{--sub-color:var(--sub-color-hdr)}
+#mkWarm{position:absolute;inset:0;pointer-events:none;z-index:2;background:#ff8a2a;mix-blend-mode:normal;opacity:0;transition:opacity .4s ease}
+html.touch-ui #pEnds{display:none}
+</style>
+<script>
+'use strict';
+/* 2.87 player extras */
+(() => {
+  const safe = (fn) => { try { return fn(); } catch (e) { console.warn('2.87b', e); } };
+  if (typeof CFG_DEFAULTS === 'object') Object.assign(CFG_DEFAULTS, { resumeBack: 5, skipStub: true, subHdrDim: 25, endsAt: true, subOutlineColor: '#000000', subOutlineStyle: 'classic', warm: 0 });
+  ['resumeBack', 'skipStub', 'subHdrDim', 'endsAt', 'subOutlineColor', 'subOutlineStyle', 'warm'].forEach((k) => { if (!(k in CFG)) CFG[k] = CFG_DEFAULTS[k]; });
+  const pl = () => document.getElementById('player');
+
+  /* ---- rewind a few seconds when a film or episode resumes, so you catch the last line again ---- */
+  safe(() => {
+    const ps = playStream;
+    playStream = function (ctx, stream, opts) {
+      opts = opts || {};
+      safe(() => {
+        const back = Number(CFG.resumeBack) || 0; if (!back || !ctx || !ctx.meta || opts._mkrb) return;
+        const key = ctx.video ? ctx.video.id : ctx.meta.id, pr = S.progress && S.progress[key];
+        if (!pr || !(pr.t > 20) || !(pr.t < pr.d * .95)) return;
+        let st = opts.startAt; if (st == null && CFG.resume) st = pr.t;
+        if (st != null && Math.abs(st - pr.t) < 1.5) opts = Object.assign({}, opts, { startAt: Math.max(0, st - back), _mkrb: 1 });
+      });
+      return ps.call(this, ctx, stream, opts);
+    };
+  });
+
+  /* ---- a "ready" source that is really a short placeholder clip (removed file, error video) is skipped ---- */
+  const runtimeMin = (m) => { if (!m) return 0; const r = String(m.runtime || ''); const h = /(\d+)\s*h/i.exec(r), mi = /(\d+)\s*min/i.exec(r); return (h ? +h[1] * 60 : 0) + (mi ? +mi[1] : (!h && /^\d+$/.test(r) ? +r : 0)); };
+  safe(() => {
+    video.addEventListener('loadedmetadata', () => safe(() => {
+      if (CFG.skipStub === false || !P.ctx || !P.stream || P.stream._local) return;
+      const t = P.stream._tel || {}; if (t.isTrailer || t.kind === 'yt' || P.ctx.live || P.ctx.isLive) return;
+      const d = video.duration; if (!isFinite(d) || d <= 0 || d >= 150) return;
+      const m = P.ctx.meta || {}, expect = P.ctx.video ? 10 : Math.max(runtimeMin(m), m.type === 'movie' ? 40 : 0);
+      if (expect < 10) return;
+      if (P.stream._mkStub) return; P.stream._mkStub = true;
+      toast('That source is only a short placeholder clip. Trying the next one…', 'info', 3500);
+      playerAct('next-src');
+    }));
+  });
+
+  /* ---- "Ends at" next to the time ---- */
+  const Ends = {
+    el: null, last: 0,
+    mount() { const t = document.getElementById('pTime'); if (!t || document.getElementById('pEnds')) return; t.insertAdjacentHTML('afterend', '<span class="tnum" id="pEnds" hidden></span>'); this.el = document.getElementById('pEnds'); },
+    tick() {
+      if (!this.el) this.mount(); const el = this.el; if (!el) return;
+      const now = Date.now(); if (now - this.last < 1000) return; this.last = now;
+      const d = pDur(), c = pNow(), r = video.playbackRate || 1;
+      if (CFG.endsAt === false || !isFinite(d) || d < 300 || (P.ctx && (P.ctx.live || P.ctx.isLive))) { el.hidden = true; return; }
+      const at = new Date(now + Math.max(0, d - c) / r * 1000);
+      el.textContent = `Ends ${at.toLocaleTimeString(typeof appLocale === 'function' ? appLocale() : undefined, { hour: 'numeric', minute: '2-digit' })}`;
+      el.hidden = false;
+    },
+  };
+  safe(() => { video.addEventListener('timeupdate', () => safe(() => Ends.tick())); });
+
+  /* ---- subtitles: softer on HDR, outline colour and style ---- */
+  const hex = (h) => (/^#[0-9a-f]{6}$/i.test(h || '') ? h : '#000000');
+  function styleSubs() {
+    const root = document.documentElement.style;
+    // HDR: same colour, darker by the chosen amount
+    const dim = clamp(Number(CFG.subHdrDim) || 0, 0, 60);
+    root.setProperty('--sub-color-hdr', `color-mix(in srgb, ${CFG.subColor || '#ffffff'} ${100 - dim}%, #000)`);
+    const p0 = pl(); if (p0) p0.classList.toggle('mk-subdim', dim > 0);
+    // outline colour and style (only when the outline is on)
+    if (!CFG.subOutline) return;
+    const c = hex(CFG.subOutlineColor), st = CFG.subOutlineStyle || 'classic';
+    if (c.toLowerCase() === '#000000' && st === 'classic') return; // the built-in look
+    const sh = { none: '', soft: '', strong: '2px 2px 4px #000,3px 3px 8px rgba(0,0,0,.85)', drop: '3px 3px 0 #000' }[CFG.subShadow] || '';
+    const out = st === 'thick' ? `-2px -2px 0 ${c},2px -2px 0 ${c},-2px 2px 0 ${c},2px 2px 0 ${c},0 0 3px ${c}`
+      : st === 'glow' ? `0 0 4px ${c},0 0 8px ${c},0 0 14px ${c}`
+        : `0 0 3px ${c},0 0 2px ${c},1px 1px 2px ${c}`;
+    root.setProperty('--sub-shadow', [out, sh].filter(Boolean).join(','));
+  }
+  CFG_HOOKS.push((k) => { safe(() => styleSubs()); if (k === 'warm') safe(() => Warm.apply()); if (k.startsWith('subOutline') || k === 'subHdrDim') safe(() => { if (typeof styleCues === 'function') styleCues(); }); });
+
+  /* ---- warm screen: an orange veil over the picture for late nights ---- */
+  const Warm = {
+    apply() {
+      const p0 = pl(); if (!p0) return; let w = document.getElementById('mkWarm');
+      const v = clamp(Number(CFG.warm) || 0, 0, 60);
+      if (!w && v) { const vid = document.getElementById('video'); if (!vid || !vid.parentNode) return; vid.insertAdjacentHTML('afterend', '<div id="mkWarm" aria-hidden="true"></div>'); w = document.getElementById('mkWarm'); }
+      if (w) w.style.opacity = String(v / 100 * .6);
+    },
+  };
+
+  /* ---- settings rows ---- */
+  safe(() => {
+    const pb = typeof secById === 'function' && secById('playback');
+    if (pb) {
+      const rows = pb.rows;
+      pb.rows = () => { const r = rows(), at = r.findIndex((x) => x.key === 'resume'); r.splice(at >= 0 ? at + 1 : r.length, 0,
+        { key: 'resumeBack', label: 'Rewind a little on resume', help: 'Starts a few seconds before where you stopped, so you catch the last line again.', type: 'seg', num: true, options: [[0, 'Off'], [3, '3 s'], [5, '5 s'], [10, '10 s'], [15, '15 s'], [30, '30 s']] },
+        { key: 'skipStub', label: 'Skip placeholder clips', help: 'Some sources turn out to be a short clip saying the file is gone. MKCinema notices and moves to the next source.', type: 'toggle', get: () => CFG.skipStub !== false },
+        { key: 'endsAt', label: 'Show when it ends', help: 'The time the film or episode will finish, next to the clock in the player.', type: 'toggle', get: () => CFG.endsAt !== false },
+        { key: 'warm', label: 'Warm screen', help: 'An orange tint over the picture for late nights, easier on the eyes in a dark room. 0 turns it off.', type: 'range', min: 0, max: 60, step: 10, fmt: pct, live: true });
+        return r; };
+    }
+    const sb = typeof secById === 'function' && secById('subtitles');
+    if (sb) {
+      const rows = sb.rows;
+      sb.rows = () => { const r = rows(), at = r.findIndex((x) => x.key === 'subOutline'); r.splice(at >= 0 ? at + 1 : r.length, 0,
+        { key: 'subOutlineColor', label: 'Outline color', type: 'color', get: () => hex(CFG.subOutlineColor) },
+        { key: 'subOutlineStyle', label: 'Outline style', type: 'seg', options: [['classic', 'Thin'], ['thick', 'Thick'], ['glow', 'Glow']] },
+        { key: 'subHdrDim', label: 'Softer subtitles on HDR films', help: 'White text on an HDR or Dolby Vision film can glare on a bright TV. This draws it a little darker. 0 keeps it as is.', type: 'range', min: 0, max: 60, step: 5, fmt: pct, live: true });
+        return r; };
+    }
+  });
+  styleSubs();
+  safe(() => { const ps = playStream; playStream = function () { const r = ps.apply(this, arguments); safe(() => { Warm.apply(); styleSubs(); Ends.last = 0; }); return r; }; });
+})();
+</script>
+<!-- mk-287b:end -->
+<!-- mk-287c:start -->
+<style id="mk-287c-css">
+html.mk-hw-dim #view-home .card.mk-seen:not(:hover):not(:focus-visible):not(.nav-focus){opacity:.42}
+html.mk-hw-hide #view-home .card.mk-seen,html.mk-unrel-hide #view-home .card.mk-unrel{display:none}
+.ep-tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:4px 0 12px}
+.ep-tools .inp{flex:1 1 200px;min-width:0;max-width:360px}
+.ep-tools .sel{flex:0 0 auto}
+#dEps .ep[hidden]{display:none}
+</style>
+<script>
+'use strict';
+/* 2.87 library and discovery */
+(() => {
+  const safe = (fn) => { try { return fn(); } catch (e) { console.warn('2.87c', e); } };
+  if (typeof CFG_DEFAULTS === 'object') Object.assign(CFG_DEFAULTS, { cwOpens: 'play', homeWatched: 'show', hideUnreleased: false, epSort: 'aired', familyRow: true });
+  ['cwOpens', 'homeWatched', 'hideUnreleased', 'epSort', 'familyRow'].forEach((k) => { if (!(k in CFG)) CFG[k] = CFG_DEFAULTS[k]; });
+
+  /* ---- Continue watching: what a tap opens ---- */
+  document.addEventListener('click', (e) => {
+    if (CFG.cwOpens !== 'details') return;
+    const card = e.target.closest && e.target.closest('[data-card][data-video]'); if (!card || e.target.closest('[data-quickplay],button,a')) return;
+    e.stopImmediatePropagation(); e.preventDefault();
+    const m = S.metas.get(card.dataset.id) || { id: card.dataset.id, type: card.dataset.type, name: card.getAttribute('aria-label') };
+    safe(() => openDetail(m, { videoId: card.dataset.video }));
+  }, true);
+
+  /* ---- watched films and titles not out yet, marked on their cards ---- */
+  const relDate = (m) => { const r = m.released || m.release_date || m.first_air_date; const d = r ? new Date(r) : null; return d && !isNaN(d) ? d : null; };
+  const unreleased = (m) => { const d = relDate(m); if (d) return d.getTime() > Date.now() + 864e5; const y = parseInt(String(m.releaseInfo || m.year || '').slice(0, 4), 10); return y > new Date().getFullYear(); };
+  safe(() => {
+    const ch = cardHTML;
+    cardHTML = function (m, opts) {
+      const h = ch.apply(this, arguments);
+      if (!m || !m.id || (opts && opts.progress)) return h;
+      const cls = [];
+      if (CFG.homeWatched !== 'show' && m.type !== 'series' && isWatched(m.id)) cls.push('mk-seen');
+      if (CFG.hideUnreleased && unreleased(m)) cls.push('mk-unrel');
+      return cls.length ? h.replace(/^(\s*<div class="card)/, `$1 ${cls.join(' ')}`) : h;
+    };
+  });
+  const applyHome = () => { const de = document.documentElement.classList; de.toggle('mk-hw-dim', CFG.homeWatched === 'dim'); de.toggle('mk-hw-hide', CFG.homeWatched === 'hide'); de.toggle('mk-unrel-hide', !!CFG.hideUnreleased); };
+  CFG_HOOKS.push((k) => { if (k === 'homeWatched' || k === 'hideUnreleased') { applyHome(); if (typeof rerender === 'function') safe(() => rerender()); } if (k === 'familyRow') safe(() => Family.place()); });
+
+  /* ---- episodes: search and sort on the series page ---- */
+  const EpTools = {
+    q: '',
+    rating(v) { const r = parseFloat(v.rating || v.imdbRating || v.vote_average || 0); return isFinite(r) ? r : 0; },
+    mount() {
+      const eps = document.getElementById('dEps'); if (!eps || typeof D !== 'object' || !D.meta) return;
+      const n = eps.querySelectorAll('.ep').length;
+      let bar = document.getElementById('epTools');
+      if (!bar) {
+        eps.insertAdjacentHTML('beforebegin', `<div class="ep-tools" id="epTools"><input class="inp" type="search" id="epQ" data-nav placeholder="Search episodes" aria-label="Search episodes" spellcheck="false" autocomplete="off"><select class="sel" id="epSort" data-nav aria-label="Sort episodes">${[['aired', 'First to last'], ['newest', 'Newest first'], ['rating', 'Highest rated'], ['unwatched', 'Unwatched first']].map(([k, l]) => `<option value="${k}"${CFG.epSort === k ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></div>`);
+        bar = document.getElementById('epTools');
+        const q = document.getElementById('epQ'); q.value = this.q;
+        q.addEventListener('input', () => { this.q = q.value; this.apply(); });
+        document.getElementById('epSort').addEventListener('change', (e) => { setCfg('epSort', e.target.value); this.apply(); });
+      }
+      bar.hidden = n < 4 && !this.q;
+      this.apply();
+    },
+    apply() {
+      const eps = document.getElementById('dEps'); if (!eps || !D.meta) return;
+      const m = D.meta, by = new Map((m.videos || []).map((v) => [videoIdFor(m, v), v]));
+      const items = [...eps.querySelectorAll('.ep[data-vid]')]; if (!items.length) return;
+      const q = this.q.trim().toLowerCase();
+      items.forEach((b) => { const v = by.get(b.dataset.vid) || {}; const txt = `${v.name || v.title || ''} ${v.overview || v.description || ''} e${v.episode} ${v.episode}`.toLowerCase(); b.hidden = !!q && !txt.includes(q); });
+      const k = CFG.epSort || 'aired', key = (b) => by.get(b.dataset.vid) || {};
+      const cmp = {
+        aired: (a, b) => (key(a).episode || 0) - (key(b).episode || 0),
+        newest: (a, b) => (key(b).episode || 0) - (key(a).episode || 0),
+        rating: (a, b) => this.rating(key(b)) - this.rating(key(a)) || (key(a).episode || 0) - (key(b).episode || 0),
+        unwatched: (a, b) => (isWatched(a.dataset.vid) - isWatched(b.dataset.vid)) || (key(a).episode || 0) - (key(b).episode || 0),
+      }[k];
+      const sorted = items.slice().sort(cmp);
+      if (sorted.some((b, i) => b !== items[i])) sorted.forEach((b) => eps.appendChild(b));
+    },
+  };
+  window.MkEpTools = EpTools;
+  safe(() => {
+    const rd = renderDetail;
+    renderDetail = function () { const r = rd.apply(this, arguments); safe(() => EpTools.mount()); return r; };
+    const op = openDetail;
+    openDetail = function () { EpTools.q = ''; return op.apply(this, arguments); };
+  });
+
+  /* ---- Family night row on Home: popular films rated for everyone, no horror ---- */
+  const Family = {
+    tok: 0, memo: null,
+    async list() {
+      const key = typeof X8 === 'object' && X8.dayKey ? X8.dayKey() : new Date().toDateString();
+      if (this.memo && this.memo.key === key) return this.memo.list;
+      const j = await MetaBackup.relay('discover', { kind: 'movie', sort: 'pop', fam: '1', g: '10751', ng: '27', n: '20' });
+      let list = ((j && j.results) || []).map((x) => Recs.fromTmdb(x)).filter((m) => m && m.id);
+      if (typeof Seats !== 'undefined' && safe(() => Seats.kids()) && Seats.kidSafe) list = list.filter((m) => safe(() => Seats.kidSafe(m)) !== false);
+      this.memo = { key, list }; return list;
+    },
+    place() {
+      const old = document.getElementById('famRow');
+      if (CFG.familyRow === false) { if (old) old.remove(); return; }
+      const anchor = document.getElementById('holRow') || document.getElementById('chRow') || document.getElementById('netRow');
+      if (!anchor || !anchor.isConnected) return;
+      if (old && old.isConnected) { if (anchor.nextElementSibling !== old) anchor.after(old); return; }
+      const tok = ++this.tok;
+      this.list().then((list) => {
+        if (tok !== this.tok || list.length < 6) return;
+        const a = document.getElementById('holRow') || document.getElementById('chRow') || document.getElementById('netRow'); if (!a || !a.isConnected) return;
+        const sec = rowShell('Family night', ''); sec.id = 'famRow';
+        const prev = document.getElementById('famRow'); if (prev) prev.remove();
+        a.after(sec); fillRail(sec, list.slice(0, 20).map((m) => cardHTML(m)).join(''));
+        if (IS_TV && typeof Nav !== 'undefined') Nav.settle();
+      }).catch(() => { /* the row simply stays away */ });
+    },
+  };
+  window.MkFamily = Family;
+  safe(() => {
+    if (window.MkHoliday && MkHoliday.place) { const hp = MkHoliday.place.bind(MkHoliday); MkHoliday.place = function () { const r = hp(); setTimeout(() => safe(() => Family.place()), 400); return r; }; }
+    else { const home = document.getElementById('view-home'); if (home && window.MutationObserver) { let t = 0; new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => safe(() => Family.place()), 800); }).observe(home, { childList: true }); } }
+  });
+
+  /* ---- settings rows ---- */
+  safe(() => {
+    const hm = typeof secById === 'function' && secById('home');
+    if (hm) {
+      const rows = hm.rows;
+      hm.rows = () => [...rows(),
+        { key: 'familyRow', label: 'Family night row', help: 'Popular films rated for the whole family, with no horror, on Home.', type: 'toggle', get: () => CFG.familyRow !== false },
+        { key: 'cwOpens', label: 'Continue watching opens', help: 'What happens when you pick a title in Continue watching.', type: 'seg', options: [['play', 'Plays it'], ['details', 'Its page']] },
+        { key: 'homeWatched', label: 'Films you have watched', help: 'How films you finished look in Home rows.', type: 'seg', options: [['show', 'Show'], ['dim', 'Dim'], ['hide', 'Hide']] },
+        { key: 'hideUnreleased', label: 'Hide titles that are not out yet', help: 'Leaves announced films and series out of Home rows until they are released.', type: 'toggle' }];
+    }
+  });
+  applyHome();
+})();
+</script>
+<!-- mk-287c:end -->
+<!-- mk-287d:start -->
+<style id="mk-287d-css">
+#mkClock{position:absolute;top:22px;right:28px;z-index:30;padding:6px 12px;border-radius:10px;background:rgba(0,0,0,.45);color:#fff;font-size:calc(18px * var(--ts,1));font-weight:600;font-variant-numeric:tabular-nums;pointer-events:none;opacity:0;transition:opacity .25s ease}
+#mkClock.on{opacity:1}
+#player:has(.hud.idle) #mkClock.ctl{opacity:0}
+.rt-form{display:grid;gap:12px;margin:10px 0}
+.rt-form label{display:grid;gap:6px;font-size:.92rem}
+.rt-form .segc{flex-wrap:wrap}
+</style>
+<script>
+'use strict';
+/* 2.87 Live TV extras */
+(() => {
+  const safe = (fn) => { try { return fn(); } catch (e) { console.warn('2.87d', e); } };
+  if (typeof Channels === 'undefined' || typeof X8 === 'undefined') return;
+  const C = Channels;
+  if (typeof CFG_DEFAULTS === 'object') Object.assign(CFG_DEFAULTS, { chClean: false, chBackup: true, clockShow: 'off' });
+  ['chClean', 'chBackup', 'clockShow'].forEach((k) => { if (!(k in CFG)) CFG[k] = CFG_DEFAULTS[k]; });
+
+  /* ---- names and logos: your own edits, and an optional tidy-up. The original name stays the channel's key, so
+     favourites, hidden channels and the guide keep matching. ---- */
+  C.key = (ch) => `${ch.list}|${ch.tvgId || ch._on || ch.name}`;
+  const edits = () => (C.get().edits || {});
+  const TIDY = [/^\s*(\[[^\]]{1,12}\]|\([^)]{1,12}\))\s*/, /^\s*[A-Z]{2,3}\s*[:|\-–»]+\s*/, /^\s*[A-Z]{2,3}\s*\|\s*/, /\s*[|\-–]?\s*\b(FHD|UHD|HD|SD|HEVC|H265|4K|1080p?|720p?|50fps|60fps)\b\s*$/i, /\s*\b(FHD|UHD|HD|SD)\b\s*$/i, /\s*ᴴᴰ|ᶠᴴᴰ|ᵁᴴᴰ|ˢᴰ/g, /^\s*24\/7\s*[:|\-–]?\s*/i, /\s*\[[^\]]*\]\s*$/];
+  const tidy = (n) => { let x = String(n || ''); for (let i = 0; i < 3; i++) TIDY.forEach((re) => { x = x.replace(re, ' ').trim(); }); return x.replace(/\s{2,}/g, ' ').trim() || String(n || ''); };
+  const dress = (d) => {
+    if (!d || !Array.isArray(d.channels)) return d;
+    const e = edits();
+    d.channels.forEach((c) => {
+      if (c._on == null) { c._on = c.name; c._ol = c.logo || ''; }
+      const x = e[C.key(c)] || {};
+      c.name = x.name || (CFG.chClean ? tidy(c._on) : c._on);
+      c.logo = x.logo || c._ol;
+    });
+    return d;
+  };
+  safe(() => {
+    const ld = C.load;
+    C.load = async function () { return dress(await ld.apply(this, arguments)); };
+    // the guide is matched on the playlist's own names
+    const px = C.parseXMLTV;
+    C.parseXMLTV = function (text, chans) {
+      const list = Array.isArray(chans) ? chans : [];
+      const keep = list.map((c) => c.name); list.forEach((c) => { if (c._on != null) c.name = c._on; });
+      try { return px.apply(this, arguments); } finally { list.forEach((c, i) => { c.name = keep[i]; }); }
+    };
+  });
+  const redress = () => { C.data.forEach((d) => dress(d)); safe(() => { if (S.view === 'tv') C.renderGuide(); }); };
+  const saveEdit = (c, patch) => {
+    const d = C.get(), e = { ...(d.edits || {}) }, k = C.key(c), cur = { ...(e[k] || {}), ...patch };
+    Object.keys(cur).forEach((x) => { if (!cur[x]) delete cur[x]; });
+    if (Object.keys(cur).length) e[k] = cur; else delete e[k];
+    d.edits = e; C.save(d); redress();
+  };
+  const ask = (c) => {
+    X8.layer('chEdit2', { label: 'Edit channel', icon: 'pencil', eyebrow: 'Channel' });
+    const b = X8.body('chEdit2'), x = edits()[C.key(c)] || {};
+    b.innerHTML = `<h3 class="x8-h">${esc(c._on || c.name)}</h3>
+      <div class="rt-form">
+        <label>Name<input class="inp" id="ceName" data-nav value="${esc(x.name || '')}" placeholder="${esc(c._on || c.name)}" autocomplete="off"></label>
+        <label>Logo link (https)<input class="inp mono" id="ceLogo" data-nav value="${esc(x.logo || '')}" placeholder="https://…/logo.png" spellcheck="false" autocomplete="off"></label>
+      </div>
+      <div class="actions"><button class="btn btn-prime" type="button" data-nav id="ceSave"><i data-lucide="check"></i>Save</button><button class="btn btn-ghost" type="button" data-nav id="ceReset"><i data-lucide="undo-2"></i>Back to the playlist's</button></div>`;
+    icons(); X8.open('chEdit2');
+    $('#ceSave').onclick = () => {
+      const name = $('#ceName').value.trim().slice(0, 80), logo = $('#ceLogo').value.trim();
+      if (logo && !/^https:\/\/[^\s"'<>]+$/i.test(logo)) { toast('The logo link must start with https://', 'err', 3500); return; }
+      saveEdit(c, { name, logo }); X8.close('chEdit2'); toast('Channel saved', 'ok', 2000);
+    };
+    $('#ceReset').onclick = () => { saveEdit(c, { name: '', logo: '' }); X8.close('chEdit2'); toast('Back to the playlist’s name and logo', 'ok', 2400); };
+  };
+  window.MkChEdit = { ask, tidy };
+
+  /* ---- recordings by time, once or repeating ---- */
+  const RT = {
+    K: 'mkc:recTimed',
+    all() { try { const v = JSON.parse(localStorage.getItem(this.K) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } },
+    save(l) { try { localStorage.setItem(this.K, JSON.stringify(l.slice(0, 40))); } catch (e) { /* storage full */ } },
+    DAYS: { once: null, daily: [0, 1, 2, 3, 4, 5, 6], weekdays: [1, 2, 3, 4, 5], weekends: [0, 6] },
+    hm(t) { return new Date(t).toLocaleTimeString(typeof appLocale === 'function' ? appLocale() : undefined, { hour: '2-digit', minute: '2-digit' }); },
+    scan() {
+      if (!window.MkRec) return;
+      const l = this.all(); if (!l.length) return;
+      const t = Date.now(), chans = C.all(); let changed = false;
+      l.forEach((r) => {
+        const c = chans.find((x) => x.url === r.url); if (!c) return;
+        for (let i = 0; i < 3; i++) {
+          const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + i);
+          const st = d.getTime() + (r.h * 60 + r.m) * 60e3, en = st + r.len * 60e3;
+          if (r.once ? st !== r.once : !(this.DAYS[r.rep] || []).includes(d.getDay())) continue;
+          if (en <= t || st > t + 2 * 864e5) continue;
+          if (MkRec.plans().some((x) => x.url === c.url && x.start === st)) continue;
+          safe(() => MkRec.plan(c, { title: r.title || c.name, start: st, end: en }, true));
+        }
+        if (r.once && r.once + r.len * 60e3 < t) { r.done = true; changed = true; }
+      });
+      if (changed) this.save(l.filter((r) => !r.done));
+    },
+    open(c) {
+      X8.layer('recTimed', { label: 'Schedule a recording', icon: 'calendar-clock', eyebrow: 'Recording' });
+      const b = X8.body('recTimed'); let rep = 'once', len = 60, when = 0;
+      const now0 = new Date(Date.now() + 5 * 60e3), hh = String(now0.getHours()).padStart(2, '0'), mm = String(now0.getMinutes()).padStart(2, '0');
+      const paint = () => {
+        b.innerHTML = `<h3 class="x8-h">Record ${esc(c.name)}</h3>
+        <div class="rt-form">
+          <label>Starts at<input class="inp" type="time" id="rtAt" data-nav value="${hh}:${mm}"></label>
+          <div><span class="sub">How long</span><div class="segc" role="radiogroup">${[[30, '30 min'], [60, '1 hour'], [90, '1½ hours'], [120, '2 hours'], [180, '3 hours']].map(([v, tx]) => `<button type="button" data-nav data-rtl="${v}" class="${v === len ? 'on' : ''}">${tx}</button>`).join('')}</div></div>
+          <div><span class="sub">Repeat</span><div class="segc" role="radiogroup">${[['once', 'Once'], ['daily', 'Every day'], ['weekdays', 'Weekdays'], ['weekends', 'Weekends']].map(([v, tx]) => `<button type="button" data-nav data-rtr="${v}" class="${v === rep ? 'on' : ''}">${tx}</button>`).join('')}</div></div>
+          ${rep === 'once' ? `<div><span class="sub">Day</span><div class="segc" role="radiogroup">${[[0, 'Today'], [1, 'Tomorrow']].map(([v, tx]) => `<button type="button" data-nav data-rtd="${v}" class="${v === when ? 'on' : ''}">${tx}</button>`).join('')}</div></div>` : ''}
+        </div>
+        <p class="tour-note">${MkRec.nat && MkRec.nat() ? 'The app starts it even if it’s closed.' : 'Keep MKCinema open in a tab at that time.'}</p>
+        <div class="actions"><button class="btn btn-prime" type="button" data-nav id="rtGo"><span class="rec-dot"></span>Schedule</button></div>`;
+        icons();
+        const at = $('#rtAt'); const keepAt = at.value;
+        $$('[data-rtl]', b).forEach((x) => x.addEventListener('click', () => { len = Number(x.dataset.rtl); const v = $('#rtAt').value; paint(); $('#rtAt').value = v; }));
+        $$('[data-rtr]', b).forEach((x) => x.addEventListener('click', () => { rep = x.dataset.rtr; const v = $('#rtAt').value; paint(); $('#rtAt').value = v; }));
+        $$('[data-rtd]', b).forEach((x) => x.addEventListener('click', () => { when = Number(x.dataset.rtd); const v = $('#rtAt').value; paint(); $('#rtAt').value = v; }));
+        void keepAt;
+        $('#rtGo').onclick = () => {
+          const m = /^(\d{1,2}):(\d{2})/.exec($('#rtAt').value || ''); if (!m) { toast('Pick a start time', 'err', 3000); return; }
+          const h = +m[1], mi = +m[2], d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + when);
+          const once = rep === 'once' ? d.getTime() + (h * 60 + mi) * 60e3 : 0;
+          if (once && once + len * 60e3 <= Date.now()) { toast('That time has already passed today. Pick Tomorrow.', 'err', 4000); return; }
+          const l = this.all(); l.push({ id: `t${Date.now().toString(36)}`, url: c.url, ch: c.name, logo: c.logo || '', title: c.name, h, m: mi, len, rep, once });
+          this.save(l); X8.close('recTimed'); this.scan();
+          { const at2 = `${String(h).padStart(2, '0')}:${String(mi).padStart(2, '0')}`; toast(rep === 'once' ? `${c.name} will record at ${this.hm(once)}.` : rep === 'daily' ? `${c.name} will record at ${at2} (every day).` : rep === 'weekdays' ? `${c.name} will record at ${at2} (on weekdays).` : `${c.name} will record at ${at2} (at weekends).`, 'ok', 5000, 'rec'); }
+        };
+      };
+      paint(); X8.open('recTimed');
+    },
+  };
+  window.MkRecTimed = RT;
+  setInterval(() => safe(() => RT.scan()), 5 * 60e3);
+  setTimeout(() => safe(() => RT.scan()), 8000);
+
+  /* ---- the channel menu: Edit and Schedule ---- */
+  safe(() => {
+    const menu = C.menu;
+    C.menu = function (c) {
+      const r = menu.apply(this, arguments);
+      safe(() => {
+        const b = X8.body('chMenu'), box = b && b.querySelector('.lt-menu'); if (!box) return;
+        const row = (act, icon, t) => `<button class="xt-row" type="button" data-nav data-act2="${act}"><i data-lucide="${icon}"></i><span><b>${t}</b></span></button>`;
+        box.insertAdjacentHTML('beforeend', `${row('edit', 'pencil', 'Rename or change logo')}${window.MkRec ? row('rect', 'calendar-clock', 'Schedule a recording') : ''}`);
+        icons();
+        $$('[data-act2]', b).forEach((x) => x.addEventListener('click', () => { X8.close('chMenu'); if (x.dataset.act2 === 'edit') ask(c); else RT.open(c); }));
+      });
+      return r;
+    };
+  });
+
+  /* ---- backup channel: same name in another group or playlist ---- */
+  const norm = (n) => tidy(n).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+  safe(() => {
+    const ps = playStream;
+    playStream = function (ctx, stream, opts) {
+      safe(() => {
+        if (CFG.chBackup === false || !ctx || !ctx.meta || !ctx.meta._iptv || !Array.isArray(ctx.streams) || ctx.streams.length !== 1 || ctx._mkBk) return;
+        const c0 = ctx.meta._iptv, n0 = norm(c0._on || c0.name); if (!n0) return;
+        const alts = C.all().filter((c) => c !== c0 && c.url && c.url !== c0.url && norm(c._on || c.name) === n0 && !X8.mixedBlocked(c.url)).slice(0, 4);
+        if (!alts.length) return;
+        ctx._mkBk = true;
+        alts.forEach((c) => { const st = C.stream(c); st._tel.score -= 1; st._mkBackup = c; ctx.streams.push(st); });
+      });
+      return ps.apply(this, arguments);
+    };
+  });
+
+  /* ---- clock on screen while watching ---- */
+  const Clock = {
+    el: null, t: 0,
+    paint() {
+      const p = document.getElementById('player'); if (!p) return;
+      if (!this.el) { p.insertAdjacentHTML('beforeend', '<div id="mkClock" aria-hidden="true"></div>'); this.el = document.getElementById('mkClock'); }
+      const mode = CFG.clockShow || 'off', open = !p.hidden;
+      this.el.classList.toggle('on', open && mode !== 'off'); this.el.classList.toggle('ctl', mode === 'controls');
+      if (open && mode !== 'off') this.el.textContent = new Date().toLocaleTimeString(typeof appLocale === 'function' ? appLocale() : undefined, { hour: '2-digit', minute: '2-digit' });
+    },
+  };
+  setInterval(() => safe(() => Clock.paint()), 15000);
+  safe(() => { const ps = playStream; playStream = function () { const r = ps.apply(this, arguments); setTimeout(() => safe(() => Clock.paint()), 300); return r; }; });
+  CFG_HOOKS.push((k) => { if (k === 'clockShow') safe(() => Clock.paint()); if (k === 'chClean') safe(() => redress()); });
+
+  /* ---- settings rows (Playback) ---- */
+  safe(() => {
+    const pb = typeof secById === 'function' && secById('playback');
+    if (!pb) return;
+    const rows = pb.rows;
+    pb.rows = () => [...rows(),
+      { group: 'Live TV' },
+      { key: 'chClean', label: 'Tidy channel names', help: 'Takes country tags, quality tags and 24/7 off channel names, so “US: CNN HD” shows as “CNN”. Your own names always win.', type: 'toggle' },
+      { key: 'chBackup', label: 'Switch to a backup channel', help: 'If a channel won’t play, the same channel from another group or playlist takes over.', type: 'toggle', get: () => CFG.chBackup !== false },
+      { key: 'clockShow', label: 'Clock on screen', help: 'The time in the corner while you watch.', type: 'seg', options: [['off', 'Off'], ['controls', 'With the controls'], ['always', 'Always']] }];
+  });
+})();
+</script>
+<!-- mk-287d:end -->
 </body>
 </html>

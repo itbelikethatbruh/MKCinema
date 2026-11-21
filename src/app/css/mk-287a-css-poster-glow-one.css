@@ -1,0 +1,46 @@
+
+/* poster glow: one pre-drawn shadow on a layer that only fades (opacity), so focus moves stay cheap */
+html.mk-glow .card-inner::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:4;opacity:0;transition:opacity .22s ease;
+  box-shadow:0 0 0 2px var(--glow,#4aa8ff),0 0 16px 2px rgba(var(--glow-c,74,168,255),.7),0 0 40px 8px rgba(var(--glow-c,74,168,255),.32)}
+html.mk-glow .card:is(:hover,:focus-visible,.nav-focus) .card-inner::before{opacity:1}
+html.mk-glow .card:is(:hover,:focus-visible,.nav-focus) .card-inner{box-shadow:0 22px 44px -22px var(--n000000,#000)!important;border-image:none!important}
+html.mk-glow .card:is(:hover,:focus-visible,.nav-focus) .card-inner::after{box-shadow:none!important}
+html.mk-glow.lite .card-inner::before,html.mk-glow body.reduce-motion .card-inner::before{transition:none}
+html.mk-glow.lite .card-inner::before{box-shadow:0 0 0 3px var(--glow,#4aa8ff),0 0 12px 1px rgba(var(--glow-c,74,168,255),.55)}
+.glw-sw{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.glw-sw button{width:34px;height:34px;border-radius:50%;border:2px solid rgba(var(--kffffff-c,255,255,255),.18);background:var(--c);cursor:pointer;padding:0;transition:transform .15s ease}
+.glw-sw button.on{border-color:var(--kffffff,#fff);transform:scale(1.12)}
+.glw-sw button:focus-visible,.glw-sw button.nav-focus{outline:2px solid var(--kffffff,#fff);outline-offset:3px}
+.glw-sw .clr{width:44px;height:34px}
+.glw-sw button.glw-art{background:conic-gradient(#ff5f6d,#ffc371,#3ee08f,#2ee6ff,#a66bff,#ff5f6d)}
+/* stream badges: label styles. "classic" keeps the original look */
+.tb.bx-hero{font-weight:700}
+html[data-bdg] .tb.tb{border:1px solid transparent;font-family:var(--f-body);letter-spacing:.02em}
+html[data-bdg="glass"] .tb.tb{color:#eef1f6;background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.16)}
+html[data-bdg="glass"] .tb.tb.bx-hero,html[data-bdg="glass"] .tb.tb.deb{color:#1a1406;background:linear-gradient(180deg,#f6e3a8,#d8b45c);border-color:#f0d58c}
+html[data-bdg="solid"] .tb.tb{color:#fff;background:#2b2e36;border-color:#2b2e36}
+html[data-bdg="solid"] .tb.tb.res{background:#e9e9ec;color:#0b0b0c;border-color:#e9e9ec}
+html[data-bdg="solid"] .tb.tb.hdr{background:#5b3fb8;border-color:#5b3fb8}
+html[data-bdg="solid"] .tb.tb.aud{background:#0f6d84;border-color:#0f6d84}
+html[data-bdg="solid"] .tb.tb.bx-ed{background:#8a5a12;border-color:#8a5a12}
+html[data-bdg="solid"] .tb.tb.bx-svc{background:#7a1f3d;border-color:#7a1f3d}
+html[data-bdg="solid"] .tb.tb.bx-lang{background:#1f5d3a;border-color:#1f5d3a}
+html[data-bdg="solid"] .tb.tb.bx-hero,html[data-bdg="solid"] .tb.tb.deb{background:#e3b341;color:#141005;border-color:#e3b341}
+html[data-bdg="neon"] .tb.tb{color:#bfe9ff;background:rgba(10,14,22,.6);border-color:#39b6ff;text-shadow:0 0 6px rgba(57,182,255,.8)}
+html[data-bdg="neon"] .tb.tb.hdr{color:#e6d2ff;border-color:#b06bff;text-shadow:0 0 6px rgba(176,107,255,.85)}
+html[data-bdg="neon"] .tb.tb.aud{color:#c9fff1;border-color:#2fe6b4;text-shadow:0 0 6px rgba(47,230,180,.8)}
+html[data-bdg="neon"] .tb.tb.bx-hero,html[data-bdg="neon"] .tb.tb.deb{color:#fff3c4;border-color:#ffc93c;text-shadow:0 0 6px rgba(255,201,60,.9)}
+html[data-bdg="outline"] .tb.tb{color:var(--ink);background:transparent;border-color:rgba(var(--kffffff-c,255,255,255),.45)}
+html[data-bdg="outline"] .tb.tb.bx-hero,html[data-bdg="outline"] .tb.tb.deb{color:var(--gold);border-color:var(--gold)}
+html[data-bdg="minimal"] .tb.tb{color:var(--mute);background:transparent;border-color:transparent;padding-inline:2px}
+html[data-bdg="minimal"] .tb.tb.bx-hero,html[data-bdg="minimal"] .tb.tb.res,html[data-bdg="minimal"] .tb.tb.deb{color:var(--ink)}
+html[data-bdg="light"] .tb.tb{color:#17181c;background:#f1f1f3;border-color:#f1f1f3}
+html[data-bdg="light"] .tb.tb.bx-hero,html[data-bdg="light"] .tb.tb.deb{background:#f3d27a;border-color:#f3d27a}
+html[data-bdg="mono"] .tb.tb{color:#fff;background:#000;border-color:#fff}
+html[data-bdg="mono"] .tb.tb.bx-hero,html[data-bdg="mono"] .tb.tb.deb,html[data-bdg="mono"] .tb.tb.res{color:#000;background:#fff}
+html[data-bdg="pastel"] .tb.tb{color:#2a2433;background:#e3dcf5;border-color:#e3dcf5}
+html[data-bdg="pastel"] .tb.tb.res{background:#d6ecf7;border-color:#d6ecf7}
+html[data-bdg="pastel"] .tb.tb.aud{background:#d5f2e6;border-color:#d5f2e6}
+html[data-bdg="pastel"] .tb.tb.bx-ed,html[data-bdg="pastel"] .tb.tb.bx-svc{background:#f7e0d2;border-color:#f7e0d2}
+html[data-bdg="pastel"] .tb.tb.bx-hero,html[data-bdg="pastel"] .tb.tb.deb{background:#f6e7b0;border-color:#f6e7b0}
+.bdg-prev{display:flex;flex-wrap:wrap;gap:6px;padding:12px 0 4px}

@@ -1,4 +1,0 @@
-/* 2.79 Lite mode: decided before the first paint, so a weak TV never builds the heavy page first.
-   Auto (default) turns it on for TVs with 1 GB of memory or 2 cores, and for the Fire TV models known to be slow
-   (Stick 1st/2nd/3rd gen, Stick Lite, Stick 4K 1st gen, Fire TV 1st gen box). On / Off in Settings › Performance. */
-(function(){try{var d=document.documentElement;if(!d.classList.contains('tv'))return;var v='auto';try{v=JSON.parse(localStorage.getItem('mkc:lite')||'"auto"')}catch(e){}if(v==='off')return;var why='';if(v==='on')why='on';else{var ua=navigator.userAgent,m=navigator.deviceMemory,c=navigator.hardwareConcurrency;if(/\bAFT(M|T|SS|SSS|MM|B)\b/.test(ua))why='model';else if(m&&m<=1)why='memory';else if(c&&c<=2)why='cores'}if(why){d.classList.add('lite');window.MK_LITE=why}}catch(e){}})();
