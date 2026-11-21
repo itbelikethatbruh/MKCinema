@@ -1,0 +1,7 @@
+
+html.mk-hw-dim #view-home .card.mk-seen:not(:hover):not(:focus-visible):not(.nav-focus){opacity:.42}
+html.mk-hw-hide #view-home .card.mk-seen,html.mk-unrel-hide #view-home .card.mk-unrel{display:none}
+.ep-tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:4px 0 12px}
+.ep-tools .inp{flex:1 1 200px;min-width:0;max-width:360px}
+.ep-tools .sel{flex:0 0 auto}
+#dEps .ep[hidden]{display:none}

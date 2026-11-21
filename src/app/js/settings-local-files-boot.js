@@ -229,7 +229,7 @@ const SECTIONS = [
   ] },
   { id: 'performance', icon: 'gauge', label: 'Performance', intro: 'High is the default: raised, shimmering buttons, posters with depth, the 3D logo while a film loads, and frosted glass on desktops. Phones get all of it except the glass. If scrolling ever stutters or the battery runs low, MKCinema drops to Low by itself. Video quality is never affected.', rows: () => [
     { html: presetsHTML },
-    ...(IS_TV && typeof Lite !== 'undefined' ? [{ key: 'liteMode', label: 'Lite mode', help: Lite.HELP, type: 'seg', options: [['auto', 'Automatic'], ['on', 'On'], ['off', 'Off']], get: () => Lite.mode(), set: (v) => Lite.set(v) }] : []),
+    ...(typeof Lite !== 'undefined' ? [{ key: 'liteMode', label: 'Snappy mode', help: Lite.HELP, type: 'seg', options: [['auto', 'Automatic'], ['on', 'On'], ['off', 'Off']], get: () => Lite.mode(), set: (v) => Lite.set(v) }] : []),
     { key: 'blur', label: 'Glass blur', help: `0 gives solid black panels, the fastest option.${IS_TV ? ' TVs always use solid panels, which keeps the remote smooth at High.' : TOUCH_UI ? ' This device always uses solid panels, because Chrome on Android can black out parts of the screen under glass.' : ''}`, type: 'range', min: 0, max: 30, step: 2, fmt: (v) => (v ? `${v}px` : 'solid') },
     { key: 'showFps', label: 'Show frame rate', type: 'toggle' },
   ] },

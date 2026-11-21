@@ -15,3 +15,14 @@ html.lite #mikoBox .mk-dots i{animation:mkDot 1s ease infinite!important}
 html.lite #pRec.on .rec-dot{animation:recPulse 1.6s ease-in-out infinite!important}
 html.lite .pal-mic.live,html.lite .qp-mic.live{animation:micPulse 1.2s ease-in-out infinite!important}
 html.lite .sv-hint{animation:svHint 8s ease 1.4s both!important}
+/* mk-287-snappy */
+/* 2.87 Snappy: glass, blur and shadows are drawn flat, so a slow chip paints each frame in about half the time.
+   The poster glow (its own ::before layer) and focus outlines stay. */
+html.lite *,html.lite *::after{box-shadow:none!important;text-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.lite :not(.card-inner)::before{box-shadow:none!important;text-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.lite:not(.mk-glow) .card-inner::before{box-shadow:none!important}
+html.lite:not(.mk-glow) .nav-focus .card-inner,html.lite:not(.mk-glow) .card:focus-visible .card-inner{outline:2px solid var(--kffffff,#fff);outline-offset:0}
+/* 2.87 layout sweep: the All / Films / Series switch in Library no longer breaks onto two lines on narrow phones,
+   and the Play / Artist / Radio buttons in Music fit one line */
+@media (max-width:480px){.lib-bar .segc{grid-column:1/-1;flex-wrap:nowrap;justify-self:start}}
+@media (max-width:400px){.inrow>[data-mi],.inrow>[data-mart],.inrow>[data-mradio]{padding-inline:12px}.inrow>[data-mradio],.inrow>[data-mart]{margin:0}}

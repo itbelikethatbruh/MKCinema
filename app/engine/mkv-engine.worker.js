@@ -59,7 +59,7 @@ const Net = {
     try {
       const r = await fetch(this.url, { headers: { ...this.headers, Range: `bytes=${a}-${b}` }, signal: ctl.signal, cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer' });
       if (r.status !== 206) {
-        if (r.status === 200 && a === 0) { const buf = new Uint8Array(await r.arrayBuffer()); return { buf, total: buf.length, noRange: true }; }
+        if (r.status === 200 && a === 0) { ctl.abort(); /* mk-2863-big: never download a whole film into memory */ return { buf: new Uint8Array(0), total: 0, noRange: true }; }
         throw new Error(r.status === 200 ? 'the host ignores byte ranges' : `the host answered ${r.status}`);
       }
       const cr = r.headers.get('content-range') || '', m = cr.match(/\/(\d+)\s*$/);
@@ -1119,7 +1119,8 @@ async function seekPos(t) {
   }
   return best;
 }
-async function findCluster(at) {
+async function findCluster(at0) {
+ for (let w = 0; w < 24; w++) { const at = at0 + w * 262132; if (Net.size && at >= Net.size) return null;
   const r = await Net.range(at, at + 262143, St.ctl && St.ctl.signal); const u = r.buf;
   for (let i = 0; i + 12 < u.length; i++) {
     if (u[i] !== 0x1F || u[i + 1] !== 0x43 || u[i + 2] !== 0xB6 || u[i + 3] !== 0x75) continue;
@@ -1130,6 +1131,7 @@ async function findCluster(at) {
       return { pos: at + i, t: tc * File.scale / 1e9 };
     } catch (err) { /* not a real cluster */ }
   }
+ }
   return null;
 }
 function parseBlock(u, p, end, clusterTc, key) {

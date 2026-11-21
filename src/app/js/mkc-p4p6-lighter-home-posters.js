@@ -7,7 +7,7 @@
       three screens' worth of posters (the rest join as you scroll along it, as endless rows already do). Not on TV,
       where every row stays built for the remote. */
 const ImgFit = {
-  dpr: window.MK_LITE ? 1 : Math.min(window.devicePixelRatio || 1, 2),
+  dpr: window.MK_LITE ? (document.documentElement.classList.contains('tv') ? 1 : Math.min(window.devicePixelRatio || 1, 1.5)) : Math.min(window.devicePixelRatio || 1, 2),
   RX: /^https:\/\/(image\.tmdb\.org\/t\/p\/|(images|live)\.metahub\.space\/(poster|background)\/|media\.kitsu\.(app|io)\/(anime|manga)\/poster_images\/)/,
   TMDB: [['w92', 92], ['w154', 154], ['w185', 185], ['w300', 300], ['w342', 342], ['w500', 500], ['w780', 780], ['w1280', 1280], ['original', 1e9]],
   MH_POSTER: [['small', 300], ['medium', 500], ['large', 780]],

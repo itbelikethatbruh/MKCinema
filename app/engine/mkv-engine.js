@@ -205,7 +205,7 @@
       this.aIdx = r.ai; this.aMode = r.mode; this.gen = 1; this.aGen = 1; this.reqT = startAt || 0; this.reqAt = performance.now();
       this.label = this.describe(info, r.ai, r.mode);
       this.reason.set(stream, '');
-      this.q = { v: [], a: [] }; this.busy = { v: false, a: false }; this.sb = { v: null, a: null };
+      this.q = { v: [], a: [] }; this.busy = { v: false, a: false }; this.sb = { v: null, a: null }; this.cap = 0;
       const ms = this.ms = new MSEC();
       if (MANAGED) { this.prevRemote = video.disableRemotePlayback; video.disableRemotePlayback = true; video.playsInline = true; }
       this.url = URL.createObjectURL(ms);
@@ -246,7 +246,9 @@
       this.sw.connect(ch.port2, this.gen, startAt || 0);
       this.w.postMessage({ ...start, port: ch.port1 }, [ch.port1]);
     },
-    ahead() { return this.soft ? Math.min(AHEAD, 20) : AHEAD; },
+    /* mk-2863-big: cap = how many seconds ahead fit in this device's media memory (set when the budget fills) */
+    ahead() { const a = this.soft ? Math.min(AHEAD, 20) : AHEAD; return this.cap ? Math.min(a, this.cap) : a; },
+    queued() { let n = 0; for (const k of ['v', 'a']) for (const j of this.q[k]) if (j.data) n += j.data.byteLength || 0; return n; },
 
     msg(m) {
       if (!this.active) return;
@@ -278,9 +280,16 @@
       catch (e) {
         this.busy[k] = false;
         if (e.name === 'QuotaExceededError') {
-          // the browser's memory budget is full (about 300 MB on iPhone): drop what is behind and retry once
-          if (job.retried) { this.q[k].shift(); return; } job.retried = true;
-          const t = video.currentTime; if (t > 10) { this.busy[k] = true; try { sb.remove(0, t - 5); } catch (x) { this.busy[k] = false; } }
+          // the browser's memory budget is full: keep the piece, read less far ahead, free what is behind, and add it as the film moves on
+          const t = video.currentTime || 0; let end = t, first = t;
+          try { const b = sb.buffered; if (b.length) first = b.start(0); for (let i = 0; i < b.length; i++) if (t >= b.start(i) - 0.5 && t <= b.end(i) + 0.5) end = b.end(i); } catch (x) { /* ignore */ }
+          const have = Math.max(0, end - t); job.tries = (job.tries || 0) + 1;
+          this.cap = Math.max(6, Math.min(this.cap || AHEAD, have * 0.8));
+          try { if (this.w) this.w.postMessage({ op: 'until', t: t + Math.min(this.cap, have) }); } catch (x) { /* ignore */ }
+          if (have < 2 && job.tries > 40) { this.fail('this file needs more memory than this device gives the player'); return; }
+          const cut = have < 2 && job.tries > 3 ? t - 0.5 : t - 3;
+          if (cut > 0.3 && first < cut - 0.5) { this.busy[k] = true; try { sb.remove(0, cut); } catch (x) { this.busy[k] = false; } }
+          else if (have < 2 && job.tries > 3) { try { const b = sb.buffered, last = b.length ? b.end(b.length - 1) : 0; if (last > end + 1) { this.busy[k] = true; sb.remove(end + 0.5, last + 1); } } catch (x) { this.busy[k] = false; } }
           return;
         }
         if (e.name === 'InvalidStateError' && this.ms.readyState === 'ended') return;
@@ -320,7 +329,7 @@
     pump() {
       if (!this.active || !this.w) return;
       const t = video.currentTime || 0;
-      this.w.postMessage({ op: 'until', t: this.hold ? t + 4 : t + this.ahead() });
+      this.w.postMessage({ op: 'until', t: this.hold ? t + 4 : this.queued() > 48e6 ? t : t + this.ahead() });
       this.drain('v'); this.drain('a');
       // keep memory low: drop what is more than 15 s behind
       if (performance.now() - this.lastEvict > 5000 && t > BEHIND + 10) {

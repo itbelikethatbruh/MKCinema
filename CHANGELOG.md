@@ -2,6 +2,18 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.87.0 (2026-11-21)
+
+- **Snappy mode:** the fastest MKCinema, on any device. Every feature stays, but nothing animates, glass and shadows are drawn flat and rows start shorter, so every press answers at once. It turns on automatically on Fire TV Sticks (Settings, Performance).
+- **Very large films play through:** 4K remux films and other very large files no longer stall a few seconds in, and skipping ahead lands where you asked.
+- **Poster glow:** a soft glow around the title you point at or reach with the remote, in a colour you pick or taken from each film.
+- **Stream badges:** sources show the edition, release type, 10-bit, 60 fps, audio languages and subtitles, in nine badge styles.
+- **Player:** rewinds a few seconds on resume, shows when the film ends, skips placeholder clips, a warm screen for late nights, and subtitle outlines in Thin, Thick or Glow.
+- **Series pages:** search episodes and sort them first to last, newest first, highest rated or unwatched first.
+- **Home:** a Family night row, Continue watching can open the title page, and watched films can be dimmed or hidden.
+- **Live TV:** rename a channel or change its logo, tidy channel names, schedule a recording by time, a clock on screen, and a backup channel when one won't play.
+- **Small phones:** the Library filter and the Music buttons each stay on one line.
+
 ## Android app 1.17.2 (2026-11-21)
 
 - **Next episode on TVs:** the TV app keeps the page ready while a film plays, so Next episode and Continue watching are there when the episode ends.

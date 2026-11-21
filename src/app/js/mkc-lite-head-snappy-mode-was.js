@@ -1,0 +1,4 @@
+/* 2.87 Snappy mode (was Lite mode): decided before the first paint, so a slow device never builds the heavy page first.
+   Automatic (default) turns it on for every Fire TV, for TVs with 2 GB of memory or less or 2 cores, and for phones and
+   computers with 1 GB or less. On / Off for any device in Settings › Performance. */
+(function(){try{var d=document.documentElement,tv=d.classList.contains('tv');var v='auto';try{v=JSON.parse(localStorage.getItem('mkc:lite')||'"auto"')}catch(e){}if(v==='off')return;var why='';if(v==='on')why='on';else{var ua=navigator.userAgent,m=navigator.deviceMemory,c=navigator.hardwareConcurrency;if(tv){if(/\bAFT[A-Z0-9]*\b/.test(ua))why='model';else if(m&&m<=2)why='memory';else if(c&&c<=2)why='cores'}else if(m&&m<=1)why='memory'}if(why){d.classList.add('lite');window.MK_LITE=why}}catch(e){}})();

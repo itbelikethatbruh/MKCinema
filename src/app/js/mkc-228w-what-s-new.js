@@ -8,6 +8,22 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.87.0', date: '2026-11-21', items: [
+    ['new', 'Snappy mode', 'The fastest MKCinema, on any device. Every feature stays, but nothing animates, glass and shadows are drawn flat and rows start shorter, so every press answers at once. It turns on by itself on Fire TV Sticks. Settings › Performance.'],
+    ['fix', 'Very large films play through', '4K remux films and other very large files no longer stall a few seconds in or close the player, and skipping ahead in them lands where you asked.'],
+    ['new', 'Poster glow', 'A soft glow around the film or series you point at or reach with the remote. Pick its colour, take it from each film, or choose your own. Settings › Appearance › Posters.'],
+    ['new', 'Stream badges', 'Sources now show the edition, release type, the service a web release came from, 10-bit and 60 fps, audio languages and subtitles, and warn about camera copies and upscaled video. Nine badge styles, with a switch for each group of labels.'],
+    ['new', 'Rewind a little on resume', 'Picks up a few seconds before where you stopped, so you catch the last line again.'],
+    ['new', 'When it ends', 'The player shows the time the film or episode will finish.'],
+    ['better', 'Placeholder clips are skipped', 'A source that turns out to be a short "file removed" clip moves on to the next source by itself.'],
+    ['better', 'Subtitles', 'Softer subtitles on HDR films, an outline colour, and Thin, Thick or Glow outlines.'],
+    ['new', 'Warm screen', 'An orange tint for late nights. Settings › Playback.'],
+    ['new', 'Search and sort episodes', 'On a series page: first to last, newest first, highest rated or unwatched first.'],
+    ['new', 'Family night row', 'Popular films for the whole family on Home.'],
+    ['better', 'Home your way', 'Continue watching can open the title page instead of playing, and films you have watched can be dimmed or hidden in Home rows.'],
+    ['new', 'Live TV', 'Rename a channel or change its logo, tidy channel names, schedule a recording by time, a clock on screen, and a backup channel takes over when one won\'t play.'],
+    ['fix', 'Small phones', 'The Library filter and the Music buttons each stay on one line.'],
+  ] },
   { v: '2.86.2', date: '2026-11-21', items: [
     ['fix', 'Next episode on TVs', 'Pressing Next episode or reaching the end of an episode now plays the next one, and the TV layout keeps its proper size.'],
   ] },
