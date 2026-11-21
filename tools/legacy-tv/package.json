@@ -5,7 +5,7 @@
   "scripts": { "build": "node build.js" },
   "dependencies": {
     "acorn": "8.14.0",
-    "acorn-walk": "8.3.4",
+    "acorn-walk": "8.3.5",
     "core-js": "3.39.0",
     "esbuild": "0.24.0",
     "fflate": "0.8.2",
