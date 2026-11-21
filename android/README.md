@@ -29,6 +29,14 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.17.3 (versionCode 45): no start-up screen between episodes on any TV
+
+- `keepPage` now applies on every TV, not only those with 3 GB or more: while the TV player is open the page keeps its
+  renderer priority, so Android frees memory from background apps first.
+- If the page's renderer is still stopped while the TV player is open, the page is rebuilt at once behind the film
+  (once per film, with the same priority) instead of when the player closes. The end of an episode or Next episode
+  then lands on a page that is already loaded, and the web app (2.86.2+) plays the next episode from its device copy.
+
 ## 1.17.2 (versionCode 44): TV player returns to the same page
 
 - On TVs with 3 GB of memory or more, the page keeps its renderer priority while the TV player is open

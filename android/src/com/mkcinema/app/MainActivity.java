@@ -70,7 +70,7 @@ public class MainActivity extends Activity {
     static final String[] APP_HOSTS = { HOST, "app.mkcinema.app" };
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6, REQ_MIRROR = 7, REQ_MIRROR_MIC = 8;
-    static final String VER = "1.17.2";
+    static final String VER = "1.17.3";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -226,7 +226,11 @@ public class MainActivity extends Activity {
                 try { v.destroy(); } catch (Exception ignored) { }
                 pageHost = ""; pageReady = false;
                 buildWeb(); // empty until it loads, so every web call stays safe
-                if (resumed) reloadWeb(); else webDead = true;
+                if (resumed) reloadWeb();
+                else if (tv && playerOpen && !rebuiltBehind && lastUrl != null) {
+                    // 1.17.3: rebuild behind the TV player, keeping its priority, so the end of the film doesn't wait for a start-up
+                    rebuiltBehind = true; priority(true); reloadWeb(); web.onPause();
+                } else webDead = true;
                 return true;
             }
         });
@@ -290,19 +294,18 @@ public class MainActivity extends Activity {
     }
 
     /* 1.17.2: while the TV player is open the page is hidden, and Android dropped its renderer within seconds on some
-       4 GB TVs (Google TV Streamer, Android 14/15): every return from a film reloaded the whole app. On TVs with 3 GB
-       or more the page now keeps its priority while the TV player is open; small sticks keep the old rule, so the
-       film always gets the memory first there. */
+       TVs, so every return from a film (or Next episode) showed the start-up screen again.
+       1.17.3: on every TV the page keeps its priority while the TV player is open (it was 3 GB+ only). On a small stick
+       Android then frees memory from apps in the background first; if it still stops the page, the page is rebuilt
+       right away behind the film (once per film), so it is ready when the film ends instead of starting up then. */
+    boolean playerOpen, rebuiltBehind;
     void keepPage(boolean on) {
+        playerOpen = on; if (on) rebuiltBehind = false;
+        priority(on);
+    }
+    void priority(boolean keep) {
         if (!tv || Build.VERSION.SDK_INT < 26 || web == null) return;
-        if (on) {
-            try {
-                android.app.ActivityManager am = (android.app.ActivityManager) getSystemService(ACTIVITY_SERVICE);
-                android.app.ActivityManager.MemoryInfo mi = new android.app.ActivityManager.MemoryInfo(); am.getMemoryInfo(mi);
-                if (mi.totalMem < 2900L * 1024 * 1024) return;
-            } catch (Exception e) { return; }
-        }
-        try { web.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, !on); } catch (Exception ignored) { }
+        try { web.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, !keep); } catch (Exception ignored) { }
     }
 
     String startUrl(Intent i) {
