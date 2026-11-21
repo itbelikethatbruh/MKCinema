@@ -2,6 +2,14 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.87.1 (2026-11-21)
+
+- **Live TV remembers each channel:** the audio language and subtitles you choose on a channel are there the next time you tune in.
+- **Record new episodes only:** repeats of a show are skipped when the guide marks them, with a New only switch for each show.
+- **First-choice addon:** pick one addon and its sources are tried first for everything.
+- **Calendar by week or month:** List, Week and Month views.
+- **Recordings:** cancelling one planned recording no longer removes others planned at the same moment.
+
 ## Web app 2.87.0 (2026-11-21)
 
 - **Snappy mode:** the fastest MKCinema, on any device. Every feature stays, but nothing animates, glass and shadows are drawn flat and rows start shorter, so every press answers at once. It turns on automatically on Fire TV Sticks (Settings, Performance).
