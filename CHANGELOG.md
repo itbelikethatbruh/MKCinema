@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Android app 1.17.2 (2026-11-21)
+
+- **Next episode on TVs:** the TV app keeps the page ready while a film plays, so Next episode and Continue watching are there when the episode ends.
+
 ## Web app 2.86.2 (2026-11-21)
 
 - **Next episode on TVs:** pressing Next episode or reaching the end of an episode now plays the next one, and the TV layout keeps its proper size.
