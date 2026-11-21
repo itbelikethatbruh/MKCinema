@@ -510,23 +510,40 @@ const Reviews = {
     const tt = String(m.id).split(':')[0]; if (!/^tt\d+$/.test(tt)) return [];
     if (this.cache.has(tt)) return this.cache.get(tt);
     const kind = m.type === 'series' ? 'shows' : 'movies';
-    const j = await Trakt.api(`/${kind}/${tt}/comments/likes?limit=20`).catch(() => null);
+    const j = Trakt.cfg().clientId ? await Trakt.api(`/${kind}/${tt}/comments/likes?limit=20`).catch(() => null) : null;
     const list = (Array.isArray(j) ? j : []).filter((c) => c && typeof c.comment === 'string' && c.comment.trim().length >= 40)
       .map((c) => ({ id: c.id, who: (c.user && (c.user.name || c.user.username)) || 'Trakt member', text: c.comment.replace(/\[\/?spoiler\]/gi, '').trim(), spoiler: !!c.spoiler || /\[spoiler\]/i.test(c.comment), likes: c.likes || 0, rating: c.user_stats && c.user_stats.rating, at: c.created_at }))
       .slice(0, 12);
-    this.cache.set(tt, list); if (this.cache.size > 40) this.cache.delete(this.cache.keys().next().value);
-    return list;
+    // 2.86: reviews from TMDB too, each marked with where it came from
+    list.forEach((c) => { c.src = 'Trakt'; });
+    try {
+      const tm = await this.tmdb(tt, m.type === 'series' ? 'tv' : 'movie');
+      const have = new Set(list.map((c) => c.text.slice(0, 60)));
+      tm.forEach((c) => { if (!have.has(c.text.slice(0, 60))) list.push(c); });
+    } catch (e) { /* TMDB did not answer: Trakt alone */ }
+    list.sort((a, b) => (b.likes || 0) - (a.likes || 0) || (b.rating ? 1 : 0) - (a.rating ? 1 : 0));
+    this.cache.set(tt, list.slice(0, 16)); if (this.cache.size > 40) this.cache.delete(this.cache.keys().next().value);
+    return list.slice(0, 16);
+  },
+  async tmdb(tt, kind) {
+    if (!TMDB.key()) return [];
+    const f = await TMDB.find(tt); const hit = f && ((kind === 'tv' ? f.tv_results : f.movie_results) || [])[0]; if (!hit) return [];
+    const r = await TMDB.get(`${kind}/${hit.id}/reviews`, { page: 1 });
+    return ((r && r.results) || []).filter((c) => c && typeof c.content === 'string' && c.content.trim().length >= 40).slice(0, 10).map((c) => ({
+      id: `tm${c.id}`, who: c.author || (c.author_details && c.author_details.username) || 'TMDB member', src: 'TMDB',
+      text: c.content.replace(/\r/g, '').replace(/\*\*|__/g, '').trim(), spoiler: /\bspoilers?\b/i.test(c.content.slice(0, 200)), likes: 0,
+      rating: c.author_details && c.author_details.rating ? Math.round(c.author_details.rating) : 0, at: c.created_at || '' }));
   },
   place(m) {
-    if (CFG.traktReviews === false || this.kids() || !Trakt.cfg().clientId) return;
+    if (CFG.traktReviews === false || this.kids() || (!Trakt.cfg().clientId && !TMDB.key())) return;
     const id = m.id;
     this.load(m).then((list) => {
       const panel = $('#detailPanel'); if (!list.length || !panel || !D.meta || D.meta.id !== id) return;
       const old = $('#dReviews', panel); if (old) old.remove();
       const bodies = $$(':scope > .d-body', panel), host = bodies[bodies.length - 1]; if (!host) return;
       const sec = document.createElement('section'); sec.className = 'row mk-rv-row'; sec.id = 'dReviews';
-      sec.innerHTML = `<div class="row-head"><h2 class="row-title">Reviews on Trakt</h2></div><div class="rail">${list.map((c, i) => `<button type="button" class="mk-rv" data-nav data-rv="${i}">
-        <span class="mk-rv-top"><b translate="no">${esc(c.who)}</b>${c.rating ? `<span class="mk-rv-r"><i data-lucide="star"></i>${esc(String(c.rating))}/10</span>` : ''}</span>
+      sec.innerHTML = `<div class="row-head"><h2 class="row-title">Reviews</h2></div><div class="rail">${list.map((c, i) => `<button type="button" class="mk-rv" data-nav data-rv="${i}">
+        <span class="mk-rv-top"><b translate="no">${esc(c.who)}</b>${c.src ? `<em class="mk-rv-src">${esc(c.src)}</em>` : ''}${c.rating ? `<span class="mk-rv-r"><i data-lucide="star"></i>${esc(String(c.rating))}/10</span>` : ''}</span>
         ${c.spoiler ? '<span class="mk-rv-sp"><i data-lucide="eye-off"></i><span>Contains spoilers. Press to read.</span></span>' : `<span class="mk-rv-t" translate="no">${esc(c.text)}</span>`}
         <small><i data-lucide="heart"></i>${c.likes}${c.at ? ` · ${esc(fmtDate(c.at))}` : ''}</small></button>`).join('')}</div>`;
       const more = $('#dMore', panel); if (more && more.parentElement === host) host.insertBefore(sec, more); else host.appendChild(sec);
@@ -536,7 +553,7 @@ const Reviews = {
   },
   read(list, i) {
     const c = list[i]; if (!c) return;
-    const el = X8.layer('mkReview', { label: 'Review', icon: 'message-square-quote', eyebrow: 'Reviews on Trakt' }); el.classList.add('mk-rv-ov');
+    const el = X8.layer('mkReview', { label: 'Review', icon: 'message-square-quote', eyebrow: 'Reviews' }); el.classList.add('mk-rv-ov');
     if (el.hidden) X8.open('mkReview');
     const b0 = X8.body('mkReview'); if (!b0) return;
     b0.innerHTML = `<h2 class="x8-h" translate="no">${esc(c.who)}</h2><p class="sub">${c.rating ? `${esc(String(c.rating))}/10 · ` : ''}<i data-lucide="heart"></i> ${c.likes}${c.at ? ` · ${esc(fmtDate(c.at))}` : ''}</p>
@@ -657,7 +674,7 @@ window.MkHeroText = HeroText; HeroText.init();
       { key: 'srcSpeed', label: 'Test the last source', help: 'Checks how fast the server of the last film you played sends it, so you know whether a pause is the source or your internet.', type: 'button', text: 'Test the source', icon: 'server', run: (b) => SrcSpeed.run(b) },
     ]);
     scAddRows('sync', null, [
-      { key: 'traktReviews', label: 'Reviews on Trakt', help: 'Shows reviews from Trakt on film and series pages when your Trakt app ID is saved. Spoilers stay covered until you open them.', type: 'toggle', get: () => CFG.traktReviews !== false, set: (v) => setCfg('traktReviews', v) },
+      { key: 'traktReviews', label: 'Reviews on title pages', help: 'Shows reviews from Trakt (when your Trakt app ID is saved) and TMDB (when your TMDB key is saved) on film and series pages. Spoilers stay covered until you open them.', type: 'toggle', get: () => CFG.traktReviews !== false, set: (v) => setCfg('traktReviews', v) },
     ]);
     scAddRows('debrid', null, [
       { key: 'myCloud', label: 'Your cloud', help: 'Browse and play what is already in your debrid account.', type: 'button', text: 'Open your cloud', icon: 'cloud', run: () => { closeLayer('settings'); MyCloud.open(); } },

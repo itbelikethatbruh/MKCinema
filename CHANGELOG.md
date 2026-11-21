@@ -2,6 +2,24 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.86.0 (2026-11-21)
+
+- **Swipe to choose:** swipe right to save a title to your watchlist, left to skip it. Open it from Discover or the command bar.
+- **Critics' Pick:** one acclaimed film or series a day at the top of Discover.
+- **Calendar countdown and reminders:** the next episode or film counts down at the top of the Calendar, and Remind me tells you when it is out. At the end of the newest episode, the player says when the next one airs.
+- **Alerts to Discord or Telegram:** new episodes and your reminders can go to your own Discord channel or Telegram chat (Settings, Devices).
+- **Holiday row:** Christmas, Halloween, Thanksgiving, Valentine's Day and New Year films on Home in season.
+- **Pick a trailer:** titles with several trailers show them all, with pictures.
+- **Are you still watching?** After 90 minutes with nobody pressing anything, the next episode waits for a yes.
+- **Cinema mode:** an official trailer for a new film before your film starts (off by default).
+- **Also:** reviews from TMDB next to Trakt reviews, New film / New season labels on the Home banner, Show everyone for watch party hosts, speeds up to 5x, interface sizes up to 200%, bold subtitles with a shadow choice, save a playlist as .m3u, and a screensaver that can let the TV sleep.
+
+## Web app 2.84.1 to 2.85.0 (2026-11-19 and 2026-11-20)
+
+- **Networks row:** Home has a row of TV networks such as ABC, NBC, CBS, HBO, FX and BBC One. Pick one to see its most popular series. The row with Netflix, Hulu and the others is now called Streaming services.
+- **Search on TVs** opens the keyboard at once.
+- **Quicker menus on TVs,** and the update bar waits until the player is closed.
+
 ## Web app 2.84.0 (2026-11-19)
 
 - **Link a phone, TV or computer without a password:** a new device shows a code, you scan or type it on a device that already has your synced keys and addons, and it is done. Accounts that sign in with Google now sync keys and addon links too.

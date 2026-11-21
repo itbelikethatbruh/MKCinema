@@ -661,7 +661,9 @@ const Calendar = {
     const day = (t) => { const d = new Date(t), today = new Date(); today.setHours(0, 0, 0, 0); const diff = Math.round((new Date(d).setHours(0, 0, 0, 0) - today) / 86400e3); return diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff === -1 ? 'Yesterday' : d.toLocaleDateString(appLocale(), { weekday: 'long', month: 'short', day: 'numeric' }); };
     const groups = []; eps.forEach((e) => { const k = day(e.at); const g = groups[groups.length - 1]; if (g && g.k === k) g.list.push(e); else groups.push({ k, list: [e] }); });
     const KIND = { cinema: ['clapperboard', 'In cinemas'], home: ['tv', 'At home'], release: ['calendar', 'Release'] };
-    body.innerHTML = groups.map((g) => `<section class="cal-day"><h3>${esc(g.k)}</h3>${g.list.map((e) => {
+    const nx = eps.find((e) => e.at > now);
+    const head = nx ? `<div class="cal-next"><span class="eyebrow"><i data-lucide="timer"></i>Coming up next</span><b translate="no">${esc(nx.meta.name)}</b><small>${nx.film ? esc((KIND[nx.film] || KIND.release)[1]) : `S${esc(nx.v.season)} · E${esc(nx.v.episode)}${nx.v.name || nx.v.title ? ` · ${esc(nx.v.name || nx.v.title)}` : ''}`}</small><span class="cal-cd tnum" data-at="${nx.at}"></span>${Remind.btn(nx.film ? `f:${nx.meta.id}:${nx.film}` : videoIdFor(nx.meta, nx.v), nx.meta.name, nx.film ? '' : `S${nx.v.season} · E${nx.v.episode}`, nx.at)}</div>` : '';
+    body.innerHTML = head + groups.map((g) => `<section class="cal-day"><h3>${esc(g.k)}</h3>${g.list.map((e) => {
       if (e.film) {
         const out = e.at <= now, k = KIND[e.film] || KIND.release;
         return `<div class="cal-ep cal-film ${out ? 'aired' : ''}">${imgTag(metaPoster(e.meta), e.meta.name, e.meta.id)}<div class="cal-t"><b>${esc(e.meta.name)}</b><small><span class="cal-kind"><i data-lucide="${k[0]}"></i>${esc(k[1])}</span>Film</small><span class="cal-when tnum" data-at="${e.at}"></span></div>
@@ -671,7 +673,12 @@ const Calendar = {
       return `<div class="cal-ep ${aired ? 'aired' : ''}">${imgTag(metaPoster(e.meta), e.meta.name, e.meta.id)}<div class="cal-t"><b>${esc(e.meta.name)}</b><small>S${esc(e.v.season)} · E${esc(e.v.episode)}${e.v.name || e.v.title ? ` · ${esc(e.v.name || e.v.title)}` : ''}</small><span class="cal-when tnum" data-at="${e.at}"></span></div>
         ${aired ? `<button class="btn btn-prime btn-sm" type="button" data-cplay="${esc(id)}" data-meta="${esc(e.meta.id)}"><i data-lucide="play"></i>${isWatched(id) ? 'Watch again' : 'Play'}</button>` : `<button class="btn btn-ghost btn-sm" type="button" data-cinfo="${esc(e.meta.id)}"><i data-lucide="info"></i>Details</button>`}</div>`;
     }).join('')}</section>`).join('');
-    icons(); this.tick();
+    $$('.cal-ep:not(.aired)', body).forEach((row) => {
+      const at = Number(($('[data-at]', row) || {}).dataset ? $('[data-at]', row).dataset.at : 0); if (!at) return;
+      const e = eps.find((x) => x.at === at && row.textContent.includes(x.meta.name)); if (!e) return;
+      const ct = $('.cal-t', row) || row; ct.insertAdjacentHTML('beforeend', Remind.btn(e.film ? `f:${e.meta.id}:${e.film}` : videoIdFor(e.meta, e.v), e.meta.name, e.film ? '' : `S${e.v.season} · E${e.v.episode}`, e.at));
+    });
+    icons(); this.tick(); Remind.wire(body);
     $$('[data-cplay]', body).forEach((b) => b.addEventListener('click', () => this.play(b.dataset.meta, b.dataset.cplay, b)));
     $$('[data-cinfo]', body).forEach((b) => b.addEventListener('click', () => { const m = S.metas.get(b.dataset.cinfo); if (m) openDetail(m); }));
     clearInterval(this.tickT); this.tickT = setInterval(() => { if (S.view === 'calendar') this.tick(); else clearInterval(this.tickT); }, 30000);
@@ -681,6 +688,7 @@ const Calendar = {
     $$('#calBody [data-at]').forEach((el) => {
       const d = Number(el.dataset.at) - now, a = Math.abs(d), dd = Math.floor(a / 86400e3), hh = Math.floor(a % 86400e3 / 3600e3), mm = Math.floor(a % 3600e3 / 60e3);
       const span = dd ? `${dd}d ${hh}h` : hh ? `${hh}h ${mm}m` : `${mm}m`;
+      if (el.classList.contains('cal-cd')) { el.textContent = d > 0 ? (dd ? `${dd}d ${hh}h ${mm}m` : `${hh}h ${mm}m`) : 'Out now'; return; }
       el.textContent = d > 0 ? `in ${span}` : el.closest('.cal-film') ? `out ${span} ago` : `aired ${span} ago`;
     });
   },

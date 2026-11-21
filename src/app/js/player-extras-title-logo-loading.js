@@ -178,7 +178,8 @@ video.addEventListener('loadedmetadata', () => setTimeout(() => Skip.chapters(),
 /* ---------------- Next episode: a 10-second countdown card during the credits or the last 45 seconds ---------------- */
 showUpNext = function () {
   if (!P.ctx || !P.ctx.video) return;
-  const nv = nextVideo(P.ctx.meta, P.ctx.video); if (!nv || !$('#upNext').hidden) return;
+  const nv = nextVideo(P.ctx.meta, P.ctx.video); if (!nv && typeof Remind !== 'undefined') { Remind.nextAirs(); return; }
+  if (!nv || !$('#upNext').hidden) return;
   const box = $('#upNext'); box.hidden = false; box.classList.add('countdown');
   const auto = !!CFG.autoNext, total = 10000; let left = total, last = performance.now();
   box.innerHTML = `<div class="un-th${Spoilers.guarded(videoIdFor(P.ctx.meta, nv)) ? ' spoil' : ''}">${imgTag(nv.thumbnail, nv.name || nv.title || '', videoIdFor(P.ctx.meta, nv), { wide: true })}</div>
@@ -196,7 +197,7 @@ showUpNext = function () {
     const now = performance.now(); if (!video.paused) left -= now - last; last = now;
     const sec = $('#unSec'), fill = $('#unFill'); if (!sec) { clearInterval(P.upNextT); return; }
     sec.textContent = String(Math.max(0, Math.ceil(left / 1000))); fill.style.transform = `scaleX(${clamp(1 - left / total, 0, 1)})`;
-    if (left <= 0) { clearInterval(P.upNextT); playNext(); }
+    if (left <= 0) { clearInterval(P.upNextT); playNext(true); }
   }, 100);
 };
 

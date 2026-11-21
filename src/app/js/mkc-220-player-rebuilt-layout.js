@@ -102,8 +102,8 @@ const PxMenu = {
     const sr = $('[data-speed]', m) && $('[data-speed]', m).parentElement;
     if (sr && !$('[data-speed="0.25"]', sr)) {
       sr.insertAdjacentHTML('afterbegin', '<button type="button" data-speed="0.25">0.25×</button>');
-      sr.insertAdjacentHTML('beforeend', '<button type="button" data-speed="2.5">2.5×</button><button type="button" data-speed="3">3×</button>');
-      [$('[data-speed="0.25"]', sr), $('[data-speed="2.5"]', sr), $('[data-speed="3"]', sr)].forEach((b) => { b.classList.toggle('on', video.playbackRate === Number(b.dataset.speed)); b.addEventListener('click', () => { video.playbackRate = Number(b.dataset.speed); renderOptMenu(); }); });
+      sr.insertAdjacentHTML('beforeend', '<button type="button" data-speed="2.5">2.5×</button><button type="button" data-speed="3">3×</button><button type="button" data-speed="4">4×</button><button type="button" data-speed="5">5×</button>');
+      [$('[data-speed="0.25"]', sr), $('[data-speed="2.5"]', sr), $('[data-speed="3"]', sr), $('[data-speed="4"]', sr), $('[data-speed="5"]', sr)].forEach((b) => { b.classList.toggle('on', video.playbackRate === Number(b.dataset.speed)); b.addEventListener('click', () => { video.playbackRate = Number(b.dataset.speed); renderOptMenu(); }); });
     }
     const amb = $('[data-amb]', m); if (amb && !PX_TV && !PX_TOUCH()) { amb.innerHTML = `<i data-lucide="monitor"></i>Theatre view · ${PxLayout.theatre() ? 'on' : 'off'}`; amb.onclick = () => PxLayout.setTheatre(!PxLayout.theatre()); }
     m.innerHTML = '';

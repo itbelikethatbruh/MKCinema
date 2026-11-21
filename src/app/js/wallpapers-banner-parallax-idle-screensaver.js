@@ -307,7 +307,10 @@ const Saver = {
     const prev = back; back = function () { if (Saver.isOpen) { Saver.close(); return; } return prev.apply(this, arguments); };
   },
   tick() {
-    const a = this.after(); if (!a || this.isOpen || Date.now() - this.last < a * 60000) return;
+    const a = this.after();
+    // 2.86: after a long idle time the screensaver gives the TV back, so the TV's own sleep can take over
+    if (this.isOpen && a) { const sl = Number(Store.get('saverSleep', 0)) || 0; if (sl && Date.now() - this.last > (a + sl) * 60000) { this.close(); if (typeof ExitAsk !== 'undefined' && IS_TV && ExitAsk.canQuit()) ExitAsk.quit(); else this.last = Date.now() + 864e5; return; } }
+    if (!a || this.isOpen || Date.now() - this.last < a * 60000) return;
     if (this.allowed()) this.open();
   },
   allowed() {
