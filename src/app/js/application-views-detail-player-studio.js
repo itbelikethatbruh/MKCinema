@@ -1244,14 +1244,25 @@ async function closePlayer() {
   if (typeof MiniPlay !== 'undefined' && MiniPlay.on) MiniPlay.restore(true);
   if (typeof PartyGuest !== 'undefined') PartyGuest.closed();
   playReq++; // a next episode or Smart Play still loading must not reopen the player
-  const liveKeep = LiveMini.grab();
+  const liveKeep = LiveMini.grab(), endedCtx = P.ctx;
   saveProgress(true); teardown(); closeLayer('player');
   if (document.fullscreenElement && !window.MkKeepFull) document.exitFullscreen().catch(() => {});
   $('#player').classList.remove('full'); cancelAnimationFrame(P.raf);
   closeDrawers(); $('#subMenu').hidden = true; $('#optMenu').hidden = true; P.aspect = 'fit'; P.zoom = 1; applyPicture(); setLock(false); releaseWake();
   P.ctx = null; P.stream = null; if (window.MkRec) MkRec.playing(null);
   if (S.view === 'home') renderHome(); if (S.view === 'library') renderLibrary();
-  if (!$('#detail').hidden && D.meta) renderDetail(false);
+  if (!$('#detail').hidden && D.meta) {
+    // 2.91.1: a series' page moves on to the episode to continue (the one Next episode started, or the next unwatched)
+    const m = D.meta, ev = endedCtx && endedCtx.video;
+    let to = null;
+    if (ev && m.type === 'series' && endedCtx.meta && endedCtx.meta.id === m.id && Array.isArray(m.videos)) {
+      const eps = orderedEpisodes(m), rp = continueItems().find((x) => x.metaId === m.id);
+      to = (rp && m.videos.find((v) => videoIdFor(m, v) === rp.videoId)) || eps.find((v) => !S.progress[videoIdFor(m, v)] && !isWatched(videoIdFor(m, v))) || null;
+      if (to && D.video && videoIdFor(m, to) === videoIdFor(m, D.video)) to = null;
+    }
+    if (to) { D.video = to; D.season = seasonNo(to); renderDetail(false); try { markEpisodes(); } catch (e) { /* the list catches up */ } loadDetailStreams(); }
+    else renderDetail(false);
+  }
   if (liveKeep) setTimeout(() => { if ($('#player').hidden && S.view === 'tv') LiveMini.show(liveKeep); }, 60);
 }
 
@@ -2059,8 +2070,20 @@ const Nav = {
     if (root.id === 'settings') return list.find((el) => el.matches('#setNav .on')) || list.find((el) => el.closest('#setNav [data-sec]')) || list[0];
     return list.find((el) => el.matches('.btn-prime')) || list.find((el) => !/close|back/i.test(`${el.getAttribute('aria-label') || ''} ${el.className}`)) || list[0];
   },
+  // 2.91.1: the same poster after its row was redrawn (same title in the same row, else anywhere on the page)
+  twin(old, root) {
+    const id = old && old.dataset && old.dataset.id; if (!id || !root) return null;
+    const q = `[data-id="${CSS.escape(id)}"]`, sec = old.closest('section[id], section[data-arr-k], .row[id], .row[data-arr-k]');
+    const vis = (e) => e && !e.closest('[hidden]') && e.getClientRects().length ? e : null;
+    const sq = !sec ? '' : sec.id ? `#${CSS.escape(sec.id)}` : sec.dataset.arrK ? `[data-arr-k="${CSS.escape(sec.dataset.arrK)}"]` : '';
+    let el = sq ? vis(root.querySelector(`${sq} ${q}`)) : null;
+    if (!el) el = [...root.querySelectorAll(q)].find((e) => vis(e) && e.matches('[data-nav], [tabindex]')) || null;
+    if (el) this.mem.set(root, el);
+    return el;
+  },
   restore(fast = true) {
-    const root = this.root(), was = this.mem.get(root);
+    const root = this.root(); let was = this.mem.get(root);
+    if (was && !was.isConnected) was = this.twin(was, root) || was;
     // the item used last is still there and visible: go straight back without measuring the whole page
     if (was && was.isConnected && root.contains(was) && !was.disabled && was.tabIndex >= 0 && was.style.visibility !== 'hidden' && !was.closest('[hidden]') && (() => { const r = was.getBoundingClientRect(); return r.width > 0 && r.height > 0; })()) { this.focus(was, fast); return was; }
     const list = this.items(root); if (!list.length) return false;

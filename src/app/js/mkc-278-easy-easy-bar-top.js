@@ -90,7 +90,7 @@
         h += `<hr><div class="ezb-lab">Home style</div><div class="ezb-seg" role="group" aria-label="Home style"><button type="button" data-nav data-mk="#vRails" aria-pressed="${!wall}">Rails</button><button type="button" data-nav data-mk="#vWall" aria-pressed="${wall}">IMAX</button></div>`;
       }
       h += '<hr>';
-      if (it.mute) { const off = /off|x|mute/i.test(iconOf(it.mute)); h += row('#muteBtn', off ? 'volume-x' : 'volume-2', 'Intro sound', `<span class="ezb-state">${off ? 'Off' : 'On'}</span>`); }
+      if (it.mute) { const off = /off|x|mute/i.test(iconOf(it.mute)); h += row('#muteBtn', off ? 'volume-x' : 'volume-2', 'Sound', `<span class="ezb-state">${off ? 'Off' : 'On'}</span>`); }
       h += row('updates', 'refresh-cw', 'Updates', typeof Updates !== 'undefined' && Updates.due() ? '<span class="ezb-state ezb-new">New</span>' : '');
       h += row('tour', 'map', 'Take the tour');
       if (it.settings) h += row('#openSettings', 'settings-2', 'Settings');

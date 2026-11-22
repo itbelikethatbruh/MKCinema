@@ -454,8 +454,9 @@ const Remote = {
     el.innerHTML = `<div class="qr-wrap">${QR.svg(link, { margin: 2 })}</div><div class="rm-hint-t"><small>Phone remote</small><b>Use your phone as a remote</b><span>Scan with your phone camera, or open ${esc(this.link().replace(/^https?:\/\//, ''))} and type <b class="mono">${esc(this.code)}</b></span></div>`;
     document.body.appendChild(el); requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on'))); tvBackHook();
     setTimeout(() => this.unhint(), 18000);
+    clearInterval(this.hintW); this.hintW = setInterval(() => { if (!this.hintEl) { clearInterval(this.hintW); return; } if (this.layerOpen() || document.documentElement.classList.contains('ezb-menu-open') || !$('#player').hidden) this.unhint(); }, 400);
   },
-  unhint() { const el = this.hintEl; if (!el) return; this.hintEl = null; el.classList.remove('on'); if (el.id === 'remote') el.removeAttribute('id'); tvBackHook(); setTimeout(() => el.remove(), 700); },
+  unhint() { clearInterval(this.hintW); const el = this.hintEl; if (!el) return; this.hintEl = null; el.classList.remove('on'); if (el.id === 'remote') el.removeAttribute('id'); tvBackHook(); setTimeout(() => el.remove(), 700); },
 };
 ['play', 'pause', 'seeked', 'loadedmetadata'].forEach((ev) => video.addEventListener(ev, () => { if (Remote.peers.size) Remote.soon(); }));
 document.addEventListener('focusin', () => { if (Remote.peers.size) Remote.soon(); });
