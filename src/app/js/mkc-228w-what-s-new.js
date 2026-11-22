@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.90.3', date: '2026-11-22', items: [
+    ['better', 'App updates you can see', 'The Android and TV apps now show the download as it happens, with an Install button as soon as the update is ready.'],
+  ] },
   { v: '2.90.2', date: '2026-11-22', items: [
     ['better', 'Cleaner phone screens', 'On phones Miko sits in a raised circle on the bottom bar, Settings fills the screen and opens without the bar flashing, and the Top 10 and Library filters line up neatly.'],
   ] },
