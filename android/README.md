@@ -29,6 +29,14 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.17.4 (versionCode 46): update progress you can see
+
+- New bridge method `MKAndroid.updateProgress()` returns the update download's state as JSON (`a` update state,
+  `auto`, `st` DownloadManager status, `d` / `t` bytes, `why` when paused). The web app (2.90.3+) shows a progress
+  line while the update downloads and an Install button as soon as it is ready, instead of a silent download.
+- `updateInstall` stops the timed install after leaving the app from running a second time.
+- A new download first deletes any older checked copy, so Install can never pick up an earlier update file.
+
 ## 1.17.3 (versionCode 45): no start-up screen between episodes on any TV
 
 - `keepPage` now applies on every TV, not only those with 3 GB or more: while the TV player is open the page keeps its

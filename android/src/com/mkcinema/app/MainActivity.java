@@ -716,8 +716,34 @@ public class MainActivity extends Activity {
         @JavascriptInterface public boolean updateInstall(String k) {
             if (!ok(k)) return false;
             File apk = UpdateFiles.file(MainActivity.this); if (!apk.exists()) return false;
-            new Thread(() -> { String why = checkApk(apk); if (why != null) { apk.delete(); return; } installApk(apk, false); }).start();
+            // 1.17.4: the timed install after leaving the app must not run a second time
+            runOnUiThread(() -> later.removeCallbacks(autoInstall)); if (autoState == 2) autoState = 3;
+            new Thread(() -> { String why = checkApk(apk); if (why != null) { apk.delete(); autoState = 0; return; } if (!installApk(apk, false)) autoState = 2; }).start();
             return true;
+        }
+        /** 1.17.4: how the update download is going, so the page can show a progress line and Install.
+            {"a": 0 none | 1 downloading by itself | 2 downloaded and checked | 3 installing, "auto": by itself,
+             "st": DownloadManager status (1 pending, 2 running, 4 paused, 8 done, 16 failed, 0 not in the list),
+             "d": bytes so far, "t": total bytes (-1 unknown), "why": paused reason} */
+        @JavascriptInterface public String updateProgress(String k) {
+            if (!ok(k)) return "null";
+            JSONObject o = new JSONObject();
+            try {
+                o.put("a", autoState).put("auto", updAuto).put("st", 0).put("d", 0).put("t", -1);
+                long id = updId;
+                if (id >= 0) {
+                    DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+                    try (Cursor cur = dm.query(new DownloadManager.Query().setFilterById(id))) {
+                        if (cur != null && cur.moveToFirst()) {
+                            int st = cur.getInt(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
+                            o.put("st", st).put("d", cur.getLong(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)))
+                                .put("t", cur.getLong(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)));
+                            if (st == DownloadManager.STATUS_PAUSED) o.put("why", Downloads.pausedWhy(cur.getInt(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))));
+                        }
+                    }
+                }
+            } catch (Exception e) { return "null"; }
+            return o.toString();
         }
         /** Trailers on TVs: hands a YouTube video id to the YouTube app, whose player uses the TV's video hardware.
             False when no YouTube app takes it, so the page plays the trailer itself. */
@@ -757,7 +783,7 @@ public class MainActivity extends Activity {
     static final String[] BRIDGE_METHODS = { "voice", "voiceStop", "version", "fps", "watchNext", "watchNextRemove", "p2pStart", "p2pStop",
         "p2pAvailable", "dlStart", "dlSpace", "setSlow", "epEnable", "epOn", "epSync", "dlList", "dlRemove", "dlPlay", "pipState", "pip", "play",
         "setEngine", "update", "youtube", "exit", "iptvHosts", "recStart", "recStop", "recPlan", "recUnplan",
-        "apScan", "apPlay", "apPin", "apCtl", "apForget", "apState", "signIn", "apAdd", "apDiag", "updateAuto", "updateInstall", "mpv",
+        "apScan", "apPlay", "apPin", "apCtl", "apForget", "apState", "signIn", "apAdd", "apDiag", "updateAuto", "updateInstall", "updateProgress", "mpv",
         "mirrorStart", "mirrorSignal", "mirrorStop", "mirrorOn", "widgetOn", "widgetSync" };
 
     static String newKey() {
@@ -850,7 +876,8 @@ public class MainActivity extends Activity {
     }
 
     static final String UPD_FILE = "MKCinema-update.apk";
-    long updId = -1;
+    static volatile long updId = -1;
+    static volatile boolean updAuto;
     /** 0 nothing, 1 downloading, 2 ready to install when the app is left, 3 installing */
     static volatile int autoState = 0;
     final android.os.Handler later = new android.os.Handler(android.os.Looper.getMainLooper());
@@ -873,7 +900,10 @@ public class MainActivity extends Activity {
             DownloadManager.Request r = new DownloadManager.Request(Uri.parse(url)).setTitle("MKCinema update").setMimeType("application/vnd.android.package-archive")
                 .setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, "MKCinema-update-" + System.currentTimeMillis() + ".apk")
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
-            final long id = dm.enqueue(r); updId = id; if (auto) autoState = 1;
+            // 1.17.4: an older checked copy must never be installed in place of this one (see updateInstall)
+            later.removeCallbacks(autoInstall); if (!auto) autoState = 0;
+            File old = UpdateFiles.file(this); if (old.exists()) old.delete();
+            final long id = dm.enqueue(r); updId = id; updAuto = auto; if (auto) autoState = 1;
             BroadcastReceiver done = new BroadcastReceiver() { @Override public void onReceive(Context c, Intent i) {
                 if (i.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -2) != id) return;
                 try { unregisterReceiver(this); } catch (Exception ignored) { }
