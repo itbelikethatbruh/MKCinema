@@ -4231,6 +4231,7 @@ function go(view, opts = {}) {
   if (view === 'library') renderLibrary();
   if (view === 'studio') renderStudio();
   if (view === 'calendar') Calendar.render();
+  if (view === 'browse' && typeof Browse !== 'undefined') Browse.render();
   if (view === 'home') { queueWall(); if (backHome && window.MkHomePlace) MkHomePlace.back(); }
   try { history.replaceState(null, '', `#${view}`); } catch (e) { /* sandboxed */ }
 }
@@ -11381,7 +11382,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.90.4';
+const APP_VERSION = '2.91.0';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -16507,6 +16508,7 @@ const Networks = {
     this.chPlace();
     if (typeof Holiday !== 'undefined') Holiday.place();
     if (window.MkNetTop) MkNetTop.place();
+    if (typeof Browse !== 'undefined') Browse.place();
   },
   open(id, type) { this.cur = id || this.cur; if (type) this.type = type; go('network'); },
   render() {
@@ -16685,6 +16687,7 @@ const SimpleHome = {
     if (sec.id === 'netRow') return 3;
     if (sec.id === 'chRow') return 3.2;
     if (sec.id === 'uniRow') return 3.5;
+    if (sec.dataset.brRank) return Number(sec.dataset.brRank);
     if (k === 'movie:top') return seriesFirst ? 5 : 4;
     if (k === 'series:top') return seriesFirst ? 4 : 5;
     if (sec.id === 'forYouRow') return sec.querySelector('.fy-cta') ? 40 : 6;
@@ -24281,6 +24284,9 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.91.0', date: '2026-11-22', items: [
+    ['new', 'More ways to browse', 'Nine new rows on Home: Studios, Animation studios, Film collections, TV universes, Decades, Genres, Based on, Animated series and Animation for grown-ups. Each tile shows the studio or title logo over a picture. Hide any row in Settings › Home, or single tiles with the row’s Choose button.'],
+  ] },
   { v: '2.90.4', date: '2026-11-22', items: [
     ['better', 'Smoother menus', 'The Menu opens instantly on TVs, tablets and computers.'],
   ] },
@@ -36092,6 +36098,10 @@ const TourDeep = {
         lede: '142 franchises, from superheroes to Middle-earth, each with every film in release order and its own title logo.',
         pts: [['orbit', 'Eight groups', 'Superheroes, sci-fi, action, horror, animation, anime, comedy and more.'], ['network', 'Networks', 'Real network logos open everything from that network.'], ['list', 'See all', 'Every universe on one page when you want to browse.']],
         where: 'Universes row on Home' },
+      { id: 'browse-rows', ch: 'discover', t: 'Browse rows', art: 'universes',
+        lede: 'Home rows for studios, animation studios, film collections, TV universes, decades, genres and what a story is based on.',
+        pts: [['clapperboard', 'Studios and animation studios', 'Real studio logos open their best known films and series.'], ['list-ordered', 'TV universes and collections', 'Every series or film in order.'], ['sliders-horizontal', 'Choose what shows', 'Hide any row or any tile.']],
+        where: 'Home' },
       { id: 'title', ch: 'discover', t: 'Everything about a title', art: 'title',
         lede: 'Every film and series page brings together the trailer, the cast, scores and where it is streaming in your region.',
         pts: [['star', 'Scores from other sites', 'TMDB, Rotten Tomatoes, Metacritic, Trakt and Letterboxd next to IMDb, with a free MDBList key.'], ['globe', 'Where to watch', 'The services that have it in your region, with no key needed.'], ['eye-off', 'Spoiler Guard', 'Hides the synopsis of episodes you haven’t seen yet.']],
@@ -56345,6 +56355,275 @@ body.reduce-motion #tabs .mkp-ind[data-go]{transition:none!important}
   window.MkUpdProg = P;
   try { P.init(); } catch (e) { /* updates keep the old way */ }
 })();
+</script>
+<style id="mk-291-browse-css">/* 2.91 Browse rows: studios, animation studios, collections, TV universes, decades, genres, "based on".
+   A tile is a picture with the studio's or title's logo floating over it, and a caption that says what it is.
+   Transform and opacity only. Phones and computers get the float; TVs and Snappy mode stay flat and only lift the
+   highlighted tile, so the remote stays quick. */
+.br-row .rail{gap:14px}
+.uni-card.br-tile{width:300px;background:#0b0b0d;border-radius:var(--r-m,14px);contain:layout paint}
+.uni-card.br-tile img.br-art{opacity:0;transform:scale(1.02);transition:opacity .45s ease,transform .9s cubic-bezier(.2,.7,.2,1)}
+.uni-card.br-tile img.br-art.in{opacity:.6}
+.uni-card.br-tile::after{background:radial-gradient(ellipse 75% 70% at 50% 44%,rgba(0,0,0,.42),rgba(0,0,0,.1) 72%),linear-gradient(180deg,rgba(0,0,0,0) 46%,rgba(0,0,0,.86) 100%)}
+.br-tile .br-glow{position:absolute;inset:-20%;z-index:1;pointer-events:none;opacity:0;transition:opacity .4s ease;background:radial-gradient(circle at var(--gx,50%) var(--gy,40%),rgba(255,255,255,.16),rgba(255,255,255,0) 45%)}
+.br-tile .br-float{font-family:var(--f-display);font-size:calc(24px * var(--ts,1));font-weight:700;color:#fff;text-align:center;line-height:1.1;text-shadow:0 3px 12px rgba(0,0,0,.8);position:absolute;left:10%;right:10%;top:10%;bottom:30%;z-index:2;display:flex;align-items:center;justify-content:center;pointer-events:none;transform:translate(var(--px,0),var(--py,0));transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+.uni-card.br-tile img.br-logo{position:static;inset:auto;width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;opacity:0;transform:none;filter:drop-shadow(0 2px 1px rgba(0,0,0,.65)) drop-shadow(0 14px 16px rgba(0,0,0,.8));transition:opacity .4s ease,transform .5s cubic-bezier(.2,.7,.2,1)}
+.uni-card.br-tile img.br-logo.in{opacity:1}
+.uni-card.br-tile.br-mono img.br-logo{filter:brightness(0) invert(1) drop-shadow(0 2px 1px rgba(0,0,0,.65)) drop-shadow(0 14px 16px rgba(0,0,0,.8))}
+.br-tile .br-word{font-family:var(--f-display);font-weight:300;letter-spacing:-.03em;line-height:.95;font-size:calc(54px * var(--ts,1));color:#fff;text-align:center;text-shadow:0 2px 2px rgba(0,0,0,.5),0 16px 30px rgba(0,0,0,.75);white-space:nowrap}
+.br-tile.br-tvu .br-word{font-weight:700;font-size:calc(30px * var(--ts,1));letter-spacing:.02em;white-space:normal;line-height:1}
+.uni-card.br-tile.br-word-tile img.br-art.in{opacity:.72}
+.br-tile.br-genres .br-word{font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:calc(34px * var(--ts,1))}
+.br-tile.br-based .br-word{font-weight:600;font-size:calc(25px * var(--ts,1));letter-spacing:0;white-space:normal;line-height:1.05;max-width:100%}
+.br-tile.br-based .br-word small{display:block;font-size:.5em;font-weight:500;letter-spacing:.3em;text-transform:uppercase;opacity:.75;margin-bottom:6px}
+.br-tile .br-cap{position:absolute;left:14px;right:14px;bottom:11px;z-index:3;display:flex;flex-direction:column;gap:1px;transform:translateY(6px);opacity:.0;transition:opacity .3s ease,transform .35s cubic-bezier(.2,.7,.2,1)}
+.br-tile .br-cap i{font-style:normal;font-size:calc(10.5px * var(--ts,1));letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.66)}
+.br-tile .br-cap b{font-family:var(--f-display);font-size:calc(15px * var(--ts,1));font-weight:650;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 8px rgba(0,0,0,.7)}
+.br-tile:focus-visible .br-cap,.br-tile.nav-focus .br-cap{opacity:1;transform:none}
+.br-tile:focus-visible img.br-art.in,.br-tile.nav-focus img.br-art.in{opacity:.78}
+@media (hover:none){.br-tile .br-cap{opacity:1;transform:none}.br-tile .br-cap b{display:none}}
+@media (hover:hover){
+  html:not(.tv):not(.lite) .br-tile:hover img.br-art.in{opacity:.8;transform:scale(1.08) translate(calc(var(--px,0) * -.6),calc(var(--py,0) * -.6))}
+  html:not(.tv):not(.lite) .br-tile:hover .br-glow{opacity:1}
+  html:not(.tv):not(.lite) .br-tile:hover .br-cap{opacity:1;transform:none}
+  html:not(.tv):not(.lite) .br-tile:hover img.br-logo,html:not(.tv):not(.lite) .br-tile:hover .br-word{transform:scale(1.07)}
+  html:not(.tv):not(.lite) .br-rail .br-tile .br-float>*{animation:brFloat 7s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.9s)}
+}
+@keyframes brFloat{0%,100%{translate:0 0}50%{translate:0 -5px}}
+html.tv .uni-card.br-tile{width:330px}
+html.tv .br-tile *,html.lite .br-tile *{transition:none!important;animation:none!important}
+html.tv .br-tile .br-glow,html.lite .br-tile .br-glow{display:none}
+html.tv .br-tile.nav-focus{transform:scale(1.05);transition:transform .14s ease-out}
+html.tv .br-tile.nav-focus .br-float{transform:translateY(-6px)}
+html.tv .uni-card.br-tile.br-mono img.br-logo{filter:brightness(0) invert(1)}
+html.tv .uni-card.br-tile img.br-logo{filter:none}
+html.tv .br-tile .br-word{text-shadow:0 3px 10px rgba(0,0,0,.8)}
+@media (max-width:600px){.uni-card.br-tile{width:236px}.br-tile .br-word{font-size:calc(42px * var(--ts,1))}.br-tile.br-tvu .br-word{font-size:calc(23px * var(--ts,1))}.br-tile.br-genres .br-word{font-size:calc(27px * var(--ts,1))}.br-tile.br-based .br-word{font-size:calc(20px * var(--ts,1))}}
+body.reduce-motion .br-tile *{animation:none!important}
+@media (prefers-reduced-motion:reduce){.br-tile *{animation:none!important;transition:none!important}}
+.br-row .row-head .br-edit{margin-left:auto}
+.br-row .row-head .br-edit+.row-more{margin-left:4px}
+/* the page */
+.br-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:14px}
+.br-grid .uni-card.br-tile{width:auto}
+.br-grid .br-tile .br-cap{opacity:1;transform:none}
+@media (max-width:600px){.br-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.br-grid .br-tile .br-word{font-size:calc(30px * var(--ts,1))}.br-grid .br-tile.br-tvu .br-word{font-size:calc(18px * var(--ts,1))}.br-grid .br-tile.br-genres .br-word{font-size:calc(19px * var(--ts,1))}.br-grid .br-tile.br-based .br-word{font-size:calc(15px * var(--ts,1))}}
+.br-hero{position:relative;border-radius:var(--r-l,18px);overflow:hidden;aspect-ratio:21/8;min-height:200px;background:#0b0b0d;margin-bottom:16px;isolation:isolate}
+.br-hero>img.br-hart{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55}
+.br-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.85),rgba(0,0,0,.2) 70%),linear-gradient(180deg,rgba(0,0,0,0) 50%,rgba(0,0,0,.7));z-index:1}
+.br-hero .br-hin{position:absolute;left:clamp(18px,4vw,48px);bottom:clamp(16px,3vw,36px);right:20px;z-index:2;display:flex;flex-direction:column;gap:8px;align-items:flex-start;color:#fff}
+.br-hero .br-hin i{font-style:normal;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+.br-hero img.br-hlogo{max-width:min(380px,60vw);max-height:clamp(60px,10vw,130px);object-fit:contain;filter:drop-shadow(0 10px 18px rgba(0,0,0,.7))}
+.br-hero.br-mono img.br-hlogo{filter:brightness(0) invert(1) drop-shadow(0 10px 18px rgba(0,0,0,.7))}
+.br-hero h1.page-title{margin:0;color:#fff}
+.br-hero .page-sub{margin:0;color:rgba(255,255,255,.75)}
+@media (max-width:600px){.br-hero{aspect-ratio:16/10}}
+/* the chooser */
+.br-pick-row{margin:14px 0 4px}
+.br-pick-row h3{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:10px}
+.br-pick-row h3 .btn{margin-left:auto}
+.br-pick{display:flex;flex-wrap:wrap;gap:8px}
+.br-pick .chip[aria-pressed="false"]{opacity:.5;text-decoration:line-through}
+</style>
+<script id="mk-291-browse">
+/* ---------------- 2.91 Browse rows ----------------
+   Nine more rows for Home: Studios, Animation studios, Film collections, TV universes, Decades, Genres, Based on,
+   Animated series and Animation for grown-ups. The lists ship with the app (browse-home.json for the tiles,
+   browse/<row>.json for each tile's titles), rebuilt from TMDB at release time, so nothing needs a key or an addon.
+   Playing still uses the viewer's own addons. Each row can be switched off in Settings › Home, moved, renamed or
+   hidden in Arrange Home, and every tile in a row can be hidden with the row's Choose button. Kids seats get none of
+   these rows (the lists are not filtered by age). */
+const Browse = {
+  ROWS: [
+    { id: 'studios', title: 'Studios', kind: 'Studio', rank: 5.5 },
+    { id: 'anim', title: 'Animation studios', kind: 'Animation studio', rank: 6.5 },
+    { id: 'coll', title: 'Film collections', kind: 'Collection', rank: 8.5 },
+    { id: 'tvu', title: 'TV universes', kind: 'TV universe', rank: 9.2 },
+    { id: 'toons', title: 'Animated series', rank: 9.4, posters: true },
+    { id: 'grownup', title: 'Animation for grown-ups', rank: 9.6, posters: true },
+    { id: 'decades', title: 'Decades', kind: 'Decade', rank: 11.2 },
+    { id: 'genres', title: 'Genres', kind: 'Genre', rank: 11.4 },
+    { id: 'based', title: 'Based on', kind: 'Based on', rank: 11.6 },
+  ],
+  IMG: 'https://image.tmdb.org/t/p/',
+  home: null, homeP: null, full: {}, fullP: {}, row: '', tile: '', type: '', token: 0,
+  def(id) { return this.ROWS.find((r) => r.id === id); },
+  on(id) { return typeof Layout === 'undefined' || Layout.shows(`br-${id}`); },
+  kids() { return typeof Seats !== 'undefined' && Seats.kids(); },
+  hidden() { const h = Store.get('brHide', null); return h && typeof h === 'object' && !Array.isArray(h) ? h : {}; },
+  setHidden(h) { Store.set('brHide', h); if (typeof Account !== 'undefined' && Account.schedule) Account.schedule(); },
+  load() {
+    return this.homeP || (this.homeP = fetch('browse-home.json').then((r) => (r.ok ? r.json() : Promise.reject(new Error(`browse-home.json ${r.status}`)))).then((d) => {
+      this.home = {}; (d.rows || []).forEach((r) => { if (r && r.id) this.home[r.id] = r; });
+      return this.home;
+    }).catch((e) => { this.homeP = null; throw e; }));
+  },
+  loadRow(id) {
+    if (this.full[id]) return Promise.resolve(this.full[id]);
+    return this.fullP[id] || (this.fullP[id] = fetch(`browse/${id}.json`).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`${id} ${r.status}`)))).then((d) => (this.full[id] = d.tiles || {})).catch((e) => { delete this.fullP[id]; throw e; }));
+  },
+  tiles(id, all) {
+    const r = this.home && this.home[id]; if (!r || !r.tiles) return [];
+    const off = all ? [] : (this.hidden()[id] || []);
+    return r.tiles.filter((t) => t && t.id && !off.includes(t.id));
+  },
+  /* names that stay as they are in every language: studios, franchises, decades. Genres and "Based on" translate. */
+  own(rowId, t) { return !!t.logo || rowId === 'tvu' || rowId === 'coll' || rowId === 'decades'; },
+  img(p, w) { return p ? `${this.IMG}${w}${p}` : ''; },
+  tileHTML(rowId, t, i) {
+    const d = this.def(rowId) || {}, mono = t.logo && t.m === 1;
+    const art = this.img(t.art, IS_TV || document.documentElement.classList.contains('lite') ? 'w500' : 'w780');
+    const based = rowId === 'based';
+    const inner = t.logo
+      ? `<img class="br-logo" src="${esc(this.img(t.logo, 'w500'))}" alt="" loading="lazy" decoding="async" draggable="false" data-fadein data-gone="label">`
+      : `<span class="br-word">${based ? '<small>Based on</small>' : ''}<span${this.own(rowId, t) ? ' translate="no"' : ''}>${esc(t.name)}</span></span>`;
+    return `<button type="button" class="uni-card br-tile br-${esc(rowId)}${mono ? ' br-mono' : ''}${t.logo ? '' : ' br-word-tile'}" style="--i:${i || 0}" data-nav data-br="${esc(rowId)}" data-brt="${esc(t.id)}" aria-label="${esc(t.name)}">`
+      + `${art ? `<img class="uni-art br-art" src="${esc(art)}" alt="" loading="lazy" decoding="async" draggable="false" data-fadein>` : ''}<span class="br-glow"></span>`
+      + `<span class="br-float" aria-label="${esc(t.name)}">${inner}</span><span class="br-cap"><i>${esc(d.kind || '')}</i><b${this.own(rowId, t) ? ' translate="no"' : ''}>${esc(t.name)}</b></span></button>`;
+  },
+  bind(box) {
+    $$('[data-brt]', box).forEach((b) => {
+      b.addEventListener('click', () => this.open(b.dataset.br, b.dataset.brt));
+      if (IS_TV || !matchMedia('(hover:hover)').matches) return;
+      // the logo follows the pointer a little and the picture moves the other way: depth without 3D layers
+      b.addEventListener('pointermove', (e) => {
+        if (document.documentElement.classList.contains('lite')) return;
+        const r = b.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+        b.style.setProperty('--px', `${(x * 16).toFixed(1)}px`); b.style.setProperty('--py', `${(y * 10).toFixed(1)}px`);
+        b.style.setProperty('--gx', `${((x + 0.5) * 100).toFixed(0)}%`); b.style.setProperty('--gy', `${((y + 0.5) * 100).toFixed(0)}%`);
+      });
+      b.addEventListener('pointerleave', () => { b.style.setProperty('--px', '0px'); b.style.setProperty('--py', '0px'); });
+    });
+  },
+  section(d) {
+    const sec = document.createElement('section'); sec.id = `br-${d.id}`; sec.dataset.brRank = d.rank;
+    if (d.posters) {
+      sec.className = 'row br-row br-posters';
+      const items = (this.home[d.id] && this.home[d.id].items) || [];
+      sec.innerHTML = `<div class="row-head"><h2 class="row-title">${esc(d.title)}</h2></div><div class="rail"></div>`;
+      fillRail(sec, items.map((x) => cardHTML(this.meta(x))).join(''));
+      return sec;
+    }
+    sec.className = 'row br-row';
+    // TVs and Snappy mode draw 12 tiles and a See all at the end, so nine more rows cost little at start-up
+    const full = this.tiles(d.id), lean = IS_TV || document.documentElement.classList.contains('lite'), list = lean ? full.slice(0, 12) : full;
+    sec.innerHTML = `<div class="row-head"><h2 class="row-title">${esc(d.title)}</h2><button class="row-more br-edit" type="button" data-nav data-br-edit="${esc(d.id)}" aria-label="Choose what shows" title="Choose what shows"><i data-lucide="sliders-horizontal"></i></button><button class="row-more" type="button" data-nav data-br-all="${esc(d.id)}">See all<i data-lucide="chevron-right"></i></button></div>`
+      + `<div class="rail br-rail">${list.map((t, i) => this.tileHTML(d.id, t, i)).join('')}${list.length < full.length ? `<button class="rail-all" type="button" data-nav data-br-all2><i data-lucide="layout-grid"></i><span>See all</span></button>` : ''}</div>`;
+    this.bind(sec);
+    $('[data-br-all]', sec).onclick = () => this.open(d.id, '');
+    const all2 = $('[data-br-all2]', sec); if (all2) all2.onclick = () => this.open(d.id, '');
+    $('[data-br-edit]', sec).onclick = () => this.choose(d.id);
+    icons();
+    return sec;
+  },
+  meta(x) { return { id: x.id, type: x.t === 'series' ? 'series' : 'movie', name: x.n, releaseInfo: x.y, poster: x.p ? `${this.IMG}w342${x.p}` : undefined }; },
+  place() {
+    const rows = $('#homeRows'); if (!rows) return;
+    if (this.kids()) { $$('#homeRows > .br-row').forEach((s) => s.remove()); return; }
+    if (!this.home) { this.load().then(() => { if (S.view === 'home') this.place(); }).catch(() => { /* the rows stay away until the list loads */ }); return; }
+    let added = false;
+    this.ROWS.forEach((d) => {
+      let sec = $(`#br-${d.id}`);
+      const want = this.on(d.id) && (d.posters ? ((this.home[d.id] || {}).items || []).length >= 6 : this.tiles(d.id).length > 0);
+      if (!want) { if (sec) sec.remove(); return; }
+      if (!sec) { sec = this.section(d); added = true; }
+      if (!sec.isConnected) { rows.append(sec); added = true; }
+    });
+    if (added) { if (typeof SimpleHome !== 'undefined') SimpleHome.tidy(); if (IS_TV && typeof Nav !== 'undefined') Nav.settle(); }
+  },
+  /* rebuild one row in place after its tiles change */
+  refresh(id) {
+    const old = $(`#br-${id}`); if (!old) { this.place(); return; }
+    const d = this.def(id); if (!this.tiles(id).length) { old.remove(); return; }
+    const sec = this.section(d); old.replaceWith(sec);
+    if (typeof Arrange !== 'undefined') Arrange.apply(true);
+  },
+  open(row, tile) { this.row = row || this.row || 'studios'; this.tile = tile || ''; this.type = ''; go('browse'); },
+  hero(d, t) {
+    const mono = t.logo && t.m === 1;
+    return `<div class="br-hero${mono ? ' br-mono' : ''}">${t.art ? `<img class="br-hart" src="${esc(this.img(t.art, IS_TV ? 'w780' : 'w1280'))}" alt="" decoding="async">` : ''}<div class="br-hin"><i>${esc(d.kind || d.title)}</i>`
+      + `${t.logo ? `<h1 class="page-title uni-title" aria-label="${esc(t.name)}"><img class="br-hlogo" src="${esc(this.img(t.logo, 'w500'))}" alt="" decoding="async" data-gone="label"></h1>` : `<h1 class="page-title"${this.own(d.id, t) ? ' translate="no"' : ''}>${esc(t.name)}</h1>`}`
+      + `<p class="page-sub">${esc(this.sub(d))}</p></div></div>`;
+  },
+  sub(d) {
+    if (d.id === 'tvu') return 'Every series in the order it first aired. Playing uses your own addons.';
+    if (d.id === 'coll') return 'Every film in release order. Playing uses your own addons.';
+    return 'The best known first. Playing uses your own addons.';
+  },
+  async render() {
+    const box = $('#brBody'); if (!box) return;
+    const tok = ++this.token;
+    box.innerHTML = `<div class="grid">${skeletons(12)}</div>`;
+    try { await this.load(); } catch (e) { if (tok === this.token) box.innerHTML = '<div class="empty">The list did not load. Try again in a moment.</div>'; return; }
+    if (tok !== this.token || !box.isConnected) return;
+    const d = this.def(this.row) && !this.def(this.row).posters ? this.def(this.row) : this.ROWS[0];
+    const all = this.tiles(d.id, true), t = this.tile && all.find((x) => x.id === this.tile);
+    const rowChips = this.ROWS.filter((r) => !r.posters).map((r) => `<button type="button" class="chip ${r.id === d.id && !t ? 'on' : ''}" data-nav data-brrow="${esc(r.id)}">${esc(r.title)}</button>`).join('');
+    if (!t) {
+      box.innerHTML = `<div class="net-head uni-head"><h1 class="page-title">${esc(d.title)}</h1><div class="net-switch">${rowChips}</div></div><div class="br-grid">${all.map((x, i) => this.tileHTML(d.id, x, i)).join('')}</div>`;
+      $$('[data-brrow]', box).forEach((b) => b.addEventListener('click', () => { this.row = b.dataset.brrow; this.tile = ''; this.render(); scrollTo({ top: 0 }); }));
+      this.bind(box); icons(); if (IS_TV) Nav.settle(); return;
+    }
+    let titles;
+    try { titles = (await this.loadRow(d.id))[t.id] || []; } catch (e) { if (tok === this.token) box.innerHTML = '<div class="empty">The list did not load. Try again in a moment.</div>'; return; }
+    if (tok !== this.token || !box.isConnected) return;
+    const hasM = titles.some((x) => x.t !== 'series'), hasS = titles.some((x) => x.t === 'series');
+    const type = hasM && hasS ? this.type : '';
+    const list = titles.filter((x) => !type || (type === 'series' ? x.t === 'series' : x.t !== 'series'));
+    box.innerHTML = `${this.hero(d, t)}<div class="net-switch"><button type="button" class="chip" data-nav data-brback><i data-lucide="layout-grid"></i>${esc(d.title)}</button>${all.map((x) => `<button type="button" class="chip ${x.id === t.id ? 'on' : ''}" data-nav data-brsw="${esc(x.id)}"${this.own(d.id, x) ? ' translate="no"' : ''}>${esc(x.name)}</button>`).join('')}</div>`
+      + `${hasM && hasS ? `<div class="net-switch">${[['', 'Everything'], ['movie', 'Films'], ['series', 'Series']].map(([v, l]) => `<button type="button" class="chip ${type === v ? 'on' : ''}" data-nav data-brty="${v}">${l}</button>`).join('')}</div>` : ''}`
+      + `<div class="grid" id="brGrid"></div><div class="actions" style="justify-content:center"><button class="btn btn-ghost" type="button" data-nav id="brMore" hidden>Show more</button></div>`;
+    $$('[data-brsw]', box).forEach((b) => b.addEventListener('click', () => { this.tile = b.dataset.brsw; this.render(); scrollTo({ top: 0 }); }));
+    $$('[data-brty]', box).forEach((b) => b.addEventListener('click', () => { this.type = b.dataset.brty; this.render(); }));
+    $('[data-brback]', box).onclick = () => { this.tile = ''; this.render(); scrollTo({ top: 0 }); };
+    const grid = $('#brGrid'), more = $('#brMore'); let n = 0;
+    const add = () => {
+      const part = list.slice(n, n + 30); n += part.length;
+      grid.insertAdjacentHTML('beforeend', part.map((x, i) => cardHTML(this.meta(x), d.id === 'coll' || d.id === 'tvu' ? { sub: `${n - part.length + i + 1} · ${x.y}` } : {})).join(''));
+      more.hidden = n >= list.length; icons(); if (typeof queueWall === 'function') queueWall();
+    };
+    more.onclick = add; add(); if (IS_TV) Nav.settle();
+  },
+  /* Choose what shows: every tile of a row (or of every row) as a switch */
+  choose(only) {
+    const el = X8.layer('brChoose', { label: 'Choose what shows', icon: 'sliders-horizontal', eyebrow: 'Home' });
+    const draw = () => {
+      const b = X8.body('brChoose'); if (!b) return;
+      const h = this.hidden(), rows = this.ROWS.filter((r) => !r.posters && (!only || r.id === only));
+      b.innerHTML = `<h2 class="x8-h">Choose what shows</h2><p class="arr-sub">Tap a tile to hide it from Home or bring it back. Whole rows switch off in Settings › Home or in Arrange Home.</p>`
+        + rows.map((r) => {
+          const off = h[r.id] || [];
+          return `<section class="br-pick-row"><h3>${esc(r.title)}<button class="btn btn-ghost btn-sm" type="button" data-nav data-br-allon="${esc(r.id)}"${off.length ? '' : ' disabled'}>Show all</button></h3><div class="br-pick">${this.tiles(r.id, true).map((t) => `<button type="button" class="chip" data-nav data-br-tg="${esc(r.id)}" data-id="${esc(t.id)}" aria-pressed="${!off.includes(t.id)}"${this.own(r.id, t) ? ' translate="no"' : ''}>${esc(t.name)}</button>`).join('')}</div></section>`;
+        }).join('')
+        + `${only ? '<div class="inrow arr-foot"><button class="btn btn-ghost btn-sm" type="button" data-nav data-br-every><i data-lucide="layout-list"></i>Every row</button>' : '<div class="inrow arr-foot">'}<button class="btn btn-prime btn-sm" type="button" data-nav data-x8close><i data-lucide="check"></i>Done</button></div>`;
+      $$('[data-br-tg]', b).forEach((c) => c.addEventListener('click', () => {
+        const hh = this.hidden(), r = c.dataset.brTg, list = new Set(hh[r] || []);
+        if (list.has(c.dataset.id)) list.delete(c.dataset.id); else list.add(c.dataset.id);
+        hh[r] = [...list]; if (!hh[r].length) delete hh[r]; this.setHidden(hh);
+        c.setAttribute('aria-pressed', String(!list.has(c.dataset.id)));
+        const all = b.querySelector(`[data-br-allon="${r}"]`); if (all) all.disabled = !list.size;
+        this.refresh(r);
+      }));
+      $$('[data-br-allon]', b).forEach((c) => c.addEventListener('click', () => { const hh = this.hidden(); delete hh[c.dataset.brAllon]; this.setHidden(hh); this.refresh(c.dataset.brAllon); draw(); }));
+      const ev = $('[data-br-every]', b); if (ev) ev.onclick = () => { only = ''; draw(); };
+      icons();
+      if (IS_TV) setTimeout(() => { const f = b.querySelector('[data-br-tg]'); if (f) Nav.focus(f, true); }, 60);
+    };
+    if (!el) return;
+    draw(); X8.open('brChoose');
+  },
+  init() {
+    const v = $('#view-universe') || $('#view-network') || $('#view-calendar');
+    if (v && !$('#view-browse')) v.insertAdjacentHTML('afterend', '<section class="view" id="view-browse" aria-label="Browse"><div id="brBody"></div></section>');
+    this.ROWS.forEach((r) => HOME_ROWS.push([`br-${r.id}`, r.title]));
+    const hm = typeof secById === 'function' && secById('home');
+    if (hm) { const rows = hm.rows; hm.rows = () => { const r = rows(), i = r.findIndex((x) => x.key === `hl-br-${this.ROWS[0].id}`), btn = { key: 'brChoose', label: 'Choose what each row shows', help: 'Hide single studios, collections, decades or genres from their rows on Home.', type: 'button', text: 'Choose', icon: 'sliders-horizontal', run: () => { closeLayer('settings'); setTimeout(() => this.choose(''), 280); } }; if (i >= 0) r.splice(i, 0, btn); else r.push(btn); return r; }; }
+    COMMANDS.push(...this.ROWS.filter((r) => !r.posters).map((r) => ({ label: `Browse ${r.title.toLowerCase()}`, icon: 'layout-grid', run: () => this.open(r.id, '') })));
+    if (S.view === 'home') this.place();
+    if (S.view === 'browse') this.render();
+  },
+};
+Browse.init();
 </script>
 </body>
 </html>
