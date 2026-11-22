@@ -29,6 +29,12 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.17.5 (versionCode 47): updates install once
+
+- 1.17.4 still reported version 1.17.3 to the page (`MainActivity.VER` was not bumped), so after installing it the app
+  offered the same update again, in a loop. `MKAndroid.version()` now returns the installed package's own versionName.
+- build.sh stops when `MainActivity.VER` does not match versionName in AndroidManifest.xml.
+
 ## 1.17.4 (versionCode 46): update progress you can see
 
 - New bridge method `MKAndroid.updateProgress()` returns the update download's state as JSON (`a` update state,

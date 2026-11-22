@@ -70,7 +70,8 @@ public class MainActivity extends Activity {
     static final String[] APP_HOSTS = { HOST, "app.mkcinema.app" };
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6, REQ_MIRROR = 7, REQ_MIRROR_MIC = 8;
-    static final String VER = "1.17.3";
+    // must equal versionName in AndroidManifest.xml (build.sh stops the build when it does not)
+    static final String VER = "1.17.5";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -562,7 +563,13 @@ public class MainActivity extends Activity {
             return true;
         }
         @JavascriptInterface public void voiceStop(String k) { if (ok(k)) runOnUiThread(() -> { if (recognizer != null) recognizer.cancel(); }); }
-        @JavascriptInterface public String version(String k) { return ok(k) ? VER : ""; }
+        /** 1.17.5: the installed package's own versionName, so an update can never report an older version than it is
+            (1.17.4 reported 1.17.3, and the page offered the same update again after every install) */
+        @JavascriptInterface public String version(String k) {
+            if (!ok(k)) return "";
+            try { String v = getPackageManager().getPackageInfo(getPackageName(), 0).versionName; if (v != null && !v.isEmpty()) return v; } catch (Exception ignored) { }
+            return VER;
+        }
         /* 1.16.0: screen mirroring. json: {ice:[…], to, maxSide, fps, kbps, sound}. Events come back on MKMirrorNative.ev */
         @JavascriptInterface public boolean mirrorStart(String k, String json) {
             if (!ok(k) || tv || json == null || json.length() > 20000 || Build.VERSION.SDK_INT < 21 || MirrorService.running()) return false;

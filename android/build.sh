@@ -3,6 +3,9 @@
 set -e
 cd "$(dirname "$0")"
 SDK=${SDK:-$ANDROID_HOME}; BT=$SDK/build-tools/35.0.0; JAR=$SDK/platforms/android-35/android.jar
+# 1.17.5: the version the app reports (MainActivity.VER) must match the manifest, or updates loop
+MV=$(sed -n 's/.*android:versionName="\([^"]*\)".*/\1/p' AndroidManifest.xml | head -1)
+grep -q "static final String VER = \"$MV\";" src/com/mkcinema/app/MainActivity.java || { echo "MainActivity.VER does not match versionName $MV" >&2; exit 1; }
 OUT=${OUT:-build}; rm -rf $OUT; mkdir -p $OUT/c $OUT/classes $OUT/dex
 $BT/aapt2 compile --dir res -o $OUT/c/res.zip
 # 1.15.0: DEBUG_APK=1 (the emulator test only, never a release) makes a debuggable build so the test can drive the page
