@@ -12,5 +12,6 @@ html:not(.tv) .lib-bar .lib-q{grid-column:1;order:3;width:100%;flex:none}
 html:not(.tv) .lib-bar #libHide{grid-column:2;order:4;white-space:nowrap;justify-content:center;text-align:center}
 html:not(.tv) .lib-bar:not(:has(#libHide)) .lib-q{grid-column:1/-1}
 html:not(.tv) .lib-bar #libClear,html:not(.tv) .lib-bar #libDel{grid-column:1/-1;order:5;justify-self:start}
+@media (max-width:760px){html:not(.tv) .lib-bar{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}html:not(.tv) .lib-bar .segc{grid-column:1/-1;justify-self:stretch;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}html:not(.tv) .lib-bar .lib-sort{grid-column:auto;max-width:none;width:100%}}
 html:not(.tv) .lib-grid{margin-top:24px;column-gap:14px;row-gap:24px}
 }

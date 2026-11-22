@@ -1,0 +1,8 @@
+
+.sn-strip{align-items:center;margin:0 0 18px}
+@media (max-width:760px){.sn-strip{align-items:flex-start}.sn-strip>.lucide,.sn-strip>svg{margin-top:1px}}
+.sn-strip>.lucide,.sn-strip>svg{width:26px;height:26px;margin-top:0;flex:none}
+.sn-strip .sn-body{display:grid;gap:4px;min-width:0}
+.sn-strip strong{font-size:calc(16px * var(--ts,1))}
+.sn-strip .sn-act{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.sn-strip .btn .lucide,.sn-strip .btn svg{color:inherit;margin-top:0}

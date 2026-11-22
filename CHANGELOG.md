@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.90.2 (2026-11-22)
+
+- **Cleaner phone screens:** on phones Miko sits in a raised circle on the bottom bar, Settings fills the screen and opens without the bar flashing, and the Top 10 and Library filters line up neatly.
+- Fresh phone pictures on the website and in the README.
+
 ## Web app 2.90.1 (2026-11-22)
 
 - **Smoother phone menus:** changing sections on phones glides with no jumping, the bars are slightly see-through, and Miko sits in the middle of the bottom bar. The coloured card glow now shows only with a remote, keyboard or mouse.
