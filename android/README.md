@@ -29,6 +29,13 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.17.6 (versionCode 48): updates say why they fail
+
+- Every update failure (download, file check, saving, installer) now reaches the page as `MkUpdProg.fail(why)`, the
+  app log (Send log) and `err` in `MKAndroid.updateProgress()`. Before, automatic updates failed without a word.
+- If Android's "download complete" message is lost, `updateProgress` finishes the update itself.
+- Installer failures carry Android's own status message.
+
 ## 1.17.5 (versionCode 47): updates install once
 
 - 1.17.4 still reported version 1.17.3 to the page (`MainActivity.VER` was not bumped), so after installing it the app

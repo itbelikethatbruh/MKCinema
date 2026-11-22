@@ -27,7 +27,15 @@ public class UpdateResult extends BroadcastReceiver {
         }
         if (st != PackageInstaller.STATUS_SUCCESS) {
             MainActivity.autoState = 0;
-            if (!silent) MainActivity.toPage("window.toast&&toast('The update did not install. Try again','err',6000)");
+            // 1.17.6: say why (Android's own message), on the page and in the app log, instead of nothing
+            String msg = i.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE);
+            String why = st == PackageInstaller.STATUS_FAILURE_ABORTED ? "the install was cancelled"
+                : st == PackageInstaller.STATUS_FAILURE_STORAGE ? "there is not enough free space to install it"
+                : st == PackageInstaller.STATUS_FAILURE_CONFLICT ? "it conflicts with the installed app"
+                : st == PackageInstaller.STATUS_FAILURE_INCOMPATIBLE ? "this device cannot install it"
+                : st == PackageInstaller.STATUS_FAILURE_BLOCKED ? "the device blocked the install"
+                : "Android could not install it";
+            MainActivity.updFail(why + (msg != null && !msg.isEmpty() ? " (" + msg + ")" : ""));
         }
     }
 
