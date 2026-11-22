@@ -71,7 +71,7 @@ public class MainActivity extends Activity {
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6, REQ_MIRROR = 7, REQ_MIRROR_MIC = 8;
     // must equal versionName in AndroidManifest.xml (build.sh stops the build when it does not)
-    static final String VER = "1.17.5";
+    static final String VER = "1.17.6";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -725,7 +725,7 @@ public class MainActivity extends Activity {
             File apk = UpdateFiles.file(MainActivity.this); if (!apk.exists()) return false;
             // 1.17.4: the timed install after leaving the app must not run a second time
             runOnUiThread(() -> later.removeCallbacks(autoInstall)); if (autoState == 2) autoState = 3;
-            new Thread(() -> { String why = checkApk(apk); if (why != null) { apk.delete(); autoState = 0; return; } if (!installApk(apk, false)) autoState = 2; }).start();
+            new Thread(() -> { String why = checkApk(apk); if (why != null) { apk.delete(); autoState = 0; updFail("the downloaded file was refused: " + why); return; } if (!installApk(apk, false)) { autoState = 2; updFail("the installer could not start"); } }).start();
             return true;
         }
         /** 1.17.4: how the update download is going, so the page can show a progress line and Install.
@@ -736,7 +736,7 @@ public class MainActivity extends Activity {
             if (!ok(k)) return "null";
             JSONObject o = new JSONObject();
             try {
-                o.put("a", autoState).put("auto", updAuto).put("st", 0).put("d", 0).put("t", -1);
+                o.put("a", autoState).put("auto", updAuto).put("st", 0).put("d", 0).put("t", -1).put("err", updErr);
                 long id = updId;
                 if (id >= 0) {
                     DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
@@ -746,6 +746,11 @@ public class MainActivity extends Activity {
                             o.put("st", st).put("d", cur.getLong(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)))
                                 .put("t", cur.getLong(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)));
                             if (st == DownloadManager.STATUS_PAUSED) o.put("why", Downloads.pausedWhy(cur.getInt(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))));
+                            // 1.17.6: finished or failed, but the "download complete" message never reached the app: finish it here
+                            if ((st == DownloadManager.STATUS_SUCCESSFUL || st == DownloadManager.STATUS_FAILED) && !updFinishing) {
+                                updFinishing = true; final boolean au = updAuto;
+                                new Thread(() -> finishUpdate(dm, id, au)).start();
+                            }
                         }
                     }
                 }
@@ -885,6 +890,29 @@ public class MainActivity extends Activity {
     static final String UPD_FILE = "MKCinema-update.apk";
     static volatile long updId = -1;
     static volatile boolean updAuto;
+    /** 1.17.6: why the last update failed ("" while none did); shown on the page, and kept in the app log */
+    static volatile String updErr = "";
+    static volatile boolean updFinishing;
+    static void updFail(String why) {
+        updErr = why == null || why.isEmpty() ? "it stopped for an unknown reason" : why;
+        toPage("window.MkUpdProg&&MkUpdProg.fail&&MkUpdProg.fail(" + JSONObject.quote(updErr) + ");"
+            + "if(typeof MKLog!=='undefined')MKLog.add('update'," + JSONObject.quote("android update failed: " + updErr + " (" + Build.MODEL + ", Android " + Build.VERSION.RELEASE + ", app " + VER + ")") + ")");
+    }
+    /** a DownloadManager failure in plain words */
+    static String dlWhy(Cursor cur) {
+        try {
+            int st = cur.getInt(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)), r = cur.getInt(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON));
+            if (st != DownloadManager.STATUS_FAILED) return "the download did not finish (status " + st + ")";
+            if (r >= 400 && r < 600) return "the server answered " + r;
+            switch (r) {
+                case DownloadManager.ERROR_INSUFFICIENT_SPACE: return "there is not enough free space";
+                case DownloadManager.ERROR_DEVICE_NOT_FOUND: return "storage is not available";
+                case DownloadManager.ERROR_TOO_MANY_REDIRECTS: return "the link redirected too many times";
+                case DownloadManager.ERROR_HTTP_DATA_ERROR: case DownloadManager.ERROR_CANNOT_RESUME: return "the connection broke";
+                default: return "the download failed (code " + r + ")";
+            }
+        } catch (Exception e) { return "the download failed"; }
+    }
     /** 0 nothing, 1 downloading, 2 ready to install when the app is left, 3 installing */
     static volatile int autoState = 0;
     final android.os.Handler later = new android.os.Handler(android.os.Looper.getMainLooper());
@@ -893,7 +921,7 @@ public class MainActivity extends Activity {
         // never under a film, a recording, a download or an AirPlay session: try again later
         if (pipPlaying || PlayerActivity.open || !RecService.jobs.isEmpty() || DlService.running || AirPlayService.session != null) { later.postDelayed(this.autoInstall, 10 * 60_000L); return; }
         autoState = 3;
-        new Thread(() -> { File apk = UpdateFiles.file(this); if (checkApk(apk) == null) installApk(apk, true); else { apk.delete(); autoState = 0; } }).start();
+        new Thread(() -> { File apk = UpdateFiles.file(this); String bad = checkApk(apk); if (bad == null) installApk(apk, true); else { apk.delete(); autoState = 0; updFail("the downloaded file was refused: " + bad); } }).start();
     };
     void startUpdate(String url) { startUpdate(url, false); }
     void startUpdate(String url, boolean auto) {
@@ -910,15 +938,16 @@ public class MainActivity extends Activity {
             // 1.17.4: an older checked copy must never be installed in place of this one (see updateInstall)
             later.removeCallbacks(autoInstall); if (!auto) autoState = 0;
             File old = UpdateFiles.file(this); if (old.exists()) old.delete();
-            final long id = dm.enqueue(r); updId = id; updAuto = auto; if (auto) autoState = 1;
+            final long id = dm.enqueue(r); updId = id; updAuto = auto; updErr = ""; updFinishing = false; if (auto) autoState = 1;
             BroadcastReceiver done = new BroadcastReceiver() { @Override public void onReceive(Context c, Intent i) {
                 if (i.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -2) != id) return;
                 try { unregisterReceiver(this); } catch (Exception ignored) { }
+                if (updFinishing) return; updFinishing = true;
                 new Thread(() -> finishUpdate(dm, id, auto)).start();
             } };
             IntentFilter f = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
             if (Build.VERSION.SDK_INT >= 33) registerReceiver(done, f, Context.RECEIVER_EXPORTED); else registerReceiver(done, f);
-        } catch (Exception e) { if (auto) autoState = 0; else web.evaluateJavascript("window.toast&&toast('The update could not start','err',6000)", null); }
+        } catch (Exception e) { if (auto) autoState = 0; updFail("the download could not start: " + e.getClass().getSimpleName()); }
     }
 
     /** copies the finished download into the app's private storage (no other app can swap it there), checks
@@ -929,25 +958,25 @@ public class MainActivity extends Activity {
         if (auto) {
             try {
                 try (Cursor cur = dm.query(new DownloadManager.Query().setFilterById(id))) {
-                    if (cur == null || !cur.moveToFirst() || cur.getInt(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)) != DownloadManager.STATUS_SUCCESSFUL) { autoState = 0; return; }
+                    if (cur == null || !cur.moveToFirst()) { autoState = 0; updFail("the download was cancelled"); return; }
+                    if (cur.getInt(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)) != DownloadManager.STATUS_SUCCESSFUL) { autoState = 0; updFail(dlWhy(cur)); return; }
                 }
                 apk.getParentFile().mkdirs(); apk.delete();
                 try (InputStream in = new ParcelFileDescriptor.AutoCloseInputStream(dm.openDownloadedFile(id)); OutputStream out = new FileOutputStream(apk)) {
                     byte[] b = new byte[65536]; int n; while ((n = in.read(b)) > 0) out.write(b, 0, n);
                 }
                 try { dm.remove(id); } catch (Exception ignored) { }
-                if (checkApk(apk) != null) { apk.delete(); autoState = 0; return; }
+                String bad = checkApk(apk); if (bad != null) { apk.delete(); autoState = 0; updFail("the downloaded file was refused: " + bad); return; }
                 autoState = 2;
                 js("window.MkAutoUpd&&MkAutoUpd.ready()");
                 runOnUiThread(() -> { if (!resumed) { later.removeCallbacks(autoInstall); later.postDelayed(autoInstall, 3 * 60_000L); } });
-            } catch (Exception e) { apk.delete(); autoState = 0; }
+            } catch (Exception e) { apk.delete(); autoState = 0; updFail("the update could not be saved: " + e.getClass().getSimpleName()); }
             return;
         }
         try {
             try (Cursor cur = dm.query(new DownloadManager.Query().setFilterById(id))) {
-                if (cur == null || !cur.moveToFirst() || cur.getInt(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)) != DownloadManager.STATUS_SUCCESSFUL) {
-                    js("window.toast&&toast('The update did not download. Try again','err',6000)"); return;
-                }
+                if (cur == null || !cur.moveToFirst()) { updFail("the download was cancelled"); return; }
+                if (cur.getInt(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)) != DownloadManager.STATUS_SUCCESSFUL) { updFail(dlWhy(cur)); return; }
             }
             apk.getParentFile().mkdirs(); apk.delete();
             try (InputStream in = new ParcelFileDescriptor.AutoCloseInputStream(dm.openDownloadedFile(id)); OutputStream out = new FileOutputStream(apk)) {
@@ -955,12 +984,12 @@ public class MainActivity extends Activity {
             }
             try { dm.remove(id); } catch (Exception ignored) { }
             String why = checkApk(apk);
-            if (why != null) { apk.delete(); js("window.toast&&toast(" + JSONObject.quote("Update rejected: " + why) + ",'err',8000)"); return; }
+            if (why != null) { apk.delete(); updFail("the downloaded file was refused: " + why); return; }
             if (installApk(apk, false)) return;
             Uri cu = Uri.parse("content://" + getPackageName() + ".update/" + UPD_FILE);
             Intent inst = new Intent(Intent.ACTION_VIEW).setDataAndType(cu, "application/vnd.android.package-archive").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
-            runOnUiThread(() -> { try { startActivity(inst); } catch (Exception e) { js("window.toast&&toast('The installer could not open','err',6000)"); } });
-        } catch (Exception e) { apk.delete(); js("window.toast&&toast('The update did not download. Try again','err',6000)"); }
+            runOnUiThread(() -> { try { startActivity(inst); } catch (Exception e) { updFail("the installer could not open"); } });
+        } catch (Exception e) { apk.delete(); updFail("the update could not be saved: " + e.getClass().getSimpleName()); }
     }
 
     /** 1.13.0: installs through the system's package installer session, so MKCinema becomes the app that installed
