@@ -1530,11 +1530,11 @@ const AvTracks = {
     if (!r.rows.length) {
       // mkc-2721-av: nothing in this page could read the file's tracks. The Android app's own player reads every track
       // itself, so there it takes over at the same moment and shows the file's languages.
-      if (r.note && this.native()) return `<button type="button" class="on av-fixed" tabindex="-1"><i data-lucide="audio-lines"></i>Original audio</button><button type="button" data-avnative><i data-lucide="languages"></i>Choose the language</button><p class="av-note">This host doesn’t let the MKCinema player read the file’s languages, so MKCinema’s Android player opens at this moment and lists every language in the file.</p>`;
+      if (r.note && this.native()) return `<button type="button" class="on av-fixed" tabindex="-1"><i data-lucide="audio-lines"></i>This copy’s audio</button><button type="button" data-avnative><i data-lucide="languages"></i>Choose the language</button><p class="av-note">This host doesn’t let the MKCinema player read the file’s languages, so MKCinema’s Android player opens at this moment and lists every language in the file.</p>`;
       // nothing could read the file's tracks: say what plays, and where another language can be picked
       let xp = null;
       try { xp = r.note && P.stream && handoffUrl(P.stream) ? (extPlayer() || playersHere().find((p) => !p.m3u)) : null; } catch (e) { xp = null; }
-      return `<button type="button" class="on av-fixed" tabindex="-1"><i data-lucide="audio-lines"></i>Original audio</button>${xp ? `<p class="av-note">Other languages in this file can’t be switched in this browser.</p><button type="button" data-avxp="${esc(xp.id)}"><i data-lucide="external-link"></i>${esc(`Open in ${playerName(xp)}`)}</button>` : ''}`;
+      return `<button type="button" class="on av-fixed" tabindex="-1"><i data-lucide="audio-lines"></i>This copy’s audio</button>${xp ? `<p class="av-note">Other languages in this file can’t be switched in this browser.</p><button type="button" data-avxp="${esc(xp.id)}"><i data-lucide="external-link"></i>${esc(`Open in ${playerName(xp)}`)}</button>` : ''}`;
     }
     if (r.how === 'one') return r.rows.map((t) => `<button type="button" class="on av-fixed" tabindex="-1"><i data-lucide="audio-lines"></i>${esc(t.label)}</button>`).join('');
     return r.rows.map((t) => `<button type="button" class="${t.on ? 'on' : ''}${t.bad ? ' av-bad' : ''}" data-avaudio="${t.i}" data-avhow="${r.how}" aria-pressed="${t.on}"><i data-lucide="${t.on ? 'check' : 'audio-lines'}"></i>${esc(t.label)}</button>`).join('');

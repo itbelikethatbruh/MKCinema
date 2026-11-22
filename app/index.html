@@ -5478,11 +5478,11 @@ const AvTracks = {
     if (!r.rows.length) {
       // mkc-2721-av: nothing in this page could read the file's tracks. The Android app's own player reads every track
       // itself, so there it takes over at the same moment and shows the file's languages.
-      if (r.note && this.native()) return `<button type="button" class="on av-fixed" tabindex="-1"><i data-lucide="audio-lines"></i>Original audio</button><button type="button" data-avnative><i data-lucide="languages"></i>Choose the language</button><p class="av-note">This host doesn’t let the MKCinema player read the file’s languages, so MKCinema’s Android player opens at this moment and lists every language in the file.</p>`;
+      if (r.note && this.native()) return `<button type="button" class="on av-fixed" tabindex="-1"><i data-lucide="audio-lines"></i>This copy’s audio</button><button type="button" data-avnative><i data-lucide="languages"></i>Choose the language</button><p class="av-note">This host doesn’t let the MKCinema player read the file’s languages, so MKCinema’s Android player opens at this moment and lists every language in the file.</p>`;
       // nothing could read the file's tracks: say what plays, and where another language can be picked
       let xp = null;
       try { xp = r.note && P.stream && handoffUrl(P.stream) ? (extPlayer() || playersHere().find((p) => !p.m3u)) : null; } catch (e) { xp = null; }
-      return `<button type="button" class="on av-fixed" tabindex="-1"><i data-lucide="audio-lines"></i>Original audio</button>${xp ? `<p class="av-note">Other languages in this file can’t be switched in this browser.</p><button type="button" data-avxp="${esc(xp.id)}"><i data-lucide="external-link"></i>${esc(`Open in ${playerName(xp)}`)}</button>` : ''}`;
+      return `<button type="button" class="on av-fixed" tabindex="-1"><i data-lucide="audio-lines"></i>This copy’s audio</button>${xp ? `<p class="av-note">Other languages in this file can’t be switched in this browser.</p><button type="button" data-avxp="${esc(xp.id)}"><i data-lucide="external-link"></i>${esc(`Open in ${playerName(xp)}`)}</button>` : ''}`;
     }
     if (r.how === 'one') return r.rows.map((t) => `<button type="button" class="on av-fixed" tabindex="-1"><i data-lucide="audio-lines"></i>${esc(t.label)}</button>`).join('');
     return r.rows.map((t) => `<button type="button" class="${t.on ? 'on' : ''}${t.bad ? ' av-bad' : ''}" data-avaudio="${t.i}" data-avhow="${r.how}" aria-pressed="${t.on}"><i data-lucide="${t.on ? 'check' : 'audio-lines'}"></i>${esc(t.label)}</button>`).join('');
@@ -11345,7 +11345,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.89.0';
+const APP_VERSION = '2.89.1';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -11689,7 +11689,7 @@ const CloudConvert = {
   playbackFailed = function (stream, reason) {
     if (stream && stream._audioTry && Date.now() - stream._audioTry < 30000 && stream._audioBase) {
       const at = pNow(); stream.url = stream._audioBase; delete stream._audioTry; stream._audio = null; AudioLang.info.delete(stream); stream._tel = Telemetry.parse(stream);
-      toast('That language stream would not play here, so the original audio is back', 'err', 6000);
+      toast('That language stream would not play here, so this copy plays as it is again', 'err', 6000);
       playStream(P.ctx, stream, { startAt: at }); return;
     }
     return failed(stream, reason);
@@ -17103,7 +17103,7 @@ const SourceRules = {
   audioBonus(s, t) {
     const want = CFG.srAudio; if (!want || want === 'any' || !t || t.isTrailer || t.kind === 'yt') return 0;
     const { langs, multi } = AudioPref.langs(s);
-    if (langs.has(want) || (want === 'eng' && !langs.size)) return 150;
+    if ((langs.has(want) && !(window.MkAudioRight && MkAudioRight.risky(s))) || (want === 'eng' && !langs.size)) return 150;
     return multi ? 60 : 0;
   },
   words() { return String(CFG.srWords || '').split(',').map((w) => w.trim().toLowerCase()).filter(Boolean); },
@@ -23246,7 +23246,7 @@ SportsHub.init();
     known = known.filter((x, i, a) => x && a.indexOf(x) === i);
     if (st && st.tracks && st.tracks.length === 1) known = [st.tracks[0].label];
     const row = (label, on) => `<button type="button" class="al-row${on ? ' on' : ''}" data-alinfo tabindex="-1"><i data-lucide="audio-lines"></i>${esc(label)}${on ? ' · playing' : ''}</button>`;
-    if (known.length <= 1 && !multi) return `${head}${row(known[0] || 'Original audio', true)}`;
+    if (known.length <= 1 && !multi) return `${head}${row(known[0] || 'This copy’s audio', true)}`;
     let xp = null;
     try { xp = handoffUrl(s) ? (extPlayer() || playersHere().find((p) => !p.m3u)) : null; } catch (e) { xp = null; }
     const list = known.length ? known.map((l) => row(l, false)).join('') : row('Several languages (MULTi)', false);
@@ -24245,6 +24245,9 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.89.1', date: '2026-11-21', items: [
+    ['better', 'Your audio language comes first', 'When a source has several languages and this device can’t pick the track inside it, MKCinema plays a copy in your language instead, and the Audio panel switches to one in a tap.'],
+  ] },
   { v: '2.89.0', date: '2026-11-21', items: [
     ['new', 'Home appears at once on TVs', 'When you open MKCinema on a TV or Fire TV stick, Home is drawn straight away as you last saw it, then the fresh rows take over a moment later. No more waiting on a blank screen.'],
     ['new', '4K first where your device plays it', 'Smart Play now starts with 4K in the MKCinema player when your device plays 4K smoothly, and always in the Windows and Android apps\' own player. Other devices still start with 1080p, so films keep starting on the first try.'],
@@ -51823,7 +51826,7 @@ const StreamsNudge = {
     try { MKLog.add('play', 'native: back to the page player (' + why + ')'); } catch (e) { /* ignore */ }
     const at = (typeof switchAt === 'function' ? switchAt() : 0) || 0;
     try { MkNative.stop(); } catch (e) { /* ignore */ }
-    setTimeout(() => { if (P.stream === s && P.ctx) { try { toast('That language could not be switched here; playing the file’s own track.', 'info', 3500); } catch (e) { /* ignore */ } playStream(P.ctx, s, { startAt: at || undefined }); } }, 0);
+    setTimeout(() => { if (P.stream === s && P.ctx) { try { toast('The MKCinema Player couldn’t open this copy, so it plays in the web player.', 'info', 3500); } catch (e) { /* ignore */ } playStream(P.ctx, s, { startAt: at || undefined }); } }, 0);
     return true;
   };
   const baseFail = MkNative.fail.bind(MkNative);
@@ -51864,7 +51867,7 @@ const StreamsNudge = {
   const rows = (s, cls) => codes(s).list.map((c) => `<button type="button" class="${cls || ''}" data-mkapick="${esc(c)}"><i data-lucide="audio-lines"></i>${esc(lang(c))}</button>`).join('');
   const said = (s) => { const l = codes(s).list.map(lang); return l.length ? `This file has ${l.join(' and ')}.` : 'This file has more than one language.'; };
   const cant = () => (droid() ? ' This file plays its default track here; the MKCinema Player could not take it over.' : ' This browser plays the file’s own default track; the MKCinema apps for Android, Windows and Mac switch languages while it plays.');
-  const plainText = (s) => `<p class="al-note">${esc(said(s))}${cant()}</p>`;
+  const plainText = (s) => (window.MkAudioRight ? MkAudioRight.html(s, 'al') : `<p class="al-note">${esc(said(s))}${cant()}</p>`);
 
   /* the Audio language block in Options */
   let obs = null;
@@ -51902,7 +51905,7 @@ const StreamsNudge = {
       if (!s || /data-avaudio/.test(h) || /spin/.test(h)) return h;
       const c = codes(s); if (!c.multi) return h;
       if (can() && plain(s)) return `${rows(s, '')}<p class="av-note">Tap a language to play in it.</p>`;
-      return `<p class="av-note">${esc(said(s))}${cant()}</p>`;
+      return window.MkAudioRight ? MkAudioRight.html(s, 'av') : `<p class="av-note">${esc(said(s))}${cant()}</p>`;
     };
     AvTracks.bind = function (m) { bind(m); $$('[data-mkapick]', m).forEach((b) => { b.onclick = () => pick(b.dataset.mkapick); }); };
   }
@@ -52414,7 +52417,7 @@ html.tv .ea-badge,html.tv .ea-dot{display:none!important}
       AudioLang.section = function (st) {
         const out = sec(st);
         if (typeof out !== 'string' || !/data-alxp/.test(out)) return out;
-        return '<h5>Audio language</h5><button type="button" class="al-row on" data-alinfo tabindex="-1"><i data-lucide="audio-lines"></i>Original audio · playing</button>';
+        return '<h5>Audio language</h5><button type="button" class="al-row on" data-alinfo tabindex="-1"><i data-lucide="audio-lines"></i>This copy’s audio · playing</button>';
       };
     }
   } catch (e) { /* player not built here */ }
@@ -55776,6 +55779,155 @@ Spot.init();
   // a different account or profile must never see the last one's Home
   try { if (typeof Account !== 'undefined' && Account.signedOut) { const so = Account.signedOut; Account.signedOut = function () { clear(); return so.apply(this, arguments); }; } } catch (e) { /* no accounts */ }
   window.MkFastHome = { take, clear };
+})();
+</script>
+<script id="mk-2891-audio-right">
+/* 2.89.1 Your audio language plays.
+   A release named for several languages ("ITA ENG", MULTi, Dual Audio) used to rank like a release in your language alone.
+   Where this device cannot choose the track inside a file (Chrome, Edge, Firefox and Android browsers on a host that
+   does not let MKCinema read the file, with no switchable stream from the debrid service), the browser simply plays the
+   file's first track, which is often the dub. So:
+   - Smart Play, resume, next episode and the "Best match" pick use a copy that names only your language (or no language)
+     whenever one exists, and only fall back to a several-language copy when nothing else is there.
+   - Moving on to another source after a failure tries those copies first too.
+   - A several-language copy that started anyway, by itself, switches to a copy in your language once it is clear the
+     track cannot be chosen here. A copy you picked by hand stays, and the Audio panel offers the switch.
+   - The Audio panel never calls a track "original" and never sends anyone to another app. */
+(() => {
+  if (typeof AudioPref === 'undefined' || typeof engine === 'undefined' || typeof video === 'undefined') return;
+  const want = () => { try { return window.MkAudioWant ? MkAudioWant() : ''; } catch (e) { return ''; } };
+  const lang = (c) => { try { return langName(c); } catch (e) { return String(c); } };
+  const log = (m) => { try { MKLog.add('info', `audio: ${m}`); } catch (e) { /* no log */ } };
+  const names = (s) => { try { const r = AudioPref.langs(s); return { langs: r.langs, multi: !!(r.multi || r.langs.size > 1) }; } catch (e) { return { langs: new Set(), multi: false }; } };
+  const film = (s) => !!(s && s._tel && !s._tel.isTrailer && !s.ytId && s._tel.kind !== 'yt');
+
+  /* ---------- can this device choose the track inside this file? ---------- */
+  const engHost = (u) => {
+    try {
+      const x = new URL(u), m = x.pathname.match(/\/(?:resolve|playback|stream|dl)\/([a-z][a-z-]{1,20})\//i), k = x.host + (m ? `/${m[1].toLowerCase()}` : '');
+      const e = (JSON.parse(localStorage.getItem('mkc.engHosts') || '{}') || {})[k];
+      return e && Date.now() - e.t < 7 * 864e5 ? e.v : '';
+    } catch (e) { return ''; }
+  };
+  let nOk = null; // the app's own player answered the check (true / false), or not yet (null)
+  try { if (typeof MkNative !== 'undefined' && MkNative.bridge()) MkNative.probe().then((v) => { nOk = !!v; }, () => { nOk = false; }); } catch (e) { nOk = false; }
+  const nativeHere = () => {
+    try {
+      if (typeof MkNative === 'undefined' || CFG.nativePlayer === false || MkNative.bad || !MkNative.bridge()) return false;
+      return MkNative.ok || nOk !== false;
+    } catch (e) { return false; }
+  };
+  const canSwitch = (s) => {
+    if ('audioTracks' in HTMLMediaElement.prototype) return true; // Safari, the Mac app
+    if (nativeHere()) return true; // the Windows, Mac and Android apps' own player
+    if (IS_TV && window.MKAndroid) return true; // the Android TV player starts in your language
+    const u = String((s && (s._audioBase || s.url)) || '');
+    if (/\.m3u8(\?|#|$)/i.test(u)) return true; // hls.js switches audio groups
+    // MKCinema's engine reads this host and picks your track itself
+    if (CFG.engine !== false && !IS_TV && window.MkEngine && MkEngine.ok && engHost(u) === 'ok') return true;
+    return false;
+  };
+  /* a copy that may start in another language here: it names several languages (yours among them, or MULTi) and the
+     track cannot be chosen on this device */
+  const risky = (s) => {
+    const w = want(); if (!w || !film(s)) return false;
+    const n = names(s); if (!n.multi) return false;
+    return !canSwitch(s);
+  };
+  /* a copy whose name says your language only, or no language at all (most English releases name none) */
+  const safe = (s) => { const w = want(); if (!w || !film(s)) return true; const n = names(s); if (n.multi) return false; return !n.langs.size || (n.langs.size === 1 && n.langs.has(w)); };
+
+  /* ---------- 1) the automatic pick ---------- */
+  const pb = engine.pickBest.bind(engine);
+  engine.pickBest = function (streams, opts) {
+    let r = null;
+    try {
+      if (want() && Array.isArray(streams) && streams.some(risky)) {
+        const keep = streams.filter((s) => !risky(s));
+        const p = keep.length ? pb(keep, opts) : null;
+        // a copy in your language that the debrid service has not cached is only a "downloading" notice: not worth it
+        if (p && p._tel && p._tel.cached !== false) r = p;
+      }
+    } catch (e) { r = null; }
+    if (!r) r = pb(streams, opts);
+    if (r && typeof r === 'object') r._mkAuto = Date.now();
+    return r;
+  };
+  /* ---------- 2) the next source after a failure ---------- */
+  if (typeof Failover !== 'undefined' && typeof Failover.candidates === 'function') {
+    const fc = Failover.candidates;
+    Failover.candidates = function () {
+      const list = fc.apply(this, arguments);
+      if (!Array.isArray(list) || list.length < 2 || !want()) return list;
+      try { return list.map((s, i) => [s, i, risky(s) ? 1 : 0]).sort((a, b) => a[2] - b[2] || a[1] - b[1]).map((x) => x[0]); } catch (e) { return list; }
+    };
+  }
+
+  /* ---------- 3) the copy in your language for the one playing ---------- */
+  const alt = (s) => {
+    const ctx = P.ctx; if (!ctx || !Array.isArray(ctx.streams) || !want()) return null;
+    let vis = []; try { vis = visibleStreams(ctx.streams); } catch (e) { vis = ctx.streams; }
+    const tried = (typeof Failover !== 'undefined' && Failover.tried) || new Set();
+    const list = vis.filter((x) => x !== s && film(x) && x._tel.webReady && x._tel.cached !== false && !x._tel.is3d && !risky(x) && !x._mkBadLang && !tried.has(x));
+    if (!list.length) return null;
+    const mine = list.filter(safe), pool = mine.length ? mine : list;
+    try { return pb(pool, {}) || pool[0]; } catch (e) { return pool[0]; }
+  };
+  const go = (s, a, why) => {
+    if (!a || P.stream !== s || $('#player').hidden) return false;
+    const at = typeof pNow === 'function' ? pNow() : 0;
+    s._mkBadLang = true; a._mkAudUser = !!why.hand;
+    log(`${why.hand ? 'you asked for' : 'switching to'} a copy in ${lang(want())} (${why.text})`);
+    try { $('#optMenu').hidden = true; $('#subMenu').hidden = true; } catch (e) { /* menus not built */ }
+    try { toast(why.hand ? `Switching to ${lang(want())}…` : `Playing a copy in ${lang(want())}: the other copy has several languages and this browser can’t choose between them.`, 'info', 4200, 'audioright'); } catch (e) { /* no toast */ }
+    P.force = true;
+    playStream(P.ctx, a, { startAt: at > 5 ? at : undefined });
+    return true;
+  };
+
+  /* ---------- 4) a several-language copy that started by itself ---------- */
+  const userPicked = (s) => !!(s && (s._audio != null || s._audioTry || s._mkAudUser));
+  video.addEventListener('playing', () => {
+    const s = P.stream; if (!s || s._mkRightChk || !s._mkAuto || userPicked(s) || !risky(s)) return;
+    if ((window.MkEngine && MkEngine.active) || (window.MkNative && MkNative.active)) return;
+    s._mkRightChk = true;
+    const t0 = Date.now();
+    const wait = () => {
+      if (P.stream !== s || userPicked(s) || $('#player').hidden) return;
+      const st = typeof AudioLang !== 'undefined' ? AudioLang.info.get(s) : null;
+      // your debrid service's own stream or your MKCinema server can switch the track: the 2.62.6 code does that
+      if (st && st.state === 'ok') return;
+      if (st && st.state === 'loading' && Date.now() - t0 < 30000) { setTimeout(wait, 600); return; }
+      if (!st && Date.now() - t0 < 4000) { setTimeout(wait, 600); return; }
+      const a = alt(s);
+      if (a) go(s, a, { text: 'this browser plays the first track of that file' });
+      else log(`no copy in ${lang(want())} only; this copy plays its first track`);
+    };
+    setTimeout(wait, 1500);
+  });
+
+  /* ---------- 5) what the Audio panel says when the track cannot be chosen ---------- */
+  const androidWeb = () => /Android/i.test(navigator.userAgent) && !window.MKAndroid;
+  window.MkAudioRight = {
+    risky, safe, alt, canSwitch,
+    html(s, kind) {
+      const p = kind === 'al' ? 'al-note' : 'av-note', w = want(), a = w ? alt(s) : null, n = names(s);
+      const has = [...n.langs].map(lang).filter((x, i, l) => x && l.indexOf(x) === i);
+      // one sentence per line, so each one is translated whole
+      const line = (t) => `<p class="${p}">${esc(t)}</p>`;
+      const what = has.length > 1 ? line(`This copy has ${has.join(' and ')}.`) : '';
+      const cant = line('This browser can only play the first track inside this copy, so its language can’t be changed here.');
+      if (a) return `<button type="button" class="${kind === 'al' ? 'al-row' : ''}" data-mkalt><i data-lucide="languages"></i>${esc(`Switch to ${lang(w)}`)}</button>${what}${cant}${line(`Another copy in ${lang(w)} plays from the same moment.`)}`;
+      return `${what}${cant}${w ? line(`No other copy in ${lang(w)} was found.`) : ''}${androidWeb() ? line('The MKCinema Android app chooses the language inside the file.') : ''}`;
+    },
+  };
+  document.addEventListener('click', (e) => {
+    const b = e.target && e.target.closest && e.target.closest('[data-mkalt]'); if (!b) return;
+    e.preventDefault(); e.stopPropagation();
+    const s = P.stream, a = s && alt(s);
+    if (!a) { try { toast(`No copy in ${lang(want())} was found`, 'info', 3000); } catch (x) { /* no toast */ } return; }
+    s._mkAudUser = true; go(s, a, { hand: true, text: 'picked in the Audio panel' });
+  }, true);
 })();
 </script>
 </body>

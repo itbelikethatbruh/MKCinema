@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.89.1 (2026-11-21)
+
+- **Your audio language comes first:** when a source has several languages and the device can't pick the track inside it, MKCinema plays a copy in your language instead, and the Audio panel switches to one in a tap.
+
 ## Web app 2.89.0 (2026-11-21)
 
 - **Home appears at once on TVs:** when you open MKCinema on a TV or Fire TV stick, Home is drawn straight away as you last saw it, then the fresh rows take over a moment later.

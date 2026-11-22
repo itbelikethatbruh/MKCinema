@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.89.1', date: '2026-11-21', items: [
+    ['better', 'Your audio language comes first', 'When a source has several languages and this device can’t pick the track inside it, MKCinema plays a copy in your language instead, and the Audio panel switches to one in a tap.'],
+  ] },
   { v: '2.89.0', date: '2026-11-21', items: [
     ['new', 'Home appears at once on TVs', 'When you open MKCinema on a TV or Fire TV stick, Home is drawn straight away as you last saw it, then the fresh rows take over a moment later. No more waiting on a blank screen.'],
     ['new', '4K first where your device plays it', 'Smart Play now starts with 4K in the MKCinema player when your device plays 4K smoothly, and always in the Windows and Android apps\' own player. Other devices still start with 1080p, so films keep starting on the first try.'],

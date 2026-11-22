@@ -252,7 +252,7 @@ const CloudConvert = {
   playbackFailed = function (stream, reason) {
     if (stream && stream._audioTry && Date.now() - stream._audioTry < 30000 && stream._audioBase) {
       const at = pNow(); stream.url = stream._audioBase; delete stream._audioTry; stream._audio = null; AudioLang.info.delete(stream); stream._tel = Telemetry.parse(stream);
-      toast('That language stream would not play here, so the original audio is back', 'err', 6000);
+      toast('That language stream would not play here, so this copy plays as it is again', 'err', 6000);
       playStream(P.ctx, stream, { startAt: at }); return;
     }
     return failed(stream, reason);

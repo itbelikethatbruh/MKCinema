@@ -15,7 +15,7 @@
       AudioLang.section = function (st) {
         const out = sec(st);
         if (typeof out !== 'string' || !/data-alxp/.test(out)) return out;
-        return '<h5>Audio language</h5><button type="button" class="al-row on" data-alinfo tabindex="-1"><i data-lucide="audio-lines"></i>Original audio · playing</button>';
+        return '<h5>Audio language</h5><button type="button" class="al-row on" data-alinfo tabindex="-1"><i data-lucide="audio-lines"></i>This copy’s audio · playing</button>';
       };
     }
   } catch (e) { /* player not built here */ }
