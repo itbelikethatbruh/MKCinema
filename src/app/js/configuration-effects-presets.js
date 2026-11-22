@@ -38,7 +38,7 @@ const CFG_DEFAULTS = {
   partyName: '', partyShareLink: false, governor: true, syncKeys: true, anonStats: true, pickMemo: true, liveMini: true,
   ambilight: true, ambIntensity: 85, rememberVolume: true, extPlayers: {},
   // subtitles
-  subAuto: true, subDubSigns: true, subLang: 'eng', subSize: 100, subColor: '#ffffff', subBg: 65, subPos: 'bottom', subFont: 'sans', subOutline: true, subBold: false, subShadow: 'soft',
+  subAuto: true, subDubSigns: true, subLang: 'eng', subSize: 100, subColor: '#ffffff', subBg: 65, subPos: 'bottom', subFont: 'sans', subOutline: true, subBold: false, subShadow: 'soft', subLook: 'custom',
   // streams
   hideP2P: false, browserOnly: false, audioOnly: 'eng', showTrailers: true, timeout: 15, alwaysProxy: false,
   // intro, sound, trailers

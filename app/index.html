@@ -2745,7 +2745,7 @@ const CFG_DEFAULTS = {
   partyName: '', partyShareLink: false, governor: true, syncKeys: true, anonStats: true, pickMemo: true, liveMini: true,
   ambilight: true, ambIntensity: 85, rememberVolume: true, extPlayers: {},
   // subtitles
-  subAuto: true, subDubSigns: true, subLang: 'eng', subSize: 100, subColor: '#ffffff', subBg: 65, subPos: 'bottom', subFont: 'sans', subOutline: true, subBold: false, subShadow: 'soft',
+  subAuto: true, subDubSigns: true, subLang: 'eng', subSize: 100, subColor: '#ffffff', subBg: 65, subPos: 'bottom', subFont: 'sans', subOutline: true, subBold: false, subShadow: 'soft', subLook: 'custom',
   // streams
   hideP2P: false, browserOnly: false, audioOnly: 'eng', showTrailers: true, timeout: 15, alwaysProxy: false,
   // intro, sound, trailers
@@ -10646,7 +10646,28 @@ COMMANDS.push(
 /* =====================================================================
    MKCinema · settings, local files, boot
    ===================================================================== */
-const SUB_FONTS = { sans: '"Onest", system-ui, sans-serif', serif: 'Georgia, "Times New Roman", serif', mono: 'var(--f-mono)', display: '"Sora", system-ui, sans-serif', system: 'system-ui, sans-serif' };
+const SUB_FONTS = { sans: '"Onest", system-ui, sans-serif', serif: 'Georgia, "Times New Roman", serif', mono: 'var(--f-mono)', display: '"Sora", system-ui, sans-serif', system: 'system-ui, sans-serif',
+  stream: '"Inter", "Onest", system-ui, sans-serif', caption: '"IBM Plex Mono", var(--f-mono)', rounded: '"Nunito", system-ui, sans-serif', condensed: '"Roboto Condensed", "Arial Narrow", sans-serif' };
+/* 2.90.1: the extra subtitle fonts load only when someone picks them */
+const SUB_FONT_FILES = { stream: 'Inter:wght@400;500;600;700', caption: 'IBM+Plex+Mono:wght@400;500;600', rounded: 'Nunito:wght@400;600;700;800', condensed: 'Roboto+Condensed:wght@400;500;700' };
+function loadSubFont(k) {
+  const f = SUB_FONT_FILES[k]; if (!f || document.getElementById('mkc-subfont-' + k)) return;
+  const l = document.createElement('link'); l.id = 'mkc-subfont-' + k; l.rel = 'stylesheet';
+  l.href = `https://fonts.googleapis.com/css2?family=${f}&display=swap`; document.head.appendChild(l);
+}
+/* 2.90.1: ready-made subtitle looks. Each sets the whole look at once; touching one part afterwards means Your own. */
+const SUB_LOOKS = {
+  stream: { subFont: 'stream', subColor: '#ffffff', subBg: 0, subBgColor: '#000000', subOutline: true, subBold: false, subShadow: 'strong' },
+  tv: { subFont: 'caption', subColor: '#ffffff', subBg: 100, subBgColor: '#000000', subOutline: false, subBold: false, subShadow: 'none' },
+};
+let subLookBusy = false;
+function setSubLook(v) {
+  const p = SUB_LOOKS[v];
+  subLookBusy = true;
+  try { if (p) Object.entries(p).forEach(([k, x]) => setCfg(k, x)); setCfg('subLook', p ? v : 'custom'); } finally { subLookBusy = false; }
+  if (typeof renderSettingsBody === 'function' && $('#settings') && !$('#settings').hidden) renderSettingsBody();
+}
+CFG_HOOKS.push((k) => { if (!subLookBusy && CFG.subLook && CFG.subLook !== 'custom' && ['subFont', 'subColor', 'subBg', 'subBgColor', 'subOutline', 'subBold', 'subShadow'].includes(k)) { CFG.subLook = 'custom'; saveCfg(); } });
 const LANG_CHOICES = (() => { const seen = new Map(); Object.entries(LANGS).forEach(([code, name]) => { if (code.length === 3 && !seen.has(name)) seen.set(name, code); }); return [...seen.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([n, c]) => [c, n]); })();
 
 function applyAll() {
@@ -10661,10 +10682,10 @@ function applyAll() {
   body.toggle('ci-hover', cardInfoMode() === 'hover'); body.toggle('ci-below', cardInfoMode() === 'below');
   { const de = document.documentElement.classList; de.toggle('ls-cs-s', CFG.cardSize === 's'); de.toggle('ls-cs-l', CFG.cardSize === 'l'); de.toggle('ls-hero-short', CFG.banner === 'short'); de.toggle('ls-hero-off', CFG.banner === 'off'); if (typeof LayStudio !== 'undefined') LayStudio.menuSync(); }
   root.setProperty('--sub-size', `${CFG.subSize}%`); root.setProperty('--sub-color', CFG.subColor);
-  root.setProperty('--sub-bg', `rgba(0,0,0,${CFG.subBg / 100})`); root.setProperty('--sub-font', SUB_FONTS[CFG.subFont] || SUB_FONTS.sans);
+  root.setProperty('--sub-bg', `rgba(0,0,0,${CFG.subBg / 100})`); root.setProperty('--sub-font', SUB_FONTS[CFG.subFont] || SUB_FONTS.sans); loadSubFont(CFG.subFont);
   { const sh = { none: '', soft: '', strong: '2px 2px 4px #000,3px 3px 8px rgba(0,0,0,.85)', drop: '3px 3px 0 #000' }[CFG.subShadow] || '';
     root.setProperty('--sub-shadow', [CFG.subOutline ? '0 0 3px #000,0 0 2px #000,1px 1px 2px #000' : '', sh].filter(Boolean).join(',') || 'none');
-    root.setProperty('--sub-weight', CFG.subBold ? '700' : '400'); }
+    root.setProperty('--sub-weight', CFG.subBold ? '700' : (CFG.subFont === 'stream' ? '500' : '400')); }
   $('#fps').hidden = !CFG.showFps; FpsMeter.set(!!CFG.showFps);
   sfx.setVolume();
 }
@@ -10907,10 +10928,11 @@ const SECTIONS = [
     { key: 'subAuto', label: 'Turn on subtitles automatically', help: 'Picks your language when a stream has it.', type: 'toggle' },
     { key: 'subDubSigns', label: 'Signs & Songs with dubs', help: 'When a dual-audio anime plays its dub in your subtitle language, picks the file\u2019s Signs & Songs track (on-screen text and lyrics) instead of full subtitles made for the original voices.', type: 'toggle' },
     { key: 'subLang', label: 'Preferred language', type: 'select', options: LANG_CHOICES },
+    { key: 'subLook', label: 'Style', help: 'Streaming: clean white letters with a soft shadow. TV captions: white letters on a black box, line by line. Your own: set each part below.', type: 'seg', options: [['custom', 'Your own'], ['stream', 'Streaming'], ['tv', 'TV captions']], get: () => CFG.subLook || 'custom', set: (v) => setSubLook(v) },
     { key: 'subSize', label: 'Size', type: 'range', min: 50, max: 220, step: 10, fmt: pct, live: true },
     { key: 'subColor', label: 'Text color', type: 'color' },
     { key: 'subBg', label: 'Background opacity', type: 'range', min: 0, max: 100, step: 5, fmt: pct, live: true },
-    { key: 'subFont', label: 'Font', type: 'select', options: [['sans', 'Onest (sans)'], ['system', 'System'], ['serif', 'Serif'], ['mono', 'Monospace'], ['display', 'Sora']] },
+    { key: 'subFont', label: 'Font', type: 'select', options: [['sans', 'Onest (sans)'], ['stream', 'Streaming font'], ['caption', 'TV caption font'], ['rounded', 'Rounded'], ['condensed', 'Condensed'], ['system', 'System'], ['serif', 'Serif'], ['mono', 'Monospace'], ['display', 'Sora']] },
     { key: 'subOutline', label: 'Text outline', type: 'toggle' },
     { key: 'subBold', label: 'Bold text', type: 'toggle' },
     { key: 'subShadow', label: 'Shadow', help: 'A shadow behind the letters helps on bright scenes.', type: 'seg', options: [['none', 'None'], ['strong', 'Soft shadow'], ['drop', 'Hard shadow']] },
@@ -11185,7 +11207,7 @@ const SetTidy = {
     ],
     subtitles: [
       ['Turning them on', ['subAuto', 'subLang', 'subWait', 'subMemory', 'forcedSubs', 'hideSDH', 'subAutoTranslate', 'subAutoSync', 'subDubSigns']],
-      ['How they look', ['subSize', 'subColor', 'subBg', 'subFont', 'subOutline', 'subBold', 'subShadow', 'subPos']],
+      ['How they look', ['subLook', 'subSize', 'subColor', 'subBg', 'subFont', 'subOutline', 'subBold', 'subShadow', 'subPos']],
       ['While watching', ['lineSnap', 'lastTime', 'margins', 'phoneSubs']],
       ['Anime and styled subtitles', ['assMode', 'mkvSubs']],
       ['Learn and replay', ['replayCC', 'learnWordsBtn']],
@@ -11347,7 +11369,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.90.0';
+const APP_VERSION = '2.90.1';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -24247,6 +24269,10 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.90.1', date: '2026-11-22', items: [
+    ['better', 'Smoother phone menus', 'Changing sections on phones now glides with no jumping, the bars are slightly see-through, and Miko sits in the middle of the bottom bar.'],
+    ['new', 'Subtitle styles', 'Settings › Subtitles has ready-made styles: Streaming (clean white letters with a soft shadow) and TV captions (white letters on a black box), plus four new fonts.'],
+  ] },
   { v: '2.90.0', date: '2026-11-22', items: [
     ['new', 'New phone menus', 'On phones, the sections sit in one bar at the top and Search and Menu sit in a bar at the bottom. Tap the small tab above it, or swipe, to tuck the bar away and bring it back.'],
   ] },
@@ -55787,9 +55813,12 @@ Spot.init();
 })();
 </script>
 <style id="mk-pill">
-/* 2.90 Phone bars: one sections bar on top, Search + Menu bar at the bottom that the user can lower and lift.
-   Phones only (html.mk-pill: below 761 px, never TVs). Rounded rectangles, Noir. Transform/opacity motion only. */
-html.mk-pill{--mkp-r:18px;--mkp-ri:12px;--mkp-bg:#0e0e10;--mkp-line:rgba(255,255,255,.12);--mkp-ink:#f4f1ea;--mkp-dim:#ffffffa8;--mkp-lift:78px;--mkp-ease:cubic-bezier(.2,.75,.2,1)}
+/* 2.90 Phone bars: one sections bar on top, Search + Miko + Menu bar at the bottom that the user can lower and lift.
+   Phones only (html.mk-pill: below 761 px, never TVs). Rounded rectangles, Noir, a little see-through.
+   Motion: transform/opacity only. 2.90.1: see-through bars, Miko in the bar, a sliding highlight on the sections,
+   steady section widths, a softer section change, and the card glow only with a remote or keyboard. */
+html.mk-pill{--mkp-r:18px;--mkp-ri:12px;--mkp-bg:rgba(14,14,16,.9);--mkp-line:rgba(255,255,255,.12);--mkp-ink:#f4f1ea;--mkp-dim:#ffffffb0;--mkp-lift:78px;--mkp-ease:cubic-bezier(.2,.75,.2,1)}
+html.mk-pill:not(.lite) body.fx-hi{--mkp-bg:rgba(14,14,16,.7)}
 html.mk-pill.mk-pill-down{--mkp-lift:30px}
 html.mk-pill.ezb-bar,html.mk-pill.ezb-bar body{--dock-h:calc(44px + env(safe-area-inset-top,0px))!important}
 body.mk-player-on,body.layer-open{--mkp-lift:0px}
@@ -55797,20 +55826,32 @@ body.mk-player-on,body.layer-open{--mkp-lift:0px}
 html.mk-pill .dock .brand,html.mk-pill #sideBtn,html.mk-pill .dock-tools{display:none!important}
 html.mk-pill .dock{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;min-height:0!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 html.mk-pill .dock-wrap{padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));padding-top:calc(8px + env(safe-area-inset-top,0px))}
-html.mk-pill.ezb-bar #tabs{order:0;flex:1 1 100%;width:100%;max-width:100%;height:50px;box-sizing:border-box;padding:5px;gap:2px;border-radius:var(--mkp-r)!important;background:var(--mkp-bg)!important;border:1px solid var(--mkp-line)!important;box-shadow:0 10px 30px #0000008c!important;pointer-events:auto}
-html.mk-pill.ezb-bar #tabs .tab,html.mk-pill.ezb-bar #tabs .mk-pm-btn{flex:1 0 auto!important;min-height:38px;height:38px;padding:0 9px!important;border-radius:var(--mkp-ri)!important;font-size:calc(16px * var(--ts,1))!important;font-weight:500;letter-spacing:0;color:var(--mkp-dim)}
-html.mk-pill.ezb-bar #tabs .tab.on{font-weight:600}
+html.mk-pill.ezb-bar #tabs{position:relative;order:0;flex:1 1 100%;width:100%;max-width:100%;height:50px;box-sizing:border-box;padding:5px;gap:2px;border-radius:var(--mkp-r)!important;background:var(--mkp-bg)!important;border:1px solid var(--mkp-line)!important;box-shadow:0 10px 30px #0000008c!important;pointer-events:auto}
+html.mk-pill:not(.lite) body.fx-hi #tabs,html.mk-pill:not(.lite) body.fx-hi #mkPill,html.mk-pill:not(.lite) body.fx-hi #mkPillTog{-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%)}
+/* every section keeps the same weight, so the bar never re-fits when you change section */
+html.mk-pill.ezb-bar #tabs .tab,html.mk-pill.ezb-bar #tabs .mk-pm-btn{position:relative;z-index:1;flex:1 0 auto!important;min-height:38px;height:38px;padding:0 9px!important;border-radius:var(--mkp-ri)!important;font-size:calc(16px * var(--ts,1))!important;font-weight:550!important;letter-spacing:0;color:var(--mkp-dim)}
 html.mk-pill.ezb-bar #tabs .mk-pm-btn{justify-content:center}
 html.mk-pill #mkPmMenu{border-radius:var(--mkp-r)!important}
 html.mk-pill #mkPmMenu button{border-radius:var(--mkp-ri)!important}
+/* the sliding highlight: the open section's own fill hides and one highlight glides between sections */
+html.mk-pill.mkp-ind-on.ezb-bar #tabs .tab.on{background:transparent!important;box-shadow:none!important;transition:color .3s ease}
+#tabs .mkp-ind{display:none}
+html.mk-pill.mkp-ind-on #tabs .mkp-ind{display:block;position:absolute;z-index:0;left:0;top:5px;height:38px;width:60px;border-radius:var(--mkp-ri);background:linear-gradient(180deg,#fbf8f2,#e6e0d4);box-shadow:0 2px 12px #fff0d229;pointer-events:none;transform-origin:0 50%;will-change:transform}
+html.mk-pill.mkp-ind-on #tabs .mkp-ind[data-go]{transition:transform .38s var(--mkp-ease)}
+/* a softer change between sections on phones */
+html.mk-pill #app .view.on{animation:mkpView .36s var(--mkp-ease)}
+@keyframes mkpView{0%{opacity:0;transform:translate3d(0,12px,0)}}
 /* bottom bar */
 #mkPill,#mkPillTog{display:none}
-html.mk-pill #mkPill{display:flex;position:fixed;z-index:60;left:max(14px,env(safe-area-inset-left,0px));right:max(14px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));height:56px;padding:4px;box-sizing:border-box;border-radius:var(--mkp-r);background:var(--mkp-bg);border:1px solid var(--mkp-line);box-shadow:0 14px 36px #000000a6,0 1px 0 #ffffff0d inset;transition:transform .42s var(--mkp-ease),opacity .3s ease;touch-action:none}
+html.mk-pill #mkPill{display:flex;align-items:stretch;position:fixed;z-index:60;left:max(14px,env(safe-area-inset-left,0px));right:max(14px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));height:56px;padding:4px;box-sizing:border-box;border-radius:var(--mkp-r);background:var(--mkp-bg);border:1px solid var(--mkp-line);box-shadow:0 14px 36px #000000a6,0 1px 0 #ffffff0d inset;transition:transform .42s var(--mkp-ease),opacity .3s ease;touch-action:none}
 html.mk-pill #mkPill button{all:unset;flex:1;display:flex;align-items:center;justify-content:center;gap:9px;border-radius:var(--mkp-ri);color:var(--mkp-ink);font:600 calc(16px * var(--ts,1))/1 var(--f-ui,inherit);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .2s ease}
 html.mk-pill #mkPill button svg{width:19px;height:19px;opacity:.85}
 html.mk-pill #mkPill button:active,html.mk-pill #mkPill button[aria-expanded=true]{background:#ffffff14}
 html.mk-pill #mkPill button:focus-visible{outline:2px solid var(--mkp-ink);outline-offset:-2px}
 html.mk-pill #mkPill .mkp-sep{width:1px;align-self:center;height:22px;background:#ffffff1f;flex:none}
+html.mk-pill #mkPill .mkp-gap{display:none;flex:none;width:52px}
+html.mk-pill.mk-pill-miko #mkPill .mkp-sep{display:none}
+html.mk-pill.mk-pill-miko #mkPill .mkp-gap{display:block}
 html.mk-pill #mkPillTog{all:unset;display:grid;place-items:center;position:fixed;z-index:60;left:50%;margin-left:-28px;width:56px;height:26px;bottom:calc(76px + env(safe-area-inset-bottom,0px));border-radius:10px;background:var(--mkp-bg);border:1px solid var(--mkp-line);color:var(--mkp-ink);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .42s var(--mkp-ease);touch-action:none}
 html.mk-pill #mkPillTog:before{content:"";position:absolute;inset:-12px -14px}
 html.mk-pill #mkPillTog svg{width:18px;height:18px;transition:transform .42s var(--mkp-ease)}
@@ -55823,11 +55864,15 @@ body.mk-player-on #mkPill,body.mk-player-on #mkPillTog{visibility:hidden}
 html.mk-pill body.layer-open #mkPill{transform:translate3d(0,calc(100% + 16px + env(safe-area-inset-bottom,0px)),0);opacity:0;pointer-events:none}
 html.mk-pill body.layer-open #mkPillTog{transform:translate3d(0,140px,0);pointer-events:none}
 html.mk-pill body{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+/* Miko sits in the middle of the bar as a small round button and moves with it */
+html.mk-pill #mikoFab{left:50%!important;right:auto!important;margin:0 0 0 -20px!important;width:40px!important;height:40px!important;bottom:calc(20px + env(safe-area-inset-bottom,0px))!important;z-index:61!important;translate:0 0;transition:translate .42s var(--mkp-ease),opacity .28s,transform .38s!important}
+html.mk-pill #mikoFab .mk-tip{display:none!important}
+html.mk-pill.mk-pill-down #mikoFab,html.mk-pill body.layer-open #mikoFab{translate:0 calc(100% + 40px + env(safe-area-inset-bottom,0px));pointer-events:none}
 /* things that float at the bottom sit above the bar */
-html.mk-pill #mikoFab{bottom:calc(var(--mkp-lift) + 14px + env(safe-area-inset-bottom,0px))!important;transition:bottom .42s var(--mkp-ease),opacity .28s,transform .38s}
 html.mk-pill #toasts,html.mk-pill .sup-ask,html.mk-pill .ls-undo,html.mk-pill .ds-off,html.mk-pill #soundgate,html.mk-pill #updBar,html.mk-pill #adPaste{bottom:calc(var(--mkp-lift) + 14px + env(safe-area-inset-bottom,0px))!important}
 html.mk-pill .party-pill,html.mk-pill .mu-mini,html.mk-pill .rec-pill,html.mk-pill .mk-qs{bottom:calc(var(--mkp-lift) + 10px + env(safe-area-inset-bottom,0px))!important}
 html.mk-pill .live-mini,html.mk-pill .mini-play{bottom:calc(var(--mkp-lift) + 76px + env(safe-area-inset-bottom,0px))!important}
+html.mk-pill #mikoBox{bottom:calc(var(--mkp-lift) + 14px + env(safe-area-inset-bottom,0px))!important}
 html.mk-pill body.mk-player-on #toasts{bottom:auto!important}
 html.mk-pill body.mk-player-on .rec-pill{bottom:auto!important}
 /* Menu opens as a sheet from the bottom */
@@ -55841,17 +55886,25 @@ html.mk-pill #ezbMenu .ezb-big{border-radius:16px!important}
 html.mk-pill #ezbMenu button{border-radius:12px}
 #mkPillShade{position:fixed;inset:0;z-index:2147482999;background:#000;opacity:0;transition:opacity .3s ease}
 #mkPillShade.in{opacity:.55}
-#ezbMenu .mkp-acct{display:flex;gap:10px;padding:12px 4px 2px;margin-top:6px;border-top:1px solid #ffffff1a;position:sticky;bottom:-10px;background:#0f0f11;padding-bottom:10px}
+#ezbMenu .mkp-acct{display:flex;gap:10px;padding:12px 4px 10px;margin-top:6px;border-top:1px solid #ffffff1a;position:sticky;bottom:-10px;background:#0f0f11}
 #ezbMenu .mkp-acct button{flex:1;justify-content:center;height:46px;padding:0!important;border-radius:12px!important;font-weight:600;background:#ffffff12}
 #ezbMenu .mkp-acct button.mkp-main{background:linear-gradient(180deg,#fbf8f2,#e6e0d4)!important;color:#0b0b0b!important}
-@media (prefers-reduced-motion:reduce){html.mk-pill #mkPill,html.mk-pill #mkPillTog,html.mk-pill #mkPillTog svg,html.mk-pill #ezbMenu,#mkPillShade,html.mk-pill #mikoFab{transition:none!important}}
+/* the coloured card glow is a remote/keyboard highlight: on touch screens a tap leaves it stuck, so it shows only
+   on TVs, with a remote or keyboard (kbnav), or with a mouse */
+@media (hover:none){
+html.mk-glow:not(.tv):not(.kbnav) .card:hover .card-inner:before,html.mk-glow:not(.tv):not(.kbnav) .card:focus-visible .card-inner:before,html.mk-glow:not(.tv):not(.kbnav) .card.nav-focus .card-inner:before{opacity:0}
+}
+@media (prefers-reduced-motion:reduce){html.mk-pill #mkPill,html.mk-pill #mkPillTog,html.mk-pill #mkPillTog svg,html.mk-pill #ezbMenu,#mkPillShade,html.mk-pill #mikoFab,html.mk-pill.mkp-ind-on #tabs .mkp-ind[data-go]{transition:none!important}html.mk-pill #app .view.on{animation:none}}
+body.reduce-motion #tabs .mkp-ind[data-go]{transition:none!important}
 </style>
 <script id="mk-pill-js">
-// Phones: sections bar on top, Search + Menu bar at the bottom. The small tab above the bar lowers it out of the way
-// and lifts it back (tap, or swipe the bar down / the tab up). Remembered per device. TVs, tablets, computers untouched.
+// Phones: sections bar on top, Search + Miko + Menu bar at the bottom. The small tab above the bar lowers it out of
+// the way and lifts it back (tap, or swipe the bar down / the tab up). Remembered per device. TVs, tablets, computers
+// untouched.
 (() => {
   const de = document.documentElement;
-  if (!document.getElementById('tabs')) return;
+  const tabsEl = document.getElementById('tabs');
+  if (!tabsEl) return;
   const mq = matchMedia('(max-width: 760px)');
   const KEY = 'mkc:pillDown';
   const svg = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -55860,7 +55913,7 @@ html.mk-pill #ezbMenu button{border-radius:12px}
   const I_DOWN = svg('<path d="m6 9 6 6 6-6"/>');
   const bar = document.createElement('nav');
   bar.id = 'mkPill'; bar.setAttribute('aria-label', 'Search and menu');
-  bar.innerHTML = `<button type="button" data-nav id="mkPillSearch">${I_SEARCH}<span>Search</span></button><i class="mkp-sep" aria-hidden="true"></i><button type="button" data-nav id="mkPillMenu" aria-haspopup="menu" aria-expanded="false">${I_MENU}<span>Menu</span></button>`;
+  bar.innerHTML = `<button type="button" data-nav id="mkPillSearch">${I_SEARCH}<span>Search</span></button><i class="mkp-sep" aria-hidden="true"></i><i class="mkp-gap" aria-hidden="true"></i><button type="button" data-nav id="mkPillMenu" aria-haspopup="menu" aria-expanded="false">${I_MENU}<span>Menu</span></button>`;
   const tog = document.createElement('button');
   tog.type = 'button'; tog.id = 'mkPillTog'; tog.setAttribute('data-nav', ''); tog.innerHTML = I_DOWN;
   document.body.append(bar, tog);
@@ -55868,7 +55921,13 @@ html.mk-pill #ezbMenu button{border-radius:12px}
   let down = false; try { down = localStorage.getItem(KEY) === '1'; } catch {}
   const label = () => { const t = down ? 'Show menu bar' : 'Hide menu bar'; tog.setAttribute('aria-label', t); tog.title = t; tog.setAttribute('aria-expanded', String(!down)); };
   const setDown = v => { down = v; de.classList.toggle('mk-pill-down', v); try { localStorage.setItem(KEY, v ? '1' : '0'); } catch {} label(); };
-  const apply = () => { const on = live(); if (de.classList.contains('mk-pill') !== on) de.classList.toggle('mk-pill', on); if (on && de.classList.contains('mk-pill-down') !== down) de.classList.toggle('mk-pill-down', down); if (!on) closeSheet(); };
+  const apply = () => {
+    const on = live();
+    if (de.classList.contains('mk-pill') !== on) de.classList.toggle('mk-pill', on);
+    if (on && de.classList.contains('mk-pill-down') !== down) de.classList.toggle('mk-pill-down', down);
+    if (!on) closeSheet();
+    miko(); ind(false);
+  };
   label();
   tog.addEventListener('click', e => { e.stopPropagation(); setDown(!down); });
   // swipe the bar down to lower it, swipe the tab up to lift it
@@ -55881,8 +55940,35 @@ html.mk-pill #ezbMenu button{border-radius:12px}
     });
   };
   swipe(bar, true); swipe(tog, false);
-  // Search and Menu use the app's own search and menu
-  bar.querySelector('#mkPillSearch').addEventListener('click', e => { e.stopPropagation(); const b = document.getElementById('openPalette'); b && b.click(); });
+
+  // Search: open the app's search and ask for the keyboard inside the tap itself, so phones open it once and keep it.
+  // If the field loses focus by itself in the first moments (a layout change while the keyboard slides in), it is
+  // given back, unless the person touched something else.
+  let lastTouch = 0;
+  addEventListener('pointerdown', () => { lastTouch = Date.now(); }, true);
+  bar.querySelector('#mkPillSearch').addEventListener('click', e => {
+    e.stopPropagation();
+    const b = document.getElementById('openPalette'); if (!b) return;
+    b.click();
+    const inp = document.getElementById('palInput');
+    if (!inp) return;
+    try { inp.focus({ preventScroll: true }); } catch {}
+    const until = Date.now() + 1500, opened = Date.now();
+    const keep = () => {
+      if (Date.now() > until) { inp.removeEventListener('blur', keep); return; }
+      setTimeout(() => {
+        const pal = document.getElementById('palette');
+        if (!pal || pal.hidden || document.activeElement === inp) return;
+        if (lastTouch > opened + 50) return;            // the person tapped something else: leave it
+        const a = document.activeElement;
+        if (a && a !== document.body && a.tagName !== 'BUTTON') return;
+        try { inp.focus({ preventScroll: true }); } catch {}
+      }, 0);
+    };
+    inp.addEventListener('blur', keep);
+    setTimeout(() => inp.removeEventListener('blur', keep), 1600);
+  });
+
   const menuBtn = bar.querySelector('#mkPillMenu');
   menuBtn.addEventListener('click', e => {
     e.stopPropagation();
@@ -55905,7 +55991,6 @@ html.mk-pill #ezbMenu button{border-radius:12px}
     else row.innerHTML = '<button type="button" role="menuitem" data-nav><span>Sign in</span></button><button type="button" role="menuitem" data-nav class="mkp-main"><span>Create account</span></button>';
     row.querySelectorAll('button').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); acct(); }));
     m.appendChild(row);
-    try { window.I18N && I18N.apply && I18N.apply(row); } catch {}
   }
   function sync() {
     const m = document.getElementById('ezbMenu');
@@ -55917,7 +56002,53 @@ html.mk-pill #ezbMenu button{border-radius:12px}
       if (!m.__mkpSwipe) { m.__mkpSwipe = 1; let y0 = null; m.addEventListener('touchstart', e => { y0 = m.scrollTop <= 0 ? e.touches[0].clientY : null; }, { passive: true }); m.addEventListener('touchend', e => { if (y0 != null && e.changedTouches[0].clientY - y0 > 60) closeSheet(); y0 = null; }); }
     } else if (shade) { const s = shade; shade = null; s.classList.remove('in'); setTimeout(() => s.remove(), 300); }
   }
-  new MutationObserver(recs => { for (const r of recs) { for (const n of r.addedNodes) if (n.id === 'ezbMenu') watchMenu(n); } sync(); }).observe(document.body, { childList: true });
+
+  // Miko: a small round button in the middle of the bar (the gap opens only while Miko is there)
+  let mikoSeen = null;
+  function miko() {
+    const f = document.getElementById('mikoFab');
+    const on = !!(f && !f.classList.contains('away') && getComputedStyle(f).display !== 'none');
+    if (de.classList.contains('mk-pill-miko') !== on) de.classList.toggle('mk-pill-miko', on);
+    if (f && f !== mikoSeen) { mikoSeen = f; swipe(f, true); new MutationObserver(miko).observe(f, { attributes: true, attributeFilter: ['class', 'hidden', 'style'] }); }
+  }
+
+  // one highlight that glides to the section you open (transform only)
+  const pill = document.createElement('i');
+  pill.className = 'mkp-ind'; pill.setAttribute('aria-hidden', 'true');
+  let last = null, raf = 0;
+  function ind(animate) {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      const on = de.classList.contains('mk-pill');
+      const cur = on && [...tabsEl.querySelectorAll('.tab.on')].find(t => t.getClientRects().length && getComputedStyle(t).display !== 'none');
+      if (!cur) { if (de.classList.contains('mkp-ind-on')) de.classList.remove('mkp-ind-on'); last = null; return; }
+      if (!pill.isConnected) tabsEl.insertBefore(pill, tabsEl.firstChild);
+      if (!de.classList.contains('mkp-ind-on')) de.classList.add('mkp-ind-on');
+      const x = cur.offsetLeft, w = cur.offsetWidth;
+      const reduce = CFG_REDUCED();
+      if (animate && last && !reduce && (last.x !== x || last.w !== w)) {
+        delete pill.dataset.go;
+        pill.style.width = w + 'px';
+        pill.style.transform = `translate3d(${last.x}px,0,0) scaleX(${last.w / w})`;
+        void pill.offsetWidth;
+        pill.dataset.go = '1';
+        pill.style.transform = `translate3d(${x}px,0,0)`;
+      } else {
+        if (last && last.x === x && last.w === w) return;   // already there (or gliding there): leave it alone
+        delete pill.dataset.go;
+        pill.style.width = w + 'px';
+        pill.style.transform = `translate3d(${x}px,0,0)`;
+      }
+      last = { x, w };
+    });
+  }
+  const CFG_REDUCED = () => document.body.classList.contains('reduce-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+  new MutationObserver(recs => { recs = recs.filter(r => r.target !== pill); if (!recs.length) return; if (recs.some(r => r.target.classList && r.target.classList.contains('tab') && r.oldValue !== r.target.className && (/\bon\b/.test(r.oldValue || '') !== r.target.classList.contains('on')))) ind(true); else ind(false); })
+    .observe(tabsEl, { subtree: true, attributes: true, attributeFilter: ['class'], attributeOldValue: true });
+  if (window.ResizeObserver) new ResizeObserver(() => ind(false)).observe(tabsEl);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => ind(false));
+
+  new MutationObserver(recs => { for (const r of recs) { for (const n of r.addedNodes) { if (n.id === 'ezbMenu') watchMenu(n); if (n.id === 'mikoFab') miko(); } } sync(); }).observe(document.body, { childList: true });
   function watchMenu(m) { if (m.__mkpW) return; m.__mkpW = 1; new MutationObserver(sync).observe(m, { attributes: true, attributeFilter: ['class', 'hidden'], childList: true }); }
   const m0 = document.getElementById('ezbMenu'); if (m0) watchMenu(m0);
   if (mq.addEventListener) mq.addEventListener('change', apply);

@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.90.1 (2026-11-22)
+
+- **Smoother phone menus:** changing sections on phones glides with no jumping, the bars are slightly see-through, and Miko sits in the middle of the bottom bar. The coloured card glow now shows only with a remote, keyboard or mouse.
+- **Subtitle styles:** Settings › Subtitles has ready-made styles, Streaming (clean white letters with a soft shadow) and TV captions (white letters on a black box), plus four new fonts.
+
 ## Web app 2.90.0 (2026-11-22)
 
 - **New phone menus:** on phones, the sections sit in one bar at the top and Search and Menu sit in a bar at the bottom. Tap the small tab above it, or swipe, to tuck the bar away and bring it back. Tablets, computers and TVs are unchanged.
