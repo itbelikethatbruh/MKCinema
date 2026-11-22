@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.90.0', date: '2026-11-22', items: [
+    ['new', 'New phone menus', 'On phones, the sections sit in one bar at the top and Search and Menu sit in a bar at the bottom. Tap the small tab above it, or swipe, to tuck the bar away and bring it back.'],
+  ] },
   { v: '2.89.1', date: '2026-11-21', items: [
     ['better', 'Your audio language comes first', 'When a source has several languages and this device can’t pick the track inside it, MKCinema plays a copy in your language instead, and the Audio panel switches to one in a tap.'],
   ] },
