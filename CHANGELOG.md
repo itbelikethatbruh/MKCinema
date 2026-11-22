@@ -2,6 +2,12 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.91.1 (2026-11-22)
+
+- **Smoother TV and series browsing:** after watching, the title page moves on to your next episode, and the TV remote lands back on the poster you opened.
+- Movies and Series pages fit the screen exactly, and browse pages on TVs show every column in full.
+- Settings rows with a wide menu are easier to read on TVs; the Menu switch for sounds is now called Sound.
+
 ## Web app 2.91.0 (2026-11-22)
 
 - **More ways to browse:** nine new rows on Home: Studios, Animation studios, Film collections, TV universes, Decades, Genres, Based on, Animated series and Animation for grown-ups. Each tile shows the studio or title logo over a picture.

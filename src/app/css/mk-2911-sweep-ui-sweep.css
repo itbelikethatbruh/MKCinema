@@ -1,0 +1,6 @@
+
+/* 2.91.1 UI sweep */
+#app>main{overflow-x:clip}
+html.tv .br-grid .uni-card.br-tile{width:auto;min-width:0}
+/* TV Settings: a row with a wide menu (Language, ...) left its words a 100 px column; under 1100 px the menu goes below */
+@media (max-width:1100px){html.tv #settings .set-row.sr-h{grid-template-columns:minmax(0,1fr);row-gap:10px}html.tv #settings .set-row.sr-h>:last-child{justify-self:start}}

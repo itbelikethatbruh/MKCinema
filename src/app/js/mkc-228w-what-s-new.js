@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.91.1', date: '2026-11-22', items: [
+    ['better', 'Smoother TV and series browsing', 'After watching, the title page moves on to your next episode and the TV remote lands back on the poster you opened.'],
+  ] },
   { v: '2.91.0', date: '2026-11-22', items: [
     ['new', 'More ways to browse', 'Nine new rows on Home: Studios, Animation studios, Film collections, TV universes, Decades, Genres, Based on, Animated series and Animation for grown-ups. Each tile shows the studio or title logo over a picture. Hide any row in Settings › Home, or single tiles with the row’s Choose button.'],
   ] },
