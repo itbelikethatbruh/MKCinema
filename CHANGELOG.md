@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Android 1.17.5 (2026-11-22)
+
+- App updates install once and the update offer then goes away.
+- The website and the in-app update check now offer Android 1.17.5.
+
 ## Web app 2.91.1 (2026-11-22)
 
 - **Smoother TV and series browsing:** after watching, the title page moves on to your next episode, and the TV remote lands back on the poster you opened.
