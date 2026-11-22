@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.90.4', date: '2026-11-22', items: [
+    ['better', 'Smoother menus', 'The Menu opens instantly on TVs, tablets and computers.'],
+  ] },
   { v: '2.90.3', date: '2026-11-22', items: [
     ['better', 'App updates you can see', 'The Android and TV apps now show the download as it happens, with an Install button as soon as the update is ready.'],
   ] },

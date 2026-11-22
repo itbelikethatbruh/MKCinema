@@ -23,10 +23,12 @@
   const label = () => { const t = down ? 'Show menu bar' : 'Hide menu bar'; tog.setAttribute('aria-label', t); tog.title = t; tog.setAttribute('aria-expanded', String(!down)); };
   const setDown = v => { down = v; de.classList.toggle('mk-pill-down', v); try { localStorage.setItem(KEY, v ? '1' : '0'); } catch {} label(); };
   const apply = () => {
-    const on = live();
-    if (de.classList.contains('mk-pill') !== on) de.classList.toggle('mk-pill', on);
+    const on = live(), was = de.classList.contains('mk-pill');
+    if (was !== on) de.classList.toggle('mk-pill', on);
     if (on && de.classList.contains('mk-pill-down') !== down) de.classList.toggle('mk-pill-down', down);
-    if (!on) closeSheet();
+    // 2.90.4: close the sheet only when the phone bar switches off. Calling it on every class change while off
+    // looped forever with MKEasy.close() (which touches <html>'s class) and froze TVs, tablets and computers.
+    if (was && !on) closeSheet();
     miko(); ind(false);
   };
   label();

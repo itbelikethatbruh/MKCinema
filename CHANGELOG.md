@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.90.4 (2026-11-22)
+
+- **Smoother menus:** the Menu opens instantly on TVs, tablets and computers.
+- The website and the in-app update check now offer Android 1.17.4, which shows how far an app update has downloaded.
+
 ## Web app 2.90.3 (2026-11-22)
 
 - **App updates you can see:** the Android and TV apps now show the download as it happens, with an Install button as soon as the update is ready.
