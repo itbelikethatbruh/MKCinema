@@ -3185,7 +3185,7 @@ const SourceRules = {
   audioBonus(s, t) {
     const want = CFG.srAudio; if (!want || want === 'any' || !t || t.isTrailer || t.kind === 'yt') return 0;
     const { langs, multi } = AudioPref.langs(s);
-    if (langs.has(want) || (want === 'eng' && !langs.size)) return 150;
+    if ((langs.has(want) && !(window.MkAudioRight && MkAudioRight.risky(s))) || (want === 'eng' && !langs.size)) return 150;
     return multi ? 60 : 0;
   },
   words() { return String(CFG.srWords || '').split(',').map((w) => w.trim().toLowerCase()).filter(Boolean); },

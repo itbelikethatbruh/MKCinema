@@ -23,7 +23,7 @@
     known = known.filter((x, i, a) => x && a.indexOf(x) === i);
     if (st && st.tracks && st.tracks.length === 1) known = [st.tracks[0].label];
     const row = (label, on) => `<button type="button" class="al-row${on ? ' on' : ''}" data-alinfo tabindex="-1"><i data-lucide="audio-lines"></i>${esc(label)}${on ? ' · playing' : ''}</button>`;
-    if (known.length <= 1 && !multi) return `${head}${row(known[0] || 'Original audio', true)}`;
+    if (known.length <= 1 && !multi) return `${head}${row(known[0] || 'This copy’s audio', true)}`;
     let xp = null;
     try { xp = handoffUrl(s) ? (extPlayer() || playersHere().find((p) => !p.m3u)) : null; } catch (e) { xp = null; }
     const list = known.length ? known.map((l) => row(l, false)).join('') : row('Several languages (MULTi)', false);

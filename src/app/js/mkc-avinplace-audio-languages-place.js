@@ -30,7 +30,7 @@
     try { MKLog.add('play', 'native: back to the page player (' + why + ')'); } catch (e) { /* ignore */ }
     const at = (typeof switchAt === 'function' ? switchAt() : 0) || 0;
     try { MkNative.stop(); } catch (e) { /* ignore */ }
-    setTimeout(() => { if (P.stream === s && P.ctx) { try { toast('That language could not be switched here; playing the file’s own track.', 'info', 3500); } catch (e) { /* ignore */ } playStream(P.ctx, s, { startAt: at || undefined }); } }, 0);
+    setTimeout(() => { if (P.stream === s && P.ctx) { try { toast('The MKCinema Player couldn’t open this copy, so it plays in the web player.', 'info', 3500); } catch (e) { /* ignore */ } playStream(P.ctx, s, { startAt: at || undefined }); } }, 0);
     return true;
   };
   const baseFail = MkNative.fail.bind(MkNative);
@@ -71,7 +71,7 @@
   const rows = (s, cls) => codes(s).list.map((c) => `<button type="button" class="${cls || ''}" data-mkapick="${esc(c)}"><i data-lucide="audio-lines"></i>${esc(lang(c))}</button>`).join('');
   const said = (s) => { const l = codes(s).list.map(lang); return l.length ? `This file has ${l.join(' and ')}.` : 'This file has more than one language.'; };
   const cant = () => (droid() ? ' This file plays its default track here; the MKCinema Player could not take it over.' : ' This browser plays the file’s own default track; the MKCinema apps for Android, Windows and Mac switch languages while it plays.');
-  const plainText = (s) => `<p class="al-note">${esc(said(s))}${cant()}</p>`;
+  const plainText = (s) => (window.MkAudioRight ? MkAudioRight.html(s, 'al') : `<p class="al-note">${esc(said(s))}${cant()}</p>`);
 
   /* the Audio language block in Options */
   let obs = null;
@@ -109,7 +109,7 @@
       if (!s || /data-avaudio/.test(h) || /spin/.test(h)) return h;
       const c = codes(s); if (!c.multi) return h;
       if (can() && plain(s)) return `${rows(s, '')}<p class="av-note">Tap a language to play in it.</p>`;
-      return `<p class="av-note">${esc(said(s))}${cant()}</p>`;
+      return window.MkAudioRight ? MkAudioRight.html(s, 'av') : `<p class="av-note">${esc(said(s))}${cant()}</p>`;
     };
     AvTracks.bind = function (m) { bind(m); $$('[data-mkapick]', m).forEach((b) => { b.onclick = () => pick(b.dataset.mkapick); }); };
   }
