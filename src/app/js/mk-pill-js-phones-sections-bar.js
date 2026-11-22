@@ -109,7 +109,12 @@
   function miko() {
     const f = document.getElementById('mikoFab');
     const on = !!(f && !f.classList.contains('away') && getComputedStyle(f).display !== 'none');
+    // Miko steps away while the menu or a full-screen page is up: keep its place so Search and Menu don't shift
+    if (!on && f && (de.classList.contains('mkp-aside') || de.classList.contains('ezb-menu-open'))) { if (f !== mikoSeen) miko2(f); return; }
     if (de.classList.contains('mk-pill-miko') !== on) de.classList.toggle('mk-pill-miko', on);
+    miko2(f);
+  }
+  function miko2(f) {
     if (f && f !== mikoSeen) { mikoSeen = f; swipe(f, true); new MutationObserver(miko).observe(f, { attributes: true, attributeFilter: ['class', 'hidden', 'style'] }); }
   }
 
@@ -149,7 +154,18 @@
   if (window.ResizeObserver) new ResizeObserver(() => ind(false)).observe(tabsEl);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => ind(false));
 
-  new MutationObserver(recs => { for (const r of recs) { for (const n of r.addedNodes) { if (n.id === 'ezbMenu') watchMenu(n); if (n.id === 'mikoFab') miko(); } } sync(); }).observe(document.body, { childList: true });
+  // 2.90.3: full-screen pages (Settings, search, a title, the player...) mark html.mkp-aside in the same moment they
+  // show, so the bars slide away at once instead of showing on top of the page until body.layer-open arrives 320 ms later
+  const ASIDE = (typeof MENU_LAYERS !== 'undefined' ? MENU_LAYERS : ['epSheet', 'detail', 'addons', 'palette', 'settings', 'tastePick', 'askLayer', 'tour', 'stremioImport', 'trailer', 'partyLayer', 'castLayer']).concat('player');
+  const asideSeen = new Set();
+  const asideMo = new MutationObserver(() => aside());
+  function aside() {
+    let a = false;
+    for (const id of ASIDE) { const el = document.getElementById(id); if (!el) continue; if (!asideSeen.has(el)) { asideSeen.add(el); asideMo.observe(el, { attributes: true, attributeFilter: ['hidden'] }); } if (!el.hidden) a = true; }
+    if (de.classList.contains('mkp-aside') !== a) de.classList.toggle('mkp-aside', a);
+  }
+  new MutationObserver(recs => { let add = false; for (const r of recs) { for (const n of r.addedNodes) { if (n.id === 'ezbMenu') watchMenu(n); if (n.id === 'mikoFab') miko(); if (n.id && ASIDE.includes(n.id)) add = true; } } if (add) aside(); sync(); }).observe(document.body, { childList: true });
+  aside();
   function watchMenu(m) { if (m.__mkpW) return; m.__mkpW = 1; new MutationObserver(sync).observe(m, { attributes: true, attributeFilter: ['class', 'hidden'], childList: true }); }
   const m0 = document.getElementById('ezbMenu'); if (m0) watchMenu(m0);
   if (mq.addEventListener) mq.addEventListener('change', apply);

@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.90.2', date: '2026-11-22', items: [
+    ['better', 'Cleaner phone screens', 'On phones Miko sits in a raised circle on the bottom bar, Settings fills the screen and opens without the bar flashing, and the Top 10 and Library filters line up neatly.'],
+  ] },
   { v: '2.90.1', date: '2026-11-22', items: [
     ['better', 'Smoother phone menus', 'Changing sections on phones now glides with no jumping, the bars are slightly see-through, and Miko sits in the middle of the bottom bar.'],
     ['new', 'Subtitle styles', 'Settings › Subtitles has ready-made styles: Streaming (clean white letters with a soft shadow) and TV captions (white letters on a black box), plus four new fonts.'],

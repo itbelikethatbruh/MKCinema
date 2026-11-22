@@ -1,13 +1,13 @@
 
 /* 2.90 Phone bars: one sections bar on top, Search + Miko + Menu bar at the bottom that the user can lower and lift.
    Phones only (html.mk-pill: below 761 px, never TVs). Rounded rectangles, Noir, a little see-through.
-   Motion: transform/opacity only. 2.90.1: see-through bars, Miko in the bar, a sliding highlight on the sections,
+   Motion: transform/opacity only. 2.90.3: the bars step aside the moment a full-screen page opens (no flash). 2.90.2: Miko rises past the top of the bar. 2.90.1: see-through bars, Miko in the bar, a sliding highlight on the sections,
    steady section widths, a softer section change, and the card glow only with a remote or keyboard. */
 html.mk-pill{--mkp-r:18px;--mkp-ri:12px;--mkp-bg:rgba(14,14,16,.9);--mkp-line:rgba(255,255,255,.12);--mkp-ink:#f4f1ea;--mkp-dim:#ffffffb0;--mkp-lift:78px;--mkp-ease:cubic-bezier(.2,.75,.2,1)}
 html.mk-pill:not(.lite) body.fx-hi{--mkp-bg:rgba(14,14,16,.7)}
 html.mk-pill.mk-pill-down{--mkp-lift:30px}
 html.mk-pill.ezb-bar,html.mk-pill.ezb-bar body{--dock-h:calc(44px + env(safe-area-inset-top,0px))!important}
-body.mk-player-on,body.layer-open{--mkp-lift:0px}
+body.mk-player-on,body.layer-open,html.mkp-aside body{--mkp-lift:0px}
 /* top: only the sections bar, full width */
 html.mk-pill .dock .brand,html.mk-pill #sideBtn,html.mk-pill .dock-tools{display:none!important}
 html.mk-pill .dock{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;min-height:0!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
@@ -47,13 +47,20 @@ html.mk-pill.mk-pill-down #mkPillTog{transform:translate3d(0,62px,0)}
 html.mk-pill.mk-pill-down #mkPillTog svg{transform:rotate(180deg)}
 body.mk-player-on #mkPill,body.mk-player-on #mkPillTog{visibility:hidden}
 /* full-screen pages (title, search, settings, account) have their own close button: the bar steps aside for them */
-html.mk-pill body.layer-open #mkPill{transform:translate3d(0,calc(100% + 16px + env(safe-area-inset-bottom,0px)),0);opacity:0;pointer-events:none}
-html.mk-pill body.layer-open #mkPillTog{transform:translate3d(0,140px,0);pointer-events:none}
+html.mk-pill body.layer-open #mkPill,html.mk-pill.mkp-aside #mkPill{transform:translate3d(0,calc(100% + 16px + env(safe-area-inset-bottom,0px)),0);opacity:0;pointer-events:none}
+html.mk-pill body.layer-open #mkPillTog,html.mk-pill.mkp-aside #mkPillTog{transform:translate3d(0,140px,0);pointer-events:none}
 html.mk-pill body{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))}
 /* Miko sits in the middle of the bar as a small round button and moves with it */
 html.mk-pill #mikoFab{left:50%!important;right:auto!important;margin:0 0 0 -20px!important;width:40px!important;height:40px!important;bottom:calc(20px + env(safe-area-inset-bottom,0px))!important;z-index:61!important;translate:0 0;transition:translate .42s var(--mkp-ease),opacity .28s,transform .38s!important}
 html.mk-pill #mikoFab .mk-tip{display:none!important}
-html.mk-pill.mk-pill-down #mikoFab,html.mk-pill body.layer-open #mikoFab{translate:0 calc(100% + 40px + env(safe-area-inset-bottom,0px));pointer-events:none}
+/* 2.90.2: Miko is a bigger circle that rises past the top of the bar. Its picture fills the circle edge to edge, inside a
+   dark ring the colour of the bar with the same thin line as the bar's border, so it reads as part of the bar */
+html.mk-pill.mk-pill-miko #mikoFab{width:60px!important;height:60px!important;margin:0 0 0 -30px!important;bottom:calc(28px + env(safe-area-inset-bottom,0px))!important}
+html.mk-pill.mk-pill-miko #mikoFab .mk-face{box-shadow:inset 0 0 0 1px rgba(255,255,255,.16),0 0 0 6px #0e0e10,0 0 0 7px rgba(255,255,255,.12),0 10px 26px -6px #000000e6}
+html.mk-pill.mk-pill-miko #mkPill .mkp-gap{width:84px}
+html.mk-pill.mk-pill-miko #mkPillTog{left:auto;margin-left:0;right:max(22px,env(safe-area-inset-right,0px));width:48px}
+html.mk-pill.mk-pill-miko #mikoBox{bottom:calc(var(--mkp-lift) + 36px + env(safe-area-inset-bottom,0px))!important}
+html.mk-pill.mk-pill-down #mikoFab,html.mk-pill body.layer-open #mikoFab,html.mk-pill.mkp-aside #mikoFab{translate:0 calc(100% + 48px + env(safe-area-inset-bottom,0px));pointer-events:none}
 /* things that float at the bottom sit above the bar */
 html.mk-pill #toasts,html.mk-pill .sup-ask,html.mk-pill .ls-undo,html.mk-pill .ds-off,html.mk-pill #soundgate,html.mk-pill #updBar,html.mk-pill #adPaste{bottom:calc(var(--mkp-lift) + 14px + env(safe-area-inset-bottom,0px))!important}
 html.mk-pill .party-pill,html.mk-pill .mu-mini,html.mk-pill .rec-pill,html.mk-pill .mk-qs{bottom:calc(var(--mkp-lift) + 10px + env(safe-area-inset-bottom,0px))!important}
