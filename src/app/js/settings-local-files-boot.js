@@ -3,7 +3,28 @@
 /* =====================================================================
    MKCinema · settings, local files, boot
    ===================================================================== */
-const SUB_FONTS = { sans: '"Onest", system-ui, sans-serif', serif: 'Georgia, "Times New Roman", serif', mono: 'var(--f-mono)', display: '"Sora", system-ui, sans-serif', system: 'system-ui, sans-serif' };
+const SUB_FONTS = { sans: '"Onest", system-ui, sans-serif', serif: 'Georgia, "Times New Roman", serif', mono: 'var(--f-mono)', display: '"Sora", system-ui, sans-serif', system: 'system-ui, sans-serif',
+  stream: '"Inter", "Onest", system-ui, sans-serif', caption: '"IBM Plex Mono", var(--f-mono)', rounded: '"Nunito", system-ui, sans-serif', condensed: '"Roboto Condensed", "Arial Narrow", sans-serif' };
+/* 2.90.1: the extra subtitle fonts load only when someone picks them */
+const SUB_FONT_FILES = { stream: 'Inter:wght@400;500;600;700', caption: 'IBM+Plex+Mono:wght@400;500;600', rounded: 'Nunito:wght@400;600;700;800', condensed: 'Roboto+Condensed:wght@400;500;700' };
+function loadSubFont(k) {
+  const f = SUB_FONT_FILES[k]; if (!f || document.getElementById('mkc-subfont-' + k)) return;
+  const l = document.createElement('link'); l.id = 'mkc-subfont-' + k; l.rel = 'stylesheet';
+  l.href = `https://fonts.googleapis.com/css2?family=${f}&display=swap`; document.head.appendChild(l);
+}
+/* 2.90.1: ready-made subtitle looks. Each sets the whole look at once; touching one part afterwards means Your own. */
+const SUB_LOOKS = {
+  stream: { subFont: 'stream', subColor: '#ffffff', subBg: 0, subBgColor: '#000000', subOutline: true, subBold: false, subShadow: 'strong' },
+  tv: { subFont: 'caption', subColor: '#ffffff', subBg: 100, subBgColor: '#000000', subOutline: false, subBold: false, subShadow: 'none' },
+};
+let subLookBusy = false;
+function setSubLook(v) {
+  const p = SUB_LOOKS[v];
+  subLookBusy = true;
+  try { if (p) Object.entries(p).forEach(([k, x]) => setCfg(k, x)); setCfg('subLook', p ? v : 'custom'); } finally { subLookBusy = false; }
+  if (typeof renderSettingsBody === 'function' && $('#settings') && !$('#settings').hidden) renderSettingsBody();
+}
+CFG_HOOKS.push((k) => { if (!subLookBusy && CFG.subLook && CFG.subLook !== 'custom' && ['subFont', 'subColor', 'subBg', 'subBgColor', 'subOutline', 'subBold', 'subShadow'].includes(k)) { CFG.subLook = 'custom'; saveCfg(); } });
 const LANG_CHOICES = (() => { const seen = new Map(); Object.entries(LANGS).forEach(([code, name]) => { if (code.length === 3 && !seen.has(name)) seen.set(name, code); }); return [...seen.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([n, c]) => [c, n]); })();
 
 function applyAll() {
@@ -18,10 +39,10 @@ function applyAll() {
   body.toggle('ci-hover', cardInfoMode() === 'hover'); body.toggle('ci-below', cardInfoMode() === 'below');
   { const de = document.documentElement.classList; de.toggle('ls-cs-s', CFG.cardSize === 's'); de.toggle('ls-cs-l', CFG.cardSize === 'l'); de.toggle('ls-hero-short', CFG.banner === 'short'); de.toggle('ls-hero-off', CFG.banner === 'off'); if (typeof LayStudio !== 'undefined') LayStudio.menuSync(); }
   root.setProperty('--sub-size', `${CFG.subSize}%`); root.setProperty('--sub-color', CFG.subColor);
-  root.setProperty('--sub-bg', `rgba(0,0,0,${CFG.subBg / 100})`); root.setProperty('--sub-font', SUB_FONTS[CFG.subFont] || SUB_FONTS.sans);
+  root.setProperty('--sub-bg', `rgba(0,0,0,${CFG.subBg / 100})`); root.setProperty('--sub-font', SUB_FONTS[CFG.subFont] || SUB_FONTS.sans); loadSubFont(CFG.subFont);
   { const sh = { none: '', soft: '', strong: '2px 2px 4px #000,3px 3px 8px rgba(0,0,0,.85)', drop: '3px 3px 0 #000' }[CFG.subShadow] || '';
     root.setProperty('--sub-shadow', [CFG.subOutline ? '0 0 3px #000,0 0 2px #000,1px 1px 2px #000' : '', sh].filter(Boolean).join(',') || 'none');
-    root.setProperty('--sub-weight', CFG.subBold ? '700' : '400'); }
+    root.setProperty('--sub-weight', CFG.subBold ? '700' : (CFG.subFont === 'stream' ? '500' : '400')); }
   $('#fps').hidden = !CFG.showFps; FpsMeter.set(!!CFG.showFps);
   sfx.setVolume();
 }
@@ -264,10 +285,11 @@ const SECTIONS = [
     { key: 'subAuto', label: 'Turn on subtitles automatically', help: 'Picks your language when a stream has it.', type: 'toggle' },
     { key: 'subDubSigns', label: 'Signs & Songs with dubs', help: 'When a dual-audio anime plays its dub in your subtitle language, picks the file\u2019s Signs & Songs track (on-screen text and lyrics) instead of full subtitles made for the original voices.', type: 'toggle' },
     { key: 'subLang', label: 'Preferred language', type: 'select', options: LANG_CHOICES },
+    { key: 'subLook', label: 'Style', help: 'Streaming: clean white letters with a soft shadow. TV captions: white letters on a black box, line by line. Your own: set each part below.', type: 'seg', options: [['custom', 'Your own'], ['stream', 'Streaming'], ['tv', 'TV captions']], get: () => CFG.subLook || 'custom', set: (v) => setSubLook(v) },
     { key: 'subSize', label: 'Size', type: 'range', min: 50, max: 220, step: 10, fmt: pct, live: true },
     { key: 'subColor', label: 'Text color', type: 'color' },
     { key: 'subBg', label: 'Background opacity', type: 'range', min: 0, max: 100, step: 5, fmt: pct, live: true },
-    { key: 'subFont', label: 'Font', type: 'select', options: [['sans', 'Onest (sans)'], ['system', 'System'], ['serif', 'Serif'], ['mono', 'Monospace'], ['display', 'Sora']] },
+    { key: 'subFont', label: 'Font', type: 'select', options: [['sans', 'Onest (sans)'], ['stream', 'Streaming font'], ['caption', 'TV caption font'], ['rounded', 'Rounded'], ['condensed', 'Condensed'], ['system', 'System'], ['serif', 'Serif'], ['mono', 'Monospace'], ['display', 'Sora']] },
     { key: 'subOutline', label: 'Text outline', type: 'toggle' },
     { key: 'subBold', label: 'Bold text', type: 'toggle' },
     { key: 'subShadow', label: 'Shadow', help: 'A shadow behind the letters helps on bright scenes.', type: 'seg', options: [['none', 'None'], ['strong', 'Soft shadow'], ['drop', 'Hard shadow']] },

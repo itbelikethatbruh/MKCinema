@@ -1,7 +1,10 @@
 
-/* 2.90 Phone bars: one sections bar on top, Search + Menu bar at the bottom that the user can lower and lift.
-   Phones only (html.mk-pill: below 761 px, never TVs). Rounded rectangles, Noir. Transform/opacity motion only. */
-html.mk-pill{--mkp-r:18px;--mkp-ri:12px;--mkp-bg:#0e0e10;--mkp-line:rgba(255,255,255,.12);--mkp-ink:#f4f1ea;--mkp-dim:#ffffffa8;--mkp-lift:78px;--mkp-ease:cubic-bezier(.2,.75,.2,1)}
+/* 2.90 Phone bars: one sections bar on top, Search + Miko + Menu bar at the bottom that the user can lower and lift.
+   Phones only (html.mk-pill: below 761 px, never TVs). Rounded rectangles, Noir, a little see-through.
+   Motion: transform/opacity only. 2.90.1: see-through bars, Miko in the bar, a sliding highlight on the sections,
+   steady section widths, a softer section change, and the card glow only with a remote or keyboard. */
+html.mk-pill{--mkp-r:18px;--mkp-ri:12px;--mkp-bg:rgba(14,14,16,.9);--mkp-line:rgba(255,255,255,.12);--mkp-ink:#f4f1ea;--mkp-dim:#ffffffb0;--mkp-lift:78px;--mkp-ease:cubic-bezier(.2,.75,.2,1)}
+html.mk-pill:not(.lite) body.fx-hi{--mkp-bg:rgba(14,14,16,.7)}
 html.mk-pill.mk-pill-down{--mkp-lift:30px}
 html.mk-pill.ezb-bar,html.mk-pill.ezb-bar body{--dock-h:calc(44px + env(safe-area-inset-top,0px))!important}
 body.mk-player-on,body.layer-open{--mkp-lift:0px}
@@ -9,20 +12,32 @@ body.mk-player-on,body.layer-open{--mkp-lift:0px}
 html.mk-pill .dock .brand,html.mk-pill #sideBtn,html.mk-pill .dock-tools{display:none!important}
 html.mk-pill .dock{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;min-height:0!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 html.mk-pill .dock-wrap{padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));padding-top:calc(8px + env(safe-area-inset-top,0px))}
-html.mk-pill.ezb-bar #tabs{order:0;flex:1 1 100%;width:100%;max-width:100%;height:50px;box-sizing:border-box;padding:5px;gap:2px;border-radius:var(--mkp-r)!important;background:var(--mkp-bg)!important;border:1px solid var(--mkp-line)!important;box-shadow:0 10px 30px #0000008c!important;pointer-events:auto}
-html.mk-pill.ezb-bar #tabs .tab,html.mk-pill.ezb-bar #tabs .mk-pm-btn{flex:1 0 auto!important;min-height:38px;height:38px;padding:0 9px!important;border-radius:var(--mkp-ri)!important;font-size:calc(16px * var(--ts,1))!important;font-weight:500;letter-spacing:0;color:var(--mkp-dim)}
-html.mk-pill.ezb-bar #tabs .tab.on{font-weight:600}
+html.mk-pill.ezb-bar #tabs{position:relative;order:0;flex:1 1 100%;width:100%;max-width:100%;height:50px;box-sizing:border-box;padding:5px;gap:2px;border-radius:var(--mkp-r)!important;background:var(--mkp-bg)!important;border:1px solid var(--mkp-line)!important;box-shadow:0 10px 30px #0000008c!important;pointer-events:auto}
+html.mk-pill:not(.lite) body.fx-hi #tabs,html.mk-pill:not(.lite) body.fx-hi #mkPill,html.mk-pill:not(.lite) body.fx-hi #mkPillTog{-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%)}
+/* every section keeps the same weight, so the bar never re-fits when you change section */
+html.mk-pill.ezb-bar #tabs .tab,html.mk-pill.ezb-bar #tabs .mk-pm-btn{position:relative;z-index:1;flex:1 0 auto!important;min-height:38px;height:38px;padding:0 9px!important;border-radius:var(--mkp-ri)!important;font-size:calc(16px * var(--ts,1))!important;font-weight:550!important;letter-spacing:0;color:var(--mkp-dim)}
 html.mk-pill.ezb-bar #tabs .mk-pm-btn{justify-content:center}
 html.mk-pill #mkPmMenu{border-radius:var(--mkp-r)!important}
 html.mk-pill #mkPmMenu button{border-radius:var(--mkp-ri)!important}
+/* the sliding highlight: the open section's own fill hides and one highlight glides between sections */
+html.mk-pill.mkp-ind-on.ezb-bar #tabs .tab.on{background:transparent!important;box-shadow:none!important;transition:color .3s ease}
+#tabs .mkp-ind{display:none}
+html.mk-pill.mkp-ind-on #tabs .mkp-ind{display:block;position:absolute;z-index:0;left:0;top:5px;height:38px;width:60px;border-radius:var(--mkp-ri);background:linear-gradient(180deg,#fbf8f2,#e6e0d4);box-shadow:0 2px 12px #fff0d229;pointer-events:none;transform-origin:0 50%;will-change:transform}
+html.mk-pill.mkp-ind-on #tabs .mkp-ind[data-go]{transition:transform .38s var(--mkp-ease)}
+/* a softer change between sections on phones */
+html.mk-pill #app .view.on{animation:mkpView .36s var(--mkp-ease)}
+@keyframes mkpView{0%{opacity:0;transform:translate3d(0,12px,0)}}
 /* bottom bar */
 #mkPill,#mkPillTog{display:none}
-html.mk-pill #mkPill{display:flex;position:fixed;z-index:60;left:max(14px,env(safe-area-inset-left,0px));right:max(14px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));height:56px;padding:4px;box-sizing:border-box;border-radius:var(--mkp-r);background:var(--mkp-bg);border:1px solid var(--mkp-line);box-shadow:0 14px 36px #000000a6,0 1px 0 #ffffff0d inset;transition:transform .42s var(--mkp-ease),opacity .3s ease;touch-action:none}
+html.mk-pill #mkPill{display:flex;align-items:stretch;position:fixed;z-index:60;left:max(14px,env(safe-area-inset-left,0px));right:max(14px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));height:56px;padding:4px;box-sizing:border-box;border-radius:var(--mkp-r);background:var(--mkp-bg);border:1px solid var(--mkp-line);box-shadow:0 14px 36px #000000a6,0 1px 0 #ffffff0d inset;transition:transform .42s var(--mkp-ease),opacity .3s ease;touch-action:none}
 html.mk-pill #mkPill button{all:unset;flex:1;display:flex;align-items:center;justify-content:center;gap:9px;border-radius:var(--mkp-ri);color:var(--mkp-ink);font:600 calc(16px * var(--ts,1))/1 var(--f-ui,inherit);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .2s ease}
 html.mk-pill #mkPill button svg{width:19px;height:19px;opacity:.85}
 html.mk-pill #mkPill button:active,html.mk-pill #mkPill button[aria-expanded=true]{background:#ffffff14}
 html.mk-pill #mkPill button:focus-visible{outline:2px solid var(--mkp-ink);outline-offset:-2px}
 html.mk-pill #mkPill .mkp-sep{width:1px;align-self:center;height:22px;background:#ffffff1f;flex:none}
+html.mk-pill #mkPill .mkp-gap{display:none;flex:none;width:52px}
+html.mk-pill.mk-pill-miko #mkPill .mkp-sep{display:none}
+html.mk-pill.mk-pill-miko #mkPill .mkp-gap{display:block}
 html.mk-pill #mkPillTog{all:unset;display:grid;place-items:center;position:fixed;z-index:60;left:50%;margin-left:-28px;width:56px;height:26px;bottom:calc(76px + env(safe-area-inset-bottom,0px));border-radius:10px;background:var(--mkp-bg);border:1px solid var(--mkp-line);color:var(--mkp-ink);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .42s var(--mkp-ease);touch-action:none}
 html.mk-pill #mkPillTog:before{content:"";position:absolute;inset:-12px -14px}
 html.mk-pill #mkPillTog svg{width:18px;height:18px;transition:transform .42s var(--mkp-ease)}
@@ -35,11 +50,15 @@ body.mk-player-on #mkPill,body.mk-player-on #mkPillTog{visibility:hidden}
 html.mk-pill body.layer-open #mkPill{transform:translate3d(0,calc(100% + 16px + env(safe-area-inset-bottom,0px)),0);opacity:0;pointer-events:none}
 html.mk-pill body.layer-open #mkPillTog{transform:translate3d(0,140px,0);pointer-events:none}
 html.mk-pill body{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+/* Miko sits in the middle of the bar as a small round button and moves with it */
+html.mk-pill #mikoFab{left:50%!important;right:auto!important;margin:0 0 0 -20px!important;width:40px!important;height:40px!important;bottom:calc(20px + env(safe-area-inset-bottom,0px))!important;z-index:61!important;translate:0 0;transition:translate .42s var(--mkp-ease),opacity .28s,transform .38s!important}
+html.mk-pill #mikoFab .mk-tip{display:none!important}
+html.mk-pill.mk-pill-down #mikoFab,html.mk-pill body.layer-open #mikoFab{translate:0 calc(100% + 40px + env(safe-area-inset-bottom,0px));pointer-events:none}
 /* things that float at the bottom sit above the bar */
-html.mk-pill #mikoFab{bottom:calc(var(--mkp-lift) + 14px + env(safe-area-inset-bottom,0px))!important;transition:bottom .42s var(--mkp-ease),opacity .28s,transform .38s}
 html.mk-pill #toasts,html.mk-pill .sup-ask,html.mk-pill .ls-undo,html.mk-pill .ds-off,html.mk-pill #soundgate,html.mk-pill #updBar,html.mk-pill #adPaste{bottom:calc(var(--mkp-lift) + 14px + env(safe-area-inset-bottom,0px))!important}
 html.mk-pill .party-pill,html.mk-pill .mu-mini,html.mk-pill .rec-pill,html.mk-pill .mk-qs{bottom:calc(var(--mkp-lift) + 10px + env(safe-area-inset-bottom,0px))!important}
 html.mk-pill .live-mini,html.mk-pill .mini-play{bottom:calc(var(--mkp-lift) + 76px + env(safe-area-inset-bottom,0px))!important}
+html.mk-pill #mikoBox{bottom:calc(var(--mkp-lift) + 14px + env(safe-area-inset-bottom,0px))!important}
 html.mk-pill body.mk-player-on #toasts{bottom:auto!important}
 html.mk-pill body.mk-player-on .rec-pill{bottom:auto!important}
 /* Menu opens as a sheet from the bottom */
@@ -53,7 +72,13 @@ html.mk-pill #ezbMenu .ezb-big{border-radius:16px!important}
 html.mk-pill #ezbMenu button{border-radius:12px}
 #mkPillShade{position:fixed;inset:0;z-index:2147482999;background:#000;opacity:0;transition:opacity .3s ease}
 #mkPillShade.in{opacity:.55}
-#ezbMenu .mkp-acct{display:flex;gap:10px;padding:12px 4px 2px;margin-top:6px;border-top:1px solid #ffffff1a;position:sticky;bottom:-10px;background:#0f0f11;padding-bottom:10px}
+#ezbMenu .mkp-acct{display:flex;gap:10px;padding:12px 4px 10px;margin-top:6px;border-top:1px solid #ffffff1a;position:sticky;bottom:-10px;background:#0f0f11}
 #ezbMenu .mkp-acct button{flex:1;justify-content:center;height:46px;padding:0!important;border-radius:12px!important;font-weight:600;background:#ffffff12}
 #ezbMenu .mkp-acct button.mkp-main{background:linear-gradient(180deg,#fbf8f2,#e6e0d4)!important;color:#0b0b0b!important}
-@media (prefers-reduced-motion:reduce){html.mk-pill #mkPill,html.mk-pill #mkPillTog,html.mk-pill #mkPillTog svg,html.mk-pill #ezbMenu,#mkPillShade,html.mk-pill #mikoFab{transition:none!important}}
+/* the coloured card glow is a remote/keyboard highlight: on touch screens a tap leaves it stuck, so it shows only
+   on TVs, with a remote or keyboard (kbnav), or with a mouse */
+@media (hover:none){
+html.mk-glow:not(.tv):not(.kbnav) .card:hover .card-inner:before,html.mk-glow:not(.tv):not(.kbnav) .card:focus-visible .card-inner:before,html.mk-glow:not(.tv):not(.kbnav) .card.nav-focus .card-inner:before{opacity:0}
+}
+@media (prefers-reduced-motion:reduce){html.mk-pill #mkPill,html.mk-pill #mkPillTog,html.mk-pill #mkPillTog svg,html.mk-pill #ezbMenu,#mkPillShade,html.mk-pill #mikoFab,html.mk-pill.mkp-ind-on #tabs .mkp-ind[data-go]{transition:none!important}html.mk-pill #app .view.on{animation:none}}
+body.reduce-motion #tabs .mkp-ind[data-go]{transition:none!important}
