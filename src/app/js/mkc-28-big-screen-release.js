@@ -2553,6 +2553,7 @@ const Networks = {
     this.chPlace();
     if (typeof Holiday !== 'undefined') Holiday.place();
     if (window.MkNetTop) MkNetTop.place();
+    if (typeof Browse !== 'undefined') Browse.place();
   },
   open(id, type) { this.cur = id || this.cur; if (type) this.type = type; go('network'); },
   render() {
@@ -2731,6 +2732,7 @@ const SimpleHome = {
     if (sec.id === 'netRow') return 3;
     if (sec.id === 'chRow') return 3.2;
     if (sec.id === 'uniRow') return 3.5;
+    if (sec.dataset.brRank) return Number(sec.dataset.brRank);
     if (k === 'movie:top') return seriesFirst ? 5 : 4;
     if (k === 'series:top') return seriesFirst ? 4 : 5;
     if (sec.id === 'forYouRow') return sec.querySelector('.fy-cta') ? 40 : 6;

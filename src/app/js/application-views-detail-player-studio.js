@@ -269,6 +269,7 @@ function go(view, opts = {}) {
   if (view === 'library') renderLibrary();
   if (view === 'studio') renderStudio();
   if (view === 'calendar') Calendar.render();
+  if (view === 'browse' && typeof Browse !== 'undefined') Browse.render();
   if (view === 'home') { queueWall(); if (backHome && window.MkHomePlace) MkHomePlace.back(); }
   try { history.replaceState(null, '', `#${view}`); } catch (e) { /* sandboxed */ }
 }
