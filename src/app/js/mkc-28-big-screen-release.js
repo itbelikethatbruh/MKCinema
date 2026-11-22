@@ -3292,7 +3292,7 @@ const Updater = {
     if (go) go.onclick = () => {
       if (kind === 'web') { go.disabled = true; this.swFetch().then(() => location.reload()); return; }
       const url = v.apk || 'https://mkcinema.app/download/MKCinema.apk';
-      if (canSelf) { let ok = false; try { ok = MKAndroid.update(url); } catch (e) { ok = false; } if (ok && window.MkUpdProg && typeof MKAndroid.updateProgress === 'function') MkUpdProg.show((Updater.v || {}).android || '', true); else toast(ok ? 'Downloading the update… the installer opens when it is done' : 'The download could not start', ok ? 'info' : 'err', 6000); if (ok) { el.remove(); Nav.settle(); } return; }
+      if (canSelf) { let ok = false; try { ok = MKAndroid.update(url); } catch (e) { ok = false; } if (ok && window.MkUpdProg) MkUpdProg.show((Updater.v || {}).android || '', true); else toast(ok ? 'Downloading the update… the installer opens when it is done' : 'The download could not start', ok ? 'info' : 'err', 6000); if (ok) { el.remove(); Nav.settle(); } return; }
       window.open(url, '_blank', 'noopener');
     };
   },
@@ -3355,7 +3355,7 @@ const Updates = {
     if (id === 'web') { this.busy = 'web'; this.paint(); Updater.swFetch(8000).then(() => location.reload()); return; }
     if (id === 'app') {
       const url = v.apk || 'https://mkcinema.app/download/MKCinema.apk';
-      if (this.canSelf()) { let ok = false; try { ok = MKAndroid.update(url); } catch (e) { ok = false; } if (ok && window.MkUpdProg && typeof MKAndroid.updateProgress === 'function') MkUpdProg.show((Updater.v || {}).android || '', true); else toast(ok ? 'Downloading the update… the installer opens when it is done' : 'The download could not start', ok ? 'info' : 'err', 6000); return; }
+      if (this.canSelf()) { let ok = false; try { ok = MKAndroid.update(url); } catch (e) { ok = false; } if (ok && window.MkUpdProg) MkUpdProg.show((Updater.v || {}).android || '', true); else toast(ok ? 'Downloading the update… the installer opens when it is done' : 'The download could not start', ok ? 'info' : 'err', 6000); return; }
       window.open(url, '_blank', 'noopener'); return;
     }
     if (id === 'desk') { window.open(v[`${x.plat}Url`] || this.DL[x.plat] || 'https://mkcinema.app/#download', '_blank', 'noopener'); toast('The download opens in your browser. Run it and it installs over this one. Your settings stay.', 'info', 7000); }

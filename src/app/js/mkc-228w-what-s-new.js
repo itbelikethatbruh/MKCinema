@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.91.2', date: '2026-11-22', items: [
+    ['better', 'Smoother app updates', 'If an update can\'t finish, MKCinema says why and offers a one-tap install from the browser.'],
+  ] },
   { v: '2.91.1', date: '2026-11-22', items: [
     ['better', 'Smoother TV and series browsing', 'After watching, the title page moves on to your next episode and the TV remote lands back on the poster you opened.'],
   ] },
