@@ -6,3 +6,9 @@
 #netBody .net-title .net-ch-logo.net-ch-inv{filter:invert(1) grayscale(1) brightness(1.6)}
 html[data-look="daylight"] #netBody .net-title .net-ch-logo,html[data-look="linen"] #netBody .net-title .net-ch-logo{filter:brightness(0)}
 html[data-look="daylight"] #netBody .net-title .net-ch-logo.net-ch-inv,html[data-look="linen"] #netBody .net-title .net-ch-logo.net-ch-inv{filter:grayscale(1) brightness(.5)}
+/* 2.90.3 update progress */
+#updBar .upd-prog{display:block;position:relative;height:4px;margin-top:8px;border-radius:2px;overflow:hidden;background:rgba(var(--kffffff-c,255,255,255),.12);min-width:180px}
+#updBar .upd-prog i{position:absolute;inset:0;display:block;border-radius:2px;background:var(--accent,#d9d4c7);transform-origin:0 50%;transform:scaleX(0);transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+#updBar .upd-prog.ind i{right:auto;width:38%;transform:translateX(-100%);transition:none;animation:mkUpdInd 1.5s cubic-bezier(.45,0,.55,1) infinite}
+@keyframes mkUpdInd{0%{transform:translateX(-100%)}100%{transform:translateX(270%)}}
+@media (prefers-reduced-motion:reduce){#updBar .upd-prog.ind i{animation-duration:3s}}

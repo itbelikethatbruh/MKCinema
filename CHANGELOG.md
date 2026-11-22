@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.90.3 (2026-11-22)
+
+- **App updates you can see:** the Android and TV apps now show the download as it happens, with an Install button as soon as the update is ready.
+
 ## Web app 2.90.2 (2026-11-22)
 
 - **Cleaner phone screens:** on phones Miko sits in a raised circle on the bottom bar, Settings fills the screen and opens without the bar flashing, and the Top 10 and Library filters line up neatly.
