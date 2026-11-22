@@ -2,6 +2,15 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Android 1.17.6 (2026-11-22)
+
+- Smoother app updates.
+- The website and the in-app update check now offer Android 1.17.6.
+
+## Web app 2.91.2 (2026-11-22)
+
+- **Smoother app updates:** if an update can't finish, MKCinema says why and offers a one-tap install from the browser.
+
 ## Android 1.17.5 (2026-11-22)
 
 - App updates install once and the update offer then goes away.
