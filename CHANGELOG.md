@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.91.7 (2026-11-22)
+
+- Next episode, every time: Next episode always goes straight to the next episode, even on TVs that are short of memory.
+- Smoother playback on TVs, and the player controls now tuck away on their own once a film starts.
+
 ## Android 1.17.7 (2026-11-22)
 
 - TVs play films in the MKCinema player itself, with the TV's hardware decoding underneath.

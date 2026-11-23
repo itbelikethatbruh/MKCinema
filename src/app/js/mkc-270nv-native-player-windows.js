@@ -20,6 +20,8 @@ const MkDroid = {
     return (this.b = b);
   },
 };
+/* 2.91.7: TVs hand films to the Android TV player again until the MKCinema player is checked on a real Fire Stick */
+window.MK_TV_UNDER = false;
 const MkNative = {
   ok: false, active: false, gen: 0, st: {}, tAt: 0, cur: null, subIds: [], lastEnd: null, probed: null,
   bridge() { try { return window.MKDesktop && MKDesktop.player && typeof MKDesktop.player.cmd === 'function' ? MKDesktop.player : MkDroid.get(); } catch (e) { return null; } },
@@ -27,7 +29,7 @@ const MkNative = {
   ready() { const b = this.bridge(); return this.ok && !!b && (b.droid ? CFG.nativePlayer === true : CFG.nativePlayer !== false); },
   probe() {
     const b = this.bridge(); if (!b) return Promise.resolve(false);
-    return this.probed || (this.probed = b.cmd('probe').then((j) => { const r = JSON.parse(j || '{}'); this.ok = !!r.ok; this.embed = !!(r.ok && r.embed); if (!r.ok) console.info('Native player unavailable:', r.err); return this.ok; }).catch(() => (this.ok = false)));
+    return this.probed || (this.probed = b.cmd('probe').then((j) => { const r = JSON.parse(j || '{}'); if (b.droid && IS_TV && !window.MK_TV_UNDER) { r.ok = false; r.err = 'TVs use the Android TV player'; } this.ok = !!r.ok; this.embed = !!(r.ok && r.embed); if (!r.ok) console.info('Native player unavailable:', r.err); return this.ok; }).catch(() => (this.ok = false)));
   },
   wants(s) { return this.ready() && !!s && !!s.url && !s.ytId && /^https?:\/\//i.test(s.url) && !(typeof PartyGuest !== 'undefined' && PartyGuest.relaying()); },
   cmd(c, a) { const b = this.bridge(); if (!b) return Promise.reject(new Error('no native player')); return b.cmd(c, a); },
@@ -43,7 +45,7 @@ const MkNative = {
   open(stream, startAt) {
     const bh = stream.behaviorHints || {}, h = (bh.proxyHeaders && bh.proxyHeaders.request) || {};
     this.attach();
-    this.subClear(); this.cur = stream; this.st = { paused: true }; this.tAt = 0; this.subIds = []; this.lastEnd = null; this.loadedFired = false; this.metaFired = false; this.err = null;
+    this.subClear(); this.cur = stream; this.st = { paused: true }; this.pSeen = false; this._adv = 0; this.tAt = 0; this.subIds = []; this.lastEnd = null; this.loadedFired = false; this.metaFired = false; this.err = null;
     // whatever was on screen under the player (a title page, Home) hides, so the see-through page shows only the film
     if (!this.under) { this.under = [...document.body.children].filter((el) => el.id !== 'player' && el.id !== 'toasts' && !/^(SCRIPT|STYLE|LINK|TEMPLATE)$/.test(el.tagName) && !el.hidden); this.under.forEach((el) => el.classList.add('mk-nv-under')); }
     document.documentElement.classList.add('mk-native-on');
@@ -76,7 +78,16 @@ const MkNative = {
     if (!this.metaFired && (meta || n.loaded)) {
       this.metaFired = true; ['loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough'].forEach((e) => this.fire(e));
       setTimeout(() => { if (this.active) addEmbeddedSubs(); }, 50);
+      // 2.91.7: ask libmpv whether it is playing (it never reports a pause that didn't change)
+      if (!this.pSeen) { const g = this.gen, c = this.cur; this.cmd('get', 'pause').then((v) => { if (this.active && this.cur === c && this.gen === g && !this.pSeen && /^(no|false|0)$/i.test(String(v).trim())) this.ev({ gen: g, paused: false }); }).catch(() => {}); }
     }
+    if ('paused' in n) this.pSeen = true;
+    // 2.91.7 safety net: the clock moves on by itself, so the film plays (only while nobody has said otherwise)
+    else if (!this.pSeen && st.paused !== false && 't' in n && !st.seeking && !st.buffering && !was.seeking && this.metaFired) {
+      const d = (Number(n.t) || 0) - (Number(was.t) || 0);
+      if (was.t != null && d > 0.05 && d < 2) { this._adv = (this._adv || 0) + 1; if (this._adv >= 2) { this.pSeen = true; n = Object.assign({}, n, { paused: false }); } } else this._adv = 0;
+    }
+    if ('paused' in n) st.paused = n.paused;
     if ('paused' in n && n.paused !== was.paused) { if (n.paused) this.fire('pause'); else { this.fire('play'); if (!st.buffering) this.fire('playing'); } }
     if ('buffering' in n && n.buffering !== was.buffering) { if (n.buffering) this.fire('waiting'); else if (!st.paused) this.fire('playing'); }
     if ('seeking' in n && n.seeking !== was.seeking) this.fire(n.seeking ? 'seeking' : 'seeked');
@@ -182,8 +193,8 @@ const MkNative = {
     const ranges = (end) => ({ length: end > 0 ? 1 : 0, start: () => 0, end: () => end });
     def('buffered', () => ranges(Math.max(N.now(), Number(N.st.cached) > 0 ? N.now() + Number(N.st.cached) : 0)));
     def('seekable', () => ranges(N.st.dur || 0));
-    video.play = () => { N.st.paused = false; N.tAt = performance.now(); N.cmd('play').catch(() => {}); N.fire('play'); return Promise.resolve(); };
-    video.pause = () => { if (N.st.paused) return; N.st.t = N.now(); N.st.paused = true; N.cmd('pause').catch(() => {}); N.fire('pause'); };
+    video.play = () => { N.pSeen = true; N.st.paused = false; N.tAt = performance.now(); N.cmd('play').catch(() => {}); N.fire('play'); return Promise.resolve(); };
+    video.pause = () => { N.pSeen = true; if (N.st.paused) return; N.st.t = N.now(); N.st.paused = true; N.cmd('pause').catch(() => {}); N.fire('pause'); };
     video.load = () => {};
     video.removeAttribute = function (a) { if (a !== 'src') HTMLMediaElement.prototype.removeAttribute.call(this, a); };
   },
