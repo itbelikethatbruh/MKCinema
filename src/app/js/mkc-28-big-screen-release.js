@@ -1399,7 +1399,7 @@ const Curate = {
     };
   },
   top10(list) {
-    return list.slice(0, 10).map((m, i) => cardHTML(m).replace('<div class="card"', `<div class="card t10c" data-rank="${i + 1}"`)).join('');
+    return list.slice(0, 10).map((m, i) => cardHTML(m).replace('<div class="card"',`<div class="card t10c t10v" data-rank="${i + 1}"`).replace('<div class="card-inner">',`<i class="t10n" aria-hidden="true" data-n="${i + 1}" style="--t10i:${i + 1}"><b>${i + 1}</b></i><div class="card-inner">`)).join('');
   },
   async render() {
     const rows = $('#homeRows'); if (!rows || S.view !== 'home') return;

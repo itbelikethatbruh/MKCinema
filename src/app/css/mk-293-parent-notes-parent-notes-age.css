@@ -1,0 +1,12 @@
+
+/* 2.93 Parent notes: age ratings and what rating boards warn about, under the synopsis on title pages */
+.pn{margin:18px 0 22px;display:grid;gap:10px}
+.pn .sec-title{margin:0}
+.pn-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pn-rt{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--line);font-size:calc(12px * var(--ts,1));color:var(--ink)}
+.pn-rt b{font-family:var(--f-mono);font-weight:600}
+.pn-rt small{color:var(--mute);font-size:inherit}
+.pn-fl{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;background:rgba(var(--kffffff-c,255,255,255),.06);font-size:calc(12px * var(--ts,1));font-weight:600;color:var(--ink)}
+.pn-fl svg{width:14px;height:14px;opacity:.8}
+.pn-none{color:var(--mute);font-size:calc(13px * var(--ts,1))}
+.pn-src{color:var(--dim,var(--mute));font-size:calc(11px * var(--ts,1));margin:0}

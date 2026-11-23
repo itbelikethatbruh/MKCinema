@@ -8,6 +8,14 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.93.0', date: '2026-11-23', items: [
+    ['better', 'Simpler MKCinema player', 'The MKCinema player has fewer buttons, and Settings opens as one short card with speed, picture, screen and sleep timer. Everything else is one tap away in All settings.'],
+    ['new', 'Parent notes', 'Title pages show the age rating where you live and what rating boards warn about, like violence, scary scenes or strong language. Settings › Home turns it off.'],
+    ['new', '13 more languages', 'MKCinema now speaks 44 languages, adding Nederlands, Українська, Română, Ελληνικά, Čeština, Magyar, Svenska, עברית, Bahasa Melayu, नेपाली, မြန်မာ, አማርኛ and Oʻzbekcha. Pick one in Settings › Appearance › Language.'],
+    ['new', 'Ask a grown-up', 'On a kids seat, Search shows how many more titles need a grown-up. After the grown-up PIN, they can allow any of them for that seat, and take them back in Settings › Seats.'],
+    ['better', 'Clearer source picks', 'The Best match source now also says when it is in your audio language, from your own server, from your first-choice addon or like the source you picked last time.'],
+    ['better', 'New Top 10 numbers', 'Top 10 numbers get a new look: metal edges in gold, platinum and bronze, and a soft glow in your colour that moves on computers and phones. It stays still on TVs, Snappy mode and Low graphics.'],
+  ] },
   { v: '2.92.1', date: '2026-11-23', items: [
     ['better', 'Smoother film start', 'Films open more smoothly: only the title shows while the film gets ready, and fewer notes pop up as it starts.'],
   ] },

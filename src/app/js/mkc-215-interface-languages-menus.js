@@ -7,8 +7,8 @@
    yet stays in English. The page is translated as it is drawn: each piece of interface text is looked up in the
    language's list and swapped in place, so the app's own code keeps working in English underneath. */
 const I18N = {
-  langs: { en: 'English', es: 'Español', pt: 'Português (Brasil)', fr: 'Français', de: 'Deutsch', it: 'Italiano', hi: 'हिन्दी', ta: 'தமிழ்', te: 'తెలుగు', bn: 'বাংলা', ml: 'മലയാളം', sm: 'Gagana Samoa', zh: '中文（简体）', ar: 'العربية', ru: 'Русский', ur: 'اردو', id: 'Bahasa Indonesia', ja: '日本語', mr: 'मराठी', tr: 'Türkçe', vi: 'Tiếng Việt', ko: '한국어', fa: 'فارسی', tl: 'Filipino', sw: 'Kiswahili', pa: 'ਪੰਜਾਬੀ', gu: 'ગુજરાતી', th: 'ไทย', pl: 'Polski', kn: 'ಕನ್ನಡ', ha: 'Hausa' },
-  RTL: { ar: 1, ur: 1, fa: 1 }, ALIAS: { fil: 'tl', in: 'id', iw: 'he' }, pats: null,
+  langs: { en: 'English', es: 'Español', pt: 'Português (Brasil)', fr: 'Français', de: 'Deutsch', it: 'Italiano', hi: 'हिन्दी', ta: 'தமிழ்', te: 'తెలుగు', bn: 'বাংলা', ml: 'മലയാളം', sm: 'Gagana Samoa', zh: '中文（简体）', ar: 'العربية', ru: 'Русский', ur: 'اردو', id: 'Bahasa Indonesia', ja: '日本語', mr: 'मराठी', tr: 'Türkçe', vi: 'Tiếng Việt', ko: '한국어', fa: 'فارسی', tl: 'Filipino', sw: 'Kiswahili', pa: 'ਪੰਜਾਬੀ', gu: 'ગુજરાતી', th: 'ไทย', pl: 'Polski', kn: 'ಕನ್ನಡ', ha: 'Hausa', nl: 'Nederlands', uk: 'Українська', ro: 'Română', el: 'Ελληνικά', cs: 'Čeština', hu: 'Magyar', sv: 'Svenska', he: 'עברית', ms: 'Bahasa Melayu', ne: 'नेपाली', my: 'မြန်မာ', am: 'አማርኛ', uz: 'Oʻzbekcha' },
+  RTL: { ar: 1, ur: 1, fa: 1, he: 1 }, ALIAS: { fil: 'tl', in: 'id', iw: 'he' }, pats: null,
   code: 'en', map: null, done: new WeakMap(), orig: new WeakMap(), attrDone: new WeakMap(),
   SKIP: '.card-title,.hero-title,.hero-desc,.d-desc,h1:not(.page-title),.net-title,.uni-title,#view-universe h1,#view-network h1,.stream .t1,.stream .t2,.s-meta,#pTitle,#pSub,pre,code,textarea,input,select.inp-raw,[translate="no"],[data-card] .card-sub,.dl-main b,#set-uiLang option,.brand,.sd-brand',
   ATTRS: ['placeholder', 'aria-label', 'title'],
@@ -98,6 +98,10 @@ const I18N = {
     ar: ['Noto Sans Arabic', 'arabic', 'U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC', ['Noto Sans Arabic', 'NotoSansArabic-Regular', 'Segoe UI', 'Geeza Pro']],
     ur: ['Noto Sans Arabic', 'arabic', 'U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC', ['Noto Sans Arabic', 'NotoSansArabic-Regular', 'Segoe UI', 'Geeza Pro']],
     fa: ['Noto Sans Arabic', 'arabic', 'U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC', ['Noto Sans Arabic', 'NotoSansArabic-Regular', 'Segoe UI', 'Geeza Pro']],
+    ne: ['Noto Sans Devanagari', 'devanagari', 'U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF', ['Noto Sans Devanagari', 'NotoSansDevanagari-Regular', 'Nirmala UI', 'Kohinoor Devanagari']],
+    he: ['Noto Sans Hebrew', 'hebrew', 'U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F', ['Noto Sans Hebrew', 'NotoSansHebrew-Regular', 'Arial Hebrew', 'David']],
+    my: ['Noto Sans Myanmar', 'myanmar', 'U+1000-109F, U+200C-200D, U+25CC, U+A9E0-A9FE, U+AA60-AA7F', ['Noto Sans Myanmar', 'NotoSansMyanmar-Regular', 'Myanmar Text', 'Myanmar Sangam MN', 'Padauk']],
+    am: ['Noto Sans Ethiopic', 'ethiopic', 'U+1200-1399, U+2D80-2DDE, U+AB01-AB2E, U+25CC', ['Noto Sans Ethiopic', 'NotoSansEthiopic-Regular', 'Nyala', 'Kefa', 'Ebrima']],
     ml: ['Noto Sans Malayalam', 'malayalam', 'U+0D00-0D7F, U+200C-200D, U+20B9, U+25CC', ['Noto Sans Malayalam', 'NotoSansMalayalam-Regular', 'Nirmala UI', 'Malayalam Sangam MN', 'Kartika']],
   },
   async deva() {
@@ -118,7 +122,7 @@ const I18N = {
       document.querySelectorAll('link[href*="fonts.googleapis.com"]').forEach((l) => {
         for (const m of l.href.matchAll(/family=([^:&]+)/g)) fams.push(decodeURIComponent(m[1]).replace(/\+/g, ' '));
       });
-      const add = fams.filter((f) => !/^Noto Sans (Devanagari|Tamil|Telugu|Bengali|Malayalam|Gujarati|Gurmukhi|Arabic|Kannada)$/i.test(f) && !seen.has(f));
+      const add = fams.filter((f) => !/^Noto Sans (Devanagari|Tamil|Telugu|Bengali|Malayalam|Gujarati|Gurmukhi|Arabic|Kannada|Hebrew|Myanmar|Ethiopic)$/i.test(f) && !seen.has(f));
       if (!add.length) return;
       add.forEach((f) => seen.add(f));
       const src = [url && `url(${url}) format('woff2')`, ...locals.map((n) => `local('${n}')`)].filter(Boolean).join(', ');
