@@ -2766,7 +2766,7 @@ const CFG_DEFAULTS = {
   quality: 'high', qualityChosen: false, blur: 18, showFps: false,
   // playback
   maxQuality: '4k', preferFormat: 'any', autoNext: true, upNextAt: 45, seekStep: 10, hudHide: 3, hdrDim: true, resume: true, speed: 1,
-  failover: true, skipIntro: true, autoSkipIntro: false, xray: true, spoilerGuard: false, dsp: 'flat',
+  failover: true, skipIntro: true, autoSkipIntro: false, xray: false, spoilerGuard: false, dsp: 'flat',
   // posters
   ratingBadges: true, rpdb: false,
   // watch party
@@ -7662,8 +7662,8 @@ async function renderForYouRow(rows) {
   const sec = rowShell('For you', Taste.ready() ? 'Your Picks · made on this device' : '', { id: 'forYouRow' });
   rows.appendChild(sec);
   const head = sec.querySelector('.row-head');
-  head.insertAdjacentHTML('beforeend', `<div class="fy-tools"><button class="btn btn-ghost btn-sm" type="button" data-fy-ask data-nav><i data-lucide="sparkles"></i>Ask</button>${Taste.ready() ? '<button class="btn btn-ghost btn-sm" type="button" data-fy-tune data-nav><i data-lucide="sliders-horizontal"></i>Tune</button>' : ''}</div>`);
-  sec.querySelector('[data-fy-ask]').onclick = () => openPalette('', { ask: true });
+  head.insertAdjacentHTML('beforeend', `<div class="fy-tools">${Taste.ready() ? '<button class="btn btn-ghost btn-sm" type="button" data-fy-tune data-nav><i data-lucide="sliders-horizontal"></i>Tune</button>' : ''}</div>`);
+  
   const tune = sec.querySelector('[data-fy-tune]'); if (tune) tune.onclick = () => openQuickPick();
   if (!Taste.ready()) {
     fillRail(sec, `<div class="fy-cta"><div class="fy-orb"><i data-lucide="sparkles"></i></div><div><b>Picks made for you</b><p>Choose at least 3 shows, movies or genres you love. MKCinema builds this row from them, right on your device.</p></div><button class="btn btn-prime" type="button" data-fy-start data-nav><i data-lucide="wand-sparkles"></i>Pick my favorites</button></div>`);
@@ -11428,7 +11428,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.91.9';
+const APP_VERSION = '2.91.10';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -24410,6 +24410,10 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.91.10', date: '2026-11-23', items: [
+    ['better', 'Cleaner phone pages', 'Section pages on phones start with what matters, without a repeated title and explainer. Videos open full screen and sideways on phones and tablets, Live TV no longer jumps as it loads, and X-Ray when paused is now off unless you turn it on.'],
+    ['better', 'Smoother title logos', 'Title logos now rise in once, smoothly.'],
+  ] },
   { v: '2.91.9', date: '2026-11-23', items: [
     ['better', 'Smooth title pages', 'Movie and show pages open smoothly: the picture, title and details now fade in together instead of filling in piece by piece.'],
   ] },
@@ -57099,13 +57103,14 @@ try { KidsPlus.init(); } catch (e) { console.warn('Kids seat:', e); }
 #detail.dp-hold #detailPanel .logo3d.pop{animation:none!important}
 @keyframes dpFade{from{opacity:0}to{opacity:1}}
 @keyframes dpRise{from{opacity:0;transform:translate3d(0,14px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
-html #detail.dp-in #detailPanel .d-hero>img.bg:not(.d-wait){animation:dpFade .6s cubic-bezier(.25,.6,.3,1) both!important}
-html #detail.dp-in #detailPanel .d-hero .d-body>:not(.logo3d){animation:dpRise .5s cubic-bezier(.2,.75,.2,1) .08s both!important}
+html #detail.dp-in #detailPanel .d-hero>img.bg.dp-a:not(.d-wait){animation:dpFade .6s cubic-bezier(.25,.6,.3,1) both!important}
+html #detail.dp-in #detailPanel .d-hero .d-body>.dp-a:not(.logo3d){animation:dpRise .5s cubic-bezier(.2,.75,.2,1) .08s both!important}
 html #detail.dp-in #detailPanel .d-hero .d-body>:nth-child(3){animation-delay:.15s!important}
 html #detail.dp-in #detailPanel .d-hero .d-body>:nth-child(n+4){animation-delay:.21s!important}
-html #detail.dp-in #detailPanel>.d-body{animation:dpRise .55s cubic-bezier(.2,.75,.2,1) .27s both!important}
-html.lite #detail.dp-in #detailPanel .d-hero .d-body>.logo3d,body:not(.fx) #detail.dp-in #detailPanel .d-hero .d-body>.logo3d{animation:dpRise .5s cubic-bezier(.2,.75,.2,1) both!important}
-html #detail.dp-in.dp-rm #detailPanel .d-hero .d-body>*,html #detail.dp-in.dp-rm #detailPanel>.d-body{animation:dpFade .3s ease-out both!important}
+html #detail.dp-in #detailPanel>.d-body.dp-a{animation:dpRise .55s cubic-bezier(.2,.75,.2,1) .27s both!important}
+html.lite #detail.dp-in #detailPanel .d-hero .d-body>.logo3d.dp-a,body:not(.fx) #detail.dp-in #detailPanel .d-hero .d-body>.logo3d.dp-a{animation:dpRise .5s cubic-bezier(.2,.75,.2,1) both!important}
+html #detail.dp-in #detailPanel .d-hero .d-body>.dp-a.dp-c,html #detail.dp-in #detailPanel>.d-body.dp-a.dp-c{animation-name:dpFade!important}
+html #detail.dp-in.dp-rm #detailPanel .d-hero .d-body>.dp-a,html #detail.dp-in.dp-rm #detailPanel>.d-body.dp-a{animation:dpFade .3s ease-out both!important}
 /* a picture that arrives after the page is shown fades in, Snappy mode too */
 html #detail #detailPanel .d-hero>img.bg,html #detail #detailPanel .d-hero .hero-logo{transition:opacity .45s ease-out!important}
 html #detail #detailPanel .d-hero>img.bg.mk-under{transition:none!important}
@@ -57147,13 +57152,24 @@ document.addEventListener('focusin',e=>{const c=e.target&&e.target.closest&&e.ta
 document.addEventListener('pointerover',e=>{if(e.pointerType!=='mouse')return;const c=e.target&&e.target.closest&&e.target.closest(CARD);if(c)arm(c,160)},{passive:true});
 document.addEventListener('pointerdown',e=>{const c=e.target&&e.target.closest&&e.target.closest(CARD);if(c&&c!==wc){clearTimeout(wt);wc=c;warm(c)}},{passive:true,capture:true});
 /* staged opening */
-const CAP=1000;let st=null,seq=0,inT=0;
+const CAP=1000;let st=null,seq=0,inT=0,mo=null,revAt=0,revId=null;
 const reveal=()=>{if(!st)return;clearTimeout(st.cap);st=null;
   const lg=det.querySelector('#detailPanel .logo3d.pop');
-  try{renderDetail.popAt=now()}catch(e){}if(lg)lg.style.setProperty('--t0','0s');
+  try{renderDetail.popAt=now()}catch(e){}revAt=now();try{revId=D.meta&&D.meta.id}catch(e){revId=null}if(lg)lg.style.setProperty('--t0','0s');
   let rm=false;try{rm=!!(CFG.reduceMotion||matchMedia('(prefers-reduced-motion: reduce)').matches)}catch(e){}
-  det.classList.toggle('dp-rm',rm);det.classList.remove('dp-hold');det.classList.add('dp-in');
-  clearTimeout(inT);inT=setTimeout(()=>det.classList.remove('dp-in','dp-rm'),1100)};
+  det.classList.toggle('dp-rm',rm);det.classList.remove('dp-hold');det.classList.add('dp-in');try{rest=measure()}catch(e){}
+  /* 2.91.10: only the parts on screen at this moment rise (class dp-a). A part the page redraws during the fade (full
+     details arriving late) does not rise again: it only finishes the fade, opacity only, so it never moves and the TV
+     remote focus never scrolls the page to follow a moving button */
+  const t0=now(),pn=document.getElementById('detailPanel'),T='#detailPanel .d-hero>img.bg,#detailPanel .d-hero .d-body>*,#detailPanel>.d-body';
+  det.querySelectorAll(T).forEach(e=>e.classList.add('dp-a'));if(mo)mo.disconnect();
+  const cont=el=>{const xs=[];if(el.matches(T))xs.push(el);if(el.querySelectorAll)xs.push(...el.querySelectorAll(T));const gone=now()-t0;if(gone>=900)return;
+    for(const x of xs){if(x.classList.contains('logo3d'))x.style.setProperty('--t0',(gone/1000).toFixed(3)+'s');
+      x.classList.add('dp-a','dp-c');const d=parseFloat(getComputedStyle(x).animationDelay)||0;
+      x.style.setProperty('animation-delay',(d-gone/1000).toFixed(3)+'s','important')}};
+  mo=pn?new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes)if(n.nodeType===1)cont(n)}):null;
+  if(mo)mo.observe(pn,{childList:true,subtree:true});
+  clearTimeout(inT);inT=setTimeout(()=>{const g=Math.max(1.3,(now()-revAt)/1000).toFixed(3)+'s';det.querySelectorAll('#detailPanel .logo3d').forEach(x=>x.style.setProperty('--t0',g));det.querySelectorAll('#detailPanel .dp-c').forEach(x=>x.style.removeProperty('animation-delay'));det.querySelectorAll('#detailPanel .dp-a').forEach(x=>x.classList.remove('dp-a','dp-c'));det.classList.remove('dp-in','dp-rm');if(mo){mo.disconnect();mo=null}},1100)};
 const ready=tok=>{if(!st||st.tok!==tok)return;
   const left=Math.max(160,CAP-(now()-st.t0));
   const imgs=[...det.querySelectorAll('#detailPanel .d-hero>img.bg,#detailPanel .d-hero .hero-logo')].filter(i=>!i.hidden&&i.getAttribute('src'));
@@ -57162,13 +57178,106 @@ const ready=tok=>{if(!st||st.tok!==tok)return;
 const od=openDetail;
 openDetail=function(){
   const fresh=det.hidden;let tok=0;
-  if(fresh){clearTimeout(inT);det.classList.remove('dp-in','dp-rm');if(st)clearTimeout(st.cap);tok=++seq;st={tok,t0:now(),cap:setTimeout(reveal,CAP)};det.classList.add('dp-hold')}
+  if(fresh){clearTimeout(inT);if(mo){mo.disconnect();mo=null}det.classList.remove('dp-in','dp-rm');if(st)clearTimeout(st.cap);tok=++seq;st={tok,t0:now(),cap:setTimeout(reveal,CAP)};det.classList.add('dp-hold')}
   let r;try{r=od.apply(this,arguments)}catch(e){reveal();throw e}
   if(tok){if(det.hidden){reveal()}else Promise.resolve(r).then(()=>ready(tok),()=>ready(tok))}
   return r};
 try{openDetail._mkDp=1}catch(e){}
+/* 2.91.10: when the page fills in more (a longer details line, a second row of genres, a tag added a moment later), the
+   parts that move glide to their new place instead of jumping. Layout positions (offsetTop) ignore running animations. */
+const pnl=document.getElementById('detailPanel'),G='#detailPanel .d-hero .d-body>*,#detailPanel>.d-body';let rest=new Map();
+const keyOf=(e,i)=>i+'|'+String(e.className||'').split(' ')[0];
+const measure=()=>{const m=new Map();det.querySelectorAll(G).forEach((e,i)=>{if(e.offsetParent)m.set(keyOf(e,i),e.offsetTop+(e.offsetParent===pnl?0:e.offsetParent.offsetTop))});return m};
+const settle=()=>{if(det.hidden||det.classList.contains('dp-hold')){rest=new Map();return}
+  const m=measure();if(rest.size){let i=0;for(const e of det.querySelectorAll(G)){const k=keyOf(e,i++),y=rest.get(k),z=m.get(k);if(y==null||z==null||!e.animate)continue;const d=y-z;
+    if(Math.abs(d)<2||Math.abs(d)>220)continue;try{e.animate([{transform:'translate3d(0,'+d+'px,0)'},{transform:'translate3d(0,0,0)'}],{duration:380,easing:'cubic-bezier(.2,.75,.2,1)',composite:'add'})}catch(x){}}}
+  rest=m};
+let lastMut=0,lastIn=0,lastTop=0;
+/* a logo redrawn later for the same title keeps its finished entrance instead of popping in again */
+const logoKeep=ms=>{if(!revAt||typeof D==='undefined'||!D.meta||D.meta.id!==revId)return;const g=((now()-revAt)/1000).toFixed(3)+'s';
+  for(const m of ms)for(const n of m.addedNodes)if(n.nodeType===1){const l=n.matches('.logo3d')?[n]:n.querySelectorAll?n.querySelectorAll('.logo3d'):[];for(const x of l)x.style.setProperty('--t0',g)}};
+if(pnl)new MutationObserver(ms=>{lastMut=now();try{logoKeep(ms)}catch(e){}try{settle()}catch(e){}}).observe(pnl,{childList:true,subtree:true,characterData:true});
+/* on TVs the remote focus is put back after a redraw and the page could hop a few pixels: that hop glides too */
+['keydown','wheel','touchstart','pointerdown'].forEach(t=>addEventListener(t,()=>{lastIn=now()},{capture:true,passive:true}));
+det.addEventListener('scroll',()=>{const y=det.scrollTop,d=y-lastTop;lastTop=y;
+  if(!pnl||!pnl.animate||det.hidden||Math.abs(d)<2||Math.abs(d)>90||now()-lastMut>600||now()-lastIn<350)return;
+  try{pnl.animate([{transform:'translate3d(0,'+d+'px,0)'},{transform:'translate3d(0,0,0)'}],{duration:380,easing:'cubic-bezier(.2,.75,.2,1)',composite:'add'})}catch(e){}},{passive:true});
 /* leaving the page while it is still waiting: nothing is left half hidden */
 if(typeof closeLayer==='function'){const cl=closeLayer;closeLayer=function(id){const r=cl.apply(this,arguments);if(id==='detail'&&st)reveal();return r}}
 })();</script>
+<style id="mk-phone-tidy">
+/* 2.91.10 phone tidy: on phones the top bar already names the section, so its big title and explainer go
+   (titles stay for screen readers). Only the section pages; titles of networks, universes etc. stay. */
+body.mk-phone :is(#view-discover,#view-tv,#view-library,#view-anime,#view-sports)>.page-title,
+body.mk-phone #view-anime .an-head>.page-title{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+body.mk-phone :is(#view-discover,#view-tv,#view-library,#view-anime,#view-sports,#view-calendar,#view-explore)>.page-sub,
+body.mk-phone #view-anime .an-head>.page-sub{display:none!important}
+/* Live TV: the game card fades in once, in the space kept for it */
+@keyframes mkLhIn{from{opacity:0}to{opacity:1}}
+#lhHub .lh-top.lh-in>*{animation:mkLhIn .35s ease both}
+@media (prefers-reduced-motion:reduce){#lhHub .lh-top.lh-in>*{animation:none}}
+</style>
+<script id="mk-phone-tidy-js">
+(function(){
+  /* Live TV: keep the space for the game card while it loads (no jump), and never flash back to the empty card */
+  function hub(){
+    var H=window.MKLiveHub;if(!H||H._steady)return;H._steady=1;
+    var KEY='mkc:lhH',show=H.show,draw=H.draw;
+    var bucket=function(){return Math.round(innerWidth/40)*40+(innerHeight>innerWidth?'p':'l')};
+    var get=function(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){return{}}};
+    var guess=function(){var w=innerWidth;if(innerHeight>innerWidth&&w<700)return Math.round(w*0.72+250);return 0};
+    H.show=function(){
+      var v=this.host(),el=document.getElementById('lhHub'),sec=v&&document.getElementById('view-'+v);
+      if(v&&el&&el.parentElement===sec&&el.dataset.lhv===v&&!this.kids()){
+        if(el.querySelector('.lh-feat:not(.lh-wait)')&&this.games.length&&Date.now()-this.at<this.TTL)return Promise.resolve();
+        if(el.querySelector('.lh-wait')&&this.busy)return Promise.resolve();
+      }
+      var r=show.apply(this,arguments);
+      el=document.getElementById('lhHub');if(el&&v)el.dataset.lhv=v;
+      var t=el&&el.querySelector('.lh-top');
+      if(t&&t.querySelector('.lh-wait')){var h=get()[bucket()]||guess();if(h)t.style.minHeight=h+'px'}
+      return r;
+    };
+    H.draw=function(){
+      var t0=document.querySelector('#lhHub .lh-top'),fresh=!!(t0&&t0.querySelector('.lh-wait'));
+      var r=draw.apply(this,arguments);
+      var t=document.querySelector('#lhHub .lh-top');
+      if(t&&this.games.length){
+        t.style.minHeight='';
+        var h=Math.round(t.getBoundingClientRect().height);
+        if(h>60){var o=get();o[bucket()]=h;try{localStorage.setItem(KEY,JSON.stringify(o))}catch(e){}}
+        if(fresh){t.classList.remove('lh-in');void t.offsetWidth;t.classList.add('lh-in')}
+      }
+      return r;
+    };
+    /* draw the hub before the first paint of Live TV, not a moment after it */
+    var watch=function(s){if(!s||s._lhNow)return;s._lhNow=1;new MutationObserver(function(){if(s.classList.contains('on')&&H.host())try{H.show()}catch(e){}}).observe(s,{attributes:true,attributeFilter:['class']})};
+    watch(document.getElementById('view-tv'));watch(document.getElementById('view-sports'));
+    var main=document.querySelector('main');if(main)new MutationObserver(function(){watch(document.getElementById('view-sports'))}).observe(main,{childList:true,subtree:true});
+  }
+
+  /* Phones and tablets: a video opens full screen, sideways */
+  function full(){
+    if(typeof IS_TV!=='undefined'&&IS_TV)return;
+    var pl=document.getElementById('player');if(!pl||!pl.requestFullscreen)return;
+    if(/iPhone|iPod/.test(navigator.userAgent))return;
+    var armed=false;
+    var want=function(){return document.body.classList.contains('touch-ui')&&!pl.hidden};
+    var lock=function(){try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(function(){})}catch(e){}};
+    var enter=function(){
+      if(!want())return;
+      if(document.fullscreenElement){lock();return}
+      try{pl.requestFullscreen({navigationUI:'hide'}).then(function(){armed=false;lock()},function(){armed=true})}catch(e){armed=true}
+    };
+    new MutationObserver(function(){if(pl.hidden){armed=false;return}enter()}).observe(pl,{attributes:true,attributeFilter:['hidden']});
+    /* the browser said no (no tap close enough): the first tap on the player does it */
+    pl.addEventListener('pointerup',function(){if(armed&&want()&&!document.fullscreenElement){armed=false;enter()}},true);
+  }
+  /* X-Ray when paused: off by default now; switch it off once on seats that had the old default (Settings can turn it back on) */
+  function xray(){try{if(localStorage.getItem('mkc:xrayOff1'))return;localStorage.setItem('mkc:xrayOff1','1');if(typeof CFG!=='undefined'&&CFG.xray){CFG.xray=false;if(typeof saveCfg==='function')saveCfg()}}catch(e){}}
+  var go=function(){try{xray()}catch(e){}try{hub()}catch(e){}try{full()}catch(e){}};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go,{once:true});else go();
+})();
+</script>
 </body>
 </html>

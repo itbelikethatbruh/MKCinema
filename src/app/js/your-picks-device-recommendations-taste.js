@@ -249,8 +249,8 @@ async function renderForYouRow(rows) {
   const sec = rowShell('For you', Taste.ready() ? 'Your Picks · made on this device' : '', { id: 'forYouRow' });
   rows.appendChild(sec);
   const head = sec.querySelector('.row-head');
-  head.insertAdjacentHTML('beforeend', `<div class="fy-tools"><button class="btn btn-ghost btn-sm" type="button" data-fy-ask data-nav><i data-lucide="sparkles"></i>Ask</button>${Taste.ready() ? '<button class="btn btn-ghost btn-sm" type="button" data-fy-tune data-nav><i data-lucide="sliders-horizontal"></i>Tune</button>' : ''}</div>`);
-  sec.querySelector('[data-fy-ask]').onclick = () => openPalette('', { ask: true });
+  head.insertAdjacentHTML('beforeend', `<div class="fy-tools">${Taste.ready() ? '<button class="btn btn-ghost btn-sm" type="button" data-fy-tune data-nav><i data-lucide="sliders-horizontal"></i>Tune</button>' : ''}</div>`);
+  
   const tune = sec.querySelector('[data-fy-tune]'); if (tune) tune.onclick = () => openQuickPick();
   if (!Taste.ready()) {
     fillRail(sec, `<div class="fy-cta"><div class="fy-orb"><i data-lucide="sparkles"></i></div><div><b>Picks made for you</b><p>Choose at least 3 shows, movies or genres you love. MKCinema builds this row from them, right on your device.</p></div><button class="btn btn-prime" type="button" data-fy-start data-nav><i data-lucide="wand-sparkles"></i>Pick my favorites</button></div>`);
