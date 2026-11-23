@@ -52,7 +52,8 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
 
     // ---- the page's commands (any thread: the JavaScript bridge calls in on its own thread) ----
 
-    /** Returns the answer as text; throws on a refused or failed command (the page sees a rejected promise). */
+    /** Returns the answer as text; throws on a refused command (the page sees a rejected promise). Since 1.17.8 the work
+        itself runs on the player's own thread, and a film that can't open is reported as news ("end": "error"). */
     String cmd(String c, String arg) throws Exception {
         if (c == null) throw new IllegalArgumentException("not allowed");
         if (arg == null) arg = "";
@@ -63,26 +64,45 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
             }
             case "show": { final boolean on = !"0".equals(arg); want = on; a.runOnUiThread(() -> show(on)); return ""; }
             case "get": {
-                for (String w : WATCHED) if (w.equals(arg)) { MPVLib x = client(); String v = x == null ? null : x.getPropertyString(arg); return v == null ? "" : v; }
+                // 1.17.8: answered from the news already gathered, so the page never waits on the player
+                for (String w : WATCHED) if (w.equals(arg)) { String k = KEYS.containsKey(w) ? KEYS.get(w) : w; synchronized (lock) { Object v = vals.get(k); return v == null || v == JSONObject.NULL ? "" : v instanceof Boolean ? ((Boolean) v ? "yes" : "no") : String.valueOf(v); } }
                 throw new IllegalArgumentException("not allowed");
             }
         }
-        List<Op> ops = translate(c, arg);
-        MPVLib x = client(); if (x == null) throw new IllegalStateException(initErr == null ? "no player" : initErr);
-        int g = 0;
-        if ("open".equals(c)) {
-            for (int i = 0; i < 50 && want && !hasSurface; i++) Thread.sleep(50); // the picture surface comes up a moment after "show"
-            synchronized (lock) { g = ++gen; vals.clear(); dirty.clear(); extra.clear(); dbg.setLength(0); }
-            note("open gen " + g + " surface " + hasSurface + " shown " + shown);
+        final List<Op> ops = translate(c, arg); // refused commands still fail here, at once
+        if (client() == null) throw new IllegalStateException(initErr == null ? "no player" : initErr);
+        final boolean open = "open".equals(c);
+        int g0 = 0;
+        if (open) synchronized (lock) { g0 = ++gen; vals.clear(); dirty.clear(); extra.clear(); dbg.setLength(0); }
+        final int g = g0; final String cc = c, aa = arg;
+        // 1.17.8: the page's call returns at once and mpv does the work on its own thread, in order. A JavaScript bridge
+        // call blocks the whole page until it returns, and mpv can hold a command while it opens or buffers a film, so a
+        // remote press on a TV could wait seconds behind it.
+        work.execute(() -> run(cc, aa, ops, open, g));
+        return open ? "{\"gen\":" + g + "}" : "";
+    }
+    final java.util.concurrent.ExecutorService work = java.util.concurrent.Executors.newSingleThreadExecutor(r -> { Thread t = new Thread(r, "mkc-under"); t.setDaemon(true); return t; });
+    void run(String c, String arg, List<Op> ops, boolean open, int g) {
+        MPVLib x = client(); if (x == null) { if (open) { news("end", "error"); news("err", initErr == null ? "no player" : initErr); } return; }
+        try {
+            if (open) {
+                for (int i = 0; i < 50 && want && !hasSurface; i++) Thread.sleep(50); // the picture surface comes up a moment after "show"
+                synchronized (lock) { if (g != gen) return; } // a newer film was asked for meanwhile
+                note("open gen " + g + " surface " + hasSurface + " shown " + shown);
+            }
+            Exception last = null;
+            for (Op o : ops) {
+                try { if (o.prop != null) x.setPropertyString(o.prop, o.val); else x.command(o.args); }
+                catch (Exception e) { if (!open || o.args != null) last = e; }
+            }
+            if (open) { try { put("pause", parse("pause", x.getPropertyString("pause"))); } catch (Exception ignored) { } } // the page hears "playing" even when pause never changes
+            if ("aid".equals(c) || "sid".equals(c)) android.util.Log.i("MKCPlayer", "under: " + c + " " + arg + " now " + x.getPropertyString(c));
+            if (last != null) throw last;
+        } catch (Throwable e) {
+            String m = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+            note(c + " failed: " + m);
+            if (open) { news("end", "error"); news("err", "the file could not be opened (" + m + ")"); }
         }
-        Exception last = null;
-        for (Op o : ops) {
-            try { if (o.prop != null) x.setPropertyString(o.prop, o.val); else x.command(o.args); }
-            catch (Exception e) { if (!"open".equals(c) || o.args != null) last = e; }
-        }
-        if ("aid".equals(c) || "sid".equals(c)) android.util.Log.i("MKCPlayer", "under: " + c + " " + arg + " now " + x.getPropertyString(c));
-        if (last != null) throw last;
-        return "open".equals(c) ? "{\"gen\":" + g + "}" : "";
     }
 
     static final class Op { final String prop, val; final String[] args; Op(String p, String v, String[] a) { prop = p; val = v; args = a; } }
@@ -272,7 +292,10 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
     /** the app was closed: mpv goes too */
     void release() {
         h.removeCallbacksAndMessages(null); MPVLib x; synchronized (this) { x = m; m = null; initErr = "closed"; }
-        if (x != null) try { x.removeObserver(this); x.detachSurface(); x.destroy(); } catch (Throwable ignored) { }
+        if (x == null) return;
+        final MPVLib y = x; // after anything still queued for it
+        try { work.execute(() -> { try { y.removeObserver(this); y.detachSurface(); y.destroy(); } catch (Throwable ignored) { } }); work.shutdown(); }
+        catch (Exception e) { try { y.removeObserver(this); y.detachSurface(); y.destroy(); } catch (Throwable ignored) { } }
     }
     /** the app went to the background (not picture in picture): the film pauses, like a web video */
     void pauseForBackground() { MPVLib x = m; if (x != null && shown) try { x.setPropertyString("pause", "yes"); } catch (Throwable ignored) { } }
