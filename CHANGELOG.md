@@ -2,6 +2,12 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.93.3 and Android 1.17.10 (2026-11-23)
+
+- Smoother menus: opening Menu or Search on a phone now tidies away the More list.
+- Clearer title pages: the list of sources fades out at the bottom with a clear break before More like this, and an arrow on phones and tablets shows there are more titles to swipe through.
+- Android 1.17.10: app updates download reliably on every phone.
+
 ## Web app 2.93.2 (2026-11-23)
 
 - If an app update can't start downloading, MKCinema offers a one-tap install from the browser.
