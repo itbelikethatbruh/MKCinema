@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.93.2 (2026-11-23)
+
+- If an app update can't start downloading, MKCinema offers a one-tap install from the browser.
+
 ## Web app 2.93.1 (2026-11-23)
 
 - Claude and ChatGPT: ask either one for something to watch and it opens or plays it on your TV. Turn it on in Settings › Devices and add the link shown there as a connector. It only looks titles up and sends them: it never sees your account or what you watch.

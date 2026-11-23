@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.93.2', date: '2026-11-23', items: [
+    ['fixed', 'App updates that won\'t start', 'If an app update can\'t start downloading, MKCinema offers a one-tap install from the browser.'],
+  ] },
   { v: '2.93.1', date: '2026-11-23', items: [
     ['new', 'Claude and ChatGPT', 'Ask Claude or ChatGPT for something to watch and it opens or plays it on your TV. Turn it on in Settings › Devices and add the link shown there as a connector. It only looks titles up and sends them: it never sees your account or what you watch.'],
   ] },
