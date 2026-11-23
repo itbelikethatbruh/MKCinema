@@ -8,7 +8,7 @@ html.mk-turn-in #player>*{transition:opacity .26s ease!important}
 @media (pointer:coarse) and (max-height:500px){
  html:not(.tv) #player #subMenu.av-on{top:var(--mk-pt,calc(86px + env(safe-area-inset-top,0px)))!important;max-height:none!important}
  html:not(.tv) #player #subMenu.av-on[style*=--mk-pw]{width:var(--mk-pw)!important}
- html:not(.tv) #player #subMenu.av-on{display:flex!important;flex-direction:column;overflow:hidden!important}
+ html:not(.tv) #player #subMenu.av-on:not([hidden]){display:flex!important;flex-direction:column;overflow:hidden!important}
  html:not(.tv) #player #subMenu.av-on .av-cols{flex:1 1 auto;min-height:0}
  html:not(.tv) #player #subMenu.av-on .av-col{max-height:none!important;height:100%}
  html:not(.tv) #player #subMenu.av-on .av-foot{flex:none}

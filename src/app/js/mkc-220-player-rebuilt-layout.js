@@ -335,20 +335,65 @@ addEventListener('keydown', (e) => {
 /* ---- Phone gestures: hold for 2x, swipe up or down on the left for brightness and on the right for volume,
         swipe sideways to seek. Taps and double-taps keep working as before. ---- */
 const PxGestures = {
+  /* 2.93.6 smooth swipes: the finger sets a target and the level glides to it every frame, so the number counts
+     through each step instead of jumping. The swipe starts from where the finger was when it began to move (no
+     jump past the dead zone), the volume is only sent when it changes by 1 %, and the volume's own listeners
+     (button icon, saving, the native player's echo) wait until the finger lifts. */
   init() {
     const st = $('#stage'); let g = null, eat = false;
     const dim = document.createElement('div'); dim.className = 'px-dim'; dim.setAttribute('aria-hidden', 'true'); st.insertBefore(dim, $('#hud'));
     const pill = document.createElement('div'); pill.className = 'px-pill'; pill.hidden = true; st.appendChild(pill);
-    let pillT = 0;
-    const say = (h) => { pill.innerHTML = h; pill.hidden = false; clearTimeout(pillT); };
+    let pillT = 0, kind = '', bar = null, num = null;
+    const ICON = {
+      vol: PxUtil.svg('<path d="M11 5 6 9H2v6h4l5 4V5Z" fill="currentColor"/>'),
+      bright: PxUtil.svg('<circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'),
+    };
+    const say = (h) => { kind = ''; bar = num = null; pill.classList.remove('px-lvl'); pill.innerHTML = h; pill.hidden = false; clearTimeout(pillT); };
+    // built once per swipe; after that only the bar's scale and the number's text change
+    const level = (k, x) => {
+      if (kind !== k) { kind = k; pill.classList.add('px-lvl'); pill.innerHTML = `${ICON[k]}<span class="px-lv"><i></i></span><b class="tnum"></b>`; bar = pill.querySelector('.px-lv i'); num = pill.querySelector('b'); }
+      pill.hidden = false; clearTimeout(pillT);
+      bar.style.transform = `scaleX(${x.toFixed(3)})`;
+      const t = `${Math.round(x * 100)}%`; if (num.textContent !== t) num.textContent = t;
+    };
     const hush = (ms = 500) => { clearTimeout(pillT); pillT = setTimeout(() => { pill.hidden = true; }, ms); };
     this.bright = 1;
     const fixedVol = (() => { try { const a = document.createElement('audio'); a.volume = 0.5; return a.volume === 1; } catch (e) { return false; } })();
     const ok = (e) => e.pointerType === 'touch' && !P.locked && !$('#player').hidden && !e.target.closest('button, a, input, .menu, .drawer, .upnext, .p-msg, #ytwrap, .seek, .px-seekrow, .pp-ui, .hud-top, .ctl');
+    // while the finger is on the level, volumechange reaches only the gesture (the rest hear one at the end)
+    this.live = false;
+    video.addEventListener('volumechange', (e) => { if (this.live && !(typeof DubMix !== 'undefined' && DubMix.a)) e.stopImmediatePropagation(); }, true);
+    /* the glide: a ~60 ms ease toward the finger, the same on 60 and 120 Hz screens */
+    const S = this.s = { raf: 0, k: '', cur: 0, to: 0, at: 0, sent: -1, down: false };
+    const put = (k, x) => {
+      if (k === 'bright') { this.bright = x; dim.style.opacity = String(1 - x); level('bright', x); return; }
+      const pc = Math.round(x * 100);
+      if (pc !== S.sent) { S.sent = pc; const v = pc / 100; video.volume = v; if (video.muted !== (v === 0)) video.muted = v === 0; }
+      level('vol', x);
+    };
+    const finish = () => {
+      S.raf = 0; const k = S.k; S.k = '';
+      if (k === 'vol') { this.live = false; try { video.dispatchEvent(new Event('volumechange')); } catch (e) { /* ignore */ } }
+      hush();
+    };
+    const step = (now) => {
+      const dt = Math.min(64, now - (S.at || now)); S.at = now;
+      const d = S.to - S.cur;
+      S.cur = Math.abs(d) < 0.002 ? S.to : S.cur + d * (1 - Math.exp(-dt / 60));
+      put(S.k, S.cur);
+      if (S.down || S.cur !== S.to) S.raf = requestAnimationFrame(step); else finish();
+    };
+    const begin = (k, from) => {
+      if (S.raf) cancelAnimationFrame(S.raf);
+      S.k = k; S.cur = S.to = from; S.at = 0; S.sent = Math.round(from * 100); S.down = true;
+      if (k === 'vol') this.live = true;
+      put(k, from); S.raf = requestAnimationFrame(step);
+    };
+    this.stopGlide = () => { if (S.raf) cancelAnimationFrame(S.raf); S.raf = 0; S.down = false; if (S.k === 'vol') { S.k = ''; this.live = false; } S.k = ''; };
     st.addEventListener('pointerdown', (e) => {
       if (!ok(e) || g) return;
       const r = st.getBoundingClientRect();
-      g = { id: e.pointerId, x: e.clientX, y: e.clientY, r, left: e.clientX - r.left < r.width / 2, mode: '', t0: pNow(), v0: (video.muted ? 0 : video.volume), b0: this.bright, rate: video.playbackRate, holdT: 0 };
+      g = { id: e.pointerId, x: e.clientX, y: e.clientY, r, left: e.clientX - r.left < r.width / 2, mode: '', t0: pNow(), rate: video.playbackRate, holdT: 0 };
       g.holdT = setTimeout(() => {
         if (!g || g.mode || video.paused) return;
         g.mode = 'hold'; video.playbackRate = 2; say(`${PxUtil.svg('<path d="M13 19 22 12 13 5v14ZM2 19l9-7-9-7v14Z" fill="currentColor"/>')}2× speed`); try { navigator.vibrate && navigator.vibrate(8); } catch (x) { /* no vibration */ }
@@ -358,28 +403,39 @@ const PxGestures = {
       if (!g || e.pointerId !== g.id || g.mode === 'hold') return;
       const dx = e.clientX - g.x, dy = e.clientY - g.y;
       if (!g.mode) {
-        if (Math.abs(dx) < 14 && Math.abs(dy) < 14) return;
+        // a slow start is a swipe, not a hold
+        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) clearTimeout(g.holdT);
+        if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return;
         clearTimeout(g.holdT);
         g.mode = Math.abs(dx) > Math.abs(dy) ? (isFinite(pDur()) ? 'seek' : 'none') : g.left ? 'bright' : 'vol';
+        if (g.mode === 'bright' || (g.mode === 'vol' && !fixedVol)) {
+          // the level starts from here, so passing the dead zone doesn't jump it
+          g.x = e.clientX; g.y = e.clientY;
+          g.span = clamp(g.r.height * 0.85, 240, 520);
+          g.v0 = g.mode === 'vol' ? (video.muted ? 0 : clamp(video.volume, 0, 1)) : this.bright;
+          begin(g.mode, g.v0);
+          return;
+        }
       }
       if (g.mode === 'seek') {
         const d = pDur(), span = Math.min(600, d * 0.5), to = clamp(g.t0 + (dx / g.r.width) * span, 0, d - 1); g.to = to;
         say(`<b class="tnum">${fmtTime(to)}</b><small class="tnum">${to >= g.t0 ? '+' : '−'}${fmtTime(Math.abs(to - g.t0))}</small>`);
       } else if (g.mode === 'vol' && fixedVol) {
-        say(`${PxUtil.svg('<path d="M11 5 6 9H2v6h4l5 4V5Z" fill="currentColor"/>')}<small>Use the side buttons for volume</small>`);
+        if (kind !== 'fixed') { say(`${ICON.vol}<small>Use the side buttons for volume</small>`); kind = 'fixed'; }
       } else if (g.mode === 'vol') {
-        const v = clamp(g.v0 - dy / (g.r.height * 0.7), 0, 1); video.volume = v; video.muted = v === 0;
-        say(`${PxUtil.svg('<path d="M11 5 6 9H2v6h4l5 4V5Z" fill="currentColor"/>')}<b class="tnum">${Math.round(v * 100)}%</b>`);
+        S.to = clamp(g.v0 - (e.clientY - g.y) / g.span, 0, 1);
       } else if (g.mode === 'bright') {
-        this.bright = clamp(g.b0 - dy / (g.r.height * 0.7), 0.15, 1); dim.style.opacity = String(1 - this.bright);
-        say(`${PxUtil.svg('<circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>')}<b class="tnum">${Math.round(this.bright * 100)}%</b>`);
+        S.to = clamp(g.v0 - (e.clientY - g.y) / g.span, 0.15, 1);
       }
     }, { passive: true });
+    // the browser must not take the swipe for a scroll or a pull (that ends it with pointercancel)
+    st.addEventListener('touchmove', (e) => { if (g && g.mode && g.mode !== 'none' && e.cancelable) e.preventDefault(); }, { passive: false });
     const end = (e) => {
       if (!g || (e && e.pointerId !== g.id)) return;
       clearTimeout(g.holdT);
       if (g.mode === 'hold') { video.playbackRate = g.rate; hush(150); eat = true; }
       else if (g.mode === 'seek' && g.to != null) { pSeek(g.to); hush(); eat = true; }
+      else if (g.mode === 'bright' || g.mode === 'vol') { S.down = false; if (!S.raf) finish(); eat = true; }
       else if (g.mode) { hush(); eat = true; }
       g = null;
     };
@@ -388,7 +444,7 @@ const PxGestures = {
     $('#player').addEventListener('click', (e) => { if (eat) { eat = false; e.stopPropagation(); e.preventDefault(); } }, true);
     st.addEventListener('pointerdown', () => { eat = false; }, { capture: true, passive: true });
   },
-  reset() { this.bright = 1; const d = $('.px-dim'); if (d) d.style.opacity = '0'; },
+  reset() { if (this.stopGlide) this.stopGlide(); this.bright = 1; const d = $('.px-dim'); if (d) d.style.opacity = '0'; },
 };
 
 /* ---- Per-title memory: speed for the series or film, subtitle timing for the exact file ---- */
