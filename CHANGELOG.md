@@ -2,6 +2,16 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.93.3 and Android 1.17.10 (2026-11-23)
+
+- Smoother menus: opening Menu or Search on a phone now tidies away the More list.
+- Clearer title pages: the list of sources fades out at the bottom with a clear break before More like this, and an arrow on phones and tablets shows there are more titles to swipe through.
+- Android 1.17.10: app updates download reliably on every phone.
+
+## Web app 2.93.2 (2026-11-23)
+
+- If an app update can't start downloading, MKCinema offers a one-tap install from the browser.
+
 ## Web app 2.93.1 (2026-11-23)
 
 - Claude and ChatGPT: ask either one for something to watch and it opens or plays it on your TV. Turn it on in Settings › Devices and add the link shown there as a connector. It only looks titles up and sends them: it never sees your account or what you watch.

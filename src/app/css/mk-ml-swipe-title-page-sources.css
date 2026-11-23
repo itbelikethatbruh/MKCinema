@@ -1,0 +1,14 @@
+
+/* 2.93.3 title page: the sources list ends clearly and More like this shows a swipe arrow (Owner 2026-11-23) */
+#dStreams .streams::after{content:"";grid-column:1/-1;position:sticky;bottom:0;height:72px;margin-top:-80px;pointer-events:none;opacity:0;background:linear-gradient(to bottom,transparent,var(--mkss-bg,#0a0a0b) 88%)}
+@supports (animation-timeline:scroll()){#dStreams .streams::after{animation:mkssFade linear both;animation-timeline:scroll(nearest block)}}
+@keyframes mkssFade{0%,88%{opacity:1}100%{opacity:0}}
+#dMore.ml-row{margin-top:44px;padding-top:30px;position:relative}
+#dMore.ml-row::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,currentColor 18%,currentColor 82%,transparent);opacity:.34;pointer-events:none}
+.mk-ml-next{position:absolute;right:2px;top:45%;z-index:3;width:40px;height:40px;margin-top:-20px;padding:0;border-radius:50%;display:grid;place-items:center;background:var(--n121214,#121214);color:inherit;border:1px solid var(--line,rgba(255,255,255,.22));box-shadow:0 6px 18px rgba(var(--n000000-c,0,0,0),.55);opacity:0;pointer-events:none;transition:opacity .3s ease;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mk-ml-next.rtl{right:auto;left:2px;transform:scaleX(-1)}
+#dMore.mk-ml-more .mk-ml-next{opacity:1;pointer-events:auto}
+.mk-ml-next svg{width:20px;height:20px;display:block}
+.mk-ml-next.mk-ml-nudge svg{animation:mkmlNudge 1s ease-in-out 3}
+@keyframes mkmlNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
+html.tv .mk-ml-next{display:none}
