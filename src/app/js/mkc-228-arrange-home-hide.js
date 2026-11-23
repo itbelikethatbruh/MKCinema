@@ -250,11 +250,10 @@ const KidsAge = {
   of(id) {
     const a = this.ages(id); if (!a) return null;
     const cs = (this.data && this.data.c) || ['US', 'BR', 'IN', 'GB', 'DE'], i = cs.indexOf(this.country());
-    const v = i >= 0 ? a[i] : null; if (v != null) return v;
-    if (a[0] != null) return a[0];
+    const v = i >= 0 ? a[i] : null; if (v != null || a[0] != null) return Math.max(qq(v, 0), qq(a[0], 0)); // 2.91.3: the stricter one
     const any = a.filter((x) => x != null); return any.length ? Math.max(...any) : null;
   },
-  ok(m) { const id = m && m.id; if (!id) return true; const v = this.of(id); return v == null || v <= this.limit(); },
+  ok(m) { const id = m && m.id; if (!id || !/^tt\d+$/.test(id)) return false; const v = this.of(id); return v != null && v <= this.limit(); }, // 2.91.3: unknown = hidden
   /* rating text to a minimum age (same rules as build_ages.py) */
   toAge(c, r) {
     r = String(r || '').trim().toUpperCase(); if (!r || /^(NR|NOT RATED|UNRATED)$/.test(r)) return null;
@@ -277,9 +276,10 @@ const KidsAge = {
       const tv = (f.tv_results || [])[0], mv = (f.movie_results || [])[0];
       const pick = type === 'series' ? tv || mv : mv || tv; if (!pick) return null;
       const rs = {};
-      if (pick === tv) { const d = await q(`tv/${tv.id}/content_ratings`); ((d && d.results) || []).forEach((x) => { rs[x.iso_3166_1] = x.rating; }); }
-      else { const d = await q(`movie/${mv.id}/release_dates`); ((d && d.results) || []).forEach((x) => { const c = (x.release_dates || []).map((y) => y.certification).find(Boolean); if (c) rs[x.iso_3166_1] = c; }); }
-      return C.map((c) => this.toAge(c, rs[c]));
+      const put = (c, r) => { if (r) (rs[c] = rs[c] || []).push(r); };
+      if (pick === tv) { const d = await q(`tv/${tv.id}/content_ratings`); ((d && d.results) || []).forEach((x) => put(x.iso_3166_1, x.rating)); }
+      else { const d = await q(`movie/${mv.id}/release_dates`); ((d && d.results) || []).forEach((x) => (x.release_dates || []).forEach((y) => put(x.iso_3166_1, y.certification))); }
+      return C.map((c) => { const a = (rs[c] || []).map((r) => this.toAge(c, r)).filter((v) => v != null); return a.length ? Math.max(...a) : null; });
     };
     const wiki = async (ids) => {
       const P = { US: 'P1657', BR: 'P3216', DE: 'P1981' };
@@ -331,8 +331,7 @@ const KidsAge = {
   later() { clearTimeout(this.t); this.t = setTimeout(() => this.scan(), 700); },
   init() {
     // every kids seat gets the rule, and the seat's own age limit
-    const base = Seats.kidSafe.bind(Seats);
-    Seats.kidSafe = (m) => base(m) && this.ok(m);
+    // 2.91.3: Seats.kidSafe asks KidsAge.ok itself
     const sec = SECTIONS.find((s) => s.id === 'seats');
     if (sec) {
       sec.intro = 'Everyone in the house gets their own seat: their own watchlist, progress, picks and Home. A seat can have a PIN, and a kids seat shows only family titles rated for its age.';
@@ -340,17 +339,17 @@ const KidsAge = {
       sec.rows = () => {
         const r = rows(); if (!Seats.list().some((s) => s.kids)) return r;
         const at = r.findIndex((x) => x.key === 'seatAsk');
-        r.splice(at < 0 ? r.length : at, 0, { key: 'kidsAge', label: 'Kids seats show titles rated for', help: 'Uses the age rating where you live (US, Brazil, India, UK or Germany), else the US one. Titles with no rating at all fall back to Animation and Family only. Ratings: TMDB and Wikidata.', type: 'select', num: true, options: this.LIMITS,
+        r.splice(at < 0 ? r.length : at, 0, { key: 'kidsAge', label: 'Kids seats show titles rated for', help: 'Uses the stricter of the US age rating and the one where you live (Brazil, India, UK or Germany). Titles with no rating are hidden. Ratings: TMDB and Wikidata.', type: 'select', num: true, options: this.LIMITS,
           get: () => { const k = Seats.list().find((s) => s.kids); return k && [6, 9, 12].includes(Number(k.maxAge)) ? Number(k.maxAge) : 9; },
           set: (v) => { Seats.saveList(Seats.list().map((s) => (s.kids ? { ...s, maxAge: Number(v) } : s))); toast('Kids seats updated', 'ok'); } });
         return r;
       };
     }
     if (!Seats.kids()) return;
-    this.load().then(() => { this.later(); if (S.view === 'home') this.prune(); });
+    this.load().then(() => { this.later(); if (S.view === 'home') { if (KidsAge.late) { KidsAge.late = false; renderHome(); } else this.prune(); } });
     const rh = renderHome;
     // no wait once the age list is in; on a cold start at most 0.6 s (cards it rules out are pruned when it arrives)
-    renderHome = async function () { if (!KidsAge.data) await Promise.race([KidsAge.load(), new Promise((r) => setTimeout(r, 600))]); const out = await rh.apply(this, arguments); KidsAge.later(); return out; };
+    renderHome = async function () { if (!KidsAge.data) await Promise.race([KidsAge.load(), new Promise((r) => setTimeout(r, 4000))]); KidsAge.late = !KidsAge.data; const out = await rh.apply(this, arguments); KidsAge.later(); return out; };
     new MutationObserver(() => this.later()).observe(document.body, { childList: true, subtree: true });
   },
 };

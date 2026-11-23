@@ -85,6 +85,7 @@ const Top10 = {
   plain(f) { return !f.where && !f.net && !f.genre && !f.year; },
   /* ---- the ten titles for a set of filters ---- */
   list(type, f) {
+    if (typeof KidsPlus !== 'undefined' && KidsPlus.on()) return KidsPlus.top(type); // 2.91.3: kids get their own Top 10
     const key = JSON.stringify([type, f.where, f.net, f.genre, f.year, typeof Seats !== 'undefined' && Seats.kids && Seats.kids() ? 'k' : '']);
     const hit = this.cache.get(key); if (hit && Date.now() - hit.t < this.TTL) return Promise.resolve(hit.l);
     if (this.live.has(key)) return this.live.get(key);
@@ -115,7 +116,7 @@ const Top10 = {
   /* ---- saved filters, per place (home, movie, series) ---- */
   get(scope) {
     const d = { where: '', net: '', genre: '', year: '', type: '' };
-    try { return { ...d, ...(Store.get(`t10f:${scope}`, null) || {}) }; } catch (e) { return d; }
+    try { const v = { ...d, ...(Store.get(`t10f:${scope}`, null) || {}) }; return typeof KidsPlus !== 'undefined' && KidsPlus.on() ? { ...d, type: v.type } : v; } catch (e) { return d; }
   },
   set(scope, f) { try { Store.set(`t10f:${scope}`, f); } catch (e) { /* this visit only */ } },
   homeType() { const f = this.get('home'); if (f.type) return f.type; try { return /^series/.test((Layout.get() || {}).focus || '') ? 'series' : 'movie'; } catch (e) { return 'movie'; } },
@@ -139,6 +140,7 @@ const Top10 = {
       + sel('genre', 'Category', [['', 'All categories'], ...this.genreList(type).map((g) => [g, g])])
       + sel('year', 'Year', [['', 'Any year'], ...this.years()])
       + (this.plain(f) ? '' : '<button type="button" class="t10-reset" data-nav data-t10r>Reset</button>');
+    if (typeof KidsPlus !== 'undefined' && KidsPlus.on()) { bar.innerHTML = seg; bar.hidden = !seg; } // 2.91.3: only Films / Series on kids seats
     bar.querySelectorAll('[data-t10f]').forEach((s) => s.addEventListener('change', () => {
       const n = this.get(scope); n[s.dataset.t10f] = s.value; this.set(scope, n); this.redo(sec, scope, withType);
       if (IS_TV) { const again = bar.querySelector(`[data-t10f="${s.dataset.t10f}"]`); if (again) again.focus({ preventScroll: true }); }
@@ -184,7 +186,6 @@ const Top10 = {
   /* ---- Home: the row Curate makes, with the filter bar ---- */
   home(done) {
     const sec = document.querySelector('#homeRows > section[data-curate="top10"]'); if (!sec) { if (done) PeakUp.place(); return; }
-    if (typeof Seats !== 'undefined' && Seats.kids && Seats.kids()) return;
     sec.classList.add('t10x');
     const type = this.homeType(), f = this.get('home');
     this.bar(sec, 'home', type, true); this.head(sec, type, f);

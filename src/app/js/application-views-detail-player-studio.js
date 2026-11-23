@@ -153,7 +153,7 @@ async function renderHome() {
   if (typeof HomeCards !== 'undefined') HomeCards.mount(rows); // 2.82
   const cw = Layout.shows('cw') ? continueItems() : [];
   if (cw.length) {
-    const sec = rowShell('Continue watching', `${cw.length} in progress`, { id: 'cwRow' }); rows.appendChild(sec);
+    const sec = rowShell('Continue watching', '', { id: 'cwRow' }); rows.appendChild(sec);
     fillRail(sec, cw.slice(0, 20).map((p) => cardHTML({ id: p.metaId, type: p.type, name: p.type === 'series' ? `${p.name}` : p.name, poster: p.poster, background: p.background, genres: p.genres }, { wide: true, progress: p, sub: progressSub(p) })).join(''));
   }
   if (Layout.shows('picks')) renderForYouRow(rows);
@@ -380,7 +380,7 @@ async function tuneChannel(ch) {
 function renderLibrary() {
   const root = $('#libRows'); root.innerHTML = '';
   const cw = continueItems();
-  const a = rowShell('Continue watching', cw.length ? `${cw.length} in progress` : ''); root.appendChild(a);
+  const a = rowShell('Continue watching', ''); root.appendChild(a);
   fillRail(a, cw.map((p) => cardHTML({ id: p.metaId, type: p.type, name: p.name, poster: p.poster, background: p.background, genres: p.genres }, { wide: true, progress: p, sub: progressSub(p) })).join(''), 'Start something and it will show up here with its exact timestamp.');
   if (cw.length) { const b = document.createElement('button'); b.className = 'btn btn-ghost btn-sm'; b.type = 'button'; b.innerHTML = '<i data-lucide="trash-2"></i>Clear progress'; b.style.marginTop = '8px'; b.onclick = () => { S.progress = {}; Store.set('progress', {}); renderLibrary(); }; a.appendChild(b); }
   const w = document.createElement('section'); w.className = 'row';
@@ -1083,6 +1083,7 @@ function teardown() {
   P.remux = null; video.playbackRate = CFG.speed || 1; PlayerPlus.reset();
 }
 async function playStream(ctx, stream, { startAt, _cin } = {}) {
+  if (typeof Seats !== 'undefined' && Seats.kids() && !(ctx && ctx.meta && Seats.kidSafe(ctx.meta))) { toast('Not on the kids seat', 'err', 2600, 'kids'); return; } // 2.91.3
   if (typeof MiniPlay !== 'undefined' && MiniPlay.on) MiniPlay.restore(true);
   if (!_cin && typeof CinemaMode !== 'undefined' && await CinemaMode.hold(ctx, stream, startAt)) return;
   if (!stream) return;

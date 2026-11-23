@@ -8,6 +8,14 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.91.5', date: '2026-11-22', items: [
+    ['better', 'Filters stay put', 'Pick 4K, HDR or any source filter with the remote and you stay right on the filters instead of jumping back to the top.'],
+  ] },
+  { v: '2.91.4', date: '2026-11-22', items: [
+    ['better', 'Kids seats, made for kids', 'Kids seats get their own Top 10, a banner and Animation, Family and Animated series rows, and only show titles rated for their age.'],
+    ['better', 'Full screen on big TVs', 'On 4K TVs and sticks, MKCinema now fills the whole screen edge to edge.'],
+    ['better', 'App updates download once', 'If you close the app before installing, it picks up where it left off.'],
+  ] },
   { v: '2.91.3', date: '2026-11-22', items: [
     ['better', 'Quicker app updates', 'When an update is ready, Android\'s install screen opens right away. One tap and you\'re done.'],
     ['better', 'Phone menu at a glance', 'On phones the Menu now shows everything at once, with no scrolling.'],
