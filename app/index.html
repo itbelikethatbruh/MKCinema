@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <script id="mkc-evt">/* image fallbacks, font swap and the import button, handled here instead of in on*= attributes */(function(){function fx(e){var t=e.target,g,p;if(!t||t.nodeType!==1)return;if(e.type==='error'){g=t.getAttribute('data-gone');if(g===null)return;p=t.parentNode;if(g==='label'&&p){p.textContent=p.getAttribute('aria-label')||'';return}if(g==='logo'&&p&&p.classList)p.classList.remove('has-logo');t.remove();return}if(t.hasAttribute('data-fadein'))t.classList.add('in');if(t.hasAttribute('data-print-swap'))t.media='all'}document.addEventListener('error',fx,true);document.addEventListener('load',fx,true);document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-see-home]');if(!b)return;closeLayer('stremioImport');closeLayer('settings');go('home')})})();</script>
 <script>/* settings are read and parsed once here and reused below and by CFG */window.__CFG0={};try{window.__CFG0=JSON.parse(localStorage.getItem('mkc:cfg')||'{}')||{}}catch(e){}try{window.__mkBoost=function(){var w=innerWidth;return w<=760&&matchMedia('(pointer:coarse)').matches&&!/AFT|Android TV|GoogleTV|BRAVIA|SMART-TV|SmartTV|Web0S|Tizen|MKCinemaTV|Xbox|PlayStation/i.test(navigator.userAgent)?Math.min(1.3,Math.max(1.06,w/390)):1};var _ts=+window.__CFG0.textScale;if(!(_ts>=85&&_ts<=130))_ts=100;var _v=_ts/100*window.__mkBoost();if(_v!==1)document.documentElement.style.setProperty('--ts',String(+_v.toFixed(3)))}catch(e){}</script>
-<script>try{var _ul=(window.__CFG0||{}).uiLang||'auto',_uc=_ul!=='auto'?_ul:((navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en']).map(function(x){x=String(x).toLowerCase().split('-')[0];return {fil:'tl','in':'id',iw:'he'}[x]||x}).filter(function(x){return /^(en|es|pt|fr|de|it|hi|ta|te|bn|ml|sm|zh|ar|ru|ur|id|ja|mr|tr|vi|ko|fa|tl|sw|pa|gu|th|pl|kn|ha)$/.test(x)})[0]||'en');if(/^(es|pt|fr|de|it|hi|ta|te|bn|ml|sm|zh|ar|ru|ur|id|ja|mr|tr|vi|ko|fa|tl|sw|pa|gu|th|pl|kn|ha)$/.test(_uc))window.__i18nP=fetch('i18n/'+_uc+'.json')}catch(e){}if (/MKCinemaTV|Android TV|GoogleTV|AFT[A-Z]|SMART-TV|SmartTV|Web0S|webOS|Tizen|BRAVIA|Xbox|PlayStation/i.test(navigator.userAgent)) document.documentElement.classList.add('tv');try{/*side-default*//*2.81 one menu: no side menu*/if(false){document.documentElement.classList.add('nav-side');if(document.documentElement.classList.contains('tv')||innerWidth<1200)document.documentElement.classList.add('side-mini')}}catch(e){}try{var _fn=(window.__CFG0||{}).font,_FF={"editorial":"Bodoni+Moda:opsz,wght@6..96,400..900&family=Manrope:wght@400..800","classic":"DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400..700","wide":"Unbounded:wght@400..800&family=Inter:opsz,wght@14..32,400..700","condensed":"Oswald:wght@400..700&family=Barlow:wght@400;500;600;700","rounded":"Nunito:wght@400..900","deco":"Josefin+Sans:wght@300..700&family=Jost:wght@400..700","slab":"Zilla+Slab:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700","techno":"Chakra+Petch:wght@400;600;700&family=Barlow:wght@400;500;600;700","groovy":"Shrikhand","bubble":"Bagel+Fat+One","graffiti":"Sedgwick+Ave+Display","gothic":"Pirata+One","street":"Bungee","outline":"Rampart+One","drip":"Rubik+Wet+Paint","heavy":"Climate+Crisis","brush":"Kaushan+Script"};if(_FF[_fn]){document.documentElement.setAttribute('data-font',_fn);var _fl=document.createElement('link');_fl.rel='stylesheet';_fl.id='mkcFont';_fl.href='https://fonts.googleapis.com/css2?family='+_FF[_fn]+'&display=swap';document.head.appendChild(_fl)}}catch(e){}try{var _lk=(window.__CFG0||{}).look;if(_lk&&_lk!=='noir'&&/^[a-z]+$/.test(_lk))document.documentElement.setAttribute('data-look',_lk);if(_lk==='atelier'){var _ac=JSON.parse(localStorage.getItem('mkc:atelierCss')||'null');if(typeof _ac==='string'){var _st=document.createElement('style');_st.id='atelier';_st.textContent=_ac;document.head.appendChild(_st);}}}catch(e){}</script>
+<script>try{var _ul=(window.__CFG0||{}).uiLang||'auto',_uc=_ul!=='auto'?_ul:((navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en']).map(function(x){x=String(x).toLowerCase().split('-')[0];return {fil:'tl','in':'id',iw:'he'}[x]||x}).filter(function(x){return /^(en|es|pt|fr|de|it|hi|ta|te|bn|ml|sm|zh|ar|ru|ur|id|ja|mr|tr|vi|ko|fa|tl|sw|pa|gu|th|pl|kn|ha|nl|uk|ro|el|cs|hu|sv|he|ms|ne|my|am|uz)$/.test(x)})[0]||'en');if(/^(es|pt|fr|de|it|hi|ta|te|bn|ml|sm|zh|ar|ru|ur|id|ja|mr|tr|vi|ko|fa|tl|sw|pa|gu|th|pl|kn|ha|nl|uk|ro|el|cs|hu|sv|he|ms|ne|my|am|uz)$/.test(_uc))window.__i18nP=fetch('i18n/'+_uc+'.json')}catch(e){}if (/MKCinemaTV|Android TV|GoogleTV|AFT[A-Z]|SMART-TV|SmartTV|Web0S|webOS|Tizen|BRAVIA|Xbox|PlayStation/i.test(navigator.userAgent)) document.documentElement.classList.add('tv');try{/*side-default*//*2.81 one menu: no side menu*/if(false){document.documentElement.classList.add('nav-side');if(document.documentElement.classList.contains('tv')||innerWidth<1200)document.documentElement.classList.add('side-mini')}}catch(e){}try{var _fn=(window.__CFG0||{}).font,_FF={"editorial":"Bodoni+Moda:opsz,wght@6..96,400..900&family=Manrope:wght@400..800","classic":"DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400..700","wide":"Unbounded:wght@400..800&family=Inter:opsz,wght@14..32,400..700","condensed":"Oswald:wght@400..700&family=Barlow:wght@400;500;600;700","rounded":"Nunito:wght@400..900","deco":"Josefin+Sans:wght@300..700&family=Jost:wght@400..700","slab":"Zilla+Slab:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700","techno":"Chakra+Petch:wght@400;600;700&family=Barlow:wght@400;500;600;700","groovy":"Shrikhand","bubble":"Bagel+Fat+One","graffiti":"Sedgwick+Ave+Display","gothic":"Pirata+One","street":"Bungee","outline":"Rampart+One","drip":"Rubik+Wet+Paint","heavy":"Climate+Crisis","brush":"Kaushan+Script"};if(_FF[_fn]){document.documentElement.setAttribute('data-font',_fn);var _fl=document.createElement('link');_fl.rel='stylesheet';_fl.id='mkcFont';_fl.href='https://fonts.googleapis.com/css2?family='+_FF[_fn]+'&display=swap';document.head.appendChild(_fl)}}catch(e){}try{var _lk=(window.__CFG0||{}).look;if(_lk&&_lk!=='noir'&&/^[a-z]+$/.test(_lk))document.documentElement.setAttribute('data-look',_lk);if(_lk==='atelier'){var _ac=JSON.parse(localStorage.getItem('mkc:atelierCss')||'null');if(typeof _ac==='string'){var _st=document.createElement('style');_st.id='atelier';_st.textContent=_ac;document.head.appendChild(_st);}}}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script id="mkc-lite-head">/* 2.87 Snappy mode (was Lite mode): decided before the first paint, so a slow device never builds the heavy page first.
    Automatic (default) turns it on for every Fire TV, for TVs with 2 GB of memory or less or 2 cores, and for phones and
@@ -11428,7 +11428,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.92.1';
+const APP_VERSION = '2.93.0';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -12835,7 +12835,7 @@ const Peak = {
     let ui = 'en'; try { ui = I18N.code || String(navigator.language || 'en').slice(0, 2); } catch (e) { /* early */ }
     return { en: 'eng', es: 'spa', pt: 'por', fr: 'fre', de: 'ger', it: 'ita', hi: 'hin', ta: 'tam', te: 'tel', bn: 'ben', ml: 'mal', sm: 'smo', zh: 'chi', ar: 'ara',
       ru: 'rus', ur: 'urd', id: 'ind', ja: 'jpn', mr: 'mar', tr: 'tur', vi: 'vie', ko: 'kor', fa: 'per', tl: 'tgl', sw: 'swa', pa: 'pan', gu: 'guj', th: 'tha', pl: 'pol',
-      kn: 'kan', ha: 'hau' }[ui] || 'eng';
+      kn: 'kan', ha: 'hau', nl: 'dut', uk: 'ukr', ro: 'rum', el: 'gre', cs: 'cze', hu: 'hun', sv: 'swe', he: 'heb', ms: 'may', ne: 'nep', my: 'bur', am: 'amh', uz: 'uzb' }[ui] || 'eng';
   },
   canSwitch() { return !!(this.vids && this.vids[0] && this.vids[0].audioTracks); },
   /* 2 = names your language only, 1 = names none but the film is in your language, or several with a track switch here; 0 = not used */
@@ -15402,7 +15402,7 @@ const Curate = {
     };
   },
   top10(list) {
-    return list.slice(0, 10).map((m, i) => cardHTML(m).replace('<div class="card"', `<div class="card t10c" data-rank="${i + 1}"`)).join('');
+    return list.slice(0, 10).map((m, i) => cardHTML(m).replace('<div class="card"',`<div class="card t10c t10v" data-rank="${i + 1}"`).replace('<div class="card-inner">',`<i class="t10n" aria-hidden="true" data-n="${i + 1}" style="--t10i:${i + 1}"><b>${i + 1}</b></i><div class="card-inner">`)).join('');
   },
   async render() {
     const rows = $('#homeRows'); if (!rows || S.view !== 'home') return;
@@ -19337,8 +19337,8 @@ PcShare.init();
    yet stays in English. The page is translated as it is drawn: each piece of interface text is looked up in the
    language's list and swapped in place, so the app's own code keeps working in English underneath. */
 const I18N = {
-  langs: { en: 'English', es: 'Español', pt: 'Português (Brasil)', fr: 'Français', de: 'Deutsch', it: 'Italiano', hi: 'हिन्दी', ta: 'தமிழ்', te: 'తెలుగు', bn: 'বাংলা', ml: 'മലയാളം', sm: 'Gagana Samoa', zh: '中文（简体）', ar: 'العربية', ru: 'Русский', ur: 'اردو', id: 'Bahasa Indonesia', ja: '日本語', mr: 'मराठी', tr: 'Türkçe', vi: 'Tiếng Việt', ko: '한국어', fa: 'فارسی', tl: 'Filipino', sw: 'Kiswahili', pa: 'ਪੰਜਾਬੀ', gu: 'ગુજરાતી', th: 'ไทย', pl: 'Polski', kn: 'ಕನ್ನಡ', ha: 'Hausa' },
-  RTL: { ar: 1, ur: 1, fa: 1 }, ALIAS: { fil: 'tl', in: 'id', iw: 'he' }, pats: null,
+  langs: { en: 'English', es: 'Español', pt: 'Português (Brasil)', fr: 'Français', de: 'Deutsch', it: 'Italiano', hi: 'हिन्दी', ta: 'தமிழ்', te: 'తెలుగు', bn: 'বাংলা', ml: 'മലയാളം', sm: 'Gagana Samoa', zh: '中文（简体）', ar: 'العربية', ru: 'Русский', ur: 'اردو', id: 'Bahasa Indonesia', ja: '日本語', mr: 'मराठी', tr: 'Türkçe', vi: 'Tiếng Việt', ko: '한국어', fa: 'فارسی', tl: 'Filipino', sw: 'Kiswahili', pa: 'ਪੰਜਾਬੀ', gu: 'ગુજરાતી', th: 'ไทย', pl: 'Polski', kn: 'ಕನ್ನಡ', ha: 'Hausa', nl: 'Nederlands', uk: 'Українська', ro: 'Română', el: 'Ελληνικά', cs: 'Čeština', hu: 'Magyar', sv: 'Svenska', he: 'עברית', ms: 'Bahasa Melayu', ne: 'नेपाली', my: 'မြန်မာ', am: 'አማርኛ', uz: 'Oʻzbekcha' },
+  RTL: { ar: 1, ur: 1, fa: 1, he: 1 }, ALIAS: { fil: 'tl', in: 'id', iw: 'he' }, pats: null,
   code: 'en', map: null, done: new WeakMap(), orig: new WeakMap(), attrDone: new WeakMap(),
   SKIP: '.card-title,.hero-title,.hero-desc,.d-desc,h1:not(.page-title),.net-title,.uni-title,#view-universe h1,#view-network h1,.stream .t1,.stream .t2,.s-meta,#pTitle,#pSub,pre,code,textarea,input,select.inp-raw,[translate="no"],[data-card] .card-sub,.dl-main b,#set-uiLang option,.brand,.sd-brand',
   ATTRS: ['placeholder', 'aria-label', 'title'],
@@ -19428,6 +19428,10 @@ const I18N = {
     ar: ['Noto Sans Arabic', 'arabic', 'U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC', ['Noto Sans Arabic', 'NotoSansArabic-Regular', 'Segoe UI', 'Geeza Pro']],
     ur: ['Noto Sans Arabic', 'arabic', 'U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC', ['Noto Sans Arabic', 'NotoSansArabic-Regular', 'Segoe UI', 'Geeza Pro']],
     fa: ['Noto Sans Arabic', 'arabic', 'U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC', ['Noto Sans Arabic', 'NotoSansArabic-Regular', 'Segoe UI', 'Geeza Pro']],
+    ne: ['Noto Sans Devanagari', 'devanagari', 'U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF', ['Noto Sans Devanagari', 'NotoSansDevanagari-Regular', 'Nirmala UI', 'Kohinoor Devanagari']],
+    he: ['Noto Sans Hebrew', 'hebrew', 'U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F', ['Noto Sans Hebrew', 'NotoSansHebrew-Regular', 'Arial Hebrew', 'David']],
+    my: ['Noto Sans Myanmar', 'myanmar', 'U+1000-109F, U+200C-200D, U+25CC, U+A9E0-A9FE, U+AA60-AA7F', ['Noto Sans Myanmar', 'NotoSansMyanmar-Regular', 'Myanmar Text', 'Myanmar Sangam MN', 'Padauk']],
+    am: ['Noto Sans Ethiopic', 'ethiopic', 'U+1200-1399, U+2D80-2DDE, U+AB01-AB2E, U+25CC', ['Noto Sans Ethiopic', 'NotoSansEthiopic-Regular', 'Nyala', 'Kefa', 'Ebrima']],
     ml: ['Noto Sans Malayalam', 'malayalam', 'U+0D00-0D7F, U+200C-200D, U+20B9, U+25CC', ['Noto Sans Malayalam', 'NotoSansMalayalam-Regular', 'Nirmala UI', 'Malayalam Sangam MN', 'Kartika']],
   },
   async deva() {
@@ -19448,7 +19452,7 @@ const I18N = {
       document.querySelectorAll('link[href*="fonts.googleapis.com"]').forEach((l) => {
         for (const m of l.href.matchAll(/family=([^:&]+)/g)) fams.push(decodeURIComponent(m[1]).replace(/\+/g, ' '));
       });
-      const add = fams.filter((f) => !/^Noto Sans (Devanagari|Tamil|Telugu|Bengali|Malayalam|Gujarati|Gurmukhi|Arabic|Kannada)$/i.test(f) && !seen.has(f));
+      const add = fams.filter((f) => !/^Noto Sans (Devanagari|Tamil|Telugu|Bengali|Malayalam|Gujarati|Gurmukhi|Arabic|Kannada|Hebrew|Myanmar|Ethiopic)$/i.test(f) && !seen.has(f));
       if (!add.length) return;
       add.forEach((f) => seen.add(f));
       const src = [url && `url(${url}) format('woff2')`, ...locals.map((n) => `local('${n}')`)].filter(Boolean).join(', ');
@@ -24410,6 +24414,14 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.93.0', date: '2026-11-23', items: [
+    ['better', 'Simpler MKCinema player', 'The MKCinema player has fewer buttons, and Settings opens as one short card with speed, picture, screen and sleep timer. Everything else is one tap away in All settings.'],
+    ['new', 'Parent notes', 'Title pages show the age rating where you live and what rating boards warn about, like violence, scary scenes or strong language. Settings › Home turns it off.'],
+    ['new', '13 more languages', 'MKCinema now speaks 44 languages, adding Nederlands, Українська, Română, Ελληνικά, Čeština, Magyar, Svenska, עברית, Bahasa Melayu, नेपाली, မြန်မာ, አማርኛ and Oʻzbekcha. Pick one in Settings › Appearance › Language.'],
+    ['new', 'Ask a grown-up', 'On a kids seat, Search shows how many more titles need a grown-up. After the grown-up PIN, they can allow any of them for that seat, and take them back in Settings › Seats.'],
+    ['better', 'Clearer source picks', 'The Best match source now also says when it is in your audio language, from your own server, from your first-choice addon or like the source you picked last time.'],
+    ['better', 'New Top 10 numbers', 'Top 10 numbers get a new look: metal edges in gold, platinum and bronze, and a soft glow in your colour that moves on computers and phones. It stays still on TVs, Snappy mode and Low graphics.'],
+  ] },
   { v: '2.92.1', date: '2026-11-23', items: [
     ['better', 'Smoother film start', 'Films open more smoothly: only the title shows while the film gets ready, and fewer notes pop up as it starts.'],
   ] },
@@ -29023,7 +29035,7 @@ const AddonUI = {
     if (lay === 'landscape') return cardHTML(m, { wide: true });
     const h = cardHTML(m);
     if (lay === 'square') return h.replace('<div class="card"', '<div class="card ax-sq"');
-    if (lay === 'top10' && k < 10) return h.replace('<div class="card"', `<div class="card t10c" data-rank="${k + 1}"`);
+    if (lay === 'top10' && k < 10) return h.replace('<div class="card"',`<div class="card t10c t10v" data-rank="${k + 1}"`).replace('<div class="card-inner">',`<i class="t10n" aria-hidden="true" data-n="${k + 1}" style="--t10i:${k + 1}"><b>${k + 1}</b></i><div class="card-inner">`);
     return h;
   },
   host(u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; } },
@@ -40066,7 +40078,7 @@ const Top10 = {
     const keep = rail.contains(document.activeElement) ? [...rail.children].indexOf(document.activeElement.closest('.rail > *')) : -1;
     if (!l) rail.innerHTML = '<div class="rail-empty">This Top 10 did not load. Try again in a moment.</div>';
     else if (!l.length) rail.innerHTML = '<div class="rail-empty">Nothing matches these filters yet. Try another year or category.</div>';
-    else rail.innerHTML = l.map((m, i) => cardHTML(m).replace('<div class="card"', `<div class="card t10c" data-rank="${i + 1}"`)).join('');
+    else rail.innerHTML = l.map((m, i) => cardHTML(m).replace('<div class="card"',`<div class="card t10c t10v" data-rank="${i + 1}"`).replace('<div class="card-inner">',`<i class="t10n" aria-hidden="true" data-n="${i + 1}" style="--t10i:${i + 1}"><b>${i + 1}</b></i><div class="card-inner">`)).join('');
     rail.scrollLeft = 0;
     if (keep >= 0 && rail.children[Math.min(keep, rail.children.length - 1)]) rail.children[Math.min(keep, rail.children.length - 1)].focus({ preventScroll: true });
     icons(); if (typeof queueWall === 'function') queueWall();
@@ -52944,7 +52956,9 @@ html.ezb-bar.mk-pm:not(.tv) #tabs .mk-pm-btn.mk-pm-show{display:flex}
 .t10x .t10c.t10c[data-rank="10"]{margin-left:calc(var(--t10f) * 1.02);scroll-margin-left:calc(var(--t10f) * 1.02)}
 .t10x .t10c.t10c::before{font-size:var(--t10f);font-weight:400;letter-spacing:-.04em;line-height:.8;right:calc(100% - 2px);padding-right:.05em;color:transparent;-webkit-text-stroke:0;background:linear-gradient(180deg,rgba(var(--kf6f6f8-c,246,246,248),.98) 0%,rgba(var(--kceced4-c,206,206,212),.75) 55%,rgba(var(--k787880-c,120,120,128),.28) 100%);-webkit-background-clip:text;background-clip:text;font-variant-numeric:lining-nums}
 .t10x .rail{padding-left:2px}
+</style><style id="mk-t10-premium">.t10c.t10v:before{content:none!important;display:none!important}.t10n{--t10w:calc(var(--t10f,calc(clamp(84px,9vw,132px) * var(--ts,1))) * .058);position:absolute;right:calc(100% - 4px);top:0;margin-top:calc(150% + .1em);transform:translateY(-100%);transform-origin:100% 100%;padding:.1em .07em .1em .1em;font-family:var(--f-display);font-size:var(--t10f,calc(clamp(84px,9vw,132px) * var(--ts,1)));font-weight:800;font-style:normal;line-height:.8;letter-spacing:-.06em;font-variant-numeric:lining-nums;white-space:nowrap;color:transparent;pointer-events:none;z-index:0;--t10a:linear-gradient(165deg,#f7f5f0 0%,#bdb8ad 26%,#5c5a55 52%,#e4e0d7 76%,#4b4945 100%);--t10g:rgba(226,220,206,.28);--t10b:linear-gradient(135deg,var(--glow,#4aa8ff) 0%,#9a72ff 40%,#ff6fae 72%,#ffd38a 100%);--t10bg:rgba(var(--glow-c,74,168,255),.55)}.t10c[data-rank="1"] .t10n{--t10a:linear-gradient(165deg,#fff6d6 0%,#ecc768 24%,#9a7020 50%,#f8de92 74%,#6e4f14 100%);--t10g:rgba(240,196,92,.5)}.t10c[data-rank="2"] .t10n{--t10a:linear-gradient(165deg,#ffffff 0%,#d5d9e0 24%,#7b818c 50%,#f1f4f8 74%,#5d626b 100%);--t10g:rgba(214,222,236,.42)}.t10c[data-rank="3"] .t10n{--t10a:linear-gradient(165deg,#ffe6d2 0%,#da9a6e 24%,#86492a 50%,#f4bb93 74%,#5e301a 100%);--t10g:rgba(226,146,98,.42)}.t10n:before,.t10n:after{content:attr(data-n);position:absolute;inset:0;z-index:0;padding:inherit;-webkit-text-stroke:var(--t10w) transparent;-webkit-background-clip:text;background-clip:text;color:transparent}.t10n:before{background-image:var(--t10a);filter:drop-shadow(0 0 calc(var(--t10w) * 2.2) var(--t10g))}.t10n:after{background-image:var(--t10b);filter:drop-shadow(0 0 calc(var(--t10w) * 2.6) var(--t10bg));opacity:0}.t10n b{position:relative;z-index:1;display:inline-block;font:inherit;letter-spacing:inherit;color:transparent;background:linear-gradient(180deg,#34343b 0%,#151518 38%,#060607 78%,#0d0d10 100%);-webkit-background-clip:text;background-clip:text}.t10c.t10v:is(:hover,:focus-visible,.nav-focus) .t10n:after{opacity:1}html:not(.tv):not(.lite) body.fx-hi .t10n{transition:transform .45s cubic-bezier(.2,.8,.2,1)}html:not(.tv):not(.lite) body.fx-hi .t10c.t10v:is(:hover,:focus-visible,.nav-focus) .t10n{transform:translateY(-100%) translate3d(0,-6px,0) scale(1.045)}html:not(.tv):not(.lite) body.fx-hi .t10n{animation:t10probe .01s 1}html:not(.tv):not(.lite) body.fx-hi .t10-on .t10n:after{will-change:opacity;animation:t10shift 9s ease-in-out infinite;animation-delay:calc(var(--t10i,0) * -.9s)}html:not(.tv):not(.lite) body.fx-hi .t10-on .t10c.t10v:is(:hover,:focus-visible,.nav-focus) .t10n:after{animation:none;opacity:1;transition:opacity .3s ease}@keyframes t10shift{0%,18%,100%{opacity:0}46%,62%{opacity:.92}}@keyframes t10probe{to{opacity:1}}html.tv .t10n:before,html.lite .t10n:before{filter:none}html.tv .t10n:after,html.lite .t10n:after{filter:none}html.tv .t10n,html.lite .t10n{--t10w:calc(var(--t10f,120px) * .055)}@media (prefers-reduced-motion:reduce){.t10n,.t10n:after{animation:none!important;transition:none!important}}
 </style>
+<script id="mk-t10-premium-js">(function(){var io=null,seen=new WeakSet;function on(e){if(e.animationName!=="t10probe")return;var n=e.target,s=n&&n.closest&&(n.closest("section")||n.closest(".rail"));if(!s||seen.has(s)||!("IntersectionObserver"in window))return;seen.add(s);io=io||new IntersectionObserver(function(es){es.forEach(function(x){x.target.classList.toggle("t10-on",x.isIntersecting)})},{rootMargin:"80px 0px"});io.observe(s)}document.addEventListener("animationstart",on,!0)})();</script>
 <style id="mk-285-set">
 /* 2.85 Settings in the Home look: the open page is the same cream pill as the Home bar, groups and page names use
    Home's eyebrow ("— YOU") and title type, one neutral icon style instead of a colour per group, pill controls,
@@ -57466,6 +57480,329 @@ window.MKFsBack=function(){try{const p=d.getElementById('player');if(!p||p.hidde
 if(typeof toast==='function'&&!toast._rx){const t=toast;const quiet=(m,k)=>{const p=d.getElementById('player');if(!p||p.hidden)return false;
   return k==='subs'&&/ subtitles on$/.test(m)||/^(Intro|Recap|Ending) skipped automatically$/.test(m)};
  const w=function(m,type,dur,k){if(quiet(String(m||''),k||''))return;return t.apply(this,arguments)};w._rx=1;try{toast=w}catch{}}
+})();
+</script>
+<style id="mk-rx-simple">
+/* 2.92.2 simpler player: fewer buttons in the bars, and Settings opens as one short card. "All settings" shows the rest. */
+html.mk-rx #player .rx-cap #pxSpeed,html.mk-rx #player .rx-cap #rxPic,html.mk-rx #player .rx-cap #rxSleep,html.mk-rx #player .rx-cap #pCast{display:none!important}
+html.mk-rx:not(.tv) #player .rx-cap #pFull{display:none!important}
+@media (pointer:fine){html.mk-rx:not(.tv) #player .rx-cap #pFull{display:inline-grid!important}}
+html.mk-rx #player #optMenu.rx-simple>*:not(.rx-simple-pane){display:none!important}
+html.mk-rx #player #optMenu.rx-simple{width:min(540px,calc(100vw - 32px))!important;padding:18px 18px 10px!important;max-height:calc(100% - var(--rx-cap) - 70px);overflow:auto}
+html.mk-rx #player .rx-simple-pane h4{margin:0 0 12px;font:600 17px var(--f-body);color:#f3f0e9}
+html.mk-rx #player .rs-row{display:grid;grid-template-columns:88px 1fr;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(255,255,255,.07)}
+html.mk-rx #player .rs-row>span{font:500 13px var(--f-body);color:rgba(243,240,233,.66)}
+html.mk-rx #player .rs-chips{display:flex;flex-wrap:wrap;gap:6px}
+html.mk-rx #player #optMenu .rs-chips button{display:inline-flex!important;align-items:center;width:auto!important;flex:none;margin:0!important;justify-content:center;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#f3f0e9;border-radius:999px;padding:7px 13px;min-height:0;font:600 13px var(--f-body);font-variant-numeric:tabular-nums}
+html.mk-rx #player #optMenu .rs-chips button.on{background:#f3f0e9;color:#0b0b0b;border-color:#f3f0e9}
+html.mk-rx #player #optMenu .rs-all{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:6px;padding:12px 4px 6px;border:0;border-top:1px solid rgba(255,255,255,.07);border-radius:0;background:none;color:#d8c29a;font:600 14px var(--f-body)}
+html.mk-rx body.mk-phone #player #optMenu.rx-simple{top:12px!important;bottom:12px!important;max-height:none;left:max(12px,env(safe-area-inset-left,0px))!important;right:auto!important;width:min(470px,calc(100vw - 24px))!important;padding:14px 16px 8px!important}
+html.mk-rx body.mk-phone #player .rs-row{padding:6px 0}
+html.mk-rx #player:has(#optMenu.rx-simple:not([hidden])) .hud-mid{opacity:0;pointer-events:none}
+html.tv.mk-rx #player .rs-chips button:focus,html.tv.mk-rx #player .rs-all:focus{outline:3px solid #d8c29a;outline-offset:2px}
+</style>
+<script id="mk-rx-simple-js">
+(()=>{const d=document,m=()=>d.getElementById('optMenu');
+const ROWS=[['Speed','speed',[['0.5','0.5×'],['0.75','0.75×'],['1','1×'],['1.25','1.25×'],['1.5','1.5×'],['2','2×']]],
+ ['Picture','picp',[['normal','Normal'],['vivid','Vivid'],['dark','Brighter']]],
+ ['Screen','fit',[['fit','Fit'],['fill','Fill'],['crop','Crop bars']]],
+ ['Sleep timer','sleep',[['0','Off'],['15','15'],['30','30'],['60','60'],['end','End of film']]]];
+let full=false,busy=false,sleepPick='0';
+const isOn=(k,v,x)=>{if(k!=='sleep')return x.classList.contains('on');const l=(m().querySelector('.tl-sleep .tl-k')||{}).textContent||'';if(/off/i.test(l))sleepPick='0';return v===sleepPick};
+const src=(k,v)=>{const e=m();return e&&e.querySelector(`[data-pane] [data-${k}="${v}"]`)};
+function paint(){const e=m();if(!e||busy)return;busy=true;try{
+ if(full){e.classList.remove('rx-simple');const o=e.querySelector('.rx-simple-pane');o&&o.remove();return}
+ e.classList.add('rx-simple');let pane=e.querySelector('.rx-simple-pane');
+ if(!pane){pane=d.createElement('div');pane.className='rx-simple-pane';e.prepend(pane);
+  pane.addEventListener('click',ev=>{ev.stopPropagation();const b=ev.target.closest('button');if(!b)return;
+   if(b.classList.contains('rs-all')){full=true;paint();const t=e.querySelector('[data-pxtab].on')||e.querySelector('[data-pxtab]');if(t&&typeof IS_TV!=='undefined'&&IS_TV&&window.Nav)try{Nav.focus(t,!0)}catch{}return}
+   const x=src(b.dataset.k,b.dataset.v);if(x){if(b.dataset.k==='sleep')sleepPick=b.dataset.v;x.click();setTimeout(paint,30)}})}
+ const html=`<h4>Settings</h4>`+ROWS.map(([label,k,opts])=>{const shown=opts.filter(([v])=>src(k,v));if(!shown.length)return'';
+  return `<div class="rs-row"><span>${label}</span><div class="rs-chips">${shown.map(([v,t])=>{const x=src(k,v);return `<button type="button" data-k="${k}" data-v="${v}" class="${x&&isOn(k,v,x)?'on':''}">${t}</button>`}).join('')}</div></div>`}).join('')+`<button type="button" class="rs-all">All settings <span aria-hidden="true">›</span></button>`;
+ if(pane.dataset.h!==html){const f=d.activeElement&&pane.contains(d.activeElement)?[d.activeElement.dataset.k,d.activeElement.dataset.v]:null;pane.innerHTML=html;pane.dataset.h=html;
+  if(f){const n=pane.querySelector(`[data-k="${f[0]}"][data-v="${f[1]}"]`)||pane.querySelector('.rs-all');n&&n.focus()}}
+ if(e.firstChild!==pane)e.prepend(pane);
+}finally{busy=false}}
+function hook(){const e=m();if(!e)return;
+ new MutationObserver(()=>{if(e.hidden){full=false;return}paint()}).observe(e,{attributes:true,attributeFilter:['hidden']});
+ new MutationObserver(()=>{if(!e.hidden&&!busy)paint()}).observe(e,{childList:true});
+ if(!e.hidden)paint()}
+d.readyState==='loading'?d.addEventListener('DOMContentLoaded',hook):hook();
+})();
+</script>
+<style id="mk-293-kids-ask">
+/* 2.93 Ask a grown-up: titles hidden on a kids seat can be allowed for that seat, one by one, behind the grown-up PIN */
+.ka-intro{color:var(--mute);margin:4px 0 0;max-width:62ch}
+.ka-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:16px;margin-top:18px}
+.ka-t{position:relative;display:grid;gap:6px;align-content:start;text-align:left;background:none;border:0;padding:0;color:var(--ink);cursor:pointer;font:inherit}
+.ka-t .ka-art{position:relative;display:block;aspect-ratio:2/3;border-radius:var(--r-m);overflow:hidden;background:var(--n0a0a0b,#0a0a0b);box-shadow:0 0 0 1px var(--line-soft)}
+.ka-t .ka-art img{width:100%;height:100%;object-fit:cover;display:block}
+.ka-t b{font-size:calc(13px * var(--ts,1));line-height:1.25;font-weight:600}
+.ka-t small{color:var(--mute);font-size:calc(12px * var(--ts,1))}
+.ka-t .ka-st{position:absolute;left:8px;right:8px;bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border-radius:999px;background:rgba(var(--n000000-c,0,0,0),.78);border:1px solid var(--line-hi);font-size:calc(12px * var(--ts,1));font-weight:600;color:var(--kffffff,#fff)}
+.ka-t .ka-st svg{width:14px;height:14px}
+.ka-t.on .ka-st{background:var(--gold,#d8b25a);border-color:var(--gold,#d8b25a);color:var(--n000000,#000)}
+.ka-t:focus,.ka-t.nav-focus,html.tv .ka-t.nav-focus,html.tv .ka-t:focus-visible{outline:none!important;box-shadow:none!important;transform:none!important;background:none!important}
+.ka-grid{padding:4px}
+.ka-t:focus-visible .ka-art,.ka-t.nav-focus .ka-art,html.tv .ka-t:focus .ka-art{outline:3px solid var(--ink)!important;outline-offset:3px}
+.ka-foot{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.ka-warn{margin-top:14px}
+.ka-set{display:grid;gap:10px}
+.ka-set h4{margin:6px 0 0;font-size:calc(14px * var(--ts,1))}
+.ka-chips{display:flex;flex-wrap:wrap;gap:8px}
+.ka-chips .chip{gap:6px}
+.ka-chips .chip svg{width:14px;height:14px}
+</style>
+<script id="mk-293-kids-ask-js">
+'use strict';
+/* 2.93 Ask a grown-up. On a kids seat, Search hides titles over the seat's age (or with no known rating). Instead of a
+   dead end, Search now says how many more titles need a grown-up, with one row to ask. After the grown-up PIN (the same
+   one that guards Settings and leaving the seat), the grown-up sees those titles and allows any of them for this seat.
+   Allowed titles pass the kids rule everywhere on this seat (Search, title page, play). Settings › Seats lists them and
+   takes any back. Stored on this device only (mkc:kidsAllow, per seat). Nothing is sent anywhere. */
+(function () {
+  if (typeof Seats === 'undefined' || typeof palCompose !== 'function' || typeof X8 === 'undefined') return;
+  const K = 'kidsAllow';
+  const safe = (f, d) => { try { return f(); } catch (e) { return d; } };
+  const KidsAsk = window.KidsAsk = {
+    hidden: [],
+    all() { const v = Store.raw.get(K, {}); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; },
+    of(seat) { const a = this.all()[seat]; return a && typeof a === 'object' && !Array.isArray(a) ? a : {}; },
+    has(m) { return !!(m && m.id && safe(() => Seats.kids(), false) && this.of(SEAT)[m.id]); },
+    set(seat, m, on) {
+      const all = this.all(), mine = { ...this.of(seat) };
+      if (on) mine[m.id] = { n: String(m.name || '').slice(0, 120), t: m.type || '', at: Date.now() };
+      else delete mine[m.id];
+      all[seat] = mine; Store.raw.set(K, all);
+    },
+    age(m) {
+      const v = safe(() => (typeof KidsAge !== 'undefined' ? KidsAge.of(m.id) : null), null);
+      return v == null ? 'No age rating known' : v <= 0 ? 'Rated for all ages' : `Rated ${v}+`;
+    },
+    ask() {
+      const list = this.hidden.slice(); if (!list.length) return;
+      Seats.guard(() => this.panel(list));
+    },
+    focus(el) { if (!el) return; if (IS_TV && typeof Nav !== 'undefined') Nav.focus(el, true); else if (!TOUCH_UI) el.focus({ preventScroll: true }); },
+    panel(list) {
+      const seat = Seats.cur();
+      X8.layer('kidsAsk', { label: 'Ask a grown-up', icon: 'lock-open', eyebrow: 'Kids seat', wide: true });
+      const body = X8.body('kidsAsk');
+      const paint = () => {
+        const mine = this.of(SEAT);
+        body.innerHTML = `<h2 class="x8-h">Allow for ${esc(seat.name || 'this seat')}</h2>
+          <p class="ka-intro">These titles are hidden on this seat because their age rating is over the seat’s limit or not known. Allowed titles show in Search and can play on this seat only.</p>
+          ${Seats.owner().pin ? '' : '<p class="tour-note seat-warn ka-warn">There is no grown-up PIN yet, so anyone can allow titles here. Edit your main seat and set one.</p>'}
+          <div class="ka-grid">${list.map((m, i) => { const on = !!mine[m.id]; return `<button type="button" class="ka-t${on ? ' on' : ''}" data-nav data-ka="${i}" aria-pressed="${on}"><span class="ka-art">${safe(() => imgTag(metaPoster(m), m.name, m.id), '')}<span class="ka-st"><i data-lucide="${on ? 'check' : 'plus'}"></i>${on ? 'Allowed' : 'Allow'}</span></span><b>${esc(m.name || '')}</b><small>${esc([safe(() => yearOf(m), ''), this.age(m)].filter(Boolean).join(' · '))}</small></button>`; }).join('')}</div>
+          <div class="ka-foot"><button type="button" class="btn btn-prime" data-nav id="kaDone"><i data-lucide="check"></i>Done</button></div>`;
+        icons();
+        $$('[data-ka]', body).forEach((b) => b.addEventListener('click', () => {
+          const m = list[Number(b.dataset.ka)]; if (!m) return;
+          this.set(SEAT, m, !this.of(SEAT)[m.id]); const k = b.dataset.ka; paint();
+          this.focus($(`[data-ka="${k}"]`, body));
+        }));
+        $('#kaDone', body).onclick = () => X8.close('kidsAsk');
+      };
+      paint(); X8.open('kidsAsk');
+      setTimeout(() => this.focus($('[data-ka]', body)), 60);
+    },
+  };
+
+  /* an allowed title passes the kids rule on that seat */
+  const ks = Seats.kidSafe.bind(Seats);
+  Seats.kidSafe = function (m) { return KidsAsk.has(m) || ks(m); };
+
+  /* Search: say how many more titles a grown-up could allow, instead of a dead end */
+  const pc = palCompose;
+  palCompose = function (q, titles, pending) {
+    const kids = safe(() => Seats.kids(), false), t = String(q || '').trim();
+    const hid = kids && t.length >= 2 ? (titles || []).filter((m) => m && m.id && /^tt\d+$/.test(m.id) && !safe(() => Seats.kidSafe(m), true)) : [];
+    const r = pc.apply(this, arguments);
+    if (!hid.length || typeof PAL === 'undefined' || !Array.isArray(PAL.items)) return r;
+    KidsAsk.hidden = hid.slice(0, 24);
+    const none = PAL.items.find((it) => it.kind === 'status' && /^No titles found/.test(it.label || ''));
+    if (none) { none.label = 'Nothing for this seat yet'; none.sub = ''; none.icon = 'baby'; }
+    const n = hid.length;
+    PAL.items.push({ kind: 'row', group: 'Kids seat', label: n === 1 ? '1 more title needs a grown-up' : `${n} more titles need a grown-up`, sub: 'Ask a grown-up to allow it for this seat', icon: 'lock', run: () => KidsAsk.ask(), i: PAL.items.length });
+    palRender();
+    return r;
+  };
+
+  /* Settings › Seats: what a grown-up allowed, and taking it back */
+  const sec = typeof secById === 'function' && secById('seats');
+  if (sec) {
+    const rows = sec.rows, bind = sec.bind;
+    sec.rows = () => {
+      const out = rows();
+      const seats = Seats.all().filter((s) => s.kids && Object.keys(KidsAsk.of(s.id)).length);
+      if (seats.length) out.push({ html: () => `<div class="ka-set">${seats.map((s) => `<h4>Allowed by a grown-up for ${esc(s.name)}</h4><div class="ka-chips">${Object.entries(KidsAsk.of(s.id)).sort((a, b) => (b[1].at || 0) - (a[1].at || 0)).map(([id, x]) => `<button type="button" class="chip" data-nav data-kax="${esc(s.id)}|${esc(id)}" aria-label="Take back ${esc(x.n || id)}">${esc(x.n || id)}<i data-lucide="x"></i></button>`).join('')}</div>`).join('')}<p class="tour-note">These titles show on that kids seat even though their age rating is over its limit or not known. Tap one to take it back.</p></div>` });
+      return out;
+    };
+    sec.bind = function () {
+      const r = bind ? bind.apply(this, arguments) : undefined;
+      $$('#setBody [data-kax]').forEach((b) => b.addEventListener('click', () => {
+        const [sid, id] = b.dataset.kax.split('|'); KidsAsk.set(sid, { id }, false);
+        try { renderSettingsBody(); } catch (e) { b.remove(); }
+      }));
+      return r;
+    };
+  }
+})();
+</script>
+<script id="mk-293-why-js">
+'use strict';
+/* 2.93 "Why this one" names more of what Smart Play weighed: your own server, your audio language, your first-choice
+   addon and the source you picked last time for this show. Only facts the app already has; nothing is guessed. */
+(function () {
+  if (typeof SourceCheck === 'undefined' || typeof SourceCheck.why !== 'function') return;
+  const why = SourceCheck.why.bind(SourceCheck);
+  SourceCheck.why = function (s) {
+    const base = why(s), pre = [], post = [];
+    try {
+      if (s && s._srv) pre.push('from your own server');
+      const want = [CFG.srAudio, CFG.audioOnly].find((x) => x && x !== 'any');
+      if (want && typeof AudioPref !== 'undefined') { const l = AudioPref.langs(s); if (l.langs.has(want)) pre.push('in your audio language'); else if (l.multi) pre.push('several audio languages'); }
+      if (CFG.pinAddon && s._addon === CFG.pinAddon) post.push('your first-choice addon');
+      const memo = typeof PickMemo !== 'undefined' && typeof D === 'object' ? PickMemo.get(D.meta) : null;
+      if (memo && memo.a && s._addon === memo.a && (!memo.r || (s._tel && s._tel.res === memo.r))) post.push('like the source you picked last time');
+    } catch (e) { /* the plain reasons still show */ }
+    return [...pre, base, ...post].filter(Boolean).join(' · ');
+  };
+})();
+</script>
+<style id="mk-293-parent-notes">
+/* 2.93 Parent notes: age ratings and what rating boards warn about, under the synopsis on title pages */
+.pn{margin:18px 0 22px;display:grid;gap:10px}
+.pn .sec-title{margin:0}
+.pn-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pn-rt{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--line);font-size:calc(12px * var(--ts,1));color:var(--ink)}
+.pn-rt b{font-family:var(--f-mono);font-weight:600}
+.pn-rt small{color:var(--mute);font-size:inherit}
+.pn-fl{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;background:rgba(var(--kffffff-c,255,255,255),.06);font-size:calc(12px * var(--ts,1));font-weight:600;color:var(--ink)}
+.pn-fl svg{width:14px;height:14px;opacity:.8}
+.pn-none{color:var(--mute);font-size:calc(13px * var(--ts,1))}
+.pn-src{color:var(--dim,var(--mute));font-size:calc(11px * var(--ts,1));margin:0}
+</style>
+<script id="mk-293-parent-notes-js">
+'use strict';
+/* 2.93 Parent notes. Every title page gets a short block under the synopsis: the age rating in the US, the UK and where
+   you live, and what the rating boards that list reasons (Brazil, Germany, the Netherlands, Canada, South Africa,
+   Turkey, Finland...) warn about, grouped into plain words: violence, scary scenes, sex, nudity, strong language,
+   drugs or alcohol, self-harm, discrimination, mature themes. Nothing is guessed: no rating board reason, no warning.
+   Data: TMDB, with the viewer's own key, else MKCinema's title-notes function (MKCinema's key; only the IMDb id is
+   sent). Kept 14 days on this device (mkc:notesCache). Settings › Home › Parent notes turns it off. */
+(function () {
+  if (typeof renderDetail !== 'function') return;
+  const FN = 'title-notes', TTL = 14 * 864e5, K = 'notesCache';
+  const CAT = [
+    ['violence', 'Violence', 'swords'], ['scary', 'Scary or upsetting scenes', 'ghost'], ['sex', 'Sex', 'heart'], ['nudity', 'Nudity', 'eye-off'],
+    ['language', 'Strong language', 'message-square-warning'], ['drugs', 'Drugs or alcohol', 'wine'], ['selfharm', 'Self-harm', 'heart-crack'],
+    ['discrimination', 'Discrimination', 'users'], ['crime', 'Crime', 'siren'], ['themes', 'Mature themes', 'info'],
+  ];
+  /* one board's reason -> our groups (single letters only where that country's board uses them) */
+  const groups = (c, d) => {
+    const x = String(d || '').trim(), l = x.toLowerCase(), out = new Set();
+    if (/^[A-Z]{1,3}$/.test(x)) {
+      const L = c === 'ZA' ? { V: 'violence', L: 'language', S: 'sex', N: 'nudity', D: 'drugs', H: 'scary' }
+        : c === 'US' ? { V: 'violence', FV: 'violence', L: 'language', S: 'sex', D: 'sex' } : {};
+      if (L[x]) out.add(L[x]); return out;
+    }
+    if (/violen|injur|brutal|gore/.test(l)) out.add('violence');
+    if (/fear|threat|stress|anxiety|shock|disturb|frighten|scary/.test(l) || (/horror/.test(l) && !/violence\s*\/\s*horror/.test(l))) out.add('scary'); // Turkey's "Violence / Horror" is one violence box
+    if (/sex/.test(l)) out.add('sex');
+    if (/nud/.test(l)) out.add('nudity');
+    if (/language|profan|swear/.test(l)) out.add('language');
+    if (/drug|alcohol|smok|tobacco/.test(l)) out.add('drugs');
+    if (/self-harm|self harm|suicid/.test(l)) out.add('selfharm');
+    if (/discriminat/.test(l)) out.add('discrimination');
+    if (/criminal|crime/.test(l)) out.add('crime');
+    if (/mature|sensitive|not recommended|negative example|theme/.test(l)) out.add('themes');
+    return out;
+  };
+  const safe = (f, d) => { try { return f(); } catch (e) { return d; } };
+  const MkNotes = window.MkNotes = {
+    mem: new Map(),
+    on() { return CFG.parentNotes !== false; },
+    tt(m) { const t = String((m && (m.imdb_id || m.id)) || '').split(':')[0]; return /^tt\d{5,10}$/.test(t) ? t : ''; },
+    cached(tt) {
+      if (this.mem.has(tt)) return this.mem.get(tt);
+      const c = Store.raw.get(K, {}), e = c && c[tt];
+      return e && Date.now() - e.at < TTL ? e.v : undefined;
+    },
+    keep(tt, v) {
+      this.mem.set(tt, v);
+      const c = Store.raw.get(K, {}); c[tt] = { at: Date.now(), v };
+      const ks = Object.keys(c); if (ks.length > 400) ks.sort((a, b) => c[a].at - c[b].at).slice(0, ks.length - 400).forEach((k) => delete c[k]);
+      Store.raw.set(K, c);
+    },
+    trim(kind, d) {
+      const out = [];
+      for (const x of ((d && d.results) || []).slice(0, 120)) {
+        const c = String(x.iso_3166_1 || ''); if (!/^[A-Z]{2}$/.test(c)) continue;
+        let r = ''; const ds = new Set();
+        if (kind === 'tv') { r = String(x.rating || '').trim(); (x.descriptors || []).forEach((y) => y && ds.add(String(y).trim())); }
+        else for (const y of (x.release_dates || []).slice().sort((a, b) => (a.type === 3 ? 0 : 1) - (b.type === 3 ? 0 : 1))) { if (!r && y.certification) r = String(y.certification).trim(); (y.descriptors || []).forEach((z) => z && ds.add(String(z).trim())); }
+        if (r || ds.size) out.push({ c, r, d: [...ds].slice(0, 12) });
+      }
+      return out;
+    },
+    async fetch(tt) {
+      if (safe(() => TMDB.key(), '')) {
+        try {
+          const f = await TMDB.find(tt), mv = f && (f.movie_results || [])[0], tv = !mv && f && (f.tv_results || [])[0];
+          if (!mv && !tv) return { kind: null, ratings: [] };
+          const kind = mv ? 'movie' : 'tv', d = await TMDB.get(mv ? `movie/${mv.id}/release_dates` : `tv/${tv.id}/content_ratings`);
+          if (d) return { kind, ratings: this.trim(kind, d) };
+        } catch (e) { /* MKCinema's lookup below */ }
+      }
+      const c = (typeof Account !== 'undefined' && Account.config && Account.config()) || {};
+      if (!c.url) return null;
+      const r = await netFetch(`${String(c.url).replace(/\/+$/, '')}/functions/v1/${FN}?tt=${encodeURIComponent(tt)}`, { headers: { apikey: c.anonKey || '', accept: 'application/json' } }, 12000);
+      if (!r.ok) return null;
+      return r.json();
+    },
+    get(tt) {
+      const v = this.cached(tt); if (v !== undefined) return Promise.resolve(v);
+      if (!this.inflight) this.inflight = new Map();
+      if (!this.inflight.has(tt)) this.inflight.set(tt, this.fetch(tt).then((x) => { if (x && Array.isArray(x.ratings)) this.keep(tt, x); return x; }).catch(() => null).finally(() => this.inflight.delete(tt)));
+      return this.inflight.get(tt);
+    },
+    home() { const l = String(navigator.language || '').split('-')[1]; return /^[A-Za-z]{2}$/.test(l || '') ? l.toUpperCase() : ''; },
+    land(c) { try { return new Intl.DisplayNames([(typeof I18N !== 'undefined' && I18N.code) || 'en'], { type: 'region' }).of(c) || c; } catch (e) { return c; } },
+    html(v) {
+      const rs = (v && v.ratings) || []; if (!rs.length) return '';
+      const by = new Map(rs.map((x) => [x.c, x]));
+      const want = [...new Set(['US', 'GB', this.home()].filter(Boolean))];
+      const shown = want.map((c) => by.get(c)).filter((x) => x && x.r);
+      const flags = new Set(), from = new Set();
+      rs.forEach((x) => (x.d || []).forEach((d) => { const g = groups(x.c, d); if (g.size) { g.forEach((k) => flags.add(k)); from.add(x.c); } }));
+      if (!shown.length && !flags.size) return '';
+      const fl = CAT.filter(([k]) => flags.has(k));
+      return `<div class="pn" id="mkNotes"><h3 class="sec-title"><i data-lucide="shield-check"></i>Parent notes</h3>
+        ${shown.length ? `<div class="pn-row">${shown.map((x) => `<span class="pn-rt"><small>${esc(this.land(x.c))}</small><b translate="no">${esc(x.r)}</b></span>`).join('')}</div>` : ''}
+        ${fl.length ? `<div class="pn-row">${fl.map(([, l, ic]) => `<span class="pn-fl"><i data-lucide="${ic}"></i>${esc(l)}</span>`).join('')}</div>` : '<p class="pn-none">No rating board lists content warnings for this title.</p>'}
+        <p class="pn-src">${from.size ? `Only what the age rating boards in ${esc([...from].slice(0, 5).map((c) => this.land(c)).join(', '))} list. Ratings: TMDB.` : 'Ratings: TMDB.'}</p></div>`;
+    },
+    place(m) {
+      const panel = document.getElementById('detailPanel'); if (!panel || !m) return;
+      const old = panel.querySelector('#mkNotes'); if (old) old.remove();
+      if (!this.on()) return;
+      const tt = this.tt(m); if (!tt) return;
+      const put = (v) => {
+        if (!v || typeof D !== 'object' || D.meta !== m) return;
+        const h = this.html(v); if (!h || panel.querySelector('#mkNotes')) return;
+        const at = panel.querySelector('.d-body .credits') || panel.querySelector('.d-body .d-desc'); if (!at) return;
+        at.insertAdjacentHTML('afterend', h); icons();
+      };
+      const v = this.cached(tt);
+      if (v !== undefined) put(v); else this.get(tt).then(put);
+    },
+  };
+  const rd = renderDetail;
+  renderDetail = function () { const r = rd.apply(this, arguments); safe(() => MkNotes.place(D.meta)); return r; };
+  /* Settings › Home: one switch */
+  const sec = typeof secById === 'function' && secById('home');
+  if (sec) { const rows = sec.rows; sec.rows = () => [...rows(), { key: 'parentNotes', label: 'Parent notes on title pages', help: 'Age ratings and the content warnings rating boards give, like violence, scary scenes or strong language. From TMDB; only the title is looked up.', type: 'toggle', get: () => CFG.parentNotes !== false }]; }
 })();
 </script>
 </body>

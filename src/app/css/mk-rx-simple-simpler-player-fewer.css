@@ -1,0 +1,18 @@
+
+/* 2.92.2 simpler player: fewer buttons in the bars, and Settings opens as one short card. "All settings" shows the rest. */
+html.mk-rx #player .rx-cap #pxSpeed,html.mk-rx #player .rx-cap #rxPic,html.mk-rx #player .rx-cap #rxSleep,html.mk-rx #player .rx-cap #pCast{display:none!important}
+html.mk-rx:not(.tv) #player .rx-cap #pFull{display:none!important}
+@media (pointer:fine){html.mk-rx:not(.tv) #player .rx-cap #pFull{display:inline-grid!important}}
+html.mk-rx #player #optMenu.rx-simple>*:not(.rx-simple-pane){display:none!important}
+html.mk-rx #player #optMenu.rx-simple{width:min(540px,calc(100vw - 32px))!important;padding:18px 18px 10px!important;max-height:calc(100% - var(--rx-cap) - 70px);overflow:auto}
+html.mk-rx #player .rx-simple-pane h4{margin:0 0 12px;font:600 17px var(--f-body);color:#f3f0e9}
+html.mk-rx #player .rs-row{display:grid;grid-template-columns:88px 1fr;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(255,255,255,.07)}
+html.mk-rx #player .rs-row>span{font:500 13px var(--f-body);color:rgba(243,240,233,.66)}
+html.mk-rx #player .rs-chips{display:flex;flex-wrap:wrap;gap:6px}
+html.mk-rx #player #optMenu .rs-chips button{display:inline-flex!important;align-items:center;width:auto!important;flex:none;margin:0!important;justify-content:center;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#f3f0e9;border-radius:999px;padding:7px 13px;min-height:0;font:600 13px var(--f-body);font-variant-numeric:tabular-nums}
+html.mk-rx #player #optMenu .rs-chips button.on{background:#f3f0e9;color:#0b0b0b;border-color:#f3f0e9}
+html.mk-rx #player #optMenu .rs-all{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:6px;padding:12px 4px 6px;border:0;border-top:1px solid rgba(255,255,255,.07);border-radius:0;background:none;color:#d8c29a;font:600 14px var(--f-body)}
+html.mk-rx body.mk-phone #player #optMenu.rx-simple{top:12px!important;bottom:12px!important;max-height:none;left:max(12px,env(safe-area-inset-left,0px))!important;right:auto!important;width:min(470px,calc(100vw - 24px))!important;padding:14px 16px 8px!important}
+html.mk-rx body.mk-phone #player .rs-row{padding:6px 0}
+html.mk-rx #player:has(#optMenu.rx-simple:not([hidden])) .hud-mid{opacity:0;pointer-events:none}
+html.tv.mk-rx #player .rs-chips button:focus,html.tv.mk-rx #player .rs-all:focus{outline:3px solid #d8c29a;outline-offset:2px}

@@ -1,0 +1,22 @@
+
+/* 2.93 Ask a grown-up: titles hidden on a kids seat can be allowed for that seat, one by one, behind the grown-up PIN */
+.ka-intro{color:var(--mute);margin:4px 0 0;max-width:62ch}
+.ka-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:16px;margin-top:18px}
+.ka-t{position:relative;display:grid;gap:6px;align-content:start;text-align:left;background:none;border:0;padding:0;color:var(--ink);cursor:pointer;font:inherit}
+.ka-t .ka-art{position:relative;display:block;aspect-ratio:2/3;border-radius:var(--r-m);overflow:hidden;background:var(--n0a0a0b,#0a0a0b);box-shadow:0 0 0 1px var(--line-soft)}
+.ka-t .ka-art img{width:100%;height:100%;object-fit:cover;display:block}
+.ka-t b{font-size:calc(13px * var(--ts,1));line-height:1.25;font-weight:600}
+.ka-t small{color:var(--mute);font-size:calc(12px * var(--ts,1))}
+.ka-t .ka-st{position:absolute;left:8px;right:8px;bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border-radius:999px;background:rgba(var(--n000000-c,0,0,0),.78);border:1px solid var(--line-hi);font-size:calc(12px * var(--ts,1));font-weight:600;color:var(--kffffff,#fff)}
+.ka-t .ka-st svg{width:14px;height:14px}
+.ka-t.on .ka-st{background:var(--gold,#d8b25a);border-color:var(--gold,#d8b25a);color:var(--n000000,#000)}
+.ka-t:focus,.ka-t.nav-focus,html.tv .ka-t.nav-focus,html.tv .ka-t:focus-visible{outline:none!important;box-shadow:none!important;transform:none!important;background:none!important}
+.ka-grid{padding:4px}
+.ka-t:focus-visible .ka-art,.ka-t.nav-focus .ka-art,html.tv .ka-t:focus .ka-art{outline:3px solid var(--ink)!important;outline-offset:3px}
+.ka-foot{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.ka-warn{margin-top:14px}
+.ka-set{display:grid;gap:10px}
+.ka-set h4{margin:6px 0 0;font-size:calc(14px * var(--ts,1))}
+.ka-chips{display:flex;flex-wrap:wrap;gap:8px}
+.ka-chips .chip{gap:6px}
+.ka-chips .chip svg{width:14px;height:14px}

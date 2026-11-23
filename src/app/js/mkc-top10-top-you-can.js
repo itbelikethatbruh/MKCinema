@@ -177,7 +177,7 @@ const Top10 = {
     const keep = rail.contains(document.activeElement) ? [...rail.children].indexOf(document.activeElement.closest('.rail > *')) : -1;
     if (!l) rail.innerHTML = '<div class="rail-empty">This Top 10 did not load. Try again in a moment.</div>';
     else if (!l.length) rail.innerHTML = '<div class="rail-empty">Nothing matches these filters yet. Try another year or category.</div>';
-    else rail.innerHTML = l.map((m, i) => cardHTML(m).replace('<div class="card"', `<div class="card t10c" data-rank="${i + 1}"`)).join('');
+    else rail.innerHTML = l.map((m, i) => cardHTML(m).replace('<div class="card"',`<div class="card t10c t10v" data-rank="${i + 1}"`).replace('<div class="card-inner">',`<i class="t10n" aria-hidden="true" data-n="${i + 1}" style="--t10i:${i + 1}"><b>${i + 1}</b></i><div class="card-inner">`)).join('');
     rail.scrollLeft = 0;
     if (keep >= 0 && rail.children[Math.min(keep, rail.children.length - 1)]) rail.children[Math.min(keep, rail.children.length - 1)].focus({ preventScroll: true });
     icons(); if (typeof queueWall === 'function') queueWall();

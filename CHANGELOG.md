@@ -2,6 +2,16 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.93.0 and Android 1.17.9 (2026-11-23)
+
+- Simpler MKCinema player: fewer buttons, and Settings opens as one short card with speed, picture, screen and sleep timer. Everything else is one tap away in All settings.
+- Parent notes: title pages show the age rating where you live and what rating boards warn about, like violence, scary scenes or strong language. Settings › Home turns it off.
+- 13 more languages: MKCinema now speaks 44 languages, adding Nederlands, Українська, Română, Ελληνικά, Čeština, Magyar, Svenska, עברית, Bahasa Melayu, नेपाली, မြန်မာ, አማርኛ and Oʻzbekcha.
+- Ask a grown-up: on a kids seat, Search shows how many more titles need a grown-up. After the grown-up PIN, they can allow any of them for that seat, and take them back in Settings › Seats.
+- Clearer source picks: the Best match source also says when it is in your audio language, from your own server, from your first-choice addon or like the source you picked last time.
+- New Top 10 numbers: metal edges in gold, platinum and bronze, and a soft glow in your colour that moves on computers and phones.
+- Android 1.17.9: on phones, swiping back while a film fills the screen closes the film.
+
 ## Web app 2.92.1 (2026-11-23)
 
 - Films open more smoothly: only the title shows while the film gets ready, and fewer notes pop up as it starts.

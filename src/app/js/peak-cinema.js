@@ -228,7 +228,7 @@ const Peak = {
     let ui = 'en'; try { ui = I18N.code || String(navigator.language || 'en').slice(0, 2); } catch (e) { /* early */ }
     return { en: 'eng', es: 'spa', pt: 'por', fr: 'fre', de: 'ger', it: 'ita', hi: 'hin', ta: 'tam', te: 'tel', bn: 'ben', ml: 'mal', sm: 'smo', zh: 'chi', ar: 'ara',
       ru: 'rus', ur: 'urd', id: 'ind', ja: 'jpn', mr: 'mar', tr: 'tur', vi: 'vie', ko: 'kor', fa: 'per', tl: 'tgl', sw: 'swa', pa: 'pan', gu: 'guj', th: 'tha', pl: 'pol',
-      kn: 'kan', ha: 'hau' }[ui] || 'eng';
+      kn: 'kan', ha: 'hau', nl: 'dut', uk: 'ukr', ro: 'rum', el: 'gre', cs: 'cze', hu: 'hun', sv: 'swe', he: 'heb', ms: 'may', ne: 'nep', my: 'bur', am: 'amh', uz: 'uzb' }[ui] || 'eng';
   },
   canSwitch() { return !!(this.vids && this.vids[0] && this.vids[0].audioTracks); },
   /* 2 = names your language only, 1 = names none but the film is in your language, or several with a track switch here; 0 = not used */

@@ -138,7 +138,7 @@ const AddonUI = {
     if (lay === 'landscape') return cardHTML(m, { wide: true });
     const h = cardHTML(m);
     if (lay === 'square') return h.replace('<div class="card"', '<div class="card ax-sq"');
-    if (lay === 'top10' && k < 10) return h.replace('<div class="card"', `<div class="card t10c" data-rank="${k + 1}"`);
+    if (lay === 'top10' && k < 10) return h.replace('<div class="card"',`<div class="card t10c t10v" data-rank="${k + 1}"`).replace('<div class="card-inner">',`<i class="t10n" aria-hidden="true" data-n="${k + 1}" style="--t10i:${k + 1}"><b>${k + 1}</b></i><div class="card-inner">`);
     return h;
   },
   host(u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; } },
