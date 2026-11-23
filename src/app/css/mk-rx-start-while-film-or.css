@@ -1,0 +1,11 @@
+
+/* 2.92.1: while a film or episode is getting ready, only its title art and Back show; the controls fade in after */
+html.mk-rx #player:has(#pLoad:not([hidden])) .hud-mid,
+html.mk-rx #player:has(#pLoad:not([hidden])) .hud-bot,
+html.mk-rx #player:has(#pLoad:not([hidden])) #rxTools,
+html.mk-rx #player:has(#pLoad:not([hidden])) .skip-btn{opacity:0!important;pointer-events:none!important}
+html.mk-rx #player:has(#pLoad:not([hidden])) .hud{opacity:1!important}
+html.mk-rx #player:has(#pLoad:not([hidden])) .hud::before{opacity:.6}
+html.mk-rx #player .hud-mid,html.mk-rx #player .hud-bot,html.mk-rx #player #rxTools{transition:opacity .35s ease}
+html.mk-rx #player #pLoad{animation:mkRxIn .3s ease both}
+@keyframes mkRxIn{from{opacity:0}to{opacity:1}}

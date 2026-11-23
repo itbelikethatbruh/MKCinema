@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.92.1 (2026-11-23)
+
+- Films open more smoothly: only the title shows while the film gets ready, and fewer notes pop up as it starts.
+- With Android app 1.17.9, swiping back on a phone closes the film.
+
 ## Web app 2.92.0 (2026-11-23)
 
 - The MKCinema player has a new look: the screen tools sit together at the top, the title and finish time at the bottom, and everything you use while watching in one bar.
