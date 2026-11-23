@@ -605,7 +605,7 @@ const AnimeHub = {
     if (typeof queueWall === 'function') queueWall();
   },
   init() {
-    if (window.lucide && lucide.icons && !lucide.icons.Torii) lucide.icons.Torii = [['path', { d: 'M3 5c4 1.5 14 1.5 18 0' }], ['path', { d: 'M4 9h16' }], ['path', { d: 'M7 6v15' }], ['path', { d: 'M17 6v15' }], ['path', { d: 'M12 6.5V9' }]];
+    try { /*mk-smooth-start*/ if (window.lucide && lucide.icons && !lucide.icons.Torii) { const T = [['path', { d: 'M3 5c4 1.5 14 1.5 18 0' }], ['path', { d: 'M4 9h16' }], ['path', { d: 'M7 6v15' }], ['path', { d: 'M17 6v15' }], ['path', { d: 'M12 6.5V9' }]]; if (Object.isExtensible(lucide.icons)) lucide.icons.Torii = T; else window.lucide = Object.assign({}, lucide, { icons: Object.assign({ Torii: T }, lucide.icons) }); } } catch (e) { /* icon only */ }
     if (!$('#view-anime')) {
       const anchor = $('#view-network') || $('.view:last-of-type');
       anchor.insertAdjacentHTML('afterend', '<section class="view" id="view-anime" aria-label="Anime"><div id="animeBody"></div></section>');

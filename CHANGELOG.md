@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.93.4 (2026-11-23)
+
+- Smoother start: Home appears once, already in place, instead of shifting while it loads.
+
 ## Web app 2.93.3 and Android 1.17.10 (2026-11-23)
 
 - Smoother menus: opening Menu or Search on a phone now tidies away the More list.

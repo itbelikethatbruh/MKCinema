@@ -233,7 +233,7 @@ const PhoneImgs = {
     // posters outside rows (grids, lists) load as they come within two screens
     this.io = new IntersectionObserver((ents) => ents.forEach((e) => { if (e.isIntersecting) { this.io.unobserve(e.target); this.show(e.target); } }), { rootMargin: `${Math.round(innerHeight * 2)}px 0px` });
     const scan = (root) => { if (root.matches && root.matches('img[data-lsrc]')) this.watch(root); else if (root.querySelectorAll) root.querySelectorAll('img[data-lsrc]').forEach((im) => this.watch(im)); };
-    new MutationObserver((ms) => { ms.forEach((m) => m.addedNodes.forEach((n) => { if (n.nodeType === 1) scan(n); })); this.sweep(); }).observe(document.documentElement, { childList: true, subtree: true });
+    new MutationObserver((ms) => { /*mk-smooth-start*/ const k = this.rails.size; for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) scan(n); if (this.rails.size === k) { clearTimeout(this.idleT); this.idleT = setTimeout(() => this.sweep(), 300); } }).observe(document.documentElement, { childList: true, subtree: true });
     addEventListener('scroll', () => this.sweep(), { passive: true, capture: true }); addEventListener('resize', () => this.sweep());
     scan(document.documentElement);
   },
