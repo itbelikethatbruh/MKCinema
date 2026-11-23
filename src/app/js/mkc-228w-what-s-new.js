@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.92.1', date: '2026-11-23', items: [
+    ['better', 'Smoother film start', 'Films open more smoothly: only the title shows while the film gets ready, and fewer notes pop up as it starts.'],
+  ] },
   { v: '2.92.0', date: '2026-11-23', items: [
     ['new', 'New MKCinema player', 'The MKCinema player has a new look: the screen tools sit together at the top, the title and finish time at the bottom, and everything you use while watching in one bar. Picture in picture shows only the film, and swiping back on a phone closes the film and returns you where you were.'],
   ] },
