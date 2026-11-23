@@ -134,6 +134,11 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         }
         paintOpts();
         root.addView(bar, new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM));
+        // 1.17.7: subtitles move up above the bar while it shows, so its buttons never sit on the words
+        bar.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+            float y = bar.getVisibility() == View.VISIBLE ? -Math.max(0, bar.getHeight() - 30 * d) : 0;
+            if (subLine.getTranslationY() != y) { subLine.setTranslationY(y); subImg.setTranslationY(y); }
+        });
         // 1.9.0: Skip intro / recap / ending, and Next episode in the credits
         skipBtn = text(17, 0xFF0B0B0C, Typeface.BOLD); skipBtn.setVisibility(View.GONE);
         skipBtn.setPadding((int) (22 * d), (int) (11 * d), (int) (22 * d), (int) (11 * d));

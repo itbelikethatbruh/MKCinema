@@ -25,7 +25,8 @@ import org.json.JSONObject;
     MKAndroid.mpv(cmd, arg), the same commands as the Windows app's MKDesktop.player (windows/mpv/cmd.go), and hears
     mpv's news about 8 times a second through MkAndroidPlayer._ev (windows/mpv/state.go). Every command is checked
     here: the page never passes raw mpv options, local paths or scripts, and films and subtitles come over http(s).
-    TVs keep the full-screen PlayerActivity (remote-first, HDR straight to the screen), so probe says no there. */
+    1.17.7: TVs too. There the decoder draws straight onto the surface (mediacodec_embed, like PlayerActivity), so 4K and
+    HDR go to the screen untouched, and the page draws the subtitle text it hears as "stext" (embed has no OSD). */
 final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback {
     final MainActivity a; final Handler h = new Handler(Looper.getMainLooper());
     SurfaceView sv; MPVLib m; String initErr; boolean shown; volatile boolean hasSurface;
@@ -39,13 +40,13 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
     static final String[] WATCHED = { "time-pos", "duration", "pause", "paused-for-cache", "seeking", "eof-reached", "idle-active",
         "volume", "mute", "speed", "aid", "sid", "secondary-sid", "track-list", "chapter-list", "demuxer-cache-time",
         "video-params/w", "video-params/h", "video-params/gamma", "video-params/primaries", "hwdec-current", "video-codec",
-        "audio-codec-name", "audio-params/channel-count", "container-fps", "sub-delay", "audio-delay" };
+        "audio-codec-name", "audio-params/channel-count", "container-fps", "sub-delay", "audio-delay", "sub-text" };
     static final Map<String, String> KEYS = new HashMap<>();
     static {
         String[] k = { "time-pos", "t", "duration", "dur", "pause", "paused", "paused-for-cache", "buffering", "eof-reached", "ended",
             "idle-active", "idle", "demuxer-cache-time", "cached", "video-params/w", "w", "video-params/h", "h", "video-params/gamma", "gamma",
             "video-params/primaries", "prim", "track-list", "tracks", "chapter-list", "chapters", "hwdec-current", "hwdec",
-            "audio-params/channel-count", "channels", "container-fps", "fps" };
+            "audio-params/channel-count", "channels", "container-fps", "fps", "sub-text", "stext" };
         for (int i = 0; i < k.length; i += 2) KEYS.put(k[i], k[i + 1]);
     }
 
@@ -58,8 +59,7 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
         switch (c) {
             case "probe": {
                 JSONObject o = new JSONObject();
-                if (a.tv) { o.put("ok", false); o.put("err", "TVs use the full-screen player"); return o.toString(); }
-                boolean ok = client() != null; o.put("ok", ok); o.put("api", "android"); o.put("err", ok ? "" : initErr); return o.toString();
+                boolean ok = client() != null; o.put("ok", ok); o.put("api", "android"); o.put("err", ok ? "" : initErr); o.put("tv", a.tv); o.put("embed", a.tv); return o.toString();
             }
             case "show": { final boolean on = !"0".equals(arg); want = on; a.runOnUiThread(() -> show(on)); return ""; }
             case "get": {
@@ -219,7 +219,7 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
             MPVLib x = MPVLib.create(a.getApplicationContext());
             String[][] o = { { "config", "no" }, { "load-scripts", "no" }, { "ytdl", "no" }, { "osc", "no" }, { "osd-level", "0" },
                 { "input-default-bindings", "no" }, { "terminal", "no" }, { "idle", "yes" }, { "keep-open", "no" },
-                { "vo", "gpu" }, { "gpu-context", "android" }, { "opengl-es", "yes" }, { "hwdec", "mediacodec-copy" }, { "hwdec-codecs", "all" },
+                { "vo", a.tv ? "mediacodec_embed" : "gpu" }, { "gpu-context", "android" }, { "opengl-es", "yes" }, { "hwdec", a.tv ? "mediacodec" : "mediacodec-copy" }, { "hwdec-codecs", "all" },
                 { "ao", "audiotrack,opensles" }, { "audio-channels", "auto-safe" }, { "force-window", "no" },
                 { "cache", "yes" }, { "demuxer-max-bytes", "150MiB" }, { "demuxer-max-back-bytes", "32MiB" }, { "demuxer-readahead-secs", "60" },
                 { "cache-pause-wait", "2" }, { "network-timeout", "30" },
@@ -260,7 +260,7 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
         try {
             x.attachSurface(hd.getSurface());
             android.graphics.Rect r = hd.getSurfaceFrame(); if (r.width() > 0) x.setPropertyString("android-surface-size", r.width() + "x" + r.height());
-            x.setOptionString("force-window", "yes"); x.setPropertyString("vo", "gpu");
+            x.setOptionString("force-window", "yes"); x.setPropertyString("vo", a.tv ? "mediacodec_embed" : "gpu");
         } catch (Throwable ignored) { }
     }
     @Override public void surfaceChanged(SurfaceHolder hd, int f, int w, int ht) { MPVLib x = m; if (x != null && w > 0) try { x.setPropertyString("android-surface-size", w + "x" + ht); } catch (Throwable ignored) { } }
@@ -286,7 +286,7 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
         switch (name) {
             case "track-list": case "chapter-list": try { return new JSONArray(raw); } catch (Exception e) { return JSONObject.NULL; }
             case "pause": case "paused-for-cache": case "seeking": case "eof-reached": case "idle-active": case "mute": return "yes".equals(raw);
-            case "aid": case "sid": case "secondary-sid": case "video-codec": case "audio-codec-name": case "hwdec-current": case "video-params/gamma": case "video-params/primaries": return raw;
+            case "aid": case "sid": case "secondary-sid": case "video-codec": case "audio-codec-name": case "hwdec-current": case "video-params/gamma": case "video-params/primaries": case "sub-text": return raw;
         }
         try { double d = Double.parseDouble(raw.trim()); return Double.isNaN(d) || Double.isInfinite(d) ? JSONObject.NULL : d; } catch (Exception e) { return raw; }
     }
