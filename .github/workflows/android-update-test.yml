@@ -1,0 +1,92 @@
+name: Android update test
+
+# Installs a released MKCinema APK on an Android emulator, opens it, and lets its own updater fetch and install the
+# newest release (as named in version.json), with nothing simulated. Screenshots, logcat and the installed version
+# before and after are kept as an artifact.
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/workflows/android-update-test.yml', 'tools/android/update-test.sh', 'tools/android/update-tap-test.sh', 'tools/android/update-dl-test.sh']
+  pull_request:
+    paths: ['android/src/com/mkcinema/app/MainActivity.java', 'tools/android/update-dl-test.sh']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  emulator:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        from: ['v1.21', 'v1.24', 'v1.26']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules > /dev/null
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+          sm="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$sm" --licenses > /dev/null || true
+          "$sm" "platform-tools" "emulator" "system-images;android-34;google_apis;x86_64" | grep -v "^\[" | tail -3
+          mkdir -p "$HOME/.android/avd"; echo "ANDROID_AVD_HOME=$HOME/.android/avd" >> "$GITHUB_ENV"
+          echo no | ANDROID_AVD_HOME="$HOME/.android/avd" "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -f -n test -k "system-images;android-34;google_apis;x86_64"
+      - name: Old app updates itself
+        run: |
+          export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+          emulator -avd test -no-window -no-audio -no-boot-anim -no-snapshot -no-metrics -accel on -gpu guest \
+            -camera-back none -camera-front none -memory 6144 -cores 4 > "$RUNNER_TEMP/emulator.log" 2>&1 &
+          for i in $(seq 1 120); do [ "$(timeout 10 adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ] && break; sleep 5; done
+          curl -sSL -o "$RUNNER_TEMP/old.apk" "https://github.com/${{ github.repository }}/releases/download/${{ matrix.from }}/MKCinema.apk"
+          OUT="$RUNNER_TEMP/out" APK="$RUNNER_TEMP/old.apk" bash tools/android/update-tap-test.sh
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: update-test-${{ matrix.from }}
+          path: ${{ runner.temp }}/out/
+          retention-days: 7
+
+  own-download:
+    # 1.17.10+: the app downloads its update itself. A test build calling itself 1.0.0 (throwaway key) fetches the live
+    # update in full; the app then refuses it (different key), which the page shows. That proves the download works.
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: SDK and emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules > /dev/null
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+          sm="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$sm" --licenses > /dev/null || true
+          "$sm" "build-tools;35.0.0" "platforms;android-35" "platform-tools" "emulator" "system-images;android-34;google_apis;x86_64" | grep -v "^\[" | tail -3
+          mkdir -p "$HOME/.android/avd"; echo "ANDROID_AVD_HOME=$HOME/.android/avd" >> "$GITHUB_ENV"
+          echo no | ANDROID_AVD_HOME="$HOME/.android/avd" "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -f -n test -k "system-images;android-34;google_apis;x86_64"
+      - name: Build a test APK that calls itself 1.0.0
+        run: |
+          sed -i 's/android:versionCode="[0-9]*"/android:versionCode="1"/; s/android:versionName="[^"]*"/android:versionName="1.0.0"/' android/AndroidManifest.xml
+          sed -i 's/static final String VER = "[^"]*";/static final String VER = "1.0.0";/' android/src/com/mkcinema/app/MainActivity.java
+          keytool -genkeypair -keystore "$RUNNER_TEMP/test.jks" -storepass testtest -keypass testtest -alias test -keyalg RSA -keysize 2048 -validity 30 -dname CN=test > /dev/null 2>&1
+          echo testtest > "$RUNNER_TEMP/pw"
+          SDK="$ANDROID_HOME" OUT="$RUNNER_TEMP/apk" KS="$RUNNER_TEMP/test.jks" KS_PASS="file:$RUNNER_TEMP/pw" sh android/build.sh 2>&1 | grep -v "kotlin\|^\s*at \|^Info\|^Warning\|Lk0\|^$" || true
+          ls -la "$RUNNER_TEMP/apk/MKCinema.apk"
+      - name: The update downloads without DownloadManager
+        run: |
+          export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+          emulator -avd test -no-window -no-audio -no-boot-anim -no-snapshot -no-metrics -accel on -gpu guest \
+            -camera-back none -camera-front none -memory 6144 -cores 4 > "$RUNNER_TEMP/emulator.log" 2>&1 &
+          for i in $(seq 1 120); do [ "$(timeout 10 adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ] && break; sleep 5; done
+          OUT="$RUNNER_TEMP/out" APK="$RUNNER_TEMP/apk/MKCinema.apk" bash tools/android/update-dl-test.sh
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: own-download
+          path: ${{ runner.temp }}/out/
+          retention-days: 7

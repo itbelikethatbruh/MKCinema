@@ -71,7 +71,7 @@ public class MainActivity extends Activity {
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6, REQ_MIRROR = 7, REQ_MIRROR_MIC = 8;
     // must equal versionName in AndroidManifest.xml (build.sh stops the build when it does not)
-    static final String VER = "1.17.9";
+    static final String VER = "1.17.10";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -739,30 +739,15 @@ public class MainActivity extends Activity {
         }
         /** 1.17.4: how the update download is going, so the page can show a progress line and Install.
             {"a": 0 none | 1 downloading by itself | 2 downloaded and checked | 3 installing, "auto": by itself,
-             "st": DownloadManager status (1 pending, 2 running, 4 paused, 8 done, 16 failed, 0 not in the list),
+             "st": 1 starting, 2 downloading, 0 not downloading (same numbers as DownloadManager used before 1.17.10),
              "d": bytes so far, "t": total bytes (-1 unknown), "why": paused reason} */
         @JavascriptInterface public String updateProgress(String k) {
             if (!ok(k)) return "null";
             JSONObject o = new JSONObject();
             try {
                 o.put("a", autoState).put("auto", updAuto).put("st", 0).put("d", 0).put("t", -1).put("err", updErr);
-                long id = updId;
-                if (id >= 0) {
-                    DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-                    try (Cursor cur = dm.query(new DownloadManager.Query().setFilterById(id))) {
-                        if (cur != null && cur.moveToFirst()) {
-                            int st = cur.getInt(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
-                            o.put("st", st).put("d", cur.getLong(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)))
-                                .put("t", cur.getLong(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)));
-                            if (st == DownloadManager.STATUS_PAUSED) o.put("why", Downloads.pausedWhy(cur.getInt(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))));
-                            // 1.17.6: finished or failed, but the "download complete" message never reached the app: finish it here
-                            if ((st == DownloadManager.STATUS_SUCCESSFUL || st == DownloadManager.STATUS_FAILED) && !updFinishing) {
-                                updFinishing = true; final boolean au = updAuto;
-                                new Thread(() -> finishUpdate(dm, id, au)).start();
-                            }
-                        }
-                    }
-                }
+                // 1.17.10: the app downloads the update itself (see download), so the numbers come from there
+                o.put("st", dlSt).put("d", dlDone).put("t", dlTotal);
             } catch (Exception e) { return "null"; }
             return o.toString();
         }
@@ -897,11 +882,9 @@ public class MainActivity extends Activity {
     }
 
     static final String UPD_FILE = "MKCinema-update.apk";
-    static volatile long updId = -1;
     static volatile boolean updAuto;
     /** 1.17.6: why the last update failed ("" while none did); shown on the page, and kept in the app log */
     static volatile String updErr = "";
-    static volatile boolean updFinishing;
     static void updFail(String why) {
         updErr = why == null || why.isEmpty() ? "it stopped for an unknown reason" : why;
         toPage("window.MkUpdProg&&MkUpdProg.fail&&MkUpdProg.fail(" + JSONObject.quote(updErr) + ");"
@@ -939,66 +922,86 @@ public class MainActivity extends Activity {
             web.evaluateJavascript("window.toast&&toast('Allow MKCinema to install apps, then press Update again','info',7000)", null);
             return;
         }
-        try {
-            DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-            DownloadManager.Request r = new DownloadManager.Request(Uri.parse(url)).setTitle("MKCinema update").setMimeType("application/vnd.android.package-archive")
-                .setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, "MKCinema-update-" + System.currentTimeMillis() + ".apk")
-                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
-            // 1.17.4: an older checked copy must never be installed in place of this one (see updateInstall)
-            later.removeCallbacks(autoInstall); if (!auto) autoState = 0;
-            File old = UpdateFiles.file(this); if (old.exists()) old.delete();
-            final long id = dm.enqueue(r); updId = id; updAuto = auto; updErr = ""; updFinishing = false; if (auto) autoState = 1;
-            BroadcastReceiver done = new BroadcastReceiver() { @Override public void onReceive(Context c, Intent i) {
-                if (i.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -2) != id) return;
-                try { unregisterReceiver(this); } catch (Exception ignored) { }
-                if (updFinishing) return; updFinishing = true;
-                new Thread(() -> finishUpdate(dm, id, auto)).start();
-            } };
-            IntentFilter f = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
-            if (Build.VERSION.SDK_INT >= 33) registerReceiver(done, f, Context.RECEIVER_EXPORTED); else registerReceiver(done, f);
-        } catch (Exception e) { if (auto) autoState = 0; updFail("the download could not start: " + e.getClass().getSimpleName()); }
+        // 1.17.10: downloaded by the app itself. Android's DownloadManager stayed queued at 0 bytes on some phones
+        // (owner's phone, 1.17.8 -> 1.17.9) and nothing could get it moving.
+        later.removeCallbacks(autoInstall); if (!auto) autoState = 0;
+        File old = UpdateFiles.file(this); if (old.exists()) old.delete(); // an older copy must never be installed in place of this one
+        final int gen = ++updGen;
+        updAuto = auto; updErr = ""; dlDone = 0; dlTotal = -1; dlSt = 1; if (auto) autoState = 1;
+        clearOldDownloads();
+        new Thread(() -> download(url, gen, auto), "mk-update").start();
     }
 
-    /** copies the finished download into the app's private storage (no other app can swap it there), checks
-        it is MKCinema signed with this app's key, and only then opens the installer on that copy (UpdateFiles). */
-    void finishUpdate(DownloadManager dm, long id) { finishUpdate(dm, id, false); }
-    void finishUpdate(DownloadManager dm, long id, boolean auto) {
-        File apk = UpdateFiles.file(this);
-        if (auto) {
+    static volatile int updGen = 0, dlSt = 0;
+    static volatile long dlDone = 0, dlTotal = -1;
+
+    /** 1.17.10: downloads the update straight into the app's private storage (no other app can swap it there), with
+        up to 3 tries, then checks it is MKCinema signed with this app's key, and only then installs it (UpdateFiles).
+        A newer startUpdate (gen) makes this one stop. */
+    void download(String url, int gen, boolean auto) {
+        File apk = UpdateFiles.file(this), part = new File(apk.getPath() + ".part");
+        String why = null;
+        for (int tryNo = 1; tryNo <= 3 && gen == updGen; tryNo++) {
+            java.net.HttpURLConnection c = null;
             try {
-                try (Cursor cur = dm.query(new DownloadManager.Query().setFilterById(id))) {
-                    if (cur == null || !cur.moveToFirst()) { autoState = 0; updFail("the download was cancelled"); return; }
-                    if (cur.getInt(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)) != DownloadManager.STATUS_SUCCESSFUL) { autoState = 0; updFail(dlWhy(cur)); return; }
+                apk.getParentFile().mkdirs(); part.delete(); dlDone = 0; dlSt = 1;
+                c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+                c.setInstanceFollowRedirects(true); c.setConnectTimeout(20000); c.setReadTimeout(30000);
+                int code = c.getResponseCode();
+                if (!"https".equals(c.getURL().getProtocol())) { why = "the download link left https"; break; }
+                if (code != 200) { why = "the server answered " + code; if (code >= 400 && code < 500) break; continue; }
+                dlTotal = c.getContentLengthLong(); dlSt = 2;
+                try (InputStream in = c.getInputStream(); OutputStream out = new FileOutputStream(part)) {
+                    byte[] b = new byte[65536]; int n;
+                    while ((n = in.read(b)) > 0) { if (gen != updGen) return; out.write(b, 0, n); dlDone += n; }
                 }
-                apk.getParentFile().mkdirs(); apk.delete();
-                try (InputStream in = new ParcelFileDescriptor.AutoCloseInputStream(dm.openDownloadedFile(id)); OutputStream out = new FileOutputStream(apk)) {
-                    byte[] b = new byte[65536]; int n; while ((n = in.read(b)) > 0) out.write(b, 0, n);
-                }
-                try { dm.remove(id); } catch (Exception ignored) { }
-                String bad = checkApk(apk); if (bad != null) { apk.delete(); autoState = 0; updFail("the downloaded file was refused: " + bad); return; }
+                if (dlTotal > 0 && dlDone != dlTotal) { why = "the connection broke"; continue; }
+                if (!part.renameTo(apk)) { why = "the update could not be saved"; break; }
+                why = null; break;
+            } catch (java.net.UnknownHostException e) { why = "there is no internet connection";
+            } catch (java.net.SocketTimeoutException e) { why = "the connection timed out";
+            } catch (java.io.IOException e) { why = e.getMessage() != null && e.getMessage().contains("ENOSPC") ? "there is not enough free space" : "the connection broke (" + e.getClass().getSimpleName() + ")";
+            } catch (Exception e) { why = "the download could not start: " + e.getClass().getSimpleName();
+            } finally { if (c != null) c.disconnect(); }
+            if (gen != updGen) return;
+            try { Thread.sleep(3000L * tryNo); } catch (InterruptedException ie) { return; }
+        }
+        if (gen != updGen) return;
+        dlSt = 0;
+        if (why != null) { part.delete(); if (auto) autoState = 0; updFail(why); return; }
+        afterDownload(apk, auto);
+    }
+
+    void afterDownload(File apk, boolean auto) {
+        try {
+            String bad = checkApk(apk);
+            if (bad != null) { apk.delete(); if (auto) autoState = 0; updFail("the downloaded file was refused: " + bad); return; }
+            if (auto) {
                 autoState = 2;
                 js("window.MkAutoUpd&&MkAutoUpd.ready()");
                 runOnUiThread(() -> { if (!resumed) { later.removeCallbacks(autoInstall); later.postDelayed(autoInstall, 3 * 60_000L); } });
-            } catch (Exception e) { apk.delete(); autoState = 0; updFail("the update could not be saved: " + e.getClass().getSimpleName()); }
-            return;
-        }
-        try {
-            try (Cursor cur = dm.query(new DownloadManager.Query().setFilterById(id))) {
-                if (cur == null || !cur.moveToFirst()) { updFail("the download was cancelled"); return; }
-                if (cur.getInt(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)) != DownloadManager.STATUS_SUCCESSFUL) { updFail(dlWhy(cur)); return; }
+                return;
             }
-            apk.getParentFile().mkdirs(); apk.delete();
-            try (InputStream in = new ParcelFileDescriptor.AutoCloseInputStream(dm.openDownloadedFile(id)); OutputStream out = new FileOutputStream(apk)) {
-                byte[] b = new byte[65536]; int n; while ((n = in.read(b)) > 0) out.write(b, 0, n);
-            }
-            try { dm.remove(id); } catch (Exception ignored) { }
-            String why = checkApk(apk);
-            if (why != null) { apk.delete(); updFail("the downloaded file was refused: " + why); return; }
             if (installApk(apk, false)) return;
             Uri cu = Uri.parse("content://" + getPackageName() + ".update/" + UPD_FILE);
             Intent inst = new Intent(Intent.ACTION_VIEW).setDataAndType(cu, "application/vnd.android.package-archive").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
             runOnUiThread(() -> { try { startActivity(inst); } catch (Exception e) { updFail("the installer could not open"); } });
-        } catch (Exception e) { apk.delete(); updFail("the update could not be saved: " + e.getClass().getSimpleName()); }
+        } catch (Exception e) { apk.delete(); if (auto) autoState = 0; updFail("the update could not be saved: " + e.getClass().getSimpleName()); }
+    }
+
+    /** 1.17.10: update downloads that older versions left queued in Android's DownloadManager (they could block it) */
+    void clearOldDownloads() {
+        try {
+            DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+            ArrayList<Long> ids = new ArrayList<>();
+            try (Cursor cur = dm.query(new DownloadManager.Query())) {
+                while (cur != null && cur.moveToNext()) {
+                    if ("MKCinema update".equals(cur.getString(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_TITLE)))) ids.add(cur.getLong(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_ID)));
+                }
+            }
+            long[] a = new long[ids.size()]; for (int i = 0; i < a.length; i++) a[i] = ids.get(i);
+            if (a.length > 0) dm.remove(a);
+        } catch (Exception ignored) { }
     }
 
     /** 1.13.0: installs through the system's package installer session, so MKCinema becomes the app that installed
