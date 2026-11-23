@@ -27,11 +27,11 @@
 <meta name="twitter:description" content="A free, open-source home cinema for the whole family: a real cinema player, a seat for everyone and watch parties, on phone, TV, computer and the web.">
 <meta name="twitter:image" content="https://mkcinema.app/og.jpg">
 <meta name="twitter:image:alt" content="MKCinema: Your addons. A private cinema. The MKCinema player showing the open movie Elephants Dream.">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"MKCinema","url":"https://mkcinema.app/","description":"A free, open-source home cinema for the whole family: a real cinema player, a seat for everyone, watch parties with cameras and a phone remote, on Android, iPhone, iPad, TV, Windows, Mac, Linux and the web.","applicationCategory":"MultimediaApplication","operatingSystem":"Android, Android TV, Fire TV, Windows, macOS, Linux, Web","image":"https://mkcinema.app/og.jpg","screenshot":"https://mkcinema.app/shots/player.webp","downloadUrl":"https://mkcinema.app/#download","license":"https://www.gnu.org/licenses/gpl-3.0.html","isAccessibleForFree":true,"featureList":["Player made for films with subtitle styling and audio tracks","Works with Stremio-compatible addons","Watch parties with voice and cameras","Phone as a remote","Skip intro, recap and credits","Apps for Android, TV, Windows, Mac, Linux and the web","Free forever and open source"],"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Dee Lavish"},"sameAs":["https://github.com/itbelikethatbruh/MKCinema"]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"MKCinema","url":"https://mkcinema.app/","description":"A free, open-source home cinema for the whole family: a real cinema player, a seat for everyone, watch parties with cameras and a phone remote, on Android, iPhone, iPad, TV, Windows, Mac, Linux and the web.","applicationCategory":"MultimediaApplication","operatingSystem":"Android, Android TV, Fire TV, Windows, macOS, Linux, Web","image":"https://mkcinema.app/og.jpg","screenshot":"https://mkcinema.app/shots/player.webp?v=292","downloadUrl":"https://mkcinema.app/#download","license":"https://www.gnu.org/licenses/gpl-3.0.html","isAccessibleForFree":true,"featureList":["Player made for films with subtitle styling and audio tracks","Works with Stremio-compatible addons","Watch parties with voice and cameras","Phone as a remote","Skip intro, recap and credits","Apps for Android, TV, Windows, Mac, Linux and the web","Free forever and open source"],"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Dee Lavish"},"sameAs":["https://github.com/itbelikethatbruh/MKCinema"]}</script>
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="preload" as="image" href="shots/home.webp?v=284" imagesrcset="shots/home-960.webp?v=284 960w, shots/home.webp?v=284 1600w" imagesizes="(max-width: 1100px) 92vw, 1100px" fetchpriority="high">
+<link rel="preload" as="image" href="shots/home.webp?v=292" imagesrcset="shots/home-960.webp?v=292 960w, shots/home.webp?v=292 1600w" imagesizes="(max-width: 1100px) 92vw, 1100px" fetchpriority="high">
 <link rel="preload" href="/fonts/fraunces-v1.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/onest-v1.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/fraunces-italic-v1.woff2" as="font" type="font/woff2" crossorigin>
@@ -732,8 +732,8 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
 
   <div class="room" id="room" aria-hidden="true">
     <div class="glow"></div>
-    <div class="screen"><img data-clip="clips/hero.mp4?v=284" data-clip-sm="clips/hero-960.mp4?v=284" src="shots/home.webp?v=284" srcset="shots/home-960.webp?v=284 960w, shots/home.webp?v=284 1600w" sizes="(max-width: 1100px) 92vw, 1100px" width="1600" height="1000" alt="" fetchpriority="high"></div>
-    <div class="phone"><img data-clip="clips/phone15.mp4?v=284" data-clip-sm="clips/phone15-320.mp4?v=284" src="shots/phone-home.webp?v=2902" srcset="shots/phone-home-320.webp?v=2902 320w, shots/phone-home-480.webp?v=2902 480w, shots/phone-home.webp?v=2902 600w" sizes="(max-width: 760px) 30vw, 230px" width="600" height="1301" alt="" decoding="async"></div>
+    <div class="screen"><img data-clip="clips/hero.mp4?v=292" data-clip-sm="clips/hero-960.mp4?v=292" src="shots/home.webp?v=292" srcset="shots/home-960.webp?v=292 960w, shots/home.webp?v=292 1600w" sizes="(max-width: 1100px) 92vw, 1100px" width="1600" height="1000" alt="" fetchpriority="high"></div>
+    <div class="phone"><img data-clip="clips/phone15.mp4?v=292" data-clip-sm="clips/phone15-320.mp4?v=292" src="shots/phone-home.webp?v=292" srcset="shots/phone-home-320.webp?v=292 320w, shots/phone-home-480.webp?v=292 480w, shots/phone-home.webp?v=292 600w" sizes="(max-width: 760px) 30vw, 230px" width="600" height="1301" alt="" decoding="async"></div>
   </div>
   <div class="floor"></div>
 </section>
@@ -756,7 +756,7 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
           <p>Smart Play picks the best stream for the screen you are on. If a source stalls, the next one takes over on the same line of dialogue.</p>
           <ul><li><svg><use href="#i-bolt"/></svg><span><b>Starts on the first try.</b> It only picks sources your device can play, and switches by itself when one fails.</span></li><li><svg><use href="#i-film"/></svg><span><b>MKV in the browser.</b> Its own engine plays MKV files with Dolby and DTS sound, right in a web page.</span></li><li><svg><use href="#i-cc"/></svg><span><b>Subtitles line up by themselves.</b> A downloaded subtitle is matched against the film’s own, with a sync strip you can drag.</span></li></ul>
         </div>
-        <figure class="fx-media"><img data-clip="clips/player.mp4?v=2" src="shots/player-960.webp" width="960" height="600" alt="The MKCinema player with the Audio tab open" loading="lazy" decoding="async"></figure>
+        <figure class="fx-media"><img data-clip="clips/player.mp4?v=292" src="shots/player-960.webp?v=292" width="960" height="600" alt="The MKCinema player with the Audio tab open" loading="lazy" decoding="async"></figure>
       </article>
       <article class="fx rv">
         <div class="fx-copy">
@@ -825,7 +825,7 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
           <p>Phones, tablets, computers and TVs all get the same cinema, and one account keeps them in step.</p>
           <ul><li><svg><use href="#i-users"/></svg><span><b>Seats.</b> Each person has their own watchlist, progress and picks, with an optional PIN.</span></li><li><svg><use href="#i-shield"/></svg><span><b>Kids seats by age rating</b>, with a grown-up PIN and a daily limit that stops at the end of an episode.</span></li><li><svg><use href="#i-tv"/></svg><span><b>Made for the remote.</b> Arrows and OK to browse, media keys to play, and Ambient Mode when you step away.</span></li></ul>
         </div>
-        <figure class="fx-media w169"><img src="shots/tv-home-960.webp?v=284" width="960" height="540" alt="MKCinema on a TV, with remote focus on the Top 10 row" loading="lazy" decoding="async"></figure>
+        <figure class="fx-media w169"><img src="shots/tv-home-960.webp?v=292" width="960" height="540" alt="MKCinema on a TV, with remote focus on the Top 10 row" loading="lazy" decoding="async"></figure>
       </article>
     </div>
   </div>
