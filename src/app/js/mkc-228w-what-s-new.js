@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.93.6', date: '2026-11-23', items: [
+    ['better', 'Steadier player', 'Audio & subtitles stays closed until you open it, and brightness and volume swipes on phones move smoothly.'],
+  ] },
   { v: '2.93.5', date: '2026-11-23', items: [
     ['better', 'Smoother phone playback', 'Films turn sideways and back cleanly on phones, and Audio & subtitles fits a phone held sideways.'],
   ] },
