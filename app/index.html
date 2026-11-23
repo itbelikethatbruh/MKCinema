@@ -11219,7 +11219,7 @@ const SET_GROUPS = [
 ];
 const SET_BLURB = {
   start: 'VLC, debrid and your first sources', account: 'Sign in and sync', picks: 'Recommendations made on this device', home: 'Start page and rows',
-  appearance: 'Contrast, posters, ratings', performance: 'Effects and smoothness', playback: 'Player, skips, audio, trailers', subtitles: 'Size, colour, language',
+  appearance: 'Theme, Anime look, posters', performance: 'Effects and smoothness', playback: 'Player, skips, audio, trailers', subtitles: 'Size, colour, language',
   streams: 'Addons and how sources load', debrid: 'AllDebrid, Premiumize, Real-Debrid, TorBox', sync: 'Scrobble and watchlists', devices: 'Phone remote, screen mirroring, install',
   sound: 'Volume and interface sounds', keys: 'Keyboard and gamepad', data: 'Setup Cloner, backup, restore', support: 'Keep MKCinema going',
   about: 'Version, credits, third-party licenses',
@@ -11417,7 +11417,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.91.2';
+const APP_VERSION = '2.91.3';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -18141,7 +18141,7 @@ const Wheel = {
     const r = rows().filter((d) => !(d.html && (d.html === lookHTML || (typeof d.html === 'function' && String(d.html()).includes('id="atelierBox"')))));
     return [
       // 2.81: no Menu group (one menu everywhere)
-      { group: 'Colour' },
+      { group: 'Theme' },
       { html: () => Wheel.html() },
       { group: 'Text' },
       ...r,
@@ -24319,6 +24319,11 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.91.3', date: '2026-11-22', items: [
+    ['better', 'Quicker app updates', 'When an update is ready, Android\'s install screen opens right away. One tap and you\'re done.'],
+    ['better', 'Phone menu at a glance', 'On phones the Menu now shows everything at once, with no scrolling.'],
+    ['better', 'Anime look in Theme', 'Anime look now lives in Settings › Appearance › Theme, next to your colours, and its section titles read cleaner.'],
+  ] },
   { v: '2.91.2', date: '2026-11-22', items: [
     ['better', 'Smoother app updates', 'If an update can\'t finish, MKCinema says why and offers a one-tap install from the browser.'],
   ] },
@@ -30217,18 +30222,8 @@ const AddonSettings = {
   wrap.addEventListener('click', (e) => { if (e.target.closest('#tabs .tab')) setTimeout(reset, 400); });
 })();
 </script>
-<style id="mkc-anisw-css">
-/* 2.45.4 · Anime look switch on the Anime page */
-#view-anime .an-head .toolbar .an-lookbtn{gap:10px;padding-inline:14px 8px;color:var(--text)}
-#view-anime .an-head .toolbar .an-lookbtn svg{width:16px;height:16px}
-#view-anime .an-head .toolbar .an-lookbtn .switch{width:34px;height:20px;pointer-events:none}
-#view-anime .an-head .toolbar .an-lookbtn .switch::after{top:3px;left:3px;width:14px;height:14px}
-#view-anime .an-head .toolbar .an-lookbtn .switch.on::after{transform:translateX(14px)}
-html[data-look="anime"] #view-anime .an-head .toolbar .an-lookbtn .switch.on{background:var(--an-red,#ff2d55)}
-html[data-look="anime"] #view-anime .an-head .toolbar .an-lookbtn .switch.on::after{background:var(--kffffff,#fff)}
-</style>
 <script id="mkc-anisw">
-/* 2.45.4: one clear switch for the Anime look, in Settings › Appearance and on the Anime page.
+/* 2.45.4: one clear switch for the Anime look, in Settings › Appearance › Theme (2.91.3: no longer on the Anime page).
    Appearance moved to the colour wheel and its look cards went away, so there was no way to turn Anime on.
    Turning it off returns to the look you had before (Noir, or your wheel colour). */
 const AnimeSwitch = {
@@ -30270,26 +30265,15 @@ const AnimeSwitch = {
         const row = { key: 'animeLookOn', label: 'Anime look', help: 'Comic panels, a new logo and Miko. Off returns to your colour.', type: 'toggle',
           get: () => this.on(),
           set: (v) => { this.set(v); if (!$('#settings').hidden) { renderSettingsBody(); if (IS_TV) { const s = $('#set-animeLookOn'); if (s) Nav.focus(s, true); } } } };
-        const i = r.findIndex((d) => d && d.group === 'Colour');
+        const i = r.findIndex((d) => d && d.group === 'Theme');
         if (i < 0) return [row, ...r];
         const j = r.findIndex((d, k) => k > i && d && d.group);
         const at = j < 0 ? r.length : j;
         return [...r.slice(0, at), row, ...r.slice(at)];
       };
     }
-    // the Anime page: a switch beside the lists
-    const ar = AnimeHub.render.bind(AnimeHub);
-    AnimeHub.render = function () {
-      const out = ar.apply(this, arguments);
-      const bar = $('#animeBody .an-head .toolbar');
-      if (bar && !$('.an-lookbtn', bar)) {
-        bar.insertAdjacentHTML('beforeend', AnimeSwitch.btnHTML()); icons();
-        $('.an-lookbtn', bar).addEventListener('click', () => AnimeSwitch.set(!AnimeSwitch.on()));
-      }
-      return out;
-    };
+    // 2.91.3: the switch lives only in Settings › Appearance › Theme (no longer on the Anime page)
     CFG_HOOKS.push((k) => { if (k === 'look') setTimeout(() => this.sync(), 0); });
-    if (S.view === 'anime' && $('#animeBody .an-head') && !$('.an-lookbtn')) AnimeHub.render();
     if (typeof COMMANDS !== 'undefined') COMMANDS.push({ label: 'Anime look on or off', icon: 'sparkles', run: () => this.set(!this.on()) });
   },
 };
@@ -51845,7 +51829,7 @@ html[data-look="linen"] .net-tile{background:#0d0e11;border-radius:var(--r-l,18p
       return `<div class="set-row"><div><b>Dark or light</b><small>The dark look keeps the posters up front. Daylight and Linen are light looks for bright rooms; films and trailers still play on black.${IS_TV && c !== 'dark' ? '</small><small>If the text on your TV turns white with a black outline, switch off High contrast text in the TV’s accessibility settings.' : ''}</small></div><div class="set-ctl"><div class="segc" id="lookTone" role="radiogroup" aria-label="Dark or light">${TONES.map(([v, l]) => `<button type="button" role="radio" data-nav data-tone="${v}" aria-checked="${v === c}" class="${v === c ? 'on' : ''}"${v === 'dark' ? '' : ' translate="no"'}>${l}</button>`).join('')}</div></div></div>`;
     };
     const rows = ap.rows;
-    ap.rows = () => { const r = rows(), c = r.findIndex((d) => d.group === 'Colour'), t = r.findIndex((d) => d.group === 'Text'); r.splice(c >= 0 ? c + 2 : t >= 0 ? t : r.length, 0, { html }); return r; };
+    ap.rows = () => { const r = rows(), c = r.findIndex((d) => d.group === 'Theme'), t = r.findIndex((d) => d.group === 'Text'); r.splice(c >= 0 ? c + 2 : t >= 0 ? t : r.length, 0, { html }); return r; };
     const bind = ap.bind;
     ap.bind = function () {
       const out = bind ? bind.apply(this, arguments) : undefined;
@@ -55958,7 +55942,7 @@ html.mk-pill #mikoBox{bottom:calc(var(--mkp-lift) + 14px + env(safe-area-inset-b
 html.mk-pill body.mk-player-on #toasts{bottom:auto!important}
 html.mk-pill body.mk-player-on .rec-pill{bottom:auto!important}
 /* Menu opens as a sheet from the bottom */
-html.mk-pill #ezbMenu{top:auto!important;left:max(10px,env(safe-area-inset-left,0px))!important;right:max(10px,env(safe-area-inset-right,0px))!important;bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;width:auto!important;max-height:min(78dvh,680px)!important;padding:22px 10px 10px!important;border-radius:22px!important;background:#0f0f11!important;transform:translate3d(0,calc(100% + 24px),0)!important;opacity:1!important;transform-origin:50% 100%!important;transition:transform .42s var(--mkp-ease)!important;z-index:2147483000!important}
+html.mk-pill #ezbMenu{top:auto!important;left:max(10px,env(safe-area-inset-left,0px))!important;right:max(10px,env(safe-area-inset-right,0px))!important;bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;width:auto!important;max-height:calc(100dvh - 20px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))!important;padding:22px 10px 8px!important;border-radius:22px!important;background:#0f0f11!important;transform:translate3d(0,calc(100% + 24px),0)!important;opacity:1!important;transform-origin:50% 100%!important;transition:transform .42s var(--mkp-ease)!important;z-index:2147483000!important}
 html.mk-pill #ezbMenu.open{transform:none!important}
 html.mk-pill #ezbMenu .ezb-top{position:absolute;left:0;right:0;top:0;height:22px;justify-content:center}
 html.mk-pill #ezbMenu .ezb-x{position:absolute;inset:0;width:auto!important;height:22px!important;border-radius:0!important;background:none!important;color:transparent}
@@ -55966,10 +55950,15 @@ html.mk-pill #ezbMenu .ezb-x svg{display:none}
 html.mk-pill #ezbMenu .ezb-top:after{content:"";width:40px;height:4px;margin-top:9px;border-radius:4px;background:#ffffff40;pointer-events:none}
 html.mk-pill #ezbMenu .ezb-big{border-radius:16px!important}
 html.mk-pill #ezbMenu button{border-radius:12px}
+/* 2.91.3: the menu fits a phone screen without scrolling: rows scale with the screen (40-46 px), tighter dividers */
+html.mk-pill #ezbMenu>button:not(.ezb-big){min-height:clamp(40px,5.2dvh,46px);padding-block:0}
+html.mk-pill #ezbMenu .ezb-big{padding:9px 12px;margin-bottom:4px}
+html.mk-pill #ezbMenu hr{margin:4px}
+html.mk-pill #ezbMenu .ezb-lab{padding:6px 12px 2px}
 #mkPillShade{position:fixed;inset:0;z-index:2147482999;background:#000;opacity:0;transition:opacity .3s ease}
 #mkPillShade.in{opacity:.55}
-#ezbMenu .mkp-acct{display:flex;gap:10px;padding:12px 4px 10px;margin-top:6px;border-top:1px solid #ffffff1a;position:sticky;bottom:-10px;background:#0f0f11}
-#ezbMenu .mkp-acct button{flex:1;justify-content:center;height:46px;padding:0!important;border-radius:12px!important;font-weight:600;background:#ffffff12}
+#ezbMenu .mkp-acct{display:flex;gap:10px;padding:10px 4px 2px;margin-top:4px;border-top:1px solid #ffffff1a;position:sticky;bottom:-10px;background:#0f0f11}
+#ezbMenu .mkp-acct button{flex:1;justify-content:center;height:44px;padding:0!important;border-radius:12px!important;font-weight:600;background:#ffffff12}
 #ezbMenu .mkp-acct button.mkp-main{background:linear-gradient(180deg,#fbf8f2,#e6e0d4)!important;color:#0b0b0b!important}
 /* the coloured card glow is a remote/keyboard highlight: on touch screens a tap leaves it stuck, so it shows only
    on TVs, with a remote or keyboard (kbnav), or with a mouse */
@@ -56733,5 +56722,51 @@ Browse.init();
   if (has('updateProgress')) setTimeout(() => { let s = null; try { s = JSON.parse(MKAndroid.updateProgress() || 'null'); } catch (e) { s = null; } if (s && s.err && s.a === 0 && !document.getElementById('updBar')) { P.shown = s.err; P.fail(s.err); } }, 3500);
 })();
 </script>
+<script id="mk-2913-update-now">
+/* 2.91.3 Android's install screen opens by itself. Apps installed from the browser (almost every MKCinema phone and
+   TV) are not their own installer, so Android never lets them install an update silently: "installs by itself after
+   you leave the app" could never happen there, and the update just waited. Now, as soon as the update has downloaded
+   and the app is on screen (no film playing), the page opens Android's install screen (MKAndroid.updateInstall,
+   in every app since 1.13), so the only step left is Android's own Update button. Once per version per visit;
+   Install on the bar still works after a Cancel. */
+(function () {
+  const P = window.MkUpdProg; if (!P) return;
+  const has = (n) => { try { return !!(window.MKAndroid && typeof MKAndroid[n] === 'function'); } catch (e) { return false; } };
+  if (!has('updateInstall')) return;
+  const playing = () => { const p = document.getElementById('player'); return !!(p && !p.hidden); };
+  const say = (txt) => { const el = document.getElementById('updBar'), sm = el && el.querySelector('small'); if (sm) sm.textContent = txt; };
+  P.opened = '';
+  P.soon = function () {
+    clearTimeout(this.w);
+    const key = this.ver || 'app';
+    if (this.opened === key) return;
+    const go = () => {
+      if (!document.getElementById('updBar')) return; // Install or Later was tapped
+      if (document.hidden || playing()) { this.w = setTimeout(go, 5000); return; } // never during a film
+      this.opened = key;
+      let ok = false; try { ok = MKAndroid.updateInstall(); } catch (e) { ok = false; }
+      if (ok) say('Tap Update on the next screen to finish. Your settings stay.');
+      try { if (typeof MKLog !== 'undefined') MKLog.add('update', `install screen opened by itself: ${ok}`); } catch (e) { /* no log */ }
+    };
+    this.w = setTimeout(go, 1500);
+  };
+  const ready = P.ready.bind(P);
+  P.ready = function () {
+    const r = ready();
+    if (document.getElementById('updBar')) { say('Tap Install, then Update on the next screen. Your settings stay.'); this.soon(); }
+    return r;
+  };
+  if (window.MkAutoUpd && typeof MkAutoUpd.ask === 'function') {
+    const ask = MkAutoUpd.ask.bind(MkAutoUpd);
+    MkAutoUpd.ask = function () { const r = ask(); if (document.getElementById('updBar')) P.soon(); return r; };
+  }
+})();
+</script>
+<style id="mk-2913-anime">
+/* 2.91.3 Anime look: the selected section pill is cream with dark text, so the comic ink shadow doubled the word */
+html[data-look="anime"] body #tabs .tab.on,html[data-look="anime"] body #tabs .tab.on *,html[data-look="anime"] body #mtabs button.on,html[data-look="anime"] body #mtabs button.on *{text-shadow:none}
+/* High contrast text turned the red selected chip's word black under a black shadow (Live TV "All sources") */
+html[data-look="anime"] body.hc .chip.on,html[data-look="anime"] body.hc .chips .chip.on{color:var(--kffffff,#fff)}
+</style>
 </body>
 </html>

@@ -69,7 +69,7 @@ html.mk-pill #mikoBox{bottom:calc(var(--mkp-lift) + 14px + env(safe-area-inset-b
 html.mk-pill body.mk-player-on #toasts{bottom:auto!important}
 html.mk-pill body.mk-player-on .rec-pill{bottom:auto!important}
 /* Menu opens as a sheet from the bottom */
-html.mk-pill #ezbMenu{top:auto!important;left:max(10px,env(safe-area-inset-left,0px))!important;right:max(10px,env(safe-area-inset-right,0px))!important;bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;width:auto!important;max-height:min(78dvh,680px)!important;padding:22px 10px 10px!important;border-radius:22px!important;background:#0f0f11!important;transform:translate3d(0,calc(100% + 24px),0)!important;opacity:1!important;transform-origin:50% 100%!important;transition:transform .42s var(--mkp-ease)!important;z-index:2147483000!important}
+html.mk-pill #ezbMenu{top:auto!important;left:max(10px,env(safe-area-inset-left,0px))!important;right:max(10px,env(safe-area-inset-right,0px))!important;bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;width:auto!important;max-height:calc(100dvh - 20px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))!important;padding:22px 10px 8px!important;border-radius:22px!important;background:#0f0f11!important;transform:translate3d(0,calc(100% + 24px),0)!important;opacity:1!important;transform-origin:50% 100%!important;transition:transform .42s var(--mkp-ease)!important;z-index:2147483000!important}
 html.mk-pill #ezbMenu.open{transform:none!important}
 html.mk-pill #ezbMenu .ezb-top{position:absolute;left:0;right:0;top:0;height:22px;justify-content:center}
 html.mk-pill #ezbMenu .ezb-x{position:absolute;inset:0;width:auto!important;height:22px!important;border-radius:0!important;background:none!important;color:transparent}
@@ -77,10 +77,15 @@ html.mk-pill #ezbMenu .ezb-x svg{display:none}
 html.mk-pill #ezbMenu .ezb-top:after{content:"";width:40px;height:4px;margin-top:9px;border-radius:4px;background:#ffffff40;pointer-events:none}
 html.mk-pill #ezbMenu .ezb-big{border-radius:16px!important}
 html.mk-pill #ezbMenu button{border-radius:12px}
+/* 2.91.3: the menu fits a phone screen without scrolling: rows scale with the screen (40-46 px), tighter dividers */
+html.mk-pill #ezbMenu>button:not(.ezb-big){min-height:clamp(40px,5.2dvh,46px);padding-block:0}
+html.mk-pill #ezbMenu .ezb-big{padding:9px 12px;margin-bottom:4px}
+html.mk-pill #ezbMenu hr{margin:4px}
+html.mk-pill #ezbMenu .ezb-lab{padding:6px 12px 2px}
 #mkPillShade{position:fixed;inset:0;z-index:2147482999;background:#000;opacity:0;transition:opacity .3s ease}
 #mkPillShade.in{opacity:.55}
-#ezbMenu .mkp-acct{display:flex;gap:10px;padding:12px 4px 10px;margin-top:6px;border-top:1px solid #ffffff1a;position:sticky;bottom:-10px;background:#0f0f11}
-#ezbMenu .mkp-acct button{flex:1;justify-content:center;height:46px;padding:0!important;border-radius:12px!important;font-weight:600;background:#ffffff12}
+#ezbMenu .mkp-acct{display:flex;gap:10px;padding:10px 4px 2px;margin-top:4px;border-top:1px solid #ffffff1a;position:sticky;bottom:-10px;background:#0f0f11}
+#ezbMenu .mkp-acct button{flex:1;justify-content:center;height:44px;padding:0!important;border-radius:12px!important;font-weight:600;background:#ffffff12}
 #ezbMenu .mkp-acct button.mkp-main{background:linear-gradient(180deg,#fbf8f2,#e6e0d4)!important;color:#0b0b0b!important}
 /* the coloured card glow is a remote/keyboard highlight: on touch screens a tap leaves it stuck, so it shows only
    on TVs, with a remote or keyboard (kbnav), or with a mouse */

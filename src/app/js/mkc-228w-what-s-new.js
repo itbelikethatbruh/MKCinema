@@ -8,6 +8,11 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.91.3', date: '2026-11-22', items: [
+    ['better', 'Quicker app updates', 'When an update is ready, Android\'s install screen opens right away. One tap and you\'re done.'],
+    ['better', 'Phone menu at a glance', 'On phones the Menu now shows everything at once, with no scrolling.'],
+    ['better', 'Anime look in Theme', 'Anime look now lives in Settings › Appearance › Theme, next to your colours, and its section titles read cleaner.'],
+  ] },
   { v: '2.91.2', date: '2026-11-22', items: [
     ['better', 'Smoother app updates', 'If an update can\'t finish, MKCinema says why and offers a one-tap install from the browser.'],
   ] },

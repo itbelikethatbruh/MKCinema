@@ -4151,7 +4151,7 @@ const Wheel = {
     const r = rows().filter((d) => !(d.html && (d.html === lookHTML || (typeof d.html === 'function' && String(d.html()).includes('id="atelierBox"')))));
     return [
       // 2.81: no Menu group (one menu everywhere)
-      { group: 'Colour' },
+      { group: 'Theme' },
       { html: () => Wheel.html() },
       { group: 'Text' },
       ...r,
