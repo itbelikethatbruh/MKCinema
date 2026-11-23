@@ -2,6 +2,17 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Android 1.17.7 (2026-11-22)
+
+- TVs play films in the MKCinema player itself, with the TV's hardware decoding underneath.
+- Subtitles in the full-screen TV player sit above its button bar.
+- The website and the in-app update check now offer Android 1.17.7.
+
+## Web app 2.91.6 (2026-11-22)
+
+- **Smoother TV remote:** Back closes the Menu, returns you to the exact tile you opened on Home, and the remote's Menu button opens MKCinema's Menu.
+- **MKCinema player on TVs:** TVs now play every film in the MKCinema player itself, with the same controls, watch parties and remote as everywhere else (with Android 1.17.7).
+
 ## Web app 2.91.5 (2026-11-22)
 
 - **Filters stay put:** pick 4K, HDR or any source filter with the remote and you stay right on the filters instead of jumping back to the top.

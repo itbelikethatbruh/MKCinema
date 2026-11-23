@@ -27,7 +27,7 @@ const MkNative = {
   ready() { const b = this.bridge(); return this.ok && !!b && (b.droid ? CFG.nativePlayer === true : CFG.nativePlayer !== false); },
   probe() {
     const b = this.bridge(); if (!b) return Promise.resolve(false);
-    return this.probed || (this.probed = b.cmd('probe').then((j) => { const r = JSON.parse(j || '{}'); this.ok = !!r.ok; if (!r.ok) console.info('Native player unavailable:', r.err); return this.ok; }).catch(() => (this.ok = false)));
+    return this.probed || (this.probed = b.cmd('probe').then((j) => { const r = JSON.parse(j || '{}'); this.ok = !!r.ok; this.embed = !!(r.ok && r.embed); if (!r.ok) console.info('Native player unavailable:', r.err); return this.ok; }).catch(() => (this.ok = false)));
   },
   wants(s) { return this.ready() && !!s && !!s.url && !s.ytId && /^https?:\/\//i.test(s.url) && !(typeof PartyGuest !== 'undefined' && PartyGuest.relaying()); },
   cmd(c, a) { const b = this.bridge(); if (!b) return Promise.reject(new Error('no native player')); return b.cmd(c, a); },
@@ -38,11 +38,12 @@ const MkNative = {
     return t + Math.min(0.5, (performance.now() - this.tAt) / 1000) * (Number(this.st.speed) || 1);
   },
   fire(n) { try { video.dispatchEvent(new Event(n)); } catch (e) { /* ignore */ } },
+  subClear() { this._subT = ''; if (this._sub) { this._sub.textContent = ''; this._sub.hidden = true; } },
   /* ---- open a film natively ---- */
   open(stream, startAt) {
     const bh = stream.behaviorHints || {}, h = (bh.proxyHeaders && bh.proxyHeaders.request) || {};
     this.attach();
-    this.cur = stream; this.st = { paused: true }; this.tAt = 0; this.subIds = []; this.lastEnd = null; this.loadedFired = false; this.metaFired = false; this.err = null;
+    this.subClear(); this.cur = stream; this.st = { paused: true }; this.tAt = 0; this.subIds = []; this.lastEnd = null; this.loadedFired = false; this.metaFired = false; this.err = null;
     // whatever was on screen under the player (a title page, Home) hides, so the see-through page shows only the film
     if (!this.under) { this.under = [...document.body.children].filter((el) => el.id !== 'player' && el.id !== 'toasts' && !/^(SCRIPT|STYLE|LINK|TEMPLATE)$/.test(el.tagName) && !el.hidden); this.under.forEach((el) => el.classList.add('mk-nv-under')); }
     document.documentElement.classList.add('mk-native-on');
@@ -85,6 +86,18 @@ const MkNative = {
     if ('cached' in n) this.fire('progress');
     if (n.end === 'eof' || (n.ended && !was.ended && st.dur > 0 && (Number(st.t) || 0) >= st.dur - 2)) { if (this.lastEnd !== this.gen) { this.lastEnd = this.gen; this.st.paused = true; this.fire('ended'); } }
     if (n.end === 'error') this.fail(n.err || 'the file could not be opened');
+    if (this.embed && ('stext' in n || 't' in n)) this.stext('stext' in n ? n.stext : undefined);
+  },
+  /* 2.91.5: TVs (Android 1.17.7+): the decoder draws straight onto the screen, so the subtitle words come as text */
+  stext(t) {
+    let el = this._sub;
+    if (!el || !el.isConnected) { el = this._sub = document.createElement('div'); el.className = 'mk-nv-sub'; el.setAttribute('aria-live', 'off'); $('#player').appendChild(el); }
+    if (t !== undefined) {
+      const txt = typeof t === 'string' ? t.replace(/\{\\[^}]*\}/g, '').replace(/<[^>]+>/g, '').replace(/\\N/g, '\n').trim() : '';
+      if (txt !== this._subT) { this._subT = txt; el.textContent = txt; el.hidden = !txt; el.style.fontSize = `${Math.round(3.4 * (Number(CFG.subSize) || 100)) / 100}vh`; el.classList.toggle('top', CFG.subPos === 'top'); }
+    }
+    const lift = !$('#hud').classList.contains('idle');
+    if (lift !== this._subLift) { this._subLift = lift; el.classList.toggle('lift', lift); }
   },
   /* the file's own tracks: audio for video.audioTracks, subtitles for the subtitle menu */
   tracks(list) {

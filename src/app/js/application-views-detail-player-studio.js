@@ -2097,6 +2097,7 @@ const Nav = {
     const run = (again) => {
       if (!$('#player').hidden) return;
       const root = this.root(), a = document.activeElement, inside = a && a !== document.body && root.contains(a) && !a.closest('[hidden]');
+      if (a && a.closest && a.closest('#ezbMenu:not([hidden])')) return;
       if (inside && !(again && a === this.auto)) return;
       this.auto = this.restore(true) || null;
       if (!again) this.settleT = setTimeout(() => run(true), 650);
@@ -2144,6 +2145,8 @@ const Nav = {
   },
 };
 function back() {
+  // 2.91.5: the Menu first (TV remotes hand Back to the page, not the Escape key the menu listens for)
+  if (document.documentElement.classList.contains('ezb-menu-open')) { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })); return; }
   for (const id of ['castLayer', 'partyLayer']) if (!$(`#${id}`).hidden) { closeLayer(id); return; }
   if (IS_TV && Nav.root().matches('.focus-ask, .sup-ask')) { Nav.root().remove(); tvBackHook(); Nav.settle(); return; }
   if (IS_TV && $('#player').hidden && !document.body.classList.contains('layer-open') && typeof Remote !== 'undefined' && Remote.hintEl) { Remote.unhint(); return; }
@@ -2207,6 +2210,8 @@ function handleKey(e) {
   if (typing) return;
   // 2.83.8: Left and Right on a slider change its value (a remote has no other way to do it); Up and Down move on
   if ((k === 'ArrowLeft' || k === 'ArrowRight') && tag === 'INPUT' && e.target.type === 'range' && !e.defaultPrevented && !e.target.disabled && !e.target.closest('#hud')) { e.preventDefault(); Nav.kbOn(); MkRange.nudge(e.target, k === 'ArrowRight' ? 1 : -1); return; }
+  // 2.91.5: TV remote Menu button (the app sends "o") outside the player and panels: MKCinema's Menu
+  if (IS_TV && k === 'o' && !e.isTrusted && $('#player').hidden && !document.body.classList.contains('layer-open') && $('#ezbMenuB')) { e.preventDefault(); if (document.documentElement.classList.contains('ezb-menu-open')) back(); else { $('#ezbMenuB').click(); setTimeout(() => { const m = $('#ezbMenu'), f = m && $('[data-mk]', m); if (f && !m.hidden && !m.contains(document.activeElement)) Nav.focus(f, true); }, 80); } return; }
   const playerOpen = !$('#player').hidden, drawer = $('#player .drawer.open') || !$('#dspPop').hidden || !$('#subMenu').hidden || !$('#optMenu').hidden || !$('#pMsg').hidden;
   if (playerOpen && !drawer && IS_TV) {
     // TV remote in the player: Up/Down reach the controls, Left/Right seek unless a control has focus, OK plays/pauses

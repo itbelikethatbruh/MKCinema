@@ -186,6 +186,10 @@ const HomePlace = {
     this.y = scrollY || 0; this.rk = ''; this.id = '';
     const a = document.activeElement, card = a && a.closest && a.closest('#homeRows [data-card]');
     if (card) { const sec = card.closest('section.row'); this.rk = sec ? sec.dataset.arrK || sec.dataset.rk || sec.id || '' : ''; this.id = card.dataset.id || ''; }
+    // 2.91.5: any other tile on Home (networks, channels, franchises, studios, decades...): its row and its place in it
+    this.el = null; this.sk = ''; this.si = -1;
+    const t = !card && a && a.closest && a.closest('#view-home [data-nav], #view-home button, #view-home a[href]');
+    if (t) { const sec = t.closest('section[id], .row[id], [data-arr-k]'); this.el = t; this.sk = sec ? sec.id || sec.dataset.arrK || '' : ''; this.si = sec ? [...sec.querySelectorAll('[data-nav], button, a[href]')].indexOf(t) : -1; }
   },
   back() {
     const y = this.y, rk = this.rk, id = this.id;
@@ -196,6 +200,14 @@ const HomePlace = {
       const secs = $$('#homeRows section.row'), sec = secs.find((s) => (s.dataset.arrK || s.dataset.rk || s.id || '') === rk);
       const card = (sec || document).querySelector(`[data-card][data-id="${CSS.escape(id)}"]`);
       if (card) try { Nav.focus(card, true); } catch (e) { /* older build */ }
+    });
+    // 2.91.5: the same tile, or the one in its place if the row was redrawn
+    if (IS_TV && !id && (this.el || this.sk)) requestAnimationFrame(() => {
+      if (S.view !== 'home') return;
+      const ok = (e) => e && e.isConnected && !e.closest('[hidden]') && e.getClientRects().length;
+      let t = ok(this.el) ? this.el : null;
+      if (!t && this.sk) { const sec = document.getElementById(this.sk) || $(`[data-arr-k="${CSS.escape(this.sk)}"]`); const l = sec ? [...sec.querySelectorAll('[data-nav], button, a[href]')] : []; t = ok(l[this.si]) ? l[this.si] : l.find(ok) || null; }
+      if (t) try { Nav.focus(t, true); } catch (e) { /* older build */ }
     });
   },
 };
