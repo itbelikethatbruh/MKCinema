@@ -4,9 +4,14 @@
 //
 // With -pass it runs the pass server instead (package pass): the Mac app uses it so the web app can read hosts
 // without CORS and open the person's own plain-http TV service. It prints its base address the same way.
+//
+// With -discord it shows what is playing on the person's Discord profile, for the Mac and Linux apps: it prints
+// "ready", then reads one status per line (the page's JSON, or an empty line to clear it) until its input closes,
+// and clears the status as it stops.
 package main
 
 import (
+	"bufio"
 	"context"
 	"flag"
 	"fmt"
@@ -18,6 +23,7 @@ import (
 	"syscall"
 	"time"
 
+	"mkcinema/discord"
 	"mkcinema/p2p"
 	"mkcinema/pass"
 )
@@ -28,7 +34,14 @@ func main() {
 	reserveMB := flag.Int64("reserve-mb", 600, "stop when free space falls below this")
 	conns := flag.Int("conns", 30, "peer connections per torrent")
 	passOnly := flag.Bool("pass", false, "run the pass server (CORS and plain-http TV) instead of the torrent engine")
+	discordOnly := flag.Bool("discord", false, "show what is playing on Discord, one status per input line")
 	flag.Parse()
+	if *discordOnly {
+		log.SetOutput(os.Stderr)
+		fmt.Println("ready")
+		presence(os.Stdin)
+		return
+	}
 	if *passOnly {
 		log.SetOutput(os.Stderr)
 		s, err := pass.Start()
@@ -80,4 +93,24 @@ func waitStop() {
 	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)
 	go func() { <-sig; stop <- struct{}{} }()
 	<-stop
+}
+
+// presence sets the Discord status from each line it reads, and clears it when the input ends.
+func presence(in io.Reader) {
+	sc := bufio.NewScanner(in)
+	sc.Buffer(make([]byte, 0, 4096), 16384)
+	for sc.Scan() {
+		line := sc.Text()
+		if line == "" || line == "null" {
+			discord.Clear()
+			continue
+		}
+		a, err := discord.Parse(line)
+		if err != nil {
+			log.Printf("discord: %v", err)
+			continue
+		}
+		discord.Set(a)
+	}
+	discord.Clear()
 }
