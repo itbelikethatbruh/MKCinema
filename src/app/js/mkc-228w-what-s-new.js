@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.93.1', date: '2026-11-23', items: [
+    ['new', 'Claude and ChatGPT', 'Ask Claude or ChatGPT for something to watch and it opens or plays it on your TV. Turn it on in Settings › Devices and add the link shown there as a connector. It only looks titles up and sends them: it never sees your account or what you watch.'],
+  ] },
   { v: '2.93.0', date: '2026-11-23', items: [
     ['better', 'Simpler MKCinema player', 'The MKCinema player has fewer buttons, and Settings opens as one short card with speed, picture, screen and sleep timer. Everything else is one tap away in All settings.'],
     ['new', 'Parent notes', 'Title pages show the age rating where you live and what rating boards warn about, like violence, scary scenes or strong language. Settings › Home turns it off.'],
