@@ -1,5 +1,5 @@
 
-/* 2.45.4: one clear switch for the Anime look, in Settings › Appearance and on the Anime page.
+/* 2.45.4: one clear switch for the Anime look, in Settings › Appearance › Theme (2.91.3: no longer on the Anime page).
    Appearance moved to the colour wheel and its look cards went away, so there was no way to turn Anime on.
    Turning it off returns to the look you had before (Noir, or your wheel colour). */
 const AnimeSwitch = {
@@ -41,26 +41,15 @@ const AnimeSwitch = {
         const row = { key: 'animeLookOn', label: 'Anime look', help: 'Comic panels, a new logo and Miko. Off returns to your colour.', type: 'toggle',
           get: () => this.on(),
           set: (v) => { this.set(v); if (!$('#settings').hidden) { renderSettingsBody(); if (IS_TV) { const s = $('#set-animeLookOn'); if (s) Nav.focus(s, true); } } } };
-        const i = r.findIndex((d) => d && d.group === 'Colour');
+        const i = r.findIndex((d) => d && d.group === 'Theme');
         if (i < 0) return [row, ...r];
         const j = r.findIndex((d, k) => k > i && d && d.group);
         const at = j < 0 ? r.length : j;
         return [...r.slice(0, at), row, ...r.slice(at)];
       };
     }
-    // the Anime page: a switch beside the lists
-    const ar = AnimeHub.render.bind(AnimeHub);
-    AnimeHub.render = function () {
-      const out = ar.apply(this, arguments);
-      const bar = $('#animeBody .an-head .toolbar');
-      if (bar && !$('.an-lookbtn', bar)) {
-        bar.insertAdjacentHTML('beforeend', AnimeSwitch.btnHTML()); icons();
-        $('.an-lookbtn', bar).addEventListener('click', () => AnimeSwitch.set(!AnimeSwitch.on()));
-      }
-      return out;
-    };
+    // 2.91.3: the switch lives only in Settings › Appearance › Theme (no longer on the Anime page)
     CFG_HOOKS.push((k) => { if (k === 'look') setTimeout(() => this.sync(), 0); });
-    if (S.view === 'anime' && $('#animeBody .an-head') && !$('.an-lookbtn')) AnimeHub.render();
     if (typeof COMMANDS !== 'undefined') COMMANDS.push({ label: 'Anime look on or off', icon: 'sparkles', run: () => this.set(!this.on()) });
   },
 };

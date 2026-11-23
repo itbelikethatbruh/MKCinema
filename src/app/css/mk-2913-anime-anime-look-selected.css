@@ -1,0 +1,5 @@
+
+/* 2.91.3 Anime look: the selected section pill is cream with dark text, so the comic ink shadow doubled the word */
+html[data-look="anime"] body #tabs .tab.on,html[data-look="anime"] body #tabs .tab.on *,html[data-look="anime"] body #mtabs button.on,html[data-look="anime"] body #mtabs button.on *{text-shadow:none}
+/* High contrast text turned the red selected chip's word black under a black shadow (Live TV "All sources") */
+html[data-look="anime"] body.hc .chip.on,html[data-look="anime"] body.hc .chips .chip.on{color:var(--kffffff,#fff)}

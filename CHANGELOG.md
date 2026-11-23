@@ -2,6 +2,12 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.91.3 (2026-11-22)
+
+- **Quicker app updates:** when an update is ready, Android's install screen opens right away. One tap and you're done.
+- **Phone menu at a glance:** on phones the Menu now shows everything at once, with no scrolling.
+- Anime look now lives in Settings › Appearance › Theme, next to your colours, and its section titles read cleaner.
+
 ## Android 1.17.6 (2026-11-22)
 
 - Smoother app updates.
