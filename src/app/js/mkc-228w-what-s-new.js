@@ -8,6 +8,10 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.91.6', date: '2026-11-22', items: [
+    ['better', 'Smoother TV remote', 'Back closes the Menu, returns you to the exact tile you opened on Home, and the remote\'s Menu button opens MKCinema\'s Menu.'],
+    ['better', 'MKCinema player on TVs', 'TVs now play every film in the MKCinema player itself, with the same controls, watch parties and remote as everywhere else, and the TV\'s hardware decoding underneath.'],
+  ] },
   { v: '2.91.5', date: '2026-11-22', items: [
     ['better', 'Filters stay put', 'Pick 4K, HDR or any source filter with the remote and you stay right on the filters instead of jumping back to the top.'],
   ] },

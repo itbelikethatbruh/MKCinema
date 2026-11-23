@@ -26,11 +26,11 @@
   /* a native start that never got going goes back to the page player once, and native stops starting by itself */
   const fell = (why) => {
     const s = MkNative.cur; if (!s || (MkNative.metaFired && MkNative.st.w > 0)) return false;
-    s._mkFell = true; s._mkNative = false; MkNative.bad = true;
+    s._mkFell = true; s._mkNative = false; if (!(IS_TV && MkNative.embed)) MkNative.bad = true;
     try { MKLog.add('play', 'native: back to the page player (' + why + ')'); } catch (e) { /* ignore */ }
     const at = (typeof switchAt === 'function' ? switchAt() : 0) || 0;
     try { MkNative.stop(); } catch (e) { /* ignore */ }
-    setTimeout(() => { if (P.stream === s && P.ctx) { try { toast('The MKCinema Player couldn’t open this copy, so it plays in the web player.', 'info', 3500); } catch (e) { /* ignore */ } playStream(P.ctx, s, { startAt: at || undefined }); } }, 0);
+    setTimeout(() => { if (P.stream === s && P.ctx) { try { toast(IS_TV && MkNative.embed ? 'The MKCinema Player couldn’t open this copy, so it plays in the TV player.' : 'The MKCinema Player couldn’t open this copy, so it plays in the web player.', 'info', 3500); } catch (e) { /* ignore */ } playStream(P.ctx, s, { startAt: at || undefined }); } }, 0);
     return true;
   };
   const baseFail = MkNative.fail.bind(MkNative);

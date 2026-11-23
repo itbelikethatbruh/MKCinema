@@ -3579,6 +3579,8 @@ const TvPlayer = {
     const lu = loadUrl;
     loadUrl = function (stream, startAt) {
       if (!(TvPlayer.on() || TvPlayer.phone(stream)) || !P.ctx || stream._local || stream._noNative) return lu.apply(this, arguments);
+      // 2.91.5: Android TV app 1.17.7+ plays under the MKCinema player itself; the TV player only takes a copy it can't open
+      if (IS_TV && window.MkNative && MkNative.embed && !stream._mkFell) { let w = false; try { w = MkNative.wants(stream); } catch (e) { w = false; } if (w) return lu.apply(this, arguments); }
       const bh = stream.behaviorHints || {}, headers = bh.proxyHeaders && bh.proxyHeaders.request;
       // streams that ask for request headers (Referer, User-Agent...): TV app 1.2.8 sends them itself, no proxy needed
       const nativeHdr = !!(headers && Object.keys(headers).length && (() => { try { return Updater.newer(MKAndroid.version(), '1.2.7'); } catch (e) { return false; } })());

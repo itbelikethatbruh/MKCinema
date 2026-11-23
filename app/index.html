@@ -2228,6 +2228,11 @@ html.tv .br-grid .uni-card.br-tile{width:auto;min-width:0}
 #updBar .inrow{flex-wrap:wrap}
 @media (max-width:560px){#updBar .inrow .btn{flex:1 1 auto;justify-content:center}}
 </style>
+<style id="mk-2915-tv-player">
+#player .mk-nv-sub{position:absolute;left:6%;right:6%;bottom:7vh;z-index:3;text-align:center;white-space:pre-line;color:#fff;font-weight:600;line-height:1.25;text-shadow:0 0 4px #000,0 2px 6px #000,0 0 2px #000;pointer-events:none;transition:transform .25s ease}
+#player .mk-nv-sub.top{bottom:auto;top:7vh}
+#player .mk-nv-sub.lift:not(.top){transform:translateY(-17vh)}
+</style>
 </head>
 <body class="locked">
 <script id="mk-2881-pre">
@@ -6070,6 +6075,7 @@ const Nav = {
     const run = (again) => {
       if (!$('#player').hidden) return;
       const root = this.root(), a = document.activeElement, inside = a && a !== document.body && root.contains(a) && !a.closest('[hidden]');
+      if (a && a.closest && a.closest('#ezbMenu:not([hidden])')) return;
       if (inside && !(again && a === this.auto)) return;
       this.auto = this.restore(true) || null;
       if (!again) this.settleT = setTimeout(() => run(true), 650);
@@ -6117,6 +6123,8 @@ const Nav = {
   },
 };
 function back() {
+  // 2.91.5: the Menu first (TV remotes hand Back to the page, not the Escape key the menu listens for)
+  if (document.documentElement.classList.contains('ezb-menu-open')) { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })); return; }
   for (const id of ['castLayer', 'partyLayer']) if (!$(`#${id}`).hidden) { closeLayer(id); return; }
   if (IS_TV && Nav.root().matches('.focus-ask, .sup-ask')) { Nav.root().remove(); tvBackHook(); Nav.settle(); return; }
   if (IS_TV && $('#player').hidden && !document.body.classList.contains('layer-open') && typeof Remote !== 'undefined' && Remote.hintEl) { Remote.unhint(); return; }
@@ -6180,6 +6188,8 @@ function handleKey(e) {
   if (typing) return;
   // 2.83.8: Left and Right on a slider change its value (a remote has no other way to do it); Up and Down move on
   if ((k === 'ArrowLeft' || k === 'ArrowRight') && tag === 'INPUT' && e.target.type === 'range' && !e.defaultPrevented && !e.target.disabled && !e.target.closest('#hud')) { e.preventDefault(); Nav.kbOn(); MkRange.nudge(e.target, k === 'ArrowRight' ? 1 : -1); return; }
+  // 2.91.5: TV remote Menu button (the app sends "o") outside the player and panels: MKCinema's Menu
+  if (IS_TV && k === 'o' && !e.isTrusted && $('#player').hidden && !document.body.classList.contains('layer-open') && $('#ezbMenuB')) { e.preventDefault(); if (document.documentElement.classList.contains('ezb-menu-open')) back(); else { $('#ezbMenuB').click(); setTimeout(() => { const m = $('#ezbMenu'), f = m && $('[data-mk]', m); if (f && !m.hidden && !m.contains(document.activeElement)) Nav.focus(f, true); }, 80); } return; }
   const playerOpen = !$('#player').hidden, drawer = $('#player .drawer.open') || !$('#dspPop').hidden || !$('#subMenu').hidden || !$('#optMenu').hidden || !$('#pMsg').hidden;
   if (playerOpen && !drawer && IS_TV) {
     // TV remote in the player: Up/Down reach the controls, Left/Right seek unless a control has focus, OK plays/pauses
@@ -11418,7 +11428,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.91.5';
+const APP_VERSION = '2.91.6';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -12246,6 +12256,7 @@ const Saver = {
       el.hidden = true; $('.sv-front', el).innerHTML = ''; $$('.sv-b', el).forEach((x) => x.remove()); this.cur = this.out = null;
       document.body.classList.remove('saver-on');
       if (typeof tvBackHook === 'function') tvBackHook();
+      if (IS_TV) Nav.settle();
     }, 460);
   },
 };
@@ -12400,6 +12411,7 @@ const ExitAsk = {
   // something is on screen that Back should close first
   busy() {
     if (document.fullscreenElement) return true;
+    if (document.documentElement.classList.contains('ezb-menu-open')) return true;
     if (!$('#player').hidden || document.body.classList.contains('layer-open')) return true;
     if (['castLayer', 'partyLayer', 'trailer', 'tour', 'stremioImport', 'palette', 'epSheet', 'askLayer', 'tastePick', 'settings', 'addons', 'detail'].some((id) => { const e = $(`#${id}`); return e && !e.hidden; })) return true;
     if (typeof EpSheet !== 'undefined' && EpSheet.isOpen()) return true;
@@ -17570,6 +17582,8 @@ const TvPlayer = {
     const lu = loadUrl;
     loadUrl = function (stream, startAt) {
       if (!(TvPlayer.on() || TvPlayer.phone(stream)) || !P.ctx || stream._local || stream._noNative) return lu.apply(this, arguments);
+      // 2.91.5: Android TV app 1.17.7+ plays under the MKCinema player itself; the TV player only takes a copy it can't open
+      if (IS_TV && window.MkNative && MkNative.embed && !stream._mkFell) { let w = false; try { w = MkNative.wants(stream); } catch (e) { w = false; } if (w) return lu.apply(this, arguments); }
       const bh = stream.behaviorHints || {}, headers = bh.proxyHeaders && bh.proxyHeaders.request;
       // streams that ask for request headers (Referer, User-Agent...): TV app 1.2.8 sends them itself, no proxy needed
       const nativeHdr = !!(headers && Object.keys(headers).length && (() => { try { return Updater.newer(MKAndroid.version(), '1.2.7'); } catch (e) { return false; } })());
@@ -24326,6 +24340,10 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.91.6', date: '2026-11-22', items: [
+    ['better', 'Smoother TV remote', 'Back closes the Menu, returns you to the exact tile you opened on Home, and the remote\'s Menu button opens MKCinema\'s Menu.'],
+    ['better', 'MKCinema player on TVs', 'TVs now play every film in the MKCinema player itself, with the same controls, watch parties and remote as everywhere else, and the TV\'s hardware decoding underneath.'],
+  ] },
   { v: '2.91.5', date: '2026-11-22', items: [
     ['better', 'Filters stay put', 'Pick 4K, HDR or any source filter with the remote and you stay right on the filters instead of jumping back to the top.'],
   ] },
@@ -45511,6 +45529,10 @@ const HomePlace = {
     this.y = scrollY || 0; this.rk = ''; this.id = '';
     const a = document.activeElement, card = a && a.closest && a.closest('#homeRows [data-card]');
     if (card) { const sec = card.closest('section.row'); this.rk = sec ? sec.dataset.arrK || sec.dataset.rk || sec.id || '' : ''; this.id = card.dataset.id || ''; }
+    // 2.91.5: any other tile on Home (networks, channels, franchises, studios, decades...): its row and its place in it
+    this.el = null; this.sk = ''; this.si = -1;
+    const t = !card && a && a.closest && a.closest('#view-home [data-nav], #view-home button, #view-home a[href]');
+    if (t) { const sec = t.closest('section[id], .row[id], [data-arr-k]'); this.el = t; this.sk = sec ? sec.id || sec.dataset.arrK || '' : ''; this.si = sec ? [...sec.querySelectorAll('[data-nav], button, a[href]')].indexOf(t) : -1; }
   },
   back() {
     const y = this.y, rk = this.rk, id = this.id;
@@ -45521,6 +45543,14 @@ const HomePlace = {
       const secs = $$('#homeRows section.row'), sec = secs.find((s) => (s.dataset.arrK || s.dataset.rk || s.id || '') === rk);
       const card = (sec || document).querySelector(`[data-card][data-id="${CSS.escape(id)}"]`);
       if (card) try { Nav.focus(card, true); } catch (e) { /* older build */ }
+    });
+    // 2.91.5: the same tile, or the one in its place if the row was redrawn
+    if (IS_TV && !id && (this.el || this.sk)) requestAnimationFrame(() => {
+      if (S.view !== 'home') return;
+      const ok = (e) => e && e.isConnected && !e.closest('[hidden]') && e.getClientRects().length;
+      let t = ok(this.el) ? this.el : null;
+      if (!t && this.sk) { const sec = document.getElementById(this.sk) || $(`[data-arr-k="${CSS.escape(this.sk)}"]`); const l = sec ? [...sec.querySelectorAll('[data-nav], button, a[href]')] : []; t = ok(l[this.si]) ? l[this.si] : l.find(ok) || null; }
+      if (t) try { Nav.focus(t, true); } catch (e) { /* older build */ }
     });
   },
 };
@@ -47131,7 +47161,7 @@ const MkNative = {
   ready() { const b = this.bridge(); return this.ok && !!b && (b.droid ? CFG.nativePlayer === true : CFG.nativePlayer !== false); },
   probe() {
     const b = this.bridge(); if (!b) return Promise.resolve(false);
-    return this.probed || (this.probed = b.cmd('probe').then((j) => { const r = JSON.parse(j || '{}'); this.ok = !!r.ok; if (!r.ok) console.info('Native player unavailable:', r.err); return this.ok; }).catch(() => (this.ok = false)));
+    return this.probed || (this.probed = b.cmd('probe').then((j) => { const r = JSON.parse(j || '{}'); this.ok = !!r.ok; this.embed = !!(r.ok && r.embed); if (!r.ok) console.info('Native player unavailable:', r.err); return this.ok; }).catch(() => (this.ok = false)));
   },
   wants(s) { return this.ready() && !!s && !!s.url && !s.ytId && /^https?:\/\//i.test(s.url) && !(typeof PartyGuest !== 'undefined' && PartyGuest.relaying()); },
   cmd(c, a) { const b = this.bridge(); if (!b) return Promise.reject(new Error('no native player')); return b.cmd(c, a); },
@@ -47142,11 +47172,12 @@ const MkNative = {
     return t + Math.min(0.5, (performance.now() - this.tAt) / 1000) * (Number(this.st.speed) || 1);
   },
   fire(n) { try { video.dispatchEvent(new Event(n)); } catch (e) { /* ignore */ } },
+  subClear() { this._subT = ''; if (this._sub) { this._sub.textContent = ''; this._sub.hidden = true; } },
   /* ---- open a film natively ---- */
   open(stream, startAt) {
     const bh = stream.behaviorHints || {}, h = (bh.proxyHeaders && bh.proxyHeaders.request) || {};
     this.attach();
-    this.cur = stream; this.st = { paused: true }; this.tAt = 0; this.subIds = []; this.lastEnd = null; this.loadedFired = false; this.metaFired = false; this.err = null;
+    this.subClear(); this.cur = stream; this.st = { paused: true }; this.tAt = 0; this.subIds = []; this.lastEnd = null; this.loadedFired = false; this.metaFired = false; this.err = null;
     // whatever was on screen under the player (a title page, Home) hides, so the see-through page shows only the film
     if (!this.under) { this.under = [...document.body.children].filter((el) => el.id !== 'player' && el.id !== 'toasts' && !/^(SCRIPT|STYLE|LINK|TEMPLATE)$/.test(el.tagName) && !el.hidden); this.under.forEach((el) => el.classList.add('mk-nv-under')); }
     document.documentElement.classList.add('mk-native-on');
@@ -47189,6 +47220,18 @@ const MkNative = {
     if ('cached' in n) this.fire('progress');
     if (n.end === 'eof' || (n.ended && !was.ended && st.dur > 0 && (Number(st.t) || 0) >= st.dur - 2)) { if (this.lastEnd !== this.gen) { this.lastEnd = this.gen; this.st.paused = true; this.fire('ended'); } }
     if (n.end === 'error') this.fail(n.err || 'the file could not be opened');
+    if (this.embed && ('stext' in n || 't' in n)) this.stext('stext' in n ? n.stext : undefined);
+  },
+  /* 2.91.5: TVs (Android 1.17.7+): the decoder draws straight onto the screen, so the subtitle words come as text */
+  stext(t) {
+    let el = this._sub;
+    if (!el || !el.isConnected) { el = this._sub = document.createElement('div'); el.className = 'mk-nv-sub'; el.setAttribute('aria-live', 'off'); $('#player').appendChild(el); }
+    if (t !== undefined) {
+      const txt = typeof t === 'string' ? t.replace(/\{\\[^}]*\}/g, '').replace(/<[^>]+>/g, '').replace(/\\N/g, '\n').trim() : '';
+      if (txt !== this._subT) { this._subT = txt; el.textContent = txt; el.hidden = !txt; el.style.fontSize = `${Math.round(3.4 * (Number(CFG.subSize) || 100)) / 100}vh`; el.classList.toggle('top', CFG.subPos === 'top'); }
+    }
+    const lift = !$('#hud').classList.contains('idle');
+    if (lift !== this._subLift) { this._subLift = lift; el.classList.toggle('lift', lift); }
   },
   /* the file's own tracks: audio for video.audioTracks, subtitles for the subtitle menu */
   tracks(list) {
@@ -51928,11 +51971,11 @@ const StreamsNudge = {
   /* a native start that never got going goes back to the page player once, and native stops starting by itself */
   const fell = (why) => {
     const s = MkNative.cur; if (!s || (MkNative.metaFired && MkNative.st.w > 0)) return false;
-    s._mkFell = true; s._mkNative = false; MkNative.bad = true;
+    s._mkFell = true; s._mkNative = false; if (!(IS_TV && MkNative.embed)) MkNative.bad = true;
     try { MKLog.add('play', 'native: back to the page player (' + why + ')'); } catch (e) { /* ignore */ }
     const at = (typeof switchAt === 'function' ? switchAt() : 0) || 0;
     try { MkNative.stop(); } catch (e) { /* ignore */ }
-    setTimeout(() => { if (P.stream === s && P.ctx) { try { toast('The MKCinema Player couldn’t open this copy, so it plays in the web player.', 'info', 3500); } catch (e) { /* ignore */ } playStream(P.ctx, s, { startAt: at || undefined }); } }, 0);
+    setTimeout(() => { if (P.stream === s && P.ctx) { try { toast(IS_TV && MkNative.embed ? 'The MKCinema Player couldn’t open this copy, so it plays in the TV player.' : 'The MKCinema Player couldn’t open this copy, so it plays in the web player.', 'info', 3500); } catch (e) { /* ignore */ } playStream(P.ctx, s, { startAt: at || undefined }); } }, 0);
     return true;
   };
   const baseFail = MkNative.fail.bind(MkNative);

@@ -19,6 +19,7 @@ const ExitAsk = {
   // something is on screen that Back should close first
   busy() {
     if (document.fullscreenElement) return true;
+    if (document.documentElement.classList.contains('ezb-menu-open')) return true;
     if (!$('#player').hidden || document.body.classList.contains('layer-open')) return true;
     if (['castLayer', 'partyLayer', 'trailer', 'tour', 'stremioImport', 'palette', 'epSheet', 'askLayer', 'tastePick', 'settings', 'addons', 'detail'].some((id) => { const e = $(`#${id}`); return e && !e.hidden; })) return true;
     if (typeof EpSheet !== 'undefined' && EpSheet.isOpen()) return true;

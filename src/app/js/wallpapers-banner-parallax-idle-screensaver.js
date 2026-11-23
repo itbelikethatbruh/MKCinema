@@ -475,6 +475,7 @@ const Saver = {
       el.hidden = true; $('.sv-front', el).innerHTML = ''; $$('.sv-b', el).forEach((x) => x.remove()); this.cur = this.out = null;
       document.body.classList.remove('saver-on');
       if (typeof tvBackHook === 'function') tvBackHook();
+      if (IS_TV) Nav.settle();
     }, 460);
   },
 };
