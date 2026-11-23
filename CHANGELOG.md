@@ -2,6 +2,12 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.92.0 (2026-11-23)
+
+- The MKCinema player has a new look: the screen tools sit together at the top, the title and finish time at the bottom, and everything you use while watching in one bar.
+- Picture in picture shows only the film, and swiping back on a phone closes the film and returns you where you were.
+- New pictures and clips of the app on the website and in the README.
+
 ## Web app 2.91.10 (2026-11-23)
 
 - Cleaner phone pages: section pages on phones start with what matters, without a repeated title and explainer.
