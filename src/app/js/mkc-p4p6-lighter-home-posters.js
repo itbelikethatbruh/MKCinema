@@ -58,7 +58,7 @@ const ImgFit = {
         if (n.nodeType !== 1) continue;
         if (n.tagName === 'IMG') { if (n.matches(SEL)) imgs.push(n); } else if (n.firstElementChild) imgs.push(...n.querySelectorAll(SEL));
       }
-      if (imgs.length) this.run(imgs);
+      if (imgs.length) { /*mk-smooth-start*/ (this.q || (this.q = [])).push(...imgs); if (!this.qr) this.qr = requestAnimationFrame(() => { const q = this.q.filter((im) => im.isConnected); this.q = []; this.qr = 0; if (q.length) this.run(q); }); }
     }).observe(document.documentElement, { childList: true, subtree: true });
     this.run(document.querySelectorAll(SEL));
   },
