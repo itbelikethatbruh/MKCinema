@@ -2,6 +2,18 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.91.10 (2026-11-23)
+
+- Cleaner phone pages: section pages on phones start with what matters, without a repeated title and explainer.
+- Videos open full screen and sideways on phones and tablets.
+- Live TV no longer jumps as it loads.
+- X-Ray when paused is now off unless you turn it on.
+- Title logos now rise in once, smoothly.
+
+## Website (2026-11-23)
+
+- A "Live now" box at the top shows visits, downloads and countries.
+
 ## Web app 2.91.9 (2026-11-23)
 
 - Movie and show pages open smoothly: the picture, title and details now fade in together instead of filling in piece by piece.

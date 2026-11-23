@@ -600,6 +600,33 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 @media(max-width:380px){.ss-scores{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.ss-card{transition:none}}
 /*ss-gold*/.ss-card{position:relative;isolation:isolate;border-color:transparent}.ss-card::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:2px;pointer-events:none;background:linear-gradient(135deg,#f6e3b4,#c9a35c 28%,#7a5a26 50%,#d8b46a 72%,#fff1c9);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}.ss-card::after{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;pointer-events:none;box-shadow:0 0 0 1px rgba(240,208,140,.5),0 0 30px 3px rgba(222,180,96,.55),0 0 90px 10px rgba(216,174,92,.22);opacity:.75;animation:ssGlow 4.5s ease-in-out infinite}.ss-card:hover::after,.ss-card:focus-visible::after{opacity:1;animation:none}@keyframes ssGlow{50%{opacity:1}}@media(prefers-reduced-motion:reduce){.ss-card::after{animation:none;opacity:.85}}
+/* mkc-live-css */
+.lv{position:relative;margin:30px auto 0;max-width:760px;padding:22px clamp(14px,3vw,30px) 20px;border-radius:22px;border:1px solid rgba(216,194,154,.22);background:radial-gradient(120% 140% at 50% -20%,rgba(216,194,154,.13),rgba(216,194,154,.02) 55%,transparent 75%),rgba(255,255,255,.015);overflow:hidden;isolation:isolate}
+.lv::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(100deg,transparent 0,rgba(255,240,205,.10) 45%,rgba(255,248,230,.18) 50%,rgba(255,240,205,.10) 55%,transparent 100%);width:40%;transform:translateX(-140%) skewX(-12deg);opacity:0}
+.lv.lv-go::before{animation:lvsweep 1.8s var(--ease) .2s}
+.lv-pill{display:inline-flex;align-items:center;gap:9px;font:600 11px/1 var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+.lv-pill .lv-sep{opacity:.5}
+.lv-pill .lv-sub{letter-spacing:.08em;text-transform:none;font-weight:500;color:var(--mute);font-size:12.5px}
+.lv-dot{position:relative;width:8px;height:8px;border-radius:50%;background:#e8c46c;box-shadow:0 0 10px rgba(232,196,108,.8)}
+.lv-dot::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:1.5px solid rgba(232,196,108,.7);opacity:0}
+.lv-row{display:grid;grid-template-columns:repeat(3,1fr);margin-top:16px}
+.lv-s{position:relative;display:grid;justify-items:center;gap:6px;padding:4px 8px}
+.lv-s+.lv-s::before{content:"";position:absolute;left:0;top:12%;bottom:12%;width:1px;background:linear-gradient(180deg,transparent,rgba(216,194,154,.35),transparent)}
+.lv-n{display:inline-block;font:400 clamp(30px,6.4vw,52px)/1 var(--serif);font-variant-numeric:tabular-nums;letter-spacing:-.01em;background:linear-gradient(180deg,#fff8e4 0,#ecd49a 55%,#c9a24a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;transform-origin:50% 70%;white-space:nowrap}
+.lv-l{font:500 12.5px/1.2 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.lv-you{position:absolute;left:50%;top:-6px;transform:translateX(-50%);font:600 11.5px/1 var(--sans);letter-spacing:.04em;color:#120e06;background:linear-gradient(90deg,#f6e3a6,#c9a24a);padding:4px 9px;border-radius:999px;white-space:nowrap;pointer-events:none;opacity:0}
+.lv-you[hidden]{display:none}
+@media (max-width:560px){.lv{padding:18px 8px 16px;border-radius:18px;margin-top:26px}.lv-s{padding:4px 2px}.lv-l{font-size:10.5px;letter-spacing:.1em}.lv-pill .lv-sub{display:none}.lv-pill .lv-sep{display:none}}
+@media (prefers-reduced-motion:no-preference){
+.lv-dot::after{animation:lvping 2.2s cubic-bezier(.2,.6,.3,1) infinite}
+.lv-n.lv-bump{animation:lvbump .7s cubic-bezier(.2,.9,.3,1.35)}
+.lv-you.lv-show{animation:lvyou 2.6s var(--ease) both}
+}
+@keyframes lvsweep{0%{opacity:0;transform:translateX(-140%) skewX(-12deg)}20%{opacity:1}100%{opacity:0;transform:translateX(330%) skewX(-12deg)}}
+@keyframes lvping{0%{opacity:.9;transform:scale(.5)}80%,100%{opacity:0;transform:scale(1.6)}}
+@keyframes lvbump{0%{transform:none}40%{transform:scale(1.08)}100%{transform:none}}
+@keyframes lvyou{0%{opacity:0;transform:translate(-50%,8px) scale(.9)}15%{opacity:1;transform:translate(-50%,-10px) scale(1)}75%{opacity:1;transform:translate(-50%,-14px)}100%{opacity:0;transform:translate(-50%,-26px)}}
+/* /mkc-live-css */
 </style>
 <script data-goatcounter="https://itbelikethatbruh.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </head>
@@ -691,6 +718,16 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
       <a href="download/mkcinema_1.1_amd64.deb" download><svg><use href="#b-linux"/></svg>Linux</a>
       <a href="#tv"><svg><use href="#b-amazonfiretv"/></svg>TV</a>
     </div>
+<!-- mkc-live -->
+    <div class="lv fade d3" id="live" role="group" aria-label="MKCinema in numbers">
+      <div class="lv-pill"><span class="lv-dot" aria-hidden="true"></span><span>Live now</span><span class="lv-sep" aria-hidden="true">·</span><span class="lv-sub">Growing every minute</span></div>
+      <div class="lv-row">
+        <div class="lv-s"><span class="lv-you" hidden><span translate="no">+1 · </span><span>that’s you</span></span><b class="lv-n" translate="no" data-lv="visits">16,450</b><span class="lv-l">visits</span></div>
+        <div class="lv-s"><b class="lv-n" translate="no" data-lv="downloads">9,510</b><span class="lv-l">downloads</span></div>
+        <div class="lv-s"><b class="lv-n" translate="no" data-lv="countries">109</b><span class="lv-l">countries</span></div>
+      </div>
+    </div>
+<!-- /mkc-live -->
   </div>
 
   <div class="room" id="room" aria-hidden="true">
@@ -1500,5 +1537,81 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
   addEventListener('scroll',on,{passive:true});addEventListener('resize',on);
 })();</script>
 <script src="/i18n/site.js" defer></script>
+<script id="mkc-live">/* Live numbers in the hero. Real totals, refreshed from a public read-only summary (no keys that can change anything,
+   no per-person data). Between refreshes the counters climb at the real pace of the last 24 hours, and your own visit adds one. */
+(() => {
+  const box = document.getElementById('live'); if (!box) return;
+  const SNAP = {"visits":16450,"visits_per_hour":73.4,"site_downloads":4637,"site_downloads_per_hour":17.9,"gh_downloads":4873,"countries":109,"snapshot_at":"2026-11-23T08:20:00Z"};
+  const API = 'https://wogffhgdixgrayowewnf.supabase.co/rest/v1/rpc/mkc_public_stats', KEY = 'sb_publishable_ZpiFwB_oM579GwCunYpHWg_jelRazT-';
+  const GH = 'https://api.github.com/repos/itbelikethatbruh/MKCinema/releases?per_page=100';
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const els = {}; box.querySelectorAll('[data-lv]').forEach((e) => { els[e.dataset.lv] = e; });
+  let fmt; try { fmt = new Intl.NumberFormat(document.documentElement.getAttribute('data-lang') || 'en'); } catch (e) { fmt = new Intl.NumberFormat('en'); }
+  const ss = (k, v) => { try { if (v === undefined) return sessionStorage.getItem(k); sessionStorage.setItem(k, v); } catch (e) { return null; } };
+  const s = Object.assign({}, SNAP);
+  const mine = ss('mkc-lv-me') ? 0 : 1; ss('mkc-lv-me', '1');
+  const PACE = 0.9, CAP_H = 36;
+  const target = () => {
+    const h = Math.max(0, Math.min(CAP_H, (Date.now() - Date.parse(s.snapshot_at)) / 36e5));
+    return {
+      visits: Math.floor(s.visits + s.visits_per_hour * PACE * h) + mine,
+      downloads: Math.floor(s.site_downloads + s.site_downloads_per_hour * PACE * h + s.gh_downloads),
+      countries: s.countries,
+    };
+  };
+  const shown = {};
+  const put = (k, v) => { shown[k] = v; els[k].textContent = fmt.format(v); };
+  const bump = (k) => { if (reduce) return; const e = els[k]; e.classList.remove('lv-bump'); void e.offsetWidth; e.classList.add('lv-bump'); };
+  let started = false;
+  if (!reduce) for (const k in els) put(k, 0);
+  const countUp = () => {
+    started = true;
+    const t = target();
+    if (reduce) { for (const k in els) put(k, t[k]); return; }
+    box.classList.add('lv-go');
+    const dur = 2200; let t0 = null;
+    const step = (now) => {
+      if (t0 == null) t0 = now;
+      const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 4);
+      for (const k in els) put(k, Math.round(t[k] * e));
+      if (p < 1) requestAnimationFrame(step);
+      else {
+        for (const k in els) bump(k);
+        const you = box.querySelector('.lv-you');
+        if (mine && you) { you.hidden = false; you.classList.add('lv-show'); setTimeout(() => { you.hidden = true; }, 2700); }
+      }
+    };
+    requestAnimationFrame(step);
+  };
+  // Keep climbing: check every few seconds, step up one at a time so each new visit or download is felt.
+  setInterval(() => {
+    if (!started || document.hidden) return;
+    const t = target();
+    for (const k in els) {
+      if (shown[k] == null) continue;
+      if (t[k] > shown[k]) { put(k, shown[k] + Math.max(1, Math.ceil((t[k] - shown[k]) / 6))); bump(k); }
+    }
+  }, 2500);
+  // Fresh numbers: the public summary, then GitHub release downloads straight from GitHub.
+  const ctl = 'AbortController' in window ? new AbortController() : null;
+  if (ctl) setTimeout(() => ctl.abort(), 6000);
+  fetch(API, { method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' }, body: '{}', signal: ctl && ctl.signal })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => { if (d && d.visits >= s.visits && d.snapshot_at) Object.assign(s, { visits: +d.visits, visits_per_hour: +d.visits_per_hour, site_downloads: +d.site_downloads, site_downloads_per_hour: +d.site_downloads_per_hour, gh_downloads: Math.max(s.gh_downloads, +d.gh_downloads || 0), countries: Math.max(s.countries, +d.countries || 0), snapshot_at: d.snapshot_at }); })
+    .catch(() => {})
+    .then(() => {
+      const cached = ss('mkc-lv-gh');
+      if (cached) return +cached;
+      return fetch(GH).then((r) => (r.ok ? r.json() : [])).then((rel) => {
+        let n = 0; for (const r of rel) for (const a of r.assets || []) if (!/release\.json|sha256/i.test(a.name)) n += a.download_count || 0;
+        if (n) ss('mkc-lv-gh', String(n)); return n;
+      }).catch(() => 0);
+    })
+    .then((gh) => { if (gh > s.gh_downloads) s.gh_downloads = gh; })
+    .catch(() => {});
+  // Start counting when the box is on screen.
+  const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); setTimeout(countUp, reduce ? 0 : 450); } }, { threshold: 0.3 }) : null;
+  if (io) io.observe(box); else countUp();
+})();</script>
 </body>
 </html>

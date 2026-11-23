@@ -1,0 +1,11 @@
+
+/* 2.91.10 phone tidy: on phones the top bar already names the section, so its big title and explainer go
+   (titles stay for screen readers). Only the section pages; titles of networks, universes etc. stay. */
+body.mk-phone :is(#view-discover,#view-tv,#view-library,#view-anime,#view-sports)>.page-title,
+body.mk-phone #view-anime .an-head>.page-title{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+body.mk-phone :is(#view-discover,#view-tv,#view-library,#view-anime,#view-sports,#view-calendar,#view-explore)>.page-sub,
+body.mk-phone #view-anime .an-head>.page-sub{display:none!important}
+/* Live TV: the game card fades in once, in the space kept for it */
+@keyframes mkLhIn{from{opacity:0}to{opacity:1}}
+#lhHub .lh-top.lh-in>*{animation:mkLhIn .35s ease both}
+@media (prefers-reduced-motion:reduce){#lhHub .lh-top.lh-in>*{animation:none}}

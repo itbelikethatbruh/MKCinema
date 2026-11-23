@@ -6,13 +6,14 @@
 #detail.dp-hold #detailPanel .logo3d.pop{animation:none!important}
 @keyframes dpFade{from{opacity:0}to{opacity:1}}
 @keyframes dpRise{from{opacity:0;transform:translate3d(0,14px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
-html #detail.dp-in #detailPanel .d-hero>img.bg:not(.d-wait){animation:dpFade .6s cubic-bezier(.25,.6,.3,1) both!important}
-html #detail.dp-in #detailPanel .d-hero .d-body>:not(.logo3d){animation:dpRise .5s cubic-bezier(.2,.75,.2,1) .08s both!important}
+html #detail.dp-in #detailPanel .d-hero>img.bg.dp-a:not(.d-wait){animation:dpFade .6s cubic-bezier(.25,.6,.3,1) both!important}
+html #detail.dp-in #detailPanel .d-hero .d-body>.dp-a:not(.logo3d){animation:dpRise .5s cubic-bezier(.2,.75,.2,1) .08s both!important}
 html #detail.dp-in #detailPanel .d-hero .d-body>:nth-child(3){animation-delay:.15s!important}
 html #detail.dp-in #detailPanel .d-hero .d-body>:nth-child(n+4){animation-delay:.21s!important}
-html #detail.dp-in #detailPanel>.d-body{animation:dpRise .55s cubic-bezier(.2,.75,.2,1) .27s both!important}
-html.lite #detail.dp-in #detailPanel .d-hero .d-body>.logo3d,body:not(.fx) #detail.dp-in #detailPanel .d-hero .d-body>.logo3d{animation:dpRise .5s cubic-bezier(.2,.75,.2,1) both!important}
-html #detail.dp-in.dp-rm #detailPanel .d-hero .d-body>*,html #detail.dp-in.dp-rm #detailPanel>.d-body{animation:dpFade .3s ease-out both!important}
+html #detail.dp-in #detailPanel>.d-body.dp-a{animation:dpRise .55s cubic-bezier(.2,.75,.2,1) .27s both!important}
+html.lite #detail.dp-in #detailPanel .d-hero .d-body>.logo3d.dp-a,body:not(.fx) #detail.dp-in #detailPanel .d-hero .d-body>.logo3d.dp-a{animation:dpRise .5s cubic-bezier(.2,.75,.2,1) both!important}
+html #detail.dp-in #detailPanel .d-hero .d-body>.dp-a.dp-c,html #detail.dp-in #detailPanel>.d-body.dp-a.dp-c{animation-name:dpFade!important}
+html #detail.dp-in.dp-rm #detailPanel .d-hero .d-body>.dp-a,html #detail.dp-in.dp-rm #detailPanel>.d-body.dp-a{animation:dpFade .3s ease-out both!important}
 /* a picture that arrives after the page is shown fades in, Snappy mode too */
 html #detail #detailPanel .d-hero>img.bg,html #detail #detailPanel .d-hero .hero-logo{transition:opacity .45s ease-out!important}
 html #detail #detailPanel .d-hero>img.bg.mk-under{transition:none!important}
