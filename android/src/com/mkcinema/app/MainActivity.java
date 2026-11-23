@@ -71,7 +71,7 @@ public class MainActivity extends Activity {
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6, REQ_MIRROR = 7, REQ_MIRROR_MIC = 8;
     // must equal versionName in AndroidManifest.xml (build.sh stops the build when it does not)
-    static final String VER = "1.17.8";
+    static final String VER = "1.17.9";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -505,7 +505,16 @@ public class MainActivity extends Activity {
 
     @SuppressWarnings("deprecation")
     @Override public void onBackPressed() {
-        if (customView != null) { exitFullscreen(); return; }
+        if (customView != null) {
+            // 1.17.9: on a phone, Back while a film fills the screen closes the film and returns to the page it came from
+            // (the page answers true); otherwise, or with an older page, it only leaves full screen as before
+            if (tv) { exitFullscreen(); return; }
+            web.evaluateJavascript("(function(){try{return !!(window.MKFsBack&&MKFsBack())}catch(e){return false}})()", r -> {
+                if (!"true".equals(r)) { exitFullscreen(); return; }
+                later.postDelayed(this::exitFullscreen, 700); // the page leaves full screen itself; this is the safety net
+            });
+            return;
+        }
         if (!tv) { if (web.canGoBack()) web.goBack(); else super.onBackPressed(); return; }
         // On a TV remote, Back closes whatever MKCinema has open first, then goes home, then leaves the app.
         web.evaluateJavascript(TV_BACK_JS, r -> {
