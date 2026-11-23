@@ -1,0 +1,15 @@
+/* 2.93.5 player turn: while a phone turns sideways for a film, the player stays black until the new shape is drawn, then fades in */
+html.mk-turn #player>*{opacity:0!important;transition:none!important}
+html.mk-turn-in #player>*{transition:opacity .26s ease!important}
+#mkTurnCover{position:fixed;inset:0;z-index:2147483646;background:#000;pointer-events:none;opacity:1;transition:opacity .28s ease}
+#mkTurnCover.out{opacity:0}
+/* Audio & subtitles on a phone held sideways: sits between the top buttons and the bottom bar, lists scroll
+   inside, the Sound settings / Second subtitles / Subtitle settings row always shows */
+@media (pointer:coarse) and (max-height:500px){
+ html:not(.tv) #player #subMenu.av-on{top:var(--mk-pt,calc(86px + env(safe-area-inset-top,0px)))!important;max-height:none!important}
+ html:not(.tv) #player #subMenu.av-on[style*=--mk-pw]{width:var(--mk-pw)!important}
+ html:not(.tv) #player #subMenu.av-on{display:flex!important;flex-direction:column;overflow:hidden!important}
+ html:not(.tv) #player #subMenu.av-on .av-cols{flex:1 1 auto;min-height:0}
+ html:not(.tv) #player #subMenu.av-on .av-col{max-height:none!important;height:100%}
+ html:not(.tv) #player #subMenu.av-on .av-foot{flex:none}
+}
