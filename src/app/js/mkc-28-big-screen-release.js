@@ -1695,6 +1695,74 @@ const SeatArt = {
    PINs are stored as slow salted hashes (PBKDF2, older seats as SHA-256 until the PIN is next typed), never as digits.
    A PIN is a household lock, not security: anyone who can open this browser's storage can get past it.
    Seats travel with account sync. */
+/* 2.91.7: Next episode never lands on Who's watching. On TV sticks (and some phones) Android can stop MKCinema's page
+   while a film plays, most often as the next episode loads, and the app rebuilds it as a fresh page. A fresh page
+   forgot that a seat was already picked, so it opened on Who's watching and the next episode never started. Now a
+   page rebuilt in the middle of a film keeps its seat and carries on: the next episode when Next episode was pressed,
+   otherwise the same film from where it was. Android app only (a second browser tab must not take over a film). */
+const SeatLive = {
+  K: 'mkc:seatLive',
+  rebuilt: (() => { let r = false; try { r = sessionStorage.getItem('mkc:alive') !== '1'; sessionStorage.setItem('mkc:alive', '1'); } catch (e) { r = false; } return r; })(),
+  app() { return /MKCinemaAndroid/.test(navigator.userAgent || ''); },
+  read(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } },
+  clear() { try { localStorage.removeItem(this.K); } catch (e) { /* off */ } },
+  /* the picker is skipped on a page rebuilt during a film (the MKCinema player, or the TV player with its hand-off) */
+  keep() {
+    if (!this.app()) return false;
+    const n = Date.now(), L = this.read(this.K), H = this.read('mkc:tvHandoff');
+    return !!(L && n - L.at < 120000 && (L.seat || '') === SEAT) || !!(H && H.meta && n - H.at < 4 * 3600e3 && (H.seat || '') === SEAT);
+  },
+  /* written every 10 s while the player is open, and at once when Next episode is pressed (want = that episode) */
+  beat(want) {
+    if (!this.app()) return;
+    try {
+      const n = Date.now(), L = this.read(this.K), open = !$('#player').hidden, c = P.ctx;
+      const pending = L && L.want && n - (L.wantAt || 0) < 90000 && c && c.video && L.video && L.video.id === c.video.id;
+      if (!c || !c.meta || !c.meta.id || (!open && !want && !pending)) { if (L && !pending) this.clear(); return; }
+      const pick = (o, ks) => { const x = {}; ks.forEach((k) => { if (o && o[k] != null) x[k] = o[k]; }); return x; };
+      const bh = (P.stream && P.stream.behaviorHints) || {};
+      let pos = 0; try { pos = window.MkNative && MkNative.active ? MkNative.now() : video.currentTime; } catch (e) { pos = 0; }
+      const rec = { at: n, seat: SEAT, pos: Number(pos) || 0, group: bh.bingeGroup || null,
+        meta: pick(c.meta, ['id', 'type', 'name', 'poster', 'background', 'logo', 'genres', 'genre', 'year', 'releaseInfo', 'videos']),
+        video: c.video ? pick(c.video, ['id', 'season', 'episode', 'title', 'name', 'thumbnail']) : null };
+      if (want) { rec.want = pick(want, ['id', 'season', 'episode', 'title', 'name', 'thumbnail']); rec.wantAt = n; }
+      else if (pending) { rec.want = L.want; rec.wantAt = L.wantAt; }
+      localStorage.setItem(this.K, JSON.stringify(rec));
+    } catch (e) { /* storage full or off */ }
+  },
+  /* a rebuilt page: play what was playing (or the episode that was asked for) with fresh sources */
+  async resume() {
+    if (!this.app() || !this.rebuilt) return;
+    const L = this.read(this.K), H = this.read('mkc:tvHandoff'), n = Date.now();
+    if (!L || !L.meta || !L.meta.id || n - L.at > 120000 || (L.seat || '') !== SEAT) return;
+    if (H && H.meta && n - H.at < 4 * 3600e3) return; // the TV player is still open: its own hand-off brings it back
+    this.clear();
+    const sp = $('#seatPick'); if (sp && !sp.hidden) return;
+    try { if (window.MkNative) { MkNative.cmd('stop').catch(() => {}); MkNative.cmd('show', '0').catch(() => {}); } } catch (e) { /* no native player */ }
+    const req = ++playReq;
+    let meta = L.meta;
+    try { meta = remember({ ...L.meta, ...((await engine.fetchMeta(L.meta.type || (L.video ? 'series' : 'movie'), L.meta.id)) || {}) }); } catch (e) { /* the saved copy */ }
+    const want = L.want && n - (L.wantAt || 0) < 90000 ? L.want : null, v0 = want || L.video;
+    const nv = v0 ? ((meta.videos && meta.videos.find((x) => x.id === v0.id)) || v0) : null;
+    const type = nv ? 'series' : (meta.type || 'movie'), id = nv ? videoIdFor(meta, nv) : meta.id;
+    let streams = [];
+    try { streams = (await engine.fetchStreams(type, id)).streams || []; } catch (e) { streams = []; }
+    if (req !== playReq) return;
+    const pk = pickBest(streams, PickMemo.opts(meta, L.group || undefined));
+    if (pk) playStream({ meta, video: nv, streams }, pk, { startAt: want ? 0 : Math.max(0, (Number(L.pos) || 0) - 3) });
+    else openDetail(meta, nv ? { videoId: id } : undefined);
+  },
+  init() {
+    if (!this.app()) return;
+    setInterval(() => this.beat(), 10000);
+    video.addEventListener('playing', () => this.beat());
+    const pn = playNext;
+    playNext = function () { try { if (P.ctx && P.ctx.video) { const nv = nextVideo(P.ctx.meta, P.ctx.video); if (nv) SeatLive.beat(nv); } } catch (e) { /* plays anyway */ } return pn.apply(this, arguments); };
+    const go = () => setTimeout(() => this.resume().catch(() => {}), 1500);
+    if (document.readyState === 'complete') go(); else window.addEventListener('load', go, { once: true });
+  },
+};
+
 const Seats = {
   list() { return Store.raw.get('seats', []) || []; },
   saveList(l) { Store.raw.set('seats', l); Account.schedule(); },
@@ -1964,6 +2032,7 @@ const Seats = {
     Account.chip = function () { chip(); const b = $('#openAccount'); if (b && Account.user && SEAT) { const a = Seats.artOf(Seats.cur()); if (a !== 'letter' && a !== 'photo') b.innerHTML = `<span class="avatar ph art">${SeatArt.svg(a)}</span>`; } if (b && Seats.list().length) { b.insertAdjacentHTML('beforeend', `<span class="seat-dot" style="--sc:${esc(Seats.cur().color)}" title="Seat: ${esc(Seats.cur().name)}"></span>`); } };
     Account.chip();
     let ok = false; try { ok = sessionStorage.getItem('mkc:seatOk') === '1'; } catch (e) { /* private */ }
+    if (!ok && SeatLive.keep()) { ok = true; try { sessionStorage.setItem('mkc:seatOk', '1'); } catch (e) { /* private */ } } // 2.91.7
     if (this.list().length && CFG.seatAsk !== false && !ok) {
       /* 2.48 seat-first: the chooser comes before Home. It opens as soon as the page is parsed, under the boot cover
          and the intro, and Home stays hidden (html.seat-gate) until it closes, so Home never flashes first. */
@@ -1982,6 +2051,7 @@ const Seats = {
   },
 };
 Seats.init();
+SeatLive.init();
 
 /* ---------------- Atelier: make your own theme ----------------
    Pick a colour for the blacks, a colour for the small highlights, how strongly they show, a type pairing and corner
@@ -3590,7 +3660,7 @@ const TvPlayer = {
       TvPlayer.cur = { ctx, stream, startAt };
       // kept on the device too: on low-memory TV sticks Android may rebuild this page while the TV player is open
       try { const pick = (o, ks) => { const x = {}; ks.forEach((k) => { if (o && o[k] != null) x[k] = o[k]; }); return x; };
-        localStorage.setItem('mkc:tvHandoff', JSON.stringify({ at: Date.now(), startAt, group: bh.bingeGroup || null, meta: pick(ctx.meta, ['id', 'type', 'name', 'poster', 'background', 'logo', 'genres', 'genre', 'year', 'releaseInfo', 'videos']), video: v ? pick(v, ['id', 'season', 'episode', 'title', 'name', 'thumbnail']) : null })); } catch (e) { /* storage full or off */ }
+        localStorage.setItem('mkc:tvHandoff', JSON.stringify({ at: Date.now(), seat: SEAT, startAt, group: bh.bingeGroup || null, meta: pick(ctx.meta, ['id', 'type', 'name', 'poster', 'background', 'logo', 'genres', 'genre', 'year', 'releaseInfo', 'videos']), video: v ? pick(v, ['id', 'season', 'episode', 'title', 'name', 'thumbnail']) : null })); } catch (e) { /* storage full or off */ }
       (async () => {
         const [subUrl, tvx] = await Promise.all([TvPlayer.subUrl(ctx), typeof TvParity !== 'undefined' ? TvParity.prep(ctx).catch(() => ({})) : Promise.resolve({})]);
         if (P.stream !== stream) return;
