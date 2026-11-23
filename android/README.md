@@ -29,6 +29,12 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.17.10 (versionCode 52): updates download reliably
+- The app downloads its own update (HttpURLConnection, 3 tries) straight into its private storage instead of handing it
+  to Android's DownloadManager, which stayed queued at 0 bytes on some phones. Progress, the signature check and the
+  install are unchanged. Update downloads left queued by older versions are removed from DownloadManager.
+- Tested by the own-download job in .github/workflows/android-update-test.yml (emulator, the live update).
+
 ## 1.17.6 (versionCode 48): updates say why they fail
 
 - Every update failure (download, file check, saving, installer) now reaches the page as `MkUpdProg.fail(why)`, the
