@@ -20,8 +20,9 @@ const MkDroid = {
     return (this.b = b);
   },
 };
-/* 2.91.7: TVs hand films to the Android TV player again until the MKCinema player is checked on a real Fire Stick */
-window.MK_TV_UNDER = false;
+/* 2.91.7: TVs handed films to the Android TV player. 2.91.8: from Android app 1.17.8 on (its player never makes the page
+   wait, which is what held up remote presses) TVs play in the MKCinema player again; older apps keep the TV player */
+window.MK_TV_UNDER = (() => { try { return !!(window.MKAndroid && typeof MKAndroid.version === 'function' && Updater.newer(MKAndroid.version(), '1.17.7')); } catch (e) { return false; } })();
 const MkNative = {
   ok: false, active: false, gen: 0, st: {}, tAt: 0, cur: null, subIds: [], lastEnd: null, probed: null,
   bridge() { try { return window.MKDesktop && MKDesktop.player && typeof MKDesktop.player.cmd === 'function' ? MKDesktop.player : MkDroid.get(); } catch (e) { return null; } },

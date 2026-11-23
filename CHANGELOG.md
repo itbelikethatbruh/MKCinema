@@ -2,6 +2,15 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.91.8 (2026-11-23)
+
+- TVs play every film in the MKCinema player again, with instant remote response (Android app 1.17.8 or newer).
+
+## Android 1.17.8 (2026-11-23)
+
+- The MKCinema player answers the remote at once, even while a film opens or buffers.
+- The website and the in-app update check now offer Android 1.17.8.
+
 ## Web app 2.91.7 (2026-11-22)
 
 - Next episode, every time: Next episode always goes straight to the next episode, even on TVs that are short of memory.
