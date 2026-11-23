@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.91.9 (2026-11-23)
+
+- Movie and show pages open smoothly: the picture, title and details now fade in together instead of filling in piece by piece.
+
 ## Web app 2.91.8 (2026-11-23)
 
 - TVs play every film in the MKCinema player again, with instant remote response (Android app 1.17.8 or newer).
