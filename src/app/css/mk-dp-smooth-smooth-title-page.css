@@ -1,0 +1,23 @@
+
+/* 2.91.9 smooth title page opening. The page waits a moment (at most 1 s) for its picture, logo and full details, then
+   fades in in steps: picture, logo, details line, buttons, the rest. Opacity and transform only, one time per opening,
+   so it also runs in Snappy mode on TVs. */
+#detail.dp-hold #detailPanel .d-hero>img.bg,#detail.dp-hold #detailPanel .d-hero .d-body>*,#detail.dp-hold #detailPanel>.d-body{opacity:0!important}
+#detail.dp-hold #detailPanel .logo3d.pop{animation:none!important}
+@keyframes dpFade{from{opacity:0}to{opacity:1}}
+@keyframes dpRise{from{opacity:0;transform:translate3d(0,14px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+html #detail.dp-in #detailPanel .d-hero>img.bg:not(.d-wait){animation:dpFade .6s cubic-bezier(.25,.6,.3,1) both!important}
+html #detail.dp-in #detailPanel .d-hero .d-body>:not(.logo3d){animation:dpRise .5s cubic-bezier(.2,.75,.2,1) .08s both!important}
+html #detail.dp-in #detailPanel .d-hero .d-body>:nth-child(3){animation-delay:.15s!important}
+html #detail.dp-in #detailPanel .d-hero .d-body>:nth-child(n+4){animation-delay:.21s!important}
+html #detail.dp-in #detailPanel>.d-body{animation:dpRise .55s cubic-bezier(.2,.75,.2,1) .27s both!important}
+html.lite #detail.dp-in #detailPanel .d-hero .d-body>.logo3d,body:not(.fx) #detail.dp-in #detailPanel .d-hero .d-body>.logo3d{animation:dpRise .5s cubic-bezier(.2,.75,.2,1) both!important}
+html #detail.dp-in.dp-rm #detailPanel .d-hero .d-body>*,html #detail.dp-in.dp-rm #detailPanel>.d-body{animation:dpFade .3s ease-out both!important}
+/* a picture that arrives after the page is shown fades in, Snappy mode too */
+html #detail #detailPanel .d-hero>img.bg,html #detail #detailPanel .d-hero .hero-logo{transition:opacity .45s ease-out!important}
+html #detail #detailPanel .d-hero>img.bg.mk-under{transition:none!important}
+/* opening any page used to re-style the whole Home page twice (about 0.35 s on a Fire Stick): the menu-bar lift
+   value and the hidden Home page were both inherited by every element. Same look, only the few users change now. */
+html.mk-pill.mk-pill-down :is(#mikoBox,#toasts,.sup-ask,.ls-undo,.ds-off,#soundgate,#updBar,#adPaste,.party-pill,.mu-mini,.rec-pill,.mk-qs,.live-mini,.mini-play){--mkp-lift:30px}
+html.mk-pill body.mk-player-on :is(#mikoBox,#toasts,.sup-ask,.ls-undo,.ds-off,#soundgate,#updBar,#adPaste,.party-pill,.mu-mini,.rec-pill,.mk-qs,.live-mini,.mini-play),html.mk-pill body.layer-open :is(#mikoBox,#toasts,.sup-ask,.ls-undo,.ds-off,#soundgate,#updBar,#adPaste,.party-pill,.mu-mini,.rec-pill,.mk-qs,.live-mini,.mini-play),html.mk-pill.mkp-aside body :is(#mikoBox,#toasts,.sup-ask,.ls-undo,.ds-off,#soundgate,#updBar,#adPaste,.party-pill,.mu-mini,.rec-pill,.mk-qs,.live-mini,.mini-play){--mkp-lift:0px}
+html body.touch-ui.layer-open #app{visibility:inherit;opacity:0}
