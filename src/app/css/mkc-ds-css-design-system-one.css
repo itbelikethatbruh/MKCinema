@@ -56,6 +56,11 @@ svg.lucide,.qp-ck .lucide,.btn-bolt>svg.lucide,.gs-n svg.lucide,.dock .ibtn .luc
 @media (min-width:1800px){
   html:not(.tv):not(.nav-side) .dock,html:not(.tv) .wrap{max-width:min(2240px,92vw)}
 }
+/* 2.91.4: TVs use the whole screen: no 1480 px column, a TV-safe edge that grows with the screen, rows run to the edge */
+html.tv{--tv-g:max(16px,calc(5vw - 48px))}
+html.tv .wrap{max-width:none;padding-left:var(--tv-g);padding-right:var(--tv-g)}
+html.tv:not(.nav-side) .dock-wrap{padding-left:var(--tv-g);padding-right:var(--tv-g)}
+html.tv:not(.nav-side) .dock{max-width:none}
 /* Tall screens: the tour stays one compact card, so Next sits under the content */
 @media (min-width:900px) and (min-height:1100px){
   #tour .tour-modal{height:min(calc(100vh - 40px),1040px);max-height:min(calc(100vh - 40px),1040px)}

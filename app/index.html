@@ -2064,7 +2064,7 @@ html.tv :is(button,a,input,select,[data-nav],[tabindex],.card,.card *,.l1,.info,
 /* bug-sweep-2.13.2 */
 @media (max-width:400px){.dock-tools{gap:2px}.dock .dock-tools .ibtn{width:40px}.dock .brand{padding-right:4px}}
 @media (max-width:340px){.dock .dock-tools .ibtn{width:36px}.dock .brand{padding-right:2px}}
-html.tv .rail{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px;scroll-padding-inline:16px}
+html.tv .rail{margin-left:calc(-1 * var(--tv-g,16px));margin-right:calc(-1 * var(--tv-g,16px));padding-left:var(--tv-g,16px);padding-right:var(--tv-g,16px);scroll-padding-inline:var(--tv-g,16px)}
 .hero-logo.logo-dark,.pk-det-logo.logo-dark,#pLoadArt img.logo-dark{filter:brightness(0) invert(1) drop-shadow(0 4px 18px rgba(var(--k000000-c,0,0,0),.65))!important}
 @media (hover:none){.foot>span:last-child{display:none}}
 html.tv .foot>span:last-child{display:none}
@@ -4126,7 +4126,7 @@ async function renderHome() {
   if (typeof HomeCards !== 'undefined') HomeCards.mount(rows); // 2.82
   const cw = Layout.shows('cw') ? continueItems() : [];
   if (cw.length) {
-    const sec = rowShell('Continue watching', `${cw.length} in progress`, { id: 'cwRow' }); rows.appendChild(sec);
+    const sec = rowShell('Continue watching', '', { id: 'cwRow' }); rows.appendChild(sec);
     fillRail(sec, cw.slice(0, 20).map((p) => cardHTML({ id: p.metaId, type: p.type, name: p.type === 'series' ? `${p.name}` : p.name, poster: p.poster, background: p.background, genres: p.genres }, { wide: true, progress: p, sub: progressSub(p) })).join(''));
   }
   if (Layout.shows('picks')) renderForYouRow(rows);
@@ -4353,7 +4353,7 @@ async function tuneChannel(ch) {
 function renderLibrary() {
   const root = $('#libRows'); root.innerHTML = '';
   const cw = continueItems();
-  const a = rowShell('Continue watching', cw.length ? `${cw.length} in progress` : ''); root.appendChild(a);
+  const a = rowShell('Continue watching', ''); root.appendChild(a);
   fillRail(a, cw.map((p) => cardHTML({ id: p.metaId, type: p.type, name: p.name, poster: p.poster, background: p.background, genres: p.genres }, { wide: true, progress: p, sub: progressSub(p) })).join(''), 'Start something and it will show up here with its exact timestamp.');
   if (cw.length) { const b = document.createElement('button'); b.className = 'btn btn-ghost btn-sm'; b.type = 'button'; b.innerHTML = '<i data-lucide="trash-2"></i>Clear progress'; b.style.marginTop = '8px'; b.onclick = () => { S.progress = {}; Store.set('progress', {}); renderLibrary(); }; a.appendChild(b); }
   const w = document.createElement('section'); w.className = 'row';
@@ -5056,6 +5056,7 @@ function teardown() {
   P.remux = null; video.playbackRate = CFG.speed || 1; PlayerPlus.reset();
 }
 async function playStream(ctx, stream, { startAt, _cin } = {}) {
+  if (typeof Seats !== 'undefined' && Seats.kids() && !(ctx && ctx.meta && Seats.kidSafe(ctx.meta))) { toast('Not on the kids seat', 'err', 2600, 'kids'); return; } // 2.91.3
   if (typeof MiniPlay !== 'undefined' && MiniPlay.on) MiniPlay.restore(true);
   if (!_cin && typeof CinemaMode !== 'undefined' && await CinemaMode.hold(ctx, stream, startAt)) return;
   if (!stream) return;
@@ -11417,7 +11418,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.91.3';
+const APP_VERSION = '2.91.5';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -15409,9 +15410,10 @@ const Curate = {
     if (Layout.shows('shortlist')) this.shortlistStrip(rows, anchor);
     let pool; try { pool = await this.get(); } catch (e) { pool = null; }
     if (!pool || !pool.movies.length) { Object.values(secs).forEach((s) => s.remove()); return; }
+    let kidTop = null; if (secs.top10 && typeof KidsPlus !== 'undefined' && KidsPlus.on()) kidTop = await KidsPlus.top(seriesFirst ? 'series' : 'movie').catch(() => []); // 2.91.3
     const got = this.rows(pool);
     Object.entries(secs).forEach(([k, s]) => {
-      const list = k === 'top10' ? (seriesFirst ? pool.topSeries : pool.topMovies) : got[k];
+      const list = k === 'top10' ? (kidTop || (seriesFirst ? pool.topSeries : pool.topMovies)) : got[k];
       if (!list || list.length < (k === 'top10' ? 5 : 6)) { s.remove(); return; }
       fillRail(s, k === 'top10' ? this.top10(list) : list.map((m) => cardHTML(m)).join(''));
     });
@@ -15799,11 +15801,17 @@ const Seats = {
     if (!this.kids() || this.unlocked || !this.owner().pin) { if (this.kids() && !this.owner().pin && !this.unlocked) { /* no grown-up PIN set: nothing to check */ } return fn(); }
     this.askPin(this.owner(), () => { this.unlocked = true; this.unlockedAt = Date.now(); if (!this.managing) X8.close('seatPick'); fn(); }, 'Grown-up PIN');
   },
+  /* 2.91.3: fails closed. A title shows on a kids seat only when its age rating is known and at or under the seat's
+     limit (KidsAge.ok); genres, when known, must include a family one and no scary one. */
+  kidGenre(m) {
+    const gg = (m && (m.genres || m.genre)) || [];
+    const g = (Array.isArray(gg) ? gg : String(gg).split(',')).map((x) => String(x || '').trim().toLowerCase()).filter(Boolean);
+    if (g.some((x) => /horror|thriller|crime|war|erotic|adult/.test(x))) return false;
+    return !g.length || g.some((x) => /animation|family|kids|children/.test(x));
+  },
   kidSafe(m) {
-    if (!m) return true;
-    const g = genresOf(m).map((x) => String(x).toLowerCase());
-    if (!g.length) return false;
-    return g.some((x) => /animation|family|kids|children/.test(x)) && !g.some((x) => /horror|thriller|crime|war/.test(x));
+    if (!m || !m.id) return false;
+    try { return this.kidGenre(m) && typeof KidsAge !== 'undefined' && KidsAge.ok(m); } catch (e) { return false; }
   },
   /* ---- Settings › Seats ---- */
   section() {
@@ -15931,7 +15939,7 @@ const Seats = {
     if (SEAT) document.documentElement.classList.add('in-seat');
     if (this.kids()) {
       document.documentElement.classList.add('kids-seat');
-      const card = cardHTML; cardHTML = function (m) { return Seats.kidSafe(m) ? card.apply(this, arguments) : ''; };
+      const card = cardHTML; cardHTML = function (m) { if (Seats.kidSafe(m)) return card.apply(this, arguments); try { if (KidsAge.need) KidsAge.need(m); } catch (e) { /* no lookup */ } return ''; };
       // a row left with nothing kid-safe in it disappears, and the banner only features kid-safe films
       const fr = fillRail; fillRail = function (sec, html) { const r = fr.apply(this, arguments); if (sec && !String(html || '').trim()) sec.hidden = true; return r; };
       const sh = setHeroList; setHeroList = function (list) { const l = (list || []).filter((m) => Seats.kidSafe(m)); if (!l.length) { S.hero = []; return; } return sh.call(this, l); };
@@ -24149,11 +24157,10 @@ const KidsAge = {
   of(id) {
     const a = this.ages(id); if (!a) return null;
     const cs = (this.data && this.data.c) || ['US', 'BR', 'IN', 'GB', 'DE'], i = cs.indexOf(this.country());
-    const v = i >= 0 ? a[i] : null; if (v != null) return v;
-    if (a[0] != null) return a[0];
+    const v = i >= 0 ? a[i] : null; if (v != null || a[0] != null) return Math.max(qq(v, 0), qq(a[0], 0)); // 2.91.3: the stricter one
     const any = a.filter((x) => x != null); return any.length ? Math.max(...any) : null;
   },
-  ok(m) { const id = m && m.id; if (!id) return true; const v = this.of(id); return v == null || v <= this.limit(); },
+  ok(m) { const id = m && m.id; if (!id || !/^tt\d+$/.test(id)) return false; const v = this.of(id); return v != null && v <= this.limit(); }, // 2.91.3: unknown = hidden
   /* rating text to a minimum age (same rules as build_ages.py) */
   toAge(c, r) {
     r = String(r || '').trim().toUpperCase(); if (!r || /^(NR|NOT RATED|UNRATED)$/.test(r)) return null;
@@ -24176,9 +24183,10 @@ const KidsAge = {
       const tv = (f.tv_results || [])[0], mv = (f.movie_results || [])[0];
       const pick = type === 'series' ? tv || mv : mv || tv; if (!pick) return null;
       const rs = {};
-      if (pick === tv) { const d = await q(`tv/${tv.id}/content_ratings`); ((d && d.results) || []).forEach((x) => { rs[x.iso_3166_1] = x.rating; }); }
-      else { const d = await q(`movie/${mv.id}/release_dates`); ((d && d.results) || []).forEach((x) => { const c = (x.release_dates || []).map((y) => y.certification).find(Boolean); if (c) rs[x.iso_3166_1] = c; }); }
-      return C.map((c) => this.toAge(c, rs[c]));
+      const put = (c, r) => { if (r) (rs[c] = rs[c] || []).push(r); };
+      if (pick === tv) { const d = await q(`tv/${tv.id}/content_ratings`); ((d && d.results) || []).forEach((x) => put(x.iso_3166_1, x.rating)); }
+      else { const d = await q(`movie/${mv.id}/release_dates`); ((d && d.results) || []).forEach((x) => (x.release_dates || []).forEach((y) => put(x.iso_3166_1, y.certification))); }
+      return C.map((c) => { const a = (rs[c] || []).map((r) => this.toAge(c, r)).filter((v) => v != null); return a.length ? Math.max(...a) : null; });
     };
     const wiki = async (ids) => {
       const P = { US: 'P1657', BR: 'P3216', DE: 'P1981' };
@@ -24230,8 +24238,7 @@ const KidsAge = {
   later() { clearTimeout(this.t); this.t = setTimeout(() => this.scan(), 700); },
   init() {
     // every kids seat gets the rule, and the seat's own age limit
-    const base = Seats.kidSafe.bind(Seats);
-    Seats.kidSafe = (m) => base(m) && this.ok(m);
+    // 2.91.3: Seats.kidSafe asks KidsAge.ok itself
     const sec = SECTIONS.find((s) => s.id === 'seats');
     if (sec) {
       sec.intro = 'Everyone in the house gets their own seat: their own watchlist, progress, picks and Home. A seat can have a PIN, and a kids seat shows only family titles rated for its age.';
@@ -24239,17 +24246,17 @@ const KidsAge = {
       sec.rows = () => {
         const r = rows(); if (!Seats.list().some((s) => s.kids)) return r;
         const at = r.findIndex((x) => x.key === 'seatAsk');
-        r.splice(at < 0 ? r.length : at, 0, { key: 'kidsAge', label: 'Kids seats show titles rated for', help: 'Uses the age rating where you live (US, Brazil, India, UK or Germany), else the US one. Titles with no rating at all fall back to Animation and Family only. Ratings: TMDB and Wikidata.', type: 'select', num: true, options: this.LIMITS,
+        r.splice(at < 0 ? r.length : at, 0, { key: 'kidsAge', label: 'Kids seats show titles rated for', help: 'Uses the stricter of the US age rating and the one where you live (Brazil, India, UK or Germany). Titles with no rating are hidden. Ratings: TMDB and Wikidata.', type: 'select', num: true, options: this.LIMITS,
           get: () => { const k = Seats.list().find((s) => s.kids); return k && [6, 9, 12].includes(Number(k.maxAge)) ? Number(k.maxAge) : 9; },
           set: (v) => { Seats.saveList(Seats.list().map((s) => (s.kids ? { ...s, maxAge: Number(v) } : s))); toast('Kids seats updated', 'ok'); } });
         return r;
       };
     }
     if (!Seats.kids()) return;
-    this.load().then(() => { this.later(); if (S.view === 'home') this.prune(); });
+    this.load().then(() => { this.later(); if (S.view === 'home') { if (KidsAge.late) { KidsAge.late = false; renderHome(); } else this.prune(); } });
     const rh = renderHome;
     // no wait once the age list is in; on a cold start at most 0.6 s (cards it rules out are pruned when it arrives)
-    renderHome = async function () { if (!KidsAge.data) await Promise.race([KidsAge.load(), new Promise((r) => setTimeout(r, 600))]); const out = await rh.apply(this, arguments); KidsAge.later(); return out; };
+    renderHome = async function () { if (!KidsAge.data) await Promise.race([KidsAge.load(), new Promise((r) => setTimeout(r, 4000))]); KidsAge.late = !KidsAge.data; const out = await rh.apply(this, arguments); KidsAge.later(); return out; };
     new MutationObserver(() => this.later()).observe(document.body, { childList: true, subtree: true });
   },
 };
@@ -24319,6 +24326,14 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.91.5', date: '2026-11-22', items: [
+    ['better', 'Filters stay put', 'Pick 4K, HDR or any source filter with the remote and you stay right on the filters instead of jumping back to the top.'],
+  ] },
+  { v: '2.91.4', date: '2026-11-22', items: [
+    ['better', 'Kids seats, made for kids', 'Kids seats get their own Top 10, a banner and Animation, Family and Animated series rows, and only show titles rated for their age.'],
+    ['better', 'Full screen on big TVs', 'On 4K TVs and sticks, MKCinema now fills the whole screen edge to edge.'],
+    ['better', 'App updates download once', 'If you close the app before installing, it picks up where it left off.'],
+  ] },
   { v: '2.91.3', date: '2026-11-22', items: [
     ['better', 'Quicker app updates', 'When an update is ready, Android\'s install screen opens right away. One tap and you\'re done.'],
     ['better', 'Phone menu at a glance', 'On phones the Menu now shows everything at once, with no scrolling.'],
@@ -39708,6 +39723,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 <style id="mkc-top10-css">
 /* ===== 2.62 Top 10 you can filter, Films and Series homes, year filters, Peak Cinema up top ===== */
 section.t10x{position:relative;isolation:isolate;margin:6px 0 38px;padding:20px 0 4px}
+html.tv section.t10x::before{left:calc(var(--tv-g,16px) * -1);right:calc(var(--tv-g,16px) * -1)}
 section.t10x::before{content:"";position:absolute;inset:0 calc(var(--pad,4vw) * -1);z-index:-1;pointer-events:none;
   background:radial-gradient(90% 120% at 0% 0%,rgba(var(--nd9d4c7-c,217,212,199),.09) 0%,rgba(var(--nd9d4c7-c,217,212,199),0) 60%),linear-gradient(180deg,rgba(var(--kffffff-c,255,255,255),.035) 0%,rgba(var(--kffffff-c,255,255,255),0) 100%);
   border-top:1px solid rgba(var(--kffffff-c,255,255,255),.07);border-bottom:1px solid rgba(var(--kffffff-c,255,255,255),.05)}
@@ -39850,6 +39866,7 @@ const Top10 = {
   plain(f) { return !f.where && !f.net && !f.genre && !f.year; },
   /* ---- the ten titles for a set of filters ---- */
   list(type, f) {
+    if (typeof KidsPlus !== 'undefined' && KidsPlus.on()) return KidsPlus.top(type); // 2.91.3: kids get their own Top 10
     const key = JSON.stringify([type, f.where, f.net, f.genre, f.year, typeof Seats !== 'undefined' && Seats.kids && Seats.kids() ? 'k' : '']);
     const hit = this.cache.get(key); if (hit && Date.now() - hit.t < this.TTL) return Promise.resolve(hit.l);
     if (this.live.has(key)) return this.live.get(key);
@@ -39880,7 +39897,7 @@ const Top10 = {
   /* ---- saved filters, per place (home, movie, series) ---- */
   get(scope) {
     const d = { where: '', net: '', genre: '', year: '', type: '' };
-    try { return { ...d, ...(Store.get(`t10f:${scope}`, null) || {}) }; } catch (e) { return d; }
+    try { const v = { ...d, ...(Store.get(`t10f:${scope}`, null) || {}) }; return typeof KidsPlus !== 'undefined' && KidsPlus.on() ? { ...d, type: v.type } : v; } catch (e) { return d; }
   },
   set(scope, f) { try { Store.set(`t10f:${scope}`, f); } catch (e) { /* this visit only */ } },
   homeType() { const f = this.get('home'); if (f.type) return f.type; try { return /^series/.test((Layout.get() || {}).focus || '') ? 'series' : 'movie'; } catch (e) { return 'movie'; } },
@@ -39904,6 +39921,7 @@ const Top10 = {
       + sel('genre', 'Category', [['', 'All categories'], ...this.genreList(type).map((g) => [g, g])])
       + sel('year', 'Year', [['', 'Any year'], ...this.years()])
       + (this.plain(f) ? '' : '<button type="button" class="t10-reset" data-nav data-t10r>Reset</button>');
+    if (typeof KidsPlus !== 'undefined' && KidsPlus.on()) { bar.innerHTML = seg; bar.hidden = !seg; } // 2.91.3: only Films / Series on kids seats
     bar.querySelectorAll('[data-t10f]').forEach((s) => s.addEventListener('change', () => {
       const n = this.get(scope); n[s.dataset.t10f] = s.value; this.set(scope, n); this.redo(sec, scope, withType);
       if (IS_TV) { const again = bar.querySelector(`[data-t10f="${s.dataset.t10f}"]`); if (again) again.focus({ preventScroll: true }); }
@@ -39949,7 +39967,6 @@ const Top10 = {
   /* ---- Home: the row Curate makes, with the filter bar ---- */
   home(done) {
     const sec = document.querySelector('#homeRows > section[data-curate="top10"]'); if (!sec) { if (done) PeakUp.place(); return; }
-    if (typeof Seats !== 'undefined' && Seats.kids && Seats.kids()) return;
     sec.classList.add('t10x');
     const type = this.homeType(), f = this.get('home');
     this.bar(sec, 'home', type, true); this.head(sec, type, f);
@@ -47357,7 +47374,7 @@ html.tv .cw-menu button:focus{background:rgba(var(--kffffff-c,255,255,255),.12);
           const sec = rail && rail.closest('section.row');
           if (sec && sec.id === 'cwRow' && !rail.querySelector('[data-card]')) sec.remove();
         });
-        $$('#cwRow .row-title small').forEach((s) => { const n = Object.keys(S.progress).length; s.textContent = n ? `${n} in progress` : ''; });
+        $$('#cwRow .row-title small').forEach((s) => { const n = Object.keys(S.progress).length; s.textContent = ''; });
       }, 230);
     },
     drop(vid) {
@@ -52128,6 +52145,11 @@ svg.lucide,.qp-ck .lucide,.btn-bolt>svg.lucide,.gs-n svg.lucide,.dock .ibtn .luc
 @media (min-width:1800px){
   html:not(.tv):not(.nav-side) .dock,html:not(.tv) .wrap{max-width:min(2240px,92vw)}
 }
+/* 2.91.4: TVs use the whole screen: no 1480 px column, a TV-safe edge that grows with the screen, rows run to the edge */
+html.tv{--tv-g:max(16px,calc(5vw - 48px))}
+html.tv .wrap{max-width:none;padding-left:var(--tv-g);padding-right:var(--tv-g)}
+html.tv:not(.nav-side) .dock-wrap{padding-left:var(--tv-g);padding-right:var(--tv-g)}
+html.tv:not(.nav-side) .dock{max-width:none}
 /* Tall screens: the tour stays one compact card, so Next sits under the content */
 @media (min-width:900px) and (min-height:1100px){
   #tour .tour-modal{height:min(calc(100vh - 40px),1040px);max-height:min(calc(100vh - 40px),1040px)}
@@ -56768,5 +56790,171 @@ html[data-look="anime"] body #tabs .tab.on,html[data-look="anime"] body #tabs .t
 /* High contrast text turned the red selected chip's word black under a black shadow (Live TV "All sources") */
 html[data-look="anime"] body.hc .chip.on,html[data-look="anime"] body.hc .chips .chip.on{color:var(--kffffff,#fff)}
 </style>
+<style id="mk-2913-kids-css">/* 2.91.3: Anime lists are not age-filtered, so kids seats do not show the section at all (like Sports) */
+html.kids-seat [data-view="anime"]{display:none!important}</style>
+<script id="mk-2913-kids">
+'use strict';
+/* ---------------- 2.91.3 Kids seats: strict ages, a Top 10 of their own, kids rows and a banner ----------------
+   Owner (2026-11-23): kids seats had no Top 10 and grown-up titles got through. A kids seat now shows a title only when
+   its age rating is known and at or under the seat's limit (Seats.kidSafe + KidsAge.ok fail closed: no id, no rating,
+   no answer = hidden). Titles on screen without a rating are looked up in the background and the Home redraws when
+   new ones pass. Playing anything checks the same rule (playStream), so a link, the party or an old Continue watching
+   entry cannot start a title the seat would not show. */
+const KidsPlus = {
+  memo: new Map(), redraws: 0,
+  on() { try { return typeof Seats !== 'undefined' && Seats.kids(); } catch (e) { return false; } },
+  ready() { return KidsAge.data ? Promise.resolve() : Promise.race([KidsAge.load(), new Promise((r) => setTimeout(r, 4000))]); },
+  /* kid-safe titles from Cinemeta's popular list in one category, more pages until `need` pass */
+  list(type, genre, need) { const a = Top10.cine(); return Top10.pages((skip) => Top10.cat(a, type, 'top', { genre, skip }), (m) => Seats.kidSafe(m), need, 5); },
+  async pick(type, need) {
+    const key = `${type}|${need}|${KidsAge.limit()}|${KidsAge.country()}`, hit = this.memo.get(key);
+    if (hit && Date.now() - hit.t < 6 * 3600e3) return hit.l;
+    await this.ready();
+    const ls = await Promise.all(['Animation', 'Family'].map((g) => this.list(type, g, need).catch(() => [])));
+    // both lists are in popularity order: take turns, so the Top 10 is the most popular of each
+    const out = [], seen = new Set();
+    for (let i = 0; out.length < need && i < Math.max(...ls.map((l) => l.length), 0); i++) ls.forEach((l) => { const m = l[i]; if (m && !seen.has(m.id) && out.length < need) { seen.add(m.id); out.push(m); } });
+    if (out.length) this.memo.set(key, { t: Date.now(), l: out });
+    return out;
+  },
+  top(type) { return this.pick(type, 10); },
+  /* Home: the banner and three rows made for kids (the addon rows above are often nearly empty once filtered) */
+  ROWS: [['movie', 'Animation', 'Animation'], ['movie', 'Family', 'Family'], ['series', 'Animation', 'Animated series']],
+  async home() {
+    const rows = $('#homeRows'); if (!rows || S.view !== 'home') return;
+    rows.querySelectorAll('[data-kid-row]').forEach((x) => x.remove());
+    const secs = this.ROWS.map(([type, genre, title], i) => { const s = rowShell(title, ''); s.dataset.brRank = String(2.1 + i / 10); // right under Top 10 (SimpleHome.rank)
+      s.id = `kidRow-${type}-${genre.toLowerCase()}`; s.dataset.kidRow = `${type}-${genre}`; s.dataset.rk = `kid:${type}/${genre}`; return [s, type, genre]; });
+    const t10 = rows.querySelector(':scope > section[data-curate="top10"]');
+    let at = t10 || rows.querySelector(':scope > #cwRow') || null;
+    secs.forEach(([s]) => { if (at) at.after(s); else rows.prepend(s); at = s; });
+    await this.ready();
+    await Promise.all(secs.map(async ([s, type, genre]) => {
+      const l = await this.list(type, genre, 24).catch(() => []);
+      if (!s.isConnected) return;
+      if (l.length < 4) { s.remove(); return; }
+      fillRail(s, l.slice(0, 24).map((m) => cardHTML(m)).join(''));
+    }));
+    icons(); if (typeof queueWall === 'function') queueWall();
+    if (!S.hero.length && CFG.banner !== 'off') {
+      const l = (await this.top('movie').catch(() => [])).filter((m) => m.background || m.poster);
+      if (l.length && S.view === 'home' && !S.hero.length) { setHeroList(l.slice(0, 8)); if (S.hero.length) $('#hero').hidden = false; }
+    }
+  },
+  /* new ratings came in: draw Home again so the titles that now pass show (only when nobody is in the middle of it) */
+  refresh() {
+    clearTimeout(this.rt);
+    this.rt = setTimeout(() => {
+      const pal = $('#palette'); if (pal && !pal.hidden && typeof PAL !== 'undefined' && PAL.q) { renderPalette(PAL.q); return; }
+      if (S.view !== 'home' || scrollY > 400 || this.redraws >= 4 || document.body.classList.contains('layer-open') || !$('#player').hidden || !$('#detail').hidden) return;
+      this.redraws++; renderHome();
+    }, 1500);
+  },
+  init() {
+    if (!this.on()) return;
+    // titles the seat would hide only because their rating is unknown are looked up (a few at a time)
+    KidsAge.want = new Map();
+    KidsAge.need = function (m) {
+      const id = m && m.id; if (!id || !/^tt\d+$/.test(id) || this.ages(id) || (this.cache && this.cache[id] === 0) || this.asked.has(id)) return;
+      if (!Seats.kidGenre(m)) return;
+      this.want.set(id, m.type === 'series' ? 'series' : 'movie'); this.later();
+    };
+    const sc = KidsAge.scan.bind(KidsAge);
+    KidsAge.scan = function () {
+      if (this.want.size && !this.running && (this.data || this.cache)) {
+        const need = [...this.want.entries()]; this.want.clear(); need.slice(40).forEach(([id, t]) => this.want.set(id, t));
+        this.running = true;
+        this.lookup(need.slice(0, 40)).then((got) => { this.running = false; if (got) KidsPlus.refresh(); if (this.want.size) this.later(); }).catch(() => { this.running = false; });
+        return;
+      }
+      return sc();
+    };
+    // Search: the same rule for every result (it draws its own tiles, not cards)
+    const pc = palCompose;
+    palCompose = function (q, titles, pending) { return pc.call(this, q, (titles || []).filter((m) => { if (Seats.kidSafe(m)) return true; try { KidsAge.need(m); } catch (e) { /* no lookup */ } return false; }), pending); };
+    const rh = renderHome;
+    renderHome = async function () { const out = await rh.apply(this, arguments); try { await KidsPlus.home(); } catch (e) { console.warn('Kids Home:', e); } return out; };
+  },
+};
+try { KidsPlus.init(); } catch (e) { console.warn('Kids seat:', e); }
+</script>
+<script id="mk-2914-update-once">
+/* 2.91.4 An update downloads once. The Android app remembers a finished update download only in memory, so when
+   Android closed the app in the background (Fire TV sticks do this all the time), or the install screen was closed,
+   the next check downloaded the whole update again, and again. The checked copy is still on the device, so the page
+   now remembers which version finished downloading and opens the installer on that copy (MKAndroid.updateInstall,
+   every app since 1.13) instead of downloading it again. Only if that copy is gone does it download. */
+(function () {
+  const P = window.MkUpdProg; if (!P || typeof Updater === 'undefined') return;
+  const has = (n) => { try { return !!(window.MKAndroid && typeof MKAndroid[n] === 'function'); } catch (e) { return false; } };
+  if (!has('updateInstall')) return;
+  const KEY = 'mkc:updGot';
+  const get = () => { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } };
+  const set = (v) => { try { if (v) localStorage.setItem(KEY, v); else localStorage.removeItem(KEY); } catch (e) { /* private mode */ } };
+  const playing = () => { const p = document.getElementById('player'); return !!(p && !p.hidden); };
+  // installed already: forget it
+  const have = Updater.appVer(), got = get();
+  if (got && have && !Updater.newer(got, have)) set('');
+  // a download finished and passed the app's check: remember its version
+  const ready = P.ready.bind(P);
+  P.ready = function () { const v = this.ver || ((Updater.v || {}).android) || ''; if (v) set(v); return ready(); };
+  const bar = Updater.bar.bind(Updater);
+  Updater.bar = function (kind, v) {
+    const want = v && v.android, app = Updater.appVer();
+    if (kind === 'app' && want && get() === want && app && Updater.newer(want, app)) {
+      if (document.hidden || playing()) return; // the next check (on return, or after the film) opens it
+      if (P.opened === want) { P.ver = want; return P.ready(); } // asked once this visit: just show Install
+      let ok = false; try { ok = MKAndroid.updateInstall(); } catch (e) { ok = false; }
+      try { if (typeof MKLog !== 'undefined') MKLog.add('update', `reused the downloaded ${want}: ${ok}`); } catch (e) { /* no log */ }
+      if (ok) { P.ver = want; P.opened = want; return P.ready(); }
+      set(''); // the copy is gone: download it again below
+    }
+    return bar(kind, v);
+  };
+})();
+</script>
+<script id="mk-2915-filter-stay">
+/* 2.91.5: a stream filter pick (or addons answering) redraws the source list; keep remote focus and scroll where they were */
+(() => {
+  'use strict';
+  const KEYS = ['filter', 'sort', 'si', 'mkpin', 'trouble'];
+  const keyOf = (el) => { for (const k of KEYS) if (el.dataset && el.dataset[k] !== undefined) return [k, el.dataset[k]]; return el.id ? ['#', el.id] : null; };
+  const ok = (el, list) => el && list.some((b) => b && b.contains(el)) && !el.closest('[hidden]') && el.getClientRects().length ? el : null;
+  const find = (list, key) => {
+    if (!key) return null;
+    if (key[0] === '#') return ok(document.getElementById(key[1]), list);
+    for (const b of list) { const el = b && ok(b.querySelector(`[data-${key[0]}="${CSS.escape(key[1])}"]`), list); if (el) return el; }
+    return null;
+  };
+  const chipOn = (list) => { for (const b of list) { const el = b && ok(b.querySelector('[data-filter].on'), list); if (el) return el; } return null; };
+  const scroller = (el) => { for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) { if (a.scrollHeight > a.clientHeight + 1) { const o = getComputedStyle(a).overflowY; if (o === 'auto' || o === 'scroll') return a; } } return null; };
+  const keep = (name, boxes) => {
+    const fn = window[name]; if (typeof fn !== 'function' || fn._mkStay) return;
+    const w = function () {
+      const a = document.activeElement, list = boxes(), box = a && a !== document.body ? list.find((b) => b && b.contains(a)) : null;
+      if (!box) return fn.apply(this, arguments);
+      const key = keyOf(a), sc = scroller(a), top = sc ? sc.scrollTop : 0, y = scrollY, navf = a.classList.contains('nav-focus');
+      const r = fn.apply(this, arguments);
+      const put = () => {
+        const now = document.activeElement;
+        if (now && now !== document.body) return; /* focus already somewhere (kept, or the pick opened something) */
+        const pl = document.getElementById('player'); if (pl && !pl.hidden && !pl.contains(box)) return; /* a source started playing */
+        const el = find(list, key) || (key && key[0] === 'si' ? chipOn(list) : null); if (!el) return;
+        if (navf) { for (const x of [...document.getElementsByClassName('nav-focus')]) x.classList.remove('nav-focus'); el.classList.add('nav-focus'); }
+        try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
+        try { if (typeof Nav === 'object' && Nav.mem) Nav.mem.set(Nav.root(), el); } catch (e) { /* no remote */ }
+        if (sc && sc.isConnected) sc.scrollTop = top; else if (Math.abs(scrollY - y) > 2) scrollTo(scrollX, y);
+      };
+      try { put(); requestAnimationFrame(put); } catch (e) { /* the list still shows */ }
+      return r;
+    };
+    w._mkStay = true; window[name] = w;
+    try { if (name === 'renderStreamsPanel') renderStreamsPanel = w; else renderSourceDrawer = w; } catch (e) { /* window copy is enough */ }
+  };
+  const box = (id) => () => [document.getElementById(id)];
+  keep('renderStreamsPanel', box('dStreams'));
+  keep('renderSourceDrawer', () => [document.getElementById('srcFilters'), document.getElementById('srcList')]);
+})();
+</script>
 </body>
 </html>

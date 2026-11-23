@@ -1,6 +1,7 @@
 
 /* ===== 2.62 Top 10 you can filter, Films and Series homes, year filters, Peak Cinema up top ===== */
 section.t10x{position:relative;isolation:isolate;margin:6px 0 38px;padding:20px 0 4px}
+html.tv section.t10x::before{left:calc(var(--tv-g,16px) * -1);right:calc(var(--tv-g,16px) * -1)}
 section.t10x::before{content:"";position:absolute;inset:0 calc(var(--pad,4vw) * -1);z-index:-1;pointer-events:none;
   background:radial-gradient(90% 120% at 0% 0%,rgba(var(--nd9d4c7-c,217,212,199),.09) 0%,rgba(var(--nd9d4c7-c,217,212,199),0) 60%),linear-gradient(180deg,rgba(var(--kffffff-c,255,255,255),.035) 0%,rgba(var(--kffffff-c,255,255,255),0) 100%);
   border-top:1px solid rgba(var(--kffffff-c,255,255,255),.07);border-bottom:1px solid rgba(var(--kffffff-c,255,255,255),.05)}

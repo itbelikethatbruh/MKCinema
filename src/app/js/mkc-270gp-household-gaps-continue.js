@@ -55,7 +55,7 @@
           const sec = rail && rail.closest('section.row');
           if (sec && sec.id === 'cwRow' && !rail.querySelector('[data-card]')) sec.remove();
         });
-        $$('#cwRow .row-title small').forEach((s) => { const n = Object.keys(S.progress).length; s.textContent = n ? `${n} in progress` : ''; });
+        $$('#cwRow .row-title small').forEach((s) => { const n = Object.keys(S.progress).length; s.textContent = ''; });
       }, 230);
     },
     drop(vid) {

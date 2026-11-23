@@ -1419,9 +1419,10 @@ const Curate = {
     if (Layout.shows('shortlist')) this.shortlistStrip(rows, anchor);
     let pool; try { pool = await this.get(); } catch (e) { pool = null; }
     if (!pool || !pool.movies.length) { Object.values(secs).forEach((s) => s.remove()); return; }
+    let kidTop = null; if (secs.top10 && typeof KidsPlus !== 'undefined' && KidsPlus.on()) kidTop = await KidsPlus.top(seriesFirst ? 'series' : 'movie').catch(() => []); // 2.91.3
     const got = this.rows(pool);
     Object.entries(secs).forEach(([k, s]) => {
-      const list = k === 'top10' ? (seriesFirst ? pool.topSeries : pool.topMovies) : got[k];
+      const list = k === 'top10' ? (kidTop || (seriesFirst ? pool.topSeries : pool.topMovies)) : got[k];
       if (!list || list.length < (k === 'top10' ? 5 : 6)) { s.remove(); return; }
       fillRail(s, k === 'top10' ? this.top10(list) : list.map((m) => cardHTML(m)).join(''));
     });
@@ -1809,11 +1810,17 @@ const Seats = {
     if (!this.kids() || this.unlocked || !this.owner().pin) { if (this.kids() && !this.owner().pin && !this.unlocked) { /* no grown-up PIN set: nothing to check */ } return fn(); }
     this.askPin(this.owner(), () => { this.unlocked = true; this.unlockedAt = Date.now(); if (!this.managing) X8.close('seatPick'); fn(); }, 'Grown-up PIN');
   },
+  /* 2.91.3: fails closed. A title shows on a kids seat only when its age rating is known and at or under the seat's
+     limit (KidsAge.ok); genres, when known, must include a family one and no scary one. */
+  kidGenre(m) {
+    const gg = (m && (m.genres || m.genre)) || [];
+    const g = (Array.isArray(gg) ? gg : String(gg).split(',')).map((x) => String(x || '').trim().toLowerCase()).filter(Boolean);
+    if (g.some((x) => /horror|thriller|crime|war|erotic|adult/.test(x))) return false;
+    return !g.length || g.some((x) => /animation|family|kids|children/.test(x));
+  },
   kidSafe(m) {
-    if (!m) return true;
-    const g = genresOf(m).map((x) => String(x).toLowerCase());
-    if (!g.length) return false;
-    return g.some((x) => /animation|family|kids|children/.test(x)) && !g.some((x) => /horror|thriller|crime|war/.test(x));
+    if (!m || !m.id) return false;
+    try { return this.kidGenre(m) && typeof KidsAge !== 'undefined' && KidsAge.ok(m); } catch (e) { return false; }
   },
   /* ---- Settings › Seats ---- */
   section() {
@@ -1941,7 +1948,7 @@ const Seats = {
     if (SEAT) document.documentElement.classList.add('in-seat');
     if (this.kids()) {
       document.documentElement.classList.add('kids-seat');
-      const card = cardHTML; cardHTML = function (m) { return Seats.kidSafe(m) ? card.apply(this, arguments) : ''; };
+      const card = cardHTML; cardHTML = function (m) { if (Seats.kidSafe(m)) return card.apply(this, arguments); try { if (KidsAge.need) KidsAge.need(m); } catch (e) { /* no lookup */ } return ''; };
       // a row left with nothing kid-safe in it disappears, and the banner only features kid-safe films
       const fr = fillRail; fillRail = function (sec, html) { const r = fr.apply(this, arguments); if (sec && !String(html || '').trim()) sec.hidden = true; return r; };
       const sh = setHeroList; setHeroList = function (list) { const l = (list || []).filter((m) => Seats.kidSafe(m)); if (!l.length) { S.hero = []; return; } return sh.call(this, l); };

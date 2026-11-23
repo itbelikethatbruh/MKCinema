@@ -2,6 +2,17 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.91.5 (2026-11-22)
+
+- **Filters stay put:** pick 4K, HDR or any source filter with the remote and you stay right on the filters instead of jumping back to the top.
+
+## Web app 2.91.4 (2026-11-22)
+
+- **Kids seats, made for kids:** kids seats get their own Top 10, a banner and Animation, Family and Animated series rows, and only show titles rated for their age.
+- **Full screen on big TVs:** on 4K TVs and sticks, MKCinema now fills the whole screen edge to edge.
+- **App updates download once:** if you close the app before installing, it picks up where it left off.
+- Continue watching no longer shows a count under its title.
+
 ## Web app 2.91.3 (2026-11-22)
 
 - **Quicker app updates:** when an update is ready, Android's install screen opens right away. One tap and you're done.
