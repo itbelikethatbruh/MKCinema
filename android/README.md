@@ -29,6 +29,20 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.17.11 (versionCode 53): Continue watching tiles resume the film
+
+- The Watch Next row (Continue watching on the Android TV / Google TV home screen, and on replacement home screens such as
+  Projectivy that read it) now resumes the film or episode itself when a tile is picked: the tile's intent is
+  `mkcinema://resume?v=VIDEO_ID`, the same link as the phone widget's Resume (`MainActivity.resumeLink`). Rows sent by
+  older pages (no video id) still open the title's page.
+- New bridge method `MKAndroid.watchNextAll(json)` (`{items:[...]}`, newest first, up to 20): the page (2.94+) sends the
+  whole Continue watching list at start-up and when MKCinema goes to the background, so titles in progress before the
+  app opened appear, and this app's rows for titles no longer in the list are removed. Each row keeps the time it was
+  last watched, so the home screen keeps your order.
+- All Watch Next writes run on one background thread (two quick updates used to race and could add a title twice).
+- Fire TV: Amazon's own home screen does not read Watch Next, and some Fire OS 8 devices have no TV provider at all
+  (writes fail quietly). A replacement home screen on a Fire TV that has the provider shows the tiles. Untested on a real TV.
+
 ## 1.17.10 (versionCode 52): updates download reliably
 - The app downloads its own update (HttpURLConnection, 3 tries) straight into its private storage instead of handing it
   to Android's DownloadManager, which stayed queued at 0 bytes on some phones. Progress, the signature check and the
