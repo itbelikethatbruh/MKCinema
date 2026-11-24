@@ -280,10 +280,13 @@ jobs:
 
   publish:
     needs: [plan, android, windows, linux, macos]
-    # runs for "files" releases (the build jobs are skipped) and after every build job succeeded
+    # runs for "files" releases (the build jobs are skipped) and after every REQUIRED build job succeeded (or was skipped).
+    # The Mac job is optional: whatever happens to it (failed, timed out, cancelled while waiting for a runner), publish goes on.
     if: >-
       always() && needs.plan.result == 'success' &&
-      !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+      !contains(fromJSON('["failure","cancelled"]'), needs.android.result) &&
+      !contains(fromJSON('["failure","cancelled"]'), needs.windows.result) &&
+      !contains(fromJSON('["failure","cancelled"]'), needs.linux.result)
     runs-on: ubuntu-latest
     permissions:
       contents: write      # create the release
