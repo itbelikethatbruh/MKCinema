@@ -300,6 +300,8 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
         if (on && sv == null) {
             sv = new SurfaceView(a); sv.getHolder().addCallback(this); sv.setVisibility(View.GONE);
             a.root.addView(sv, 0, new FrameLayout.LayoutParams(-1, -1));
+            // 1.17.12: the screen's size can change while a film plays (a TV switching display mode): size the picture again
+            if (a.tv) a.root.addOnLayoutChangeListener((v, l, t, r, bt, ol, ot, or, ob) -> { if (r - l != or - ol || bt - t != ob - ot) h.post(this::fit); });
         }
         shown = on;
         if (sv != null) { below(); sv.setVisibility(on ? View.VISIBLE : View.GONE); if (on) fit(); }
