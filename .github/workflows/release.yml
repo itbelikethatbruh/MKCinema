@@ -241,6 +241,10 @@ jobs:
     needs: plan
     if: needs.plan.outputs.build == 'true'
     runs-on: macos-15
+    # GitHub's Mac runners are scarce: a Mac build that fails, times out or never gets a runner must not turn the whole
+    # release red or hold back Android, Windows and Linux. The release then carries no Mac files and says so.
+    continue-on-error: true
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -335,7 +339,10 @@ jobs:
         run: |
           built=""
           if [ "$BUILD" = true ]; then
-            built="windows,linux,macos"; [ "$ANDROID_BUILT" = true ] && built="android,$built"
+            built="windows,linux"; [ "$ANDROID_BUILT" = true ] && built="android,$built"
+            # the Mac build is optional (continue-on-error): it counts only when its files really arrived
+            if ls "$RUNNER_TEMP"/dist/MKCinema-*-mac.zip > /dev/null 2>&1; then built="$built,macos"
+            else echo "::warning::No Mac build in this release (the Mac job failed, timed out or got no runner). The Mac download on the website is unchanged."; fi
             printf '%s' "$VERSIONS" > "$RUNNER_TEMP/versions.json"
           else
             echo '{}' > "$RUNNER_TEMP/versions.json"
