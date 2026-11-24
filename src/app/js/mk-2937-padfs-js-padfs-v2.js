@@ -1,4 +1,4 @@
-(()=>{const d=document,u=navigator.userAgent,R=d.documentElement;
+(()=>{/*padfs v2*/const d=document,u=navigator.userAgent,R=d.documentElement;
 if(!(/iPad/.test(u)||/Macintosh/.test(u)&&navigator.maxTouchPoints>1))return;
 if(typeof IS_TV!=="undefined"&&IS_TV)return;
 const pl=()=>d.getElementById("player"),fsEl=()=>d.fullscreenElement||d.webkitFullscreenElement||null,
@@ -7,12 +7,12 @@ req=e=>{try{const f=e.requestFullscreen||e.webkitRequestFullscreen;if(!f)return 
 out=()=>{try{const f=d.exitFullscreen||d.webkitExitFullscreen;const r=f&&f.call(d);r&&r.catch&&r.catch(()=>{})}catch{}},
 seen=()=>{const t=d.getElementById("trailer");return t&&!t.hidden};
 if(!can(R)&&!can(pl()))return;let last=0;{const p=pl();if(p)for(const k of["requestFullscreen","webkitRequestFullscreen"]){const f=p[k];if(f)p[k]=function(){last=Date.now();return f.apply(this,arguments)}}}R.classList.add("mk-padfs");window.MkPadFs=1;
-let pre=null,failed=false,userOut=false,mine=0,shown=false,hidAt=0,t0=0,tick=0;
+let tr=0,pre=null,failed=false,userOut=false,mine=0,shown=false,hidAt=0,t0=0,tick=0;
 const go=e=>{failed=false;req(e).then(()=>{failed=false},()=>{failed=true})};
-const watch=()=>{clearInterval(tick);mine=1;shown=false;hidAt=0;t0=Date.now();tick=setInterval(()=>{const p=pl();
+const watch=()=>{clearInterval(tick);mine=1;tr=0;shown=false;hidAt=0;t0=Date.now();tick=setInterval(()=>{const p=pl();
  if(fsEl()!==R){clearInterval(tick);mine=0;return}
  if(p&&!p.hidden){shown=true;hidAt=0;return}
- if(window.MkKeepFull||seen())return;
+ if(window.MkKeepFull)return;if(seen()){tr=1;return}if(tr&&!shown){stop();return}
  if(shown){hidAt=hidAt||Date.now();if(Date.now()-hidAt>1500)stop()}else if(Date.now()-t0>20000)stop()},500)};
 const stop=()=>{clearInterval(tick);mine=0;if(fsEl()===R)out()};
 const after=()=>{if(!pre)return;const w=pre;pre=null;const p=pl();if(!p||fsEl()||Date.now()-last<1200)return;
