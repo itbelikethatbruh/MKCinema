@@ -29,6 +29,16 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.17.12 (versionCode 54): Fill, Crop bars and zoom on TVs
+
+- TVs play under the page with the decoder drawing straight onto the surface (`mediacodec_embed`), which mpv's
+  `video-aspect-override`, `panscan` and `video-zoom` never reach, so Fit / Fill / Crop bars / forced shapes / zoom did
+  nothing there. `UnderPlayer` now sizes the picture surface itself on TVs (like `PlayerActivity.fit`): the film's shape
+  (`video-params/aspect`, or a forced one), fitted, or covering the screen for Fill, times the zoom; a surface bigger
+  than the screen is centred and the window crops what sticks out. It follows a new film's shape and re-applies when the
+  surface is shown again. Phones and tablets keep mpv's own properties as before.
+- Needs page 2.94.1 (Crop bars sends its zoom). Untested on a real TV.
+
 ## 1.17.11 (versionCode 53): Continue watching tiles resume the film
 
 - The Watch Next row (Continue watching on the Android TV / Google TV home screen, and on replacement home screens such as
