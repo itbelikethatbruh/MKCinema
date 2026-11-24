@@ -71,7 +71,7 @@ public class MainActivity extends Activity {
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6, REQ_MIRROR = 7, REQ_MIRROR_MIC = 8;
     // must equal versionName in AndroidManifest.xml (build.sh stops the build when it does not)
-    static final String VER = "1.17.10";
+    static final String VER = "1.17.11";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -597,11 +597,13 @@ public class MainActivity extends Activity {
         /** 1.6.0: frame-rate matching for the in-app player on TVs (the page measures the film's fps; 0 restores the TV's mode) */
         @JavascriptInterface public void fps(String k, float f) { if (!tv || !ok(k)) return; runOnUiThread(() -> TvExtras.matchFrameRate(MainActivity.this, f)); }
         /** 1.6.0: Continue watching on the Android TV / Google TV home screen */
-        @JavascriptInterface public void watchNext(String k, String json) { if (!tv || !ok(k) || json == null || json.length() > 4000) return; final android.content.Context c = getApplicationContext(); new Thread(() -> TvExtras.watchNext(c, json)).start(); }
+        @JavascriptInterface public void watchNext(String k, String json) { if (!tv || !ok(k) || json == null || json.length() > 4000) return; final android.content.Context c = getApplicationContext(); TvExtras.later(() -> TvExtras.watchNext(c, json)); }
+        /** 1.17.11: the whole Continue watching list for the home screen row (start-up and going to the background) */
+        @JavascriptInterface public void watchNextAll(String k, String json) { if (!tv || !ok(k) || json == null || json.length() > 60000) return; final android.content.Context c = getApplicationContext(); TvExtras.later(() -> TvExtras.watchNextAll(c, json)); }
         /** 1.17.0 Continue watching widget: is one on the home screen, and what it shows (see ContinueWidget.sync) */
         @JavascriptInterface public boolean widgetOn(String k) { return ok(k) && !tv && ContinueWidget.placed(getApplicationContext()); }
         @JavascriptInterface public void widgetSync(String k, String json) { if (!ok(k) || tv || json == null || json.length() > 20000) return; final android.content.Context c = getApplicationContext(); new Thread(() -> ContinueWidget.sync(c, json)).start(); }
-        @JavascriptInterface public void watchNextRemove(String k, String id) { if (!tv || !ok(k) || id == null) return; final android.content.Context c = getApplicationContext(); new Thread(() -> TvExtras.removeWatchNext(c, id)).start(); }
+        @JavascriptInterface public void watchNextRemove(String k, String id) { if (!tv || !ok(k) || id == null) return; final android.content.Context c = getApplicationContext(); TvExtras.later(() -> TvExtras.removeWatchNext(c, id)); }
         /** 1.3.0: torrent engine on this device; returns the local address, or "error: ..." */
         @JavascriptInterface public String p2pStart(String k) { return ok(k) ? P2P.start(getApplicationContext()) : "error: not allowed here"; }
         @JavascriptInterface public void p2pStop(String k) { if (ok(k)) P2P.stop(getApplicationContext()); }
@@ -790,7 +792,7 @@ public class MainActivity extends Activity {
         "p2pAvailable", "dlStart", "dlSpace", "setSlow", "epEnable", "epOn", "epSync", "dlList", "dlRemove", "dlPlay", "pipState", "pip", "play",
         "setEngine", "update", "youtube", "exit", "iptvHosts", "recStart", "recStop", "recPlan", "recUnplan",
         "apScan", "apPlay", "apPin", "apCtl", "apForget", "apState", "signIn", "apAdd", "apDiag", "updateAuto", "updateInstall", "updateProgress", "mpv",
-        "mirrorStart", "mirrorSignal", "mirrorStop", "mirrorOn", "widgetOn", "widgetSync" };
+        "mirrorStart", "mirrorSignal", "mirrorStop", "mirrorOn", "widgetOn", "widgetSync", "watchNextAll" };
 
     static String newKey() {
         byte[] b = new byte[24]; new SecureRandom().nextBytes(b);
