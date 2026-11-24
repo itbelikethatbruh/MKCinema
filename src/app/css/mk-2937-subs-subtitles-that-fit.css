@@ -1,0 +1,36 @@
+/* 2.93.7 Subtitles that fit the picture: our own subtitle layer replaces the browser's (which sat at the bottom of the
+   screen, outside the picture on letterboxed films, small, and on iPad pinned to the right). */
+html.mk-subov #video::cue{color:transparent!important;background:transparent!important;text-shadow:none!important;outline:0!important}
+html.mk-subov #video::-webkit-media-text-track-container{opacity:0!important}
+#mkSubs{position:absolute;left:0;top:0;width:0;height:0;z-index:2;pointer-events:none;display:flex;flex-direction:column;align-items:center;text-align:center;box-sizing:border-box;transition:transform .25s ease;will-change:transform}
+#mkSubs[hidden],body.ass-on #mkSubs,body.learn-on #mkSubs,body.pxup-on #mkSubs,html.mk-native-on #mkSubs{display:none!important}
+#mkSubs .mks-c{max-width:100%;line-height:1.32;white-space:pre-line;overflow-wrap:break-word}
+#mkSubs .mks-c+.mks-c{margin-top:.18em}
+#mkSubs .mks-c>span{color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.04em .32em;border-radius:.12em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+#mkSubs i{font-style:italic}#mkSubs b{font-weight:700}
+/* Easy subtitle choices (Settings and the player's Audio & subtitles panel) */
+.sbe{display:flex;flex-direction:column;gap:12px;padding:4px 0 6px}
+.sbe-pv{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:21/9;max-height:260px;width:100%;background:linear-gradient(135deg,#1d2b3a,#3a2236 55%,#1b1b24);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.sbe-pv:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 30% 35%,rgba(255,210,150,.28),transparent 55%),radial-gradient(ellipse at 75% 60%,rgba(120,170,255,.22),transparent 60%)}
+.sbe-pv .sbe-line{position:absolute;left:6%;right:6%;display:flex;justify-content:center;text-align:center;line-height:1.32;transition:bottom .25s ease,top .25s ease}
+.sbe-pv .sbe-line span{color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.04em .32em;border-radius:.12em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.sbe-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sbe-row>b{min-width:78px;font-weight:600;font-size:calc(14px * var(--ts,1))}
+.sbe-chips{display:flex;gap:6px;flex-wrap:wrap;flex:1;min-width:0}
+.sbe-chips button{flex:1 1 auto;min-width:0;min-height:40px;padding:6px 10px;border-radius:999px;border:1px solid var(--line-hi,rgba(255,255,255,.14));background:rgba(255,255,255,.04);color:var(--ink,#fff);font:inherit;font-size:calc(14px * var(--ts,1));cursor:pointer;white-space:nowrap}
+.sbe-chips button.on{background:var(--ink,#fff);color:var(--n000000,#000);border-color:transparent;font-weight:600}
+.sbe-chips button .sbe-a{font-weight:700}
+.sbe-more{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:6px 14px;border-radius:999px;border:1px solid var(--line-hi,rgba(255,255,255,.14));background:transparent;color:var(--ink,#fff);font:inherit;font-size:calc(13px * var(--ts,1));cursor:pointer}
+.sbe-more svg{width:16px;height:16px}
+.set-card.sbe-hide-more>.set-row{display:none}
+.sbe-pre-hidden{display:none!important}
+#subMenu .sbe{flex:none;gap:8px;padding:8px 4px 2px}
+#subMenu .sbe-delay .seg-row{display:flex;margin:0;gap:6px}
+#subMenu .sbe-delay .seg-row button{flex:1 1 0;min-height:36px;border-radius:999px}
+#subMenu .sbe-row>b{min-width:64px;font-size:13px}
+#subMenu .sbe-chips button{width:auto!important;flex:1 1 auto;justify-content:center;min-height:36px;padding:5px 8px;margin:0;font-size:13px;gap:0}
+#subMenu .sbe-delay .seg-row button{width:auto!important;justify-content:center}
+#subMenu.av-on:not([data-avmin]):not([hidden]){overflow-y:auto!important;overscroll-behavior:contain}
+#subMenu.av-on:not([data-avmin]) .av-cols{flex:0 0 auto!important;min-height:140px!important}
+@media (max-width:520px){.sbe-row>b{min-width:100%}}
+html.tv .sbe-chips button.nav-focus,html.tv .sbe-more.nav-focus{outline:3px solid var(--accent,#fff);outline-offset:2px}

@@ -2247,7 +2247,7 @@ html.tv .br-grid .uni-card.br-tile{width:auto;min-width:0}
     st.setProperty('--glow', g); st.setProperty('--glow-c', (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255));
     de.classList.add('ezb-bar'); if (!de.classList.contains('tv')) de.classList.add('ezb-lean');
     /* mk-290-pill-pre: phone bars from the first paint */
-    if (!de.classList.contains('tv') && matchMedia('(max-width: 760px)').matches) { de.classList.add('mk-pill'); if (localStorage.getItem('mkc:pillDown') === '1') de.classList.add('mk-pill-down'); }
+    if (!de.classList.contains('tv') && (matchMedia('(max-width: 760px)').matches || matchMedia('(min-width: 761px) and (max-width: 1440px) and (hover: none) and (pointer: coarse)').matches)) { de.classList.add('mk-pill'); if (!matchMedia('(max-width: 760px)').matches) de.classList.add('mk-pad'); if (localStorage.getItem('mkc:pillDown') === '1') de.classList.add('mk-pill-down'); }
     var dim = Math.min(60, Math.max(0, Number(c.subHdrDim == null ? 25 : c.subHdrDim) || 0));
     st.setProperty('--sub-color-hdr', 'color-mix(in srgb, ' + (c.subColor || '#ffffff') + ' ' + (100 - dim) + '%, #000)');
   } catch (e) { /* the app sets these itself a moment later */ }
@@ -11428,7 +11428,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.93.6';
+const APP_VERSION = '2.93.7';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -24470,6 +24470,12 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.93.7', date: '2026-11-23', items: [
+    ['better', 'Subtitles that fit the picture', 'Subtitles now sit inside the picture, centred just above its bottom edge, and their size follows the picture on every screen. Settings › Subtitles opens with simple Size, Style and Position choices and a live preview; every other option is under More choices.'],
+    ['new', 'iPad menu bar', 'iPad gets the Search, Miko and Menu bar from phones, with Miko in the middle. Top 10 numbers and filter boxes now look right on iPhone and iPad.'],
+    ['better', 'Picture in picture', 'Picture in picture uses Apple\'s own mode on iPhone and iPad, and only shows where your device supports it.'],
+    ['better', 'Faster start on iPhone and iPad', 'Films start faster on iPhone and iPad: MKCinema checks several copies at once and starts the first one that plays.'],
+  ] },
   { v: '2.93.6', date: '2026-11-23', items: [
     ['better', 'Steadier player', 'Audio & subtitles stays closed until you open it, and brightness and volume swipes on phones move smoothly.'],
   ] },
@@ -56232,7 +56238,7 @@ body.reduce-motion #tabs .mkp-ind[data-go]{transition:none!important}
   const de = document.documentElement;
   const tabsEl = document.getElementById('tabs');
   if (!tabsEl) return;
-  const mq = matchMedia('(max-width: 760px)');
+  const mq = matchMedia('(max-width: 760px), (min-width: 761px) and (max-width: 1440px) and (hover: none) and (pointer: coarse)');
   const KEY = 'mkc:pillDown';
   const svg = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
   const I_SEARCH = svg('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>');
@@ -58147,5 +58153,709 @@ d.readyState==='loading'?d.addEventListener('DOMContentLoaded',hook,{once:true})
 #player .px-pill .px-lv i{display:block;width:100%;height:100%;border-radius:2px;background:currentColor;transform-origin:0 50%;transform:scaleX(0);will-change:transform}
 html[dir=rtl] #player .px-pill .px-lv i{transform-origin:100% 50%}
 #player .px-pill.px-lvl b{display:inline-block;min-width:3.4em;text-align:end}</style>
+<style id="mk-2937-pad">/* 2.93.7 tablets (iPad, Android tablets held either way): the phone's Search · Miko · Menu bar, sized for a big
+   screen. Miko sits raised in the middle of a centred bar, so she never covers a row. The sections bar stays a
+   centred pill on top. Computers, TVs and phones are untouched. */
+html.mk-pill.mk-pad{--mkp-padw:min(480px,calc(100vw - 28px))}
+html.mk-pill.mk-pad #mkPill{left:calc(50% - var(--mkp-padw) / 2);right:calc(50% - var(--mkp-padw) / 2);bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+html.mk-pill.mk-pad #mikoFab{bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}
+html.mk-pill.mk-pad.mk-pill-miko #mikoFab{bottom:calc(32px + env(safe-area-inset-bottom,0px))!important}
+html.mk-pill.mk-pad #mkPillTog{bottom:calc(80px + env(safe-area-inset-bottom,0px))}
+html.mk-pill.mk-pad.mk-pill-miko #mkPillTog{right:calc(50% - var(--mkp-padw) / 2 + 4px)}
+/* Menu: a centred sheet, not the full width of the screen */
+html.mk-pill.mk-pad #ezbMenu{left:calc(50% - min(280px,50vw - 10px))!important;right:calc(50% - min(280px,50vw - 10px))!important;bottom:calc(16px + env(safe-area-inset-bottom,0px))!important}
+html.mk-pill.mk-pad .dock{justify-content:center}
+html.mk-pill.mk-pad.ezb-bar #tabs{flex:0 1 auto;width:auto;max-width:min(940px,100%);margin:0 auto}
+html.mk-pill.mk-pad.ezb-bar #tabs .tab,html.mk-pill.mk-pad.ezb-bar #tabs .mk-pm-btn{padding:0 20px!important}
+html.mk-pill.mk-pad #tabs .ezb-sep,html.mk-pill.mk-pad #ezbSearch,html.mk-pill.mk-pad #ezbMenuB{display:none!important}
+
+/* 2.93.7 Top 10 numbers on iPhone, iPad and Mac Safari: drawn as one SVG (metal edge + dark face + glow), because
+   Safari misaligns the layered text the other browsers use. Same look as the website. */
+html.mk-t10svg .t10n:before,html.mk-t10svg .t10n:after{content:none!important;display:none!important}
+html.mk-t10svg .t10n b{background:none!important;color:transparent!important;-webkit-text-fill-color:transparent}
+.t10n .t10s{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;z-index:2}
+.t10n .t10s text{font:inherit;letter-spacing:inherit}
+.t10n .t10s .t10g{opacity:0}
+html:not(.tv):not(.lite) body.fx-hi .t10-on .t10n .t10s .t10g{animation:t10shift 9s ease-in-out infinite;animation-delay:calc(var(--t10i,0) * -.9s)}
+.t10c.t10v:is(:hover,:focus-visible,.nav-focus) .t10n .t10s .t10g{animation:none!important;opacity:1;transition:opacity .3s ease}
+@media (prefers-reduced-motion:reduce){.t10n .t10s .t10g{animation:none!important}}</style>
+<script id="mk-2937-pad-js">/* 2.93.7 tablets get the phone bottom bar (mk-pad), Safari Top 10 numbers as SVG, Safari dropdowns never cut */
+(() => {
+  const de = document.documentElement, ua = navigator.userAgent || '';
+  const PADQ = '(min-width: 761px) and (max-width: 1440px) and (hover: none) and (pointer: coarse)';
+  const ph = matchMedia('(max-width: 760px)'), pad = matchMedia(PADQ);
+  const setPad = () => de.classList.toggle('mk-pad', pad.matches && !ph.matches && !de.classList.contains('tv'));
+  setPad();
+  try { pad.addEventListener('change', setPad); ph.addEventListener('change', setPad); } catch { pad.addListener(setPad); ph.addListener(setPad); }
+
+  // Safari / every iPhone and iPad browser (all WebKit) / the Mac app
+  let force = false; try { force = localStorage.getItem('mkc:wkTest') === '1'; } catch {}
+  const WK = force || /iP(hone|ad|od)/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ||
+    (/AppleWebKit/.test(ua) && !/Chrome|Chromium|CriOS|Android|Edg|OPR|Firefox|SamsungBrowser|Tizen|Web0S/.test(ua));
+  if (!WK || de.classList.contains('tv')) return;
+  de.classList.add('mk-t10svg', 'mk-wk');
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const RIM = {
+    1: ['#fff6d6', '#ecc768', '#9a7020', '#f8de92', '#6e4f14'],
+    2: ['#ffffff', '#d5d9e0', '#7b818c', '#f1f4f8', '#5d626b'],
+    3: ['#ffe6d2', '#da9a6e', '#86492a', '#f4bb93', '#5e301a'],
+    d: ['#f7f5f0', '#bdb8ad', '#5c5a55', '#e4e0d7', '#4b4945'],
+  };
+  const GLOW = { 1: 'rgba(240,196,92,.5)', 2: 'rgba(214,222,236,.42)', 3: 'rgba(226,146,98,.42)', d: 'rgba(226,220,206,.28)' };
+  const RIM_AT = [0, .26, .52, .76, 1];
+  let uid = 0;
+  // the glow gradient uses the real colour: SVG stop-color cannot read a CSS variable in every browser
+  const glowC = () => (getComputedStyle(de).getPropertyValue('--glow') || '').trim() || '#4aa8ff';
+  const el = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  const grad = (id, stops, at, x1, y1, x2, y2) => {
+    const g = el('linearGradient', { id, x1, y1, x2, y2 });
+    stops.forEach((c, i) => g.appendChild(el('stop', { offset: at[i], 'stop-color': c })));
+    return g;
+  };
+  function draw(n, again) {
+    const b = n.querySelector(':scope > b'); if (!b) return;
+    const w = b.offsetWidth, h = b.offsetHeight; if (!w || !h) return;
+    const fs = parseFloat(getComputedStyle(n).fontSize) || 0; if (!fs) return;
+    const key = b.textContent + '|' + fs + '|' + w + '|' + h + '|' + b.offsetLeft + '|' + b.offsetTop;
+    if (n._t10k === key) return;
+    if (n._t10k && !again) return;
+    n._t10k = key;
+    const pr = document.createElement('i'); pr.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
+    b.appendChild(pr); const base = pr.offsetTop; pr.remove();
+    const rank = (n.closest('.t10c') || {}).dataset ? n.closest('.t10c').dataset.rank : '';
+    const r = RIM[rank] ? rank : 'd', id = 'mkt10' + (++uid), lite = de.classList.contains('lite') || de.classList.contains('tv');
+    const sw = fs * (lite ? .055 : .058);
+    const s = el('svg', { class: 't10s', 'aria-hidden': 'true', width: w, height: h, viewBox: `0 0 ${w} ${h}` });
+    s.style.left = b.offsetLeft + 'px'; s.style.top = b.offsetTop + 'px';
+    if (!lite) s.style.filter = `drop-shadow(0 0 ${(fs * .058 * 2.2).toFixed(1)}px ${GLOW[r]})`;
+    const d = el('defs', {});
+    d.appendChild(grad(id + 'r', RIM[r], RIM_AT, '.4', '0', '.6', '1'));
+    d.appendChild(grad(id + 'f', ['#34343b', '#151518', '#060607', '#0d0d10'], [0, .38, .78, 1], '0', '0', '0', '1'));
+    d.appendChild(grad(id + 'g', [glowC(), '#9a72ff', '#ff6fae', '#ffd38a'], [0, .4, .72, 1], '0', '0', '1', '1'));
+    s.appendChild(d);
+    const t = b.textContent.trim();
+    const txt = (cls, attrs) => { const e = el('text', Object.assign({ x: 0, y: base, class: cls }, attrs)); e.textContent = t; s.appendChild(e); };
+    const sa = { 'stroke-width': sw.toFixed(2), 'stroke-linejoin': 'round', fill: 'none' };
+    txt('t10r', Object.assign({ stroke: `url(#${id}r)` }, sa));
+    txt('t10g', Object.assign({ stroke: `url(#${id}g)` }, sa));
+    txt('t10f', { fill: `url(#${id}f)` });
+    const old = n.querySelector(':scope > .t10s'); old ? old.replaceWith(s) : n.appendChild(s);
+  }
+  const all = again => document.querySelectorAll('.t10n').forEach(n => draw(n, again));
+
+  // dropdowns: Safari sizes a styled select narrower than its text, so give each one room for what it shows
+  const cv = document.createElement('canvas').getContext('2d');
+  function fitSel(x) {
+    if (x.multiple || x.size > 1 || x.closest('#settings')) return;
+    const o = x.options[x.selectedIndex]; if (!o) return;
+    const key = x.selectedIndex + '|' + o.text; if (x._fitK === key) return;
+    const cs = getComputedStyle(x); if (cs.display === 'none') return;
+    cv.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    const px = v => parseFloat(v) || 0;
+    const w = Math.ceil(cv.measureText(o.text).width + px(cs.paddingLeft) + px(cs.paddingRight) + px(cs.borderLeftWidth) + px(cs.borderRightWidth) + 6);
+    x._fitK = key; x.style.minWidth = `min(${w}px, 100%)`;
+  }
+  const sels = () => document.querySelectorAll('select').forEach(fitSel);
+  const resel = () => document.querySelectorAll('select').forEach(x => { x._fitK = ''; fitSel(x); });
+
+  let q = 0;
+  const run = () => { q = 0; all(false); sels(); };
+  const later = () => { if (!q) q = requestAnimationFrame(run); };
+  const start = () => {
+    new MutationObserver(later).observe(document.body, { childList: true, subtree: true });
+    document.addEventListener('change', e => { if (e.target && e.target.tagName === 'SELECT') { e.target._fitK = ''; fitSel(e.target); } }, true);
+    let rz = 0; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { all(true); resel(); }, 150); });
+    try { document.fonts.ready.then(() => { all(true); resel(); }); document.fonts.addEventListener('loadingdone', () => { all(true); resel(); }); } catch {}
+    run();
+  };
+  if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+})();</script>
+<style id="mk-2937-pip">html #pPip.mk-nopip,html.mk-rx #player .rx-cap #pPip.mk-nopip:not([hidden]){display:none!important}</style>
+<script id="mk-2937-pip-js">(()=>{"use strict";
+// 2.93.7: Picture in picture only where it works. iPhone/iPad use Apple's own picture-in-picture call; where no way
+// exists (TVs, some web views) the button and the Share list entry are hidden instead of showing an error.
+const d=document,V=()=>{try{return typeof video<"u"&&video||d.getElementById("video")}catch{return d.getElementById("video")}};
+const tv=()=>{try{return typeof IS_TV<"u"&&!!IS_TV}catch{return d.documentElement.classList.contains("tv")}};
+let broke=!1;
+const nat=()=>!tv()&&!!(window.MKAndroid&&MKAndroid.pip);
+const std=()=>{const v=V();return!!(d.pictureInPictureEnabled&&v&&typeof v.requestPictureInPicture=="function"&&!v.disablePictureInPicture)};
+const wk=()=>{const v=V();try{return!!(v&&typeof v.webkitSetPresentationMode=="function"&&typeof v.webkitSupportsPresentationMode=="function"&&v.webkitSupportsPresentationMode("picture-in-picture"))}catch{return!1}};
+const can=()=>!tv()&&!broke&&(nat()||std()||wk());
+window.MkPipOk=can;
+const sync=()=>{const b=d.getElementById("pPip");b&&b.classList.toggle("mk-nopip",!can())};
+const init=()=>{const b=d.getElementById("pPip");if(!b||b._mkPip)return;b._mkPip=1;const prev=b.onclick;
+ b.onclick=async e=>{
+  if(nat())return prev&&prev.call(b,e);
+  const v=V();
+  if(std()){try{d.pictureInPictureElement?await d.exitPictureInPicture():await v.requestPictureInPicture();return}catch(x){if(!wk()){broke=!0,sync();try{toast("Picture in picture is not available here","info")}catch{}return}}}
+  if(wk()){try{v.webkitSetPresentationMode(v.webkitPresentationMode==="picture-in-picture"?"inline":"picture-in-picture");return}catch{}}
+  broke=!0,sync();try{toast("Picture in picture is not available here","info")}catch{}
+ };
+ const v=V();v&&["loadedmetadata","emptied"].forEach(t=>v.addEventListener(t,sync));
+ const p=d.getElementById("player");p&&new MutationObserver(sync).observe(p,{attributes:!0,attributeFilter:["hidden"]});
+ sync()};
+d.readyState==="loading"?d.addEventListener("DOMContentLoaded",init,{once:!0}):init()})();</script>
+<script id="mk-2937-ios-fast">/* 2.93.7 iPhone fast start (thread "Speed up finding a source on iPhone", 2026-11-23).
+   Safari on iPhone/iPad (and Mac Safari) only. Before: the background source checks were switched off on Safari, so a
+   copy that could never play there (an MKV on a host that doesn't let the page read it) was tried with the full
+   10-25 s start limit, one copy after another, and the same blocked host was tried again for every copy on it.
+   Now: 1) the top copies are checked side by side before the first start (MKV: the engine reads the file's header;
+   MP4: a 2-byte read; HLS: the playlist), the first good one in ranking order starts; 2) an MKV the engine can't take
+   moves on at once instead of waiting for Safari's own player, which can't open MKV; 3) copies on a host already known
+   to block the page are left out while another copy exists; 4) checks go on in the background while a film plays, so
+   a switch lands on a checked copy; 5) the start limit is shorter only when a checked-good copy is waiting.
+   Nothing here relaxes the audio-language rules: copies come from pickBest/Failover.candidates (AudioPref filter) and a
+   checked file whose tagged tracks are all in another language counts as bad. Never relays the video. */
+(() => {
+  const go = () => {
+    if (window.MkIosFast || typeof playStream !== 'function' || typeof Failover === 'undefined' || typeof Preflight === 'undefined') return;
+    const WK = !!(window.MKSafari && MKSafari.on);
+    if (!WK) return;
+    const E = window.MkEngine && MkEngine.ok ? MkEngine : null;
+    const log = (m) => { try { MKLog.add('info', `fast start: ${m}`); } catch (e) { /* no log */ } };
+    const desc = (s) => { try { return MKLog.describe(s); } catch (e) { return 'a source'; } };
+    const nativeMkv = (() => { try { return !!video.canPlayType('video/x-matroska'); } catch (e) { return false; } })();
+    const isMkv = (s) => !!s && (!!(s._tel && s._tel.mkv) || /\.mkv(\?|#|$)/i.test(s.url || '') || /\.mkv$/i.test((s.behaviorHints && s.behaviorHints.filename) || ''));
+    const isHls = (s) => /\.m3u8(\?|#|$)/i.test((s && s.url) || '');
+    const engWants = (s) => { try { return !!E && E.wants(s); } catch (e) { return false; } };
+    // same key the engine uses for hosts that refuse page reads (mkc.engHosts, 7 days)
+    const hostKey = (u) => { try { const x = new URL(u), m = x.pathname.match(/\/(?:resolve|playback|stream|dl)\/([a-z][a-z-]{1,20})\//i); return x.host + (m ? `/${m[1].toLowerCase()}` : ''); } catch (e) { return ''; } };
+    const hostState = (u) => { try { const e = (JSON.parse(localStorage.getItem('mkc.engHosts') || '{}') || {})[hostKey(u)]; return e && Date.now() - e.t < 7 * 864e5 ? e.v : ''; } catch (e) { return ''; } };
+    // an MKV Safari can't open itself and the engine can't read here: it can never start on this device
+    const never = (s) => !!s && !nativeMkv && isMkv(s) && !s._local && !(window.MKSafari && MKSafari.forced && MKSafari.forced.has(s)) &&
+      (!!(s._tel && s._tel._wkBad) || !!s._engNo || !!s._engBlocked || CFG.engine === false || !E || (!!s.url && hostState(s.url) === 'blocked'));
+
+    const F = { tok: 0, N: 6, MAX: 12, CAP: 5000, res: new WeakMap(), TTL: 10 * 6e4, never };
+    window.MkIosFast = F;
+
+    /* ---------- checks (no hidden <video>: iOS won't preload one, and it takes the decoder) ---------- */
+    const fetchCheck = async (u) => {
+      try {
+        const r = await fetchT(u, { headers: { Range: 'bytes=0-1' }, cache: 'no-store', credentials: 'omit' }, 4000);
+        try { r.body && r.body.cancel(); } catch (e) { /* done */ }
+        if (r.ok || r.status === 206) return ['ok', ''];
+        return [r.status === 404 || r.status === 410 || r.status === 403 || r.status >= 500 ? 'bad' : 'unknown', `HTTP ${r.status}`];
+      } catch (e) { return ['unknown', 'host does not allow a check']; }
+    };
+    const langBad = (info) => {
+      const want = window.MkAudioWant ? MkAudioWant() : '';
+      if (!want || !info || !Array.isArray(info.audio) || !info.audio.length || !window.MkAudioMatch) return false;
+      const tagged = info.audio.filter((a) => a && !a.enc && a.lang && !/^(und|unk|mis|zxx|mul)$/i.test(a.lang));
+      return tagged.length > 0 && tagged.length === info.audio.filter((a) => a && !a.enc).length && !tagged.some((a) => MkAudioMatch(a.lang, a.name, want));
+    };
+    /* a host that answers a plain request but refuses page reads is remembered the way the engine does it (7 days), so
+       the next film skips its MKV copies at once. A failed plain request (network down) remembers nothing. */
+    const blockedSeen = new Set();
+    const noteBlocked = (u) => {
+      const k = hostKey(u); if (!k || blockedSeen.has(k) || hostState(u)) return; blockedSeen.add(k);
+      const c = new AbortController(), t = setTimeout(() => c.abort(), 4000);
+      fetch(u, { mode: 'no-cors', credentials: 'omit', referrerPolicy: 'no-referrer', signal: c.signal }).then(() => {
+        try { const m = JSON.parse(localStorage.getItem('mkc.engHosts') || '{}') || {}; m[k] = { v: 'blocked', t: Date.now() }; localStorage.setItem('mkc.engHosts', JSON.stringify(m)); } catch (e) { /* private mode */ }
+        log(`${k} doesn’t let the page read its files; its MKV copies are skipped on this device`);
+      }, () => blockedSeen.delete(k)).finally(() => { clearTimeout(t); c.abort(); });
+    };
+    const engCheck = (s) => new Promise((res) => {
+      let done = false;
+      const fin = (v) => { if (!done) { done = true; clearTimeout(t); res(v); } };
+      const t = setTimeout(() => fin(['slow', 'no answer in time']), 5500);
+      E.peek(s).then((info) => {
+        if (!info) {
+          // couldn't read the header: a host that refuses page reads (Safari's own player can't open MKV either)
+          fetchCheck(Preflight.src(s) || s.url).then(([st, why]) => fin(st === 'bad' ? ['bad', why] : st === 'ok' || nativeMkv || !isMkv(s) ? ['slow', 'could not read the file'] : (noteBlocked(s.url), ['bad', 'the host doesn’t let the page read this file'])));
+          return;
+        }
+        let r = null; const dv = E.dv; // route() notes Dolby Vision on the engine: keep the playing film's value
+        try { r = E.route(info, false); } catch (e) { r = null; } finally { E.dv = dv; }
+        if (!r) return fin(['unknown', '']);
+        if (!r.go && !r.native) return fin(['bad', r.why || 'this device can’t decode it']);
+        if (r.go && r.mode === 'none') return fin(['bad', 'sound this device cannot play']);
+        if (isFinite(info.duration) && info.duration > 0 && info.duration < 100) return fin(['bad', 'short notice clip']);
+        if (langBad(info)) return fin(['bad', 'not in your audio language']);
+        fin(['ok', '']);
+      }, () => fin(['unknown', '']));
+    });
+    F.probe = (s) => {
+      const c = F.res.get(s);
+      if (c && c.p) return c.p;
+      if (c && Date.now() - c.at < F.TTL) return Promise.resolve(c.st);
+      const u = Preflight.src(s);
+      const t0 = performance.now();
+      let p;
+      if (!u) p = Promise.resolve(['unknown', 'cannot be checked without side effects']);
+      else if (isHls(s)) p = Preflight.hls(u);
+      else if (isMkv(s) && never(s)) p = Promise.resolve(['bad', 'Safari can’t open this MKV and the host blocks the engine']);
+      else if (engWants(s) && !(s.behaviorHints && s.behaviorHints.proxyHeaders)) p = engCheck(s);
+      else p = fetchCheck(u);
+      const ent = { st: 'checking', at: Date.now(), p: null };
+      F.res.set(s, ent);
+      ent.p = p.then(([st, why]) => {
+        if (F.res.get(s) === ent) { ent.st = st; ent.at = Date.now(); ent.p = null; ent.why = why; }
+        try { if (st === 'ok') Preflight.mark(s, 'ok'); else if (st === 'bad') Preflight.mark(s, 'bad', why); } catch (e) { /* ignore */ }
+        log(`${desc(s)}: ${st}${why ? ` (${why})` : ''} in ${Math.round(performance.now() - t0)} ms`);
+        return st;
+      }, () => { ent.st = 'unknown'; ent.p = null; return 'unknown'; });
+      return ent.p;
+    };
+    const state = (s) => { const c = F.res.get(s); return c && !c.p && Date.now() - c.at < F.TTL ? c.st : (c && c.p ? 'checking' : ''); };
+
+    /* ---------- ranking: copies that can never start here go last / are skipped ---------- */
+    if (typeof engine !== 'undefined' && engine && typeof engine.pickBest === 'function') {
+      const pb = engine.pickBest.bind(engine);
+      engine.pickBest = function (streams, opts) {
+        if (!Array.isArray(streams)) return pb(streams, opts);
+        const keep = streams.filter((s) => !never(s) && !Preflight.bad(s));
+        if (keep.length && keep.length < streams.length) { const n = pb(keep, opts); if (n && !(n._tel && n._tel.cached === false)) return n; }
+        return pb(streams, opts);
+      };
+    }
+    const cand = Failover.candidates.bind(Failover);
+    Failover.candidates = function (failed) { return cand(failed).filter((s) => !never(s)); };
+
+    /* ---------- an MKV the engine couldn't take: Safari can't open it, so move on now ---------- */
+    if (E && typeof E.start === 'function') {
+      const st = E.start.bind(E);
+      E.start = async function (s, at, base, force) {
+        const took = await st(s, at, base, force);
+        if (!took && !force && !nativeMkv && isMkv(s) && s._tel && !(MKSafari.forced && MKSafari.forced.has(s))) {
+          s._tel._wkBad = 'mkv';
+          try { Preflight.mark(s, 'bad', 'the engine could not take it'); } catch (e) { /* ignore */ }
+          log(`${desc(s)}: engine could not take it, moving on`);
+        }
+        return took;
+      };
+    }
+
+    /* ---------- shorter start limit only when a checked-good copy is waiting ---------- */
+    const arm = MKSafari.arm.bind(MKSafari);
+    MKSafari.arm = function (s) {
+      arm(s);
+      // the link check says the link is dead (404, 410, 5xx): don't wait for the start limit
+      if (CFG.failover && !s._local && !s._handoff && !s._audioTry && !s._cloud && s.url && /^https?:/i.test(s.url)) {
+        F.probe(s).then((st) => {
+          if (st === 'bad' && P.stream === s && !$('#player').hidden && video.readyState < 1 && $('#pMsg').hidden) { clearTimeout(Failover.t); Failover.next(s, `the link did not answer (${(F.res.get(s) || {}).why || 'bad'})`, P.startAt || 0); }
+        });
+      }
+      let backup = null;
+      try { backup = Failover.candidates(s).find((c) => Preflight.good(c)); } catch (e) { backup = null; }
+      if (!backup || !CFG.failover || s._local || s._handoff || s._audioTry || s._cloud) return;
+      clearTimeout(Failover.t);
+      const t0 = performance.now();
+      const chk = () => {
+        if (P.stream !== s || $('#player').hidden || video.readyState >= 1 || !$('#pMsg').hidden) return;
+        const now = performance.now();
+        if (now - t0 < 12000 && MKSafari.lastProg && now - MKSafari.lastProg < 2500) { Failover.t = setTimeout(chk, 2000); return; }
+        Failover.next(s, `did not start within ${Math.round((now - t0) / 1000)} s`, P.startAt || 0);
+      };
+      Failover.t = setTimeout(chk, 6000);
+    };
+
+    /* ---------- "Sourcing a working copy" line under the title art (same element and text as 2.62.5) ---------- */
+    const line = (on) => {
+      const L = $('#pLoad'); if (!L) return;
+      let el = L.querySelector('.mk-src');
+      if (!el) { if (!on) return; el = document.createElement('div'); el.className = 'mk-src'; el.setAttribute('role', 'status'); el.innerHTML = '<i></i><span></span>'; L.appendChild(el); }
+      if (on) el.querySelector('span').textContent = 'Sourcing a working copy…';
+      requestAnimationFrame(() => el.classList.toggle('on', !!on));
+    };
+
+    /* ---------- background checks of the next copies while a film starts/plays ---------- */
+    F.scout = (s) => {
+      const ctx = P.ctx; if (!ctx) return;
+      let list = [];
+      try { list = Failover.candidates(s).filter((c) => c !== s && !Preflight.bad(c) && !state(c)).slice(0, 3); } catch (e) { list = []; }
+      list.forEach((c, i) => setTimeout(() => { if (P.ctx === ctx && !$('#player').hidden) F.probe(c); }, 600 + i * 150));
+    };
+
+    /* ---------- the first start: check the top copies side by side, start the first good one ---------- */
+    const key = (c) => (c && c.meta ? (c.video ? c.video.id : c.meta.id) : '');
+    const autoPick = (ctx, s) => {
+      try { const all = ctx.streams || [], g = s.behaviorHints && s.behaviorHints.bingeGroup; return pickBest(all) === s || (!!g && pickBest(all, { bingeGroup: g }) === s); } catch (e) { return false; }
+    };
+    const wants = (ctx, s) => {
+      if (!ctx || !s || !s.url || s._local || s._handoff || s.ytId || P.force || CFG.failover === false || !ctx.streams || ctx.streams.length < 2) return false;
+      if (window.MkNative && MkNative.ready && MkNative.ready()) return false;
+      const t = s._tel || (s._tel = Telemetry.parse(s));
+      if (t.kind === 'ext' || t.kind === 'p2p' || t.isTrailer) return false;
+      try { if (extPlayer() && handoffUrl(s)) return false; } catch (e) { /* none */ }
+      if (window.MkSourcing && Date.now() < (MkSourcing.hopUntil || 0)) return false; // a switch after a failure: candidates are already sorted by checks
+      return ($('#player').hidden || key(ctx) !== key(P.ctx)) && autoPick(ctx, s);
+    };
+    F.choose = (ctx, first, alive) => {
+      const seen = new Set([first]);
+      let rest = [];
+      const keep = P.ctx; P.ctx = ctx;
+      try { Failover.tried = new Set(); Failover.hops = 0; Failover.key = ''; rest = Failover.candidates(first); } catch (e) { rest = []; } finally { P.ctx = keep; }
+      const list = [first, ...rest.filter((c) => !seen.has(c) && seen.add(c))].filter((c) => c.url && !c._local && !c.ytId).slice(0, F.MAX);
+      // a top pick Safari plays by itself (MP4, HLS) or one already known good starts at once; its link is checked
+      // alongside (a dead link moves on as soon as that's known) and the next copies are checked as backups
+      const fast = Preflight.good(first) || state(first) === 'ok' || (!isMkv(first) && !engWants(first)) || (isMkv(first) && first.url && hostState(first.url) === 'ok' && !never(first));
+      if (fast) { list.slice(0, F.N).forEach((c) => F.probe(c)); return Promise.resolve(first); }
+      return new Promise((resolve) => {
+        let done = false, next = 0;
+        // keep F.N checks running; a copy found bad makes room for the next one in the ranking
+        const pump = () => { while (!done && next < list.length && list.slice(0, next).filter((c) => state(c) === 'checking').length < F.N) { const c = list[next++]; F.probe(c).then(() => { pick(false); pump(); }); } };
+        const pick = (final) => {
+          if (done) return;
+          if (!alive()) { done = true; return resolve(null); }
+          for (let i = 0; i < list.length; i++) {
+            const st = i < next ? state(list[i]) : '';
+            if (st === 'ok' || st === 'unknown') { done = true; return resolve(list[i]); }
+            if (st !== 'bad' && st !== 'slow' && !final) return;
+          }
+          done = true;
+          resolve(list.find((c) => { const st = state(c); return st === 'slow' || st === 'checking'; }) || null);
+        };
+        pump();
+        setTimeout(() => pick(true), F.CAP);
+      });
+    };
+    const ps = playStream;
+    playStream = async function (ctx, s, opts) {
+      if (!wants(ctx, s)) {
+        const r = await ps.apply(this, arguments);
+        try { if (s && P.stream === s && !$('#player').hidden && !s.ytId && !s._local) F.scout(s); } catch (e) { /* ignore */ }
+        return r;
+      }
+      const tok = ++F.tok, alive = () => tok === F.tok && !$('#player').hidden;
+      if ($('#player').hidden) openLayer('player'); else { try { video.pause(); } catch (e) { /* ignore */ } }
+      try { $('#pTitle').textContent = ctx.meta.name || ''; $('#pSub').textContent = ''; Loader.show(ctx.meta); } catch (e) { /* ignore */ }
+      const t0 = performance.now();
+      const lt = setTimeout(() => { if (tok === F.tok && alive()) line(true); }, 400);
+      let pick = s;
+      try { pick = await F.choose(ctx, s, alive); } catch (e) { pick = s; }
+      clearTimeout(lt);
+      if (tok !== F.tok || $('#player').hidden) return;
+      if (!pick) {
+        // every checked copy is known not to play here: let the normal flow explain it
+        pick = s;
+      }
+      if (pick !== s) log(`started ${desc(pick)} instead of the first pick (checked in ${Math.round(performance.now() - t0)} ms)`);
+      const r = await ps.call(this, ctx, pick, opts);
+      try { if (P.stream === pick && !$('#player').hidden) F.scout(pick); } catch (e) { /* ignore */ }
+      return r;
+    };
+    if (typeof closePlayer === 'function') { const cp = closePlayer; closePlayer = function () { F.tok++; return cp.apply(this, arguments); }; }
+    log('on');
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go, { once: true }); else go();
+})();</script>
+<style id="mk-2937-subs">/* 2.93.7 Subtitles that fit the picture: our own subtitle layer replaces the browser's (which sat at the bottom of the
+   screen, outside the picture on letterboxed films, small, and on iPad pinned to the right). */
+html.mk-subov #video::cue{color:transparent!important;background:transparent!important;text-shadow:none!important;outline:0!important}
+html.mk-subov #video::-webkit-media-text-track-container{opacity:0!important}
+#mkSubs{position:absolute;left:0;top:0;width:0;height:0;z-index:2;pointer-events:none;display:flex;flex-direction:column;align-items:center;text-align:center;box-sizing:border-box;transition:transform .25s ease;will-change:transform}
+#mkSubs[hidden],body.ass-on #mkSubs,body.learn-on #mkSubs,body.pxup-on #mkSubs,html.mk-native-on #mkSubs{display:none!important}
+#mkSubs .mks-c{max-width:100%;line-height:1.32;white-space:pre-line;overflow-wrap:break-word}
+#mkSubs .mks-c+.mks-c{margin-top:.18em}
+#mkSubs .mks-c>span{color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.04em .32em;border-radius:.12em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+#mkSubs i{font-style:italic}#mkSubs b{font-weight:700}
+/* Easy subtitle choices (Settings and the player's Audio & subtitles panel) */
+.sbe{display:flex;flex-direction:column;gap:12px;padding:4px 0 6px}
+.sbe-pv{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:21/9;max-height:260px;width:100%;background:linear-gradient(135deg,#1d2b3a,#3a2236 55%,#1b1b24);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.sbe-pv:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 30% 35%,rgba(255,210,150,.28),transparent 55%),radial-gradient(ellipse at 75% 60%,rgba(120,170,255,.22),transparent 60%)}
+.sbe-pv .sbe-line{position:absolute;left:6%;right:6%;display:flex;justify-content:center;text-align:center;line-height:1.32;transition:bottom .25s ease,top .25s ease}
+.sbe-pv .sbe-line span{color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.04em .32em;border-radius:.12em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.sbe-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sbe-row>b{min-width:78px;font-weight:600;font-size:calc(14px * var(--ts,1))}
+.sbe-chips{display:flex;gap:6px;flex-wrap:wrap;flex:1;min-width:0}
+.sbe-chips button{flex:1 1 auto;min-width:0;min-height:40px;padding:6px 10px;border-radius:999px;border:1px solid var(--line-hi,rgba(255,255,255,.14));background:rgba(255,255,255,.04);color:var(--ink,#fff);font:inherit;font-size:calc(14px * var(--ts,1));cursor:pointer;white-space:nowrap}
+.sbe-chips button.on{background:var(--ink,#fff);color:var(--n000000,#000);border-color:transparent;font-weight:600}
+.sbe-chips button .sbe-a{font-weight:700}
+.sbe-more{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:6px 14px;border-radius:999px;border:1px solid var(--line-hi,rgba(255,255,255,.14));background:transparent;color:var(--ink,#fff);font:inherit;font-size:calc(13px * var(--ts,1));cursor:pointer}
+.sbe-more svg{width:16px;height:16px}
+.set-card.sbe-hide-more>.set-row{display:none}
+.sbe-pre-hidden{display:none!important}
+#subMenu .sbe{flex:none;gap:8px;padding:8px 4px 2px}
+#subMenu .sbe-delay .seg-row{display:flex;margin:0;gap:6px}
+#subMenu .sbe-delay .seg-row button{flex:1 1 0;min-height:36px;border-radius:999px}
+#subMenu .sbe-row>b{min-width:64px;font-size:13px}
+#subMenu .sbe-chips button{width:auto!important;flex:1 1 auto;justify-content:center;min-height:36px;padding:5px 8px;margin:0;font-size:13px;gap:0}
+#subMenu .sbe-delay .seg-row button{width:auto!important;justify-content:center}
+#subMenu.av-on:not([data-avmin]):not([hidden]){overflow-y:auto!important;overscroll-behavior:contain}
+#subMenu.av-on:not([data-avmin]) .av-cols{flex:0 0 auto!important;min-height:140px!important}
+@media (max-width:520px){.sbe-row>b{min-width:100%}}
+html.tv .sbe-chips button.nav-focus,html.tv .sbe-more.nav-focus{outline:3px solid var(--accent,#fff);outline-offset:2px}</style>
+<script id="mk-2937-subs-js">"use strict";
+/* 2.93.7 Subtitles that fit the picture + easy subtitle choices.
+   1. SubFit draws subtitles itself, inside the picture (not the screen's black bars), centred, sized from the picture.
+      The browser's own subtitle drawing is hidden (html.mk-subov) but its track still runs the timing, so delay,
+      auto-sync, translation, Learn, glasses and the phone subtitle view keep working unchanged.
+      Where the page cannot draw over the video (iPhone's own full-screen player, picture in picture) the browser's
+      drawing comes back by itself.
+   2. SubEasy: Size / Style / Position chips with a live preview in Settings > Subtitles and in the player's
+      Audio & subtitles panel. Every older control stays under "More choices". */
+(() => {
+  const safe = f => { try { return f(); } catch (e) { console.warn('2.93.7 subs', e); } };
+  const $1 = (s, r) => (r || document).querySelector(s);
+  const vid = () => document.getElementById('video');
+  const SIZES = [['75', 'Small'], ['100', 'Medium'], ['130', 'Large'], ['165', 'Extra large']];
+  const LOOKS = [['stream', 'Clean'], ['box', 'Dark box'], ['yellow', 'Yellow']];
+  const POS = [['bottom', 'Bottom'], ['higher', 'Raised'], ['top', 'Top']];
+
+  // Two more one-tap looks next to the existing Streaming (= Clean) and TV captions looks.
+  safe(() => {
+    if (typeof SUB_LOOKS !== 'object') return;
+    // Dark box = the factory look (white on a 65% black box), so nobody's subtitles change unless they pick.
+    SUB_LOOKS.box = SUB_LOOKS.box || { subFont: 'sans', subColor: '#ffffff', subBg: 65, subBgColor: '#000000', subOutline: true, subBold: false, subShadow: 'soft' };
+    SUB_LOOKS.yellow = SUB_LOOKS.yellow || { subFont: 'stream', subColor: '#ffd84a', subBg: 0, subBgColor: '#000000', subOutline: true, subBold: true, subShadow: 'strong' };
+  });
+
+  const sizeNow = () => { const n = Number(CFG.subSize) || 100; return Math.min(250, Math.max(50, n)); };
+  const sizeKey = () => { const n = sizeNow(); let best = null, d = 1e9; for (const [v] of SIZES) { const k = Math.abs(n - Number(v)); if (k < d) { d = k; best = v; } } return d <= 14 ? best : ''; };
+  const posNow = () => (CFG.subPos === 'higher' || CFG.subPos === 'top') ? CFG.subPos : 'bottom';
+  // Font size for a picture of w x h CSS px: about 5% of the picture height, never smaller than 2.4% of its width
+  // (wide films have short pictures), so it grows and shrinks with the picture on every screen.
+  const fontFor = (w, h) => {
+    const base = Math.max(h * 0.05, w * 0.024);
+    return Math.max(14, Math.min(base * sizeNow() / 100, h * 0.16));
+  };
+
+  /* ---------- 1. SubFit: our own subtitle layer ---------- */
+  const SubFit = window.SubFit = {
+    el: null, key: '', box: null,
+    ensure() {
+      const v = vid(); if (!v) return null;
+      if (!this.el) {
+        const d = document.createElement('div');
+        d.id = 'mkSubs'; d.setAttribute('aria-live', 'off'); d.setAttribute('aria-hidden', 'true'); d.hidden = true;
+        this.el = d;
+      }
+      if (!this.el.isConnected || this.el.parentNode !== v.parentNode) v.insertAdjacentElement('afterend', this.el);
+      return this.el;
+    },
+    nativeOnly() {
+      const v = vid(); if (!v) return true;
+      return !!(v.webkitDisplayingFullscreen || document.pictureInPictureElement === v || v.webkitPresentationMode === 'picture-in-picture' || document.documentElement.classList.contains('pip-mode'));
+    },
+    syncMode() { document.documentElement.classList.toggle('mk-subov', !this.nativeOnly()); },
+    tracks() {
+      const v = vid(); if (!v || !v.textTracks) return [];
+      return Array.from(v.textTracks).filter(t => t.mode === 'showing' && t.kind !== 'metadata' && t.kind !== 'chapters');
+    },
+    cues() {
+      const out = [];
+      for (const t of this.tracks()) { const a = t.activeCues; if (a) for (let i = 0; i < a.length; i++) out.push(a[i]); }
+      return out.sort((a, b) => a.startTime - b.startTime || a.endTime - b.endTime);
+    },
+    render() {
+      const el = this.ensure(); if (!el) return;
+      this.syncMode();
+      const pl = document.getElementById('player');
+      const off = !pl || pl.hidden || (window.MkNative && MkNative.active) || (typeof P === 'object' && P.curSub < 0);
+      const cues = off ? [] : this.cues();
+      const key = cues.map(c => c.startTime + '|' + c.text).join('\n');
+      if (key === this.key && !el.hidden === !!cues.length) return;
+      this.key = key;
+      el.textContent = '';
+      for (const c of cues) {
+        const row = document.createElement('div'); row.className = 'mks-c';
+        const sp = document.createElement('span');
+        let frag = null;
+        try { frag = typeof c.getCueAsHTML === 'function' ? c.getCueAsHTML() : null; } catch { frag = null; }
+        if (frag && frag.textContent.trim()) sp.appendChild(frag); else sp.textContent = String(c.text || '').replace(/<[^>]+>/g, '');
+        if (!sp.textContent.trim()) continue;
+        row.appendChild(sp); el.appendChild(row);
+      }
+      el.hidden = !el.childNodes.length;
+      if (!el.hidden) this.layout();
+    },
+    pic() {
+      const v = vid(); if (!v) return null;
+      const st = v.parentNode.getBoundingClientRect(), r = v.getBoundingClientRect();
+      if (!r.width || !r.height) return null;
+      const iw = v.videoWidth, ih = v.videoHeight;
+      let x = r.left, y = r.top, w = r.width, h = r.height;
+      if (iw && ih) {
+        const fit = getComputedStyle(v).objectFit || 'contain';
+        if (fit !== 'fill') {
+          const k = fit === 'cover' ? Math.max(r.width / iw, r.height / ih) : Math.min(r.width / iw, r.height / ih);
+          w = iw * k; h = ih * k; x = r.left + (r.width - w) / 2; y = r.top + (r.height - h) / 2;
+        }
+      }
+      // Only the part of the picture that is on screen counts (zoom, crop, cover).
+      const L = Math.max(x, st.left, 0), T = Math.max(y, st.top, 0);
+      const R = Math.min(x + w, st.right, innerWidth), B = Math.min(y + h, st.bottom, innerHeight);
+      if (R - L < 40 || B - T < 30) return null;
+      return { st, L, T, W: R - L, H: B - T };
+    },
+    layout() {
+      const el = this.el; if (!el || el.hidden) return;
+      const p = this.pic(); if (!p) return;
+      const s = el.style, pos = posNow();
+      s.left = (p.L - p.st.left) + 'px'; s.top = (p.T - p.st.top) + 'px'; s.width = p.W + 'px'; s.height = p.H + 'px';
+      s.fontSize = fontFor(p.W, p.H).toFixed(1) + 'px';
+      s.padding = pos === 'top' ? `${(p.H * 0.06).toFixed(1)}px 5% 0` : `0 5% ${(p.H * (pos === 'higher' ? 0.17 : 0.065)).toFixed(1)}px`;
+      s.justifyContent = pos === 'top' ? 'flex-start' : 'flex-end';
+      this.lift(p);
+    },
+    lift(p) {
+      const el = this.el; if (!el) return;
+      let up = 0;
+      const hud = document.getElementById('hud');
+      if (posNow() !== 'top' && hud && !hud.classList.contains('idle') && !el.hidden) {
+        // Stay above the title and controls: the redesigned player marks its title block #rxInfo; older layouts .hud-bot.
+        const info = document.getElementById('rxInfo');
+        const bot = (info && info.getBoundingClientRect().height ? info : null) || $1('.hud-bot', hud), rows = el.children;
+        if (bot && rows.length) {
+          const b = bot.getBoundingClientRect(), last = rows[rows.length - 1].getBoundingClientRect();
+          if (b.height > 0 && getComputedStyle(bot).visibility !== 'hidden' && Number(getComputedStyle(hud).opacity) > 0.05) {
+            const cur = (parseFloat((el.style.transform.match(/-?[\d.]+/) || [0])[0]) || 0);
+            const bottomNow = last.bottom - cur; // where the last line sits without a lift
+            up = Math.max(0, Math.min(bottomNow - (b.top - 6), p.H * 0.55));
+          }
+        }
+      }
+      const t = up > 0.5 ? `translateY(${(-up).toFixed(1)}px)` : '';
+      if (el.style.transform !== t) el.style.transform = t;
+    },
+    bindTrack(t) {
+      if (!t || t._mkSubFit) return; t._mkSubFit = 1;
+      t.addEventListener('cuechange', () => this.render());
+    },
+    init() {
+      const v = vid(); if (!v) return;
+      this.ensure(); this.syncMode();
+      const tt = v.textTracks;
+      if (tt) {
+        Array.from(tt).forEach(t => this.bindTrack(t));
+        tt.addEventListener('addtrack', e => { this.bindTrack(e.track); this.render(); });
+        tt.addEventListener('change', () => { Array.from(tt).forEach(t => this.bindTrack(t)); this.key = '~'; this.render(); });
+        tt.addEventListener('removetrack', () => this.render());
+      }
+      // timeupdate is a safety net for browsers that skip cuechange after seeks or cue edits (delay, auto-sync).
+      ['timeupdate', 'seeked', 'loadedmetadata', 'emptied', 'play'].forEach(n => v.addEventListener(n, () => this.render()));
+      ['webkitbeginfullscreen', 'webkitendfullscreen', 'enterpictureinpicture', 'leavepictureinpicture', 'webkitpresentationmodechanged']
+        .forEach(n => v.addEventListener(n, () => { this.syncMode(); this.render(); }));
+      const relayout = () => requestAnimationFrame(() => this.layout());
+      addEventListener('resize', relayout); addEventListener('orientationchange', () => setTimeout(relayout, 250));
+      document.addEventListener('fullscreenchange', () => setTimeout(relayout, 60));
+      document.addEventListener('webkitfullscreenchange', () => setTimeout(relayout, 60));
+      if (window.ResizeObserver) new ResizeObserver(relayout).observe(v);
+      new MutationObserver(relayout).observe(v, { attributes: true, attributeFilter: ['style', 'class'] });
+      const hud = document.getElementById('hud');
+      if (hud) new MutationObserver(() => this.lift(this.pic() || { H: 0 })).observe(hud, { attributes: true, attributeFilter: ['class', 'style'] });
+      const pl = document.getElementById('player');
+      if (pl) new MutationObserver(() => { this.key = '~'; this.render(); }).observe(pl, { attributes: true, attributeFilter: ['hidden'] });
+      if (typeof CFG_HOOKS === 'object' && CFG_HOOKS.push) CFG_HOOKS.push(k => { if (k === 'subSize' || k === 'subPos') relayout(); });
+      // Cues added after the track turned on (MKV subtitles stream in) do not always fire cuechange.
+      setInterval(() => { const pl2 = document.getElementById('player'); if (pl2 && !pl2.hidden) this.render(); }, 400);
+      this.render();
+    }
+  };
+
+  /* ---------- 2. SubEasy: simple choices ---------- */
+  const chips = (name, list, cur, label) => `<div class="sbe-row"><b>${label}</b><div class="sbe-chips" role="radiogroup" aria-label="${label}">${
+    list.map(([v, t]) => `<button type="button" role="radio" aria-checked="${v === cur}" class="${v === cur ? 'on' : ''}" data-sbe-${name}="${v}">${t}</button>`).join('')}</div></div>`;
+  // The chip that matches what is set now (by the values, so older settings light up the right chip too).
+  const lookNow = () => {
+    if (typeof SUB_LOOKS !== 'object') return '';
+    const same = (a, b) => String(a == null ? '' : a).toLowerCase() === String(b).toLowerCase();
+    for (const [k] of LOOKS) { const L = SUB_LOOKS[k]; if (L && Object.keys(L).every(x => same(x === 'subBgColor' && CFG[x] == null ? '#000000' : CFG[x], L[x]))) return k; }
+    return 'custom';
+  };
+  const blockHTML = preview => `<div class="sbe">${preview ? '<div class="sbe-pv" aria-hidden="true"><div class="sbe-line"><span>This is how subtitles will look.</span></div></div>' : ''}${
+    chips('size', SIZES, sizeKey(), 'Size')}${chips('look', lookNow() === 'custom' ? [...LOOKS, ['custom', 'Your own']] : LOOKS, lookNow(), 'Style')}${chips('pos', POS, posNow(), 'Position')}</div>`;
+  const paintPreview = root => safe(() => {
+    const pv = $1('.sbe-pv', root); if (!pv) return;
+    const r = pv.getBoundingClientRect(); if (!r.width) return;
+    const line = $1('.sbe-line', pv), pos = posNow();
+    line.style.fontSize = fontFor(r.width, r.height).toFixed(1) + 'px';
+    line.style.top = pos === 'top' ? (r.height * 0.06).toFixed(1) + 'px' : 'auto';
+    line.style.bottom = pos === 'top' ? 'auto' : (r.height * (pos === 'higher' ? 0.17 : 0.065)).toFixed(1) + 'px';
+  });
+  const pick = (kind, v) => {
+    if (kind === 'size') setCfg('subSize', Number(v));
+    else if (kind === 'pos') setCfg('subPos', v);
+    else if (kind === 'look' && v !== 'custom' && typeof setSubLook === 'function') setSubLook(v);
+    safe(() => SubFit.layout());
+  };
+  const refocus = (root, kind, v) => safe(() => {
+    const b = $1(`[data-sbe-${kind}="${CSS.escape(v)}"]`, root || document); if (!b) return;
+    if (typeof IS_TV !== 'undefined' && IS_TV && typeof Nav === 'object' && Nav.focus) Nav.focus(b, true); else b.focus({ preventScroll: true });
+  });
+  const bindChips = (root, after) => {
+    root.querySelectorAll('[data-sbe-size],[data-sbe-look],[data-sbe-pos]').forEach(b => b.addEventListener('click', e => {
+      e.stopPropagation();
+      const kind = b.hasAttribute('data-sbe-size') ? 'size' : b.hasAttribute('data-sbe-look') ? 'look' : 'pos';
+      const v = b.getAttribute('data-sbe-' + kind);
+      pick(kind, v); after(kind, v);
+    }));
+  };
+
+  let moreOpen = false;
+  const Settings = {
+    busy: false,
+    run() {
+      if (this.busy) return; this.busy = true;
+      try {
+        const body = document.getElementById('setBody'); if (!body) return;
+        const anchor = $1('#set-subSize', body); if (!anchor) return;
+        const card = anchor.closest('.set-card'); if (!card || $1(':scope > .sbe', card)) return;
+        // The old small preview card at the top of the page is replaced by the live one below.
+        body.querySelectorAll('.set-card').forEach(c => { if (c !== card && c.children.length === 1 && /This is how subtitles will look/.test(c.textContent) && !c.querySelector('.set-row')) c.classList.add('sbe-pre-hidden'); });
+        const wrap = document.createElement('div');
+        wrap.innerHTML = blockHTML(true);
+        const sbe = wrap.firstElementChild;
+        const more = document.createElement('button');
+        more.type = 'button'; more.className = 'sbe-more'; more.setAttribute('aria-expanded', String(moreOpen));
+        more.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>' + `<span>${moreOpen ? 'Fewer choices' : 'More choices'}</span>`;
+        sbe.appendChild(more);
+        card.prepend(sbe);
+        card.classList.toggle('sbe-hide-more', !moreOpen);
+        more.addEventListener('click', e => {
+          e.stopPropagation(); moreOpen = !moreOpen;
+          card.classList.toggle('sbe-hide-more', !moreOpen);
+          more.setAttribute('aria-expanded', String(moreOpen));
+          const sp = document.createElement('span'); sp.textContent = moreOpen ? 'Fewer choices' : 'More choices';
+          more.querySelector('span').replaceWith(sp); // a new node, so the page translator picks it up
+        });
+        bindChips(sbe, (kind, v) => {
+          if (kind === 'look' && v === 'custom') { if (!moreOpen) more.click(); return; }
+          if (typeof renderSettingsBody === 'function') renderSettingsBody();
+          setTimeout(() => refocus(document.getElementById('setBody'), kind, v), 30);
+        });
+        requestAnimationFrame(() => paintPreview(sbe));
+      } finally { this.busy = false; }
+    },
+    init() {
+      const go = () => { const b = document.getElementById('setBody'); if (b && !b._sbe) { b._sbe = 1; new MutationObserver(() => this.run()).observe(b, { childList: true, subtree: true }); this.run(); } };
+      go(); setTimeout(go, 1500); setTimeout(go, 5000);
+      addEventListener('resize', () => { const b = document.getElementById('setBody'); b && paintPreview(b); });
+    }
+  };
+
+  const Panel = {
+    patch(menu) {
+      if (!menu) return;
+      const old = menu.querySelector('[data-ssize]'); if (!old) return;
+      const row = old.closest('.seg-row'); if (!row) return;
+      const h = row.previousElementSibling;
+      const wrap = document.createElement('div'); wrap.innerHTML = blockHTML(false);
+      const sbe = wrap.firstElementChild;
+      row.replaceWith(sbe);
+      if (h && h.tagName === 'H5') h.remove();
+      // The delay buttons move into the same compact list (their own click handlers come along).
+      const dl = menu.querySelector('[data-delay]'), drow = dl && dl.closest('.seg-row');
+      if (drow) {
+        const dh = drow.previousElementSibling; if (dh && dh.tagName === 'H5') dh.remove();
+        const r = document.createElement('div'); r.className = 'sbe-row sbe-delay';
+        const b = document.createElement('b'); b.textContent = 'Delay'; r.appendChild(b);
+        drow.classList.add('sbe-chips'); r.appendChild(drow); sbe.prepend(r);
+      }
+      bindChips(sbe, (kind, v) => { if (typeof renderSubMenu === 'function') renderSubMenu(); setTimeout(() => refocus(document.getElementById('subMenu'), kind, v), 30); });
+    },
+    init() {
+      if (typeof renderSubMenu !== 'function' || renderSubMenu._sbe) return;
+      const orig = renderSubMenu;
+      const wrapped = function () { const r = orig.apply(this, arguments); safe(() => Panel.patch(document.getElementById('subMenu'))); return r; };
+      wrapped._sbe = 1;
+      renderSubMenu = wrapped; // eslint-disable-line no-global-assign
+    }
+  };
+
+  const start = () => { safe(() => SubFit.init()); safe(() => Settings.init()); safe(() => Panel.init()); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();</script>
 </body>
 </html>

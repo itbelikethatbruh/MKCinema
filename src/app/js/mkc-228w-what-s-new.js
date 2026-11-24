@@ -8,6 +8,12 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.93.7', date: '2026-11-23', items: [
+    ['better', 'Subtitles that fit the picture', 'Subtitles now sit inside the picture, centred just above its bottom edge, and their size follows the picture on every screen. Settings › Subtitles opens with simple Size, Style and Position choices and a live preview; every other option is under More choices.'],
+    ['new', 'iPad menu bar', 'iPad gets the Search, Miko and Menu bar from phones, with Miko in the middle. Top 10 numbers and filter boxes now look right on iPhone and iPad.'],
+    ['better', 'Picture in picture', 'Picture in picture uses Apple\'s own mode on iPhone and iPad, and only shows where your device supports it.'],
+    ['better', 'Faster start on iPhone and iPad', 'Films start faster on iPhone and iPad: MKCinema checks several copies at once and starts the first one that plays.'],
+  ] },
   { v: '2.93.6', date: '2026-11-23', items: [
     ['better', 'Steadier player', 'Audio & subtitles stays closed until you open it, and brightness and volume swipes on phones move smoothly.'],
   ] },
