@@ -27,6 +27,8 @@ The **Release** workflow then runs five jobs side by side and publishes when all
 | macos | macos-15 | `MKCinema-<v>-mac.zip` and `MKCinema-<v>.dmg` (universal: Apple silicon and Intel) |
 | publish | ubuntu-latest | `release.json`, `SHA256SUMS`, attestations and the GitHub release |
 
+The Mac build is optional: GitHub's Mac runners are scarce, so a Mac job that fails, times out (30 minutes) or never gets a runner does not make the release red or hold back the other apps. That release simply carries no Mac files (the run log says so) and the Mac download on the website stays as it was.
+
 The webOS `.ipk` is not built in CI yet: tag releases carry the one mkcinema.app serves, checked against
 `site/download/SHA256SUMS`. The same happens to the APK when the signing secrets are missing; the run log says so.
 
