@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.94.0 (2026-11-24)
+
+- Continue watching on your TV's home screen: on Android TV, Google TV and home screens that show the Continue watching row, picking an MKCinema title plays it from where you stopped, and the row keeps in step with the app (needs the Android app 1.17.11).
+
 ## Web app 2.93.9 (2026-11-24)
 
 - Subtitles sit centred in the black bar under the picture, out of the way of the film, or just above the bottom edge when there is no bar.
