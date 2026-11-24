@@ -1,4 +1,4 @@
-/* 2.93.7 iPhone fast start (thread "Speed up finding a source on iPhone", 2026-11-23).
+/* 2.93.7 iPhone fast start (thread "Speed up finding a source on iPhone", 2026-11-23; fix 1 2026-11-24: every start cancels a pending pick).
    Safari on iPhone/iPad (and Mac Safari) only. Before: the background source checks were switched off on Safari, so a
    copy that could never play there (an MKV on a host that doesn't let the page read it) was tried with the full
    10-25 s start limit, one copy after another, and the same blocked host was tried again for every copy on it.
@@ -214,12 +214,14 @@
     };
     const ps = playStream;
     playStream = async function (ctx, s, opts) {
+      // any new start (a manual pick, a switch, another film) cancels an automatic pick that is still being checked
+      const tok = ++F.tok;
       if (!wants(ctx, s)) {
         const r = await ps.apply(this, arguments);
         try { if (s && P.stream === s && !$('#player').hidden && !s.ytId && !s._local) F.scout(s); } catch (e) { /* ignore */ }
         return r;
       }
-      const tok = ++F.tok, alive = () => tok === F.tok && !$('#player').hidden;
+      const alive = () => tok === F.tok && !$('#player').hidden;
       if ($('#player').hidden) openLayer('player'); else { try { video.pause(); } catch (e) { /* ignore */ } }
       try { $('#pTitle').textContent = ctx.meta.name || ''; $('#pSub').textContent = ''; Loader.show(ctx.meta); } catch (e) { /* ignore */ }
       const t0 = performance.now();

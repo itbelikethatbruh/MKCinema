@@ -8,6 +8,10 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.93.8', date: '2026-11-23', items: [
+    ['better', 'Full screen on iPad', 'On iPad, films now open full screen so the clock and battery bar stay out of the picture.'],
+    ['better', 'Steadier film start on iPhone and iPad', 'Choosing a different copy while one is still being checked now always plays the one you picked.'],
+  ] },
   { v: '2.93.7', date: '2026-11-23', items: [
     ['better', 'Subtitles that fit the picture', 'Subtitles now sit inside the picture, centred just above its bottom edge, and their size follows the picture on every screen. Settings › Subtitles opens with simple Size, Style and Position choices and a live preview; every other option is under More choices.'],
     ['new', 'iPad menu bar', 'iPad gets the Search, Miko and Menu bar from phones, with Miko in the middle. Top 10 numbers and filter boxes now look right on iPhone and iPad.'],
