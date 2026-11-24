@@ -6,7 +6,7 @@
   const de = document.documentElement;
   const tabsEl = document.getElementById('tabs');
   if (!tabsEl) return;
-  const mq = matchMedia('(max-width: 760px)');
+  const mq = matchMedia('(max-width: 760px), (min-width: 761px) and (max-width: 1440px) and (hover: none) and (pointer: coarse)');
   const KEY = 'mkc:pillDown';
   const svg = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
   const I_SEARCH = svg('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>');

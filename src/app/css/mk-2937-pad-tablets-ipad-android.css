@@ -1,0 +1,26 @@
+/* 2.93.7 tablets (iPad, Android tablets held either way): the phone's Search · Miko · Menu bar, sized for a big
+   screen. Miko sits raised in the middle of a centred bar, so she never covers a row. The sections bar stays a
+   centred pill on top. Computers, TVs and phones are untouched. */
+html.mk-pill.mk-pad{--mkp-padw:min(480px,calc(100vw - 28px))}
+html.mk-pill.mk-pad #mkPill{left:calc(50% - var(--mkp-padw) / 2);right:calc(50% - var(--mkp-padw) / 2);bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+html.mk-pill.mk-pad #mikoFab{bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}
+html.mk-pill.mk-pad.mk-pill-miko #mikoFab{bottom:calc(32px + env(safe-area-inset-bottom,0px))!important}
+html.mk-pill.mk-pad #mkPillTog{bottom:calc(80px + env(safe-area-inset-bottom,0px))}
+html.mk-pill.mk-pad.mk-pill-miko #mkPillTog{right:calc(50% - var(--mkp-padw) / 2 + 4px)}
+/* Menu: a centred sheet, not the full width of the screen */
+html.mk-pill.mk-pad #ezbMenu{left:calc(50% - min(280px,50vw - 10px))!important;right:calc(50% - min(280px,50vw - 10px))!important;bottom:calc(16px + env(safe-area-inset-bottom,0px))!important}
+html.mk-pill.mk-pad .dock{justify-content:center}
+html.mk-pill.mk-pad.ezb-bar #tabs{flex:0 1 auto;width:auto;max-width:min(940px,100%);margin:0 auto}
+html.mk-pill.mk-pad.ezb-bar #tabs .tab,html.mk-pill.mk-pad.ezb-bar #tabs .mk-pm-btn{padding:0 20px!important}
+html.mk-pill.mk-pad #tabs .ezb-sep,html.mk-pill.mk-pad #ezbSearch,html.mk-pill.mk-pad #ezbMenuB{display:none!important}
+
+/* 2.93.7 Top 10 numbers on iPhone, iPad and Mac Safari: drawn as one SVG (metal edge + dark face + glow), because
+   Safari misaligns the layered text the other browsers use. Same look as the website. */
+html.mk-t10svg .t10n:before,html.mk-t10svg .t10n:after{content:none!important;display:none!important}
+html.mk-t10svg .t10n b{background:none!important;color:transparent!important;-webkit-text-fill-color:transparent}
+.t10n .t10s{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;z-index:2}
+.t10n .t10s text{font:inherit;letter-spacing:inherit}
+.t10n .t10s .t10g{opacity:0}
+html:not(.tv):not(.lite) body.fx-hi .t10-on .t10n .t10s .t10g{animation:t10shift 9s ease-in-out infinite;animation-delay:calc(var(--t10i,0) * -.9s)}
+.t10c.t10v:is(:hover,:focus-visible,.nav-focus) .t10n .t10s .t10g{animation:none!important;opacity:1;transition:opacity .3s ease}
+@media (prefers-reduced-motion:reduce){.t10n .t10s .t10g{animation:none!important}}

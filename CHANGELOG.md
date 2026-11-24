@@ -2,6 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.93.7 (2026-11-24)
+
+- Subtitles that fit the picture: they sit inside the picture and their size follows it on every screen. Settings › Subtitles opens with simple Size, Style and Position choices and a live preview.
+- iPad gets the Search, Miko and Menu bar from phones, with Miko in the middle. Top 10 numbers and filter boxes now look right on iPhone and iPad.
+- Picture in picture uses Apple's own mode on iPhone and iPad, and only shows where your device supports it.
+- Films start faster on iPhone and iPad: several copies are checked at once and the first one that plays starts.
+
 ## Web app 2.93.6 (2026-11-23)
 
 - Steadier player: Audio & subtitles stays closed until you open it, and brightness and volume swipes on phones move smoothly.
