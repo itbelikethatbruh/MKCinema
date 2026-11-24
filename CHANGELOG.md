@@ -2,6 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.94.1 (2026-11-24)
+
+- Skip ahead several times in a row and the film goes straight to the spot you chose.
+- Fill, Crop bars and zoom work on TVs (needs the Android app 1.17.12).
+- Largest and Smallest sort the sources in the player.
+- On TVs, pressing Down or Done in Search takes you to the results.
+
 ## Web app 2.94.0 (2026-11-24)
 
 - Continue watching on your TV's home screen: on Android TV, Google TV and home screens that show the Continue watching row, picking an MKCinema title plays it from where you stopped, and the row keeps in step with the app (needs the Android app 1.17.11).
