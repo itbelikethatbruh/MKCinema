@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.94.0', date: '2026-11-24', items: [
+    ['new', 'Continue watching on your TV\'s home screen', 'On Android TV, Google TV and home screens like Projectivy, MKCinema\'s Continue watching row now plays the film or episode from where you stopped when you pick it, and keeps in step with the app. Needs the Android app 1.17.11.'],
+  ] },
   { v: '2.93.9', date: '2026-11-24', items: [
     ['better', 'Subtitles under the picture', 'Subtitles now sit centred in the black bar under the picture, out of the way of the film, or just above the bottom edge when there is no bar.'],
     ['better', 'Clear top menu', 'The top menu on phones and iPad is now solid and sharp, with no blur behind it.'],
