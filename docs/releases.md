@@ -25,9 +25,9 @@ The **Release** workflow then runs five jobs side by side and publishes when all
 | linux | ubuntu-22.04 | `mkcinema_<v>_amd64.deb` and `mkcinema-<v>-linux-x86_64.tar.gz`, built on the oldest supported Ubuntu so the binary runs on older systems |
 | linux (ARM) | ubuntu-22.04-arm | `mkcinema_<v>_arm64.deb` and `mkcinema-<v>-linux-arm64.tar.gz` for Raspberry Pi 4 and 5 (64-bit Raspberry Pi OS) and other 64-bit ARM boards; release.json lists them under `linux-arm64` |
 | macos | macos-15 | `MKCinema-<v>-mac.zip` and `MKCinema-<v>.dmg` (universal: Apple silicon and Intel) |
+| publish | ubuntu-latest | `release.json`, `SHA256SUMS`, attestations and the GitHub release |
 
 The Mac build is optional: GitHub's Mac runners are scarce, so a Mac job that fails, times out (30 minutes) or never gets a runner does not make the release red or hold back the other apps. That release simply carries no Mac files (the run log says so) and the Mac download on the website stays as it was.
-| publish | ubuntu-latest | `release.json`, `SHA256SUMS`, attestations and the GitHub release |
 
 The webOS `.ipk` is not built in CI yet: tag releases carry the one mkcinema.app serves, checked against
 `site/download/SHA256SUMS`. The same happens to the APK when the signing secrets are missing; the run log says so.
