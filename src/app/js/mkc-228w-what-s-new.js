@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.94.1', date: '2026-11-24', items: [
+    ['better', 'Smoother skipping and a better TV search', 'Skip ahead several times in a row and the film goes straight there. Fill, Crop bars and zoom now work on TVs (Android app 1.17.12), Largest and Smallest sort sources in the player, and on TVs Down or Done takes you to the search results.'],
+  ] },
   { v: '2.94.0', date: '2026-11-24', items: [
     ['new', 'Continue watching on your TV\'s home screen', 'On Android TV, Google TV and home screens like Projectivy, MKCinema\'s Continue watching row now plays the film or episode from where you stopped when you pick it, and keeps in step with the app. Needs the Android app 1.17.11.'],
   ] },
