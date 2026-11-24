@@ -3,6 +3,7 @@ package com.mkcinema.app;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.Gravity;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -40,13 +41,13 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
     static final String[] WATCHED = { "time-pos", "duration", "pause", "paused-for-cache", "seeking", "eof-reached", "idle-active",
         "volume", "mute", "speed", "aid", "sid", "secondary-sid", "track-list", "chapter-list", "demuxer-cache-time",
         "video-params/w", "video-params/h", "video-params/gamma", "video-params/primaries", "hwdec-current", "video-codec",
-        "audio-codec-name", "audio-params/channel-count", "container-fps", "sub-delay", "audio-delay", "sub-text" };
+        "audio-codec-name", "audio-params/channel-count", "container-fps", "sub-delay", "audio-delay", "sub-text", "video-params/aspect" };
     static final Map<String, String> KEYS = new HashMap<>();
     static {
         String[] k = { "time-pos", "t", "duration", "dur", "pause", "paused", "paused-for-cache", "buffering", "eof-reached", "ended",
             "idle-active", "idle", "demuxer-cache-time", "cached", "video-params/w", "w", "video-params/h", "h", "video-params/gamma", "gamma",
             "video-params/primaries", "prim", "track-list", "tracks", "chapter-list", "chapters", "hwdec-current", "hwdec",
-            "audio-params/channel-count", "channels", "container-fps", "fps", "sub-text", "stext" };
+            "audio-params/channel-count", "channels", "container-fps", "fps", "sub-text", "stext", "video-params/aspect", "dar" };
         for (int i = 0; i < k.length; i += 2) KEYS.put(k[i], k[i + 1]);
     }
 
@@ -70,6 +71,12 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
             }
         }
         final List<Op> ops = translate(c, arg); // refused commands still fail here, at once
+        // 1.17.12: on TVs the decoder draws straight onto the surface and mpv's aspect, panscan and zoom don't reach it,
+        // so Fit, Fill, Crop bars, the forced shapes and zoom size the picture surface itself (like PlayerActivity.fit)
+        if (a.tv && ("aspect".equals(c) || "fill".equals(c) || "zoom".equals(c))) {
+            if ("aspect".equals(c)) ovA = ratio(arg); else if ("fill".equals(c)) fillOn = "1".equals(arg); else zoomK = Double.parseDouble(num(arg, 0.25, 4));
+            h.post(this::fit); return "";
+        }
         if (client() == null) throw new IllegalStateException(initErr == null ? "no player" : initErr);
         final boolean open = "open".equals(c);
         int g0 = 0;
@@ -103,6 +110,33 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
             note(c + " failed: " + m);
             if (open) { news("end", "error"); news("err", "the file could not be opened (" + m + ")"); }
         }
+    }
+
+    volatile double ovA = -1, zoomK = 1; volatile boolean fillOn;
+    /** "-1"/"no" = the film's own shape; "2.35" or "16:9" = a forced shape */
+    static double ratio(String a) {
+        try { int i = a.indexOf(':'); double r = i > 0 ? Double.parseDouble(a.substring(0, i)) / Double.parseDouble(a.substring(i + 1)) : Double.parseDouble(a); return r > 0.2 && r < 10 ? r : -1; }
+        catch (Exception e) { return -1; }
+    }
+    /** TVs (UI thread): the surface takes the picture's shape, fitted (or, for Fill, covering the screen), times the zoom.
+        A surface bigger than the screen is centred and the window crops what sticks out. */
+    void fit() {
+        if (!a.tv || sv == null) return;
+        int sw = a.root.getWidth(), shh = a.root.getHeight();
+        double A = ovA > 0 ? ovA : num("dar");
+        if (!(A > 0)) { double w = num("w"), ht = num("h"); A = w > 0 && ht > 0 ? w / ht : 0; }
+        FrameLayout.LayoutParams lp;
+        if (sw <= 0 || shh <= 0 || !(A > 0)) lp = new FrameLayout.LayoutParams(-1, -1);
+        else {
+            double W = sw, H = sw / A;
+            if (fillOn ? H < shh : H > shh) { H = shh; W = shh * A; }
+            W *= zoomK; H *= zoomK;
+            int wi = (int) Math.round(W), hi = (int) Math.round(H);
+            lp = Math.abs(wi - sw) <= 2 && Math.abs(hi - shh) <= 2 ? new FrameLayout.LayoutParams(-1, -1) : new FrameLayout.LayoutParams(wi, hi, Gravity.CENTER);
+        }
+        android.view.ViewGroup.LayoutParams o = sv.getLayoutParams();
+        boolean same = o instanceof FrameLayout.LayoutParams && o.width == lp.width && o.height == lp.height && ((FrameLayout.LayoutParams) o).gravity == lp.gravity;
+        if (!same) { sv.setLayoutParams(lp); note("picture " + lp.width + "x" + lp.height + " on " + sw + "x" + shh); }
     }
 
     static final class Op { final String prop, val; final String[] args; Op(String p, String v, String[] a) { prop = p; val = v; args = a; } }
@@ -268,12 +302,12 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
             a.root.addView(sv, 0, new FrameLayout.LayoutParams(-1, -1));
         }
         shown = on;
-        if (sv != null) { below(); sv.setVisibility(on ? View.VISIBLE : View.GONE); }
+        if (sv != null) { below(); sv.setVisibility(on ? View.VISIBLE : View.GONE); if (on) fit(); }
         if (a.web != null) a.web.setBackgroundColor(on ? Color.TRANSPARENT : Color.BLACK);
         android.util.Log.i("MKCPlayer", "under: show " + on);
     }
     /** keeps the surface below the page (the page's WebView can be rebuilt after its renderer stopped) */
-    void below() { if (sv != null && a.root.indexOfChild(sv) != 0) { a.root.removeView(sv); a.root.addView(sv, 0, new FrameLayout.LayoutParams(-1, -1)); } }
+    void below() { if (sv != null && a.root.indexOfChild(sv) != 0) { android.view.ViewGroup.LayoutParams lp = sv.getLayoutParams(); a.root.removeView(sv); a.root.addView(sv, 0, lp != null ? lp : new FrameLayout.LayoutParams(-1, -1)); } }
 
     @Override public void surfaceCreated(SurfaceHolder hd) {
         hasSurface = true; MPVLib x = m; if (x == null) return;
@@ -302,7 +336,11 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
 
     // ---- mpv's news, gathered and handed to the page at most 8 times a second ----
 
-    void put(String name, Object v) { String k = KEYS.containsKey(name) ? KEYS.get(name) : name; synchronized (lock) { vals.put(k, v); dirty.add(k); } }
+    void put(String name, Object v) {
+        String k = KEYS.containsKey(name) ? KEYS.get(name) : name; boolean shape;
+        synchronized (lock) { Object was = vals.put(k, v); dirty.add(k); shape = a.tv && ("w".equals(k) || "h".equals(k) || "dar".equals(k)) && (was == null ? v != null : !was.equals(v)); }
+        if (shape) h.post(this::fit); // 1.17.12: a new film (or a new shape mid-film) resizes the TV picture
+    }
     void news(String k, Object v) { synchronized (lock) { extra.put(k, v); } }
     static Object parse(String name, String raw) {
         if (raw == null) return JSONObject.NULL;
