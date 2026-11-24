@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.93.8 (2026-11-24)
+
+- On iPad, films open full screen so the clock and battery bar stay out of the picture.
+- Choosing a different copy while one is still being checked on iPhone and iPad now always plays the one you picked.
+
 ## Web app 2.93.7 (2026-11-24)
 
 - Subtitles that fit the picture: they sit inside the picture and their size follows it on every screen. Settings › Subtitles opens with simple Size, Style and Position choices and a live preview.
