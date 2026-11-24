@@ -8,6 +8,11 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.93.9', date: '2026-11-24', items: [
+    ['better', 'Subtitles under the picture', 'Subtitles now sit centred in the black bar under the picture, out of the way of the film, or just above the bottom edge when there is no bar.'],
+    ['better', 'Clear top menu', 'The top menu on phones and iPad is now solid and sharp, with no blur behind it.'],
+    ['better', 'Trailers on iPad close cleanly', 'On iPad, closing a trailer now leaves full screen right away.'],
+  ] },
   { v: '2.93.8', date: '2026-11-23', items: [
     ['better', 'Full screen on iPad', 'On iPad, films now open full screen so the clock and battery bar stay out of the picture.'],
     ['better', 'Steadier film start on iPhone and iPad', 'Choosing a different copy while one is still being checked now always plays the one you picked.'],

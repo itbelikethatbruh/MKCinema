@@ -99,16 +99,25 @@
       const L = Math.max(x, st.left, 0), T = Math.max(y, st.top, 0);
       const R = Math.min(x + w, st.right, innerWidth), B = Math.min(y + h, st.bottom, innerHeight);
       if (R - L < 40 || B - T < 30) return null;
-      return { st, L, T, W: R - L, H: B - T };
+      return { st, L, T, W: R - L, H: B - T, VT: Math.max(st.top, 0), VB: Math.min(st.bottom, innerHeight) };
     },
     layout() {
       const el = this.el; if (!el || el.hidden) return;
       const p = this.pic(); if (!p) return;
-      const s = el.style, pos = posNow();
-      s.left = (p.L - p.st.left) + 'px'; s.top = (p.T - p.st.top) + 'px'; s.width = p.W + 'px'; s.height = p.H + 'px';
-      s.fontSize = fontFor(p.W, p.H).toFixed(1) + 'px';
-      s.padding = pos === 'top' ? `${(p.H * 0.06).toFixed(1)}px 5% 0` : `0 5% ${(p.H * (pos === 'higher' ? 0.17 : 0.065)).toFixed(1)}px`;
-      s.justifyContent = pos === 'top' ? 'flex-start' : 'flex-end';
+      const s = el.style, pos = posNow(), fs = fontFor(p.W, p.H);
+      s.fontSize = fs.toFixed(1) + 'px';
+      // Bottom (the default) and Top use the black bar under / over the picture when it can hold two lines, so the
+      // words stay out of the film (Owner 2026-11-23: "out the way"). Without a bar: just inside the picture's edge.
+      const need = fs * 1.32 * 2 + fs * 0.3;
+      const barB = p.VB - (p.T + p.H), barT = p.T - p.VT;
+      let top = p.T, h = p.H, pad, jc;
+      if (pos === 'bottom' && barB >= need) { top = p.T + p.H; h = barB; const mid = barB <= need * 3; pad = `${(fs * (mid ? 0.15 : 0.8)).toFixed(1)}px 5% 0`; jc = mid && barB > need * 1.4 ? 'center' : 'flex-start'; }
+      else if (pos === 'top' && barT >= need) { top = p.VT; h = barT; const mid = barT <= need * 3; pad = `0 5% ${(fs * (mid ? 0.15 : 0.8)).toFixed(1)}px`; jc = mid && barT > need * 1.4 ? 'center' : 'flex-end'; }
+      else if (pos === 'top') { pad = `${(p.H * 0.06).toFixed(1)}px 5% 0`; jc = 'flex-start'; }
+      else { pad = `0 5% ${(p.H * (pos === 'higher' ? 0.17 : 0.065)).toFixed(1)}px`; jc = 'flex-end'; }
+      s.left = (p.L - p.st.left) + 'px'; s.top = (top - p.st.top) + 'px'; s.width = p.W + 'px'; s.height = h + 'px';
+      s.padding = pad; s.justifyContent = jc;
+      el.dataset.inBar = String(top !== p.T || h !== p.H);
       this.lift(p);
     },
     lift(p) {
@@ -183,8 +192,12 @@
     const r = pv.getBoundingClientRect(); if (!r.width) return;
     const line = $1('.sbe-line', pv), pos = posNow();
     line.style.fontSize = fontFor(r.width, r.height).toFixed(1) + 'px';
-    line.style.top = pos === 'top' ? (r.height * 0.06).toFixed(1) + 'px' : 'auto';
-    line.style.bottom = pos === 'top' ? 'auto' : (r.height * (pos === 'higher' ? 0.17 : 0.065)).toFixed(1) + 'px';
+    // The preview is a wide film with black bars (18% each): Bottom and Top sit in the bars, Raised inside the picture.
+    const bar = r.height * 0.18, ph = r.height - 2 * bar, lh = line.getBoundingClientRect().height;
+    line.style.fontSize = fontFor(r.width, ph).toFixed(1) + 'px';
+    const lh2 = line.getBoundingClientRect().height || lh;
+    line.style.top = pos === 'top' ? Math.max(0, (bar - lh2) / 2).toFixed(1) + 'px' : 'auto';
+    line.style.bottom = pos === 'top' ? 'auto' : (pos === 'higher' ? bar + ph * 0.17 : Math.max(0, (bar - lh2) / 2)).toFixed(1) + 'px';
   });
   const pick = (kind, v) => {
     if (kind === 'size') setCfg('subSize', Number(v));

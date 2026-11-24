@@ -2,6 +2,12 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.93.9 (2026-11-24)
+
+- Subtitles sit centred in the black bar under the picture, out of the way of the film, or just above the bottom edge when there is no bar.
+- The top menu on phones and iPad is solid and sharp, with no blur behind it.
+- On iPad, closing a trailer leaves full screen right away.
+
 ## Web app 2.93.8 (2026-11-24)
 
 - On iPad, films open full screen so the clock and battery bar stay out of the picture.
