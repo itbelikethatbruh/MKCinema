@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.94.3', date: '2026-11-24', items: [
+    ['better', 'Full screen on iPad and iPhone home-screen app', 'In the home-screen app on iPad and iPhone, Full screen now hides the clock and battery bar.'],
+  ] },
   { v: '2.94.2', date: '2026-11-24', items: [
     ['better', 'Smoother on older Fire TV Sticks', 'Rows and pages move in one quick step instead of gliding, so the remote feels faster.'],
   ] },
