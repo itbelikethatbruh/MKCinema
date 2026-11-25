@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.94.3 (2026-11-24)
+
+- iPad and iPhone home-screen app: the Full screen button is back in the player and hides the clock and battery bar.
+
 ## Web app 2.94.2 (2026-11-24)
 
 - Smoother on older Fire TV Sticks: rows and pages move in one quick step instead of gliding, so the remote feels faster.
