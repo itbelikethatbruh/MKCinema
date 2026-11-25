@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.95.3 (2026-11-25)
+
+- Quicker back on TVs: backing out of a film is much quicker, and the title page shows at once.
+
 ## Web app 2.95.2 (2026-11-25)
 
 - Smoother Sources on TVs: the remote moves one source at a time in a title's Streams list and the player's Sources panel, and switching to another source mid-film is quicker and steadier.

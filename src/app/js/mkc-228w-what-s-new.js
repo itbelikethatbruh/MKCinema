@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.95.3', date: '2026-11-25', items: [
+    ['better', 'Quicker back on TVs', 'Backing out of a film is much quicker on TVs: the title page shows at once.'],
+  ] },
   { v: '2.95.2', date: '2026-11-25', items: [
     ['better', 'Smoother Sources on TVs', 'The remote moves one source at a time in a title\'s Streams list and the player\'s Sources panel, and switching to another source mid-film is quicker and steadier.'],
   ] },
