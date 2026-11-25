@@ -10,6 +10,31 @@
    Automatic (default) turns it on for every Fire TV, for TVs with 2 GB of memory or less or 2 cores, and for phones and
    computers with 1 GB or less. On / Off for any device in Settings › Performance. */
 (function(){try{var d=document.documentElement,tv=d.classList.contains('tv');var v='auto';try{v=JSON.parse(localStorage.getItem('mkc:lite')||'"auto"')}catch(e){}if(v==='off')return;var why='';if(v==='on')why='on';else{var ua=navigator.userAgent,m=navigator.deviceMemory,c=navigator.hardwareConcurrency;if(tv){if(/\bAFT[A-Z0-9]*\b/.test(ua))why='model';else if(m&&m<=2)why='memory';else if(c&&c<=2)why='cores';else why='tv'}else if(m&&m<=1)why='memory'}if(why){d.classList.add('lite');window.MK_LITE=why}}catch(e){}})();</script>
+<script id="mk-2942-old">
+/* 2.94.2 Old Fire Sticks: Snappy mode moves rows and the page in one step instead of gliding.
+   On a weak stick every in-between frame of a glide is a full redraw, so the 140-260 ms glide after each remote
+   press was a large share of the work, and the poster only settled once it ended. Only for the weakest TVs (the
+   1 GB Fire TV models, 1 GB or 2-core TVs) and when Snappy mode is switched On by hand; other TVs keep the glide. */
+(function () {
+  try {
+    var H = document.documentElement, why = window.MK_LITE;
+    if (!why || !H.classList.contains('tv')) return;
+    var ua = navigator.userAgent, mem = navigator.deviceMemory, cpu = navigator.hardwareConcurrency;
+    if (!(why === 'on' || /\bAFT(M|T|B|SS|SSS|MM)\b/.test(ua) || (mem && mem <= 1) || (cpu && cpu <= 2))) return;
+    H.classList.add('mk-instant'); window.MK_INSTANT = true;
+    var fix = function (o) { if (o && typeof o === 'object' && o.behavior === 'smooth') { o = Object.assign({}, o); o.behavior = 'auto'; } return o; };
+    var wrap = function (obj, name) {
+      var f = obj[name]; if (typeof f !== 'function' || f._mkInstant) return;
+      var g = function (a) { return arguments.length === 1 ? f.call(this, fix(a)) : f.apply(this, arguments); };
+      g._mkInstant = true; obj[name] = g;
+    };
+    ['scrollTo', 'scrollBy', 'scroll', 'scrollIntoView'].forEach(function (n) { wrap(Element.prototype, n); });
+    ['scrollTo', 'scrollBy', 'scroll'].forEach(function (n) { wrap(window, n); });
+    addEventListener('load', function () { try { MKLog.add('info', 'old stick: instant scrolling (' + why + ')'); } catch (e) { /* no log */ } });
+  } catch (e) { /* keep the glide */ }
+})();
+</script>
+<style id="mk-2942-old-css">html.mk-instant,html.mk-instant *{scroll-behavior:auto!important}</style>
 <style id="mkc-lite-css">
 /* 2.79 Lite mode (weak TVs only, html.lite): nothing moves on its own and nothing glides, so a slow chip only ever
    draws the frame the remote asked for. Colours, fonts, posters, the Noir look and every feature stay as they are. */
@@ -11428,7 +11453,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.94.1';
+const APP_VERSION = '2.94.2';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -16733,7 +16758,7 @@ const TvHome = {
           const top = lay ? lay.getBoundingClientRect().top : 0, h = lay ? lay.clientHeight : innerHeight;
           const sp = !lay && document.documentElement.classList.contains('mk-spot') && el.closest('#homeRows') ? $('#hero').getBoundingClientRect().height : 0;
           const d = r.top - top + r.height / 2 - (sp + (h - sp) / 2);
-          if (Math.abs(d) > 6) (lay || window).scrollBy({ top: d, behavior: quick ? 'auto' : 'smooth' });
+          if (Math.abs(d) > 6) (lay || window).scrollBy({ top: d, behavior: quick || window.MK_INSTANT ? 'auto' : 'smooth' });
         };
         let r;
         try { r = focus(el, quick); } finally { delete el.scrollIntoView; }
@@ -16743,7 +16768,11 @@ const TvHome = {
           const first = rail.firstElementChild, ml = (x) => parseFloat(getComputedStyle(x).marginLeft) || 0;
           // a Top 10 rank number sits in the card's left margin, so it stays in view
           const left = Math.max(0, Math.min(rail.scrollWidth - rail.clientWidth, ml(first) + el.offsetLeft - first.offsetLeft - ml(el)));
-          if (Math.abs(left - (rail._tw && rail._tw.raf ? rail._tw.to : rail.scrollLeft)) > 1) glide(rail, left, quick ? 140 : 260);
+          if (Math.abs(left - (rail._tw && rail._tw.raf ? rail._tw.to : rail.scrollLeft)) > 1) {
+            // 2.94.2: old sticks jump straight there (every glide frame is a full redraw on them)
+            if (window.MK_INSTANT) { if (rail._tw && rail._tw.raf) { cancelAnimationFrame(rail._tw.raf); rail._tw.raf = 0; } rail.scrollLeft = left; }
+            else glide(rail, left, quick ? 140 : 260);
+          }
         }
         return r;
       };
@@ -24470,6 +24499,9 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.94.2', date: '2026-11-24', items: [
+    ['better', 'Smoother on older Fire TV Sticks', 'Rows and pages move in one quick step instead of gliding, so the remote feels faster.'],
+  ] },
   { v: '2.94.1', date: '2026-11-24', items: [
     ['better', 'Smoother skipping and a better TV search', 'Skip ahead several times in a row and the film goes straight there. Fill, Crop bars and zoom now work on TVs (Android app 1.17.12), Largest and Smallest sort sources in the player, and on TVs Down or Done takes you to the search results.'],
   ] },
@@ -59038,6 +59070,37 @@ html.mk-pill .dock-wrap:before{height:100%!important;background:var(--void,#000)
       try { first.scrollIntoView({ block: 'nearest' }); } catch (x) { /* old web view */ }
     }, true);
   }
+})();
+</script>
+<script id="mk-2942-keep">
+/* 2.94.2 TVs: the highlighted poster stays on screen. When a Home row finishes loading as the page scrolls, Home tidies
+   its rows and the browser shifts the page to make up for it, which could carry the highlight off screen (seen when
+   the page moves in one step: held buttons, and old sticks). For a moment after each move, if the highlight was on
+   screen and is then pushed fully off it, the page is brought back to it. */
+(function () {
+  try {
+    if (!document.documentElement.classList.contains('tv') || typeof Nav === 'undefined' || Nav.focus._mkKeep) return;
+    var el = null, until = 0, seen = false, raf = 0;
+    var check = function () {
+      raf = 0;
+      if (!el || performance.now() > until || !el.isConnected || !el.classList.contains('nav-focus')) { el = null; return; }
+      if (document.body.classList.contains('layer-open') || el.closest('.layer-ov, #player, .dock-wrap, #hero')) return;
+      var r = el.getBoundingClientRect(), vh = innerHeight; if (!(r.height > 0)) return;
+      var inView = r.bottom > 0 && r.top < vh;
+      if (inView) { seen = true; return; }
+      if (!seen) return; // still on its way in (a glide)
+      seen = false; window.scrollBy({ top: r.top + r.height / 2 - vh / 2, behavior: 'auto' });
+    };
+    addEventListener('scroll', function () { if (el && !raf) raf = requestAnimationFrame(check); }, { passive: true, capture: true });
+    var f = Nav.focus;
+    Nav.focus = function (e) {
+      var out = f.apply(this, arguments);
+      el = e && e.classList ? e : null; until = performance.now() + 1500; seen = false;
+      if (el && !raf) raf = requestAnimationFrame(check);
+      return out;
+    };
+    Nav.focus._mkKeep = true;
+  } catch (e) { /* leave focus as it was */ }
 })();
 </script>
 </body>

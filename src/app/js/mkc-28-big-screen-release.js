@@ -2730,7 +2730,7 @@ const TvHome = {
           const top = lay ? lay.getBoundingClientRect().top : 0, h = lay ? lay.clientHeight : innerHeight;
           const sp = !lay && document.documentElement.classList.contains('mk-spot') && el.closest('#homeRows') ? $('#hero').getBoundingClientRect().height : 0;
           const d = r.top - top + r.height / 2 - (sp + (h - sp) / 2);
-          if (Math.abs(d) > 6) (lay || window).scrollBy({ top: d, behavior: quick ? 'auto' : 'smooth' });
+          if (Math.abs(d) > 6) (lay || window).scrollBy({ top: d, behavior: quick || window.MK_INSTANT ? 'auto' : 'smooth' });
         };
         let r;
         try { r = focus(el, quick); } finally { delete el.scrollIntoView; }
@@ -2740,7 +2740,11 @@ const TvHome = {
           const first = rail.firstElementChild, ml = (x) => parseFloat(getComputedStyle(x).marginLeft) || 0;
           // a Top 10 rank number sits in the card's left margin, so it stays in view
           const left = Math.max(0, Math.min(rail.scrollWidth - rail.clientWidth, ml(first) + el.offsetLeft - first.offsetLeft - ml(el)));
-          if (Math.abs(left - (rail._tw && rail._tw.raf ? rail._tw.to : rail.scrollLeft)) > 1) glide(rail, left, quick ? 140 : 260);
+          if (Math.abs(left - (rail._tw && rail._tw.raf ? rail._tw.to : rail.scrollLeft)) > 1) {
+            // 2.94.2: old sticks jump straight there (every glide frame is a full redraw on them)
+            if (window.MK_INSTANT) { if (rail._tw && rail._tw.raf) { cancelAnimationFrame(rail._tw.raf); rail._tw.raf = 0; } rail.scrollLeft = left; }
+            else glide(rail, left, quick ? 140 : 260);
+          }
         }
         return r;
       };
