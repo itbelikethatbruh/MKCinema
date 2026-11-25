@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.95.2 (2026-11-25)
+
+- Smoother Sources on TVs: the remote moves one source at a time in a title's Streams list and the player's Sources panel, and switching to another source mid-film is quicker and steadier.
+
 ## Web app 2.95.1 (2026-11-25)
 
 - Your language from the start: the first time you open MKCinema, pick your language from 48, each with its flag and its own name. Your device's language is already chosen. Works with touch, mouse or TV remote, signed in or not.
