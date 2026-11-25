@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.95.0 (2026-11-25)
+
+- Four more languages: Afrikaans, isiZulu, isiXhosa and Hrvatski. MKCinema now speaks 48 languages.
+- Website: available in all 48 languages.
+
 ## Web app 2.94.4 (2026-11-25)
 
 - Smoother playback: keyboard shortcuts keep working while a film plays, and subtitles stay in step.

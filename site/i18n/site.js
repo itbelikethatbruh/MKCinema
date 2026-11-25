@@ -2,7 +2,7 @@
    (their pick in the menu, else their device language). Words live in /i18n/<code>.json. Nothing is sent anywhere:
    the choice stays in this browser. */
 (() => {
-  const NAMES = { en: 'English', es: 'Español', pt: 'Português (Brasil)', fr: 'Français', de: 'Deutsch', it: 'Italiano', pl: 'Polski', tr: 'Türkçe', ru: 'Русский', id: 'Bahasa Indonesia', vi: 'Tiếng Việt', tl: 'Filipino', sw: 'Kiswahili', ha: 'Hausa', sm: 'Gagana Samoa', ar: 'العربية', fa: 'فارسی', ur: 'اردو', hi: 'हिन्दी', mr: 'मराठी', bn: 'বাংলা', pa: 'ਪੰਜਾਬੀ', gu: 'ગુજરાતી', ta: 'தமிழ்', te: 'తెలుగు', kn: 'ಕನ್ನಡ', ml: 'മലയാളം', th: 'ไทย', zh: '中文（简体）', ja: '日本語', ko: '한국어' };
+  const NAMES = { en: 'English', es: 'Español', pt: 'Português (Brasil)', fr: 'Français', de: 'Deutsch', it: 'Italiano', pl: 'Polski', tr: 'Türkçe', ru: 'Русский', id: 'Bahasa Indonesia', vi: 'Tiếng Việt', tl: 'Filipino', sw: 'Kiswahili', ha: 'Hausa', sm: 'Gagana Samoa', ar: 'العربية', fa: 'فارسی', ur: 'اردو', hi: 'हिन्दी', mr: 'मराठी', bn: 'বাংলা', pa: 'ਪੰਜਾਬੀ', gu: 'ગુજરાતી', ta: 'தமிழ்', te: 'తెలుగు', kn: 'ಕನ್ನಡ', ml: 'മലയാളം', th: 'ไทย', zh: '中文（简体）', ja: '日本語', ko: '한국어', nl: 'Nederlands', uk: 'Українська', ro: 'Română', el: 'Ελληνικά', cs: 'Čeština', hu: 'Magyar', sv: 'Svenska', he: 'עברית', ms: 'Bahasa Melayu', ne: 'नेपाली', my: 'မြန်မာ', am: 'አማርኛ', uz: 'Oʻzbekcha', af: 'Afrikaans', zu: 'isiZulu', xh: 'isiXhosa', hr: 'Hrvatski' };
   const root = document.documentElement, code = root.getAttribute('data-lang') || 'en';
   const SKIP = '.brand,[translate="no"],code,pre,script,style,svg,textarea,input,select,.lang-pick,#yr';
   const norm = (s) => s.replace(/\s+/g, ' ').trim();
@@ -63,7 +63,7 @@
     for (let n; (n = w.nextNode());) text(n);
     els.forEach((el) => el.hasAttribute && attrs(el));
   };
-  const rtl = /^(ar|fa|ur)$/.test(code);
+  const rtl = /^(ar|fa|ur|he)$/.test(code);
   const show = () => root.classList.remove('i18n-wait');
   (window.__sl || fetch(`/i18n/${code}.json`)).then((r) => r.json()).then((d) => {
     U = d.units || {}; S = d.strings || {};

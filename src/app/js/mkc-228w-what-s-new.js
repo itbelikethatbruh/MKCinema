@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.95.0', date: '2026-11-25', items: [
+    ['new', 'Four more languages', 'MKCinema now speaks 48 languages, adding Afrikaans, isiZulu, isiXhosa and Hrvatski. Pick one in Settings › Appearance › Language.'],
+  ] },
   { v: '2.94.4', date: '2026-11-25', items: [
     ['better', 'Smoother playback', 'Keyboard shortcuts keep working while a film plays, subtitles stay in step and show the right letters from older subtitle files, Try next source keeps to your audio language, Stremio import shows what came over, offline addons answer sooner and long binges use less memory.'],
   ] },
