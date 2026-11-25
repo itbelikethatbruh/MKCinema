@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.95.2', date: '2026-11-25', items: [
+    ['better', 'Smoother Sources on TVs', 'The remote moves one source at a time in a title\'s Streams list and the player\'s Sources panel, and switching to another source mid-film is quicker and steadier.'],
+  ] },
   { v: '2.95.1', date: '2026-11-25', items: [
     ['new', 'Your language from the start', 'The first time you open MKCinema, pick your language from 48, each shown with its flag and its own name. Your device\'s language is already chosen, so one tap on Continue is enough. It works with touch, a mouse or a TV remote, signed in or not, and the create-account card has a Language button too.'],
   ] },
