@@ -2,6 +2,15 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.94.4 (2026-11-25)
+
+- Smoother playback: keyboard shortcuts keep working while a film plays, and subtitles stay in step.
+- Subtitle files from older Windows tools show the right letters.
+- Try next source keeps to your audio language.
+- Stremio import shows what came over even when addons can't be read.
+- Quicker answer when an addon is offline, and less memory used over long binges.
+- Website: numbers now use a classic serif.
+
 ## Web app 2.94.3 (2026-11-24)
 
 - iPad and iPhone home-screen app: the Full screen button is back in the player and hides the clock and battery bar.

@@ -46,7 +46,7 @@ const AddonSwap = {
       if (opts.position != null || opts.builtin) return inst(input, opts);
       let base; try { base = StremioEngine.normalize(input); } catch (e) { return inst(input, opts); }
       if (this.addons.some((a) => a.baseUrl === base)) return inst(input, opts);
-      let m = null; try { m = await this.http(`${base}/manifest.json`, { ttl: 0, timeout: 12000 }); } catch (e) { return inst(input, opts); }
+      let m = null; try { m = await this.http(`${base}/manifest.json`, { ttl: 0, timeout: 12000 }); } catch (e) { throw e; }
       let host = ''; try { host = new URL(base).host; } catch (e) { /* ignore */ }
       const old = m && m.id && this.addons.find((a) => !a.virtual && !a.builtin && a.manifest && a.manifest.id === m.id && (() => { try { return new URL(a.baseUrl).host === host; } catch (e) { return false; } })());
       if (!old) return inst(input, opts);

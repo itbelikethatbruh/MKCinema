@@ -887,7 +887,7 @@ const AssR = {
     try {
       this.inst = new J({
         video, subContent: text, workerUrl: `${b}jassub-worker.js`, wasmUrl: `${b}jassub-worker.wasm`, modernWasmUrl: `${b}jassub-worker-modern.wasm`,
-        availableFonts: { 'liberation sans': `${b}default.woff2` }, fallbackFont: 'liberation sans', timeOffset: -(P.subDelay || 0),
+        availableFonts: { 'liberation sans': `${b}default.woff2` }, fallbackFont: 'liberation sans', timeOffset: (P.remux ? P.remux.offset || 0 : 0) - (P.subDelay || 0),
         dropAllBlur: lite, prescaleFactor: lite ? 0.8 : 1, maxRenderHeight: lite ? 720 : IS_TV ? 1080 : 0, libassMemoryLimit: lite ? 48 : 96, libassGlyphLimit: lite ? 24 : 48,
       });
       this.inst.addEventListener && this.inst.addEventListener('error', (e) => MKLog.add('error', `libass: ${(e && e.error && e.error.message) || 'worker error'}`));
@@ -897,7 +897,7 @@ const AssR = {
   },
   set(text) { if (this.inst) try { this.inst.setTrack(text); } catch (e) { /* worker gone */ } },
   font(bytes) { if (this.inst) try { this.inst.addFont(bytes); } catch (e) { /* worker gone */ } },
-  delay(d) { if (this.inst) { this.inst.timeOffset = -d; try { this.inst.setCurrentTime(video.paused, video.currentTime + this.inst.timeOffset); } catch (e) { /* older build */ } } },
+  delay(d) { if (this.inst) { this.inst.timeOffset = (P.remux ? P.remux.offset || 0 : 0) - d; try { this.inst.setCurrentTime(video.paused, video.currentTime + this.inst.timeOffset); } catch (e) { /* older build */ } } },
   stop() {
     this.tok++; document.body.classList.remove('ass-on');
     if (this.inst) { try { this.inst.destroy(); } catch (e) { /* already gone */ } this.inst = null; }

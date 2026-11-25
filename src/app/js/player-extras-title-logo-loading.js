@@ -325,6 +325,7 @@ const Rescue = {
       return;
     }
     P.remux.offset = start; video.crossOrigin = 'anonymous';
+    try { applySubDelay(); if (typeof AssR !== 'undefined') AssR.delay(P.subDelay || 0); } catch (e) { /* no subtitles on */ }
     video.src = this.remuxUrl(stream, start);
     // land on the exact second asked for once the first frames arrive
     // The converted stream starts on the keyframe and cannot be seeked (it is made on the fly), so it is played
@@ -406,7 +407,7 @@ const SubTools = {
     $$('#txList [data-sync]').forEach((b) => b.addEventListener('click', () => {
       const c = list[Number(b.dataset.sync)]; if (!c) return;
       const orig = c._s != null ? c._s : c.startTime;
-      setSubDelay(video.currentTime - orig, true); toast(`Synced: subtitles now ${P.subDelay >= 0 ? '+' : '−'}${Math.abs(P.subDelay).toFixed(3)} s`, 'ok');
+      setSubDelay(pNow() - orig, true); toast(`Synced: subtitles now ${P.subDelay >= 0 ? '+' : '−'}${Math.abs(P.subDelay).toFixed(3)} s`, 'ok');
     }));
     this.mark();
   },

@@ -506,7 +506,7 @@ class StremioEngine {
     if (/^stremio:\/\//i.test(u)) u = u.replace(/^stremio:\/\//i, 'https://');
     if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(u)) u = 'https://' + u;
     let parsed; try { parsed = new URL(u); } catch (e) { throw new Error('That does not look like a valid addon link.'); }
-    if (/^(localhost|127\.|0\.0\.0\.0|\[::1\]|192\.168\.|10\.)/.test(parsed.hostname) && parsed.protocol === 'https:' && input.trim().toLowerCase().startsWith('stremio://')) parsed.protocol = 'http:';
+    if ((/^(localhost|127\.|0\.0\.0\.0|\[::1\]|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(parsed.hostname) || /\.local$/i.test(parsed.hostname)) && parsed.protocol === 'https:' && input.trim().toLowerCase().startsWith('stremio://')) parsed.protocol = 'http:';
     let base = parsed.origin + parsed.pathname;
     base = base.replace(/\/manifest\.json$/i, '').replace(/\/+$/, '');
     return base;
