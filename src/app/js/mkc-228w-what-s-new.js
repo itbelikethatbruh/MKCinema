@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.94.2', date: '2026-11-24', items: [
+    ['better', 'Smoother on older Fire TV Sticks', 'Rows and pages move in one quick step instead of gliding, so the remote feels faster.'],
+  ] },
   { v: '2.94.1', date: '2026-11-24', items: [
     ['better', 'Smoother skipping and a better TV search', 'Skip ahead several times in a row and the film goes straight there. Fill, Crop bars and zoom now work on TVs (Android app 1.17.12), Largest and Smallest sort sources in the player, and on TVs Down or Done takes you to the search results.'],
   ] },
