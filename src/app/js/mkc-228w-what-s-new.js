@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.94.4', date: '2026-11-25', items: [
+    ['better', 'Smoother playback', 'Keyboard shortcuts keep working while a film plays, subtitles stay in step and show the right letters from older subtitle files, Try next source keeps to your audio language, Stremio import shows what came over, offline addons answer sooner and long binges use less memory.'],
+  ] },
   { v: '2.94.3', date: '2026-11-24', items: [
     ['better', 'Full screen on iPad and iPhone home-screen app', 'In the home-screen app on iPad and iPhone, Full screen now hides the clock and battery bar.'],
   ] },

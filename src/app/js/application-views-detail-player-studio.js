@@ -1069,7 +1069,7 @@ function showMsg(title, body, actions = '') {
 function switchAt() { return isFinite(pDur()) && pNow() > 1 ? pNow() : undefined; }
 function hideMsg() { $('#pMsg').hidden = true; $('#pMsg').innerHTML = ''; }
 function playerAct(a) {
-  if (a === 'next-src') { const list = P.ctx.streams.filter((s) => (s._tel.webReady && !s._tel.isTrailer && !s.ytId) || s === P.stream); const i = list.indexOf(P.stream); const n = list[i + 1]; if (n) playStream(P.ctx, n, { startAt: switchAt() }); else toast('No other playable sources', 'err'); }
+  if (a === 'next-src') { const list = P.ctx && P.ctx.streams ? visibleStreams(P.ctx.streams.filter((s) => s && s._tel)).filter((s) => s === P.stream || (s._tel.webReady && !s._tel.isTrailer && !s.ytId)) : []; const i = list.indexOf(P.stream); const n = list[i + 1]; if (n) playStream(P.ctx, n, { startAt: switchAt() }); else toast('No other playable sources', 'err'); }
   if (a === 'sources') openDrawer('src');
   if (a === 'close') closePlayer();
   if (a === 'force') { P.force = true; playStream(P.ctx, P.stream, { startAt: switchAt() }); }
@@ -1078,7 +1078,7 @@ function teardown() {
   if (window.MkNative && MkNative.active) MkNative.stop();
   if (P.hls) { try { P.hls.destroy(); } catch (e) { /* ignore */ } P.hls = null; }
   video.pause(); video.removeAttribute('src'); video.srcObject = null;
-  $$('track', video).forEach((t) => t.remove()); video.load();
+  $$('track', video).forEach((t) => { if (t.src && t.src.startsWith('blob:')) URL.revokeObjectURL(t.src); t.remove(); }); video.load();
   $('#ytwrap').innerHTML = ''; hideMsg(); $('#upNext').hidden = true; P.upNextDismissed = false; clearInterval(P.upNextT);
   P.remux = null; video.playbackRate = CFG.speed || 1; PlayerPlus.reset();
 }
@@ -1207,7 +1207,7 @@ const LiveMini = {
       const m = P.ctx && P.ctx.meta, st = P.stream;
       if (CFG.liveMini === false || !m || !m._iptv || !st || !st.url || S.view !== 'tv') return null;
       if (!(video.readyState >= 2 && !video.paused)) return null;   // only a channel that was really playing in this page
-      return { c: m._iptv, url: st.url, muted: video.muted, vol: video.volume };
+      const bh = st.behaviorHints || {}; return { c: m._iptv, raw: st.url, url: bh.proxyHeaders && S.proxy ? proxify(st.url, bh.proxyHeaders.request || {}) : st.url, muted: video.muted, vol: video.volume };
     } catch (e) { return null; }
   },
   show(g) {
@@ -1220,7 +1220,7 @@ const LiveMini = {
     document.body.appendChild(el); icons();
     const v = el.querySelector('video'); v.muted = !!g.muted; v.volume = g.vol == null ? 1 : g.vol;
     this.cur = { ...g, v };
-    const hlsUrl = /\.m3u8(\?|$)/i.test(g.url) && !v.canPlayType('application/vnd.apple.mpegurl');
+    const hlsUrl = /\.m3u8(\?|$)/i.test(g.raw || g.url) && !v.canPlayType('application/vnd.apple.mpegurl');
     if (hlsUrl) HlsLoad.get().then((Hls) => { if (!this.cur || this.cur.v !== v || !Hls || !Hls.isSupported()) return; this.hls = new Hls({ lowLatencyMode: true, maxBufferLength: 20 }); this.hls.loadSource(g.url); this.hls.attachMedia(v); }).catch(() => this.close());
     else v.src = g.url;
     v.play().catch(() => { v.muted = true; v.play().catch(() => {}); });
@@ -1248,6 +1248,7 @@ async function closePlayer() {
   const liveKeep = LiveMini.grab(), endedCtx = P.ctx;
   saveProgress(true); teardown(); closeLayer('player');
   if (document.fullscreenElement && !window.MkKeepFull) document.exitFullscreen().catch(() => {});
+  try { if (video.webkitDisplayingFullscreen && video.webkitExitFullscreen) video.webkitExitFullscreen(); } catch (e) { /* not in Apple's video full screen */ }
   $('#player').classList.remove('full'); cancelAnimationFrame(P.raf);
   closeDrawers(); $('#subMenu').hidden = true; $('#optMenu').hidden = true; P.aspect = 'fit'; P.zoom = 1; applyPicture(); setLock(false); releaseWake();
   P.ctx = null; P.stream = null; if (window.MkRec) MkRec.playing(null);
@@ -1491,7 +1492,9 @@ async function loadSubtitles(ctx, stream) {
   try {
     const subs = await engine.fetchSubtitles(ctx.meta.type, id, extra);
     if (P.stream !== stream) return;
+    const was = P.subs[P.curSub];
     P.subs = SubRank.merge(P.subs.concat(subs.map((x) => ({ ...x, kind: 'url' }))), stream);
+    if (was) { const j = P.subs.indexOf(was); if (j >= 0) P.curSub = j; }
   } catch (e) { /* no subtitle addons answered */ }
   P.subsLoading = false; renderSubMenu(); autoPickSub(); SubAuto.offer();
 }
@@ -1651,7 +1654,7 @@ async function selectSub(i, { auto = false } = {}) {
   try {
     if (window.MkNative && MkNative.active) {
       let text = s.text;
-      if (s.kind !== 'mpv' && text == null) { const res = await fetch(s.url); if (!res.ok) throw new Error(`HTTP ${res.status}`); text = await res.text(); }
+      if (s.kind !== 'mpv' && text == null) { const res = await fetch(s.url); if (!res.ok) throw new Error(`HTTP ${res.status}`); text = await subFromRes(res); }
       if (pick !== P.subPick) return;
       await MkNative.subOn(s, text); MkNative.subStyle();
     }
@@ -1660,7 +1663,7 @@ async function selectSub(i, { auto = false } = {}) {
     else if (s.kind === 'native') { const t = s.track && Array.from(video.textTracks).includes(s.track) ? s.track : video.textTracks[s.idx]; if (!t) throw new Error('the track is gone'); t.mode = 'showing'; styleCues(); }
     else {
       let text = s.text;
-      if (text == null) { const res = await fetch(s.url); if (!res.ok) throw new Error(`HTTP ${res.status}`); text = await res.text(); }
+      if (text == null) { const res = await fetch(s.url); if (!res.ok) throw new Error(`HTTP ${res.status}`); text = await subFromRes(res); }
       // another subtitle (or another source) was picked while this one downloaded: two tracks would both stay on screen
       if (pick !== P.subPick || P.stream !== st0) return;
       clearSubTracks();
@@ -1679,7 +1682,7 @@ function activeTrack() { return Array.from(video.textTracks).find((t) => t.mode 
 function applySubDelay() {
   if (window.MkNative && MkNative.active) { MkNative.subStyle(); return; }
   const t = activeTrack(); if (!t || !t.cues) return;
-  for (const c of t.cues) { if (c._s == null) { c._s = c.startTime; c._e = c.endTime; } c.startTime = Math.max(0, c._s + P.subDelay); c.endTime = Math.max(0, c._e + P.subDelay); }
+  for (const c of t.cues) { if (c._s == null) { c._s = c.startTime; c._e = c.endTime; } c.startTime = Math.max(0, c._s + P.subDelay - (P.remux ? P.remux.offset || 0 : 0)); c.endTime = Math.max(0, c._e + P.subDelay - (P.remux ? P.remux.offset || 0 : 0)); }
 }
 function setSubDelay(v) {}
 function styleCues() {
@@ -1688,8 +1691,25 @@ function styleCues() {
   const t = activeTrack(); if (!t || !t.cues) return;
   for (const c of t.cues) { try { c.line = line; if (CFG.subPos === 'top') c.snapToLines = true; } catch (e) { /* read-only cue */ } }
 }
+/* 2.94.4: subtitle text in UTF-8, UTF-16 or an older Windows code page (Western or Cyrillic) */
+function subDecode(buf) {
+  const u8 = new Uint8Array(buf);
+  try {
+    if (u8[0] === 0xFF && u8[1] === 0xFE) return new TextDecoder('utf-16le').decode(u8);
+    if (u8[0] === 0xFE && u8[1] === 0xFF) return new TextDecoder('utf-16be').decode(u8);
+    try { return new TextDecoder('utf-8', { fatal: true }).decode(u8); } catch (e) { /* not UTF-8 */ }
+    let hi = 0, lo = 0;
+    for (let i = 0; i < u8.length && i < 200000; i++) { const b = u8[i]; if (b >= 0xC0) hi++; else if ((b >= 0x41 && b <= 0x5A) || (b >= 0x61 && b <= 0x7A)) lo++; }
+    return new TextDecoder(hi > lo ? 'windows-1251' : 'windows-1252').decode(u8);
+  } catch (e) { return new TextDecoder().decode(u8); }
+}
+async function subFromRes(res) {
+  const cs = (/charset=\s*"?([\w-]+)/i.exec(res.headers.get('content-type') || '') || [])[1], buf = await res.arrayBuffer();
+  if (cs && !/^utf-?8$/i.test(cs)) { try { return new TextDecoder(cs).decode(buf); } catch (e) { /* unknown label */ } }
+  return subDecode(buf);
+}
 async function loadSubFile(file) {
-  const text = await file.text();
+  const text = subDecode(await file.arrayBuffer());
   const lang = (file.name.match(/[._-]([a-z]{2,3})\.(srt|vtt|ass|ssa|sub)$/i) || [])[1] || 'und';
   P.subs.unshift({ kind: 'file', text, fileName: file.name, lang, _label: `${file.name} · this device` });
   P.subUserChoice = true; selectSub(0);
@@ -2159,7 +2179,7 @@ function back() {
   }
   if (!$('#trailer').hidden) { closeTrailer(); return; }
   if (!$('#tour').hidden) { endTour(); return; }
-  if (!$('#stremioImport').hidden) { closeLayer('stremioImport'); return; }
+  if (!$('#stremioImport').hidden) { $('#siPass').value = ''; closeLayer('stremioImport'); return; }
   if (!$('#palette').hidden) { closePalette(); return; }
   if (EpSheet.isOpen()) { EpSheet.close(); return; }
   if (!$('#detail').hidden && !$('#askLayer').hidden) { closeLayer('detail'); return; }
@@ -2190,7 +2210,7 @@ const MkRange = {
 };
 function handleKey(e) {
   const k = e.key, tag = (e.target && e.target.tagName) || '', typing = /INPUT|TEXTAREA|SELECT/.test(tag) && e.target.type !== 'checkbox' && e.target.type !== 'range';
-  if ((e.ctrlKey || e.metaKey) && k.toLowerCase() === 'k') { e.preventDefault(); $('#palette').hidden ? openPalette() : closePalette(); return; }
+  if ((e.ctrlKey || e.metaKey) && k.toLowerCase() === 'k') { e.preventDefault(); /* 2.94.4 bug hunt */ if (!$('#player').hidden && $('#palette').hidden) return; $('#palette').hidden ? openPalette() : closePalette(); return; }
   if (k === 'Escape') { e.preventDefault(); back(); return; }
   if (e.keyCode === 461 || e.keyCode === 10009 || k === 'XF86Back' || k === 'GoBack' || k === 'BrowserBack') {
     e.preventDefault();
@@ -2240,7 +2260,7 @@ function handleKey(e) {
   }
   if (IS_TV && k === 'Enter' && !playerOpen && (document.activeElement === document.body || !document.activeElement)) { e.preventDefault(); Nav.restore(true); return; }
   if (k === 'Backspace') { e.preventDefault(); back(); }
-  if (k === '/' && $('#palette').hidden) { e.preventDefault(); openPalette(); }
+  if (k === '/' && $('#palette').hidden && $('#player').hidden) { e.preventDefault(); openPalette(); }
 }
 document.addEventListener('keydown', handleKey);
 document.addEventListener('pointerdown', () => { if (Pad.echo()) return; $$('.nav-focus').forEach((x) => x.classList.remove('nav-focus')); Nav.kbOff(); }, { passive: true });
@@ -2263,7 +2283,7 @@ const Pad = {
       case 'b': back(); break;
       case 'x': if (playerOpen) togglePlay(); break;
       case 'y': if (playerOpen) openDrawer('src'); else openPalette(); break;
-      case 'start': $('#palette').hidden ? openPalette() : closePalette(); break;
+      case 'start': if (playerOpen && $('#palette').hidden) { togglePlay(); break; } $('#palette').hidden ? openPalette() : closePalette(); break;
       case 'lb': case 'rb': {
         if (playerOpen) { seekBy(name === 'rb' ? 30 : -30); break; }
         const tabs = $$('#tabs .tab').filter((t) => getComputedStyle(t).display !== 'none'), i = tabs.findIndex((t) => t.classList.contains('on'));

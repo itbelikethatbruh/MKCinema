@@ -3367,7 +3367,7 @@ class StremioEngine {
     if (/^stremio:\/\//i.test(u)) u = u.replace(/^stremio:\/\//i, 'https://');
     if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(u)) u = 'https://' + u;
     let parsed; try { parsed = new URL(u); } catch (e) { throw new Error('That does not look like a valid addon link.'); }
-    if (/^(localhost|127\.|0\.0\.0\.0|\[::1\]|192\.168\.|10\.)/.test(parsed.hostname) && parsed.protocol === 'https:' && input.trim().toLowerCase().startsWith('stremio://')) parsed.protocol = 'http:';
+    if ((/^(localhost|127\.|0\.0\.0\.0|\[::1\]|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(parsed.hostname) || /\.local$/i.test(parsed.hostname)) && parsed.protocol === 'https:' && input.trim().toLowerCase().startsWith('stremio://')) parsed.protocol = 'http:';
     let base = parsed.origin + parsed.pathname;
     base = base.replace(/\/manifest\.json$/i, '').replace(/\/+$/, '');
     return base;
@@ -5072,7 +5072,7 @@ function showMsg(title, body, actions = '') {
 function switchAt() { return isFinite(pDur()) && pNow() > 1 ? pNow() : undefined; }
 function hideMsg() { $('#pMsg').hidden = true; $('#pMsg').innerHTML = ''; }
 function playerAct(a) {
-  if (a === 'next-src') { const list = P.ctx.streams.filter((s) => (s._tel.webReady && !s._tel.isTrailer && !s.ytId) || s === P.stream); const i = list.indexOf(P.stream); const n = list[i + 1]; if (n) playStream(P.ctx, n, { startAt: switchAt() }); else toast('No other playable sources', 'err'); }
+  if (a === 'next-src') { const list = P.ctx && P.ctx.streams ? visibleStreams(P.ctx.streams.filter((s) => s && s._tel)).filter((s) => s === P.stream || (s._tel.webReady && !s._tel.isTrailer && !s.ytId)) : []; const i = list.indexOf(P.stream); const n = list[i + 1]; if (n) playStream(P.ctx, n, { startAt: switchAt() }); else toast('No other playable sources', 'err'); }
   if (a === 'sources') openDrawer('src');
   if (a === 'close') closePlayer();
   if (a === 'force') { P.force = true; playStream(P.ctx, P.stream, { startAt: switchAt() }); }
@@ -5081,7 +5081,7 @@ function teardown() {
   if (window.MkNative && MkNative.active) MkNative.stop();
   if (P.hls) { try { P.hls.destroy(); } catch (e) { /* ignore */ } P.hls = null; }
   video.pause(); video.removeAttribute('src'); video.srcObject = null;
-  $$('track', video).forEach((t) => t.remove()); video.load();
+  $$('track', video).forEach((t) => { if (t.src && t.src.startsWith('blob:')) URL.revokeObjectURL(t.src); t.remove(); }); video.load();
   $('#ytwrap').innerHTML = ''; hideMsg(); $('#upNext').hidden = true; P.upNextDismissed = false; clearInterval(P.upNextT);
   P.remux = null; video.playbackRate = CFG.speed || 1; PlayerPlus.reset();
 }
@@ -5210,7 +5210,7 @@ const LiveMini = {
       const m = P.ctx && P.ctx.meta, st = P.stream;
       if (CFG.liveMini === false || !m || !m._iptv || !st || !st.url || S.view !== 'tv') return null;
       if (!(video.readyState >= 2 && !video.paused)) return null;   // only a channel that was really playing in this page
-      return { c: m._iptv, url: st.url, muted: video.muted, vol: video.volume };
+      const bh = st.behaviorHints || {}; return { c: m._iptv, raw: st.url, url: bh.proxyHeaders && S.proxy ? proxify(st.url, bh.proxyHeaders.request || {}) : st.url, muted: video.muted, vol: video.volume };
     } catch (e) { return null; }
   },
   show(g) {
@@ -5223,7 +5223,7 @@ const LiveMini = {
     document.body.appendChild(el); icons();
     const v = el.querySelector('video'); v.muted = !!g.muted; v.volume = g.vol == null ? 1 : g.vol;
     this.cur = { ...g, v };
-    const hlsUrl = /\.m3u8(\?|$)/i.test(g.url) && !v.canPlayType('application/vnd.apple.mpegurl');
+    const hlsUrl = /\.m3u8(\?|$)/i.test(g.raw || g.url) && !v.canPlayType('application/vnd.apple.mpegurl');
     if (hlsUrl) HlsLoad.get().then((Hls) => { if (!this.cur || this.cur.v !== v || !Hls || !Hls.isSupported()) return; this.hls = new Hls({ lowLatencyMode: true, maxBufferLength: 20 }); this.hls.loadSource(g.url); this.hls.attachMedia(v); }).catch(() => this.close());
     else v.src = g.url;
     v.play().catch(() => { v.muted = true; v.play().catch(() => {}); });
@@ -5251,6 +5251,7 @@ async function closePlayer() {
   const liveKeep = LiveMini.grab(), endedCtx = P.ctx;
   saveProgress(true); teardown(); closeLayer('player');
   if (document.fullscreenElement && !window.MkKeepFull) document.exitFullscreen().catch(() => {});
+  try { if (video.webkitDisplayingFullscreen && video.webkitExitFullscreen) video.webkitExitFullscreen(); } catch (e) { /* not in Apple's video full screen */ }
   $('#player').classList.remove('full'); cancelAnimationFrame(P.raf);
   closeDrawers(); $('#subMenu').hidden = true; $('#optMenu').hidden = true; P.aspect = 'fit'; P.zoom = 1; applyPicture(); setLock(false); releaseWake();
   P.ctx = null; P.stream = null; if (window.MkRec) MkRec.playing(null);
@@ -5494,7 +5495,9 @@ async function loadSubtitles(ctx, stream) {
   try {
     const subs = await engine.fetchSubtitles(ctx.meta.type, id, extra);
     if (P.stream !== stream) return;
+    const was = P.subs[P.curSub];
     P.subs = SubRank.merge(P.subs.concat(subs.map((x) => ({ ...x, kind: 'url' }))), stream);
+    if (was) { const j = P.subs.indexOf(was); if (j >= 0) P.curSub = j; }
   } catch (e) { /* no subtitle addons answered */ }
   P.subsLoading = false; renderSubMenu(); autoPickSub(); SubAuto.offer();
 }
@@ -5654,7 +5657,7 @@ async function selectSub(i, { auto = false } = {}) {
   try {
     if (window.MkNative && MkNative.active) {
       let text = s.text;
-      if (s.kind !== 'mpv' && text == null) { const res = await fetch(s.url); if (!res.ok) throw new Error(`HTTP ${res.status}`); text = await res.text(); }
+      if (s.kind !== 'mpv' && text == null) { const res = await fetch(s.url); if (!res.ok) throw new Error(`HTTP ${res.status}`); text = await subFromRes(res); }
       if (pick !== P.subPick) return;
       await MkNative.subOn(s, text); MkNative.subStyle();
     }
@@ -5663,7 +5666,7 @@ async function selectSub(i, { auto = false } = {}) {
     else if (s.kind === 'native') { const t = s.track && Array.from(video.textTracks).includes(s.track) ? s.track : video.textTracks[s.idx]; if (!t) throw new Error('the track is gone'); t.mode = 'showing'; styleCues(); }
     else {
       let text = s.text;
-      if (text == null) { const res = await fetch(s.url); if (!res.ok) throw new Error(`HTTP ${res.status}`); text = await res.text(); }
+      if (text == null) { const res = await fetch(s.url); if (!res.ok) throw new Error(`HTTP ${res.status}`); text = await subFromRes(res); }
       // another subtitle (or another source) was picked while this one downloaded: two tracks would both stay on screen
       if (pick !== P.subPick || P.stream !== st0) return;
       clearSubTracks();
@@ -5682,7 +5685,7 @@ function activeTrack() { return Array.from(video.textTracks).find((t) => t.mode 
 function applySubDelay() {
   if (window.MkNative && MkNative.active) { MkNative.subStyle(); return; }
   const t = activeTrack(); if (!t || !t.cues) return;
-  for (const c of t.cues) { if (c._s == null) { c._s = c.startTime; c._e = c.endTime; } c.startTime = Math.max(0, c._s + P.subDelay); c.endTime = Math.max(0, c._e + P.subDelay); }
+  for (const c of t.cues) { if (c._s == null) { c._s = c.startTime; c._e = c.endTime; } c.startTime = Math.max(0, c._s + P.subDelay - (P.remux ? P.remux.offset || 0 : 0)); c.endTime = Math.max(0, c._e + P.subDelay - (P.remux ? P.remux.offset || 0 : 0)); }
 }
 function setSubDelay(v) {}
 function styleCues() {
@@ -5691,8 +5694,25 @@ function styleCues() {
   const t = activeTrack(); if (!t || !t.cues) return;
   for (const c of t.cues) { try { c.line = line; if (CFG.subPos === 'top') c.snapToLines = true; } catch (e) { /* read-only cue */ } }
 }
+/* 2.94.4: subtitle text in UTF-8, UTF-16 or an older Windows code page (Western or Cyrillic) */
+function subDecode(buf) {
+  const u8 = new Uint8Array(buf);
+  try {
+    if (u8[0] === 0xFF && u8[1] === 0xFE) return new TextDecoder('utf-16le').decode(u8);
+    if (u8[0] === 0xFE && u8[1] === 0xFF) return new TextDecoder('utf-16be').decode(u8);
+    try { return new TextDecoder('utf-8', { fatal: true }).decode(u8); } catch (e) { /* not UTF-8 */ }
+    let hi = 0, lo = 0;
+    for (let i = 0; i < u8.length && i < 200000; i++) { const b = u8[i]; if (b >= 0xC0) hi++; else if ((b >= 0x41 && b <= 0x5A) || (b >= 0x61 && b <= 0x7A)) lo++; }
+    return new TextDecoder(hi > lo ? 'windows-1251' : 'windows-1252').decode(u8);
+  } catch (e) { return new TextDecoder().decode(u8); }
+}
+async function subFromRes(res) {
+  const cs = (/charset=\s*"?([\w-]+)/i.exec(res.headers.get('content-type') || '') || [])[1], buf = await res.arrayBuffer();
+  if (cs && !/^utf-?8$/i.test(cs)) { try { return new TextDecoder(cs).decode(buf); } catch (e) { /* unknown label */ } }
+  return subDecode(buf);
+}
 async function loadSubFile(file) {
-  const text = await file.text();
+  const text = subDecode(await file.arrayBuffer());
   const lang = (file.name.match(/[._-]([a-z]{2,3})\.(srt|vtt|ass|ssa|sub)$/i) || [])[1] || 'und';
   P.subs.unshift({ kind: 'file', text, fileName: file.name, lang, _label: `${file.name} · this device` });
   P.subUserChoice = true; selectSub(0);
@@ -6162,7 +6182,7 @@ function back() {
   }
   if (!$('#trailer').hidden) { closeTrailer(); return; }
   if (!$('#tour').hidden) { endTour(); return; }
-  if (!$('#stremioImport').hidden) { closeLayer('stremioImport'); return; }
+  if (!$('#stremioImport').hidden) { $('#siPass').value = ''; closeLayer('stremioImport'); return; }
   if (!$('#palette').hidden) { closePalette(); return; }
   if (EpSheet.isOpen()) { EpSheet.close(); return; }
   if (!$('#detail').hidden && !$('#askLayer').hidden) { closeLayer('detail'); return; }
@@ -6193,7 +6213,7 @@ const MkRange = {
 };
 function handleKey(e) {
   const k = e.key, tag = (e.target && e.target.tagName) || '', typing = /INPUT|TEXTAREA|SELECT/.test(tag) && e.target.type !== 'checkbox' && e.target.type !== 'range';
-  if ((e.ctrlKey || e.metaKey) && k.toLowerCase() === 'k') { e.preventDefault(); $('#palette').hidden ? openPalette() : closePalette(); return; }
+  if ((e.ctrlKey || e.metaKey) && k.toLowerCase() === 'k') { e.preventDefault(); /* 2.94.4 bug hunt */ if (!$('#player').hidden && $('#palette').hidden) return; $('#palette').hidden ? openPalette() : closePalette(); return; }
   if (k === 'Escape') { e.preventDefault(); back(); return; }
   if (e.keyCode === 461 || e.keyCode === 10009 || k === 'XF86Back' || k === 'GoBack' || k === 'BrowserBack') {
     e.preventDefault();
@@ -6243,7 +6263,7 @@ function handleKey(e) {
   }
   if (IS_TV && k === 'Enter' && !playerOpen && (document.activeElement === document.body || !document.activeElement)) { e.preventDefault(); Nav.restore(true); return; }
   if (k === 'Backspace') { e.preventDefault(); back(); }
-  if (k === '/' && $('#palette').hidden) { e.preventDefault(); openPalette(); }
+  if (k === '/' && $('#palette').hidden && $('#player').hidden) { e.preventDefault(); openPalette(); }
 }
 document.addEventListener('keydown', handleKey);
 document.addEventListener('pointerdown', () => { if (Pad.echo()) return; $$('.nav-focus').forEach((x) => x.classList.remove('nav-focus')); Nav.kbOff(); }, { passive: true });
@@ -6266,7 +6286,7 @@ const Pad = {
       case 'b': back(); break;
       case 'x': if (playerOpen) togglePlay(); break;
       case 'y': if (playerOpen) openDrawer('src'); else openPalette(); break;
-      case 'start': $('#palette').hidden ? openPalette() : closePalette(); break;
+      case 'start': if (playerOpen && $('#palette').hidden) { togglePlay(); break; } $('#palette').hidden ? openPalette() : closePalette(); break;
       case 'lb': case 'rb': {
         if (playerOpen) { seekBy(name === 'rb' ? 30 : -30); break; }
         const tabs = $$('#tabs .tab').filter((t) => getComputedStyle(t).display !== 'none'), i = tabs.findIndex((t) => t.classList.contains('on'));
@@ -7959,7 +7979,7 @@ const StremioImport = {
         Store.set('watchlist', S.watchlist); Store.set('progress', S.progress); if (seen) Store.set('watched', watchedMap());
       }
       if (addons) {
-        const col = await this.call('addonCollectionGet', { type: 'AddonCollectionGet', authKey, update: true });
+        let col = null; try { col = await this.call('addonCollectionGet', { type: 'AddonCollectionGet', authKey, update: true }); } catch (e) { out.addonsFailed = true; }
         const have = new Set(engine.addons.map((a) => a.baseUrl.replace(/\/manifest\.json$/, '')));
         for (const a of (col && col.addons) || []) {
           const url = a && a.transportUrl; if (!url || !/^https?:/.test(url)) continue;
@@ -7968,7 +7988,7 @@ const StremioImport = {
           try { await engine.install(url, { silent: true }); out.addons++; have.add(base); } catch (e) { out.skippedAddons++; }
         }
       }
-    } finally { this.call('logout', { type: 'Logout', authKey }).catch(() => {}); }
+    } finally { this.call('logout', { type: 'Logout', authKey }).catch(() => {}); if (out.addons) { try { engine.clearCache(); engine.emit('addons'); } catch (e) { /* drawn on the next visit */ } } }
     return out;
   },
 };
@@ -7988,13 +8008,14 @@ $('#siForm').addEventListener('submit', async (e) => {
     $('#siForm').hidden = true; $('#siDone').hidden = false;
     $('#siSummary').innerHTML = [[r.saved, 'titles added to your library'], [r.progress, 'items in progress'], [r.watched, 'films and episodes marked watched'], [r.addons, 'addons installed']].map(([n, l]) => `<div><b class="tnum">${n}</b><span>${l}</span></div>`).join('');
     $('#siNote').textContent = [r.skippedAddons ? `${r.skippedAddons} addon${r.skippedAddons === 1 ? ' was' : 's were'} already installed or built into Stremio, so ${r.skippedAddons === 1 ? 'it was' : 'they were'} skipped.` : '',
+      r.addonsFailed ? 'Your addons could not be read from Stremio this time, so none were copied. Import again to try once more.' : '',
       r.skippedSeries ? `Watched episodes of ${r.skippedSeries} series could not be read on this device. Import again on a newer browser or phone to bring them over.` : ''].filter(Boolean).join(' ');
     Recs.cache = null; if (S.view === 'home') renderHome(); if (S.view === 'library') renderLibrary();
   } catch (err) {
     $('#siErr').hidden = false; $('#siErr').textContent = /passw|user|email|not found|wrong/i.test(err.message) ? 'Stremio did not accept that email and password.' : err.message;
   } finally { btn.disabled = false; btn.innerHTML = '<i data-lucide="download"></i>Import'; icons(); }
 });
-$('#siClose').onclick = () => closeLayer('stremioImport');
+$('#siClose').onclick = () => { $('#siPass').value = ''; closeLayer('stremioImport'); };
 </script>
 <script>
 'use strict';
@@ -8323,6 +8344,7 @@ const Rescue = {
       return;
     }
     P.remux.offset = start; video.crossOrigin = 'anonymous';
+    try { applySubDelay(); if (typeof AssR !== 'undefined') AssR.delay(P.subDelay || 0); } catch (e) { /* no subtitles on */ }
     video.src = this.remuxUrl(stream, start);
     // land on the exact second asked for once the first frames arrive
     // The converted stream starts on the keyframe and cannot be seeked (it is made on the fly), so it is played
@@ -8404,7 +8426,7 @@ const SubTools = {
     $$('#txList [data-sync]').forEach((b) => b.addEventListener('click', () => {
       const c = list[Number(b.dataset.sync)]; if (!c) return;
       const orig = c._s != null ? c._s : c.startTime;
-      setSubDelay(video.currentTime - orig, true); toast(`Synced: subtitles now ${P.subDelay >= 0 ? '+' : '−'}${Math.abs(P.subDelay).toFixed(3)} s`, 'ok');
+      setSubDelay(pNow() - orig, true); toast(`Synced: subtitles now ${P.subDelay >= 0 ? '+' : '−'}${Math.abs(P.subDelay).toFixed(3)} s`, 'ok');
     }));
     this.mark();
   },
@@ -11453,7 +11475,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.94.3';
+const APP_VERSION = '2.94.4';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -20511,7 +20533,7 @@ const AssR = {
     try {
       this.inst = new J({
         video, subContent: text, workerUrl: `${b}jassub-worker.js`, wasmUrl: `${b}jassub-worker.wasm`, modernWasmUrl: `${b}jassub-worker-modern.wasm`,
-        availableFonts: { 'liberation sans': `${b}default.woff2` }, fallbackFont: 'liberation sans', timeOffset: -(P.subDelay || 0),
+        availableFonts: { 'liberation sans': `${b}default.woff2` }, fallbackFont: 'liberation sans', timeOffset: (P.remux ? P.remux.offset || 0 : 0) - (P.subDelay || 0),
         dropAllBlur: lite, prescaleFactor: lite ? 0.8 : 1, maxRenderHeight: lite ? 720 : IS_TV ? 1080 : 0, libassMemoryLimit: lite ? 48 : 96, libassGlyphLimit: lite ? 24 : 48,
       });
       this.inst.addEventListener && this.inst.addEventListener('error', (e) => MKLog.add('error', `libass: ${(e && e.error && e.error.message) || 'worker error'}`));
@@ -20521,7 +20543,7 @@ const AssR = {
   },
   set(text) { if (this.inst) try { this.inst.setTrack(text); } catch (e) { /* worker gone */ } },
   font(bytes) { if (this.inst) try { this.inst.addFont(bytes); } catch (e) { /* worker gone */ } },
-  delay(d) { if (this.inst) { this.inst.timeOffset = -d; try { this.inst.setCurrentTime(video.paused, video.currentTime + this.inst.timeOffset); } catch (e) { /* older build */ } } },
+  delay(d) { if (this.inst) { this.inst.timeOffset = (P.remux ? P.remux.offset || 0 : 0) - d; try { this.inst.setCurrentTime(video.paused, video.currentTime + this.inst.timeOffset); } catch (e) { /* older build */ } } },
   stop() {
     this.tok++; document.body.classList.remove('ass-on');
     if (this.inst) { try { this.inst.destroy(); } catch (e) { /* already gone */ } this.inst = null; }
@@ -24499,6 +24521,9 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.94.4', date: '2026-11-25', items: [
+    ['better', 'Smoother playback', 'Keyboard shortcuts keep working while a film plays, subtitles stay in step and show the right letters from older subtitle files, Try next source keeps to your audio language, Stremio import shows what came over, offline addons answer sooner and long binges use less memory.'],
+  ] },
   { v: '2.94.3', date: '2026-11-24', items: [
     ['better', 'Full screen on iPad and iPhone home-screen app', 'In the home-screen app on iPad and iPhone, Full screen now hides the clock and battery bar.'],
   ] },
@@ -32229,7 +32254,7 @@ const AddonSwap = {
       if (opts.position != null || opts.builtin) return inst(input, opts);
       let base; try { base = StremioEngine.normalize(input); } catch (e) { return inst(input, opts); }
       if (this.addons.some((a) => a.baseUrl === base)) return inst(input, opts);
-      let m = null; try { m = await this.http(`${base}/manifest.json`, { ttl: 0, timeout: 12000 }); } catch (e) { return inst(input, opts); }
+      let m = null; try { m = await this.http(`${base}/manifest.json`, { ttl: 0, timeout: 12000 }); } catch (e) { throw e; }
       let host = ''; try { host = new URL(base).host; } catch (e) { /* ignore */ }
       const old = m && m.id && this.addons.find((a) => !a.virtual && !a.builtin && a.manifest && a.manifest.id === m.id && (() => { try { return new URL(a.baseUrl).host === host; } catch (e) { return false; } })());
       if (!old) return inst(input, opts);

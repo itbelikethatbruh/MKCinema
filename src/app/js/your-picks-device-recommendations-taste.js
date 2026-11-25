@@ -521,7 +521,7 @@ const StremioImport = {
         Store.set('watchlist', S.watchlist); Store.set('progress', S.progress); if (seen) Store.set('watched', watchedMap());
       }
       if (addons) {
-        const col = await this.call('addonCollectionGet', { type: 'AddonCollectionGet', authKey, update: true });
+        let col = null; try { col = await this.call('addonCollectionGet', { type: 'AddonCollectionGet', authKey, update: true }); } catch (e) { out.addonsFailed = true; }
         const have = new Set(engine.addons.map((a) => a.baseUrl.replace(/\/manifest\.json$/, '')));
         for (const a of (col && col.addons) || []) {
           const url = a && a.transportUrl; if (!url || !/^https?:/.test(url)) continue;
@@ -530,7 +530,7 @@ const StremioImport = {
           try { await engine.install(url, { silent: true }); out.addons++; have.add(base); } catch (e) { out.skippedAddons++; }
         }
       }
-    } finally { this.call('logout', { type: 'Logout', authKey }).catch(() => {}); }
+    } finally { this.call('logout', { type: 'Logout', authKey }).catch(() => {}); if (out.addons) { try { engine.clearCache(); engine.emit('addons'); } catch (e) { /* drawn on the next visit */ } } }
     return out;
   },
 };
@@ -550,10 +550,11 @@ $('#siForm').addEventListener('submit', async (e) => {
     $('#siForm').hidden = true; $('#siDone').hidden = false;
     $('#siSummary').innerHTML = [[r.saved, 'titles added to your library'], [r.progress, 'items in progress'], [r.watched, 'films and episodes marked watched'], [r.addons, 'addons installed']].map(([n, l]) => `<div><b class="tnum">${n}</b><span>${l}</span></div>`).join('');
     $('#siNote').textContent = [r.skippedAddons ? `${r.skippedAddons} addon${r.skippedAddons === 1 ? ' was' : 's were'} already installed or built into Stremio, so ${r.skippedAddons === 1 ? 'it was' : 'they were'} skipped.` : '',
+      r.addonsFailed ? 'Your addons could not be read from Stremio this time, so none were copied. Import again to try once more.' : '',
       r.skippedSeries ? `Watched episodes of ${r.skippedSeries} series could not be read on this device. Import again on a newer browser or phone to bring them over.` : ''].filter(Boolean).join(' ');
     Recs.cache = null; if (S.view === 'home') renderHome(); if (S.view === 'library') renderLibrary();
   } catch (err) {
     $('#siErr').hidden = false; $('#siErr').textContent = /passw|user|email|not found|wrong/i.test(err.message) ? 'Stremio did not accept that email and password.' : err.message;
   } finally { btn.disabled = false; btn.innerHTML = '<i data-lucide="download"></i>Import'; icons(); }
 });
-$('#siClose').onclick = () => closeLayer('stremioImport');
+$('#siClose').onclick = () => { $('#siPass').value = ''; closeLayer('stremioImport'); };
