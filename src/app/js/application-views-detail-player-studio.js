@@ -616,7 +616,7 @@ const Seasons = {
     try { im.src = Posters.make(im.dataset.title || im.alt || '', im.dataset.seed || 'x', 960, 540); } catch (x) { /* stays empty */ }
   }, true);
   const shown = (e) => { const im = e.target; if (im instanceof HTMLImageElement && im.classList.contains('ss-wait') && im.naturalWidth > 2) im.classList.remove('ss-wait'); };
-  addEventListener('load', shown, true);
+  document.addEventListener('load', shown, true); // image load events never reach window
   // never left invisible
   setInterval(() => { $$('img.ss-wait').forEach((im) => { if (im.dataset.lsrc) return; const t = im._ssAt || (im._ssAt = Date.now()); if (Date.now() - t > 8000 || (im.complete && im.naturalWidth > 2)) im.classList.remove('ss-wait'); }); }, 1500);
 })();

@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.95.15 (2026-11-26)
+
+- Posters and episode pictures now appear the moment they arrive.
+
 ## Web app 2.95.14 (2026-11-26)
 
 - Smoother season switching and small reliability improvements.

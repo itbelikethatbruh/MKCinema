@@ -85,7 +85,7 @@ const posters=()=>{
   const mark=im=>{if(ok(im))im.classList.add('mk-in');else im.classList.add('mk-pf')};
   const scan=n=>{if(n.nodeType!==1)return;if(n.matches&&n.matches(SEL))mark(n);else if(n.querySelectorAll)n.querySelectorAll(SEL).forEach(mark)};
   new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes)scan(n)}).observe(document.body,{childList:true,subtree:true});
-  addEventListener('load',e=>{const im=e.target;if(im instanceof HTMLImageElement&&im.classList.contains('mk-pf')&&ok(im)){im.classList.remove('mk-pf');im.classList.add('mk-in')}},true);
+  document.addEventListener('load',e=>{const im=e.target;if(im instanceof HTMLImageElement&&im.classList.contains('mk-pf')&&ok(im)){im.classList.remove('mk-pf');im.classList.add('mk-in')}},true);
   // never left see-through
   setInterval(()=>{document.querySelectorAll('img.mk-pf').forEach(im=>{if(ok(im)||(!im.dataset.lsrc&&im.complete)){im.classList.remove('mk-pf');im.classList.add('mk-in')}})},2000);
   R.classList.add('mk-pfade');
