@@ -637,7 +637,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
             case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER: case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE: case KeyEvent.KEYCODE_SPACE:
                 togglePlay(); return true;
             // 1.17.17: Play or Pause pressed while the film waits for the screen ends the wait: the press decides
-            case KeyEvent.KEYCODE_MEDIA_PLAY: endGate(); if (prepared) eng.play(); show(2500); return true;
+            case KeyEvent.KEYCODE_MEDIA_PLAY: if (prepared) { endGate(); eng.play(); } show(2500); return true; // still opening: the gate starts it
             case KeyEvent.KEYCODE_MEDIA_PAUSE: endGate(); if (prepared) eng.pause(); show(Long.MAX_VALUE / 4); return true;
             case KeyEvent.KEYCODE_DPAD_LEFT: skip(held ? -30000 : -10000); return true;
             case KeyEvent.KEYCODE_DPAD_RIGHT: skip(held ? 30000 : 10000); return true;
