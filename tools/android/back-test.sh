@@ -29,7 +29,7 @@ backtest() { # $1 name, $2 how
   timeout 15 adb shell screenrecord --time-limit 9 --bit-rate 4000000 /sdcard/$1.mp4 & rec=$!; sleep 1.5
   if [ "$2" = key ]; then A shell input keyevent KEYCODE_BACK
   else read -r W H < <(A shell wm size | tail -1 | grep -o '[0-9]*x[0-9]*' | tr x ' '); case "$(rot)" in *_90|*_270) read -r W H <<< "$H $W";; esac
-    echo "swipe on ${W}x${H}, navigation mode $(A shell settings get secure navigation_mode | tr -d '\r')"; A shell input swipe 2 $((H/2)) $((W/3)) $((H/2)) 150; fi
+    echo "swipe on ${W}x${H}, navigation mode $(A shell settings get secure navigation_mode | tr -d '\r')"; Y=$((H/2)); A shell input motionevent DOWN 0 $Y; for x in 8 20 40 70 100 140 180; do A shell input motionevent MOVE $x $Y; done; A shell input motionevent UP 180 $Y; fi
   sleep 1; echo "$1 +1s: $(state) $(rot)"; sleep 3; echo "$1 +4s: $(state) $(rot)"
   wait $rec; A pull /sdcard/$1.mp4 "$OUT/$1.mp4" > /dev/null 2>&1
   ffmpeg -loglevel error -y -i "$OUT/$1.mp4" -vf "fps=6,scale=240:-1,tile=8x7" -frames:v 1 "$OUT/$1-sheet.png" || true
