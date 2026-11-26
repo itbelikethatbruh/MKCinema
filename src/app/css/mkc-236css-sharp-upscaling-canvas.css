@@ -7,7 +7,7 @@ body.pxup-on #player video::cue{color:transparent;background:transparent;text-sh
 #pxUpSub[data-pos="higher"]{padding-bottom:16%}
 #pxUpSub[data-pos="top"]{justify-content:flex-start;padding:4.5% 4% 0}
 #pxUpSub > div{transition:transform .25s ease}
-#pxUpSub span{display:inline;font-size:var(--sub-size);line-height:1.35;color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.05em .3em;-webkit-box-decoration-break:clone;box-decoration-break:clone;white-space:pre-line}
+#pxUpSub span{display:inline;font-size:var(--sub-size);line-height:1.35;color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.08em .5em;border-radius:.45em;-webkit-box-decoration-break:clone;box-decoration-break:clone;white-space:pre-line}
 #pxUpSub:not(.on){visibility:hidden}
 #player:has(#hud:not(.idle)) #pxUpSub:not([data-pos="top"]) > div{transform:translateY(-96px)}
 html.pip-mode #pxUp,html.pip-mode #pxUpSub{display:none!important}

@@ -2,6 +2,12 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.95.8 (2026-11-26)
+
+- Lists keep going: reach the bottom of any list, grid or guide and the next titles appear by themselves, with no Load more button, on phones, computers and TVs.
+- Softer subtitles: a soft rounded box, a clean modern font, and italic lines that stay upright and easy to read.
+- Pictures now scroll up behind the clock on phones.
+
 ## Windows 1.6.1 (2026-11-26)
 
 - Subtitle Style, colour, background, outline and shadow reach the MKCinema player.

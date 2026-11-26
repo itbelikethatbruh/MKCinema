@@ -38,7 +38,7 @@ const CFG_DEFAULTS = {
   partyName: '', partyShareLink: false, governor: true, syncKeys: true, anonStats: true, pickMemo: true, liveMini: true,
   ambilight: true, ambIntensity: 85, rememberVolume: true, extPlayers: {},
   // subtitles
-  subAuto: true, subDubSigns: true, subLang: 'eng', subSize: 100, subColor: '#ffffff', subBg: 65, subPos: 'bottom', subFont: 'sans', subOutline: true, subBold: false, subShadow: 'soft', subLook: 'custom',
+  subAuto: true, subDubSigns: true, subLang: 'eng', subSize: 100, subColor: '#ffffff', subBg: 65, subPos: 'bottom', subFont: 'stream', subOutline: true, subBold: false, subShadow: 'soft', subLook: 'custom',
   // streams
   hideP2P: false, browserOnly: false, audioOnly: 'eng', showTrailers: true, timeout: 15, alwaysProxy: false,
   // intro, sound, trailers
@@ -46,6 +46,8 @@ const CFG_DEFAULTS = {
   introMode: 'daily', sfxVolume: 70, trailerMode: 'auto',
 };
 const CFG = Object.assign({}, CFG_DEFAULTS, (() => { try { const c0 = window.__CFG0; window.__CFG0 = null; return c0 && typeof c0 === 'object' ? c0 : JSON.parse(localStorage.getItem('mkc:cfg') || '{}'); } catch (e) { return {}; } })());
+/* 2.95.8: subtitles move to Inter (modern) once for people still on the old default font */
+if (!CFG.subSoft) { if (CFG.subFont === 'sans') CFG.subFont = 'stream'; CFG.subSoft = 1; }
 // One-time upgrades for settings saved by older builds
 if ((CFG.cfgRev || 0) < 4) {
   // Low is the default graphics preset from rev 4; keep a preset only if the user picked it themselves

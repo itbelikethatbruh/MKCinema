@@ -75,6 +75,7 @@ const MkNative = {
     if ('dur' in n && n.dur !== was.dur) this.fire('durationchange');
     if (('w' in n || 'h' in n) && st.w) this.fire('resize');
     if ('tracks' in n) this.tracks(st.tracks || []);
+    if ('tracks' in n || 'sid' in n) this.subDraw();
     const meta = st.dur > 0 && Array.isArray(st.tracks);
     if (!this.metaFired && (meta || n.loaded)) {
       this.metaFired = true; ['loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough'].forEach((e) => this.fire(e)); this.subStyle();
@@ -98,7 +99,20 @@ const MkNative = {
     if ('cached' in n) this.fire('progress');
     if (n.end === 'eof' || (n.ended && !was.ended && st.dur > 0 && (Number(st.t) || 0) >= st.dur - 2)) { if (this.lastEnd !== this.gen) { this.lastEnd = this.gen; this.st.paused = true; this.fire('ended'); } }
     if (n.end === 'error') this.fail(n.err || 'the file could not be opened');
-    if (this.embed && ('stext' in n || 't' in n)) this.stext('stext' in n ? n.stext : undefined);
+    if ((this.embed || this._pageSubs) && ('stext' in n || 't' in n)) this.stext('stext' in n ? n.stext : undefined);
+  },
+  /* 2.95.8 softer subtitles */
+  /* Phones and computers: text subtitles are drawn by the page (rounded box, the chosen font, like the web player) from the
+     words mpv reports; mpv only hides its own drawing. Picture (PGS, DVD) and styled ASS subtitles stay with mpv. Apps
+     before Android 1.17.15 / Windows 1.6.2 refuse "subdraw" and keep drawing everything themselves. */
+  subDraw() {
+    if (!this.active || this.embed || this._drawNo) return;
+    const t = ((this.st && this.st.tracks) || []).find((x) => x.type === 'sub' && x.selected);
+    const page = !!t && !/pgs|dvd|dvb|xsub|^ass$|^ssa$|arib|teletext/i.test(String(t.codec || ''));
+    if (page === this._pageWant) return;
+    this._pageWant = page;
+    this.cmd('subdraw', page ? 'page' : 'mpv').then(() => { this._pageSubs = page; if (!page) this.subClear(); else this.stext(this.st.stext || ''); })
+      .catch(() => { this._drawNo = true; this._pageSubs = false; this.subClear(); });
   },
   /* 2.91.5: TVs (Android 1.17.7+): the decoder draws straight onto the screen, so the subtitle words come as text */
   stext(t) {
@@ -106,10 +120,15 @@ const MkNative = {
     if (!el || !el.isConnected) { el = this._sub = document.createElement('div'); el.className = 'mk-nv-sub'; el.setAttribute('aria-live', 'off'); $('#player').appendChild(el); }
     if (t !== undefined) {
       const txt = typeof t === 'string' ? t.replace(/\{\\[^}]*\}/g, '').replace(/<[^>]+>/g, '').replace(/\\N/g, '\n').trim() : '';
-      if (txt !== this._subT) { this._subT = txt; el.textContent = ''; if (txt) { const sp = document.createElement('span'); sp.textContent = txt; el.appendChild(sp); } el.hidden = !txt; el.style.fontSize = `${Math.round(3.4 * (Number(CFG.subSize) || 100)) / 100}vh`; el.classList.toggle('top', CFG.subPos === 'top'); }
+      if (txt !== this._subT) { this._subT = txt; el.textContent = ''; if (txt) { const sp = document.createElement('span'); sp.textContent = txt; el.appendChild(sp); } el.hidden = !txt; this.subFit(el); }
     }
     const lift = !$('#hud').classList.contains('idle');
     if (lift !== this._subLift) { this._subLift = lift; el.classList.toggle('lift', lift); }
+  },
+  subFit(el) {
+    const k = (Number(CFG.subSize) || 100) / 100;
+    el.style.fontSize = this.embed ? `${Math.round(3.4 * k * 100) / 100}vh` : `max(14px, calc(max(5vh, 2.4vw) * ${k}))`;
+    el.classList.toggle('top', CFG.subPos === 'top'); el.classList.toggle('higher', CFG.subPos === 'higher');
   },
   /* the file's own tracks: audio for video.audioTracks, subtitles for the subtitle menu */
   tracks(list) {
@@ -226,7 +245,7 @@ const MkNative = {
     CFG_HOOKS.push((k) => {
       if (!this.active || !/^sub(Size|Pos|Color|Bg|BgColor|Outline|Bold|Shadow|Font|Look)$/.test(k)) return;
       clearTimeout(this._styT); this._styT = setTimeout(() => this.subStyle(), 40); // a Style pick sets 7 values at once
-      const el = this._sub; if (el) { el.style.fontSize = `${Math.round(3.4 * (Number(CFG.subSize) || 100)) / 100}vh`; el.classList.toggle('top', CFG.subPos === 'top'); }
+      const el = this._sub; if (el) this.subFit(el);
     });
     const sec = typeof SECTIONS !== 'undefined' && SECTIONS.find((x) => x.id === 'playback');
     if (sec) {

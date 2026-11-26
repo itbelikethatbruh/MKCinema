@@ -179,7 +179,7 @@ const People = {
     $$('[data-cpx]', box).forEach((b) => { b.onclick = () => X8.close('personLayer'); });
     const rt = box.querySelector('[data-cpretry]'); if (rt) rt.onclick = () => { const c = this.cur; if (c) this.open(c.name, c.role); };
     const more = $('#cpMore'); if (more) more.onclick = () => { const b = $('#cpBio'); if (b) b.classList.toggle('clip'); more.textContent = b && b.classList.contains('clip') ? 'Read more' : 'Show less'; };
-    const all = $('#cpAll'); if (all) all.onclick = () => { this.limit = 100000; this.paint(); };
+    const all = $('#cpAll'); if (all) all.onclick = () => { this.limit = (this.limit || 60) + 60; this.paint(); };
     $$('[data-cpd]', box).forEach((b) => { b.onclick = () => { this.dept = b.dataset.cpd; this.kind = 'all'; this.limit = 60; this.paint(); }; });
     $$('[data-cpt]', box).forEach((b) => { b.onclick = () => { this.kind = b.dataset.cpt; this.limit = 60; this.paint(); }; });
     $$('[data-cpi]', box).forEach((b) => { b.onclick = () => this.pick(b); });
