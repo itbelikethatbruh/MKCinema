@@ -36,7 +36,7 @@ const I18N = {
       const v = el.getAttribute(a); if (!v) continue;
       const seen = this.attrDone.get(el); if (seen && seen[a] === v) continue;
       const t = this.map.get(v.trim()) || this.pat(v.trim()); if (!t || t === v) continue;
-      if (el.hasAttribute('data-card') || this.skip(el)) continue;
+      if (el.hasAttribute('data-card') || this.skip(/^(INPUT|TEXTAREA)$/.test(el.tagName) ? el.parentElement : el)) continue;
       el.setAttribute(a, t); this.attrDone.set(el, { ...(seen || {}), [a]: t });
     }
   },
@@ -63,7 +63,11 @@ const I18N = {
   pat(k) {
     const P = this.pats; if (!P || k.length < 4) return '';
     const L = [...(P.head.get(k.slice(0, 4)) || []), ...(P.tail.get(k.slice(-4)) || [])];
-    for (const [re, out] of L) { const m = re.exec(k); if (m) return out.replace(/\{(\d+)\}/g, (_, i) => qq(m[+i + 1], '')); }
+    for (const [re, out, g] of L) {
+      const m = re.exec(k); if (!m) continue; let cut = 0;
+      const r = out.replace(/\{(\d+)\}/g, (_, i) => { const v = qq(m[+i + 1], ''); if (g && g[+i] && /^(e?s)?$/.test(v)) { cut = 1; return ''; } return v; });
+      return cut ? r.replace(/ {2,}/g, ' ').replace(/ ([,.:;!?)])/g, '$1').trim() : r;
+    }
     return '';
   },
   loadPats(obj) {
@@ -71,11 +75,12 @@ const I18N = {
     for (const [en, out] of Object.entries(obj || {})) {
       const parts = en.split(/\{\d+\}/); const lead = parts[0], end = parts[parts.length - 1];
       const key = lead.length >= 4 ? ['h', lead.slice(0, 4)] : end.length >= 4 ? ['t', end.slice(-4)] : null; if (!key) continue;
-      const re = new RegExp('^' + parts.map((x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('(.+?)') + '$');
+      /* 2.95.4 ui sweep */ const glue = parts.slice(0, -1).map((x, j) => /[A-Za-z]$/.test(x) && !/^[A-Za-z]/.test(parts[j + 1]));
+      const re = new RegExp('^' + parts.map((x, j) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + (j < glue.length ? (glue[j] ? '(.*?)' : '(.+?)') : '')).join('') + '$');
       // the translation refers to gaps by number; the regex captures them in English order
       const order = [...en.matchAll(/\{(\d+)\}/g)].map((m) => +m[1]);
       const fixed = out.replace(/\{(\d+)\}/g, (_, i) => `{${order.indexOf(+i)}}`);
-      const M = key[0] === 'h' ? head : tail; if (!M.has(key[1])) M.set(key[1], []); M.get(key[1]).push([re, fixed]); n++;
+      const M = key[0] === 'h' ? head : tail; if (!M.has(key[1])) M.set(key[1], []); M.get(key[1]).push([re, fixed, glue.some(Boolean) ? glue : null]); n++;
     }
     this.pats = n ? { head, tail } : null;
   },
