@@ -29,6 +29,20 @@ from the last 3 days. The page sends the list with `MKAndroid.epSync`, and `epEn
 asks for permission). There is no server. Details are in the [2.19.0 episode alerts notes](https://github.com/itbelikethatbruh/mkcinema/blob/3b48ed4/tools/patches/2.19.0-episode-alerts/README.md).
 It needs web 2.19.0 for the setting. Older pages simply don't show it.
 
+## 1.17.13 (versionCode 55): phones use the whole screen
+
+- Phones and tablets (not TVs) on Android 11+ with WebView 144+ now draw edge to edge: under see-through status and
+  navigation bars and into the camera cutout (`LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS`). From WebView 144 the bars and the
+  cutout reach the page as `env(safe-area-inset-*)`, which the page already uses for iPhones, so menus stay clear of them.
+  Older WebViews keep the old black bars, since their pages would get zero insets.
+- The keyboard still shrinks the page from below like `adjustResize`: the root view is padded by the IME inset and the
+  page gets no IME or bottom navigation inset while it is up.
+- Full-screen video hides the bars with `WindowInsetsController` (swipe shows them for a moment) instead of the old
+  flags. The non-edge-to-edge path now applies its cutout mode with `setAttributes` (before, it never reached the window).
+- Bar icons follow the page's `theme-color` (new bridge method `bars`): dark icons on the light looks.
+- `PlayerActivity` fills past the cutout (`SHORT_EDGES`) and pads its bar and Skip button by the cutout.
+- Untested on a real phone.
+
 ## 1.17.12 (versionCode 54): Fill, Crop bars and zoom on TVs
 
 - TVs play under the page with the decoder drawing straight onto the surface (`mediacodec_embed`), which mpv's
