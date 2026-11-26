@@ -58,6 +58,8 @@ jobs:
           adb install -r -g "$RUNNER_TEMP/apk/MKCinema.apk" > /dev/null
           OUT="$RUNNER_TEMP/player" timeout 600 bash tools/android/back-test.sh || true
           APK="$RUNNER_TEMP/apk/MKCinema.apk" OUT="$RUNNER_TEMP/player" bash tools/android/player-test.sh
+          # 1.17.17: every remote state of the TV player, slow and dropped streams included: Back must always leave
+          OUT="$RUNNER_TEMP/player" timeout 900 bash tools/android/remote-sweep.sh
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
@@ -66,6 +68,8 @@ jobs:
             ${{ runner.temp }}/player/*.png
             ${{ runner.temp }}/player/*.txt
             ${{ runner.temp }}/player/*.mp4
+            ${{ runner.temp }}/player/sweep/*.png
+            ${{ runner.temp }}/player/sweep/*.txt
             ${{ runner.temp }}/emulator.log
           retention-days: 7
           if-no-files-found: warn

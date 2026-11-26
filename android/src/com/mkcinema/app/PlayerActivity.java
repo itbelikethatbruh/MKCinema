@@ -171,7 +171,10 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         note.setText("Loading…");
         // 1.6.1: frame-rate matching reads the file only once the player has opened it (see onPrepared), not at the same time
         // the film opens once its subtitles are downloaded, or after 3 s without them (they're added when they arrive)
-        if (subUrl != null && !subUrl.isEmpty()) { new Thread(this::loadSubs).start(); h.postDelayed(() -> { subsWaited = true; maybeStart(); }, 3000); } else subsWaited = true;
+        // 1.17.17: MKCinema Player (mpv) adds subtitles live without reloading, so the film no longer waits for them;
+        // only ExoPlayer, which has to reopen the film to add them, still waits up to 3 s
+        boolean liveSubs = !"system".equals(engineName) && !"exoplayer".equals(engineName) && MpvEngine.available();
+        if (subUrl != null && !subUrl.isEmpty()) { new Thread(this::loadSubs).start(); if (liveSubs) subsWaited = true; else h.postDelayed(() -> { subsWaited = true; maybeStart(); }, 3000); } else subsWaited = true;
         h.post(tick);
     }
 
@@ -642,7 +645,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
             case KeyEvent.KEYCODE_DPAD_UP: show(4000); return true;
             case KeyEvent.KEYCODE_MENU: openTracks(false); return true;
             case KeyEvent.KEYCODE_MEDIA_NEXT: wantNext = true; finishWithResult(); return true;
-            case KeyEvent.KEYCODE_BACK: case KeyEvent.KEYCODE_ESCAPE: android.util.Log.i("MKCPlayer", "back" + (prepared ? "" : " while opening")); finishWithResult(); return true;
+            case KeyEvent.KEYCODE_BACK: case KeyEvent.KEYCODE_ESCAPE: case KeyEvent.KEYCODE_MEDIA_STOP: android.util.Log.i("MKCPlayer", "back" + (prepared ? "" : " while opening")); finishWithResult(); return true;
         }
         return super.dispatchKeyEvent(e);
     }
