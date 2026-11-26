@@ -1,0 +1,26 @@
+/* 2.95.4 ui sweep */
+/* top menu in long languages (Tamil, Malayalam, Russian, French…): the centred menu ran under the logo and the
+   account button on Fire TV and tablets. EzbFit tightens the tabs step by step until they fit. */
+html.ezb-bar.ezf1 #tabs .tab{padding-left:12px;padding-right:12px}
+html.ezb-bar.ezf2 #tabs .tab{padding-left:9px;padding-right:9px;font-size:93%}
+html.ezb-bar.ezf2 #tabs .ezb-sep{margin:0 3px}
+html.ezb-bar.ezf3 #tabs .tab{padding-left:7px;padding-right:7px;font-size:86%;letter-spacing:0}
+html.ezb-bar.ezf3 #tabs{gap:0}
+html.ezb-bar.ezf4 #tabs .tab{padding-left:5px;padding-right:5px;font-size:78%}
+/* tablets set their own tab padding with !important */
+html.mk-pill.mk-pad.ezb-bar.ezf1 #tabs .tab{padding:0 14px!important}
+html.mk-pill.mk-pad.ezb-bar.ezf2 #tabs .tab{padding:0 10px!important;font-size:calc(15px * var(--ts,1))!important}
+html.mk-pill.mk-pad.ezb-bar.ezf3 #tabs .tab{padding:0 7px!important;font-size:calc(14px * var(--ts,1))!important}
+html.mk-pill.mk-pad.ezb-bar.ezf4 #tabs .tab{padding:0 5px!important;font-size:calc(13px * var(--ts,1))!important}
+/* last resort on a narrow tablet: the menu scrolls inside its pill instead of spilling out of it */
+html.ezb-bar.ezf5 #tabs{max-width:calc(100vw - 28px);overflow-x:auto;overflow-y:hidden;scrollbar-width:none;justify-content:flex-start}
+html.ezb-bar.ezf5 #tabs::-webkit-scrollbar{display:none}
+/* sideways phone: the Search / Menu bar sat on the banner's Play button */
+@media (orientation:landscape) and (max-height:540px){
+  html.mk-pill:not(.mk-pill-down) .hero{min-height:calc(100dvh - 90px - var(--mkp-lift,0px))}
+  html.mk-pill:not(.mk-pill-down) #hero .hero-desc-slot{display:none}
+  html.mk-pill:not(.mk-pill-down) #hero .hero-body{padding-bottom:12px}
+}
+/* narrow phone held upright: the player's middle buttons (back 10 s, play, forward 10 s) were squeezed into ovals */
+html.mk-rx #player .hud-mid{width:max-content}
+html.mk-rx #player .hud-mid .ibtn{flex:none}

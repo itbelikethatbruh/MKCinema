@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.95.4 (2026-11-25)
+
+- Clearer words in every language, a top menu that fits on TVs and tablets, and tidier player buttons on phones.
+
 ## Web app 2.95.3 (2026-11-25)
 
 - Quicker back on TVs: backing out of a film is much quicker, and the title page shows at once.
