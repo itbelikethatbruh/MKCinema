@@ -19,8 +19,8 @@ const PlayerAsk = {
       : { pick: 'builtin', bo: true, why: 'TV browsers cannot install other players, so turn on Only sources that play here below.' };
     if (PLATFORM === 'ios') return (window.ManagedMediaSource || window.MediaSource) && CFG.engine !== false
       ? { pick: 'builtin', why: 'Safari on iPhone and iPad plays MP4, HLS and most MKV files right here. If one will not start, VLC is free and one tap away.' }
-      : { pick: 'ext', why: 'This version of iOS cannot play MKV files in Safari, and many sources are MKV. Update to iOS 17.1 or later, or use VLC, which is free.' };
-    if (PLATFORM === 'android' && !this.hevc()) return { pick: 'ext', why: 'This browser cannot play HEVC (x265), which many 4K and anime files use. VLC is free and plays them.' };
+      : { pick: 'builtin', bo: true, why: 'Browsers cannot open some MKV and HEVC files. Smart Play moves to a source that plays.' }; /* 2.95.5 player pick */
+    if (PLATFORM === 'android' && !this.hevc()) return { pick: 'builtin', bo: true, why: 'Browsers cannot open some MKV and HEVC files. Smart Play moves to a source that plays.' };
     return { pick: 'builtin', why: 'This browser plays most streams. If one will not start, Smart Play moves to the next source, and VLC is always one tap away.' };
   },
   cur() {
