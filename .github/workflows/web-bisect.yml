@@ -1,0 +1,69 @@
+name: Web bisect (temporary)
+# Which 2.95.8 piece keeps Android's accessibility tree busy (own-download can't read the screen)? Each job serves one
+# web variant on the runner and runs the own-download test against it.
+on:
+  push:
+    branches: ['claude/project-thread-ivf55g']
+    paths: ['.github/workflows/web-bisect.yml', 'bisect/**']
+permissions:
+  contents: read
+jobs:
+  own-download:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        v: ['v957', 'v958', 'am', 'bc', 'ss']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Web variant
+        run: |
+          W="$RUNNER_TEMP/web"; mkdir -p "$W"
+          ref=12ce85c; [ "${{ matrix.v }}" = v958 ] && ref=bd89c694
+          git archive "$ref" app | tar -x -C "$W"
+          case "${{ matrix.v }}" in
+            am) python3 bisect/auto-more.py "$W/app" ;;
+            bc) python3 bisect/behind-clock.py "$W/app" ;;
+            ss) python3 bisect/subs-soft.py "$W/app" ;;
+          esac
+          grep -o "APP_VERSION = '[^']*'" "$W/app/index.html" | head -1
+          openssl req -x509 -newkey rsa:2048 -nodes -keyout "$RUNNER_TEMP/k.pem" -out "$RUNNER_TEMP/c.pem" -days 2 -subj /CN=localhost 2>/dev/null
+          nohup python3 bisect/serve.py "$W/app" "$RUNNER_TEMP/c.pem" "$RUNNER_TEMP/k.pem" > "$RUNNER_TEMP/serve.log" 2>&1 &
+          sleep 1; curl -sk -o /dev/null -w "%{http_code}\n" https://127.0.0.1:8443/
+      - name: SDK and emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules > /dev/null
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+          sm="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$sm" --licenses > /dev/null || true
+          "$sm" "build-tools;35.0.0" "platforms;android-35" "platform-tools" "emulator" "system-images;android-34;google_apis;x86_64" | grep -v "^\[" | tail -3
+          mkdir -p "$HOME/.android/avd"; echo "ANDROID_AVD_HOME=$HOME/.android/avd" >> "$GITHUB_ENV"
+          echo no | ANDROID_AVD_HOME="$HOME/.android/avd" "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -f -n test -k "system-images;android-34;google_apis;x86_64"
+      - name: Build a test APK that calls itself 1.0.0 and opens the runner's copy
+        run: |
+          sed -i 's/android:versionCode="[0-9]*"/android:versionCode="1"/; s/android:versionName="[^"]*"/android:versionName="1.0.0"/' android/AndroidManifest.xml
+          sed -i 's/static final String VER = "[^"]*";/static final String VER = "1.0.0";/' android/src/com/mkcinema/app/MainActivity.java
+          python3 bisect/test-build.py
+          keytool -genkeypair -keystore "$RUNNER_TEMP/test.jks" -storepass testtest -keypass testtest -alias test -keyalg RSA -keysize 2048 -validity 30 -dname CN=test > /dev/null 2>&1
+          echo testtest > "$RUNNER_TEMP/pw"
+          SDK="$ANDROID_HOME" OUT="$RUNNER_TEMP/apk" KS="$RUNNER_TEMP/test.jks" KS_PASS="file:$RUNNER_TEMP/pw" sh android/build.sh 2>&1 | grep -v "kotlin\|^\s*at \|^Info\|^Warning\|Lk0\|^$" || true
+          ls -la "$RUNNER_TEMP/apk/MKCinema.apk"
+      - name: own-download against this variant
+        run: |
+          export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+          emulator -avd test -no-window -no-audio -no-boot-anim -no-snapshot -no-metrics -accel on -gpu guest \
+            -camera-back none -camera-front none -memory 6144 -cores 4 > "$RUNNER_TEMP/emulator.log" 2>&1 &
+          for i in $(seq 1 120); do [ "$(timeout 10 adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ] && break; sleep 5; done
+          adb reverse tcp:8443 tcp:8443
+          OUT="$RUNNER_TEMP/out" APK="$RUNNER_TEMP/apk/MKCinema.apk" bash tools/android/update-dl-test.sh || { echo "RESULT ${{ matrix.v }}: FAIL"; grep -c "Fetch time" "$RUNNER_TEMP/out/logcat.txt"; tail -5 "$RUNNER_TEMP/serve.log"; exit 1; }
+          echo "RESULT ${{ matrix.v }}: PASS"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: bisect-${{ matrix.v }}
+          path: ${{ runner.temp }}/out/
+          retention-days: 3

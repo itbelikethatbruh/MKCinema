@@ -1,0 +1,2 @@
+html:not(.lk-bg):not(.tv) body::before{z-index:39;height:calc(env(safe-area-inset-top,0px) * 1.4);background:linear-gradient(rgba(var(--k000000-c,0,0,0),.6),rgba(var(--k000000-c,0,0,0),.34) 62%,rgba(var(--k000000-c,0,0,0),0));pointer-events:none}
+html.mk-pill body .dock-wrap:before{height:100%!important;background:linear-gradient(rgba(var(--k000000-c,0,0,0),.5),rgba(var(--k000000-c,0,0,0),.22) calc(env(safe-area-inset-top,0px) + 4px),rgba(var(--k000000-c,0,0,0),0))!important}
