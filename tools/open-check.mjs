@@ -12,9 +12,13 @@
          itself, so it arrives on its own (more than 0.15 apart),
        * a part moves by more than 2 px while the page is visible,
        * the page fades out again after it has faded in (a second fade).
-   - episode: from the tap until the episode panel has settled. Fails when anything on the title page under the panel
-     is animating while the panel is showing (on Android those moving layers could show the page through the panel),
-     or the panel's picture box is an empty black box when it appears.
+   - episode (The Simpsons, from a New episodes card, then closed with its X): from the tap until the panel has closed
+     again. Two test addons answer, one at once and one 0.7 s later, like real ones. Fails when
+       * the panel is see-through at any moment while it opens or closes (Home or the title page shows through its text),
+       * on a phone, the title page under it is half shown while the panel is still sliding up (three screens at once),
+       * on a phone, anything on the title page under the panel is animating while the panel is open,
+       * the source list is drawn more than twice in the first 1.5 s (a half list replaced a frame later),
+       * the panel's picture box is an empty black box when it appears.
    It also prints the time from the tap to the first frame that shows the page.
    Needs the network for the catalog (Cinemeta). A case whose data cannot load is SKIP, not FAIL. Exit code 1 on any FAIL. */
 import http from 'node:http';
@@ -32,8 +36,15 @@ const DEVS = opt('devices', ['phone', 'desktop', 'tv']);
 const RUNS = Number(opt('runs', ['2'])[0]) || 2;
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.wasm': 'application/wasm', '.woff2': 'font/woff2' };
+// two test addons: one answers at once with one source, the other 0.7 s later with 36
+const MAN = { version: '1.0.0', resources: ['stream'], types: ['movie', 'series'], idPrefixes: ['tt'], catalogs: [] };
+const json = (res, o) => { res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' }); res.end(JSON.stringify(o)); };
 const server = http.createServer((req, res) => {
   const url = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+  if (url === '/oc-a/manifest.json') return json(res, { ...MAN, id: 'oc.a', name: 'Check A' });
+  if (url === '/oc-b/manifest.json') return json(res, { ...MAN, id: 'oc.b', name: 'Check B' });
+  if (url.startsWith('/oc-a/stream/')) return json(res, { streams: [{ name: 'A 1080p', title: 'Check.1080p.WEB-DL.English', url: 'https://example.invalid/a.mp4' }] });
+  if (url.startsWith('/oc-b/stream/')) return void setTimeout(() => json(res, { streams: Array.from({ length: 36 }, (_, i) => ({ name: `B ${i % 3 ? '1080p' : '2160p'}`, title: `Check.${i % 3 ? '1080p' : '2160p'}.WEB-DL.English.${i}`, url: `https://example.invalid/b${i}.mp4` })) }), 700);
   const file = path.join(root, url.endsWith('/') ? url + 'index.html' : url);
   if (!file.startsWith(root) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); res.end(); return; }
   res.writeHead(200, { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream' });
@@ -58,8 +69,9 @@ const note = (dev, test, status, msg) => { results.push({ dev, test, status, msg
 async function start(dev) {
   const D = DEV[dev];
   const ctx = await browser.newContext({ ...D.ctx, serviceWorkers: 'block', ignoreHTTPSErrors: !!proxy });
-  await ctx.addInitScript(() => { try { if (sessionStorage.getItem('oc')) return; sessionStorage.setItem('oc', '1');
-    for (const [k, v] of Object.entries({ 'mkc:toured': 'true', 'mkc:langAsked': '1', 'mkc:whatsNewOff': 'true', 'mkc:seenVer': '"9.99.99"', 'mkc:playerAsked': '1', 'mkc:prompt': '1' })) localStorage.setItem(k, v); } catch (e) { /* storage off */ } });
+  await ctx.addInitScript((b) => { try { if (sessionStorage.getItem('oc')) return; sessionStorage.setItem('oc', '1');
+    for (const [k, v] of Object.entries({ 'mkc:toured': 'true', 'mkc:langAsked': '1', 'mkc:whatsNewOff': 'true', 'mkc:seenVer': '"9.99.99"', 'mkc:playerAsked': '1', 'mkc:prompt': '1',
+      'mkc:addons': JSON.stringify([b + '/oc-a/manifest.json', b + '/oc-b/manifest.json']) })) localStorage.setItem(k, v); } catch (e) { /* storage off */ } }, base);
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', (e) => errs.push(e.message.slice(0, 160)));
   await p.goto(base + '/', { waitUntil: 'domcontentloaded' });
   await p.waitForFunction(() => document.querySelector('#homeRows section.row, #view-home .rail'), null, { timeout: 30000 }).catch(() => {});
@@ -98,17 +110,23 @@ function recorder() {
   const t0 = performance.now(); window.__oc = [];
   const f = () => {
     const det = document.getElementById('detail'), app = document.getElementById('app'), es = document.getElementById('epSheet');
-    const r = { t: performance.now() - t0, app: vis(app), det: vis(det), sheet: vis(es), parts: {}, anim: 0, still: '' };
+    const r = { t: performance.now() - t0, app: vis(app), det: vis(det), sheet: vis(es), parts: {}, anim: 0, still: '', panel: -1, ptop: 0, draws: window.__ocDraws || 0 };
+    const pnl = es && es.querySelector('.ep-sheet');
+    if (pnl && (!es.hidden || es.classList.contains('leaving')) && getComputedStyle(es).display !== 'none') { r.panel = vis(pnl); const b = pnl.getBoundingClientRect(); r.ptop = Math.round(b.top + b.left); }
     // layout position (offsets, not transforms): an intended glide or the logo's own entrance is not a jump
     const pos = (e) => { let x = 0, y = 0; for (let n = e; n; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; } return { x, y }; };
     for (const [k, s] of Object.entries(PARTS)) { const e = document.querySelector(s); if (e && e.getClientRects().length) { const q = pos(e); r.parts[k] = { o: vis(e), y: q.y, x: q.x, wait: e.tagName === 'IMG' && !(e.complete && e.naturalWidth) }; } }
-    if (r.sheet > 0.05) {
+    r.open = !!(es && !es.hidden);
+    if (r.sheet > 0.05 && r.open) {
       try { const an = document.getAnimations().filter((a) => a.playState === 'running' && a.effect && a.effect.target && a.effect.target.closest && a.effect.target.closest('#detailPanel')); r.anim = an.length; r.animOn = an.slice(0, 4).map((a) => `${a.animationName || a.transitionProperty || 'script'} on ${a.effect.target.id || String(a.effect.target.className).slice(0, 30)}`).join(', '); } catch (e) { r.anim = 0; }
       const st = document.querySelector('#esHead .es-still'), im = st && st.querySelector('img');
       r.still = !st ? 'none' : (im && im.complete && im.naturalWidth && vis(im) > 0.5) ? 'picture' : (st.style.backgroundImage || getComputedStyle(st).backgroundImage) !== 'none' ? 'backdrop' : 'empty';
     }
-    window.__oc.push(r); if (r.t < 4500) requestAnimationFrame(f);
+    window.__oc.push(r); if (r.t < 6500) requestAnimationFrame(f);
   };
+  // each time the source list is drawn again (its rows replaced), counted
+  window.__ocDraws = 0;
+  new MutationObserver((ms) => { if (ms.some((m) => m.target.id === 'dStreams' && (m.removedNodes.length > 1 || m.addedNodes.length > 1))) window.__ocDraws++; }).observe(document.body, { childList: true, subtree: true });
   requestAnimationFrame(f);
 }
 function judgeTitle(fr) {
@@ -134,19 +152,30 @@ function judgeTitle(fr) {
   if (move) out.push(`${move.k} moved ${move.m.toFixed(1)} px while showing (at ${Math.round(move.t)} ms)`);
   return { fail: out, first: fr[first].t };
 }
-function judgeEpisode(fr) {
+function judgeEpisode(fr, dev) {
   const out = [], first = fr.findIndex((r) => r.sheet > 0.05);
   if (first < 0) return { fail: ['the episode panel never showed'], first: null };
+  const see = fr.find((r) => r.panel > 0.02 && r.panel < 0.98);
+  if (see) out.push(`the episode panel was see-through (${Math.round(see.panel * 100)}% at ${Math.round(see.t)} ms)`);
+  // where the panel rests once it is up: the title page may only appear behind it after that
+  const up = fr.slice(first).find((r, i, a) => r.panel >= 0.98 && a[i + 3] && [1, 2, 3].every((k) => a[i + k].ptop === r.ptop));
+  if (up && dev === 'phone') {
+    const half = fr.slice(first).find((r) => r.t < up.t && r.det > 0.05 && r.det < 0.95);
+    if (half) out.push(`the title page was half shown while the panel was still sliding up (${Math.round(half.det * 100)}% at ${Math.round(half.t)} ms)`);
+  }
+  const d0 = fr[first].draws, early = fr.filter((r) => r.t <= fr[first].t + 1500).pop();
+  if (early && early.draws - d0 > 1) out.push(`the source list was drawn ${early.draws - d0 + 1} times in the first 1.5 s`);
+  // a phone panel covers the page; on a computer it sits beside it, so the page may move there
   const worst = fr.slice(first).reduce((a, r) => (r.anim > a.anim ? r : a), { anim: 0 });
-  if (worst.anim > 0) out.push(`${worst.anim} animation(s) running on the title page under the episode panel (${worst.animOn})`);
+  if (dev === 'phone' && worst.anim > 0) out.push(`${worst.anim} animation(s) running on the title page under the episode panel (${worst.animOn})`);
   if (fr[first].still === 'empty') out.push('the episode picture box was empty when the panel appeared');
   return { fail: out, first: fr[first].t };
 }
 
-const CASES = { title: { id: 'tt0111161', type: 'movie' }, episode: { id: 'tt0213338', type: 'series', vid: true } };
+const CASES = { title: { id: 'tt0111161', type: 'movie' }, episode: { id: 'tt0096697', type: 'series', vid: true } };
 for (const dev of DEVS) {
   for (const test of ONLY) {
-    if (test === 'episode' && dev !== 'phone') continue;
+    if (test === 'episode' && dev === 'tv') continue;
     const c = CASES[test]; const fails = []; const firsts = []; let skip = '';
     for (let run = 0; run < RUNS && !skip; run++) {
       const { ctx, p, errs } = await start(dev);
@@ -157,10 +186,15 @@ for (const dev of DEVS) {
         const cdp = await ctx.newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: DEV[dev].cpu });
         await p.waitForTimeout(400);
         await p.evaluate(recorder); await press(p, DEV[dev].input, box);
-        await p.waitForTimeout(4800);
+        if (test === 'episode') {
+          await p.waitForTimeout(3600);
+          const x = await p.evaluate(() => { const b = document.getElementById('esClose'); if (!b || !b.getClientRects().length) return null; const r = b.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+          if (x) { if (DEV[dev].input === 'tap') await p.touchscreen.tap(x.x, x.y); else await p.mouse.click(x.x, x.y); }
+          await p.waitForTimeout(3000);
+        } else await p.waitForTimeout(6800);
         const fr = await p.evaluate(() => window.__oc);
-        if (process.env.OC_DUMP) console.log(JSON.stringify(fr.filter((r, i) => i % 3 === 0).map((r) => [Math.round(r.t), +r.det.toFixed(2), r.parts.picture && +r.parts.picture.o.toFixed(2), r.parts.logo && +r.parts.logo.o.toFixed(2), r.parts.logo && r.parts.logo.wait])));
-        const j = test === 'title' ? judgeTitle(fr) : judgeEpisode(fr);
+        if (process.env.OC_DUMP) console.log(JSON.stringify(fr.filter((r, i) => i % 3 === 0).map((r) => [Math.round(r.t), +r.det.toFixed(2), +r.app.toFixed(2), +(+r.panel).toFixed(2), r.ptop, r.draws])));
+        const j = test === 'title' ? judgeTitle(fr) : judgeEpisode(fr, dev);
         if (j.first != null) firsts.push(Math.round(j.first));
         fails.push(...j.fail.map((x) => `run ${run + 1}: ${x}`));
         if (errs.length) fails.push(`run ${run + 1}: page error ${errs[0]}`);

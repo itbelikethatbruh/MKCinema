@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.95.18', date: '2026-11-26', items: [
+    ['better', 'Episodes open and close smoother', 'The episode panel slides in and out in one piece, and its source list appears once instead of changing as it fills.'],
+  ] },
   { v: '2.95.17', date: '2026-11-26', items: [
     ['better', 'Smoother opening', 'A title page now appears in one calm step, and episodes open without the page moving behind them.'],
   ] },

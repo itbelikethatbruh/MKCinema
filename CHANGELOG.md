@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.95.18 (2026-11-26)
+
+- Episodes open and close smoother: the episode panel slides in and out in one piece, and its source list appears once instead of changing as it fills.
+
 ## Web app 2.95.17 (2026-11-26)
 
 - Smoother opening: a title page now appears in one calm step, and episodes open without the page moving behind them.
