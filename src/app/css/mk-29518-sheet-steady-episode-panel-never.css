@@ -22,3 +22,6 @@ html #epSheet.leaving[hidden] .ep-sheet{animation:mkEsOut .22s ease-in forwards!
 html #detail.dp-under:not(.dp-landed){opacity:0!important;animation:none!important}
 html #detail.dp-under.dp-landed{animation:dpOpen .3s ease both!important}
 body.reduce-motion #epSheet .ep-sheet,body.reduce-motion #epSheet::before{animation:none!important}
+/* 2.95.19: on phones the panel is its full height from the start, so it never grows (its top jumping up) when the
+   sources arrive */
+@media (max-width:760px){html #epSheet .ep-sheet{height:calc(100dvh - 28px - env(safe-area-inset-top,0px))}}

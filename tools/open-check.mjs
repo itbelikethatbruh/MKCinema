@@ -12,12 +12,14 @@
          itself, so it arrives on its own (more than 0.15 apart),
        * a part moves by more than 2 px while the page is visible,
        * the page fades out again after it has faded in (a second fade).
-   - episode (The Simpsons, from a New episodes card, then closed with its X): from the tap until the panel has closed
+   - episode and ep-cold (The Simpsons, from a New episodes card, then closed with its X; ep-cold: Home knows only the
+     show's name, so the page fetches the show before the panel opens): from the tap until the panel has closed
      again. Two test addons answer, one at once and one 0.7 s later, like real ones. Fails when
        * the panel is see-through at any moment while it opens or closes (Home or the title page shows through its text),
        * on a phone, the title page under it is half shown while the panel is still sliding up (three screens at once),
        * on a phone, anything on the title page under the panel is animating while the panel is open,
        * the source list is drawn more than twice in the first 1.5 s (a half list replaced a frame later),
+       * the panel jumps (grows or moves) after it is up,
        * the panel's picture box is an empty black box when it appears.
    It also prints the time from the tap to the first frame that shows the page.
    Needs the network for the catalog (Cinemeta). A case whose data cannot load is SKIP, not FAIL. Exit code 1 on any FAIL. */
@@ -31,7 +33,7 @@ const { chromium } = require('playwright');
 const args = process.argv.slice(2);
 const root = path.resolve(args.find((a) => !a.startsWith('--')) || 'app');
 const opt = (k, d) => { const a = args.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1].split(',') : d; };
-const ONLY = opt('only', ['title', 'episode']);
+const ONLY = opt('only', ['title', 'episode', 'ep-cold']);
 const DEVS = opt('devices', ['phone', 'desktop', 'tv']);
 const RUNS = Number(opt('runs', ['2'])[0]) || 2;
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
@@ -92,6 +94,7 @@ async function placeCard(p, id, type, vid) {
     let h = cardHTML(vid ? { id, type, name: m.name, poster: m.poster, background: m.background } : m, { wide: !!vid, sub: vid ? 'S1 · E1' : '' });
     if (vid) h = h.replace('data-card ', `data-card data-newep="${videoIdFor(m, v)}" `);
     fillRail(sec, h); scrollTo(0, 0);
+    if (vid === 'cold') S.metas.set(id, { id, type, name: m.name }); // Home knows only the name: the page asks for the show first
     return true;
   }, [id, type, vid]);
 }
@@ -159,6 +162,10 @@ function judgeEpisode(fr, dev) {
   if (see) out.push(`the episode panel was see-through (${Math.round(see.panel * 100)}% at ${Math.round(see.t)} ms)`);
   // where the panel rests once it is up: the title page may only appear behind it after that
   const up = fr.slice(first).find((r, i, a) => r.panel >= 0.98 && a[i + 3] && [1, 2, 3].every((k) => a[i + k].ptop === r.ptop));
+  if (up) {
+    const jump = fr.slice(fr.indexOf(up)).find((r) => r.open && r.panel >= 0.98 && Math.abs(r.ptop - up.ptop) > 2);
+    if (jump) out.push(`the panel jumped ${Math.abs(jump.ptop - up.ptop)} px after it was up (at ${Math.round(jump.t)} ms)`);
+  }
   if (up && dev === 'phone') {
     const half = fr.slice(first).find((r) => r.t < up.t && r.det > 0.05 && r.det < 0.95);
     if (half) out.push(`the title page was half shown while the panel was still sliding up (${Math.round(half.det * 100)}% at ${Math.round(half.t)} ms)`);
@@ -172,10 +179,10 @@ function judgeEpisode(fr, dev) {
   return { fail: out, first: fr[first].t };
 }
 
-const CASES = { title: { id: 'tt0111161', type: 'movie' }, episode: { id: 'tt0096697', type: 'series', vid: true } };
+const CASES = { title: { id: 'tt0111161', type: 'movie' }, episode: { id: 'tt0096697', type: 'series', vid: true }, 'ep-cold': { id: 'tt0096697', type: 'series', vid: 'cold' } };
 for (const dev of DEVS) {
   for (const test of ONLY) {
-    if (test === 'episode' && dev === 'tv') continue;
+    if (test !== 'title' && dev === 'tv') continue;
     const c = CASES[test]; const fails = []; const firsts = []; let skip = '';
     for (let run = 0; run < RUNS && !skip; run++) {
       const { ctx, p, errs } = await start(dev);
@@ -186,7 +193,7 @@ for (const dev of DEVS) {
         const cdp = await ctx.newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: DEV[dev].cpu });
         await p.waitForTimeout(400);
         await p.evaluate(recorder); await press(p, DEV[dev].input, box);
-        if (test === 'episode') {
+        if (test !== 'title') {
           await p.waitForTimeout(3600);
           const x = await p.evaluate(() => { const b = document.getElementById('esClose'); if (!b || !b.getClientRects().length) return null; const r = b.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
           if (x) { if (DEV[dev].input === 'tap') await p.touchscreen.tap(x.x, x.y); else await p.mouse.click(x.x, x.y); }
