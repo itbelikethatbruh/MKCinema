@@ -2266,6 +2266,9 @@ html.tv .br-grid .uni-card.br-tile{width:auto;min-width:0}
 html:not(.lk-bg):not(.tv) body::before{z-index:39;height:calc(env(safe-area-inset-top,0px) * 1.4);background:linear-gradient(rgba(var(--k000000-c,0,0,0),.6),rgba(var(--k000000-c,0,0,0),.34) 62%,rgba(var(--k000000-c,0,0,0),0));pointer-events:none}
 html.mk-pill body .dock-wrap:before{height:100%!important;background:linear-gradient(rgba(var(--k000000-c,0,0,0),.5),rgba(var(--k000000-c,0,0,0),.22) calc(env(safe-area-inset-top,0px) + 4px),rgba(var(--k000000-c,0,0,0),0))!important}
 </style>
+<style id="mk-2959-subs-simple">/* 2.95.9 simpler subtitles */
+#setBody:not(.sbe-open) .sbe-adv{display:none}
+</style>
 </head>
 <body class="locked">
 <script id="mk-2881-pre">
@@ -11447,8 +11450,9 @@ const SetTidy = {
       ['Keepsakes', ['stubs', 'stubsBtn', 'watchStatsBtn']],
     ],
     subtitles: [
-      ['Turning them on', ['subAuto', 'subLang', 'subWait', 'subMemory', 'forcedSubs', 'hideSDH', 'subAutoTranslate', 'subAutoSync', 'subDubSigns']],
+      ['Turning them on', ['subAuto', 'subLang', 'subAutoSync']],
       ['How they look', ['subLook', 'subSize', 'subColor', 'subBg', 'subFont', 'subOutline', 'subBold', 'subShadow', 'subPos']],
+      ['Which ones', ['subWait', 'subMemory', 'forcedSubs', 'hideSDH', 'subAutoTranslate', 'subDubSigns']],
       ['While watching', ['lineSnap', 'lastTime', 'margins', 'phoneSubs']],
       ['Anime and styled subtitles', ['assMode', 'mkvSubs']],
       ['Learn and replay', ['replayCC', 'learnWordsBtn']],
@@ -11610,7 +11614,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.95.8';
+const APP_VERSION = '2.95.10';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -18945,7 +18949,12 @@ const BackNav = {
   },
   onPop() {
     if (this.skip) { this.skip = false; return; }
-    if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); return; }
+    /* 2.95.8 back closes the film */
+    if (document.fullscreenElement) {
+      // phones and tablets: Back while a film fills the screen closes the film (it never just turns it upright first)
+      try { if (TOUCH_UI && !$('#player').hidden && window.MKFsBack && MKFsBack()) return; } catch (e) { /* leave full screen below */ }
+      document.exitFullscreen().catch(() => {}); return;
+    }
     if (this.closeTop() || this.prevScreen()) return;
     // the start screen with nothing open: step down to the first entry, so the next Back leaves the app
     const i = this.idx(); if (i > 0) { this.skip = true; history.go(-i); }
@@ -23989,6 +23998,7 @@ const SubSync = {
         this.decide(i, r, 'file', auto, 5);
         return;
       }
+      if (typeof MkNative !== 'undefined' && MkNative.active && !MkNative.vadNo) { this.hear(i, sub, tok, auto); return; }
       if (DSP.attached || (!auto && DSP.clean() && DSP.attach())) { this.listen(i, sub, tok, auto); return; }
       if (!auto) toast('This film has no subtitles inside it to compare with, and this source doesn’t let the browser hear it. Use Sync on a timeline instead.', 'err', 7000, 'subsync');
     } catch (e) { MKLog.add('info', `Subtitle auto-sync: ${e.message}`); }
@@ -24056,7 +24066,71 @@ const SubSync = {
       if (sure || next > 150) { stop(); if (r) this.decide(i, r, 'speech', auto, 6); else if (!auto) toast('Not enough dialogue heard to line up the subtitles', 'err', 4200, 'subsync'); }
     }, 50);
   },
-  reset() { this.tok++; clearInterval(this.listenT); this.listenT = 0; this.listening = false; this.busy = false; P.subScale = 1; },
+  reset() { this.tok++; clearInterval(this.listenT); this.listenT = 0; this.listening = false; this.busy = false; P.subScale = 1; if (typeof MkNative !== 'undefined' && MkNative.vadLvl) MkNative.vad(0).catch(() => {}); },
+  /* 2.95.9 the MKCinema player: speech from mpv (see MkNative.vad). 5.1 and 7.1 films use the centre channel, where the
+     dialogue is; stereo counts a moment as quiet only when every channel is. Too few quiet moments (music under
+     everything) raises the level, too few loud ones lowers it, twice at most. Same checks and same sure-match rule as
+     listening in the browser. */
+  hear(i, sub, tok, auto) {
+    const N = MkNative; let lvl = -32, moved = 0, R = [], last = -1, next = 45, aligning = false;
+    const stop = () => { clearInterval(this.listenT); this.listenT = 0; this.listening = false; this.busy = false; if (N.vadLvl) N.vad(0).catch(() => {}); renderSubMenu(); };
+    const heard = () => this.total(R);
+    // speech = heard time minus the quiet spans of the chosen channels
+    const speech = () => {
+      const ev = N.vadEv || [], by = {};
+      for (const [c, k, t] of ev) (by[c] || (by[c] = [])).push([k, t]);
+      let chs = Object.keys(by);
+      if ((Number(N.st.channels) || 0) >= 5) chs = by['3'] ? ['3'] : [];
+      if (!R.length) return null;
+      if (!chs.length) return this.merge(R.map((x) => [x[0], x[1]])); // never quiet: music or noise under everything
+      const lo = R[0][0] - 5, hi = R[R.length - 1][1] + 5;
+      const quiet = chs.map((c) => {
+        const list = by[c].slice().sort((a, b) => a[1] - b[1]), out = []; let open = null;
+        if (list[0][0] === 'e') open = lo;
+        for (const [k, t] of list) { if (k === 's') { if (open == null) open = t; } else if (open != null) { out.push([open, t]); open = null; } }
+        if (open != null) out.push([open, hi]);
+        return this.merge(out);
+      });
+      // quiet only where every chosen channel is quiet
+      let Q = quiet[0];
+      for (const q of quiet.slice(1)) { const o = []; let a = 0, b = 0; while (a < Q.length && b < q.length) { const s0 = Math.max(Q[a][0], q[b][0]), e0 = Math.min(Q[a][1], q[b][1]); if (e0 > s0) o.push([s0, e0]); if (Q[a][1] < q[b][1]) a++; else b++; } Q = o; }
+      const S = []; for (const [a, b] of R) { let p = a; for (const [qa, qb] of Q) { if (qb <= p || qa >= b) continue; if (qa > p) S.push([p, qa]); p = Math.max(p, qb); } if (p < b) S.push([p, b]); }
+      return this.merge(S.filter((x) => x[1] - x[0] >= 0.2));
+    };
+    this.listening = true; renderSubMenu();
+    N.vad(lvl).then(() => {
+      if (tok !== this.tok) { N.vad(0).catch(() => {}); return; }
+      if (!auto) toast('Listening to the dialogue to line up the subtitles. Keep the film playing for a minute.', 'info', 5000, 'subsync');
+      const started = Date.now();
+      clearInterval(this.listenT);
+      this.listenT = setInterval(async () => {
+        if (tok !== this.tok || P.curSub !== i || $('#player').hidden || !N.active || Date.now() - started > 15 * 60000) { if (tok === this.tok) stop(); return; }
+        if (aligning || video.paused || video.seeking || N.st.buffering) { last = -1; return; }
+        const t = pNow();
+        if (last >= 0 && t > last && t - last < 1.5) { const r = R[R.length - 1]; if (r && Math.abs(r[1] - last) < 0.01) r[1] = t; else R.push([last, t]); }
+        last = t;
+        if (heard() < next) return;
+        next += 30; aligning = true;
+        try {
+          const S = speech(), U = this.merge(R), f = S ? this.total(S) / Math.max(1, this.total(U)) : 0;
+          // the level suits this film's mix? (no quiet moments at all: music under everything; nothing loud: very soft dialogue)
+          if (S && (f > 0.9 || f < 0.04) && moved < 2) { lvl += f > 0.9 ? 8 : -10; moved++; R = []; last = -1; next = 45; await N.vad(lvl).catch(() => {}); return; }
+          let r = null;
+          const near = S && U.length ? sub.filter((x) => x[1] > U[0][0] - 60 && x[0] < U[U.length - 1][1] + 60) : [];
+          if (S && near.length >= 12 && this.total(S) >= 15) r = await this.align(near, S, { range: 60, scales: [1], clip: U });
+          if (tok !== this.tok || P.curSub !== i) return;
+          const sure = r && r.z >= 6 && r.j >= 0.2 && r.j >= r.rival * 1.2 && r.j > r.j0 + 0.02;
+          if (sure || next > 165) { stop(); if (r) this.decide(i, r, 'speech', auto, 6); else if (!auto) toast('Not enough dialogue heard to line up the subtitles', 'err', 4200, 'subsync'); }
+        } finally { aligning = false; }
+      }, 250);
+    }, () => {
+      // an app from before Android 1.17.15 / Windows 1.6.2
+      N.vadNo = true; N.vadLvl = 0; N.vadEv = null;
+      if (tok !== this.tok) return;
+      this.listening = false; this.busy = false; renderSubMenu();
+      if (!auto) toast('This film has no subtitles inside it to compare with, and this source doesn’t let the browser hear it. Use Sync on a timeline instead.', 'err', 7000, 'subsync');
+    });
+  },
 };
 {
   // run after an add-on or device subtitle comes on
@@ -24665,6 +24739,13 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.95.10', date: '2026-11-26', items: [
+    ['better', 'Back closes the film', 'Swiping Back during a film now closes it straight away.'],
+  ] },
+  { v: '2.95.9', date: '2026-11-26', items: [
+    ['better', 'Simpler subtitle settings', 'Settings › Subtitles now shows just the few choices most people use. Everything else is still there under More choices.'],
+    ['better', 'Subtitles that line up by themselves', 'Auto-sync now listens for the dialogue when films play in MKCinema on Android phones and Windows, in app 1.17.15 and 1.6.2.'],
+  ] },
   { v: '2.95.8', date: '2026-11-26', items: [
     ['better', 'Lists keep going', 'Reach the bottom of any list, grid or guide and the next titles appear by themselves. No more Load more button, on phones, computers and TVs.'],
     ['better', 'Softer subtitles', 'Subtitles now sit in a soft rounded box in a clean modern font, and italic lines stay upright and easy to read.'],
@@ -47623,7 +47704,7 @@ const MkNative = {
       .then((j) => { try { this.gen = JSON.parse(j || '{}').gen || 0; } catch (e) { /* ignore */ } })
       .catch((e) => this.fail(String((e && e.message) || e)));
     this.vol(); this.cmd('speed', CFG.speed || 1).catch(() => {}); this.cmd('tonemap', CFG.hdrMap === 'sdr' ? 'sdr' : 'auto').catch(() => {});
-    this.picture(); this.sound(); styleCues();
+    this.vadLvl = 0; this.vadEv = null; this.picture(); this.sound(); styleCues();
     this.fire('loadstart');
   },
   /* your audio language as libmpv's alang list (3- and 2-letter forms, so files tagged either way match) */
@@ -47641,6 +47722,7 @@ const MkNative = {
     if ('t' in n) this.tAt = performance.now();
     if ('dur' in n && n.dur !== was.dur) this.fire('durationchange');
     if (('w' in n || 'h' in n) && st.w) this.fire('resize');
+    if ('vad' in n) this.vadNews(n.vad);
     if ('tracks' in n) this.tracks(st.tracks || []);
     if ('tracks' in n || 'sid' in n) this.subDraw();
     const meta = st.dur > 0 && Array.isArray(st.tracks);
@@ -47763,7 +47845,21 @@ const MkNative = {
     this.cmd('zoom', P.zoom || 1).catch(() => {});
     if (typeof PxPicture !== 'undefined') { const p = PxPicture.get(); this.cmd('eq', JSON.stringify({ brightness: p.b - 100, contrast: p.c - 100, saturation: p.s - 100 })).catch(() => {}); }
   },
-  sound() { if (this.active && typeof SoundModes !== 'undefined') this.cmd('sound', { voices: 'voice', night: 'night' }[SoundModes.cur().k] || 'off').catch(() => {}); },
+  sound() { if (this.active && typeof SoundModes !== 'undefined') this.cmd('sound', { voices: 'voice', night: 'night' }[SoundModes.cur().k] || 'off').then(() => { if (this.vadLvl) this.cmd('vad', String(this.vadLvl)).catch(() => {}); }, () => {}); },
+  /* 2.95.9: speech detection for subtitle auto-sync (Android 1.17.15+, Windows 1.6.2+). mpv's silencedetect runs per
+     channel at this level (dB, 0 = off) and reports the film times where each channel goes quiet and comes back;
+     those are the film's own times, so the audio buffer doesn't shift them. A Sound mode change resets mpv's audio
+     filters, so it is put back after one. */
+  vad(lvl) { this.vadLvl = lvl; this.vadSeen = {}; this.vadEv = lvl ? [] : null; return this.cmd('vad', String(lvl)); },
+  vadNews(v) {
+    if (!this.vadEv || !v) return;
+    if (typeof v === 'string') { try { v = JSON.parse(v); } catch (e) { return; } }
+    for (const k of Object.keys(v)) {
+      const m = /^lavfi\.silence_(start|end)(?:\.(\d+))?$/.exec(k); if (!m) continue;
+      const t = Number(v[k]); if (!isFinite(t) || this.vadSeen[k] === v[k]) continue;
+      this.vadSeen[k] = v[k]; this.vadEv.push([m[2] || '0', m[1] === 'start' ? 's' : 'e', t]);
+    }
+  },
   /* ---- the <video> element answers from libmpv while a film plays natively ---- */
   attach() {
     if (this.active) return;
@@ -59090,7 +59186,11 @@ html.tv .sbe-chips button.nav-focus,html.tv .sbe-more.nav-focus{outline:3px soli
       try {
         const body = document.getElementById('setBody'); if (!body) return;
         const anchor = $1('#set-subSize', body); if (!anchor) return;
-        const card = anchor.closest('.set-card'); if (!card || $1(':scope > .sbe', card)) return;
+        const card = anchor.closest('.set-card'); if (!card) return;
+        /* 2.95.9 simpler subtitles */
+        for (let n = card.nextElementSibling; n; n = n.nextElementSibling) n.classList.add('sbe-adv'); // the group names too
+        body.classList.toggle('sbe-open', moreOpen);
+        if ($1(':scope > .sbe', card)) return;
         // The old small preview card at the top of the page is replaced by the live one below.
         body.querySelectorAll('.set-card').forEach(c => { if (c !== card && c.children.length === 1 && /This is how subtitles will look/.test(c.textContent) && !c.querySelector('.set-row')) c.classList.add('sbe-pre-hidden'); });
         const wrap = document.createElement('div');
@@ -59104,7 +59204,7 @@ html.tv .sbe-chips button.nav-focus,html.tv .sbe-more.nav-focus{outline:3px soli
         card.classList.toggle('sbe-hide-more', !moreOpen);
         more.addEventListener('click', e => {
           e.stopPropagation(); moreOpen = !moreOpen;
-          card.classList.toggle('sbe-hide-more', !moreOpen);
+          card.classList.toggle('sbe-hide-more', !moreOpen); body.classList.toggle('sbe-open', moreOpen);
           more.setAttribute('aria-expanded', String(moreOpen));
           const sp = document.createElement('span'); sp.textContent = moreOpen ? 'Fewer choices' : 'More choices';
           more.querySelector('span').replaceWith(sp); // a new node, so the page translator picks it up

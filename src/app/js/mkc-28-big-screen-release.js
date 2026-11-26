@@ -4756,7 +4756,12 @@ const BackNav = {
   },
   onPop() {
     if (this.skip) { this.skip = false; return; }
-    if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); return; }
+    /* 2.95.8 back closes the film */
+    if (document.fullscreenElement) {
+      // phones and tablets: Back while a film fills the screen closes the film (it never just turns it upright first)
+      try { if (TOUCH_UI && !$('#player').hidden && window.MKFsBack && MKFsBack()) return; } catch (e) { /* leave full screen below */ }
+      document.exitFullscreen().catch(() => {}); return;
+    }
     if (this.closeTop() || this.prevScreen()) return;
     // the start screen with nothing open: step down to the first entry, so the next Back leaves the app
     const i = this.idx(); if (i > 0) { this.skip = true; history.go(-i); }

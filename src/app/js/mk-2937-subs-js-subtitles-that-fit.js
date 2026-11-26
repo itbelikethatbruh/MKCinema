@@ -226,7 +226,11 @@
       try {
         const body = document.getElementById('setBody'); if (!body) return;
         const anchor = $1('#set-subSize', body); if (!anchor) return;
-        const card = anchor.closest('.set-card'); if (!card || $1(':scope > .sbe', card)) return;
+        const card = anchor.closest('.set-card'); if (!card) return;
+        /* 2.95.9 simpler subtitles */
+        for (let n = card.nextElementSibling; n; n = n.nextElementSibling) n.classList.add('sbe-adv'); // the group names too
+        body.classList.toggle('sbe-open', moreOpen);
+        if ($1(':scope > .sbe', card)) return;
         // The old small preview card at the top of the page is replaced by the live one below.
         body.querySelectorAll('.set-card').forEach(c => { if (c !== card && c.children.length === 1 && /This is how subtitles will look/.test(c.textContent) && !c.querySelector('.set-row')) c.classList.add('sbe-pre-hidden'); });
         const wrap = document.createElement('div');
@@ -240,7 +244,7 @@
         card.classList.toggle('sbe-hide-more', !moreOpen);
         more.addEventListener('click', e => {
           e.stopPropagation(); moreOpen = !moreOpen;
-          card.classList.toggle('sbe-hide-more', !moreOpen);
+          card.classList.toggle('sbe-hide-more', !moreOpen); body.classList.toggle('sbe-open', moreOpen);
           more.setAttribute('aria-expanded', String(moreOpen));
           const sp = document.createElement('span'); sp.textContent = moreOpen ? 'Fewer choices' : 'More choices';
           more.querySelector('span').replaceWith(sp); // a new node, so the page translator picks it up
