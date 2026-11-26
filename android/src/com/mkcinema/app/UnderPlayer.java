@@ -174,6 +174,28 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
         SOUND.put("night", "lavfi=[acompressor=threshold=-28dB:ratio=6:attack=5:release=250:makeup=6dB,alimiter=limit=0.9]");
     }
 
+    /** 1.17.13: Settings › Subtitles (Style, colour, background box, outline, bold, shadow) for subtitles mpv draws.
+        Only fixed property names; colours must be #rrggbb. Same steps as the Windows app's mpv.SubStyle. Fonts are left
+        alone on Android: the player only has its built-in subtitle font. */
+    static String hex6(String v, String d) { String x = v == null ? "" : v.trim(); if (x.startsWith("#")) x = x.substring(1); return x.matches("^[0-9A-Fa-f]{6}$") ? x.toUpperCase(Locale.US) : d; }
+    static List<Op> subStyle(JSONObject o) {
+        List<Op> ops = new ArrayList<>();
+        String col = hex6(o.optString("color"), "FFFFFF"), bg = hex6(o.optString("bg"), "000000"), sh = o.optString("shadow", "soft");
+        double a = o.optDouble("bga", 0); int bga = Double.isNaN(a) ? 0 : (int) Math.round(Math.max(0, Math.min(100, a)) * 2.55);
+        boolean outline = o.optBoolean("outline", true), box = bga > 0;
+        double off = box ? 0 : "strong".equals(sh) ? 2.5 : "drop".equals(sh) ? 3 : "none".equals(sh) ? 0 : outline ? 1 : 0;
+        ops.add(set("sub-color", "#FF" + col));
+        ops.add(set("sub-bold", o.optBoolean("bold", false) ? "yes" : "no"));
+        ops.add(set("sub-border-style", box ? "background-box" : "outline-and-shadow"));
+        ops.add(set("sub-outline-color", "#FF000000"));
+        ops.add(set("sub-outline-size", outline ? "2.6" : box ? "0.8" : "0"));
+        ops.add(set("sub-shadow-offset", String.format(Locale.US, "%.1f", off)));
+        // some mpv versions treat sub-shadow-color as another name for sub-back-color, so the box colour goes last and
+        // only one of the two is set
+        ops.add(box ? set("sub-back-color", String.format(Locale.US, "#%02X%s", bga, bg)) : set("sub-shadow-color", "drop".equals(sh) ? "#FF000000" : "#C0000000"));
+        return ops;
+    }
+
     /** the same checks and steps as the Windows app's mpv.Translate */
     static List<Op> translate(String c, String arg) throws Exception {
         List<Op> ops = new ArrayList<>();
@@ -214,6 +236,7 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
             case "audiodelay": ops.add(set("audio-delay", num(arg, -600, 600))); return ops;
             case "subscale": ops.add(set("sub-scale", num(arg, 0.3, 4))); return ops;
             case "subpos": ops.add(set("sub-pos", num(arg, 0, 150))); return ops;
+            case "substyle": return subStyle(new JSONObject(arg));
             case "aspect": if (!ASPECT.matcher(arg).matches()) throw new IllegalArgumentException("not allowed"); ops.add(set("video-aspect-override", arg)); return ops;
             case "fill": ops.add(set("panscan", "1".equals(arg) ? "1.0" : "0.0")); return ops;
             case "zoom": { double z = Double.parseDouble(num(arg, 0.25, 4)); ops.add(set("video-zoom", String.format(Locale.US, "%.4f", Math.log(z) / Math.log(2)))); return ops; }
