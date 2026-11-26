@@ -90,3 +90,36 @@ func TestState(t *testing.T) {
 		t.Error("second flush not empty")
 	}
 }
+
+func TestSubStyle(t *testing.T) {
+	get := func(ops []Op) map[string]string {
+		m := map[string]string{}
+		for _, o := range ops {
+			m[o.Prop] = o.Val
+		}
+		return m
+	}
+	ops, err := Translate("substyle", `{"color":"#ffd84a","bg":"#000000","bga":0,"outline":true,"bold":true,"shadow":"strong","font":"serif"}`)
+	m := get(ops)
+	if err != nil || m["sub-color"] != "#FFFFD84A" || m["sub-bold"] != "yes" || m["sub-border-style"] != "outline-and-shadow" || m["sub-shadow-offset"] != "2.5" || m["sub-font"] != "Georgia" || m["sub-back-color"] != "#00000000" {
+		t.Errorf("yellow %v %v", m, err)
+	}
+	m = get(must(Translate("substyle", `{"color":"#ffffff","bg":"#102030","bga":65,"outline":false,"shadow":"soft"}`)))
+	if m["sub-border-style"] != "background-box" || m["sub-back-color"] != "#A6102030" || m["sub-shadow-offset"] != "0" || m["sub-outline-size"] != "0.8" {
+		t.Errorf("box %v", m)
+	}
+	m = get(must(Translate("substyle", `{"color":"red;quit","bg":"\n","bga":900,"font":"C:\\x.ttf","shadow":"x"}`)))
+	if m["sub-color"] != "#FFFFFFFF" || m["sub-back-color"] != "#FF000000" || m["sub-font"] != "" || m["sub-outline-size"] != "2.5" {
+		t.Errorf("bad input %v", m)
+	}
+	if _, err := Translate("substyle", "nope"); err == nil {
+		t.Error("accepted non-JSON")
+	}
+}
+
+func must(ops []Op, err error) []Op {
+	if err != nil {
+		panic(err)
+	}
+	return ops
+}

@@ -274,3 +274,11 @@ The jars live in `libs/` and `libs/fetch.sh` downloads them (checked against `li
 are missing. Only the AARs' classes.jar is used: ExoPlayer needs no Android resources for what the player calls, except
 `androidx.collection` (async MediaCodec queue on Android 12+), which is included. `android:largeHeap` is on so the
 buffer (a third of the large-heap budget, 48 to 160 MB) fits.
+
+## 1.17.13: subtitle look in the MKCinema player
+
+The page sends `substyle` (JSON: `color`/`bg` as #rrggbb, `bga` box opacity 0-100, `outline`, `bold`, `shadow`
+none/soft/strong/drop) whenever Settings › Subtitles changes and when a film starts. `UnderPlayer.subStyle` turns it into
+fixed mpv properties only (`sub-color`, `sub-bold`, `sub-border-style` outline-and-shadow or background-box,
+`sub-back-color`, `sub-outline-*`, `sub-shadow-*`). Fonts stay mpv's built-in subtitle font. Same steps as the Windows
+app's `mpv.SubStyle`. Older apps answer "unknown command" and keep their built-in look. Needs web 2.95.7.

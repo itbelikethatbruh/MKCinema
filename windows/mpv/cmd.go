@@ -179,6 +179,84 @@ var soundModes = map[string]string{
 	"night": "lavfi=[acompressor=threshold=-28dB:ratio=6:attack=5:release=250:makeup=6dB,alimiter=limit=0.9]",
 }
 
+// SubReqStyle is the page's subtitle look (Settings › Subtitles): colours as #rrggbb, bga = box opacity 0..100.
+type SubReqStyle struct {
+	Color   string  `json:"color"`
+	Bg      string  `json:"bg"`
+	Bga     float64 `json:"bga"`
+	Outline *bool   `json:"outline"`
+	Bold    bool    `json:"bold"`
+	Shadow  string  `json:"shadow"`
+	Font    string  `json:"font"`
+}
+
+var hex6Re = regexp.MustCompile(`^#?[0-9A-Fa-f]{6}$`)
+
+func hex6(v, d string) string {
+	v = strings.TrimSpace(v)
+	if !hex6Re.MatchString(v) {
+		return d
+	}
+	return strings.ToUpper(strings.TrimPrefix(v, "#"))
+}
+
+// The page names a font choice, never a font: each maps to a Windows font (missing ones fall back to mpv's default).
+var subFonts = map[string]string{
+	"sans": "Segoe UI", "system": "Segoe UI", "stream": "Segoe UI Semibold", "display": "Segoe UI Semibold",
+	"serif": "Georgia", "mono": "Consolas", "caption": "Consolas", "rounded": "Segoe UI", "condensed": "Arial Narrow",
+}
+
+// SubStyle returns the mpv steps for the page's subtitle look. Same steps as the Android app's UnderPlayer.subStyle.
+func SubStyle(raw string) ([]Op, error) {
+	var r SubReqStyle
+	if json.Unmarshal([]byte(raw), &r) != nil {
+		return nil, ErrBad
+	}
+	col, bg := hex6(r.Color, "FFFFFF"), hex6(r.Bg, "000000")
+	a := r.Bga
+	if math.IsNaN(a) || math.IsInf(a, 0) {
+		a = 0
+	}
+	bga := int(math.Round(clamp(a, 0, 100) * 2.55))
+	outline, box := r.Outline == nil || *r.Outline, bga > 0
+	off := 0.0
+	switch {
+	case box:
+	case r.Shadow == "strong":
+		off = 2.5
+	case r.Shadow == "drop":
+		off = 3
+	case r.Shadow == "none":
+	case outline:
+		off = 1
+	}
+	style, size, shc, bold := "outline-and-shadow", "0", "#C0000000", "no"
+	if box {
+		style = "background-box"
+	}
+	if outline {
+		size = "2.5"
+	} else if box {
+		size = "0.8"
+	}
+	if r.Shadow == "drop" {
+		shc = "#FF000000"
+	}
+	if r.Bold {
+		bold = "yes"
+	}
+	if !box {
+		bga = 0
+	}
+	ops := []Op{set("sub-color", "#FF"+col), set("sub-bold", bold), set("sub-border-style", style),
+		set("sub-back-color", fmt.Sprintf("#%02X%s", bga, bg)), set("sub-outline-color", "#FF000000"), set("sub-outline-size", size),
+		set("sub-shadow-color", shc), set("sub-shadow-offset", num(off))}
+	if f, ok := subFonts[r.Font]; ok {
+		ops = append(ops, set("sub-font", f))
+	}
+	return ops, nil
+}
+
 // Translate checks one page command and returns the mpv steps for it.
 func Translate(c, arg string) ([]Op, error) {
 	var v string
@@ -229,6 +307,8 @@ func Translate(c, arg string) ([]Op, error) {
 		if v, err = f(arg, 0, 150); err == nil {
 			return []Op{set("sub-pos", v)}, nil
 		}
+	case "substyle": // 1.6.1: Settings › Subtitles look for subtitles mpv draws
+		return SubStyle(arg)
 	case "aspect":
 		if !aspectRe.MatchString(arg) {
 			return nil, ErrBad
