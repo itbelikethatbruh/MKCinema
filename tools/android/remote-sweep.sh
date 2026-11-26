@@ -35,7 +35,7 @@ trap 'kill $s0 $s1 $s2 2>/dev/null || true' EXIT
 sleep 1
 
 A() { timeout 60 adb "$@"; }
-log() { A logcat -d -s MKCPlayer:* mpv:* AndroidRuntime:E > "$OUT/sweep/logcat.txt" 2>/dev/null || true; }
+log() { A logcat -d -s MKCPlayer:* mpv:* AndroidRuntime:E ActivityTaskManager:I ActivityManager:I > "$OUT/sweep/logcat.txt" 2>/dev/null || true; }
 wait_for() { for _ in $(seq 1 45); do log; grep -q "$1" "$OUT/sweep/logcat.txt" && return 0; sleep 1; done; echo "  timed out waiting for: $1"; return 1; }
 player_up() { A shell dumpsys activity activities 2>/dev/null | grep -E "mResumedActivity|topResumedActivity" | grep -q PlayerActivity; }
 key() { A shell input keyevent "$1"; sleep "${2:-1}"; }

@@ -70,6 +70,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     static volatile boolean open;
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b); open = true;
+        android.util.Log.i("MKCPlayer", "player screen opened" + (b != null ? " again by Android (saved state)" : "") + ", task " + getTaskId());
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON | WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         Intent i = getIntent();
@@ -665,7 +666,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     // the place is handed back on every pause too: reopening the app from its icon closes this screen without Back
     @Override protected void onPause() { super.onPause(); fg = false; if (!isFinishing()) { try { setResult(RESULT_OK, result()); } catch (Exception ignored) { } } modeHold = false; if (eng != null && prepared && eng.playing()) eng.pause(); if (assView != null) liveAss(false); }
     @Override protected void onResume() { super.onResume(); fg = true; if (assView != null) liveAss(true); }
-    @Override protected void onDestroy() { super.onDestroy(); open = false; stopPlayer(); liveAss(false); }
+    @Override protected void onDestroy() { super.onDestroy(); android.util.Log.i("MKCPlayer", "player screen gone" + (isChangingConfigurations() ? " (recreated for a configuration change)" : "")); open = false; stopPlayer(); liveAss(false); }
 
     /** 1.11.1: the player (its decoders and its audio output) is let go the moment this screen closes. Android runs
         onDestroy only once the screen behind is idle, which on a slow TV box can be seconds later: a film started again
