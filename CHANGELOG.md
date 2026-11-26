@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.95.17 (2026-11-26)
+
+- Smoother opening: a title page now appears in one calm step, and episodes open without the page moving behind them.
+
 ## Web app 2.95.16 (2026-11-26)
 
 - Small performance and reliability improvements, and Home rows that work offline.
