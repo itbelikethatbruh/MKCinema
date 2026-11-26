@@ -117,6 +117,7 @@
       else { pad = `0 5% ${(p.H * (pos === 'higher' ? 0.17 : 0.065)).toFixed(1)}px`; jc = 'flex-end'; }
       s.left = (p.L - p.st.left) + 'px'; s.top = (top - p.st.top) + 'px'; s.width = p.W + 'px'; s.height = h + 'px';
       s.padding = pad; s.justifyContent = jc;
+      if (typeof SubHug !== 'undefined') el.querySelectorAll('.mks-c>span').forEach((sp) => SubHug.fit(sp));
       el.dataset.inBar = String(top !== p.T || h !== p.H);
       this.lift(p);
     },

@@ -69,7 +69,7 @@ const SubSync = {
     const tr = activeTrack();
     if (tr && tr._mkc !== undefined && tr.cues && tr.cues.length) return Array.from(tr.cues).map((c) => [c._o != null ? c._o : c._s != null ? c._s : c.startTime, c._oe != null ? c._oe : c._e != null ? c._e : c.endTime]);
     let text = s.text;
-    if (text == null && s.url) { try { const r = await fetch(s.url); if (r.ok) text = await r.text(); } catch (e) { /* host blocks it */ } }
+    if (text == null && s.url) { try { const r = await fetch(s.url); if (r.ok) text = typeof subFromRes === 'function' ? await subFromRes(r, s.lang) : await r.text(); } catch (e) { /* host blocks it */ } }
     return text ? this.parse(StremioEngine.toVtt(text, s.fileName || s.url || '')) : [];
   },
   /* the film's own subtitle timing: MKV index first, then text tracks the browser exposes */

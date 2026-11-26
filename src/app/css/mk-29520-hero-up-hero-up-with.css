@@ -1,0 +1,9 @@
+
+/* 2.95.20 hero up. With the top sections pill, --dock-h already holds the clock height (44px + safe-area top),
+   and main added the safe-area top a second time, so on phones drawn edge to edge (Android app 1.17.13+,
+   iPhone home-screen app) a clock-high empty band sat between the pill and the first thing on every section.
+   Count it once: the gap becomes the same as on a phone with no inset (14px on phones). */
+html.mk-pill.ezb-bar main{padding-top:calc(var(--dock-h) + 28px)}
+/* Tablets: the pill is centred in a dock that is --dock-h tall, so it already sits half an inset lower;
+   add only that half back, which gives the same 17px gap as a tablet with no inset. */
+html.mk-pill.mk-pad.ezb-bar main{padding-top:calc(var(--dock-h) + 28px + env(safe-area-inset-top,0px) / 2)}

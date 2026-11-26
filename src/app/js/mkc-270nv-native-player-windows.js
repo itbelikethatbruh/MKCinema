@@ -120,7 +120,7 @@ const MkNative = {
     let el = this._sub;
     if (!el || !el.isConnected) { el = this._sub = document.createElement('div'); el.className = 'mk-nv-sub'; el.setAttribute('aria-live', 'off'); $('#player').appendChild(el); }
     if (t !== undefined) {
-      const txt = typeof t === 'string' ? t.replace(/\{\\[^}]*\}/g, '').replace(/<[^>]+>/g, '').replace(/\\N/g, '\n').trim() : '';
+      const txt = typeof t === 'string' ? (typeof SubText !== 'undefined' ? SubText.unmangle(t) : t).replace(/\{\\[^}]*\}/g, '').replace(/<[^>]+>/g, '').replace(/\\N/g, '\n').trim() : '';
       if (txt !== this._subT) { this._subT = txt; el.textContent = ''; if (txt) { const sp = document.createElement('span'); sp.textContent = txt; el.appendChild(sp); } el.hidden = !txt; this.subFit(el); }
     }
     const lift = !$('#hud').classList.contains('idle');
@@ -130,6 +130,7 @@ const MkNative = {
     const k = (Number(CFG.subSize) || 100) / 100;
     el.style.fontSize = this.embed ? `${Math.round(3.4 * k * 100) / 100}vh` : `max(14px, calc(max(5vh, 2.4vw) * ${k}))`;
     el.classList.toggle('top', CFG.subPos === 'top'); el.classList.toggle('higher', CFG.subPos === 'higher');
+    if (typeof SubHug !== 'undefined' && el.firstElementChild) SubHug.fit(el.firstElementChild);
   },
   /* the file's own tracks: audio for video.audioTracks, subtitles for the subtitle menu */
   tracks(list) {

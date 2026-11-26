@@ -55,7 +55,7 @@ const ScriptClock = {
         let text = sub.text;
         if (text == null && sub.url) {
           const ac = new AbortController(), to = setTimeout(() => ac.abort(), 15000);
-          try { const r = await fetch(sub.url, { signal: ac.signal }); if (r.ok) text = await r.text(); } catch (e) { /* host blocks it */ } finally { clearTimeout(to); }
+          try { const r = await fetch(sub.url, { signal: ac.signal }); if (r.ok) text = typeof subFromRes === 'function' ? await subFromRes(r, sub.lang) : await r.text(); } catch (e) { /* host blocks it */ } finally { clearTimeout(to); }
         }
         if (!text) return [];
         try { return this.parse(StremioEngine.toVtt(text, sub.fileName || sub.url || '')); } catch (e) { return this.parse(text); }

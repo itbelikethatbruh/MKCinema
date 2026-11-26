@@ -889,7 +889,7 @@ class StremioEngine {
     let t = String(text).replace(/^﻿/, '').replace(/\r\n?/g, '\n').trim();
     if (/^WEBVTT/.test(t)) return t + '\n';
     t = t.replace(/(\d{1,2}:\d{2}:\d{2}),(\d{1,3})/g, (m, a, b) => `${a.padStart(8, '0')}.${b.padEnd(3, '0')}`);
-    t = t.replace(/\{\\an?\d+\}/g, '');
+    t = t.replace(/\{\\[^}]*\}/g, '').replace(/\\N/g, '\n').replace(/\\h/g, ' ');
     return 'WEBVTT\n\n' + t + '\n';
   }
 }

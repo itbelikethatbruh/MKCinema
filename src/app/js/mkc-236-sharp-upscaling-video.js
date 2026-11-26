@@ -165,7 +165,7 @@ const PxUp = {
     });
     this.sub.classList.toggle('on', cues.length > 0);
   },
-  subText(s) { if (!this.sub) return; this.subKey = ''; $('span', this.sub).textContent = s; this.sub.classList.toggle('on', !!s); },
+  subText(s) { if (!this.sub) return; this.subKey = ''; $('span', this.sub).textContent = s; this.sub.classList.toggle('on', !!s); if (s && typeof SubHug !== 'undefined') SubHug.fit($('span', this.sub)); },
   /* ---------- keep it honest: if frames start dropping, switch off for this session ---------- */
   watch() {
     const now = performance.now(); if (now - this.guard.t < 2000) return; this.guard.t = now;

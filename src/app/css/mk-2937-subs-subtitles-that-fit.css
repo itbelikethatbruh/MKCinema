@@ -5,8 +5,8 @@ html.mk-subov #video::-webkit-media-text-track-container{opacity:0!important}
 #mkSubs{position:absolute;left:0;top:0;width:0;height:0;z-index:2;pointer-events:none;display:flex;flex-direction:column;align-items:center;text-align:center;box-sizing:border-box;transition:transform .25s ease;will-change:transform}
 #mkSubs[hidden],body.ass-on #mkSubs,body.learn-on #mkSubs,body.pxup-on #mkSubs,html.mk-native-on #mkSubs{display:none!important}
 #mkSubs .mks-c{max-width:100%;line-height:1.32;white-space:pre-line;overflow-wrap:break-word}
-#mkSubs .mks-c+.mks-c{margin-top:.18em}
-#mkSubs .mks-c>span{color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.08em .5em;border-radius:.45em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+#mkSubs .mks-c+.mks-c{margin-top:.2em}
+#mkSubs .mks-c>span{color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);display:inline-block;max-width:100%;box-sizing:content-box;vertical-align:top;text-wrap:balance;line-height:1.3;padding:.14em .55em .16em;border-radius:.5em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 #mkSubs i{font-style:normal}#mkSubs b{font-weight:700}
 /* Easy subtitle choices (Settings and the player's Audio & subtitles panel) */
 .sbe{display:flex;flex-direction:column;gap:12px;padding:4px 0 6px}
@@ -14,7 +14,7 @@ html.mk-subov #video::-webkit-media-text-track-container{opacity:0!important}
 .sbe-pv{box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}.sbe-pv:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(#000 0 18%,transparent 18% 82%,#000 82%)}.sbe-pv .sbe-line{z-index:1}
 .sbe-pv:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 30% 35%,rgba(255,210,150,.28),transparent 55%),radial-gradient(ellipse at 75% 60%,rgba(120,170,255,.22),transparent 60%)}
 .sbe-pv .sbe-line{position:absolute;left:6%;right:6%;display:flex;justify-content:center;text-align:center;line-height:1.32;transition:bottom .25s ease,top .25s ease}
-.sbe-pv .sbe-line span{color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.08em .5em;border-radius:.45em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.sbe-pv .sbe-line span{color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);display:inline-block;max-width:100%;box-sizing:content-box;vertical-align:top;text-wrap:balance;line-height:1.3;padding:.14em .55em .16em;border-radius:.5em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .sbe-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .sbe-row>b{min-width:78px;font-weight:600;font-size:calc(14px * var(--ts,1))}
 .sbe-chips{display:flex;gap:6px;flex-wrap:wrap;flex:1;min-width:0}

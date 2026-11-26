@@ -170,7 +170,7 @@ const SubAuto = {
       const pick0 = P.subPick, st0 = P.stream;
       try {
         const src = s._tr.src; let text = src.text;
-        if (text == null) { const r = await fetch(s.url); if (!r.ok) throw new Error(`HTTP ${r.status}`); text = await r.text(); src.text = text; }
+        if (text == null) { const r = await fetch(s.url); if (!r.ok) throw new Error(`HTTP ${r.status}`); text = typeof subFromRes === 'function' ? await subFromRes(r, src.lang || s.lang) : await r.text(); src.text = text; }
         s.text = StremioEngine.toVtt(text, s.fileName || s.url || ''); s._vtt = true;
       } catch (e) { if (P.subPick !== pick0 || P.stream !== st0) return; if (!opts.auto) toast(`Could not load those subtitles (${e.message})`, 'err'); return; }
       // something else was chosen (or another episode started) during the download: that choice stands

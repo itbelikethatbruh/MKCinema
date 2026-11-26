@@ -2256,7 +2256,7 @@ html.tv .br-grid .uni-card.br-tile{width:auto;min-width:0}
 <style id="mk-2915-tv-player">
 #player .mk-nv-sub{position:absolute;left:6%;right:6%;bottom:7vh;z-index:3;text-align:center;white-space:pre-line;color:var(--sub-color,#fff);font-family:var(--sub-font,inherit);font-weight:var(--sub-weight,600);line-height:1.32;text-shadow:var(--sub-shadow,0 0 4px #000,0 2px 6px #000,0 0 2px #000);pointer-events:none;transition:transform .25s ease}
 #player .mk-nv-sub.higher{bottom:17vh}
-#player .mk-nv-sub>span{background:var(--sub-bg,transparent);padding:.08em .5em;border-radius:.45em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+#player .mk-nv-sub>span{background:var(--sub-bg,transparent);display:inline-block;max-width:100%;box-sizing:content-box;vertical-align:top;text-wrap:balance;line-height:1.3;padding:.14em .55em .16em;border-radius:.5em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 #player .mk-nv-sub.top{bottom:auto;top:7vh}
 #player .mk-nv-sub.lift:not(.top){transform:translateY(-17vh)}
 </style>
@@ -2293,6 +2293,16 @@ html.mk-pfade [data-card] .l0>img.mk-in{transition:opacity .3s ease}
 html.lite .ss-in>.ep{animation:none}
 html.lite .ss-ghost{display:none}
 @media (prefers-reduced-motion:reduce){.ss-in>.ep{animation:none}.ss-ghost{display:none}.ep .th img,.es-still img{transition:none}}</style>
+<style id="mk-29520-hero-up">
+/* 2.95.20 hero up. With the top sections pill, --dock-h already holds the clock height (44px + safe-area top),
+   and main added the safe-area top a second time, so on phones drawn edge to edge (Android app 1.17.13+,
+   iPhone home-screen app) a clock-high empty band sat between the pill and the first thing on every section.
+   Count it once: the gap becomes the same as on a phone with no inset (14px on phones). */
+html.mk-pill.ezb-bar main{padding-top:calc(var(--dock-h) + 28px)}
+/* Tablets: the pill is centred in a dock that is --dock-h tall, so it already sits half an inset lower;
+   add only that half back, which gives the same 17px gap as a tablet with no inset. */
+html.mk-pill.mk-pad.ezb-bar main{padding-top:calc(var(--dock-h) + 28px + env(safe-area-inset-top,0px) / 2)}
+</style>
 </head>
 <body class="locked">
 <script id="mk-2881-pre">
@@ -2875,6 +2885,67 @@ if (CFG.cfgRev < 10) {
   if (CFG.trailerMode !== 'link') CFG.trailerMode = 'auto';
   CFG.cfgRev = 10;
 }
+/* 2.96.1 health counts */
+/* Counts (never details) of: an error in the app, a film that never started or that people left while it was still
+   starting, how long films take to start, a film that stopped to load, a video error, sound playing while the picture
+   is hidden, a Back press that changed nothing, and a TV remote press with nothing highlighted. */
+const Health = {
+  once: new Set(), n: {},
+  add(k, max) { try { if (max) { this.n[k] = (this.n[k] || 0) + 1; if (this.n[k] > max) return; } Usage.add('feat', k); } catch (e) { /* counts off */ } },
+  // what is open right now: Back has to change this
+  sig() {
+    try {
+      const ids = ['castLayer', 'partyLayer', 'player', 'trailer', 'tour', 'stremioImport', 'palette', 'epSheet', 'askLayer', 'tastePick', 'settings', 'addons', 'detail', 'rcLayer'];
+      const open = ids.filter((i) => { const e = document.getElementById(i); return e && !e.hidden; });
+      const h = document.documentElement, x = document.querySelector('.exit-ask, .focus-ask, .sup-ask, .x8-layer, #ezbMore:not([hidden])');
+      return { any: open.length > 0 || h.classList.contains('ezb-menu-open') || !!x || !!document.fullscreenElement,
+        s: [open.join(','), h.classList.contains('ezb-menu-open'), !!x && x.className, !!document.fullscreenElement, (window.S && S.view) || ''].join('|') };
+    } catch (e) { return { any: false, s: '' }; }
+  },
+  backCheck(before) { if (!before.any) return; setTimeout(() => { if (this.sig().s === before.s) this.add('err:back_noop', 20); }, 700); },
+  play: null,
+  init() {
+    addEventListener('error', (e) => { if (e && e.filename !== undefined && !e.target.tagName) this.add('err:js', 5); }, true);
+    addEventListener('unhandledrejection', (e) => { const m = String((e.reason && (e.reason.name || e.reason.message)) || ''); if (!/Abort|NotAllowed|play\(\)|interrupted/i.test(m)) this.add('err:promise', 5); });
+    // Back: the TV app calls back(); phones and browsers go through the page's history
+    try { const prev = back; back = function () { const b = Health.sig(); const r = prev.apply(this, arguments); Health.backCheck(b); return r; }; } catch (e) { /* no back */ }
+    let last = this.sig(); setInterval(() => { last = this.sig(); }, 400);
+    addEventListener('popstate', () => this.backCheck(last));
+    if (typeof IS_TV !== 'undefined' && IS_TV) document.addEventListener('keydown', (e) => {
+      if (!/^Arrow/.test(e.key)) return; const a = document.activeElement;
+      if ((!a || a === document.body) && document.getElementById('player').hidden) setTimeout(() => { const b = document.activeElement; if (!b || b === document.body) this.add('err:tv_no_focus', 5); }, 300);
+    }, true);
+    // the film in the page's own player (a film handed to the Android or Windows player is counted there, not here)
+    let v; try { v = video; } catch (e) { return; }
+    if (!v) return;
+    const pl = document.getElementById('player');
+    const done = (k) => { const x = this.play; if (!x || x.done) return; x.done = true; if (k) this.add(k); };
+    v.addEventListener('loadstart', () => { if (!v.currentSrc || pl.hidden) return; const old = this.play; if (old && !old.done && !old.started) done(Date.now() - old.at > 8000 ? 'err:play_left_waiting' : '');
+      this.play = { at: Date.now(), from: v.currentTime || 0, started: false, done: false, waitAt: 0, hid: 0 }; });
+    v.addEventListener('timeupdate', () => {
+      const x = this.play; if (!x || x.started) return;
+      if (v.currentTime > x.from + 0.3 || (x.from > 0 && v.currentTime > 0.3 && Math.abs(v.currentTime - x.from) < 5 && !v.paused && v.readyState >= 3)) {
+        x.started = true; const s = (Date.now() - x.at) / 1000;
+        this.add(`play_wait:${s < 2 ? '0-2s' : s < 5 ? '2-5s' : s < 10 ? '5-10s' : s < 30 ? '10-30s' : '30s+'}`);
+      }
+    });
+    v.addEventListener('waiting', () => { const x = this.play; if (x && x.started) x.waitAt = Date.now(); });
+    v.addEventListener('playing', () => { const x = this.play; if (x) x.waitAt = 0; });
+    v.addEventListener('error', () => { if (v.currentSrc && !pl.hidden) this.add('err:video_error', 10); });
+    setInterval(() => {
+      const x = this.play; if (!x || x.done) return;
+      if (pl.hidden) { done(!x.started && Date.now() - x.at > 8000 ? 'err:play_left_waiting' : ''); return; }
+      if (!x.started && Date.now() - x.at > 30000 && !v.paused) done('err:play_never');
+      if (x.started && x.waitAt && Date.now() - x.waitAt > 5000) { x.waitAt = 0; this.add('err:stall', 20); }
+      // sound with no picture: the film runs but its picture is hidden or has not arrived
+      if (x.started && !v.paused && !v.muted && v.volume > 0) {
+        let o = 1; for (let e = v; e && e.nodeType === 1; e = e.parentElement) { const c = getComputedStyle(e); if (c.display === 'none' || c.visibility === 'hidden') { o = 0; break; } o *= +c.opacity; }
+        if (o < 0.5 || (v.readyState >= 2 && !v.videoWidth && !/audio|radio/i.test(v.currentSrc))) { if (++x.hid === 2) this.add('err:sound_no_picture'); } else x.hid = 0;
+      }
+    }, 1000);
+  },
+};
+addEventListener('load', () => setTimeout(() => { try { Health.init(); } catch (e) { /* never break the app */ } }, 0));
 /* 2.96 usage counts */
 /* Anonymous daily totals of what gets used: sections, screens, Home rows, buttons, settings, features and the time spent
    in each. Only totals leave the device, with the device type and app language; the server adds the country. Never a
@@ -3929,7 +4000,7 @@ class StremioEngine {
     let t = String(text).replace(/^﻿/, '').replace(/\r\n?/g, '\n').trim();
     if (/^WEBVTT/.test(t)) return t + '\n';
     t = t.replace(/(\d{1,2}:\d{2}:\d{2}),(\d{1,3})/g, (m, a, b) => `${a.padStart(8, '0')}.${b.padEnd(3, '0')}`);
-    t = t.replace(/\{\\an?\d+\}/g, '');
+    t = t.replace(/\{\\[^}]*\}/g, '').replace(/\\N/g, '\n').replace(/\\h/g, ' ');
     return 'WEBVTT\n\n' + t + '\n';
   }
 }
@@ -6067,7 +6138,7 @@ async function selectSub(i, { auto = false } = {}) {
   try {
     if (window.MkNative && MkNative.active) {
       let text = s.text;
-      if (s.kind !== 'mpv' && text == null) { const res = await fetch(s.url); if (!res.ok) throw new Error(`HTTP ${res.status}`); text = await subFromRes(res); }
+      if (s.kind !== 'mpv' && text == null) { const res = await fetch(s.url); if (!res.ok) throw new Error(`HTTP ${res.status}`); text = await subFromRes(res, s.lang); }
       if (pick !== P.subPick) return;
       await MkNative.subOn(s, text); MkNative.subStyle();
     }
@@ -6076,7 +6147,7 @@ async function selectSub(i, { auto = false } = {}) {
     else if (s.kind === 'native') { const t = s.track && Array.from(video.textTracks).includes(s.track) ? s.track : video.textTracks[s.idx]; if (!t) throw new Error('the track is gone'); t.mode = 'showing'; styleCues(); }
     else {
       let text = s.text;
-      if (text == null) { const res = await fetch(s.url); if (!res.ok) throw new Error(`HTTP ${res.status}`); text = await subFromRes(res); }
+      if (text == null) { const res = await fetch(s.url); if (!res.ok) throw new Error(`HTTP ${res.status}`); text = await subFromRes(res, s.lang); }
       // another subtitle (or another source) was picked while this one downloaded: two tracks would both stay on screen
       if (pick !== P.subPick || P.stream !== st0) return;
       clearSubTracks();
@@ -6105,24 +6176,102 @@ function styleCues() {
   for (const c of t.cues) { try { c.line = line; if (CFG.subPos === 'top') c.snapToLines = true; } catch (e) { /* read-only cue */ } }
 }
 /* 2.94.4: subtitle text in UTF-8, UTF-16 or an older Windows code page (Western or Cyrillic) */
-function subDecode(buf) {
+/* 2.95.20 clean subtitles */
+/* Subtitle files come in many text encodings, and about one English Simpsons file in ten on OpenSubtitles is already
+   mangled at the source (UTF-8 read as Windows-1252 and saved again: "â™ª" for "♪", "Ã©" for "é", "â€™" for "’").
+   SubText.unmangle puts such words back. Only byte runs that form valid UTF-8 AND give a normal letter or symbol are
+   changed, and a file needs one unmistakable run (starting Â, Ã or â) or two others, so real accented text is left alone. */
+const SubText = (() => {
+  const CP = '€\u0081‚ƒ„…†‡ˆ‰Š‹Œ\u008DŽ\u008F\u0090‘’“”•–—˜™š›œ\u009DžŸ';
+  const C = '[\\u0080-\\u00BF\\u20AC\\u201A\\u0192\\u201E\\u2026\\u2020\\u2021\\u02C6\\u2030\\u0160\\u2039\\u0152\\u017D\\u2018\\u2019\\u201C\\u201D\\u2022\\u2013\\u2014\\u02DC\\u2122\\u0161\\u203A\\u0153\\u017E\\u0178]';
+  const RE = new RegExp(`[\\u00C2-\\u00DF]${C}|[\\u00E0-\\u00EF]${C}{2}|[\\u00F0-\\u00F4]${C}{3}`, 'g');
+  const byte = (ch) => { const c = ch.charCodeAt(0); if (c < 0x100) return c; const i = CP.indexOf(ch); return i < 0 ? -1 : 0x80 + i; };
+  const fine = (x) => { const c = x.codePointAt(0); return (c >= 0xA0 && c <= 0x17F) || (c >= 0x391 && c <= 0x3CE) || (c >= 0x400 && c <= 0x4FF) || (c >= 0x5B0 && c <= 0x5EA) || (c >= 0x600 && c <= 0x6FF) || (c >= 0x2000 && c <= 0x2BFF) || (c >= 0x3000 && c <= 0x9FFF) || (c >= 0xAC00 && c <= 0xD7AF) || (c >= 0xFF00 && c <= 0xFFEF) || c >= 0x1F000; };
+  let dec = null;
+  // A letter from another alphabet (Arabic, Cyrillic, Greek, Hebrew) is only put back when it is not glued to plain
+  // Latin letters: "Úžasnom" (Slovak) stays, "Ø¢Ù„Ù€" (Arabic read wrongly) becomes "آلـ".
+  const LAT = /[A-Za-zÀ-ɏ]/;
+  const once = (t) => {
+    const st = new Set(), en = new Set(); for (const m of t.matchAll(RE)) { st.add(m.index); en.add(m.index + m[0].length); }
+    return t.replace(RE, (m, at) => {
+      const b = Array.from(m, byte); if (b.includes(-1)) return m;
+      let x; try { dec = dec || new TextDecoder('utf-8', { fatal: true }); x = dec.decode(new Uint8Array(b)); } catch (e) { return m; }
+      if (!fine(x)) return m;
+      const c = x.codePointAt(0), end = at + m.length;
+      if (c > 0x24F && c < 0x2000 && ((LAT.test(t[at - 1] || '') && !en.has(at)) || (LAT.test(t[end] || '') && !st.has(end)))) return m;
+      return x;
+    });
+  };
+  // a language's usual older encoding, for files that are not UTF-8
+  const LEG = {};
+  [['windows-1256', 'ara ar per fas fa urd ur'], ['windows-1255', 'heb he'], ['windows-1253', 'gre ell el'], ['windows-1254', 'tur tr aze az'],
+   ['windows-1251', 'rus ru ukr uk bul bg mac mkd mk bel be kaz kk'], ['windows-1250', 'cze ces cs pol pl hun hu rum ron ro hrv hr slv sl slo slk sk bos bs alb sqi sq'],
+   ['windows-1257', 'est et lav lv lit lt'], ['windows-1258', 'vie vi'], ['windows-874', 'tha th'], ['gb18030', 'chi zho zh zhs ze'], ['big5', 'zht zh-tw'],
+   ['shift_jis', 'jpn ja'], ['euc-kr', 'kor ko']].forEach(([cp, l]) => l.split(' ').forEach((k) => { LEG[k] = cp; }));
+  return {
+    unmangle(t, min = 2) {
+      if (typeof t !== 'string' || !/[Â-ô]/.test(t)) return t;
+      // runs like "Â¶", "Ã©" and "â€™" never happen in real text, so one of those is enough
+      for (let k = 0; k < 2; k++) { const m = t.match(RE) || []; if (m.length < min && !m.some((x) => /^(?:[\u00C2\u00C3][\u00A0-\u00BF]|\u00E2..)$/.test(x))) break; const x = once(t); if (x === t) break; t = x; min = 1; }
+      return t;
+    },
+    legacy(lang) { return LEG[String(lang || '').toLowerCase()] || ''; },
+  };
+})();
+function subDecode(buf, lang) {
   const u8 = new Uint8Array(buf);
-  try {
+  const go = () => {
     if (u8[0] === 0xFF && u8[1] === 0xFE) return new TextDecoder('utf-16le').decode(u8);
     if (u8[0] === 0xFE && u8[1] === 0xFF) return new TextDecoder('utf-16be').decode(u8);
+    // UTF-16 without the mark: every other byte is zero for Latin text
+    let z0 = 0, z1 = 0; const n = Math.min(u8.length, 4000) & ~1;
+    for (let i = 0; i < n; i += 2) { if (!u8[i]) z0++; if (!u8[i + 1]) z1++; }
+    if (n > 20 && Math.max(z0, z1) > n / 6 && Math.min(z0, z1) < n / 50) return new TextDecoder(z1 > z0 ? 'utf-16le' : 'utf-16be').decode(u8);
     try { return new TextDecoder('utf-8', { fatal: true }).decode(u8); } catch (e) { /* not UTF-8 */ }
+    const cp = SubText.legacy(lang);
+    if (cp && !/^(srp|sr|scc|scr)$/i.test(String(lang))) { try { return new TextDecoder(cp).decode(u8); } catch (e) { /* label unknown here */ } }
     let hi = 0, lo = 0;
     for (let i = 0; i < u8.length && i < 200000; i++) { const b = u8[i]; if (b >= 0xC0) hi++; else if ((b >= 0x41 && b <= 0x5A) || (b >= 0x61 && b <= 0x7A)) lo++; }
-    return new TextDecoder(hi > lo ? 'windows-1251' : 'windows-1252').decode(u8);
-  } catch (e) { return new TextDecoder().decode(u8); }
+    return new TextDecoder(hi > lo ? 'windows-1251' : /^(srp|sr|scc|scr)$/i.test(String(lang)) ? 'windows-1250' : 'windows-1252').decode(u8);
+  };
+  let t; try { t = go(); } catch (e) { t = new TextDecoder().decode(u8); }
+  return SubText.unmangle(t);
 }
-async function subFromRes(res) {
+/* Stacked subtitle lines share ONE rounded box. A box around wrapped text keeps the full row width, so after layout the
+   box is narrowed to the longest line (lines are balanced, so they are close in length). Phones turning sideways and
+   size changes measure again. */
+const SubHug = {
+  fit(sp) {
+    if (!sp || !sp.isConnected) return;
+    sp.style.width = '';
+    if (getComputedStyle(sp).display !== 'inline-block') return;
+    const r = document.createRange(); r.selectNodeContents(sp);
+    const rows = [];
+    for (const q of r.getClientRects()) {
+      if (q.width < 1) continue;
+      const mid = q.top + q.height / 2, row = rows.find((x) => Math.abs(x.m - mid) < q.height / 2);
+      if (row) { row.a = Math.min(row.a, q.left); row.b = Math.max(row.b, q.right); } else rows.push({ m: mid, a: q.left, b: q.right });
+    }
+    if (rows.length < 2) return;
+    const w = Math.max(...rows.map((x) => x.b - x.a)), cs = getComputedStyle(sp);
+    const inner = sp.getBoundingClientRect().width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    if (w < inner - 2) sp.style.width = `${Math.ceil(w + 1)}px`;
+  },
+  all() { document.querySelectorAll('#mkSubs .mks-c>span, #player .mk-nv-sub>span, #pxUpSub span').forEach((sp) => { if (sp.textContent) SubHug.fit(sp); }); },
+};
+{ let q = 0; addEventListener('resize', () => { cancelAnimationFrame(q); q = requestAnimationFrame(() => SubHug.all()); }); }
+async function subFromRes(res, lang) {
   const cs = (/charset=\s*"?([\w-]+)/i.exec(res.headers.get('content-type') || '') || [])[1], buf = await res.arrayBuffer();
-  if (cs && !/^utf-?8$/i.test(cs)) { try { return new TextDecoder(cs).decode(buf); } catch (e) { /* unknown label */ } }
-  return subDecode(buf);
+  // Servers often name an old encoding by default. Text that is valid UTF-8 with letters beyond plain English is UTF-8.
+  if (cs && !/^utf-?8$/i.test(cs)) {
+    const u8 = new Uint8Array(buf); let utf = false;
+    if (u8.some((b) => b > 0x7F)) { try { new TextDecoder('utf-8', { fatal: true }).decode(u8); utf = true; } catch (e) { /* not UTF-8 */ } }
+    if (!utf && !/^utf-?16/i.test(cs)) { try { return SubText.unmangle(new TextDecoder(cs).decode(buf)); } catch (e) { /* unknown label */ } }
+  }
+  return subDecode(buf, lang);
 }
 async function loadSubFile(file) {
-  const text = subDecode(await file.arrayBuffer());
+  const text = subDecode(await file.arrayBuffer(), (file.name.match(/[._-]([a-z]{2,3})\.(srt|vtt|ass|ssa|sub)$/i) || [])[1]);
   const lang = (file.name.match(/[._-]([a-z]{2,3})\.(srt|vtt|ass|ssa|sub)$/i) || [])[1] || 'und';
   P.subs.unshift({ kind: 'file', text, fileName: file.name, lang, _label: `${file.name} · this device` });
   P.subUserChoice = true; selectSub(0);
@@ -6423,6 +6572,17 @@ $('#openPalette').onclick = () => openPalette();
 /* =====================================================================
    Spatial navigation: keyboard arrows + HTML5 Gamepad API
    ===================================================================== */
+/* 2.96.1 tv focus keep */
+/* the guard: twice a second on TVs, nothing highlighted outside the player means the highlight was lost (the item
+   that had it closed or hid); put it back where the remote expects it */
+if (typeof IS_TV !== 'undefined' && IS_TV) setInterval(() => {
+  try {
+    const a = document.activeElement;
+    if ((a && a !== document.body && a !== document.documentElement && a.isConnected && a.getClientRects().length) || document.hidden) return;
+    if (!document.getElementById('player').hidden || document.querySelector('.exit-ask')) return;
+    Nav.settle();
+  } catch (e) { /* never break the app */ }
+}, 500);
 const Nav = {
   root() {
     for (const id of ['castLayer', 'partyLayer']) if (!$(`#${id}`).hidden) return $(`#${id}`);
@@ -6530,7 +6690,7 @@ const Nav = {
     const run = (again) => {
       if (!$('#player').hidden) return;
       const root = this.root(), a = document.activeElement, inside = a && a !== document.body && root.contains(a) && !a.closest('[hidden]');
-      if (a && a.closest && a.closest('#ezbMenu:not([hidden])')) return;
+      if (a && a.closest && a.closest('#ezbMenu.open:not([hidden])')) return; /* 2.96.1 tv focus keep */
       if (inside && !(again && a === this.auto)) return;
       this.auto = this.restore(true) || null;
       if (!again) this.settleT = setTimeout(() => run(true), 650);
@@ -11951,7 +12111,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.95.19';
+const APP_VERSION = '2.95.20';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -24323,7 +24483,7 @@ const SubSync = {
     const tr = activeTrack();
     if (tr && tr._mkc !== undefined && tr.cues && tr.cues.length) return Array.from(tr.cues).map((c) => [c._o != null ? c._o : c._s != null ? c._s : c.startTime, c._oe != null ? c._oe : c._e != null ? c._e : c.endTime]);
     let text = s.text;
-    if (text == null && s.url) { try { const r = await fetch(s.url); if (r.ok) text = await r.text(); } catch (e) { /* host blocks it */ } }
+    if (text == null && s.url) { try { const r = await fetch(s.url); if (r.ok) text = typeof subFromRes === 'function' ? await subFromRes(r, s.lang) : await r.text(); } catch (e) { /* host blocks it */ } }
     return text ? this.parse(StremioEngine.toVtt(text, s.fileName || s.url || '')) : [];
   },
   /* the film's own subtitle timing: MKV index first, then text tracks the browser exposes */
@@ -25123,6 +25283,11 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.95.20', date: '2026-11-26', items: [
+    ['better', 'Cleaner subtitles', 'Lines that stack now share one neat rounded box, and music notes, accents and other special letters show correctly even in subtitle files that were saved wrongly.'],
+    ['better', 'Home starts right under the menu', 'On phones, Home and every section now start right under the top menu.'],
+    ['better', 'TV remote keeps your place', 'After you open Settings from the Menu with a TV remote, the selected item stays marked on screen.'],
+  ] },
   { v: '2.95.19', date: '2026-11-26', items: [
     ['better', 'Episodes open steadier', 'The episode panel opens at its full size and the page behind it waits until it is up.'],
   ] },
@@ -26716,7 +26881,7 @@ const SubAuto = {
       const pick0 = P.subPick, st0 = P.stream;
       try {
         const src = s._tr.src; let text = src.text;
-        if (text == null) { const r = await fetch(s.url); if (!r.ok) throw new Error(`HTTP ${r.status}`); text = await r.text(); src.text = text; }
+        if (text == null) { const r = await fetch(s.url); if (!r.ok) throw new Error(`HTTP ${r.status}`); text = typeof subFromRes === 'function' ? await subFromRes(r, src.lang || s.lang) : await r.text(); src.text = text; }
         s.text = StremioEngine.toVtt(text, s.fileName || s.url || ''); s._vtt = true;
       } catch (e) { if (P.subPick !== pick0 || P.stream !== st0) return; if (!opts.auto) toast(`Could not load those subtitles (${e.message})`, 'err'); return; }
       // something else was chosen (or another episode started) during the download: that choice stands
@@ -27594,7 +27759,7 @@ const ScriptClock = {
         let text = sub.text;
         if (text == null && sub.url) {
           const ac = new AbortController(), to = setTimeout(() => ac.abort(), 15000);
-          try { const r = await fetch(sub.url, { signal: ac.signal }); if (r.ok) text = await r.text(); } catch (e) { /* host blocks it */ } finally { clearTimeout(to); }
+          try { const r = await fetch(sub.url, { signal: ac.signal }); if (r.ok) text = typeof subFromRes === 'function' ? await subFromRes(r, sub.lang) : await r.text(); } catch (e) { /* host blocks it */ } finally { clearTimeout(to); }
         }
         if (!text) return [];
         try { return this.parse(StremioEngine.toVtt(text, sub.fileName || sub.url || '')); } catch (e) { return this.parse(text); }
@@ -28389,7 +28554,7 @@ body.pxup-on #player video::cue{color:transparent;background:transparent;text-sh
 #pxUpSub[data-pos="higher"]{padding-bottom:16%}
 #pxUpSub[data-pos="top"]{justify-content:flex-start;padding:4.5% 4% 0}
 #pxUpSub > div{transition:transform .25s ease}
-#pxUpSub span{display:inline;font-size:var(--sub-size);line-height:1.35;color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.08em .5em;border-radius:.45em;-webkit-box-decoration-break:clone;box-decoration-break:clone;white-space:pre-line}
+#pxUpSub span{display:inline-block;max-width:100%;box-sizing:content-box;vertical-align:top;text-wrap:balance;font-size:var(--sub-size);line-height:1.3;color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.14em .55em .16em;border-radius:.5em;-webkit-box-decoration-break:clone;box-decoration-break:clone;white-space:pre-line}
 #pxUpSub:not(.on){visibility:hidden}
 #player:has(#hud:not(.idle)) #pxUpSub:not([data-pos="top"]) > div{transform:translateY(-96px)}
 html.pip-mode #pxUp,html.pip-mode #pxUpSub{display:none!important}
@@ -28562,7 +28727,7 @@ const PxUp = {
     });
     this.sub.classList.toggle('on', cues.length > 0);
   },
-  subText(s) { if (!this.sub) return; this.subKey = ''; $('span', this.sub).textContent = s; this.sub.classList.toggle('on', !!s); },
+  subText(s) { if (!this.sub) return; this.subKey = ''; $('span', this.sub).textContent = s; this.sub.classList.toggle('on', !!s); if (s && typeof SubHug !== 'undefined') SubHug.fit($('span', this.sub)); },
   /* ---------- keep it honest: if frames start dropping, switch off for this session ---------- */
   watch() {
     const now = performance.now(); if (now - this.guard.t < 2000) return; this.guard.t = now;
@@ -48212,7 +48377,7 @@ const MkNative = {
     let el = this._sub;
     if (!el || !el.isConnected) { el = this._sub = document.createElement('div'); el.className = 'mk-nv-sub'; el.setAttribute('aria-live', 'off'); $('#player').appendChild(el); }
     if (t !== undefined) {
-      const txt = typeof t === 'string' ? t.replace(/\{\\[^}]*\}/g, '').replace(/<[^>]+>/g, '').replace(/\\N/g, '\n').trim() : '';
+      const txt = typeof t === 'string' ? (typeof SubText !== 'undefined' ? SubText.unmangle(t) : t).replace(/\{\\[^}]*\}/g, '').replace(/<[^>]+>/g, '').replace(/\\N/g, '\n').trim() : '';
       if (txt !== this._subT) { this._subT = txt; el.textContent = ''; if (txt) { const sp = document.createElement('span'); sp.textContent = txt; el.appendChild(sp); } el.hidden = !txt; this.subFit(el); }
     }
     const lift = !$('#hud').classList.contains('idle');
@@ -48222,6 +48387,7 @@ const MkNative = {
     const k = (Number(CFG.subSize) || 100) / 100;
     el.style.fontSize = this.embed ? `${Math.round(3.4 * k * 100) / 100}vh` : `max(14px, calc(max(5vh, 2.4vw) * ${k}))`;
     el.classList.toggle('top', CFG.subPos === 'top'); el.classList.toggle('higher', CFG.subPos === 'higher');
+    if (typeof SubHug !== 'undefined' && el.firstElementChild) SubHug.fit(el.firstElementChild);
   },
   /* the file's own tracks: audio for video.audioTracks, subtitles for the subtitle menu */
   tracks(list) {
@@ -59382,8 +59548,8 @@ html.mk-subov #video::-webkit-media-text-track-container{opacity:0!important}
 #mkSubs{position:absolute;left:0;top:0;width:0;height:0;z-index:2;pointer-events:none;display:flex;flex-direction:column;align-items:center;text-align:center;box-sizing:border-box;transition:transform .25s ease;will-change:transform}
 #mkSubs[hidden],body.ass-on #mkSubs,body.learn-on #mkSubs,body.pxup-on #mkSubs,html.mk-native-on #mkSubs{display:none!important}
 #mkSubs .mks-c{max-width:100%;line-height:1.32;white-space:pre-line;overflow-wrap:break-word}
-#mkSubs .mks-c+.mks-c{margin-top:.18em}
-#mkSubs .mks-c>span{color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.08em .5em;border-radius:.45em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+#mkSubs .mks-c+.mks-c{margin-top:.2em}
+#mkSubs .mks-c>span{color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);display:inline-block;max-width:100%;box-sizing:content-box;vertical-align:top;text-wrap:balance;line-height:1.3;padding:.14em .55em .16em;border-radius:.5em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 #mkSubs i{font-style:normal}#mkSubs b{font-weight:700}
 /* Easy subtitle choices (Settings and the player's Audio & subtitles panel) */
 .sbe{display:flex;flex-direction:column;gap:12px;padding:4px 0 6px}
@@ -59391,7 +59557,7 @@ html.mk-subov #video::-webkit-media-text-track-container{opacity:0!important}
 .sbe-pv{box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}.sbe-pv:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(#000 0 18%,transparent 18% 82%,#000 82%)}.sbe-pv .sbe-line{z-index:1}
 .sbe-pv:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 30% 35%,rgba(255,210,150,.28),transparent 55%),radial-gradient(ellipse at 75% 60%,rgba(120,170,255,.22),transparent 60%)}
 .sbe-pv .sbe-line{position:absolute;left:6%;right:6%;display:flex;justify-content:center;text-align:center;line-height:1.32;transition:bottom .25s ease,top .25s ease}
-.sbe-pv .sbe-line span{color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.08em .5em;border-radius:.45em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.sbe-pv .sbe-line span{color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);display:inline-block;max-width:100%;box-sizing:content-box;vertical-align:top;text-wrap:balance;line-height:1.3;padding:.14em .55em .16em;border-radius:.5em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .sbe-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .sbe-row>b{min-width:78px;font-weight:600;font-size:calc(14px * var(--ts,1))}
 .sbe-chips{display:flex;gap:6px;flex-wrap:wrap;flex:1;min-width:0}
@@ -59531,6 +59697,7 @@ html.tv .sbe-chips button.nav-focus,html.tv .sbe-more.nav-focus{outline:3px soli
       else { pad = `0 5% ${(p.H * (pos === 'higher' ? 0.17 : 0.065)).toFixed(1)}px`; jc = 'flex-end'; }
       s.left = (p.L - p.st.left) + 'px'; s.top = (top - p.st.top) + 'px'; s.width = p.W + 'px'; s.height = h + 'px';
       s.padding = pad; s.justifyContent = jc;
+      if (typeof SubHug !== 'undefined') el.querySelectorAll('.mks-c>span').forEach((sp) => SubHug.fit(sp));
       el.dataset.inBar = String(top !== p.T || h !== p.H);
       this.lift(p);
     },
@@ -60174,6 +60341,8 @@ body.reduce-motion #epSheet .ep-sheet,body.reduce-motion #epSheet::before{animat
 /* 2.95.19: on phones the panel is its full height from the start, so it never grows (its top jumping up) when the
    sources arrive */
 @media (max-width:760px){html #epSheet .ep-sheet{height:calc(100dvh - 28px - env(safe-area-inset-top,0px))}}
+/* 2.95.20: a phone held sideways and short keeps its full-screen two-column sheet */
+@media (max-width:760px) and (orientation:landscape) and (max-height:540px){html #epSheet .ep-sheet{height:100%}}
 </style>
 <script id="mk-29518-sheet-steady-js">(()=>{/* 2.95.19 sheet wait */
   'use strict';
