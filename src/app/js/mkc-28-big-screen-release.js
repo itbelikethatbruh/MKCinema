@@ -552,6 +552,7 @@ const Split = {
     };
   },
   open(seed) {
+    Usage.add('feat', 'split');
     if (!this.el) this.build();
     // mkc-278-split-land: watching sideways on a phone or tablet, Split Screen stays sideways. It takes the player's full
     // screen over without leaving it (so the phone never turns upright in between), or asks for it when the phone is
@@ -596,6 +597,7 @@ const Split = {
     this.open(ok ? { name: streamTitle(ctx), url: s.url, headers: s.behaviorHints && s.behaviorHints.proxyHeaders && s.behaviorHints.proxyHeaders.request, poster: ctx.meta ? metaPoster(ctx.meta) : null, startAt: live ? 0 : pNow(), live, ...this.playerSubs(ctx) } : null);
   },
   setCount(n) {
+    Usage.add('feat', `split:${Number(n) || 0}`);
     const keep = this.slots.filter((t) => t.state !== 'empty');
     keep.splice(n).forEach((t) => this.stopVideo(t));
     this.n = n; this.slots = Array.from({ length: n }, (_, i) => keep[i] || this.blank());
@@ -2684,14 +2686,14 @@ const TvHome = {
     // Left/Right at the end of a row stays on the last poster instead of leaping to another row
     const step = Nav.step.bind(Nav), move = Nav.move.bind(Nav);
     Nav.step = function (cur, dir) {
-      if (cur && cur.matches && cur.matches('.rail>.net-tile, .rail>.uni-card')) { let el = cur; do { el = dir === 'right' ? el.nextElementSibling : el.previousElementSibling; } while (el && !el.matches('[data-nav]')); return el || null; }
+      if (cur && cur.matches && cur.matches('.rail>.net-tile, .rail>.uni-card, .rail>.rail-all')) { let el = cur; do { el = dir === 'right' ? el.nextElementSibling : el.previousElementSibling; } while (el && !el.matches('[data-nav]')); return el || null; }
       return step(cur, dir);
     };
     Nav.move = function (dir, fast) {
       const a = document.activeElement;
       if (IS_TV && a && dir === 'right' && a.id === 'heroList' && $('#heroNext')) { Nav.focus($('#heroNext'), fast); return; }
       if (IS_TV && a && dir === 'left' && a.id === 'heroPlay' && $('#heroPrev')) { if (S.hero.length > 1) showHero(S.heroIdx - 1, -1); return; }
-      if ((dir === 'left' || dir === 'right') && a && a.matches && a.matches('.rail>.card, .rail>.net-tile, .rail>.uni-card') && !Nav.step(a, dir)) {
+      if ((dir === 'left' || dir === 'right') && a && a.matches && a.matches('.rail>.card, .rail>.net-tile, .rail>.uni-card, .rail>.rail-all') && !Nav.step(a, dir)) {
         const rail = a.closest('.rail');
         if (dir === 'right' && rail && rail._inf && typeof Endless !== 'undefined') { Endless.near(rail, a); return; } // an endless row loads more and the next press continues
         // 2.8.3: like Netflix, Right on the last poster goes round to the first one instead of stopping dead
@@ -2843,7 +2845,8 @@ const SimpleHome = {
       const cards = $$('.rail > [data-card]', sec), isTop = sec.dataset.curate === 'top10' || sec.classList.contains('ax-top10');
       if (!isTop && !/^My watchlist/.test(window.i18nEn ? i18nEn(sec.querySelector('.row-title')) : ((sec.querySelector('.row-title') || {}).textContent || ''))) {
         let left = cards.length;
-        cards.forEach((c) => { if (left > 8 && seen.has(c.dataset.id) && c !== document.activeElement && !c.contains(document.activeElement)) { c.remove(); left--; } });
+        const sr = sec.getBoundingClientRect(), live = sec.contains(document.activeElement) || (sr.bottom > -80 && sr.top < innerHeight + 80);
+        if (!live) cards.forEach((c) => { if (left > 8 && seen.has(c.dataset.id) && c !== document.activeElement && !c.contains(document.activeElement)) { c.remove(); left--; } });
       }
       $$('.rail > [data-card]', sec).forEach((c) => seen.add(c.dataset.id));
     });

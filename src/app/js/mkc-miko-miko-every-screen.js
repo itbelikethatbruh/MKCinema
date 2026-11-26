@@ -445,6 +445,7 @@ const Miko = {
   },
   open(prefill) {
     if (!this.enabled()) return;
+    Usage.add('feat', 'miko');
     this.build();
     const box = $('#mikoBox');
     if (!this.on) {

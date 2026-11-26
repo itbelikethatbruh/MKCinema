@@ -140,17 +140,56 @@
       eps.forEach((ep) => {
         const id = videoIdFor(meta, ep);
         $$(`#dEps [data-vid="${CSS.escape(id)}"] .th img`).forEach((img) => {
-          img.removeAttribute('data-fb'); img.removeAttribute('srcset'); img.src = ep.thumbnail;
+          img.removeAttribute('data-fb'); img.removeAttribute('data-ssfb'); img.removeAttribute('srcset'); delete img.dataset.lsrc; img.classList.add('ss-wait'); img.src = ep.thumbnail;
         });
         try { if (D.video === ep && EpSheet.isOpen()) $$('#esHead .es-still img').forEach((img) => { img.removeAttribute('data-fb'); img.removeAttribute('srcset'); img.src = ep.thumbnail; }); } catch (e) { /* no sheet */ }
       });
     },
     fix(meta, season) {
-      const tt = this.tt(meta); if (!tt || meta.type !== 'series' || !(season >= 1)) return;
+      const tt = this.tt(meta); if (!tt || meta.type !== 'series' || !(season >= 0)) return;
       if (!(meta.videos || []).some((ep) => Number(qq(ep.season, 1)) === season && this.shared(ep.thumbnail))) return;
       const k = `${tt}:${season}`, have = this.store().get(k);
-      if (have) { this.apply(meta, season, have); return; }
-      this.get(tt, season).then((v) => { if (v) this.paint(meta, this.apply(meta, season, v)); });
+      if (have) { this.apply(meta, season, have); this.deep(meta, season, have); return; }
+      this.get(tt, season).then((v) => { if (v) { this.paint(meta, this.apply(meta, season, v)); this.deep(meta, season, v); } });
+    },
+    /* 2.95.11: some shows are cut into seasons differently on TMDB (One Piece: our season 2 is inside TMDB's season 1).
+       When most of a season's episodes found no still, the TMDB seasons around it are asked, walking towards the one
+       whose air dates cover this season (6 at most, remembered for 3 days), and episodes are matched by exact name, or by
+       an air date that only one TMDB episode has. */
+    deep(meta, season, own) {
+      const tt = this.tt(meta); if (!tt || !(season >= 1)) return;
+      const all = (meta.videos || []).filter((ep) => Number(qq(ep.season, 1)) === season);
+      const need = all.filter((ep) => this.shared(ep.thumbnail));
+      if (!need.length || need.length < all.length / 2) return;
+      const key = `${tt}:x${season}`, have = this.store().get(key);
+      if (have) { this.paint(meta, this.apply(meta, season, have)); return; }
+      if (!this.deepWait) this.deepWait = new Set();
+      if (this.deepWait.has(key)) return;
+      const days = need.map((ep) => this.day(ep.released || ep.firstAired)).filter(isFinite); if (!days.length) return;
+      this.deepWait.add(key);
+      const lo = Math.min(...days), hi = Math.max(...days);
+      const pick = (ep, eps) => {
+        const n = this.norm(ep.name || ep.title), d = this.day(ep.released || ep.firstAired);
+        if (n.length >= 6) { const h = eps.filter((x) => this.norm(x[1]) === n); if (h.length === 1) return h[0]; }
+        if (isFinite(d)) { const h = eps.filter((x) => Math.abs(this.day(x[2]) - d) < 0.5); if (h.length === 1) return h[0]; }
+        return null;
+      };
+      const range = (v) => { const ds = ((v && v.e) || []).map((x) => this.day(x[2])).filter(isFinite); return ds.length ? [Math.min(...ds), Math.max(...ds)] : null; };
+      (async () => {
+        const got = new Map(), seen = new Set([season]);
+        let r = range(own), k = r && r[1] < lo ? season + 1 : season - 1;
+        for (let tries = 0; tries < 6 && k >= 1 && !seen.has(k); tries++) {
+          seen.add(k);
+          const v = await this.get(tt, k); if (!v) break;
+          need.forEach((ep) => { if (!got.has(ep)) { const x = pick(ep, v.e); if (x) got.set(ep, x[3]); } });
+          if (got.size >= need.length) break;
+          r = range(v); const step = k < season ? -1 : 1;
+          if (!r) k += step; else if (r[0] > hi) k -= 1; else if (r[1] < lo) k += 1; else if (got.size) break; else k += step;
+        }
+        const e = [...got].map(([ep, st]) => [Number(ep.episode), String(ep.name || ep.title || ''), String(ep.released || ep.firstAired || '').slice(0, 10), st]);
+        this.store().set(key, { e, t: Date.now() }); this.save();
+        if (e.length) this.paint(meta, this.apply(meta, season, { e }));
+      })().catch(() => {}).finally(() => this.deepWait.delete(key));
     },
   };
   window.MkStills = Stills;

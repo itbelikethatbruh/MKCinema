@@ -422,7 +422,7 @@ const Eggs = {
       if (e.key === 'ArrowUp') {
         const before = document.activeElement, y = scrollY;
         setTimeout(() => {
-          if (document.activeElement !== before || scrollY !== y || y > 4) { ups = 0; return; }
+          if (document.activeElement !== before || scrollY !== y || y > 4 || document.body.classList.contains('layer-open')) { ups = 0; return; }
           const now = Date.now(); ups = now - upT < 1500 ? ups + 1 : 1; upT = now;
           if (ups >= 7) { ups = 0; this.credits(); }
         }, 120);

@@ -8,6 +8,12 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.95.13', date: '2026-11-26', items: [
+    ['better', 'Smoother series pages', 'Switching seasons keeps your place and the episodes fade in, and every episode has a picture.'],
+  ] },
+  { v: '2.95.11', date: '2026-11-26', items: [
+    ['better', 'Lighter lists', 'Long lists now look for more titles only while you scroll, which keeps the app lighter and saves battery.'],
+  ] },
   { v: '2.95.10', date: '2026-11-26', items: [
     ['better', 'Back closes the film', 'Swiping Back during a film now closes it straight away.'],
   ] },

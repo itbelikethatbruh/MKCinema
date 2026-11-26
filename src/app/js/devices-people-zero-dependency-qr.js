@@ -302,7 +302,7 @@ const Remote = {
     this.peers.set(id, { name: String(m.name || (known && known.name) || 'Phone').slice(0, 30), at: Date.now(), v: Number(m.v) || (known && known.v) || 0 });
     if (!known) {
       toast(`${m.name && m.name !== 'Phone' ? m.name.replace(/^\w/, (c) => c.toUpperCase()) : 'Your phone'} is connected as a remote`, 'ok', 3200);
-      Store.set('rmPaired', true); this.unhint(); this.paintCast();
+      Store.set('rmPaired', true); this.unhint(); this.paintCast(); Usage.add('feat', 'remote_connect');
     }
     switch (m.t) {
       case 'hi': this.push(true); return;
@@ -317,6 +317,7 @@ const Remote = {
   soon() { clearTimeout(this.soonT); this.soonT = setTimeout(() => this.push(), 40); },
   /* ---- keys: the same path a TV remote's keys take ---- */
   press(key) {
+    Usage.add('feat', 'remote_press');
     const a = document.activeElement, t = a && a !== document.body && a.isConnected ? a : document.body;
     const ev = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }); t.dispatchEvent(ev);
     // a text box keeps the arrows on a computer; a remote has no other way out of it
@@ -729,11 +730,13 @@ const Party = {
     clearInterval(this.hbT); this.hbT = setInterval(() => this.heartbeat(), 2000);
     // pings (clock offsets, and proof that a member is still there) only while someone else is in the room
     clearInterval(this.pingT); this.pingT = setInterval(() => { if (this.peers.size) this.send({ t: 'ping', a: Date.now() }); }, 5000);
+    Usage.partyStart(!!creating);
     if (creating) toast(`Party ${code} is open. Share the code or link.`, 'ok', 5000);
     this.render(); this.pill();
   },
   leave(quiet) {
     if (!this.code) return;
+    Usage.partyEnd();
     if (typeof PartyPlus !== 'undefined') PartyPlus.reset();
     try { this.bus && this.bus.send({ t: 'bye' }); } catch (e) { /* ignore */ }
     this.peers.forEach((p) => this.dropPeer(p.id)); this.peers.clear();

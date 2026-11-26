@@ -2,6 +2,22 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.95.14 (2026-11-26)
+
+- Smoother season switching and small reliability improvements.
+
+## Web app 2.95.13 (2026-11-26)
+
+- Smoother series pages: switching seasons keeps your place and the episodes fade in, and every episode has a picture.
+
+## Web app 2.95.12 (2026-11-26)
+
+- Small performance and reliability improvements.
+
+## Web app 2.95.11 (2026-11-26)
+
+- Long lists now look for more titles only while you scroll, which keeps the app lighter and saves battery.
+
 ## Android 1.17.16 (2026-11-26)
 
 - Swiping Back during a film on a phone closes it smoothly, without the picture turning upright first.
