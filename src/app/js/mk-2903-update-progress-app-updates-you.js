@@ -58,7 +58,7 @@
     ready() {
       this.stop();
       if (!has('updateInstall')) return;
-      const el = this.mount(`<div><b>${this.label()} is ready to install</b><small>Install it now. Your settings stay. Or it installs by itself after you leave the app.</small><span class="upd-prog"><i style="transform:scaleX(1)"></i></span></div><div class="inrow"><button class="btn btn-prime btn-sm" type="button" data-nav id="updGo">Install</button><button class="btn btn-ghost btn-sm" type="button" data-nav id="updLater">Later</button></div>`);
+      const el = this.mount(`<div><b>${this.label()} is ready to install</b><small>${this.asked ? 'Install it now. Your settings stay.' : 'Install it now. Your settings stay. Or it installs by itself after you leave the app.'}</small><span class="upd-prog"><i style="transform:scaleX(1)"></i></span></div><div class="inrow"><button class="btn btn-prime btn-sm" type="button" data-nav id="updGo">Install</button><button class="btn btn-ghost btn-sm" type="button" data-nav id="updLater">Later</button></div>`);
       el.classList.remove('upd-dl');
       document.getElementById('updLater').onclick = () => { el.remove(); try { Nav.settle(); } catch (e) { /* no remote */ } };
       document.getElementById('updGo').onclick = () => {
@@ -70,7 +70,7 @@
     },
     init() {
       if (!has('updateAuto') && !has('update')) return;
-      if (window.MkAutoUpd) MkAutoUpd.ready = () => this.ready();
+      if (window.MkAutoUpd) { MkAutoUpd.ready = () => this.ready(); MkAutoUpd.ask = () => { this.asked = true; this.ready(); }; }
       if (typeof Updater !== 'undefined') {
         const bar = Updater.bar.bind(Updater);
         Updater.bar = function (kind, v) {

@@ -525,9 +525,9 @@ app.get(Object.keys(PWA_FILES).map((f) => `/${f}`), (req, res, next) => {
   res.type(PWA_FILES[name]); if (name === 'sw.js') res.set('Cache-Control', 'no-cache'); res.sendFile(file);
 });
 // The rest of the app's files: only these folders and files, never this script, package files or .env
-const STATIC_DIRS = ['i18n', 'kids', 'vendor', 'anime', 'net', 'rate', 'engine', 'captions', 'addons'];
+const STATIC_DIRS = ['i18n', 'kids', 'vendor', 'anime', 'net', 'rate', 'engine', 'captions', 'addons', 'browse', 'splash', 'tour'];
 for (const d of STATIC_DIRS) app.use(`/${d}`, express.static(path.join(__dirname, d), { index: false, dotfiles: 'ignore', fallthrough: true, redirect: false }));
-const STATIC_FILES = ['universes.json', 'universes-home.json', 'version.json', 'logs.html', 'status.html', 'privacy.html', 'apple-touch-icon.png'];
+const STATIC_FILES = ['universes.json', 'universes-home.json', 'version.json', 'logs.html', 'status.html', 'privacy.html', 'terms.html', 'browse-home.json', 'networks.json', 'apple-touch-icon.png'];
 app.get(STATIC_FILES.map((f) => `/${f}`), (req, res, next) => {
   const file = path.join(__dirname, req.path.slice(1));
   if (!fs.existsSync(file)) return next();

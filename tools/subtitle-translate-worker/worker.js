@@ -20,7 +20,7 @@ const cors = (origin) => ({
 const json = (body, status, origin) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', ...(origin ? cors(origin) : {}) } });
 
 const okOrigin = (o) => ORIGINS.has(o);
-const tag = (s) => /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/.test(s || '');
+const tag = (s) => /^[a-z]{2,3}(-(?:[A-Za-z]{2,4}|\d{3}))?$/.test(s || ''); // also UN M.49 regions such as es-419
 
 function languageName(code) {
   if (code === 'pt-BR') return 'Brazilian Portuguese';

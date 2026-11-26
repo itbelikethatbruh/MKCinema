@@ -15,7 +15,7 @@ const SubLang = {
     const c = String(code || '').trim(); if (!c) return ''; const l = c.toLowerCase().replace('_', '-');
     if (this.T[l]) return this.T[l];
     if (/^[a-z]{2}$/.test(l)) return l;
-    const m = /^([a-z]{2})-([a-z]{2,4})$/.exec(l); if (m) return `${m[1]}-${m[2].length === 2 ? m[2].toUpperCase() : m[2][0].toUpperCase() + m[2].slice(1)}`;
+    /*2.95.16-m49*/if(/^[a-z]{2}-\d{3}$/.test(l))return l;const m = /^([a-z]{2})-([a-z]{2,4})$/.exec(l); if (m) return `${m[1]}-${m[2].length === 2 ? m[2].toUpperCase() : m[2][0].toUpperCase() + m[2].slice(1)}`;
     const n = LANGS[l]; if (n) { const k = Object.keys(LANGS).find((x) => x.length === 2 && LANGS[x] === n); if (k) return k; }
     return '';
   },

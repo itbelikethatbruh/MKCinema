@@ -11,7 +11,7 @@
 // free Neurons a day. When one says "limit reached" (429), that step rests until its retry-after and the next one answers.
 // Secrets it reads: GROQ_API_KEY. Optional: CF_AI_ACCOUNT + CF_AI_TOKEN (Workers AI), MIKO_AI_PER_DAY, MIKO_AI_ALL_DAY,
 // MIKO_AI_OFF=1 (switch it off).
-const VERSION = 2;
+const VERSION = 3;
 const GROQ = 'https://api.groq.com/openai/v1/chat/completions';
 type Step = { id: string; model: string; url: () => string; key: () => string; extra: Record<string, unknown> };
 const STEPS: Step[] = [
@@ -30,7 +30,7 @@ const num = (k: string, d: number) => { const n = Number(env(k)); return Number.
 const PER_MIN = 10, PER_DAY = num('MIKO_AI_PER_DAY', 60), ALL_DAY = num('MIKO_AI_ALL_DAY', 3000);
 
 const KEYS = new Set<string>(['sb_publishable_ZpiFwB_oM579GwCunYpHWg_jelRazT-']);
-if (env('SUPABASE_ANON_KEY')) KEYS.add(env('SUPABASE_ANON_KEY'));
+for (const k of [env('SUPABASE_ANON_KEY'), ...env('MKC_RELAY_KEYS').split(',')]) if (k.trim()) KEYS.add(k.trim()); // MKC_RELAY_KEYS: self-hosted projects, comma separated
 try { const p = JSON.parse(env('SUPABASE_PUBLISHABLE_KEYS') || '{}'); for (const v of Object.values(p)) if (typeof v === 'string' && v) KEYS.add(v); } catch { /* not set */ }
 const serviceKey = () => {
   try { const p = JSON.parse(env('SUPABASE_SECRET_KEYS') || '{}'); const v = Object.values(p).find((x) => typeof x === 'string' && x); if (v) return v as string; } catch { /* not set */ }
@@ -135,7 +135,9 @@ export async function handle(req: Request): Promise<Response> {
   const messages = cleanMessages(b.messages), tools = cleanTools(b.tools);
   if (!messages || !tools) return json(400, { error: { message: 'bad request' } });
 
-  // counted only for rounds that will really be sent
+  // counted only for rounds that will really be sent: when every step is resting, nothing is sent and nothing is counted
+  const soon = STEPS.slice(from).filter((s) => s.key()).map((s) => resting.get(s.id) || 0);
+  if (!soon.length || Math.min(...soon) > Date.now()) return json(429, { error: { message: 'Miko’s built-in AI needs a breather. Try again in a minute.' } }, { 'retry-after': String(Math.max(30, Math.ceil(((soon.length ? Math.min(...soon) : Date.now()) - Date.now()) / 1000))), 'x-mkc-why': 'upstream' });
   const [mine, all] = await daily(id);
   if (mine > PER_DAY) return json(429, { error: { message: 'You’ve used today’s built-in AI. It comes back tomorrow.' } }, { 'retry-after': String(toMidnight()), 'x-mkc-why': 'day', 'x-mkc-left': '0' });
   if (all > ALL_DAY) return json(429, { error: { message: 'Miko’s built-in AI is busy today. It comes back tomorrow.' } }, { 'retry-after': String(toMidnight()), 'x-mkc-why': 'all', 'x-mkc-left': '0' });
