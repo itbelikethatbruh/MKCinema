@@ -2494,12 +2494,54 @@ $$('[data-close]').forEach((b) => b.addEventListener('click', () => { const ov =
 // only a press that starts and ends on the dark background closes it (not a text selection dragged out of the box)
 $$('.layer-ov').forEach((ov) => { ov.addEventListener('pointerdown', (e) => { ov._downBg = e.target === ov; }); ov.addEventListener('click', (e) => { if (e.target === ov && ov._downBg !== false) back(); ov._downBg = null; }); });
 $('#retryCinemeta').onclick = () => installAddon(CINEMETA, true);
-// Infinite scroll for Movies and Series: one check per frame at most, and only on those views
-let moreRaf = 0;
-addEventListener('scroll', () => {
-  if (moreRaf || (S.view !== 'movie' && S.view !== 'series')) return;
-  moreRaf = requestAnimationFrame(() => { moreRaf = 0; const s = document.getElementById('discMore'); if (s && !s.hidden && s.getBoundingClientRect().top < innerHeight + 400) s.click(); });
-}, { passive: true });
+/* 2.95.9 load more by itself */
+/* Nobody presses "Load more": when a list, grid or guide is near its bottom (a swipe, the wheel, or the TV remote moving
+   the highlight down), its next page loads by itself. Each list keeps its own button and loading code; the button just
+   shows as a quiet spinner that taps and the remote skip. If a page fails to arrive twice, the button comes back as a
+   normal button so the next page can still be asked for by hand, and pressing it turns the automatic loading back on. */
+const AutoMore = {
+  SEL: '#discMore,#chMore,#mkdMore,#netMore,#animeMore,#xtMore,#ltMore,#nbMore,#brMore,#cpAll',
+  raf: 0,
+  later() { if (!this.raf) this.raf = requestAnimationFrame(() => this.check()); },
+  // the nearest box that scrolls (a layer or panel), or null for the page itself
+  box(el) {
+    for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      if (p.scrollHeight > p.clientHeight + 4) { const o = getComputedStyle(p).overflowY; if (o === 'auto' || o === 'scroll') return p; }
+    }
+    return null;
+  },
+  quiet(b) { b.classList.add('am-on'); b.tabIndex = -1; b.setAttribute('aria-busy', 'true'); },
+  // two pages in a row did not arrive: a normal button again, and a press restarts the automatic loading
+  stop(b) {
+    b._amStop = true; b.classList.remove('am-on'); b.removeAttribute('tabindex'); b.removeAttribute('aria-busy');
+    b.addEventListener('click', () => { b._amStop = false; b._amFail = 0; b._amW = null; }, { once: true, capture: true });
+  },
+  check() {
+    this.raf = 0;
+    if (document.hidden || document.body.classList.contains('mk-player-on')) return;
+    for (const b of document.querySelectorAll(this.SEL)) {
+      if (b.hidden || b.disabled || b._amStop) continue;
+      if (!b.classList.contains('am-on')) this.quiet(b);
+      if (!b.getClientRects().length || b.closest('[hidden],[inert]')) continue;
+      if (b._amBox === undefined || (b._amBox && !b._amBox.contains(b))) b._amBox = this.box(b);
+      const box = b._amBox, h = box ? box.scrollHeight : document.documentElement.scrollHeight, w = b._amW, now = performance.now();
+      if (w) {
+        if (h > w.h + 8) { b._amW = null; b._amFail = 0; } // the page arrived: ready for the next one
+        else if (now - w.at < 8000) continue; // still on its way
+        else { b._amW = null; if ((b._amFail = (b._amFail || 0) + 1) >= 2) { this.stop(b); continue; } }
+      }
+      const br = box && box.getBoundingClientRect(), top = br ? Math.max(0, br.top) : 0, bot = br ? Math.min(innerHeight, br.bottom) : innerHeight;
+      if (b.getBoundingClientRect().top > bot + Math.max(480, (bot - top) * 1.2)) continue; // not near the bottom yet
+      b._amW = { h, at: now };
+      b.click();
+    }
+  },
+};
+document.addEventListener('scroll', () => AutoMore.later(), { capture: true, passive: true });
+document.addEventListener('focusin', () => AutoMore.later());
+addEventListener('resize', () => AutoMore.later(), { passive: true });
+// lists too short to scroll, and pages that open already near their end
+setInterval(() => AutoMore.later(), 600);
 addEventListener('beforeunload', () => saveProgress(true));
 
 const rerender = debounce(() => {

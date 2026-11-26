@@ -8,6 +8,10 @@
 .rail-all .lucide{width:26px;height:26px}
 @media (hover:hover){.rail-all:hover{background:rgba(var(--kffffff-c,255,255,255),.07)}}
 .rail>.skeleton.rail-sk{flex:none;width:clamp(132px,14vw,192px)}
+.btn.am-on{pointer-events:none;position:relative;min-width:48px;color:transparent!important;background:none!important;border-color:transparent!important;box-shadow:none!important;outline:0!important}
+.btn.am-on>*{opacity:0}
+.btn.am-on::before{display:none!important}
+.btn.am-on::after,html.tv .btn.am-on::after{content:""!important;display:block!important;position:absolute!important;left:50%!important;top:50%!important;bottom:auto!important;width:22px!important;height:22px!important;margin:-11px 0 0 -11px;z-index:auto!important;border-radius:50%;background:none!important;border:2px solid rgba(var(--kffffff-c,255,255,255),.14);border-top-color:rgba(var(--kffffff-c,255,255,255),.7);transform:none;transition:none!important;animation:rot .8s linear infinite}
 /* TV: no dark text on a light fill. Light text on dark with a platinum edge reads on every TV picture mode */
 html.tv .btn-prime,html.tv .btn-bolt,html.tv a.btn.btn-prime,html.tv a.btn.btn-bolt,html.tv .exit-ask .xa-stay{color:var(--kffffff,#fff)!important;background:linear-gradient(180deg,var(--n2b2b30,#2b2b30),var(--n121215,#121215))!important;box-shadow:inset 0 0 0 2px var(--ne6e6e9,#e6e6e9)!important;border:0}
 html.tv .btn-bolt>svg.lucide{background:var(--nf2f2f3,#f2f2f3);color:var(--n000000,#000);fill:var(--n000000,#000);box-shadow:none}

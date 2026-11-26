@@ -452,7 +452,7 @@ select.sel{height:38px;border-radius:calc(var(--r-m) * 1.1);background:rgba(var(
 .upnext small{color:var(--mute);font-size:calc(11px * var(--ts,1));font-family:var(--f-mono);letter-spacing:.1em;text-transform:uppercase}
 .upnext b{display:block;font-size:calc(13px * var(--ts,1));line-height:1.25;margin:2px 0 8px}
 
-video::cue{background:var(--sub-bg);color:var(--sub-color);font-family:var(--sub-font);font-size:var(--sub-size);line-height:1.35;text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400)}
+video::cue(i){font-style:normal}video::cue{background:var(--sub-bg);color:var(--sub-color);font-family:var(--sub-font);font-size:var(--sub-size);line-height:1.35;text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400)}
 .menu{position:absolute;bottom:72px;right:18px;z-index:5;min-width:240px;max-height:50vh;overflow-y:auto;padding:8px;border-radius:calc(var(--r-l) * 0.8889)}
 .menu button{display:flex;width:100%;align-items:center;gap:8px;padding:9px 12px;border-radius:var(--r-m);font-size:calc(13px * var(--ts,1));text-align:left}
 .menu button:hover,.menu button.on{background:rgba(var(--kffffff-c,255,255,255),.08)}
@@ -2255,12 +2255,17 @@ html.tv .br-grid .uni-card.br-tile{width:auto;min-width:0}
 </style>
 <style id="mk-2915-tv-player">
 #player .mk-nv-sub{position:absolute;left:6%;right:6%;bottom:7vh;z-index:3;text-align:center;white-space:pre-line;color:var(--sub-color,#fff);font-family:var(--sub-font,inherit);font-weight:var(--sub-weight,600);line-height:1.32;text-shadow:var(--sub-shadow,0 0 4px #000,0 2px 6px #000,0 0 2px #000);pointer-events:none;transition:transform .25s ease}
-#player .mk-nv-sub>span{background:var(--sub-bg,transparent);padding:.04em .32em;border-radius:.12em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+#player .mk-nv-sub.higher{bottom:17vh}
+#player .mk-nv-sub>span{background:var(--sub-bg,transparent);padding:.08em .5em;border-radius:.45em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 #player .mk-nv-sub.top{bottom:auto;top:7vh}
 #player .mk-nv-sub.lift:not(.top){transform:translateY(-17vh)}
 </style>
 <style id="mk-2952-smooth-css">/* 2.95.2 smooth sources: the highlighted source keeps a little room from the list's edge, so the next one peeks in */
 #srcList .stream[data-si],#dStreams .stream[data-si]{scroll-margin-block:14px}</style>
+<style id="mk-2958-behind-clock">
+html:not(.lk-bg):not(.tv) body::before{z-index:39;height:calc(env(safe-area-inset-top,0px) * 1.4);background:linear-gradient(rgba(var(--k000000-c,0,0,0),.6),rgba(var(--k000000-c,0,0,0),.34) 62%,rgba(var(--k000000-c,0,0,0),0));pointer-events:none}
+html.mk-pill body .dock-wrap:before{height:100%!important;background:linear-gradient(rgba(var(--k000000-c,0,0,0),.5),rgba(var(--k000000-c,0,0,0),.22) calc(env(safe-area-inset-top,0px) + 4px),rgba(var(--k000000-c,0,0,0),0))!important}
+</style>
 </head>
 <body class="locked">
 <script id="mk-2881-pre">
@@ -2801,7 +2806,7 @@ const CFG_DEFAULTS = {
   partyName: '', partyShareLink: false, governor: true, syncKeys: true, anonStats: true, pickMemo: true, liveMini: true,
   ambilight: true, ambIntensity: 85, rememberVolume: true, extPlayers: {},
   // subtitles
-  subAuto: true, subDubSigns: true, subLang: 'eng', subSize: 100, subColor: '#ffffff', subBg: 65, subPos: 'bottom', subFont: 'sans', subOutline: true, subBold: false, subShadow: 'soft', subLook: 'custom',
+  subAuto: true, subDubSigns: true, subLang: 'eng', subSize: 100, subColor: '#ffffff', subBg: 65, subPos: 'bottom', subFont: 'stream', subOutline: true, subBold: false, subShadow: 'soft', subLook: 'custom',
   // streams
   hideP2P: false, browserOnly: false, audioOnly: 'eng', showTrailers: true, timeout: 15, alwaysProxy: false,
   // intro, sound, trailers
@@ -2809,6 +2814,8 @@ const CFG_DEFAULTS = {
   introMode: 'daily', sfxVolume: 70, trailerMode: 'auto',
 };
 const CFG = Object.assign({}, CFG_DEFAULTS, (() => { try { const c0 = window.__CFG0; window.__CFG0 = null; return c0 && typeof c0 === 'object' ? c0 : JSON.parse(localStorage.getItem('mkc:cfg') || '{}'); } catch (e) { return {}; } })());
+/* 2.95.8: subtitles move to Inter (modern) once for people still on the old default font */
+if (!CFG.subSoft) { if (CFG.subFont === 'sans') CFG.subFont = 'stream'; CFG.subSoft = 1; }
 // One-time upgrades for settings saved by older builds
 if ((CFG.cfgRev || 0) < 4) {
   // Low is the default graphics preset from rev 4; keep a preset only if the user picked it themselves
@@ -6534,12 +6541,54 @@ $$('[data-close]').forEach((b) => b.addEventListener('click', () => { const ov =
 // only a press that starts and ends on the dark background closes it (not a text selection dragged out of the box)
 $$('.layer-ov').forEach((ov) => { ov.addEventListener('pointerdown', (e) => { ov._downBg = e.target === ov; }); ov.addEventListener('click', (e) => { if (e.target === ov && ov._downBg !== false) back(); ov._downBg = null; }); });
 $('#retryCinemeta').onclick = () => installAddon(CINEMETA, true);
-// Infinite scroll for Movies and Series: one check per frame at most, and only on those views
-let moreRaf = 0;
-addEventListener('scroll', () => {
-  if (moreRaf || (S.view !== 'movie' && S.view !== 'series')) return;
-  moreRaf = requestAnimationFrame(() => { moreRaf = 0; const s = document.getElementById('discMore'); if (s && !s.hidden && s.getBoundingClientRect().top < innerHeight + 400) s.click(); });
-}, { passive: true });
+/* 2.95.9 load more by itself */
+/* Nobody presses "Load more": when a list, grid or guide is near its bottom (a swipe, the wheel, or the TV remote moving
+   the highlight down), its next page loads by itself. Each list keeps its own button and loading code; the button just
+   shows as a quiet spinner that taps and the remote skip. If a page fails to arrive twice, the button comes back as a
+   normal button so the next page can still be asked for by hand, and pressing it turns the automatic loading back on. */
+const AutoMore = {
+  SEL: '#discMore,#chMore,#mkdMore,#netMore,#animeMore,#xtMore,#ltMore,#nbMore,#brMore,#cpAll',
+  raf: 0,
+  later() { if (!this.raf) this.raf = requestAnimationFrame(() => this.check()); },
+  // the nearest box that scrolls (a layer or panel), or null for the page itself
+  box(el) {
+    for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      if (p.scrollHeight > p.clientHeight + 4) { const o = getComputedStyle(p).overflowY; if (o === 'auto' || o === 'scroll') return p; }
+    }
+    return null;
+  },
+  quiet(b) { b.classList.add('am-on'); b.tabIndex = -1; b.setAttribute('aria-busy', 'true'); },
+  // two pages in a row did not arrive: a normal button again, and a press restarts the automatic loading
+  stop(b) {
+    b._amStop = true; b.classList.remove('am-on'); b.removeAttribute('tabindex'); b.removeAttribute('aria-busy');
+    b.addEventListener('click', () => { b._amStop = false; b._amFail = 0; b._amW = null; }, { once: true, capture: true });
+  },
+  check() {
+    this.raf = 0;
+    if (document.hidden || document.body.classList.contains('mk-player-on')) return;
+    for (const b of document.querySelectorAll(this.SEL)) {
+      if (b.hidden || b.disabled || b._amStop) continue;
+      if (!b.classList.contains('am-on')) this.quiet(b);
+      if (!b.getClientRects().length || b.closest('[hidden],[inert]')) continue;
+      if (b._amBox === undefined || (b._amBox && !b._amBox.contains(b))) b._amBox = this.box(b);
+      const box = b._amBox, h = box ? box.scrollHeight : document.documentElement.scrollHeight, w = b._amW, now = performance.now();
+      if (w) {
+        if (h > w.h + 8) { b._amW = null; b._amFail = 0; } // the page arrived: ready for the next one
+        else if (now - w.at < 8000) continue; // still on its way
+        else { b._amW = null; if ((b._amFail = (b._amFail || 0) + 1) >= 2) { this.stop(b); continue; } }
+      }
+      const br = box && box.getBoundingClientRect(), top = br ? Math.max(0, br.top) : 0, bot = br ? Math.min(innerHeight, br.bottom) : innerHeight;
+      if (b.getBoundingClientRect().top > bot + Math.max(480, (bot - top) * 1.2)) continue; // not near the bottom yet
+      b._amW = { h, at: now };
+      b.click();
+    }
+  },
+};
+document.addEventListener('scroll', () => AutoMore.later(), { capture: true, passive: true });
+document.addEventListener('focusin', () => AutoMore.later());
+addEventListener('resize', () => AutoMore.later(), { passive: true });
+// lists too short to scroll, and pages that open already near their end
+setInterval(() => AutoMore.later(), 600);
 addEventListener('beforeunload', () => saveProgress(true));
 
 const rerender = debounce(() => {
@@ -11561,7 +11610,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.95.7';
+const APP_VERSION = '2.95.8';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -12693,6 +12742,10 @@ const Endless = {
 .rail-all .lucide{width:26px;height:26px}
 @media (hover:hover){.rail-all:hover{background:rgba(var(--kffffff-c,255,255,255),.07)}}
 .rail>.skeleton.rail-sk{flex:none;width:clamp(132px,14vw,192px)}
+.btn.am-on{pointer-events:none;position:relative;min-width:48px;color:transparent!important;background:none!important;border-color:transparent!important;box-shadow:none!important;outline:0!important}
+.btn.am-on>*{opacity:0}
+.btn.am-on::before{display:none!important}
+.btn.am-on::after,html.tv .btn.am-on::after{content:""!important;display:block!important;position:absolute!important;left:50%!important;top:50%!important;bottom:auto!important;width:22px!important;height:22px!important;margin:-11px 0 0 -11px;z-index:auto!important;border-radius:50%;background:none!important;border:2px solid rgba(var(--kffffff-c,255,255,255),.14);border-top-color:rgba(var(--kffffff-c,255,255,255),.7);transform:none;transition:none!important;animation:rot .8s linear infinite}
 /* TV: no dark text on a light fill. Light text on dark with a platinum edge reads on every TV picture mode */
 html.tv .btn-prime,html.tv .btn-bolt,html.tv a.btn.btn-prime,html.tv a.btn.btn-bolt,html.tv .exit-ask .xa-stay{color:var(--kffffff,#fff)!important;background:linear-gradient(180deg,var(--n2b2b30,#2b2b30),var(--n121215,#121215))!important;box-shadow:inset 0 0 0 2px var(--ne6e6e9,#e6e6e9)!important;border:0}
 html.tv .btn-bolt>svg.lucide{background:var(--nf2f2f3,#f2f2f3);color:var(--n000000,#000);fill:var(--n000000,#000);box-shadow:none}
@@ -24612,6 +24665,11 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.95.8', date: '2026-11-26', items: [
+    ['better', 'Lists keep going', 'Reach the bottom of any list, grid or guide and the next titles appear by themselves. No more Load more button, on phones, computers and TVs.'],
+    ['better', 'Softer subtitles', 'Subtitles now sit in a soft rounded box in a clean modern font, and italic lines stay upright and easy to read.'],
+    ['better', 'Pictures behind the clock', 'Pictures now scroll up behind the clock on phones.'],
+  ] },
   { v: '2.95.7', date: '2026-11-25', items: [
     ['better', 'Subtitle styles everywhere', 'Your subtitle Style, colour, background, outline and shadow now show when films play in MKCinema on Android phones, Windows and TVs, and changes apply straight away while you watch.'],
     ['better', 'Smoother starts and finishes', 'The title fades into the film, and closing a film fades back to its page without a jump.'],
@@ -27848,7 +27906,7 @@ body.pxup-on #player video::cue{color:transparent;background:transparent;text-sh
 #pxUpSub[data-pos="higher"]{padding-bottom:16%}
 #pxUpSub[data-pos="top"]{justify-content:flex-start;padding:4.5% 4% 0}
 #pxUpSub > div{transition:transform .25s ease}
-#pxUpSub span{display:inline;font-size:var(--sub-size);line-height:1.35;color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.05em .3em;-webkit-box-decoration-break:clone;box-decoration-break:clone;white-space:pre-line}
+#pxUpSub span{display:inline;font-size:var(--sub-size);line-height:1.35;color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.08em .5em;border-radius:.45em;-webkit-box-decoration-break:clone;box-decoration-break:clone;white-space:pre-line}
 #pxUpSub:not(.on){visibility:hidden}
 #player:has(#hud:not(.idle)) #pxUpSub:not([data-pos="top"]) > div{transform:translateY(-96px)}
 html.pip-mode #pxUp,html.pip-mode #pxUpSub{display:none!important}
@@ -32200,7 +32258,7 @@ const People = {
     $$('[data-cpx]', box).forEach((b) => { b.onclick = () => X8.close('personLayer'); });
     const rt = box.querySelector('[data-cpretry]'); if (rt) rt.onclick = () => { const c = this.cur; if (c) this.open(c.name, c.role); };
     const more = $('#cpMore'); if (more) more.onclick = () => { const b = $('#cpBio'); if (b) b.classList.toggle('clip'); more.textContent = b && b.classList.contains('clip') ? 'Read more' : 'Show less'; };
-    const all = $('#cpAll'); if (all) all.onclick = () => { this.limit = 100000; this.paint(); };
+    const all = $('#cpAll'); if (all) all.onclick = () => { this.limit = (this.limit || 60) + 60; this.paint(); };
     $$('[data-cpd]', box).forEach((b) => { b.onclick = () => { this.dept = b.dataset.cpd; this.kind = 'all'; this.limit = 60; this.paint(); }; });
     $$('[data-cpt]', box).forEach((b) => { b.onclick = () => { this.kind = b.dataset.cpt; this.limit = 60; this.paint(); }; });
     $$('[data-cpi]', box).forEach((b) => { b.onclick = () => this.pick(b); });
@@ -47584,6 +47642,7 @@ const MkNative = {
     if ('dur' in n && n.dur !== was.dur) this.fire('durationchange');
     if (('w' in n || 'h' in n) && st.w) this.fire('resize');
     if ('tracks' in n) this.tracks(st.tracks || []);
+    if ('tracks' in n || 'sid' in n) this.subDraw();
     const meta = st.dur > 0 && Array.isArray(st.tracks);
     if (!this.metaFired && (meta || n.loaded)) {
       this.metaFired = true; ['loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough'].forEach((e) => this.fire(e)); this.subStyle();
@@ -47607,7 +47666,20 @@ const MkNative = {
     if ('cached' in n) this.fire('progress');
     if (n.end === 'eof' || (n.ended && !was.ended && st.dur > 0 && (Number(st.t) || 0) >= st.dur - 2)) { if (this.lastEnd !== this.gen) { this.lastEnd = this.gen; this.st.paused = true; this.fire('ended'); } }
     if (n.end === 'error') this.fail(n.err || 'the file could not be opened');
-    if (this.embed && ('stext' in n || 't' in n)) this.stext('stext' in n ? n.stext : undefined);
+    if ((this.embed || this._pageSubs) && ('stext' in n || 't' in n)) this.stext('stext' in n ? n.stext : undefined);
+  },
+  /* 2.95.8 softer subtitles */
+  /* Phones and computers: text subtitles are drawn by the page (rounded box, the chosen font, like the web player) from the
+     words mpv reports; mpv only hides its own drawing. Picture (PGS, DVD) and styled ASS subtitles stay with mpv. Apps
+     before Android 1.17.15 / Windows 1.6.2 refuse "subdraw" and keep drawing everything themselves. */
+  subDraw() {
+    if (!this.active || this.embed || this._drawNo) return;
+    const t = ((this.st && this.st.tracks) || []).find((x) => x.type === 'sub' && x.selected);
+    const page = !!t && !/pgs|dvd|dvb|xsub|^ass$|^ssa$|arib|teletext/i.test(String(t.codec || ''));
+    if (page === this._pageWant) return;
+    this._pageWant = page;
+    this.cmd('subdraw', page ? 'page' : 'mpv').then(() => { this._pageSubs = page; if (!page) this.subClear(); else this.stext(this.st.stext || ''); })
+      .catch(() => { this._drawNo = true; this._pageSubs = false; this.subClear(); });
   },
   /* 2.91.5: TVs (Android 1.17.7+): the decoder draws straight onto the screen, so the subtitle words come as text */
   stext(t) {
@@ -47615,10 +47687,15 @@ const MkNative = {
     if (!el || !el.isConnected) { el = this._sub = document.createElement('div'); el.className = 'mk-nv-sub'; el.setAttribute('aria-live', 'off'); $('#player').appendChild(el); }
     if (t !== undefined) {
       const txt = typeof t === 'string' ? t.replace(/\{\\[^}]*\}/g, '').replace(/<[^>]+>/g, '').replace(/\\N/g, '\n').trim() : '';
-      if (txt !== this._subT) { this._subT = txt; el.textContent = ''; if (txt) { const sp = document.createElement('span'); sp.textContent = txt; el.appendChild(sp); } el.hidden = !txt; el.style.fontSize = `${Math.round(3.4 * (Number(CFG.subSize) || 100)) / 100}vh`; el.classList.toggle('top', CFG.subPos === 'top'); }
+      if (txt !== this._subT) { this._subT = txt; el.textContent = ''; if (txt) { const sp = document.createElement('span'); sp.textContent = txt; el.appendChild(sp); } el.hidden = !txt; this.subFit(el); }
     }
     const lift = !$('#hud').classList.contains('idle');
     if (lift !== this._subLift) { this._subLift = lift; el.classList.toggle('lift', lift); }
+  },
+  subFit(el) {
+    const k = (Number(CFG.subSize) || 100) / 100;
+    el.style.fontSize = this.embed ? `${Math.round(3.4 * k * 100) / 100}vh` : `max(14px, calc(max(5vh, 2.4vw) * ${k}))`;
+    el.classList.toggle('top', CFG.subPos === 'top'); el.classList.toggle('higher', CFG.subPos === 'higher');
   },
   /* the file's own tracks: audio for video.audioTracks, subtitles for the subtitle menu */
   tracks(list) {
@@ -47735,7 +47812,7 @@ const MkNative = {
     CFG_HOOKS.push((k) => {
       if (!this.active || !/^sub(Size|Pos|Color|Bg|BgColor|Outline|Bold|Shadow|Font|Look)$/.test(k)) return;
       clearTimeout(this._styT); this._styT = setTimeout(() => this.subStyle(), 40); // a Style pick sets 7 values at once
-      const el = this._sub; if (el) { el.style.fontSize = `${Math.round(3.4 * (Number(CFG.subSize) || 100)) / 100}vh`; el.classList.toggle('top', CFG.subPos === 'top'); }
+      const el = this._sub; if (el) this.subFit(el);
     });
     const sec = typeof SECTIONS !== 'undefined' && SECTIONS.find((x) => x.id === 'playback');
     if (sec) {
@@ -58756,15 +58833,15 @@ html.mk-subov #video::-webkit-media-text-track-container{opacity:0!important}
 #mkSubs[hidden],body.ass-on #mkSubs,body.learn-on #mkSubs,body.pxup-on #mkSubs,html.mk-native-on #mkSubs{display:none!important}
 #mkSubs .mks-c{max-width:100%;line-height:1.32;white-space:pre-line;overflow-wrap:break-word}
 #mkSubs .mks-c+.mks-c{margin-top:.18em}
-#mkSubs .mks-c>span{color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.04em .32em;border-radius:.12em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
-#mkSubs i{font-style:italic}#mkSubs b{font-weight:700}
+#mkSubs .mks-c>span{color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.08em .5em;border-radius:.45em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+#mkSubs i{font-style:normal}#mkSubs b{font-weight:700}
 /* Easy subtitle choices (Settings and the player's Audio & subtitles panel) */
 .sbe{display:flex;flex-direction:column;gap:12px;padding:4px 0 6px}
 .sbe-pv{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:21/9;max-height:260px;width:100%;background:linear-gradient(135deg,#1d2b3a,#3a2236 55%,#1b1b24);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
 .sbe-pv{box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}.sbe-pv:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(#000 0 18%,transparent 18% 82%,#000 82%)}.sbe-pv .sbe-line{z-index:1}
 .sbe-pv:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 30% 35%,rgba(255,210,150,.28),transparent 55%),radial-gradient(ellipse at 75% 60%,rgba(120,170,255,.22),transparent 60%)}
 .sbe-pv .sbe-line{position:absolute;left:6%;right:6%;display:flex;justify-content:center;text-align:center;line-height:1.32;transition:bottom .25s ease,top .25s ease}
-.sbe-pv .sbe-line span{color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.04em .32em;border-radius:.12em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.sbe-pv .sbe-line span{color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.08em .5em;border-radius:.45em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .sbe-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .sbe-row>b{min-width:78px;font-weight:600;font-size:calc(14px * var(--ts,1))}
 .sbe-chips{display:flex;gap:6px;flex-wrap:wrap;flex:1;min-width:0}
@@ -58806,7 +58883,7 @@ html.tv .sbe-chips button.nav-focus,html.tv .sbe-more.nav-focus{outline:3px soli
   safe(() => {
     if (typeof SUB_LOOKS !== 'object') return;
     // Dark box = the factory look (white on a 65% black box), so nobody's subtitles change unless they pick.
-    SUB_LOOKS.box = SUB_LOOKS.box || { subFont: 'sans', subColor: '#ffffff', subBg: 65, subBgColor: '#000000', subOutline: true, subBold: false, subShadow: 'soft' };
+    SUB_LOOKS.box = SUB_LOOKS.box || { subFont: 'stream', subColor: '#ffffff', subBg: 65, subBgColor: '#000000', subOutline: true, subBold: false, subShadow: 'soft' };
     SUB_LOOKS.yellow = SUB_LOOKS.yellow || { subFont: 'stream', subColor: '#ffd84a', subBg: 0, subBgColor: '#000000', subOutline: true, subBold: true, subShadow: 'strong' };
   });
 

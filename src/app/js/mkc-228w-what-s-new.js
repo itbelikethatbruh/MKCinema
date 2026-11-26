@@ -8,6 +8,11 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.95.8', date: '2026-11-26', items: [
+    ['better', 'Lists keep going', 'Reach the bottom of any list, grid or guide and the next titles appear by themselves. No more Load more button, on phones, computers and TVs.'],
+    ['better', 'Softer subtitles', 'Subtitles now sit in a soft rounded box in a clean modern font, and italic lines stay upright and easy to read.'],
+    ['better', 'Pictures behind the clock', 'Pictures now scroll up behind the clock on phones.'],
+  ] },
   { v: '2.95.7', date: '2026-11-25', items: [
     ['better', 'Subtitle styles everywhere', 'Your subtitle Style, colour, background, outline and shadow now show when films play in MKCinema on Android phones, Windows and TVs, and changes apply straight away while you watch.'],
     ['better', 'Smoother starts and finishes', 'The title fades into the film, and closing a film fades back to its page without a jump.'],

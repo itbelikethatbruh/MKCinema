@@ -19,7 +19,7 @@
   safe(() => {
     if (typeof SUB_LOOKS !== 'object') return;
     // Dark box = the factory look (white on a 65% black box), so nobody's subtitles change unless they pick.
-    SUB_LOOKS.box = SUB_LOOKS.box || { subFont: 'sans', subColor: '#ffffff', subBg: 65, subBgColor: '#000000', subOutline: true, subBold: false, subShadow: 'soft' };
+    SUB_LOOKS.box = SUB_LOOKS.box || { subFont: 'stream', subColor: '#ffffff', subBg: 65, subBgColor: '#000000', subOutline: true, subBold: false, subShadow: 'soft' };
     SUB_LOOKS.yellow = SUB_LOOKS.yellow || { subFont: 'stream', subColor: '#ffd84a', subBg: 0, subBgColor: '#000000', subOutline: true, subBold: true, subShadow: 'strong' };
   });
 
