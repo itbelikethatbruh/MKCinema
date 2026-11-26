@@ -70,7 +70,7 @@ try{if(typeof EpSheet==='object'&&EpSheet.close){const ec=EpSheet.close;EpSheet.
 const pnl=document.getElementById('detailPanel'),G='#detailPanel .d-hero .d-body>*,#detailPanel>.d-body';let rest=new Map();
 const keyOf=(e,i)=>i+'|'+String(e.className||'').split(' ')[0];
 const measure=()=>{const m=new Map();det.querySelectorAll(G).forEach((e,i)=>{if(e.offsetParent)m.set(keyOf(e,i),e.offsetTop+(e.offsetParent===pnl?0:e.offsetParent.offsetTop))});return m};
-const settle=()=>{if(det.hidden||det.classList.contains('dp-hold')){rest=new Map();return}
+const settle=()=>{if(det.hidden||det.classList.contains('dp-hold')||det.classList.contains('dp-under')){rest=new Map();return}
   const m=measure();if(rest.size){let i=0;for(const e of det.querySelectorAll(G)){const k=keyOf(e,i++),y=rest.get(k),z=m.get(k);if(y==null||z==null||!e.animate)continue;const d=y-z;
     if(Math.abs(d)<2||Math.abs(d)>220)continue;try{e.animate([{transform:'translate3d(0,'+d+'px,0)'},{transform:'translate3d(0,0,0)'}],{duration:380,easing:'cubic-bezier(.2,.75,.2,1)',composite:'add'})}catch(x){}}}
   rest=m};
@@ -82,7 +82,7 @@ if(pnl)new MutationObserver(ms=>{lastMut=now();try{logoKeep(ms)}catch(e){}try{se
 /* on TVs the remote focus is put back after a redraw and the page could hop a few pixels: that hop glides too */
 ['keydown','wheel','touchstart','pointerdown'].forEach(t=>addEventListener(t,()=>{lastIn=now()},{capture:true,passive:true}));
 det.addEventListener('scroll',()=>{const y=det.scrollTop,d=y-lastTop;lastTop=y;
-  if(!pnl||!pnl.animate||det.hidden||Math.abs(d)<2||Math.abs(d)>90||now()-lastMut>600||now()-lastIn<350)return;
+  if(!pnl||!pnl.animate||det.hidden||det.classList.contains('dp-under')||Math.abs(d)<2||Math.abs(d)>90||now()-lastMut>600||now()-lastIn<350)return;
   try{pnl.animate([{transform:'translate3d(0,'+d+'px,0)'},{transform:'translate3d(0,0,0)'}],{duration:380,easing:'cubic-bezier(.2,.75,.2,1)',composite:'add'})}catch(e){}},{passive:true});
 /* leaving the page while it is still waiting: nothing is left half hidden */
 if(typeof closeLayer==='function'){const cl=closeLayer;closeLayer=function(id){const r=cl.apply(this,arguments);if(id==='detail'&&st)reveal();return r}}
