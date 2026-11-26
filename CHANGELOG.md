@@ -2,6 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Windows 1.6.1 (2026-11-26)
+
+- Subtitle Style, colour, background, outline and shadow reach the MKCinema player.
+- Show what you're watching as your Discord status (optional).
+- HDR choice in the Windows player.
+- Faster, steadier built-in streaming engine.
+
 ## Web app 2.95.7 (2026-11-26)
 
 - Subtitle styles everywhere: your subtitle Style, colour, background, outline and shadow now show when films play in MKCinema on Android phones and TVs, and changes apply straight away while you watch.
