@@ -25,13 +25,30 @@ trap 'kill $srv 2>/dev/null || true' EXIT
 adb install -r -g "$APK" > /dev/null
 adb logcat -c
 adb shell setprop log.tag.MKCPlayer DEBUG
-adb shell am start -W -a android.intent.action.VIEW -d http://10.0.2.2:8000/test.mkv -t video/x-matroska -n com.mkcinema.app/.OpenActivity
+openfilm() { adb shell am start -W -a android.intent.action.VIEW -d http://10.0.2.2:8000/test.mkv -t video/x-matroska -n com.mkcinema.app/.OpenActivity; }
 log() { adb logcat -d -s MKCPlayer:* MKCinema:* mpv:* AndroidRuntime:E > "$OUT/logcat.txt" || true; }
 wait_for() { for _ in $(seq 1 60); do log; grep -q "$1" "$OUT/logcat.txt" && return 0; sleep 2; done; echo "timed out waiting for: $1"; cat "$OUT/logcat.txt"; return 1; }
 shot() { adb exec-out screencap -p > "$OUT/$1.png"; }
+# 1.17.17: true while the player screen is the one in front
+player_up() { adb shell dumpsys activity activities 2>/dev/null | grep -E "mResumedActivity|topResumedActivity" | grep -q PlayerActivity; }
+closed_within() { # $1 what, $2 tenths of a second
+  for _ in $(seq 1 "$2"); do player_up || { echo "$1: the player closed"; return 0; }; sleep 0.1; done
+  echo "$1: the player was still open after $(( $2 / 10 )) s"; log; tail -40 "$OUT/logcat.txt"; return 1
+}
 
+# 1.17.17: Back while the film is still opening closes the player at once, and the same film opens again right after
+openfilm
+wait_for "engine mpv"
+adb shell input keyevent KEYCODE_BACK
+closed_within "Back while opening" 20
+wait_for "back while opening\|back$"
+adb logcat -c
+openfilm
 wait_for "engine mpv"
 wait_for "mpv ready"
+# the film opens paused and plays once the screen is ready (the emulator has one refresh rate, so at once)
+wait_for "start: "
+grep -h "start: \|first picture\|mpv closed in\|waited .* ms for the last film" "$OUT/logcat.txt" || true
 sleep 5; shot playing
 key() { adb shell input keyevent "$1"; sleep 1.5; }
 # Audio: the remote's Menu key opens the audio list; Down, OK picks the second language
@@ -57,6 +74,15 @@ print("positions at the switches:", a)
 assert len(a) >= 2 and a[0] > 1 and a[1] > a[0], "playback did not keep going through the switches"
 PY
 echo "MKCinema Player: mpv played, audio and subtitles switched live"
+
+# 1.17.17: Back while the options row under the bar is open leaves the film (it used to only close the row)
+key KEYCODE_DPAD_DOWN; shot options-row
+adb shell input keyevent KEYCODE_BACK
+closed_within "Back from the options row" 15
+wait_for "back from the options row"
+wait_for "mpv closed in"
+grep -h "mpv closed in" "$OUT/logcat.txt" | tail -1
+echo "MKCinema Player: Back leaves at once while opening and from the options row"
 
 # 1.15.0: MKCinema Player under the web player (phones and tablets). A debuggable test build started with underTest
 # plays the film under a blank page using the page's own commands (UnderPlayer.selfTest) and logs what mpv reports.
