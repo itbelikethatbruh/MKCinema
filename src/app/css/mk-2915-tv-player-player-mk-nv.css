@@ -1,0 +1,5 @@
+
+#player .mk-nv-sub{position:absolute;left:6%;right:6%;bottom:7vh;z-index:3;text-align:center;white-space:pre-line;color:var(--sub-color,#fff);font-family:var(--sub-font,inherit);font-weight:var(--sub-weight,600);line-height:1.32;text-shadow:var(--sub-shadow,0 0 4px #000,0 2px 6px #000,0 0 2px #000);pointer-events:none;transition:transform .25s ease}
+#player .mk-nv-sub>span{background:var(--sub-bg,transparent);padding:.04em .32em;border-radius:.12em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+#player .mk-nv-sub.top{bottom:auto;top:7vh}
+#player .mk-nv-sub.lift:not(.top){transform:translateY(-17vh)}

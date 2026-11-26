@@ -7,5 +7,5 @@ html.mk-rx #player:has(#pLoad:not([hidden])) .skip-btn{opacity:0!important;point
 html.mk-rx #player:has(#pLoad:not([hidden])) .hud{opacity:1!important}
 html.mk-rx #player:has(#pLoad:not([hidden])) .hud::before{opacity:.6}
 html.mk-rx #player .hud-mid,html.mk-rx #player .hud-bot,html.mk-rx #player #rxTools{transition:opacity .35s ease}
-html.mk-rx #player #pLoad{animation:mkRxIn .3s ease both}
+html.mk-rx #player #pLoad{animation:mkRxIn .3s ease both}/* 2.95.7 smooth in and out */html.mk-rx #player #pLoad.out{animation:plOut .3s ease-in forwards}#mkPicFade{position:fixed;z-index:70;pointer-events:none;margin:0;opacity:1;transition:opacity .36s ease}#mkPicFade.out{opacity:0}
 @keyframes mkRxIn{from{opacity:0}to{opacity:1}}

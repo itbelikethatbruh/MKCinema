@@ -2,6 +2,17 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.95.7 (2026-11-26)
+
+- Subtitle styles everywhere: your subtitle Style, colour, background, outline and shadow now show when films play in MKCinema on Android phones and TVs, and changes apply straight away while you watch.
+- Smoother starts and finishes: the title fades into the film, and closing a film fades back to its page without a jump.
+- Website: live numbers shown in short form (20.5k), downloads point to Android 1.17.14.
+
+## Android 1.17.13 and 1.17.14 (2026-11-26)
+
+- Phones use the whole screen, right up to the camera and under the system bars.
+- Subtitle Style, colour, background, outline and shadow reach the MKCinema player.
+
 ## Web app 2.95.6 (2026-11-25)
 
 - Next episode and Continue watching keep the same copy you were watching.

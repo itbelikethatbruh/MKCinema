@@ -600,6 +600,10 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 @media(max-width:380px){.ss-scores{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.ss-card{transition:none}}
 /*ss-gold*/.ss-card{position:relative;isolation:isolate;border-color:transparent}.ss-card::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:2px;pointer-events:none;background:linear-gradient(135deg,#f6e3b4,#c9a35c 28%,#7a5a26 50%,#d8b46a 72%,#fff1c9);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}.ss-card::after{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;pointer-events:none;box-shadow:0 0 0 1px rgba(240,208,140,.5),0 0 30px 3px rgba(222,180,96,.55),0 0 90px 10px rgba(216,174,92,.22);opacity:.75;animation:ssGlow 4.5s ease-in-out infinite}.ss-card:hover::after,.ss-card:focus-visible::after{opacity:1;animation:none}@keyframes ssGlow{50%{opacity:1}}@media(prefers-reduced-motion:reduce){.ss-card::after{animation:none;opacity:.85}}
+/* nav-one-line */
+@media (min-width:861px){.nav-in{gap:22px}.links{flex-shrink:0;gap:22px}.links a{white-space:nowrap}}
+@media (min-width:861px) and (max-width:1199px){.links a[href="#different"],.links a[href="#iphone"]{display:none}}
+@media (min-width:861px) and (max-width:1023px){.links a[href="#social"],.links a[href="#everything"]{display:none}}
 /* mkc-live-css */
 .lv{position:relative;margin:30px auto 0;max-width:760px;padding:22px clamp(14px,3vw,30px) 20px;border-radius:22px;border:1px solid rgba(216,194,154,.22);background:radial-gradient(120% 140% at 50% -20%,rgba(216,194,154,.13),rgba(216,194,154,.02) 55%,transparent 75%),rgba(255,255,255,.015);overflow:hidden;isolation:isolate}
 .lv::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(100deg,transparent 0,rgba(255,240,205,.10) 45%,rgba(255,248,230,.18) 50%,rgba(255,240,205,.10) 55%,transparent 100%);width:40%;transform:translateX(-140%) skewX(-12deg);opacity:0}
@@ -627,10 +631,6 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 @keyframes lvbump{0%{transform:none}40%{transform:scale(1.08)}100%{transform:none}}
 @keyframes lvyou{0%{opacity:0;transform:translate(-50%,8px) scale(.9)}15%{opacity:1;transform:translate(-50%,-10px) scale(1)}75%{opacity:1;transform:translate(-50%,-14px)}100%{opacity:0;transform:translate(-50%,-26px)}}
 /* /mkc-live-css */
-/* nav-one-line */
-@media (min-width:861px){.nav-in{gap:22px}.links{flex-shrink:0;gap:22px}.links a{white-space:nowrap}}
-@media (min-width:861px) and (max-width:1199px){.links a[href="#different"],.links a[href="#iphone"]{display:none}}
-@media (min-width:861px) and (max-width:1023px){.links a[href="#social"],.links a[href="#everything"]{display:none}}
 </style>
 <script data-goatcounter="https://itbelikethatbruh.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </head>
@@ -726,9 +726,9 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
     <div class="lv fade d3" id="live" role="group" aria-label="MKCinema in numbers">
       <div class="lv-pill"><span class="lv-dot" aria-hidden="true"></span><span>Live now</span><span class="lv-sep" aria-hidden="true">·</span><span class="lv-sub">Growing every minute</span></div>
       <div class="lv-row">
-        <div class="lv-s"><span class="lv-you" hidden><span translate="no">+1 · </span><span>that’s you</span></span><b class="lv-n" translate="no" data-lv="visits">16,450</b><span class="lv-l">visits</span></div>
-        <div class="lv-s"><b class="lv-n" translate="no" data-lv="downloads">9,510</b><span class="lv-l">downloads</span></div>
-        <div class="lv-s"><b class="lv-n" translate="no" data-lv="countries">109</b><span class="lv-l">countries</span></div>
+        <div class="lv-s"><span class="lv-you" hidden><span translate="no">+1 · </span><span>that’s you</span></span><b class="lv-n" translate="no" data-lv="visits">20.3k</b><span class="lv-l">visits</span></div>
+        <div class="lv-s"><b class="lv-n" translate="no" data-lv="downloads">11.3k</b><span class="lv-l">downloads</span></div>
+        <div class="lv-s"><b class="lv-n" translate="no" data-lv="countries">116</b><span class="lv-l">countries</span></div>
       </div>
     </div>
 <!-- /mkc-live -->
@@ -1002,7 +1002,7 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
         <div class="top"><svg><use href="#b-android"/></svg><h3>Android</h3></div>
         <p>Phones and tablets, with a full-screen player and one-tap hand-off to VLC.</p>
         <div class="acts"><a class="btn btn-plat" href="download/MKCinema.apk" download="MKCinema.apk"><svg><use href="#i-down"/></svg>Download APK</a><a class="btn btn-ghost" href="obtainium://add/https://github.com/itbelikethatbruh/MKCinema" rel="nofollow">Get updates with Obtainium</a></div>
-        <span class="meta">Version 1.17.12 · 52 MB · Android 7 or later</span>
+        <span class="meta">Version 1.17.14 · 52 MB · Android 7 or later</span>
       </div>
       <div class="dev rv" data-os="android-remote" id="remote-app">
         <div class="top"><svg><use href="#b-android"/></svg><h3>MK Remote</h3></div>
@@ -1051,7 +1051,7 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
         <div class="top"><svg><use href="#b-amazonfiretv"/></svg><h3>Smart TV</h3></div>
         <p>Android TV and Fire TV, plus LG webOS and Samsung in beta. On Fire TV, open Downloader and enter the code <b>6400996</b> (or type <b>tv.mkcinema.app</b>).</p>
         <div class="acts"><a class="btn btn-plat" href="download/MKCinema-TV.apk" download="MKCinema-TV.apk"><svg><use href="#i-down"/></svg>Android TV &amp; Fire TV</a><a class="btn btn-ghost" href="download/com.mkcinema.app_1.1.0_all.ipk" download>LG .ipk</a></div>
-        <span class="meta">Version 1.17.12 · 52 MB · Android TV 7 or later</span>
+        <span class="meta">Version 1.17.14 · 52 MB · Android TV 7 or later</span>
       </div>
       <div class="dev rv" data-os="web">
         <div class="top"><svg class="st"><use href="#i-globe"/></svg><h3>Any browser</h3></div>
@@ -1545,12 +1545,14 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
    no per-person data). Between refreshes the counters climb at the real pace of the last 24 hours, and your own visit adds one. */
 (() => {
   const box = document.getElementById('live'); if (!box) return;
-  const SNAP = {"visits":16450,"visits_per_hour":73.4,"site_downloads":4637,"site_downloads_per_hour":17.9,"gh_downloads":4873,"countries":109,"snapshot_at":"2026-11-23T08:20:00Z"};
+  const SNAP = {"visits":20370,"visits_per_hour":60.9,"site_downloads":5160,"site_downloads_per_hour":4.0,"gh_downloads":6156,"countries":116,"snapshot_at":"2026-11-26T00:27:15Z"};
   const API = 'https://wogffhgdixgrayowewnf.supabase.co/rest/v1/rpc/mkc_public_stats', KEY = 'sb_publishable_ZpiFwB_oM579GwCunYpHWg_jelRazT-';
   const GH = 'https://api.github.com/repos/itbelikethatbruh/MKCinema/releases?per_page=100';
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const els = {}; box.querySelectorAll('[data-lv]').forEach((e) => { els[e.dataset.lv] = e; });
-  let fmt; try { fmt = new Intl.NumberFormat(document.documentElement.getAttribute('data-lang') || 'en'); } catch (e) { fmt = new Intl.NumberFormat('en'); }
+  let fmt; try { fmt = new Intl.NumberFormat(document.documentElement.getAttribute('data-lang') || 'en', { maximumFractionDigits: 1 }); } catch (e) { fmt = new Intl.NumberFormat('en', { maximumFractionDigits: 1 }); }
+  // Short form: 950, 10.8k, 1.2M (rounded down, never overstated).
+  const short = (n) => (n < 1000 ? fmt.format(n) : n < 1e6 ? fmt.format(Math.floor(n / 100) / 10) + 'k' : fmt.format(Math.floor(n / 1e5) / 10) + 'M');
   const ss = (k, v) => { try { if (v === undefined) return sessionStorage.getItem(k); sessionStorage.setItem(k, v); } catch (e) { return null; } };
   const s = Object.assign({}, SNAP);
   const mine = ss('mkc-lv-me') ? 0 : 1; ss('mkc-lv-me', '1');
@@ -1564,7 +1566,7 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
     };
   };
   const shown = {};
-  const put = (k, v) => { shown[k] = v; els[k].textContent = fmt.format(v); };
+  const put = (k, v) => { shown[k] = v; const t = short(v); if (els[k].textContent === t) return false; els[k].textContent = t; return true; };
   const bump = (k) => { if (reduce) return; const e = els[k]; e.classList.remove('lv-bump'); void e.offsetWidth; e.classList.add('lv-bump'); };
   let started = false;
   if (!reduce) for (const k in els) put(k, 0);
@@ -1593,7 +1595,7 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
     const t = target();
     for (const k in els) {
       if (shown[k] == null) continue;
-      if (t[k] > shown[k]) { put(k, shown[k] + Math.max(1, Math.ceil((t[k] - shown[k]) / 6))); bump(k); }
+      if (t[k] > shown[k] && put(k, shown[k] + Math.max(1, Math.ceil((t[k] - shown[k]) / 6)))) bump(k);
     }
   }, 2500);
   // Fresh numbers: the public summary, then GitHub release downloads straight from GitHub.

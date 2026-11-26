@@ -77,7 +77,7 @@ const MkNative = {
     if ('tracks' in n) this.tracks(st.tracks || []);
     const meta = st.dur > 0 && Array.isArray(st.tracks);
     if (!this.metaFired && (meta || n.loaded)) {
-      this.metaFired = true; ['loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough'].forEach((e) => this.fire(e));
+      this.metaFired = true; ['loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough'].forEach((e) => this.fire(e)); this.subStyle();
       setTimeout(() => { if (this.active) addEmbeddedSubs(); }, 50);
       // 2.91.7: ask libmpv whether it is playing (it never reports a pause that didn't change)
       if (!this.pSeen) { const g = this.gen, c = this.cur; this.cmd('get', 'pause').then((v) => { if (this.active && this.cur === c && this.gen === g && !this.pSeen && /^(no|false|0)$/i.test(String(v).trim())) this.ev({ gen: g, paused: false }); }).catch(() => {}); }
@@ -106,7 +106,7 @@ const MkNative = {
     if (!el || !el.isConnected) { el = this._sub = document.createElement('div'); el.className = 'mk-nv-sub'; el.setAttribute('aria-live', 'off'); $('#player').appendChild(el); }
     if (t !== undefined) {
       const txt = typeof t === 'string' ? t.replace(/\{\\[^}]*\}/g, '').replace(/<[^>]+>/g, '').replace(/\\N/g, '\n').trim() : '';
-      if (txt !== this._subT) { this._subT = txt; el.textContent = txt; el.hidden = !txt; el.style.fontSize = `${Math.round(3.4 * (Number(CFG.subSize) || 100)) / 100}vh`; el.classList.toggle('top', CFG.subPos === 'top'); }
+      if (txt !== this._subT) { this._subT = txt; el.textContent = ''; if (txt) { const sp = document.createElement('span'); sp.textContent = txt; el.appendChild(sp); } el.hidden = !txt; el.style.fontSize = `${Math.round(3.4 * (Number(CFG.subSize) || 100)) / 100}vh`; el.classList.toggle('top', CFG.subPos === 'top'); }
     }
     const lift = !$('#hud').classList.contains('idle');
     if (lift !== this._subLift) { this._subLift = lift; el.classList.toggle('lift', lift); }
@@ -149,6 +149,15 @@ const MkNative = {
     this.cmd('subdelay', P.subDelay || 0).catch(() => {});
     this.cmd('subscale', (Number(CFG.subSize) || 100) / 100).catch(() => {});
     this.cmd('subpos', { top: 8, higher: 88 }[CFG.subPos] || 96).catch(() => {});
+    /* 2.95.7 subtitle look */
+    /* The look from Settings › Subtitles: colour, background box, outline, bold, shadow and font. Apps older than
+       Android 1.17.14 / Windows 1.6.1 answer "unknown command" and keep their built-in look. */
+    const hex = (v, d) => (/^#[0-9a-f]{6}$/i.test(String(v || '')) ? String(v) : d);
+    const j = JSON.stringify({ color: hex(CFG.subColor, '#ffffff'), bg: hex(CFG.subBgColor, '#000000'), bga: Math.max(0, Math.min(100, Number(CFG.subBg) || 0)),
+      outline: CFG.subOutline !== false, bold: !!CFG.subBold, shadow: String(CFG.subShadow || 'soft'), font: String(CFG.subFont || 'sans') });
+    if (j === this._styJ && Date.now() - (this._styAt || 0) < 1500) return; // several settings hooks call this for one pick
+    this._styJ = j; this._styAt = Date.now();
+    this.cmd('substyle', j).catch(() => {});
   },
   vol() {
     if (!this.active) return;
@@ -214,6 +223,11 @@ const MkNative = {
     const b = this.bridge(); if (!b) return;
     b._ev = (n) => this.ev(n);
     this.probe();
+    CFG_HOOKS.push((k) => {
+      if (!this.active || !/^sub(Size|Pos|Color|Bg|BgColor|Outline|Bold|Shadow|Font|Look)$/.test(k)) return;
+      clearTimeout(this._styT); this._styT = setTimeout(() => this.subStyle(), 40); // a Style pick sets 7 values at once
+      const el = this._sub; if (el) { el.style.fontSize = `${Math.round(3.4 * (Number(CFG.subSize) || 100)) / 100}vh`; el.classList.toggle('top', CFG.subPos === 'top'); }
+    });
     const sec = typeof SECTIONS !== 'undefined' && SECTIONS.find((x) => x.id === 'playback');
     if (sec) {
       const rows = sec.rows;

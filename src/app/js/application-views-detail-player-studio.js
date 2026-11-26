@@ -1260,8 +1260,38 @@ const LiveMini = {
     this.cur = null;
   },
 };
+/* 2.95.7: closing a film fades its last picture into the page underneath instead of cutting to black (teardown empties the
+   video at once). The frame is copied into a canvas over the closing player and fades with it. Not in Snappy mode or with
+   reduced motion, not on TVs, not when a phone turns upright
+   on close (that close has its own black cover), not when no picture shows. */
+const PicFade = {
+  grab() {
+    try {
+      const de = document.documentElement, pl = $('#player'), v = video, old = document.getElementById('mkPicFade');
+      if (old) old.remove();
+      if (!pl || pl.hidden || !v || de.classList.contains('lite') || de.classList.contains('pip-mode') || IS_TV || CFG.reduceMotion) return;
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches || (typeof MiniPlay !== 'undefined' && MiniPlay.on)) return;
+      if (document.getElementById('mkTurnCover')) return; // 2.93.5's black turn cover is closing this film
+      if (v.readyState < 2 || !v.videoWidth || !v.videoHeight || ($('#ytwrap') && $('#ytwrap').firstChild)) return;
+      if (typeof Loader === 'object' && Loader.on) return;
+      const cs = getComputedStyle(v), r = v.getBoundingClientRect();
+      if (cs.visibility === 'hidden' || cs.display === 'none' || +cs.opacity < .5 || r.width < 40 || r.height < 40) return;
+      const k = Math.min(1, 1920 / v.videoWidth), c = document.createElement('canvas');
+      c.width = Math.round(v.videoWidth * k); c.height = Math.round(v.videoHeight * k);
+      c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+      c.id = 'mkPicFade'; c.setAttribute('aria-hidden', 'true');
+      const W = innerWidth || 1, H = innerHeight || 1, pc = (a, b) => (a / b * 100).toFixed(3) + '%';
+      Object.assign(c.style, { left: pc(r.left, W), top: pc(r.top, H), width: pc(r.width, W), height: pc(r.height, H),
+        objectFit: /cover|fill/.test(cs.objectFit) ? cs.objectFit : 'contain', objectPosition: cs.objectPosition });
+      document.body.appendChild(c);
+      requestAnimationFrame(() => requestAnimationFrame(() => c.classList.add('out')));
+      setTimeout(() => c.remove(), 520);
+    } catch (e) { const c = document.getElementById('mkPicFade'); if (c) c.remove(); }
+  },
+};
 async function closePlayer() {
   if (typeof MiniPlay !== 'undefined' && MiniPlay.on) MiniPlay.restore(true);
+  PicFade.grab();
   if (typeof PartyGuest !== 'undefined') PartyGuest.closed();
   playReq++; // a next episode or Smart Play still loading must not reopen the player
   const liveKeep = LiveMini.grab(), endedCtx = P.ctx;
