@@ -296,3 +296,10 @@ none/soft/strong/drop) whenever Settings › Subtitles changes and when a film s
 fixed mpv properties only (`sub-color`, `sub-bold`, `sub-border-style` outline-and-shadow or background-box,
 `sub-back-color`, `sub-outline-*`, `sub-shadow-*`). Fonts stay mpv's built-in subtitle font. Same steps as the Windows
 app's `mpv.SubStyle`. Older apps answer "unknown command" and keep their built-in look. Needs web 2.95.7.
+
+## 1.17.15: the page draws text subtitles
+
+`subdraw` (`page` or `mpv`) sets mpv's `sub-visibility`. With `page`, mpv still reports the words as `stext` and the page
+draws them like the web player (rounded box, the chosen font, upright italics). The page asks for `page` only for text
+tracks; picture (PGS, DVD) and ASS subtitles stay with mpv. Older apps refuse the command and keep drawing everything.
+Needs web 2.95.8.

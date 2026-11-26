@@ -126,3 +126,20 @@ func must(ops []Op, err error) []Op {
 }
 
 func ops2last(ops []Op) bool { return ops[len(ops)-1].Prop != "sub-back-color" }
+
+func TestSubDraw(t *testing.T) {
+	if o := must(Translate("subdraw", "page")); o[0].Prop != "sub-visibility" || o[0].Val != "no" {
+		t.Errorf("page %v", o)
+	}
+	if o := must(Translate("subdraw", "mpv")); o[0].Val != "yes" {
+		t.Errorf("mpv %v", o)
+	}
+	if _, err := Translate("subdraw", "x"); err == nil {
+		t.Error("accepted x")
+	}
+	s := NewState()
+	s.Set("sub-text", "123", true)
+	if s.vals["stext"] != "123" {
+		t.Errorf("stext %#v", s.vals["stext"])
+	}
+}

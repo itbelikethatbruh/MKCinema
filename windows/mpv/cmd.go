@@ -310,6 +310,14 @@ func Translate(c, arg string) ([]Op, error) {
 		}
 	case "substyle": // 1.6.1: Settings › Subtitles look for subtitles mpv draws
 		return SubStyle(arg)
+	case "subdraw": // 1.6.2: "page" = the page draws text subtitles from stext (rounded box, its fonts); mpv keeps picture and ASS ones
+		switch arg {
+		case "page":
+			return []Op{set("sub-visibility", "no")}, nil
+		case "mpv":
+			return []Op{set("sub-visibility", "yes")}, nil
+		}
+		return nil, ErrBad
 	case "aspect":
 		if !aspectRe.MatchString(arg) {
 			return nil, ErrBad

@@ -237,6 +237,8 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
             case "subscale": ops.add(set("sub-scale", num(arg, 0.3, 4))); return ops;
             case "subpos": ops.add(set("sub-pos", num(arg, 0, 150))); return ops;
             case "substyle": return subStyle(new JSONObject(arg));
+            // 1.17.15: the page draws text subtitles itself (rounded box, its fonts) from "stext"; mpv keeps picture and ASS subtitles
+            case "subdraw": if (!"page".equals(arg) && !"mpv".equals(arg)) throw new IllegalArgumentException("not allowed"); ops.add(set("sub-visibility", "page".equals(arg) ? "no" : "yes")); return ops;
             case "aspect": if (!ASPECT.matcher(arg).matches()) throw new IllegalArgumentException("not allowed"); ops.add(set("video-aspect-override", arg)); return ops;
             case "fill": ops.add(set("panscan", "1".equals(arg) ? "1.0" : "0.0")); return ops;
             case "zoom": { double z = Double.parseDouble(num(arg, 0.25, 4)); ops.add(set("video-zoom", String.format(Locale.US, "%.4f", Math.log(z) / Math.log(2)))); return ops; }
