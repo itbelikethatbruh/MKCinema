@@ -245,12 +245,13 @@ func SubStyle(raw string) ([]Op, error) {
 	if r.Bold {
 		bold = "yes"
 	}
-	if !box {
-		bga = 0
+	// Some mpv versions treat sub-shadow-color as another name for sub-back-color, so only one is set, the box colour last.
+	last := set("sub-shadow-color", shc)
+	if box {
+		last = set("sub-back-color", fmt.Sprintf("#%02X%s", bga, bg))
 	}
 	ops := []Op{set("sub-color", "#FF"+col), set("sub-bold", bold), set("sub-border-style", style),
-		set("sub-back-color", fmt.Sprintf("#%02X%s", bga, bg)), set("sub-outline-color", "#FF000000"), set("sub-outline-size", size),
-		set("sub-shadow-color", shc), set("sub-shadow-offset", num(off))}
+		set("sub-outline-color", "#FF000000"), set("sub-outline-size", size), set("sub-shadow-offset", num(off)), last}
 	if f, ok := subFonts[r.Font]; ok {
 		ops = append(ops, set("sub-font", f))
 	}

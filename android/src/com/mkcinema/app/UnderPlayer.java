@@ -187,11 +187,12 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
         ops.add(set("sub-color", "#FF" + col));
         ops.add(set("sub-bold", o.optBoolean("bold", false) ? "yes" : "no"));
         ops.add(set("sub-border-style", box ? "background-box" : "outline-and-shadow"));
-        ops.add(set("sub-back-color", String.format(Locale.US, "#%02X%s", box ? bga : 0, bg)));
         ops.add(set("sub-outline-color", "#FF000000"));
         ops.add(set("sub-outline-size", outline ? "2.6" : box ? "0.8" : "0"));
-        ops.add(set("sub-shadow-color", "drop".equals(sh) ? "#FF000000" : "#C0000000"));
         ops.add(set("sub-shadow-offset", String.format(Locale.US, "%.1f", off)));
+        // some mpv versions treat sub-shadow-color as another name for sub-back-color, so the box colour goes last and
+        // only one of the two is set
+        ops.add(box ? set("sub-back-color", String.format(Locale.US, "#%02X%s", bga, bg)) : set("sub-shadow-color", "drop".equals(sh) ? "#FF000000" : "#C0000000"));
         return ops;
     }
 
