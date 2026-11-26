@@ -416,7 +416,7 @@ public class MainActivity extends Activity {
         if (curtain == null) { curtain = new View(this); curtain.setBackgroundColor(Color.BLACK); curtain.setClickable(true); }
         curtain.animate().cancel(); curtain.setAlpha(1f);
         if (curtain.getParent() == null) root.addView(curtain, new FrameLayout.LayoutParams(-1, -1)); else curtain.bringToFront();
-        curtainT0 = android.os.SystemClock.uptimeMillis();
+        curtainT0 = android.os.SystemClock.uptimeMillis(); curtainUp = 0;
         later.removeCallbacks(curtainWatch); later.postDelayed(curtainWatch, 120);
     }
     final Runnable curtainWatch = new Runnable() { @Override public void run() {
@@ -424,7 +424,10 @@ public class MainActivity extends Activity {
         long age = android.os.SystemClock.uptimeMillis() - curtainT0;
         boolean upright = root.getHeight() > root.getWidth();
         if (customView == null && upright && curtainUp == 0) curtainUp = age;
-        if ((customView == null && curtainUp > 0 && age - curtainUp > 220) || (customView == null && age > 1200) || age > 2400) { curtainUp = 0; curtainOff(); return; }
+        if ((customView == null && curtainUp > 0 && age - curtainUp > 220) || (customView == null && age > 1200) || age > 2400) {
+            android.util.Log.i("MKCPlayer", "curtain lifts after " + age + " ms, upright " + upright + ", full screen " + (customView != null));
+            curtainUp = 0; curtainOff(); return;
+        }
         later.postDelayed(this, 60);
     } };
     long curtainUp;
