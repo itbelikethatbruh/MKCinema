@@ -8,6 +8,11 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.95.20', date: '2026-11-26', items: [
+    ['better', 'Cleaner subtitles', 'Lines that stack now share one neat rounded box, and music notes, accents and other special letters show correctly even in subtitle files that were saved wrongly.'],
+    ['better', 'Home starts right under the menu', 'On phones, Home and every section now start right under the top menu.'],
+    ['better', 'TV remote keeps your place', 'After you open Settings from the Menu with a TV remote, the selected item stays marked on screen.'],
+  ] },
   { v: '2.95.19', date: '2026-11-26', items: [
     ['better', 'Episodes open steadier', 'The episode panel opens at its full size and the page behind it waits until it is up.'],
   ] },

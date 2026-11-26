@@ -1851,7 +1851,7 @@ async function selectSub(i, { auto = false } = {}) {
   try {
     if (window.MkNative && MkNative.active) {
       let text = s.text;
-      if (s.kind !== 'mpv' && text == null) { const res = await fetch(s.url); if (!res.ok) throw new Error(`HTTP ${res.status}`); text = await subFromRes(res); }
+      if (s.kind !== 'mpv' && text == null) { const res = await fetch(s.url); if (!res.ok) throw new Error(`HTTP ${res.status}`); text = await subFromRes(res, s.lang); }
       if (pick !== P.subPick) return;
       await MkNative.subOn(s, text); MkNative.subStyle();
     }
@@ -1860,7 +1860,7 @@ async function selectSub(i, { auto = false } = {}) {
     else if (s.kind === 'native') { const t = s.track && Array.from(video.textTracks).includes(s.track) ? s.track : video.textTracks[s.idx]; if (!t) throw new Error('the track is gone'); t.mode = 'showing'; styleCues(); }
     else {
       let text = s.text;
-      if (text == null) { const res = await fetch(s.url); if (!res.ok) throw new Error(`HTTP ${res.status}`); text = await subFromRes(res); }
+      if (text == null) { const res = await fetch(s.url); if (!res.ok) throw new Error(`HTTP ${res.status}`); text = await subFromRes(res, s.lang); }
       // another subtitle (or another source) was picked while this one downloaded: two tracks would both stay on screen
       if (pick !== P.subPick || P.stream !== st0) return;
       clearSubTracks();
@@ -1889,24 +1889,102 @@ function styleCues() {
   for (const c of t.cues) { try { c.line = line; if (CFG.subPos === 'top') c.snapToLines = true; } catch (e) { /* read-only cue */ } }
 }
 /* 2.94.4: subtitle text in UTF-8, UTF-16 or an older Windows code page (Western or Cyrillic) */
-function subDecode(buf) {
+/* 2.95.20 clean subtitles */
+/* Subtitle files come in many text encodings, and about one English Simpsons file in ten on OpenSubtitles is already
+   mangled at the source (UTF-8 read as Windows-1252 and saved again: "â™ª" for "♪", "Ã©" for "é", "â€™" for "’").
+   SubText.unmangle puts such words back. Only byte runs that form valid UTF-8 AND give a normal letter or symbol are
+   changed, and a file needs one unmistakable run (starting Â, Ã or â) or two others, so real accented text is left alone. */
+const SubText = (() => {
+  const CP = '€\u0081‚ƒ„…†‡ˆ‰Š‹Œ\u008DŽ\u008F\u0090‘’“”•–—˜™š›œ\u009DžŸ';
+  const C = '[\\u0080-\\u00BF\\u20AC\\u201A\\u0192\\u201E\\u2026\\u2020\\u2021\\u02C6\\u2030\\u0160\\u2039\\u0152\\u017D\\u2018\\u2019\\u201C\\u201D\\u2022\\u2013\\u2014\\u02DC\\u2122\\u0161\\u203A\\u0153\\u017E\\u0178]';
+  const RE = new RegExp(`[\\u00C2-\\u00DF]${C}|[\\u00E0-\\u00EF]${C}{2}|[\\u00F0-\\u00F4]${C}{3}`, 'g');
+  const byte = (ch) => { const c = ch.charCodeAt(0); if (c < 0x100) return c; const i = CP.indexOf(ch); return i < 0 ? -1 : 0x80 + i; };
+  const fine = (x) => { const c = x.codePointAt(0); return (c >= 0xA0 && c <= 0x17F) || (c >= 0x391 && c <= 0x3CE) || (c >= 0x400 && c <= 0x4FF) || (c >= 0x5B0 && c <= 0x5EA) || (c >= 0x600 && c <= 0x6FF) || (c >= 0x2000 && c <= 0x2BFF) || (c >= 0x3000 && c <= 0x9FFF) || (c >= 0xAC00 && c <= 0xD7AF) || (c >= 0xFF00 && c <= 0xFFEF) || c >= 0x1F000; };
+  let dec = null;
+  // A letter from another alphabet (Arabic, Cyrillic, Greek, Hebrew) is only put back when it is not glued to plain
+  // Latin letters: "Úžasnom" (Slovak) stays, "Ø¢Ù„Ù€" (Arabic read wrongly) becomes "آلـ".
+  const LAT = /[A-Za-zÀ-ɏ]/;
+  const once = (t) => {
+    const st = new Set(), en = new Set(); for (const m of t.matchAll(RE)) { st.add(m.index); en.add(m.index + m[0].length); }
+    return t.replace(RE, (m, at) => {
+      const b = Array.from(m, byte); if (b.includes(-1)) return m;
+      let x; try { dec = dec || new TextDecoder('utf-8', { fatal: true }); x = dec.decode(new Uint8Array(b)); } catch (e) { return m; }
+      if (!fine(x)) return m;
+      const c = x.codePointAt(0), end = at + m.length;
+      if (c > 0x24F && c < 0x2000 && ((LAT.test(t[at - 1] || '') && !en.has(at)) || (LAT.test(t[end] || '') && !st.has(end)))) return m;
+      return x;
+    });
+  };
+  // a language's usual older encoding, for files that are not UTF-8
+  const LEG = {};
+  [['windows-1256', 'ara ar per fas fa urd ur'], ['windows-1255', 'heb he'], ['windows-1253', 'gre ell el'], ['windows-1254', 'tur tr aze az'],
+   ['windows-1251', 'rus ru ukr uk bul bg mac mkd mk bel be kaz kk'], ['windows-1250', 'cze ces cs pol pl hun hu rum ron ro hrv hr slv sl slo slk sk bos bs alb sqi sq'],
+   ['windows-1257', 'est et lav lv lit lt'], ['windows-1258', 'vie vi'], ['windows-874', 'tha th'], ['gb18030', 'chi zho zh zhs ze'], ['big5', 'zht zh-tw'],
+   ['shift_jis', 'jpn ja'], ['euc-kr', 'kor ko']].forEach(([cp, l]) => l.split(' ').forEach((k) => { LEG[k] = cp; }));
+  return {
+    unmangle(t, min = 2) {
+      if (typeof t !== 'string' || !/[Â-ô]/.test(t)) return t;
+      // runs like "Â¶", "Ã©" and "â€™" never happen in real text, so one of those is enough
+      for (let k = 0; k < 2; k++) { const m = t.match(RE) || []; if (m.length < min && !m.some((x) => /^(?:[\u00C2\u00C3][\u00A0-\u00BF]|\u00E2..)$/.test(x))) break; const x = once(t); if (x === t) break; t = x; min = 1; }
+      return t;
+    },
+    legacy(lang) { return LEG[String(lang || '').toLowerCase()] || ''; },
+  };
+})();
+function subDecode(buf, lang) {
   const u8 = new Uint8Array(buf);
-  try {
+  const go = () => {
     if (u8[0] === 0xFF && u8[1] === 0xFE) return new TextDecoder('utf-16le').decode(u8);
     if (u8[0] === 0xFE && u8[1] === 0xFF) return new TextDecoder('utf-16be').decode(u8);
+    // UTF-16 without the mark: every other byte is zero for Latin text
+    let z0 = 0, z1 = 0; const n = Math.min(u8.length, 4000) & ~1;
+    for (let i = 0; i < n; i += 2) { if (!u8[i]) z0++; if (!u8[i + 1]) z1++; }
+    if (n > 20 && Math.max(z0, z1) > n / 6 && Math.min(z0, z1) < n / 50) return new TextDecoder(z1 > z0 ? 'utf-16le' : 'utf-16be').decode(u8);
     try { return new TextDecoder('utf-8', { fatal: true }).decode(u8); } catch (e) { /* not UTF-8 */ }
+    const cp = SubText.legacy(lang);
+    if (cp && !/^(srp|sr|scc|scr)$/i.test(String(lang))) { try { return new TextDecoder(cp).decode(u8); } catch (e) { /* label unknown here */ } }
     let hi = 0, lo = 0;
     for (let i = 0; i < u8.length && i < 200000; i++) { const b = u8[i]; if (b >= 0xC0) hi++; else if ((b >= 0x41 && b <= 0x5A) || (b >= 0x61 && b <= 0x7A)) lo++; }
-    return new TextDecoder(hi > lo ? 'windows-1251' : 'windows-1252').decode(u8);
-  } catch (e) { return new TextDecoder().decode(u8); }
+    return new TextDecoder(hi > lo ? 'windows-1251' : /^(srp|sr|scc|scr)$/i.test(String(lang)) ? 'windows-1250' : 'windows-1252').decode(u8);
+  };
+  let t; try { t = go(); } catch (e) { t = new TextDecoder().decode(u8); }
+  return SubText.unmangle(t);
 }
-async function subFromRes(res) {
+/* Stacked subtitle lines share ONE rounded box. A box around wrapped text keeps the full row width, so after layout the
+   box is narrowed to the longest line (lines are balanced, so they are close in length). Phones turning sideways and
+   size changes measure again. */
+const SubHug = {
+  fit(sp) {
+    if (!sp || !sp.isConnected) return;
+    sp.style.width = '';
+    if (getComputedStyle(sp).display !== 'inline-block') return;
+    const r = document.createRange(); r.selectNodeContents(sp);
+    const rows = [];
+    for (const q of r.getClientRects()) {
+      if (q.width < 1) continue;
+      const mid = q.top + q.height / 2, row = rows.find((x) => Math.abs(x.m - mid) < q.height / 2);
+      if (row) { row.a = Math.min(row.a, q.left); row.b = Math.max(row.b, q.right); } else rows.push({ m: mid, a: q.left, b: q.right });
+    }
+    if (rows.length < 2) return;
+    const w = Math.max(...rows.map((x) => x.b - x.a)), cs = getComputedStyle(sp);
+    const inner = sp.getBoundingClientRect().width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    if (w < inner - 2) sp.style.width = `${Math.ceil(w + 1)}px`;
+  },
+  all() { document.querySelectorAll('#mkSubs .mks-c>span, #player .mk-nv-sub>span, #pxUpSub span').forEach((sp) => { if (sp.textContent) SubHug.fit(sp); }); },
+};
+{ let q = 0; addEventListener('resize', () => { cancelAnimationFrame(q); q = requestAnimationFrame(() => SubHug.all()); }); }
+async function subFromRes(res, lang) {
   const cs = (/charset=\s*"?([\w-]+)/i.exec(res.headers.get('content-type') || '') || [])[1], buf = await res.arrayBuffer();
-  if (cs && !/^utf-?8$/i.test(cs)) { try { return new TextDecoder(cs).decode(buf); } catch (e) { /* unknown label */ } }
-  return subDecode(buf);
+  // Servers often name an old encoding by default. Text that is valid UTF-8 with letters beyond plain English is UTF-8.
+  if (cs && !/^utf-?8$/i.test(cs)) {
+    const u8 = new Uint8Array(buf); let utf = false;
+    if (u8.some((b) => b > 0x7F)) { try { new TextDecoder('utf-8', { fatal: true }).decode(u8); utf = true; } catch (e) { /* not UTF-8 */ } }
+    if (!utf && !/^utf-?16/i.test(cs)) { try { return SubText.unmangle(new TextDecoder(cs).decode(buf)); } catch (e) { /* unknown label */ } }
+  }
+  return subDecode(buf, lang);
 }
 async function loadSubFile(file) {
-  const text = subDecode(await file.arrayBuffer());
+  const text = subDecode(await file.arrayBuffer(), (file.name.match(/[._-]([a-z]{2,3})\.(srt|vtt|ass|ssa|sub)$/i) || [])[1]);
   const lang = (file.name.match(/[._-]([a-z]{2,3})\.(srt|vtt|ass|ssa|sub)$/i) || [])[1] || 'und';
   P.subs.unshift({ kind: 'file', text, fileName: file.name, lang, _label: `${file.name} · this device` });
   P.subUserChoice = true; selectSub(0);
@@ -2207,6 +2285,17 @@ $('#openPalette').onclick = () => openPalette();
 /* =====================================================================
    Spatial navigation: keyboard arrows + HTML5 Gamepad API
    ===================================================================== */
+/* 2.96.1 tv focus keep */
+/* the guard: twice a second on TVs, nothing highlighted outside the player means the highlight was lost (the item
+   that had it closed or hid); put it back where the remote expects it */
+if (typeof IS_TV !== 'undefined' && IS_TV) setInterval(() => {
+  try {
+    const a = document.activeElement;
+    if ((a && a !== document.body && a !== document.documentElement && a.isConnected && a.getClientRects().length) || document.hidden) return;
+    if (!document.getElementById('player').hidden || document.querySelector('.exit-ask')) return;
+    Nav.settle();
+  } catch (e) { /* never break the app */ }
+}, 500);
 const Nav = {
   root() {
     for (const id of ['castLayer', 'partyLayer']) if (!$(`#${id}`).hidden) return $(`#${id}`);
@@ -2314,7 +2403,7 @@ const Nav = {
     const run = (again) => {
       if (!$('#player').hidden) return;
       const root = this.root(), a = document.activeElement, inside = a && a !== document.body && root.contains(a) && !a.closest('[hidden]');
-      if (a && a.closest && a.closest('#ezbMenu:not([hidden])')) return;
+      if (a && a.closest && a.closest('#ezbMenu.open:not([hidden])')) return; /* 2.96.1 tv focus keep */
       if (inside && !(again && a === this.auto)) return;
       this.auto = this.restore(true) || null;
       if (!again) this.settleT = setTimeout(() => run(true), 650);

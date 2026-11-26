@@ -25,3 +25,5 @@ body.reduce-motion #epSheet .ep-sheet,body.reduce-motion #epSheet::before{animat
 /* 2.95.19: on phones the panel is its full height from the start, so it never grows (its top jumping up) when the
    sources arrive */
 @media (max-width:760px){html #epSheet .ep-sheet{height:calc(100dvh - 28px - env(safe-area-inset-top,0px))}}
+/* 2.95.20: a phone held sideways and short keeps its full-screen two-column sheet */
+@media (max-width:760px) and (orientation:landscape) and (max-height:540px){html #epSheet .ep-sheet{height:100%}}

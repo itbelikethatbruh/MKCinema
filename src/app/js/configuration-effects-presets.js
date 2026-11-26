@@ -80,6 +80,67 @@ if (CFG.cfgRev < 10) {
   if (CFG.trailerMode !== 'link') CFG.trailerMode = 'auto';
   CFG.cfgRev = 10;
 }
+/* 2.96.1 health counts */
+/* Counts (never details) of: an error in the app, a film that never started or that people left while it was still
+   starting, how long films take to start, a film that stopped to load, a video error, sound playing while the picture
+   is hidden, a Back press that changed nothing, and a TV remote press with nothing highlighted. */
+const Health = {
+  once: new Set(), n: {},
+  add(k, max) { try { if (max) { this.n[k] = (this.n[k] || 0) + 1; if (this.n[k] > max) return; } Usage.add('feat', k); } catch (e) { /* counts off */ } },
+  // what is open right now: Back has to change this
+  sig() {
+    try {
+      const ids = ['castLayer', 'partyLayer', 'player', 'trailer', 'tour', 'stremioImport', 'palette', 'epSheet', 'askLayer', 'tastePick', 'settings', 'addons', 'detail', 'rcLayer'];
+      const open = ids.filter((i) => { const e = document.getElementById(i); return e && !e.hidden; });
+      const h = document.documentElement, x = document.querySelector('.exit-ask, .focus-ask, .sup-ask, .x8-layer, #ezbMore:not([hidden])');
+      return { any: open.length > 0 || h.classList.contains('ezb-menu-open') || !!x || !!document.fullscreenElement,
+        s: [open.join(','), h.classList.contains('ezb-menu-open'), !!x && x.className, !!document.fullscreenElement, (window.S && S.view) || ''].join('|') };
+    } catch (e) { return { any: false, s: '' }; }
+  },
+  backCheck(before) { if (!before.any) return; setTimeout(() => { if (this.sig().s === before.s) this.add('err:back_noop', 20); }, 700); },
+  play: null,
+  init() {
+    addEventListener('error', (e) => { if (e && e.filename !== undefined && !e.target.tagName) this.add('err:js', 5); }, true);
+    addEventListener('unhandledrejection', (e) => { const m = String((e.reason && (e.reason.name || e.reason.message)) || ''); if (!/Abort|NotAllowed|play\(\)|interrupted/i.test(m)) this.add('err:promise', 5); });
+    // Back: the TV app calls back(); phones and browsers go through the page's history
+    try { const prev = back; back = function () { const b = Health.sig(); const r = prev.apply(this, arguments); Health.backCheck(b); return r; }; } catch (e) { /* no back */ }
+    let last = this.sig(); setInterval(() => { last = this.sig(); }, 400);
+    addEventListener('popstate', () => this.backCheck(last));
+    if (typeof IS_TV !== 'undefined' && IS_TV) document.addEventListener('keydown', (e) => {
+      if (!/^Arrow/.test(e.key)) return; const a = document.activeElement;
+      if ((!a || a === document.body) && document.getElementById('player').hidden) setTimeout(() => { const b = document.activeElement; if (!b || b === document.body) this.add('err:tv_no_focus', 5); }, 300);
+    }, true);
+    // the film in the page's own player (a film handed to the Android or Windows player is counted there, not here)
+    let v; try { v = video; } catch (e) { return; }
+    if (!v) return;
+    const pl = document.getElementById('player');
+    const done = (k) => { const x = this.play; if (!x || x.done) return; x.done = true; if (k) this.add(k); };
+    v.addEventListener('loadstart', () => { if (!v.currentSrc || pl.hidden) return; const old = this.play; if (old && !old.done && !old.started) done(Date.now() - old.at > 8000 ? 'err:play_left_waiting' : '');
+      this.play = { at: Date.now(), from: v.currentTime || 0, started: false, done: false, waitAt: 0, hid: 0 }; });
+    v.addEventListener('timeupdate', () => {
+      const x = this.play; if (!x || x.started) return;
+      if (v.currentTime > x.from + 0.3 || (x.from > 0 && v.currentTime > 0.3 && Math.abs(v.currentTime - x.from) < 5 && !v.paused && v.readyState >= 3)) {
+        x.started = true; const s = (Date.now() - x.at) / 1000;
+        this.add(`play_wait:${s < 2 ? '0-2s' : s < 5 ? '2-5s' : s < 10 ? '5-10s' : s < 30 ? '10-30s' : '30s+'}`);
+      }
+    });
+    v.addEventListener('waiting', () => { const x = this.play; if (x && x.started) x.waitAt = Date.now(); });
+    v.addEventListener('playing', () => { const x = this.play; if (x) x.waitAt = 0; });
+    v.addEventListener('error', () => { if (v.currentSrc && !pl.hidden) this.add('err:video_error', 10); });
+    setInterval(() => {
+      const x = this.play; if (!x || x.done) return;
+      if (pl.hidden) { done(!x.started && Date.now() - x.at > 8000 ? 'err:play_left_waiting' : ''); return; }
+      if (!x.started && Date.now() - x.at > 30000 && !v.paused) done('err:play_never');
+      if (x.started && x.waitAt && Date.now() - x.waitAt > 5000) { x.waitAt = 0; this.add('err:stall', 20); }
+      // sound with no picture: the film runs but its picture is hidden or has not arrived
+      if (x.started && !v.paused && !v.muted && v.volume > 0) {
+        let o = 1; for (let e = v; e && e.nodeType === 1; e = e.parentElement) { const c = getComputedStyle(e); if (c.display === 'none' || c.visibility === 'hidden') { o = 0; break; } o *= +c.opacity; }
+        if (o < 0.5 || (v.readyState >= 2 && !v.videoWidth && !/audio|radio/i.test(v.currentSrc))) { if (++x.hid === 2) this.add('err:sound_no_picture'); } else x.hid = 0;
+      }
+    }, 1000);
+  },
+};
+addEventListener('load', () => setTimeout(() => { try { Health.init(); } catch (e) { /* never break the app */ } }, 0));
 /* 2.96 usage counts */
 /* Anonymous daily totals of what gets used: sections, screens, Home rows, buttons, settings, features and the time spent
    in each. Only totals leave the device, with the device type and app language; the server adds the country. Never a

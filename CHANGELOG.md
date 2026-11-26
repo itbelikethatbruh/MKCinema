@@ -2,6 +2,15 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.95.20 (2026-11-26)
+
+- Cleaner subtitles: lines that stack share one rounded box, and music notes, accents and other special letters show correctly even in subtitle files that were saved wrongly.
+- On phones, Home and every section start right under the top menu.
+- The TV remote keeps its highlight on screen after you open Settings from the Menu.
+- The episode panel fills the screen on phones held sideways.
+- Android 1.17.17 is offered as an update in the app.
+- Journey check (tools/journey-check.mjs): every main path on a phone, a computer and a TV remote, on every pull request and daily against the live app.
+
 ## Web app 2.95.19 (2026-11-26)
 
 - Episodes open steadier: the episode panel opens at its full size and the page behind it waits until it is up.
