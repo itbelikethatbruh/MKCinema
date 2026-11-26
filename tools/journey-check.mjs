@@ -638,7 +638,12 @@ for (const dev of DEVS) {
   let r;
   try { r = await new Run(dev).open(); } catch (e) { report('open app', 'FAIL', 'errors', e.message.split('\n')[0]); continue; }
   const ready = await r.ev(() => !!document.querySelector('#homeRows .card, #view-home .rail .card'));
-  if (!ready) { report('open app', 'SKIP', '', 'Home did not load (catalog offline?)'); await r.close(); continue; }
+  if (!ready) {
+    // only an unreachable catalog is a SKIP; a catalog that answers while Home stays empty is a broken app
+    const up = await r.ev(async () => { try { const x = await fetch('https://v3-cinemeta.strem.io/catalog/movie/top.json'); return x.ok; } catch (e) { return false; } }).catch(() => false);
+    report('open app', up ? 'FAIL' : 'SKIP', up ? 'errors' : '', up ? 'Home showed no titles although the catalog answers' : 'Home did not load (catalog offline)', up ? r.sheet('open-app', Date.now() - 45000) : '');
+    await r.close(); continue;
+  }
   for (const j of JOURNEYS) {
     curJourney = j;
     if (!J[j]) { report(j, 'SKIP', '', 'no such journey'); continue; }
