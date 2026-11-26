@@ -64,7 +64,7 @@ const b64json = (obj) => btoa(unescape(encodeURIComponent(JSON.stringify(obj))))
 
 /* ---------------- Storage ---------------- */
 /* 2.8 Seats: the library keys below belong to the seat in use; the main seat keeps the plain keys */
-const SEAT_KEYS = ['watchlist', 'progress', 'watched', 'taste', 'recentSearches', 'bookmarks', 'slSkipped', 'pickMemo', 'music', 'ratings', 'sportsFollow', 'chSeatOff'];
+const SEAT_KEYS = ['watchlist', 'progress', 'watched', 'taste', 'recentSearches', 'bookmarks', 'slSkipped', 'pickMemo', 'relMemo', 'music', 'ratings', 'sportsFollow', 'chSeatOff'];
 const SEAT = (() => { try { const v = localStorage.getItem('mkc:seat') || ''; return /^[a-z0-9]{4,16}$/.test(v) ? v : ''; } catch (e) { return ''; } })();
 const Store = {
   key(k) { return SEAT && SEAT_KEYS.includes(k) ? `mkc:seat:${SEAT}:${k}` : 'mkc:' + k; },
@@ -552,17 +552,31 @@ class StremioEngine {
   /* One request per address at a time (two rows asking for the same catalog share it), a capped cache, and one quiet
      retry when the connection drops or the addon's host answers 502/503/504 for a moment. A timeout is never retried. */
   http(url, { timeout = (CFG.timeout || 15) * 1000, ttl = 10 * 60 * 1000 } = {}) {
-    const hit = this.cache.get(url);
-    if (hit && Date.now() - hit.t < ttl) return Promise.resolve(hit.v);
+    const hit = this.cache.get(url), age = hit ? Date.now() - hit.t : 0;
+    if (hit && age < ttl && !(hit.x && age >= hit.x)) return Promise.resolve(hit.v);
     if (!this.flight) this.flight = new Map();
     if (this.flight.has(url)) return this.flight.get(url);
-    const p = this.fetchJson(url, timeout).then((v) => {
-      this.cache.delete(url); this.cache.set(url, { t: Date.now(), v });
-      while (this.cache.size > 400) this.cache.delete(this.cache.keys().next().value);
-      return v;
-    }).finally(() => { if (this.flight.get(url) === p) this.flight.delete(url); });
+    const p = this.fetchJson(url, timeout).then((v) => { this.keep(url, v, ttl); return v; }).finally(() => { if (this.flight.get(url) === p) this.flight.delete(url); });
     this.flight.set(url, p);
     return p;
+  }
+  /* 2.95.6 steady streams */
+  /* An answer is kept as long as the caller asked (each answer has its own age), and old answers leave memory every minute.
+     A source request answered with no sources is only kept for 20 s, then asked again: that is usually a busy moment at
+     the addon's end, and keeping it would hide every source of that title for minutes. The answers kept stay inside a budget that fits
+     the device's memory (smaller on 1 and 2 GB TV sticks), oldest out first. */
+  keep(url, v, ttl) {
+    const was = this.cache.get(url); if (was) this.cache.delete(url);
+    const none = /\/stream\/[^/]+\/[^/]+\.json$/.test(url) && !(v && Array.isArray(v.streams) && v.streams.length);
+    const n = (this.sizes && v && typeof v === 'object' && this.sizes.get(v)) || 4096;
+    this.cache.set(url, none ? { t: Date.now(), v, k: 20000, x: 20000, n } : { t: Date.now(), v, k: Math.max(Number(ttl) || 0, 10 * 60 * 1000), n });
+    const now = Date.now(), dm = Number(navigator.deviceMemory) || 4, cap = (dm <= 1 ? 8 : dm <= 2 ? 16 : 48) * 1048576;
+    this.cacheBytes = (this.cacheBytes || 0) + n;
+    if (this.cache.size <= 400 && this.cacheBytes <= cap && now - (this.swept || 0) < 60000) return;
+    this.swept = now; let sum = 0;
+    for (const [u, e] of this.cache) { if (now - e.t >= (e.k || 6e5)) this.cache.delete(u); else sum += e.n || 4096; }
+    for (const [u, e] of this.cache) { if (this.cache.size <= 400 && sum <= cap) break; if (u === url) continue; this.cache.delete(u); sum -= e.n || 4096; }
+    this.cacheBytes = sum;
   }
   /* 2.73.6: some networks, ad blockers and Private DNS filters stop raw.githubusercontent.com, where many addons live.
      jsDelivr serves the same files from GitHub, so a request there that got no answer at all tries that copy once. */
@@ -584,7 +598,9 @@ class StremioEngine {
         const res = await fetch(url, { signal: ctl.signal, headers: { Accept: 'application/json' } });
         if (!res.ok) { const e = new Error(`HTTP ${res.status}`); e.again = res.status === 502 || res.status === 503 || res.status === 504; throw e; }
         const text = await res.text();
-        try { return JSON.parse(text.replace(/^﻿/, '')); } catch (e) { throw new Error('The addon did not answer with JSON'); }
+        let v; try { v = JSON.parse(text.replace(/^﻿/, '')); } catch (e) { throw new Error('The addon did not answer with JSON'); }
+        if (v && typeof v === 'object') (this.sizes || (this.sizes = new WeakMap())).set(v, text.length * 3);
+        return v;
       } catch (e) {
         if (e && e.name === 'AbortError') throw new Error('Timed out');
         if (i + 1 < tries && (e instanceof TypeError || e.again)) { await new Promise((r) => setTimeout(r, 700)); continue; }
@@ -765,9 +781,27 @@ class StremioEngine {
     if (best && best._tel.res) (window.MkQualSet || ((mp, k, v) => mp.set(k, v)))(this.qualityCache, baseIdOf(id), [best._tel.res === '4K UHD' ? '4K' : best._tel.res, best._tel.hdr === 'Dolby Vision' ? 'DV' : best._tel.hdr ? 'HDR' : '', best._tel.audio.includes('Atmos') ? 'Atmos' : ''].filter(Boolean).join(' · '));
     return { streams: all, errors, addons: cands.length };
   }
-  pickBest(streams, { bingeGroup, memo } = {}) {
+  /* The release a file belongs to: its name with the episode number taken out, and the episode title too (the part between
+     the number and the first quality word), so S01E05 and S01E06 of the same release match. A film keeps its whole name. */
+  static relSig(f) {
+    const t = String(f || '').toLowerCase().replace(/\.(mkv|mp4|avi|m4v|webm|ts)$/, '');
+    const m = /(?:^|[^a-z0-9])(s\d{1,2}[ ._-]?e\d{1,4}|\d{1,2}x\d{2,4})(?![0-9])/.exec(t);
+    if (!m) return t.replace(/[^a-z0-9]+/g, '');
+    const head = t.slice(0, m.index), tail = t.slice(m.index + m[0].length);
+    const q = /(?:^|[^a-z0-9])(2160p|1080p|720p|576p|480p|4k|uhd|web[ ._-]?dl|webrip|web|blu[ ._-]?ray|bdrip|brrip|remux|hdtv|dvdrip|hdrip|x26[45]|h[ .]?26[45]|hevc|avc|10bit)(?![a-z0-9])/.exec(tail);
+    return head.replace(/[^a-z0-9]+/g, '') + '#' + (q ? tail.slice(q.index) : tail).replace(/[^a-z0-9]+/g, '');
+  }
+  pickBest(streams, { bingeGroup, memo, rel } = {}) {
     // a source the debrid service has not cached yet only plays a "downloading" notice, so it is a last resort
     const ok = (s) => s._tel.cached !== false;
+    /* 2.95.6: the release watched last for this title (same file name with this episode's number, or the same season pack)
+       comes first, so the next episode and a resume keep the same picture, audio and subtitle timing */
+    if (rel && (rel.f || rel.h) && Array.isArray(streams)) {
+      const sig = rel.f ? StremioEngine.relSig(rel.f) : '', good = (s) => ok(s) && s._tel.webReady && !s._tel.isTrailer && !s.ytId;
+      const sg = (s) => { const f = (s.behaviorHints || {}).filename; if (!f) return ''; if (s._relF !== f) { s._relF = f; s._relSig = StremioEngine.relSig(f); } return s._relSig; };
+      const m = (sig && streams.find((s) => good(s) && sg(s) === sig)) || (rel.h && streams.find((s) => good(s) && s.infoHash && String(s.infoHash).toLowerCase() === rel.h));
+      if (m) return m;
+    }
     /* 2.26.1: never auto-pick a trailer */ if (bingeGroup) { const m = streams.find((s) => (s.behaviorHints || {}).bingeGroup === bingeGroup && ok(s) && s._tel.webReady && !s._tel.isTrailer && !s.ytId); if (m) return m; }
     /* 2.75: the addon and quality picked by hand for this show last time come first */
     if (memo && memo.a) { const m = streams.find((s) => s._addon === memo.a && (!memo.r || s._tel.res === memo.r) && ok(s) && s._tel.webReady && !s._tel.isTrailer && !s.ytId); if (m) return m; }

@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.95.6', date: '2026-11-25', items: [
+    ['better', 'Steadier streams', 'Next episode and Continue watching keep the same copy you were watching. Sources show again sooner after an addon\'s busy moment. Lighter memory use on TV sticks.'],
+  ] },
   { v: '2.95.5', date: '2026-11-25', items: [
     ['better', 'Smarter choice of how to watch', 'The first time you open MKCinema, more phones are now told to watch right inside MKCinema, the best fit for them.'],
   ] },

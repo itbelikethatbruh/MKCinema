@@ -703,10 +703,28 @@ function visibleStreams(streams) {
 const pickBest = (streams, opts) => engine.pickBest(visibleStreams(streams), opts);
 /* 2.75 Remember my pick: a source chosen by hand for a show (addon, quality, source group) is tried first next time,
    for the next episode, a resume, Smart Play and the Best match badge. Per seat, on this device; Settings › Playback. */
+/* 2.95.6 Same release: the copy last played for each title (its file name, or its torrent for a season pack). The next
+   episode, a resume and the Play button look for the same release first. Per seat, on this device, 200 titles. */
+const RelMemo = {
+  get(meta) { if (!meta || !meta.id) return null; const r = Store.get('relMemo', {})[meta.id]; return r && (r.f || r.h) ? r : null; },
+  set(ctx, s) {
+    try {
+      if (!ctx || !ctx.meta || !ctx.meta.id || !s || s._local || s.ytId || s._restored || (s._tel && (s._tel.isTrailer || s._tel.notice))) return;
+      const f = String((s.behaviorHints || {}).filename || '').slice(0, 300), h = /^[a-f0-9]{40}$/i.test(String(s.infoHash || '')) ? String(s.infoHash).toLowerCase() : '';
+      if (!f && !h) return;
+      const all = Store.get('relMemo', {}), was = all[ctx.meta.id];
+      if (was && was.f === f && was.h === h && Date.now() - was.at < 3600e3) return;
+      all[ctx.meta.id] = { f, h, at: Date.now() };
+      const keys = Object.keys(all);
+      if (keys.length > 200) keys.sort((x, y) => all[x].at - all[y].at).slice(0, keys.length - 200).forEach((k) => { delete all[k]; });
+      Store.set('relMemo', all);
+    } catch (e) { /* storage full or off: the normal pick still works */ }
+  },
+};
 const PickMemo = {
   all() { return Store.get('pickMemo', {}); },
   get(meta) { if (!meta || !meta.id || CFG.pickMemo === false) return null; return this.all()[meta.id] || null; },
-  opts(meta, group) { const m = this.get(meta); return { bingeGroup: group || (m && m.g) || undefined, memo: m || undefined }; },
+  opts(meta, group) { const m = this.get(meta); return { bingeGroup: group || (m && m.g) || undefined, memo: m || undefined, rel: RelMemo.get(meta) || undefined }; },
   set(meta, s) {
     if (!meta || !meta.id || !s || !s._tel || CFG.pickMemo === false || s._tel.isTrailer || s.ytId) return;
     const all = this.all(), bh = s.behaviorHints || {};
@@ -1100,6 +1118,7 @@ async function playStream(ctx, stream, { startAt, _cin } = {}) {
   $('#player').classList.toggle('is-hdr', CFG.hdrDim !== false && !!(stream._tel && stream._tel.hdr));
   if (window.MkShuffle && MkShuffle.id && MkShuffle.id !== (ctx.meta && ctx.meta.id)) MkShuffle.stop();
   if (window.MkSrcSpeed) MkSrcSpeed.note(stream);
+  RelMemo.set(ctx, stream);
   const key = ctx.video ? ctx.video.id : ctx.meta.id;
   if (startAt == null) { const p = CFG.resume && S.progress[key]; startAt = p && p.t > 20 && p.t < p.d * .95 ? p.t : 0; }
   $('#pTitle').textContent = ctx.meta.name || '';
