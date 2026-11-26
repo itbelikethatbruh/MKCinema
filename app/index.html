@@ -2851,10 +2851,151 @@ if (CFG.cfgRev < 10) {
   if (CFG.trailerMode !== 'link') CFG.trailerMode = 'auto';
   CFG.cfgRev = 10;
 }
+/* 2.96 usage counts */
+/* Anonymous daily totals of what gets used: sections, screens, Home rows, buttons, settings, features and the time spent
+   in each. Only totals leave the device, with the device type and app language; the server adds the country. Never a
+   user id, device id, title, search text, addon or key. Live hosts only; Settings › Data › Share anonymous visit counts
+   off sends nothing. Nothing ever goes to an addon server. */
+const Usage = {
+  q: new Map(), stack: [], lastIn: 0, party: null, started: false,
+  HOSTS: /^(mkcinema\.pages\.dev|app\.mkcinema\.app)$/,
+  SENS: /name|key|url|token|pin|code|pass|mail|addon|secret|host|server|proxy|list|ip$|user|id$/i,
+  on() { try { return CFG.anonStats !== false && this.HOSTS.test(location.hostname); } catch (e) { return false; } },
+  clean(k) { return String(k == null ? '' : k).replace(/[^A-Za-z0-9_.:=/+-]/g, '_').slice(0, 64); },
+  add(ev, k, n = 1, secs = 0) {
+    if (!this.on()) return;
+    k = this.clean(k); if (!k) return;
+    const id = `${ev}|${k}`, r = this.q.get(id) || [ev, k, 0, 0]; r[2] += n; r[3] += secs; this.q.set(id, r);
+    if (this.q.size >= 250 || r[2] >= 400) this.send();
+  },
+  // a setting's value is kept only when it says nothing about the person: on/off, a number, or a short word
+  val(key, v) {
+    if (this.SENS.test(key)) return '';
+    if (typeof v === 'boolean') return v ? 'on' : 'off';
+    if (typeof v === 'number' && isFinite(v)) return String(Math.round(v * 100) / 100);
+    if (typeof v === 'string' && /^[a-z0-9_-]{1,20}$/i.test(v)) return v;
+    return '';
+  },
+  // only changes a person made count (the app adjusting itself at start does not)
+  set(key, v) { if (Date.now() - this.lastIn > 4000) return; if (typeof key !== 'string' || !/^[A-Za-z][A-Za-z0-9_]{0,40}$/.test(key)) return; const x = this.val(key, v); this.add('set', x ? `${key}=${x}` : key); },
+  // a screen over the page (player, details, settings, Peak Cinema, party...) counts from open to close
+  layer(id, open) {
+    id = this.clean(id); if (!id) return;
+    this.stack = this.stack.filter((x) => x !== id);
+    if (open) { this.stack.push(id); this.add('layer', id); }
+  },
+  where() {
+    for (let i = this.stack.length - 1; i >= 0; i--) { const el = document.getElementById(this.stack[i]); if (el && !el.hidden) return ['layer', this.stack[i]]; this.stack.splice(i, 1); }
+    let v = 'home'; try { v = (S && S.view) || 'home'; } catch (e) { /* early */ }
+    return ['view', v];
+  },
+  day() { try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date()); } catch (e) { return new Date().toISOString().slice(0, 10); } },
+  dev() {
+    let p = 'web'; try { p = PLATFORM; } catch (e) { /* early */ }
+    const ua = navigator.userAgent || '', app = /MKCinema/.test(ua) ? '-app' : '';
+    if (IS_TV) return `${p}-tv${app}`;
+    const touch = matchMedia('(hover: none)').matches, m = Math.min(screen.width || 0, screen.height || 0);
+    return `${p}-${touch ? (m && m < 600 ? 'phone' : 'tablet') : 'desktop'}${app}`;
+  },
+  lang() { try { return I18N.code || 'en'; } catch (e) { return 'en'; } },
+  seatKind() {
+    try { if (!SEAT) return 'main'; const s = (Store.raw.get('seats', []) || []).find((x) => x && x.id === SEAT); return s && s.kids ? 'kids' : 'other'; } catch (e) { return 'main'; }
+  },
+  // app opens, devices active today, devices new today, which seat; once a day the settings that differ from the default
+  open() {
+    const d = this.day(), seat = this.seatKind(); let last = '', lastSeat = '', first = false;
+    try {
+      last = localStorage.getItem('mkc:usageDay') || ''; lastSeat = localStorage.getItem(`mkc:usageDay:${seat}`) || ''; first = !localStorage.getItem('mkc:usageSeen');
+      localStorage.setItem('mkc:usageDay', d); localStorage.setItem(`mkc:usageDay:${seat}`, d); if (first) localStorage.setItem('mkc:usageSeen', '1');
+    } catch (e) { /* storage blocked: counts as a start only */ }
+    this.add('open', 'start'); this.add('open', `start:${seat}`);
+    if (first) this.add('open', 'new');
+    if (lastSeat !== d) this.add('open', `day:${seat}`);
+    if (last !== d) {
+      this.add('open', 'day');
+      try {
+        for (const k of Object.keys(CFG_DEFAULTS)) {
+          const v = CFG[k], dv = CFG_DEFAULTS[k];
+          if (v === dv || v == null || typeof v === 'object') continue;
+          const x = this.val(k, v); if (x) this.add('set', `on:${k}=${x}`);
+        }
+      } catch (e) { /* settings not ready */ }
+    }
+  },
+  partyStart(host) {
+    this.partyEnd(true);
+    this.party = { host, at: Date.now(), peak: 1 };
+    this.add('party', host ? 'start' : 'join');
+  },
+  partyEnd(quiet) {
+    const p = this.party; if (!p) return; this.party = null;
+    try { p.peak = Math.max(p.peak, Party.peers.size + 1); } catch (e) { /* closed */ }
+    const secs = Math.min(86400, Math.round((Date.now() - p.at) / 1000)), min = secs / 60;
+    this.add('party', p.host ? 'host_secs' : 'guest_secs', 1, secs);
+    if (p.host) {
+      this.add('party', `size:${p.peak >= 6 ? '6+' : p.peak}`);
+      this.add('party', `len:${min < 5 ? '0-5m' : min < 30 ? '5-30m' : min < 60 ? '30-60m' : min < 120 ? '1-2h' : '2h+'}`);
+      if (p.peak > 1) this.add('party', 'with_guests');
+    }
+    if (quiet !== true) this.send();
+  },
+  // every 15 s: the seconds go to the section or screen in front, while someone is there (or a video plays)
+  tick() {
+    if (document.hidden) return;
+    try { if (this.party && Party.code) this.party.peak = Math.max(this.party.peak, Party.peers.size + 1); } catch (e) { /* no party */ }
+    let playing = false; try { playing = !video.paused && !$('#player').hidden; } catch (e) { /* no player */ }
+    if (!playing && Date.now() - this.lastIn > 300000) return;
+    const [ev, k] = this.where(); this.add(ev, k, 0, 15);
+  },
+  rowKind(sec) {
+    const rk = sec.dataset.rk || '';
+    if (rk.startsWith('cat:')) { const t = rk.slice(4).split('/')[1]; return `cat:${/^[a-z]{2,12}$/.test(t || '') ? t : 'other'}`; }
+    if (rk && /^[a-z][a-z0-9_-]{1,30}$/i.test(rk)) return rk;
+    if (sec.id && /^[A-Za-z_-]{2,30}$/.test(sec.id)) return sec.id;
+    const c = [...sec.classList].find((x) => x !== 'row' && /^[a-z][a-z-]{1,30}$/.test(x));
+    return c || 'other';
+  },
+  tap(e) {
+    this.lastIn = Date.now();
+    const t = e.target; if (!t || !t.closest) return;
+    const b = t.closest('button[id],a[id],[role="button"][id],[data-nav][id],input[id],select[id]');
+    if (b && /^[A-Za-z][A-Za-z_-]{1,40}$/.test(b.id)) this.add('tap', b.id);
+    const sec = t.closest('#homeRows > section');
+    if (sec) {
+      const kind = this.rowKind(sec), all = [...sec.parentElement.children].filter((x) => x.tagName === 'SECTION'), pos = all.indexOf(sec) + 1;
+      this.add('row', kind); this.add('row', `pos:${pos > 12 ? '13+' : pos}`);
+      if (t.closest('.row-more,.rail-all')) this.add('row', `all:${kind}`);
+    } else if (t.closest('#hero')) this.add('row', 'hero');
+  },
+  send() {
+    if (!this.q.size) return;
+    const rows = [...this.q.values()].map((r) => [r[0], r[1], Math.round(r[2]), Math.round(r[3])]); this.q.clear();
+    if (!this.on()) return;
+    let url = '', key = ''; try { url = SUPABASE_PROJECT.url; key = SUPABASE_PROJECT.anonKey; } catch (e) { return; }
+    for (let i = 0; i < rows.length; i += 250) {
+      const body = JSON.stringify({ d: this.day(), dev: this.dev(), lang: this.lang(), cc: '', rows: rows.slice(i, i + 250) });
+      try { fetch(`${url}/rest/v1/rpc/mkc_usage_add`, { method: 'POST', keepalive: body.length < 60000, credentials: 'omit', cache: 'no-store', headers: { apikey: key, 'Content-Type': 'application/json' }, body }).catch(() => {}); } catch (e) { /* offline */ }
+    }
+  },
+  init() {
+    if (this.started) return; this.started = true;
+    if (!this.on()) return;
+    const seen = () => { this.lastIn = Date.now(); };
+    addEventListener('click', (e) => { try { this.tap(e); } catch (x) { /* never in the way */ } }, true);
+    ['keydown', 'pointerdown', 'touchstart', 'wheel'].forEach((t) => addEventListener(t, seen, { capture: true, passive: true }));
+    setInterval(() => this.tick(), 15000);
+    setInterval(() => this.send(), 300000);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) this.send(); });
+    addEventListener('pagehide', () => { this.partyEnd(true); this.send(); });
+    this.open();
+    setTimeout(() => this.send(), 60000);
+  },
+};
+setTimeout(() => Usage.init(), 4000);
 const CFG_HOOKS = [];
 function saveCfg() { try { localStorage.setItem('mkc:cfg', JSON.stringify(CFG)); } catch (e) { /* storage blocked */ } }
 function setCfg(key, value, { silent = false } = {}) {
-  CFG[key] = value; saveCfg();
+  CFG[key] = value; saveCfg(); if (!silent) Usage.set(key, value);
   if (!silent) CFG_HOOKS.forEach((fn) => { try { fn(key, value); } catch (e) { console.error(e); } });
 }
 function applyPreset(name) {
@@ -4309,7 +4450,7 @@ function go(view, opts = {}) {
   if (typeof SeatHide !== 'undefined' && SeatHide.blocked(view)) { toast('This seat doesn’t show that section', 'info', 2200); return; }
   if (S.view === 'home' && view !== 'home' && window.MkHomePlace) MkHomePlace.leave();
   const backHome = view === 'home' && S.view !== 'home';
-  S.view = view;
+  S.view = view; Usage.add('view', view);
   $$('#tabs .tab, #mtabs [data-view]').forEach((t) => t.classList.toggle('on', t.dataset.view === view));
   const id = view === 'movie' || view === 'series' ? 'discover' : view;
   $$('.view').forEach((v) => { const on = v.id === `view-${id}`; if (on) { v.classList.remove('on'); void v.offsetWidth; } v.classList.toggle('on', on); });
@@ -4467,12 +4608,12 @@ function syncLayers() {
   if (open) layerT = setTimeout(() => b.toggle('layer-open', [...MENU_LAYERS, 'player'].some((x) => !$(`#${x}`).hidden)), 320); else b.remove('layer-open');
   if (IS_TV && typeof Nav !== 'undefined') Nav.settle();
 }
-function openLayer(id) { const el = $(`#${id}`); el.classList.remove('leaving'); el.hidden = false; syncLayers(); return el; }
+function openLayer(id) { const el = $(`#${id}`); if (el.hidden) Usage.layer(id, true); el.classList.remove('leaving'); el.hidden = false; syncLayers(); return el; }
 /* A closed layer is hidden at once (all logic sees it as closed), but CSS keeps .leaving[hidden] on screen for a short fade */
 function closeLayer(id) {
   if (id === 'detail') EpSheet.close();
   const el = $(`#${id}`); if (el.hidden) return;
-  el.hidden = true; syncLayers();
+  el.hidden = true; Usage.layer(id, false); syncLayers();
   if (CFG.reduceMotion) return;
   el.classList.add('leaving'); clearTimeout(el._leaveT); el._leaveT = setTimeout(() => el.classList.remove('leaving'), 240);
 }
@@ -5155,7 +5296,7 @@ async function playStream(ctx, stream, { startAt, _cin } = {}) {
   if (typeof MiniPlay !== 'undefined' && MiniPlay.on) MiniPlay.restore(true);
   if (!_cin && typeof CinemaMode !== 'undefined' && await CinemaMode.hold(ctx, stream, startAt)) return;
   if (!stream) return;
-  playReq++;
+  playReq++; Usage.add('feat', 'play'); Usage.add('feat', `play:${(ctx && ctx.type) || 'other'}`);
   if (stream.ytId) { if (!$('#player').hidden) closePlayer(); openTrailer(stream.ytId); return; }
   stream._tel = stream._tel || Telemetry.parse(stream);
   if (stream._tel.kind !== 'ext' && stream._tel.kind !== 'p2p' && extPlayer() && handoffUrl(stream) && !P.force) {
@@ -6033,7 +6174,7 @@ function openPalette(q = '', { ask = false } = {}) {
 }
 function closePalette() { closeLayer('palette'); }
 const recentSearches = () => Store.get('recentSearches', []);
-function rememberSearch(q) { q = q.trim(); if (q.length < 2) return; Store.set('recentSearches', [q, ...recentSearches().filter((x) => x.toLowerCase() !== q.toLowerCase())].slice(0, 8)); }
+function rememberSearch(q) { q = q.trim(); if (q.length < 2) return; Usage.add('feat', 'search'); Store.set('recentSearches', [q, ...recentSearches().filter((x) => x.toLowerCase() !== q.toLowerCase())].slice(0, 8)); }
 function titleItem(m, q, why) {
   return { kind: 'title', group: m.type === 'series' ? 'Series' : m.type === 'movie' ? 'Movies' : 'Channels & more', m, label: m.name, sub: why || [yearOf(m), genresOf(m).slice(0, 2).join(', ')].filter(Boolean).join(' · '), run: () => { rememberSearch(q); openDetail(m); } };
 }
@@ -6551,8 +6692,18 @@ $('#retryCinemeta').onclick = () => installAddon(CINEMETA, true);
    normal button so the next page can still be asked for by hand, and pressing it turns the automatic loading back on. */
 const AutoMore = {
   SEL: '#discMore,#chMore,#mkdMore,#netMore,#animeMore,#xtMore,#ltMore,#nbMore,#brMore,#cpAll',
-  raf: 0,
+  raf: 0, tmr: 0, pk: 0,
+  /* 2.95.11 auto-more idle */
+  // a button coming into range (a list grew, a hidden button showed) wakes the check; nothing polls while idle
+  io: typeof IntersectionObserver === 'function' ? new IntersectionObserver(() => AutoMore.later(), { rootMargin: '0px 0px 100% 0px' }) : null,
+  seen: new WeakSet(),
   later() { if (!this.raf) this.raf = requestAnimationFrame(() => this.check()); },
+  // a tap or key may open a list a moment later: look a few times, then stop
+  poke() {
+    clearTimeout(this.pk); const at = [300, 1200, 3000, 7000]; let i = 0;
+    const go = () => { this.later(); if (++i < at.length) this.pk = setTimeout(go, at[i] - at[i - 1]); };
+    this.pk = setTimeout(go, at[0]);
+  },
   // the nearest box that scrolls (a layer or panel), or null for the page itself
   box(el) {
     for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
@@ -6560,38 +6711,48 @@ const AutoMore = {
     }
     return null;
   },
-  quiet(b) { b.classList.add('am-on'); b.tabIndex = -1; b.setAttribute('aria-busy', 'true'); },
+  quiet(b) { // only writes what is not already so
+    if (!b.classList.contains('am-on')) b.classList.add('am-on');
+    if (b.getAttribute('tabindex') !== '-1') b.tabIndex = -1;
+    if (b.getAttribute('aria-busy') !== 'true') b.setAttribute('aria-busy', 'true');
+  },
   // two pages in a row did not arrive: a normal button again, and a press restarts the automatic loading
   stop(b) {
     b._amStop = true; b.classList.remove('am-on'); b.removeAttribute('tabindex'); b.removeAttribute('aria-busy');
     b.addEventListener('click', () => { b._amStop = false; b._amFail = 0; b._amW = null; }, { once: true, capture: true });
   },
   check() {
-    this.raf = 0;
-    if (document.hidden || document.body.classList.contains('mk-player-on')) return;
+    this.raf = 0; clearTimeout(this.tmr); this.tmr = 0;
+    if (document.hidden || document.body.classList.contains('mk-player-on') || document.getElementById('mkLangPick')) return;
+    let busy = false;
     for (const b of document.querySelectorAll(this.SEL)) {
+      if (this.io && !this.seen.has(b)) { this.seen.add(b); this.io.observe(b); }
       if (b.hidden || b.disabled || b._amStop) continue;
-      if (!b.classList.contains('am-on')) this.quiet(b);
+      this.quiet(b);
       if (!b.getClientRects().length || b.closest('[hidden],[inert]')) continue;
       if (b._amBox === undefined || (b._amBox && !b._amBox.contains(b))) b._amBox = this.box(b);
       const box = b._amBox, h = box ? box.scrollHeight : document.documentElement.scrollHeight, w = b._amW, now = performance.now();
       if (w) {
         if (h > w.h + 8) { b._amW = null; b._amFail = 0; } // the page arrived: ready for the next one
-        else if (now - w.at < 8000) continue; // still on its way
+        else if (now - w.at < 8000) { busy = true; continue; } // still on its way
         else { b._amW = null; if ((b._amFail = (b._amFail || 0) + 1) >= 2) { this.stop(b); continue; } }
       }
       const br = box && box.getBoundingClientRect(), top = br ? Math.max(0, br.top) : 0, bot = br ? Math.min(innerHeight, br.bottom) : innerHeight;
       if (b.getBoundingClientRect().top > bot + Math.max(480, (bot - top) * 1.2)) continue; // not near the bottom yet
-      b._amW = { h, at: now };
+      b._amW = { h, at: now }; busy = true;
       b.click();
     }
+    // a page is on its way: look again shortly. Otherwise nothing runs until a scroll, tap, key or the observer
+    if (busy) this.tmr = setTimeout(() => this.later(), 600);
   },
 };
 document.addEventListener('scroll', () => AutoMore.later(), { capture: true, passive: true });
 document.addEventListener('focusin', () => AutoMore.later());
 addEventListener('resize', () => AutoMore.later(), { passive: true });
-// lists too short to scroll, and pages that open already near their end
-setInterval(() => AutoMore.later(), 600);
+// lists too short to scroll, and pages that open already near their end: a short look after each tap or key
+['click', 'keydown', 'touchend'].forEach((t) => document.addEventListener(t, () => AutoMore.poke(), { capture: true, passive: true }));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) AutoMore.later(); });
+AutoMore.poke();
 addEventListener('beforeunload', () => saveProgress(true));
 
 const rerender = debounce(() => {
@@ -9155,7 +9316,7 @@ const Remote = {
     this.peers.set(id, { name: String(m.name || (known && known.name) || 'Phone').slice(0, 30), at: Date.now(), v: Number(m.v) || (known && known.v) || 0 });
     if (!known) {
       toast(`${m.name && m.name !== 'Phone' ? m.name.replace(/^\w/, (c) => c.toUpperCase()) : 'Your phone'} is connected as a remote`, 'ok', 3200);
-      Store.set('rmPaired', true); this.unhint(); this.paintCast();
+      Store.set('rmPaired', true); this.unhint(); this.paintCast(); Usage.add('feat', 'remote_connect');
     }
     switch (m.t) {
       case 'hi': this.push(true); return;
@@ -9170,6 +9331,7 @@ const Remote = {
   soon() { clearTimeout(this.soonT); this.soonT = setTimeout(() => this.push(), 40); },
   /* ---- keys: the same path a TV remote's keys take ---- */
   press(key) {
+    Usage.add('feat', 'remote_press');
     const a = document.activeElement, t = a && a !== document.body && a.isConnected ? a : document.body;
     const ev = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }); t.dispatchEvent(ev);
     // a text box keeps the arrows on a computer; a remote has no other way out of it
@@ -9582,11 +9744,13 @@ const Party = {
     clearInterval(this.hbT); this.hbT = setInterval(() => this.heartbeat(), 2000);
     // pings (clock offsets, and proof that a member is still there) only while someone else is in the room
     clearInterval(this.pingT); this.pingT = setInterval(() => { if (this.peers.size) this.send({ t: 'ping', a: Date.now() }); }, 5000);
+    Usage.partyStart(!!creating);
     if (creating) toast(`Party ${code} is open. Share the code or link.`, 'ok', 5000);
     this.render(); this.pill();
   },
   leave(quiet) {
     if (!this.code) return;
+    Usage.partyEnd();
     if (typeof PartyPlus !== 'undefined') PartyPlus.reset();
     try { this.bus && this.bus.send({ t: 'bye' }); } catch (e) { /* ignore */ }
     this.peers.forEach((p) => this.dropPeer(p.id)); this.peers.clear();
@@ -11256,7 +11420,7 @@ const SECTIONS = [
   ].map(([k, d]) => `<span class="kbd">${esc(k)}</span><span>${esc(d)}</span>`).join('')}</div>` }] },
   { id: 'data', icon: 'database', label: 'Data', intro: 'Your setup lives in this browser (and your account, if you sign in). The Setup Cloner moves all of it to another device in one code.', rows: () => [
     { group: 'Privacy' },
-    { key: 'anonStats', label: 'Share anonymous visit counts', help: 'Once per visit, Cloudflare Web Analytics counts the page, the site you came from, browser, country and load speed. No cookies, no IDs, nothing about your addons, keys or what you watch. Off sends nothing.', type: 'toggle' },
+    { key: 'anonStats', label: 'Share anonymous visit counts', help: 'Once per visit, Cloudflare Web Analytics counts the page, the site you came from, browser, country and load speed. MKCinema also adds up which sections, buttons and features get used, as daily totals for everyone together. No cookies, no IDs, no titles, nothing about your addons, keys or what you watch. Off sends nothing.', type: 'toggle' },
     { group: 'Setup Cloner' },
     { html: () => `<div class="set-row"><div><b>Include my private keys</b><small>Adds debrid, RPDB and OMDb keys. Only for your own devices: anyone with the code can use them.</small></div><div class="set-ctl"><button class="switch" type="button" id="cl-secrets" role="switch" aria-checked="false" aria-label="Include private keys"></button></div></div>` },
     { key: 'cloneCode', label: 'Setup code', help: 'Addons, Studio project, settings, proxy, watchlist, progress and Home layout, packed into one mkc:// code.', type: 'button', text: 'Copy setup code', icon: 'copy', run: async () => copyText(await Cloner.code({ secrets: $('#cl-secrets').classList.contains('on') })) },
@@ -11614,7 +11778,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.95.10';
+const APP_VERSION = '2.95.12';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -14745,6 +14909,7 @@ const Split = {
     };
   },
   open(seed) {
+    Usage.add('feat', 'split');
     if (!this.el) this.build();
     // mkc-278-split-land: watching sideways on a phone or tablet, Split Screen stays sideways. It takes the player's full
     // screen over without leaving it (so the phone never turns upright in between), or asks for it when the phone is
@@ -14789,6 +14954,7 @@ const Split = {
     this.open(ok ? { name: streamTitle(ctx), url: s.url, headers: s.behaviorHints && s.behaviorHints.proxyHeaders && s.behaviorHints.proxyHeaders.request, poster: ctx.meta ? metaPoster(ctx.meta) : null, startAt: live ? 0 : pNow(), live, ...this.playerSubs(ctx) } : null);
   },
   setCount(n) {
+    Usage.add('feat', `split:${Number(n) || 0}`);
     const keep = this.slots.filter((t) => t.state !== 'empty');
     keep.splice(n).forEach((t) => this.stopVideo(t));
     this.n = n; this.slots = Array.from({ length: n }, (_, i) => keep[i] || this.blank());
@@ -24739,6 +24905,9 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.95.11', date: '2026-11-26', items: [
+    ['better', 'Lighter lists', 'Long lists now look for more titles only while you scroll, which keeps the app lighter and saves battery.'],
+  ] },
   { v: '2.95.10', date: '2026-11-26', items: [
     ['better', 'Back closes the film', 'Swiping Back during a film now closes it straight away.'],
   ] },
@@ -38117,6 +38286,7 @@ const DevLink = {
     return X8.body('dvlLayer');
   },
   openTake() {
+    Usage.add('feat', 'devlink_open');
     if (!Account.user) { toast('Sign in first', 'err'); return; }
     this.layer(); this.mode = 'take'; X8.open('dvlLayer'); this.start();
   },
@@ -38175,7 +38345,7 @@ const DevLink = {
       this.send({ t: 'ok', id: me.id }); this.stop();
       A.unlocking = true; try { await A.pull({ force: true, quiet: true }); } finally { A.unlocking = false; }
       if (rewrap) { A.forceSeal = true; const m = A.m(); m.at.secrets = Math.max(SyncClock.now(), (m.rat.secrets || 0) + 1); A.saveMeta(); await A.push({ force: true }); }
-      this.paintTake('done'); if (!this.open()) toast('This device is linked. Your keys and addons are here now', 'ok', 6000);
+      this.paintTake('done'); Usage.add('feat', 'devlink_done'); if (!this.open()) toast('This device is linked. Your keys and addons are here now', 'ok', 6000);
       try { A.render(); if (!$('#settings').hidden && typeof renderSettingsBody === 'function') renderSettingsBody(); } catch (e) { /* closed */ }
     } catch (e) {
       this.send({ t: 'fail', id: me.id }); if (this.me === me) { this.stop(); this.paintTake('fail'); }
@@ -39508,6 +39678,7 @@ const Miko = {
   },
   open(prefill) {
     if (!this.enabled()) return;
+    Usage.add('feat', 'miko');
     this.build();
     const box = $('#mikoBox');
     if (!this.on) {

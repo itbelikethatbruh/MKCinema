@@ -2,6 +2,14 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.95.12 (2026-11-26)
+
+- Small performance and reliability improvements.
+
+## Web app 2.95.11 (2026-11-26)
+
+- Long lists now look for more titles only while you scroll, which keeps the app lighter and saves battery.
+
 ## Web app 2.95.10 (2026-11-26)
 
 - Swiping Back during a film now closes it straight away.

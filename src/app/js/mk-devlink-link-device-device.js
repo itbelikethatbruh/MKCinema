@@ -81,6 +81,7 @@ const DevLink = {
     return X8.body('dvlLayer');
   },
   openTake() {
+    Usage.add('feat', 'devlink_open');
     if (!Account.user) { toast('Sign in first', 'err'); return; }
     this.layer(); this.mode = 'take'; X8.open('dvlLayer'); this.start();
   },
@@ -139,7 +140,7 @@ const DevLink = {
       this.send({ t: 'ok', id: me.id }); this.stop();
       A.unlocking = true; try { await A.pull({ force: true, quiet: true }); } finally { A.unlocking = false; }
       if (rewrap) { A.forceSeal = true; const m = A.m(); m.at.secrets = Math.max(SyncClock.now(), (m.rat.secrets || 0) + 1); A.saveMeta(); await A.push({ force: true }); }
-      this.paintTake('done'); if (!this.open()) toast('This device is linked. Your keys and addons are here now', 'ok', 6000);
+      this.paintTake('done'); Usage.add('feat', 'devlink_done'); if (!this.open()) toast('This device is linked. Your keys and addons are here now', 'ok', 6000);
       try { A.render(); if (!$('#settings').hidden && typeof renderSettingsBody === 'function') renderSettingsBody(); } catch (e) { /* closed */ }
     } catch (e) {
       this.send({ t: 'fail', id: me.id }); if (this.me === me) { this.stop(); this.paintTake('fail'); }

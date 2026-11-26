@@ -259,7 +259,7 @@ function go(view, opts = {}) {
   if (typeof SeatHide !== 'undefined' && SeatHide.blocked(view)) { toast('This seat doesn’t show that section', 'info', 2200); return; }
   if (S.view === 'home' && view !== 'home' && window.MkHomePlace) MkHomePlace.leave();
   const backHome = view === 'home' && S.view !== 'home';
-  S.view = view;
+  S.view = view; Usage.add('view', view);
   $$('#tabs .tab, #mtabs [data-view]').forEach((t) => t.classList.toggle('on', t.dataset.view === view));
   const id = view === 'movie' || view === 'series' ? 'discover' : view;
   $$('.view').forEach((v) => { const on = v.id === `view-${id}`; if (on) { v.classList.remove('on'); void v.offsetWidth; } v.classList.toggle('on', on); });
@@ -417,12 +417,12 @@ function syncLayers() {
   if (open) layerT = setTimeout(() => b.toggle('layer-open', [...MENU_LAYERS, 'player'].some((x) => !$(`#${x}`).hidden)), 320); else b.remove('layer-open');
   if (IS_TV && typeof Nav !== 'undefined') Nav.settle();
 }
-function openLayer(id) { const el = $(`#${id}`); el.classList.remove('leaving'); el.hidden = false; syncLayers(); return el; }
+function openLayer(id) { const el = $(`#${id}`); if (el.hidden) Usage.layer(id, true); el.classList.remove('leaving'); el.hidden = false; syncLayers(); return el; }
 /* A closed layer is hidden at once (all logic sees it as closed), but CSS keeps .leaving[hidden] on screen for a short fade */
 function closeLayer(id) {
   if (id === 'detail') EpSheet.close();
   const el = $(`#${id}`); if (el.hidden) return;
-  el.hidden = true; syncLayers();
+  el.hidden = true; Usage.layer(id, false); syncLayers();
   if (CFG.reduceMotion) return;
   el.classList.add('leaving'); clearTimeout(el._leaveT); el._leaveT = setTimeout(() => el.classList.remove('leaving'), 240);
 }
@@ -1105,7 +1105,7 @@ async function playStream(ctx, stream, { startAt, _cin } = {}) {
   if (typeof MiniPlay !== 'undefined' && MiniPlay.on) MiniPlay.restore(true);
   if (!_cin && typeof CinemaMode !== 'undefined' && await CinemaMode.hold(ctx, stream, startAt)) return;
   if (!stream) return;
-  playReq++;
+  playReq++; Usage.add('feat', 'play'); Usage.add('feat', `play:${(ctx && ctx.type) || 'other'}`);
   if (stream.ytId) { if (!$('#player').hidden) closePlayer(); openTrailer(stream.ytId); return; }
   stream._tel = stream._tel || Telemetry.parse(stream);
   if (stream._tel.kind !== 'ext' && stream._tel.kind !== 'p2p' && extPlayer() && handoffUrl(stream) && !P.force) {
@@ -1983,7 +1983,7 @@ function openPalette(q = '', { ask = false } = {}) {
 }
 function closePalette() { closeLayer('palette'); }
 const recentSearches = () => Store.get('recentSearches', []);
-function rememberSearch(q) { q = q.trim(); if (q.length < 2) return; Store.set('recentSearches', [q, ...recentSearches().filter((x) => x.toLowerCase() !== q.toLowerCase())].slice(0, 8)); }
+function rememberSearch(q) { q = q.trim(); if (q.length < 2) return; Usage.add('feat', 'search'); Store.set('recentSearches', [q, ...recentSearches().filter((x) => x.toLowerCase() !== q.toLowerCase())].slice(0, 8)); }
 function titleItem(m, q, why) {
   return { kind: 'title', group: m.type === 'series' ? 'Series' : m.type === 'movie' ? 'Movies' : 'Channels & more', m, label: m.name, sub: why || [yearOf(m), genresOf(m).slice(0, 2).join(', ')].filter(Boolean).join(' · '), run: () => { rememberSearch(q); openDetail(m); } };
 }
@@ -2501,8 +2501,18 @@ $('#retryCinemeta').onclick = () => installAddon(CINEMETA, true);
    normal button so the next page can still be asked for by hand, and pressing it turns the automatic loading back on. */
 const AutoMore = {
   SEL: '#discMore,#chMore,#mkdMore,#netMore,#animeMore,#xtMore,#ltMore,#nbMore,#brMore,#cpAll',
-  raf: 0,
+  raf: 0, tmr: 0, pk: 0,
+  /* 2.95.11 auto-more idle */
+  // a button coming into range (a list grew, a hidden button showed) wakes the check; nothing polls while idle
+  io: typeof IntersectionObserver === 'function' ? new IntersectionObserver(() => AutoMore.later(), { rootMargin: '0px 0px 100% 0px' }) : null,
+  seen: new WeakSet(),
   later() { if (!this.raf) this.raf = requestAnimationFrame(() => this.check()); },
+  // a tap or key may open a list a moment later: look a few times, then stop
+  poke() {
+    clearTimeout(this.pk); const at = [300, 1200, 3000, 7000]; let i = 0;
+    const go = () => { this.later(); if (++i < at.length) this.pk = setTimeout(go, at[i] - at[i - 1]); };
+    this.pk = setTimeout(go, at[0]);
+  },
   // the nearest box that scrolls (a layer or panel), or null for the page itself
   box(el) {
     for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
@@ -2510,38 +2520,48 @@ const AutoMore = {
     }
     return null;
   },
-  quiet(b) { b.classList.add('am-on'); b.tabIndex = -1; b.setAttribute('aria-busy', 'true'); },
+  quiet(b) { // only writes what is not already so
+    if (!b.classList.contains('am-on')) b.classList.add('am-on');
+    if (b.getAttribute('tabindex') !== '-1') b.tabIndex = -1;
+    if (b.getAttribute('aria-busy') !== 'true') b.setAttribute('aria-busy', 'true');
+  },
   // two pages in a row did not arrive: a normal button again, and a press restarts the automatic loading
   stop(b) {
     b._amStop = true; b.classList.remove('am-on'); b.removeAttribute('tabindex'); b.removeAttribute('aria-busy');
     b.addEventListener('click', () => { b._amStop = false; b._amFail = 0; b._amW = null; }, { once: true, capture: true });
   },
   check() {
-    this.raf = 0;
-    if (document.hidden || document.body.classList.contains('mk-player-on')) return;
+    this.raf = 0; clearTimeout(this.tmr); this.tmr = 0;
+    if (document.hidden || document.body.classList.contains('mk-player-on') || document.getElementById('mkLangPick')) return;
+    let busy = false;
     for (const b of document.querySelectorAll(this.SEL)) {
+      if (this.io && !this.seen.has(b)) { this.seen.add(b); this.io.observe(b); }
       if (b.hidden || b.disabled || b._amStop) continue;
-      if (!b.classList.contains('am-on')) this.quiet(b);
+      this.quiet(b);
       if (!b.getClientRects().length || b.closest('[hidden],[inert]')) continue;
       if (b._amBox === undefined || (b._amBox && !b._amBox.contains(b))) b._amBox = this.box(b);
       const box = b._amBox, h = box ? box.scrollHeight : document.documentElement.scrollHeight, w = b._amW, now = performance.now();
       if (w) {
         if (h > w.h + 8) { b._amW = null; b._amFail = 0; } // the page arrived: ready for the next one
-        else if (now - w.at < 8000) continue; // still on its way
+        else if (now - w.at < 8000) { busy = true; continue; } // still on its way
         else { b._amW = null; if ((b._amFail = (b._amFail || 0) + 1) >= 2) { this.stop(b); continue; } }
       }
       const br = box && box.getBoundingClientRect(), top = br ? Math.max(0, br.top) : 0, bot = br ? Math.min(innerHeight, br.bottom) : innerHeight;
       if (b.getBoundingClientRect().top > bot + Math.max(480, (bot - top) * 1.2)) continue; // not near the bottom yet
-      b._amW = { h, at: now };
+      b._amW = { h, at: now }; busy = true;
       b.click();
     }
+    // a page is on its way: look again shortly. Otherwise nothing runs until a scroll, tap, key or the observer
+    if (busy) this.tmr = setTimeout(() => this.later(), 600);
   },
 };
 document.addEventListener('scroll', () => AutoMore.later(), { capture: true, passive: true });
 document.addEventListener('focusin', () => AutoMore.later());
 addEventListener('resize', () => AutoMore.later(), { passive: true });
-// lists too short to scroll, and pages that open already near their end
-setInterval(() => AutoMore.later(), 600);
+// lists too short to scroll, and pages that open already near their end: a short look after each tap or key
+['click', 'keydown', 'touchend'].forEach((t) => document.addEventListener(t, () => AutoMore.poke(), { capture: true, passive: true }));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) AutoMore.later(); });
+AutoMore.poke();
 addEventListener('beforeunload', () => saveProgress(true));
 
 const rerender = debounce(() => {

@@ -552,6 +552,7 @@ const Split = {
     };
   },
   open(seed) {
+    Usage.add('feat', 'split');
     if (!this.el) this.build();
     // mkc-278-split-land: watching sideways on a phone or tablet, Split Screen stays sideways. It takes the player's full
     // screen over without leaving it (so the phone never turns upright in between), or asks for it when the phone is
@@ -596,6 +597,7 @@ const Split = {
     this.open(ok ? { name: streamTitle(ctx), url: s.url, headers: s.behaviorHints && s.behaviorHints.proxyHeaders && s.behaviorHints.proxyHeaders.request, poster: ctx.meta ? metaPoster(ctx.meta) : null, startAt: live ? 0 : pNow(), live, ...this.playerSubs(ctx) } : null);
   },
   setCount(n) {
+    Usage.add('feat', `split:${Number(n) || 0}`);
     const keep = this.slots.filter((t) => t.state !== 'empty');
     keep.splice(n).forEach((t) => this.stopVideo(t));
     this.n = n; this.slots = Array.from({ length: n }, (_, i) => keep[i] || this.blank());
