@@ -469,10 +469,158 @@ function markEpisodes() {
   if (!D.meta || !$('#dEps')) return;
   const cur = D.video ? videoIdFor(D.meta, D.video) : '';
   const shown = Number(($('#dSeasons .chip.on') || {}).dataset ? $('#dSeasons .chip.on').dataset.season : NaN);
-  if (D.video && shown !== seasonNo(D.video)) { renderDetail(false); return; }
+  if (D.video && shown !== seasonNo(D.video)) { Seasons.swap(); return; }
   $$('#dEps [data-vid]').forEach((b) => b.classList.toggle('on', b.dataset.vid === cur));
 }
 $('#epSheet').addEventListener('click', (e) => { if (e.target.id === 'epSheet' || e.target.closest('.es-grab')) EpSheet.close(); });
+/* 2.95.11 steady seasons */
+/* Picking another season swaps only the episode list, in place. Nothing above the list changes, so the page never
+   jumps; the list keeps its old height until that extra space is off screen, so nothing below it moves while you look
+   at it; the new episodes fade in over the old ones (opacity and a small rise only); the season chips are not rebuilt,
+   so the TV highlight stays where it is. The same swap serves the player's Episodes panel and an episode sheet that
+   steps into another season. */
+const Seasons = {
+  pickEp(v) { D.video = v; D.season = seasonNo(v); markEpisodes(); EpSheet.open(); loadDetailStreams(); },
+  motion() {
+    if (document.documentElement.classList.contains('lite') || (typeof CFG === 'object' && CFG.reduceMotion)) return false;
+    try { return !matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return true; }
+  },
+  chips(root, n) {
+    $$('[data-season]', root).forEach((b) => { const on = Number(b.dataset.season) === n; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+  },
+  scroller(el) {
+    for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      const o = getComputedStyle(p).overflowY; if ((o === 'auto' || o === 'scroll') && p.scrollHeight > p.clientHeight + 2) return p;
+    }
+    return document.scrollingElement || document.documentElement;
+  },
+  // the old episodes stay on top for a moment, fading out, while the new ones fade in underneath
+  ghost(list, scrolled) {
+    const g = document.createElement('div');
+    g.className = `${list.className} ss-ghost`.replace(/\bss-in\b/g, ''); g.setAttribute('aria-hidden', 'true'); g.inert = true;
+    while (list.firstChild) g.appendChild(list.firstChild);
+    g.querySelectorAll('[id],[data-vid],[data-nav],[tabindex]').forEach((e) => { e.removeAttribute('id'); e.removeAttribute('data-vid'); e.removeAttribute('data-nav'); e.setAttribute('tabindex', '-1'); });
+    const a = list.getBoundingClientRect();
+    g.style.cssText = `width:${a.width}px;height:${a.height}px;max-height:none`;
+    list.after(g);
+    // placed from where it would sit (just after the list) back onto the list, whatever box it sits in
+    const b = g.getBoundingClientRect();
+    g.style.marginTop = `${a.top - b.top}px`; g.style.marginLeft = `${a.left - b.left}px`;
+    if (scrolled) g.scrollTop = scrolled;
+    setTimeout(() => g.remove(), 460);
+    return g;
+  },
+  // puts new episodes into a list without moving anything on screen
+  put(list, html, { own = false } = {}) {
+    const sc = own ? list : this.scroller(list), y0 = sc.scrollTop, h0 = list.offsetHeight;
+    if (list._ssGhost) { list._ssGhost.remove(); list._ssGhost = null; }
+    const anim = this.motion() && h0 > 0 && !!list.getClientRects().length;
+    if (anim) list._ssGhost = this.ghost(list, own ? y0 : 0);
+    if (!own && h0) list.style.minHeight = `${Math.max(h0, parseFloat(list.style.minHeight) || 0)}px`;
+    list.innerHTML = html;
+    if (own) list.scrollTop = 0; else if (sc.scrollTop !== y0) sc.scrollTop = y0;
+    // pictures near the top are asked for at once (not one frame later by the lazy loader) and fade in when they arrive
+    $$('.th img', list).forEach((im, i) => {
+      if (i < 8 && im.dataset.lsrc && typeof PhoneImgs === 'object') PhoneImgs.show(im);
+      if (!(im.complete && im.naturalWidth > 2)) im.classList.add('ss-wait');
+    });
+    if (anim) { list.classList.remove('ss-in'); void list.offsetWidth; list.classList.add('ss-in'); clearTimeout(list._ssT); list._ssT = setTimeout(() => list.classList.remove('ss-in'), 700); }
+    if (!own) this.keep(list, sc);
+  },
+  // the kept height goes once the empty part is below the bottom of the screen (or the list fills it again)
+  keep(list, sc) {
+    if (list._ssKeep) list._ssKeep();
+    const box = sc === document.scrollingElement || sc === document.documentElement ? window : sc;
+    let raf = 0;
+    const check = () => {
+      raf = 0;
+      if (!list.isConnected || !list.style.minHeight) { stop(); return; }
+      const r = list.getBoundingClientRect(), kids = [...list.children].filter((k) => !k.hidden && k.getClientRects().length);
+      const end = kids.length ? Math.max(...kids.map((k) => k.getBoundingClientRect().bottom)) : r.top;
+      const vb = box === window ? innerHeight : sc.getBoundingClientRect().bottom;
+      if (end >= r.bottom - 2 || end >= vb) { list.style.minHeight = ''; stop(); }
+    };
+    const on = () => { if (!raf) raf = requestAnimationFrame(check); };
+    const stop = () => { box.removeEventListener('scroll', on); list.removeEventListener('input', free, true); if (list._ssKeep === stop) list._ssKeep = null; };
+    const free = () => { list.style.minHeight = ''; stop(); };
+    box.addEventListener('scroll', on, { passive: true });
+    list._ssKeep = stop;
+    setTimeout(on, 480);
+  },
+  // title page
+  swap() {
+    const m = D.meta, list = $('#dEps');
+    if (!m || !list) { renderDetail(false); return; }
+    this.chips($('#dSeasons'), D.season);
+    this.put(list, episodesHTML(m, D.season, D.video));
+    bindEpisodes(list, m, this.pickEp);
+    icons();
+    try { if (window.MkFiller) MkFiller.paint(m); } catch (e) { /* tags are extra */ }
+    // the search and sort bar above the list stays as it was (hiding it for a short season would pull the list up)
+    const bar = $('#epTools'), had = bar && !bar.hidden;
+    try { if (window.MkEpTools) MkEpTools.mount(); } catch (e) { /* the list works without search and sort */ }
+    if (had && bar.isConnected) bar.hidden = false;
+  },
+  pick(n) {
+    if (!D.meta) return;
+    const shown = Number(($('#dSeasons .chip.on') || { dataset: {} }).dataset.season);
+    D.season = n;
+    if (shown === n && $('#dEps')) return;
+    this.swap(); renderStreamsPanel();
+  },
+  // player Episodes panel
+  drawer(n) {
+    const meta = P.ctx && P.ctx.meta, list = $('#epDrawerList'); if (!meta || !list) return;
+    if (P.epSeason === n && list.children.length) return;
+    P.epSeason = n;
+    this.chips($('#epDrawerSeasons'), n);
+    this.put(list, episodesHTML(meta, n, P.ctx.video), { own: true });
+    bindEpisodes(list, meta, (v) => { closeDrawers(); playEpisode(v); });
+    icons();
+  },
+  // a finger on a chip, the mouse over it or the TV highlight on it starts that season's pictures early
+  warm(b) {
+    const n = Number(b.dataset.season), drawer = !!b.closest('#epDrawerSeasons');
+    const m = drawer ? P.ctx && P.ctx.meta : D.meta; if (!m || !Array.isArray(m.videos)) return;
+    if (!this.warmed) this.warmed = new Set();
+    const k = `${m.id}:${n}`; if (this.warmed.has(k)) return; this.warmed.add(k);
+    try { if (window.MkStills) MkStills.fix(m, n); } catch (e) { /* the catalog's pictures stay */ }
+    const list = (seasonsOf(m).find(([s]) => s === n) || [0, []])[1];
+    list.slice(0, 8).forEach((v) => { if (v.thumbnail) { const i = new Image(); i.decoding = 'async'; i.referrerPolicy = 'no-referrer'; i.src = v.thumbnail; } });
+  },
+  // the show's own art for an episode whose picture is missing, instead of an empty grey box
+  art(img) {
+    const m = img.closest('#epDrawer') ? P.ctx && P.ctx.meta : D.meta;
+    let u = ''; try { u = m ? metaBg(m) || metaPoster(m) || '' : ''; } catch (e) { u = ''; }
+    return u;
+  },
+};
+(() => {
+  const at = (e) => { const b = e.target && e.target.closest && e.target.closest('#dSeasons [data-season], #epDrawerSeasons [data-season]'); if (b) Seasons.warm(b); };
+  document.addEventListener('pointerdown', at, { passive: true, capture: true });
+  document.addEventListener('focusin', at, true);
+  document.addEventListener('pointerover', (e) => { if (e.pointerType === 'mouse') at(e); }, { passive: true });
+  const EP = '.ep .th img, .es-still img';
+  // runs before the general picture fallback (that one listens on document)
+  addEventListener('error', (e) => {
+    const im = e.target; if (!(im instanceof HTMLImageElement) || !im.matches(EP)) return;
+    if (im.dataset.ssfb === '1' || im.dataset.fb === '1') return;
+    const u = Seasons.art(im); if (!u || u === im.getAttribute('src')) return;
+    im.dataset.ssfb = '1'; im.dataset.fb = '1'; im.removeAttribute('srcset'); im.classList.add('ss-art', 'ss-wait'); im.src = u;
+    e.stopImmediatePropagation();
+  }, true);
+  // the show's art failed too: the drawn picture, as before
+  addEventListener('error', (e) => {
+    const im = e.target; if (!(im instanceof HTMLImageElement) || im.dataset.ssfb !== '1' || !im.matches(EP)) return;
+    im.dataset.ssfb = '2'; im.classList.remove('ss-art', 'ss-wait');
+    try { im.src = Posters.make(im.dataset.title || im.alt || '', im.dataset.seed || 'x', 960, 540); } catch (x) { /* stays empty */ }
+  }, true);
+  const shown = (e) => { const im = e.target; if (im instanceof HTMLImageElement && im.classList.contains('ss-wait') && im.naturalWidth > 2) im.classList.remove('ss-wait'); };
+  addEventListener('load', shown, true);
+  // never left invisible
+  setInterval(() => { $$('img.ss-wait').forEach((im) => { if (im.dataset.lsrc) return; const t = im._ssAt || (im._ssAt = Date.now()); if (Date.now() - t > 8000 || (im.complete && im.naturalWidth > 2)) im.classList.remove('ss-wait'); }); }, 1500);
+})();
+
 
 async function openDetail(seed, { videoId } = {}) {
   remember(seed); HlsLoad.warm();
@@ -602,9 +750,9 @@ function renderDetail(loading) {
   if (window.MkLangArt && MkLangArt.wants()) MkLangArt.detail(m);
   if (window.MkReviews && !loading) MkReviews.place(m);
   $('#dList').onclick = () => { toggleWatchlist(m); renderDetail(false); renderStreamsPanel(); };
-  $$('#dSeasons [data-season]').forEach((b) => b.addEventListener('click', () => { D.season = Number(b.dataset.season); renderDetail(false); renderStreamsPanel(); }));
+  $$('#dSeasons [data-season]').forEach((b) => b.addEventListener('click', () => Seasons.pick(Number(b.dataset.season))));
   if (window.MkFiller) MkFiller.paint(m);
-  bindEpisodes($('#dEps'), m, (v) => { D.video = v; D.season = seasonNo(v); markEpisodes(); EpSheet.open(); loadDetailStreams(); });
+  bindEpisodes($('#dEps'), m, Seasons.pickEp);
   renderStreamsPanel();
 }
 function episodesHTML(meta, season, cur) {
@@ -1521,7 +1669,7 @@ function renderEpisodeDrawer() {
   const ss = seasonsOf(meta); if (P.epSeason == null) P.epSeason = (ss.find(([s]) => s !== 0) || ss[0])[0];
   $('#epDrawerTitle').textContent = meta.name;
   $('#epDrawerSeasons').innerHTML = ss.map(([s]) => `<button class="chip ${s === P.epSeason ? 'on' : ''}" type="button" data-nav data-season="${s}">${s === 0 ? 'Specials' : `S${s}`}</button>`).join('');
-  $$('#epDrawerSeasons [data-season]').forEach((b) => b.addEventListener('click', () => { P.epSeason = Number(b.dataset.season); renderEpisodeDrawer(); }));
+  $$('#epDrawerSeasons [data-season]').forEach((b) => b.addEventListener('click', () => Seasons.drawer(Number(b.dataset.season))));
   $('#epDrawerList').innerHTML = episodesHTML(meta, P.epSeason, P.ctx.video);
   bindEpisodes($('#epDrawerList'), meta, (v) => { closeDrawers(); playEpisode(v); });
   icons();

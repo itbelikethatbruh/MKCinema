@@ -1,0 +1,24 @@
+/* 2.95.11 steady seasons */
+/* the episode list is swapped in place: scroll anchoring never picks an episode that is about to be replaced */
+#dEps,#epDrawerList{overflow-anchor:none}
+/* while the list keeps its old height, its episodes stay packed at the top (a grid would spread them out) */
+#dEps,#epDrawerList,.ss-ghost{align-content:start}
+.ss-ghost{position:absolute!important;z-index:2;pointer-events:none;overflow:hidden!important;padding-bottom:0;animation:ssOut .28s ease-in both}
+.ss-in>.ep{animation:ssIn .4s cubic-bezier(.2,.75,.2,1) both}
+.ss-in>.ep:nth-child(2){animation-delay:.03s}.ss-in>.ep:nth-child(3){animation-delay:.06s}.ss-in>.ep:nth-child(4){animation-delay:.09s}
+.ss-in>.ep:nth-child(5){animation-delay:.12s}.ss-in>.ep:nth-child(n+6){animation-delay:.15s}
+@keyframes ssOut{from{opacity:1}to{opacity:0}}
+@keyframes ssIn{from{opacity:0;transform:translate3d(0,8px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+/* an episode picture that is still on its way is see-through over the dark box, then fades in */
+.ep .th img,.es-still img{transition:opacity .3s ease}
+.ep .th img.ss-wait,.es-still img.ss-wait{opacity:0}
+/* the show's own art standing in for a missing episode picture, a little darker so it reads as a stand-in */
+.ep .th img.ss-art,.es-still img.ss-art{filter:brightness(.62) saturate(.85)}
+/* Where to watch takes no room until it has something to show (an empty one took 18 px, then left and pulled the page up) */
+#dWtw:empty{display:none}
+/* posters fade in over their dark box when they arrive (ones already loaded show at once) */
+html.mk-pfade [data-card] .l0>img.mk-pf{opacity:0}
+html.mk-pfade [data-card] .l0>img.mk-in{transition:opacity .3s ease}
+html.lite .ss-in>.ep{animation:none}
+html.lite .ss-ghost{display:none}
+@media (prefers-reduced-motion:reduce){.ss-in>.ep{animation:none}.ss-ghost{display:none}.ep .th img,.es-still img{transition:none}}

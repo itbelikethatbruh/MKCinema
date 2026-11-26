@@ -55,6 +55,8 @@ jobs:
         run: NODE_PATH="$RUNNER_TEMP/pw/node_modules" node tools/smoke-web.mjs app
       - name: Smoke test, minified build
         run: NODE_PATH="$RUNNER_TEMP/pw/node_modules" node tools/smoke-web.mjs "$RUNNER_TEMP/web"
+      - name: Layout steadiness, minified build
+        run: NODE_PATH="$RUNNER_TEMP/pw/node_modules" node tools/layout-check.mjs "$RUNNER_TEMP/web"
 
   site:
     runs-on: ubuntu-latest

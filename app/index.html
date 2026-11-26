@@ -2269,6 +2269,30 @@ html.mk-pill body .dock-wrap:before{height:100%!important;background:linear-grad
 <style id="mk-2959-subs-simple">/* 2.95.9 simpler subtitles */
 #setBody:not(.sbe-open) .sbe-adv{display:none}
 </style>
+<style id="mk-29511-seasons">/* 2.95.11 steady seasons */
+/* the episode list is swapped in place: scroll anchoring never picks an episode that is about to be replaced */
+#dEps,#epDrawerList{overflow-anchor:none}
+/* while the list keeps its old height, its episodes stay packed at the top (a grid would spread them out) */
+#dEps,#epDrawerList,.ss-ghost{align-content:start}
+.ss-ghost{position:absolute!important;z-index:2;pointer-events:none;overflow:hidden!important;padding-bottom:0;animation:ssOut .28s ease-in both}
+.ss-in>.ep{animation:ssIn .4s cubic-bezier(.2,.75,.2,1) both}
+.ss-in>.ep:nth-child(2){animation-delay:.03s}.ss-in>.ep:nth-child(3){animation-delay:.06s}.ss-in>.ep:nth-child(4){animation-delay:.09s}
+.ss-in>.ep:nth-child(5){animation-delay:.12s}.ss-in>.ep:nth-child(n+6){animation-delay:.15s}
+@keyframes ssOut{from{opacity:1}to{opacity:0}}
+@keyframes ssIn{from{opacity:0;transform:translate3d(0,8px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+/* an episode picture that is still on its way is see-through over the dark box, then fades in */
+.ep .th img,.es-still img{transition:opacity .3s ease}
+.ep .th img.ss-wait,.es-still img.ss-wait{opacity:0}
+/* the show's own art standing in for a missing episode picture, a little darker so it reads as a stand-in */
+.ep .th img.ss-art,.es-still img.ss-art{filter:brightness(.62) saturate(.85)}
+/* Where to watch takes no room until it has something to show (an empty one took 18 px, then left and pulled the page up) */
+#dWtw:empty{display:none}
+/* posters fade in over their dark box when they arrive (ones already loaded show at once) */
+html.mk-pfade [data-card] .l0>img.mk-pf{opacity:0}
+html.mk-pfade [data-card] .l0>img.mk-in{transition:opacity .3s ease}
+html.lite .ss-in>.ep{animation:none}
+html.lite .ss-ghost{display:none}
+@media (prefers-reduced-motion:reduce){.ss-in>.ep{animation:none}.ss-ghost{display:none}.ep .th img,.es-still img{transition:none}}</style>
 </head>
 <body class="locked">
 <script id="mk-2881-pre">
@@ -4660,10 +4684,158 @@ function markEpisodes() {
   if (!D.meta || !$('#dEps')) return;
   const cur = D.video ? videoIdFor(D.meta, D.video) : '';
   const shown = Number(($('#dSeasons .chip.on') || {}).dataset ? $('#dSeasons .chip.on').dataset.season : NaN);
-  if (D.video && shown !== seasonNo(D.video)) { renderDetail(false); return; }
+  if (D.video && shown !== seasonNo(D.video)) { Seasons.swap(); return; }
   $$('#dEps [data-vid]').forEach((b) => b.classList.toggle('on', b.dataset.vid === cur));
 }
 $('#epSheet').addEventListener('click', (e) => { if (e.target.id === 'epSheet' || e.target.closest('.es-grab')) EpSheet.close(); });
+/* 2.95.11 steady seasons */
+/* Picking another season swaps only the episode list, in place. Nothing above the list changes, so the page never
+   jumps; the list keeps its old height until that extra space is off screen, so nothing below it moves while you look
+   at it; the new episodes fade in over the old ones (opacity and a small rise only); the season chips are not rebuilt,
+   so the TV highlight stays where it is. The same swap serves the player's Episodes panel and an episode sheet that
+   steps into another season. */
+const Seasons = {
+  pickEp(v) { D.video = v; D.season = seasonNo(v); markEpisodes(); EpSheet.open(); loadDetailStreams(); },
+  motion() {
+    if (document.documentElement.classList.contains('lite') || (typeof CFG === 'object' && CFG.reduceMotion)) return false;
+    try { return !matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return true; }
+  },
+  chips(root, n) {
+    $$('[data-season]', root).forEach((b) => { const on = Number(b.dataset.season) === n; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+  },
+  scroller(el) {
+    for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      const o = getComputedStyle(p).overflowY; if ((o === 'auto' || o === 'scroll') && p.scrollHeight > p.clientHeight + 2) return p;
+    }
+    return document.scrollingElement || document.documentElement;
+  },
+  // the old episodes stay on top for a moment, fading out, while the new ones fade in underneath
+  ghost(list, scrolled) {
+    const g = document.createElement('div');
+    g.className = `${list.className} ss-ghost`.replace(/\bss-in\b/g, ''); g.setAttribute('aria-hidden', 'true'); g.inert = true;
+    while (list.firstChild) g.appendChild(list.firstChild);
+    g.querySelectorAll('[id],[data-vid],[data-nav],[tabindex]').forEach((e) => { e.removeAttribute('id'); e.removeAttribute('data-vid'); e.removeAttribute('data-nav'); e.setAttribute('tabindex', '-1'); });
+    const a = list.getBoundingClientRect();
+    g.style.cssText = `width:${a.width}px;height:${a.height}px;max-height:none`;
+    list.after(g);
+    // placed from where it would sit (just after the list) back onto the list, whatever box it sits in
+    const b = g.getBoundingClientRect();
+    g.style.marginTop = `${a.top - b.top}px`; g.style.marginLeft = `${a.left - b.left}px`;
+    if (scrolled) g.scrollTop = scrolled;
+    setTimeout(() => g.remove(), 460);
+    return g;
+  },
+  // puts new episodes into a list without moving anything on screen
+  put(list, html, { own = false } = {}) {
+    const sc = own ? list : this.scroller(list), y0 = sc.scrollTop, h0 = list.offsetHeight;
+    if (list._ssGhost) { list._ssGhost.remove(); list._ssGhost = null; }
+    const anim = this.motion() && h0 > 0 && !!list.getClientRects().length;
+    if (anim) list._ssGhost = this.ghost(list, own ? y0 : 0);
+    if (!own && h0) list.style.minHeight = `${Math.max(h0, parseFloat(list.style.minHeight) || 0)}px`;
+    list.innerHTML = html;
+    if (own) list.scrollTop = 0; else if (sc.scrollTop !== y0) sc.scrollTop = y0;
+    // pictures near the top are asked for at once (not one frame later by the lazy loader) and fade in when they arrive
+    $$('.th img', list).forEach((im, i) => {
+      if (i < 8 && im.dataset.lsrc && typeof PhoneImgs === 'object') PhoneImgs.show(im);
+      if (!(im.complete && im.naturalWidth > 2)) im.classList.add('ss-wait');
+    });
+    if (anim) { list.classList.remove('ss-in'); void list.offsetWidth; list.classList.add('ss-in'); clearTimeout(list._ssT); list._ssT = setTimeout(() => list.classList.remove('ss-in'), 700); }
+    if (!own) this.keep(list, sc);
+  },
+  // the kept height goes once the empty part is below the bottom of the screen (or the list fills it again)
+  keep(list, sc) {
+    if (list._ssKeep) list._ssKeep();
+    const box = sc === document.scrollingElement || sc === document.documentElement ? window : sc;
+    let raf = 0;
+    const check = () => {
+      raf = 0;
+      if (!list.isConnected || !list.style.minHeight) { stop(); return; }
+      const r = list.getBoundingClientRect(), kids = [...list.children].filter((k) => !k.hidden && k.getClientRects().length);
+      const end = kids.length ? Math.max(...kids.map((k) => k.getBoundingClientRect().bottom)) : r.top;
+      const vb = box === window ? innerHeight : sc.getBoundingClientRect().bottom;
+      if (end >= r.bottom - 2 || end >= vb) { list.style.minHeight = ''; stop(); }
+    };
+    const on = () => { if (!raf) raf = requestAnimationFrame(check); };
+    const stop = () => { box.removeEventListener('scroll', on); list.removeEventListener('input', free, true); if (list._ssKeep === stop) list._ssKeep = null; };
+    const free = () => { list.style.minHeight = ''; stop(); };
+    box.addEventListener('scroll', on, { passive: true });
+    list._ssKeep = stop;
+    setTimeout(on, 480);
+  },
+  // title page
+  swap() {
+    const m = D.meta, list = $('#dEps');
+    if (!m || !list) { renderDetail(false); return; }
+    this.chips($('#dSeasons'), D.season);
+    this.put(list, episodesHTML(m, D.season, D.video));
+    bindEpisodes(list, m, this.pickEp);
+    icons();
+    try { if (window.MkFiller) MkFiller.paint(m); } catch (e) { /* tags are extra */ }
+    // the search and sort bar above the list stays as it was (hiding it for a short season would pull the list up)
+    const bar = $('#epTools'), had = bar && !bar.hidden;
+    try { if (window.MkEpTools) MkEpTools.mount(); } catch (e) { /* the list works without search and sort */ }
+    if (had && bar.isConnected) bar.hidden = false;
+  },
+  pick(n) {
+    if (!D.meta) return;
+    const shown = Number(($('#dSeasons .chip.on') || { dataset: {} }).dataset.season);
+    D.season = n;
+    if (shown === n && $('#dEps')) return;
+    this.swap(); renderStreamsPanel();
+  },
+  // player Episodes panel
+  drawer(n) {
+    const meta = P.ctx && P.ctx.meta, list = $('#epDrawerList'); if (!meta || !list) return;
+    if (P.epSeason === n && list.children.length) return;
+    P.epSeason = n;
+    this.chips($('#epDrawerSeasons'), n);
+    this.put(list, episodesHTML(meta, n, P.ctx.video), { own: true });
+    bindEpisodes(list, meta, (v) => { closeDrawers(); playEpisode(v); });
+    icons();
+  },
+  // a finger on a chip, the mouse over it or the TV highlight on it starts that season's pictures early
+  warm(b) {
+    const n = Number(b.dataset.season), drawer = !!b.closest('#epDrawerSeasons');
+    const m = drawer ? P.ctx && P.ctx.meta : D.meta; if (!m || !Array.isArray(m.videos)) return;
+    if (!this.warmed) this.warmed = new Set();
+    const k = `${m.id}:${n}`; if (this.warmed.has(k)) return; this.warmed.add(k);
+    try { if (window.MkStills) MkStills.fix(m, n); } catch (e) { /* the catalog's pictures stay */ }
+    const list = (seasonsOf(m).find(([s]) => s === n) || [0, []])[1];
+    list.slice(0, 8).forEach((v) => { if (v.thumbnail) { const i = new Image(); i.decoding = 'async'; i.referrerPolicy = 'no-referrer'; i.src = v.thumbnail; } });
+  },
+  // the show's own art for an episode whose picture is missing, instead of an empty grey box
+  art(img) {
+    const m = img.closest('#epDrawer') ? P.ctx && P.ctx.meta : D.meta;
+    let u = ''; try { u = m ? metaBg(m) || metaPoster(m) || '' : ''; } catch (e) { u = ''; }
+    return u;
+  },
+};
+(() => {
+  const at = (e) => { const b = e.target && e.target.closest && e.target.closest('#dSeasons [data-season], #epDrawerSeasons [data-season]'); if (b) Seasons.warm(b); };
+  document.addEventListener('pointerdown', at, { passive: true, capture: true });
+  document.addEventListener('focusin', at, true);
+  document.addEventListener('pointerover', (e) => { if (e.pointerType === 'mouse') at(e); }, { passive: true });
+  const EP = '.ep .th img, .es-still img';
+  // runs before the general picture fallback (that one listens on document)
+  addEventListener('error', (e) => {
+    const im = e.target; if (!(im instanceof HTMLImageElement) || !im.matches(EP)) return;
+    if (im.dataset.ssfb === '1' || im.dataset.fb === '1') return;
+    const u = Seasons.art(im); if (!u || u === im.getAttribute('src')) return;
+    im.dataset.ssfb = '1'; im.dataset.fb = '1'; im.removeAttribute('srcset'); im.classList.add('ss-art', 'ss-wait'); im.src = u;
+    e.stopImmediatePropagation();
+  }, true);
+  // the show's art failed too: the drawn picture, as before
+  addEventListener('error', (e) => {
+    const im = e.target; if (!(im instanceof HTMLImageElement) || im.dataset.ssfb !== '1' || !im.matches(EP)) return;
+    im.dataset.ssfb = '2'; im.classList.remove('ss-art', 'ss-wait');
+    try { im.src = Posters.make(im.dataset.title || im.alt || '', im.dataset.seed || 'x', 960, 540); } catch (x) { /* stays empty */ }
+  }, true);
+  const shown = (e) => { const im = e.target; if (im instanceof HTMLImageElement && im.classList.contains('ss-wait') && im.naturalWidth > 2) im.classList.remove('ss-wait'); };
+  addEventListener('load', shown, true);
+  // never left invisible
+  setInterval(() => { $$('img.ss-wait').forEach((im) => { if (im.dataset.lsrc) return; const t = im._ssAt || (im._ssAt = Date.now()); if (Date.now() - t > 8000 || (im.complete && im.naturalWidth > 2)) im.classList.remove('ss-wait'); }); }, 1500);
+})();
+
 
 async function openDetail(seed, { videoId } = {}) {
   remember(seed); HlsLoad.warm();
@@ -4793,9 +4965,9 @@ function renderDetail(loading) {
   if (window.MkLangArt && MkLangArt.wants()) MkLangArt.detail(m);
   if (window.MkReviews && !loading) MkReviews.place(m);
   $('#dList').onclick = () => { toggleWatchlist(m); renderDetail(false); renderStreamsPanel(); };
-  $$('#dSeasons [data-season]').forEach((b) => b.addEventListener('click', () => { D.season = Number(b.dataset.season); renderDetail(false); renderStreamsPanel(); }));
+  $$('#dSeasons [data-season]').forEach((b) => b.addEventListener('click', () => Seasons.pick(Number(b.dataset.season))));
   if (window.MkFiller) MkFiller.paint(m);
-  bindEpisodes($('#dEps'), m, (v) => { D.video = v; D.season = seasonNo(v); markEpisodes(); EpSheet.open(); loadDetailStreams(); });
+  bindEpisodes($('#dEps'), m, Seasons.pickEp);
   renderStreamsPanel();
 }
 function episodesHTML(meta, season, cur) {
@@ -5712,7 +5884,7 @@ function renderEpisodeDrawer() {
   const ss = seasonsOf(meta); if (P.epSeason == null) P.epSeason = (ss.find(([s]) => s !== 0) || ss[0])[0];
   $('#epDrawerTitle').textContent = meta.name;
   $('#epDrawerSeasons').innerHTML = ss.map(([s]) => `<button class="chip ${s === P.epSeason ? 'on' : ''}" type="button" data-nav data-season="${s}">${s === 0 ? 'Specials' : `S${s}`}</button>`).join('');
-  $$('#epDrawerSeasons [data-season]').forEach((b) => b.addEventListener('click', () => { P.epSeason = Number(b.dataset.season); renderEpisodeDrawer(); }));
+  $$('#epDrawerSeasons [data-season]').forEach((b) => b.addEventListener('click', () => Seasons.drawer(Number(b.dataset.season))));
   $('#epDrawerList').innerHTML = episodesHTML(meta, P.epSeason, P.ctx.video);
   bindEpisodes($('#epDrawerList'), meta, (v) => { closeDrawers(); playEpisode(v); });
   icons();
@@ -11778,7 +11950,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.95.12';
+const APP_VERSION = '2.95.13';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -17043,14 +17215,14 @@ const TvHome = {
     // Left/Right at the end of a row stays on the last poster instead of leaping to another row
     const step = Nav.step.bind(Nav), move = Nav.move.bind(Nav);
     Nav.step = function (cur, dir) {
-      if (cur && cur.matches && cur.matches('.rail>.net-tile, .rail>.uni-card')) { let el = cur; do { el = dir === 'right' ? el.nextElementSibling : el.previousElementSibling; } while (el && !el.matches('[data-nav]')); return el || null; }
+      if (cur && cur.matches && cur.matches('.rail>.net-tile, .rail>.uni-card, .rail>.rail-all')) { let el = cur; do { el = dir === 'right' ? el.nextElementSibling : el.previousElementSibling; } while (el && !el.matches('[data-nav]')); return el || null; }
       return step(cur, dir);
     };
     Nav.move = function (dir, fast) {
       const a = document.activeElement;
       if (IS_TV && a && dir === 'right' && a.id === 'heroList' && $('#heroNext')) { Nav.focus($('#heroNext'), fast); return; }
       if (IS_TV && a && dir === 'left' && a.id === 'heroPlay' && $('#heroPrev')) { if (S.hero.length > 1) showHero(S.heroIdx - 1, -1); return; }
-      if ((dir === 'left' || dir === 'right') && a && a.matches && a.matches('.rail>.card, .rail>.net-tile, .rail>.uni-card') && !Nav.step(a, dir)) {
+      if ((dir === 'left' || dir === 'right') && a && a.matches && a.matches('.rail>.card, .rail>.net-tile, .rail>.uni-card, .rail>.rail-all') && !Nav.step(a, dir)) {
         const rail = a.closest('.rail');
         if (dir === 'right' && rail && rail._inf && typeof Endless !== 'undefined') { Endless.near(rail, a); return; } // an endless row loads more and the next press continues
         // 2.8.3: like Netflix, Right on the last poster goes round to the first one instead of stopping dead
@@ -17202,7 +17374,8 @@ const SimpleHome = {
       const cards = $$('.rail > [data-card]', sec), isTop = sec.dataset.curate === 'top10' || sec.classList.contains('ax-top10');
       if (!isTop && !/^My watchlist/.test(window.i18nEn ? i18nEn(sec.querySelector('.row-title')) : ((sec.querySelector('.row-title') || {}).textContent || ''))) {
         let left = cards.length;
-        cards.forEach((c) => { if (left > 8 && seen.has(c.dataset.id) && c !== document.activeElement && !c.contains(document.activeElement)) { c.remove(); left--; } });
+        const sr = sec.getBoundingClientRect(), live = sec.contains(document.activeElement) || (sr.bottom > -80 && sr.top < innerHeight + 80);
+        if (!live) cards.forEach((c) => { if (left > 8 && seen.has(c.dataset.id) && c !== document.activeElement && !c.contains(document.activeElement)) { c.remove(); left--; } });
       }
       $$('.rail > [data-card]', sec).forEach((c) => seen.add(c.dataset.id));
     });
@@ -24905,6 +25078,9 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.95.13', date: '2026-11-26', items: [
+    ['better', 'Smoother series pages', 'Switching seasons keeps your place and the episodes fade in, and every episode has a picture.'],
+  ] },
   { v: '2.95.11', date: '2026-11-26', items: [
     ['better', 'Lighter lists', 'Long lists now look for more titles only while you scroll, which keeps the app lighter and saves battery.'],
   ] },
@@ -37310,17 +37486,56 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
       eps.forEach((ep) => {
         const id = videoIdFor(meta, ep);
         $$(`#dEps [data-vid="${CSS.escape(id)}"] .th img`).forEach((img) => {
-          img.removeAttribute('data-fb'); img.removeAttribute('srcset'); img.src = ep.thumbnail;
+          img.removeAttribute('data-fb'); img.removeAttribute('data-ssfb'); img.removeAttribute('srcset'); delete img.dataset.lsrc; img.classList.add('ss-wait'); img.src = ep.thumbnail;
         });
         try { if (D.video === ep && EpSheet.isOpen()) $$('#esHead .es-still img').forEach((img) => { img.removeAttribute('data-fb'); img.removeAttribute('srcset'); img.src = ep.thumbnail; }); } catch (e) { /* no sheet */ }
       });
     },
     fix(meta, season) {
-      const tt = this.tt(meta); if (!tt || meta.type !== 'series' || !(season >= 1)) return;
+      const tt = this.tt(meta); if (!tt || meta.type !== 'series' || !(season >= 0)) return;
       if (!(meta.videos || []).some((ep) => Number(qq(ep.season, 1)) === season && this.shared(ep.thumbnail))) return;
       const k = `${tt}:${season}`, have = this.store().get(k);
-      if (have) { this.apply(meta, season, have); return; }
-      this.get(tt, season).then((v) => { if (v) this.paint(meta, this.apply(meta, season, v)); });
+      if (have) { this.apply(meta, season, have); this.deep(meta, season, have); return; }
+      this.get(tt, season).then((v) => { if (v) { this.paint(meta, this.apply(meta, season, v)); this.deep(meta, season, v); } });
+    },
+    /* 2.95.11: some shows are cut into seasons differently on TMDB (One Piece: our season 2 is inside TMDB's season 1).
+       When most of a season's episodes found no still, the TMDB seasons around it are asked, walking towards the one
+       whose air dates cover this season (6 at most, remembered for 3 days), and episodes are matched by exact name, or by
+       an air date that only one TMDB episode has. */
+    deep(meta, season, own) {
+      const tt = this.tt(meta); if (!tt || !(season >= 1)) return;
+      const all = (meta.videos || []).filter((ep) => Number(qq(ep.season, 1)) === season);
+      const need = all.filter((ep) => this.shared(ep.thumbnail));
+      if (!need.length || need.length < all.length / 2) return;
+      const key = `${tt}:x${season}`, have = this.store().get(key);
+      if (have) { this.paint(meta, this.apply(meta, season, have)); return; }
+      if (!this.deepWait) this.deepWait = new Set();
+      if (this.deepWait.has(key)) return;
+      const days = need.map((ep) => this.day(ep.released || ep.firstAired)).filter(isFinite); if (!days.length) return;
+      this.deepWait.add(key);
+      const lo = Math.min(...days), hi = Math.max(...days);
+      const pick = (ep, eps) => {
+        const n = this.norm(ep.name || ep.title), d = this.day(ep.released || ep.firstAired);
+        if (n.length >= 6) { const h = eps.filter((x) => this.norm(x[1]) === n); if (h.length === 1) return h[0]; }
+        if (isFinite(d)) { const h = eps.filter((x) => Math.abs(this.day(x[2]) - d) < 0.5); if (h.length === 1) return h[0]; }
+        return null;
+      };
+      const range = (v) => { const ds = ((v && v.e) || []).map((x) => this.day(x[2])).filter(isFinite); return ds.length ? [Math.min(...ds), Math.max(...ds)] : null; };
+      (async () => {
+        const got = new Map(), seen = new Set([season]);
+        let r = range(own), k = r && r[1] < lo ? season + 1 : season - 1;
+        for (let tries = 0; tries < 6 && k >= 1 && !seen.has(k); tries++) {
+          seen.add(k);
+          const v = await this.get(tt, k); if (!v) break;
+          need.forEach((ep) => { if (!got.has(ep)) { const x = pick(ep, v.e); if (x) got.set(ep, x[3]); } });
+          if (got.size >= need.length) break;
+          r = range(v); const step = k < season ? -1 : 1;
+          if (!r) k += step; else if (r[0] > hi) k -= 1; else if (r[1] < lo) k += 1; else if (got.size) break; else k += step;
+        }
+        const e = [...got].map(([ep, st]) => [Number(ep.episode), String(ep.name || ep.title || ''), String(ep.released || ep.firstAired || '').slice(0, 10), st]);
+        this.store().set(key, { e, t: Date.now() }); this.save();
+        if (e.length) this.paint(meta, this.apply(meta, season, { e }));
+      })().catch(() => {}).finally(() => this.deepWait.delete(key));
     },
   };
   window.MkStills = Stills;
@@ -51303,7 +51518,7 @@ const Eggs = {
       if (e.key === 'ArrowUp') {
         const before = document.activeElement, y = scrollY;
         setTimeout(() => {
-          if (document.activeElement !== before || scrollY !== y || y > 4) { ups = 0; return; }
+          if (document.activeElement !== before || scrollY !== y || y > 4 || document.body.classList.contains('layer-open')) { ups = 0; return; }
           const now = Date.now(); ups = now - upT < 1500 ? ups + 1 : 1; upT = now;
           if (ups >= 7) { ups = 0; this.credits(); }
         }, 120);
@@ -57828,7 +58043,8 @@ const ready=tok=>{if(!st||st.tok!==tok)return;
   Promise.race([dec,new Promise(r=>setTimeout(r,left))]).then(()=>{if(st&&st.tok===tok)requestAnimationFrame(reveal)})};
 const od=openDetail;
 openDetail=function(){
-  const fresh=det.hidden;let tok=0;
+  const a0=arguments[0];let other=false;try{other=!!(a0&&a0.id&&typeof D==='object'&&D&&D.meta&&String(a0.id)!==String(D.meta.id))}catch(e){}
+  const fresh=det.hidden||other;let tok=0;
   if(fresh){clearTimeout(inT);if(mo){mo.disconnect();mo=null}det.classList.remove('dp-in','dp-rm');if(st)clearTimeout(st.cap);tok=++seq;st={tok,t0:now(),cap:setTimeout(reveal,CAP)};det.classList.add('dp-hold')}
   let r;try{r=od.apply(this,arguments)}catch(e){reveal();throw e}
   if(tok){if(det.hidden){reveal()}else Promise.resolve(r).then(()=>ready(tok),()=>ready(tok))}
@@ -59768,6 +59984,102 @@ try{new MutationObserver(later).observe(de,{attributes:true,attributeFilter:['la
 setTimeout(later,0);setTimeout(later,1500);window.EzbFit=EzbFit;
 })();</script>
 
+<script id="mk-29511-steady">(()=>{/* 2.95.11 steady pages */
+'use strict';
+if(window.__mkSteady)return;window.__mkSteady=1;
+const $1=(s,r)=>(r||document).querySelector(s),$a=(s,r)=>[...(r||document).querySelectorAll(s)];
+const det=document.getElementById('detail'),pn=document.getElementById('detailPanel');
+
+/* 1. The title page redrawn for the same title (Watchlist, Spoiler Guard, coming back from the film, Shuffle) keeps
+   its place: the scroll position is put back, the page keeps its height until the new parts are in, More like this
+   and Where to watch keep their filled rows instead of starting again from grey boxes, and episode pictures already
+   on screen are kept (no blank flash while the lazy loader catches up). */
+let depth=0,qbTok=0;
+// the page's own buttons bar (one Play button + pill, Choose a source) is laid out in the same frame as the redraw, not one later
+const ezb=()=>{try{if(window.MKEasy&&!(typeof IS_TV!=='undefined'&&IS_TV)&&!document.documentElement.classList.contains('tv'))MKEasy.detail()}catch(e){}};
+const steadyDetail=()=>{
+  if(typeof renderDetail!=='function'||!det||!pn||renderDetail._mkSteady)return;
+  const rd=renderDetail;
+  renderDetail=function(loading){
+    if(depth)return rd.apply(this,arguments);
+    // 2.95.3 quick back puts this redraw one frame after the player is gone; it happens here, so it is steady too
+    const Q=window.MkQuickBack;
+    if(Q&&Q.hold&&!Q.inRd&&typeof D==='object'&&D&&D.video===Q.vid0&&!det.hidden){
+      const args=arguments,self=this,tok=++qbTok;
+      requestAnimationFrame(()=>setTimeout(()=>{
+        if(tok!==qbTok||det.hidden||!document.getElementById('player').hidden)return;
+        const a=document.activeElement,keep=a&&a!==document.body&&a.id;
+        Q.inRd=true;try{renderDetail.apply(self,args)}finally{Q.inRd=false}
+        try{if(keep&&document.activeElement===document.body){const n=document.getElementById(keep);if(n)(typeof Nav==='object'&&typeof IS_TV!=='undefined'&&IS_TV?Nav.focus(n,true):n.focus({preventScroll:true}))}}catch(e){}
+      },0));
+      return;
+    }
+    depth++;try{return steady.apply(this,arguments)}finally{depth--}
+  };
+  renderDetail._mkSteady=1;
+  const steady=function(loading){
+    const m=typeof D==='object'&&D?D.meta:null;
+    const same=!!(m&&!det.hidden&&pn.dataset.mkFor===String(m.id)&&!det.classList.contains('dp-hold'));
+    if(!same){pn.style.minHeight='';clearTimeout(pn._mkMinT);const r=rd.apply(this,arguments);ezb();if(m)pn.dataset.mkFor=String(m.id);return r}
+    const y=det.scrollTop,h=pn.offsetHeight;
+    const more=$1('#dMore',pn),moreOk=more&&more.dataset.for===String(m.id)?more:null;
+    const wtw=$1('#dWtw',pn),wtwOk=wtw&&wtw.children.length?wtw:null;
+    const imgs=new Map();$a('#dEps [data-vid] .th img',pn).forEach(im=>{if(im.complete&&im.naturalWidth>2&&!im.dataset.lsrc)imgs.set(im.closest('[data-vid]').dataset.vid+'|'+(im.getAttribute('src')||''),im)});
+    pn.style.minHeight=h+'px';
+    let r;try{r=rd.apply(this,arguments)}finally{
+      ezb();
+      try{
+        const nm=$1('#dMore',pn);if(moreOk&&nm&&nm!==moreOk&&nm.dataset.for!==String(m.id)){nm.replaceWith(moreOk)}
+        const nw=$1('#dWtw',pn);if(wtwOk&&nw&&nw!==wtwOk&&!nw.children.length){nw.replaceWith(wtwOk)}
+        if(imgs.size)$a('#dEps [data-vid] .th img',pn).forEach(im=>{const k=im.closest('[data-vid]').dataset.vid+'|'+(im.dataset.lsrc||im.getAttribute('src')||'');const o=imgs.get(k);if(o&&o!==im){o.className=im.className.replace(/\bss-wait\b/,'');im.replaceWith(o)}});
+      }catch(e){}
+      if(det.scrollTop!==y)det.scrollTop=y;
+      clearTimeout(pn._mkMinT);
+      // the kept height goes once whatever comes late has had time to arrive, and only when the space it frees is
+      // below the bottom of the screen (so nothing in view moves); otherwise at the next scroll that makes it so
+      const end=()=>{let b=0;for(const k of pn.children){if(k.getClientRects().length)b=Math.max(b,k.getBoundingClientRect().bottom)}return b};
+      const free=()=>{if(!pn.style.minHeight)return;if(det.hidden||end()>=innerHeight-1){pn.style.minHeight='';det.removeEventListener('scroll',later)}};
+      const later=()=>{clearTimeout(pn._mkMinT);pn._mkMinT=setTimeout(free,120)};
+      if(pn._mkMinL)det.removeEventListener('scroll',pn._mkMinL);pn._mkMinL=later;
+      pn._mkMinT=setTimeout(()=>{free();if(pn.style.minHeight)det.addEventListener('scroll',later,{passive:true})},1600);
+    }
+    return r;
+  };
+};
+// stays the outermost layer even when a feature wraps renderDetail later (checked whenever a title opens)
+const keepOuter=()=>{if(typeof openDetail!=='function'||openDetail._mkSteadyOd)return;const od=openDetail;openDetail=function(){try{steadyDetail()}catch(e){}return od.apply(this,arguments)};openDetail._mkSteadyOd=1;try{Object.assign(openDetail,od)}catch(e){}};
+
+/* 2. Toasts: the ones already showing glide to their new place when one arrives or leaves (they jumped) */
+const toasts=()=>{
+  const box=document.getElementById('toasts');if(!box||box._mkFlip)return;box._mkFlip=1;
+  let last=new Map();
+  const snap=()=>{const m=new Map();for(const t of box.children)m.set(t,t.offsetTop);return m};
+  new MutationObserver(()=>{
+    const now=snap();
+    for(const [t,y] of now){const p=last.get(t);if(p==null||Math.abs(p-y)<2||!t.animate)continue;
+      try{t.animate([{transform:`translate3d(0,${p-y}px,0)`},{transform:'translate3d(0,0,0)'}],{duration:340,easing:'cubic-bezier(.2,.75,.2,1)',composite:'add'})}catch(e){}}
+    last=now;
+  }).observe(box,{childList:true});
+};
+
+/* 3. Posters fade in when they arrive, over their dark box, instead of popping in. A poster that is already there
+   when its card is drawn (cached) shows at once, so redrawn rows never flash. */
+const posters=()=>{
+  const R=document.documentElement;if(R._mkPf)return;R._mkPf=1;
+  const SEL='[data-card] .l0>img';
+  const ok=im=>im.complete&&im.naturalWidth>2;
+  const mark=im=>{if(ok(im))im.classList.add('mk-in');else im.classList.add('mk-pf')};
+  const scan=n=>{if(n.nodeType!==1)return;if(n.matches&&n.matches(SEL))mark(n);else if(n.querySelectorAll)n.querySelectorAll(SEL).forEach(mark)};
+  new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes)scan(n)}).observe(document.body,{childList:true,subtree:true});
+  addEventListener('load',e=>{const im=e.target;if(im instanceof HTMLImageElement&&im.classList.contains('mk-pf')&&ok(im)){im.classList.remove('mk-pf');im.classList.add('mk-in')}},true);
+  // never left see-through
+  setInterval(()=>{document.querySelectorAll('img.mk-pf').forEach(im=>{if(ok(im)||(!im.dataset.lsrc&&im.complete)){im.classList.remove('mk-pf');im.classList.add('mk-in')}})},2000);
+  R.classList.add('mk-pfade');
+};
+
+const go=()=>{try{steadyDetail();keepOuter()}catch(e){}try{toasts()}catch(e){}try{posters()}catch(e){}};
+if(document.readyState==='complete')setTimeout(go,0);else addEventListener('load',()=>setTimeout(go,0),{once:true});
+})();</script>
 <script id="mk-2952-smooth">/* 2.95.2 smooth sources: the title page Streams list and the player's Sources panel step one row at a time with the
    remote, and picking another source in the MKCinema Player (Android app) swaps the film without tearing the picture down */
 (()=>{

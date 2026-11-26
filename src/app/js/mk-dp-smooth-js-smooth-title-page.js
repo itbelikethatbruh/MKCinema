@@ -55,7 +55,8 @@ const ready=tok=>{if(!st||st.tok!==tok)return;
   Promise.race([dec,new Promise(r=>setTimeout(r,left))]).then(()=>{if(st&&st.tok===tok)requestAnimationFrame(reveal)})};
 const od=openDetail;
 openDetail=function(){
-  const fresh=det.hidden;let tok=0;
+  const a0=arguments[0];let other=false;try{other=!!(a0&&a0.id&&typeof D==='object'&&D&&D.meta&&String(a0.id)!==String(D.meta.id))}catch(e){}
+  const fresh=det.hidden||other;let tok=0;
   if(fresh){clearTimeout(inT);if(mo){mo.disconnect();mo=null}det.classList.remove('dp-in','dp-rm');if(st)clearTimeout(st.cap);tok=++seq;st={tok,t0:now(),cap:setTimeout(reveal,CAP)};det.classList.add('dp-hold')}
   let r;try{r=od.apply(this,arguments)}catch(e){reveal();throw e}
   if(tok){if(det.hidden){reveal()}else Promise.resolve(r).then(()=>ready(tok),()=>ready(tok))}
