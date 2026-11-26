@@ -924,7 +924,7 @@ html:not(.tv):not([data-look="anime"]) .card-inner{transition:transform .3s cubi
 <style id="mk-285-set">@@src:css/mk-285-set-settings-home-look.css@@</style>
 <style id="mk-calm-sk">@@src:css/mk-calm-sk-title-page-once.css@@</style>
 <script id="mk-calm-js">
-document.addEventListener('animationend', (e) => { const t = e.target; if (e.animationName === 'logoPop' && t && t.classList && t.classList.contains('logo3d')) t.classList.add('mk-popped'); }, true);
+document.addEventListener('animationend', (e) => { const t = e.target; if ((e.animationName === 'logoPop' || e.animationName === 'mkLogoRise') && t && t.classList && t.classList.contains('logo3d')) t.classList.add('mk-popped'); }, true);
 </script>
 <script id="mk-home-retry">@@src:js/mk-home-retry-if-typeof-renderhome.js@@</script>
 <style id="mk-zoom-lock">
