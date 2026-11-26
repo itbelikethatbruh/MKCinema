@@ -226,7 +226,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
 
     void togglePlay() {
         if (!prepared || eng == null) return;
-        modeHold = false; if (gate) { gate = false; h.removeCallbacks(capGo); }
+        endGate();
         if (eng.playing()) { eng.pause(); show(Long.MAX_VALUE / 4); } else { eng.play(); show(2500); }
     }
 
@@ -353,6 +353,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         final float hz = best.getRefreshRate();
         switchMode(best, () -> { modeHold = false; go(String.format(java.util.Locale.US, "screen switched to %.3f Hz", hz)); });
     }
+    void endGate() { modeHold = false; if (gate) { gate = false; h.removeCallbacks(capGo); } }
     final Runnable capGo = () -> { modeHold = false; go("waited 9 s"); };
     void go(String why) {
         if (!gate || eng == null || isFinishing()) return;
@@ -631,8 +632,9 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         switch (k) {
             case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER: case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE: case KeyEvent.KEYCODE_SPACE:
                 togglePlay(); return true;
-            case KeyEvent.KEYCODE_MEDIA_PLAY: if (prepared) eng.play(); show(2500); return true;
-            case KeyEvent.KEYCODE_MEDIA_PAUSE: if (prepared) eng.pause(); show(Long.MAX_VALUE / 4); return true;
+            // 1.17.17: Play or Pause pressed while the film waits for the screen ends the wait: the press decides
+            case KeyEvent.KEYCODE_MEDIA_PLAY: endGate(); if (prepared) eng.play(); show(2500); return true;
+            case KeyEvent.KEYCODE_MEDIA_PAUSE: endGate(); if (prepared) eng.pause(); show(Long.MAX_VALUE / 4); return true;
             case KeyEvent.KEYCODE_DPAD_LEFT: skip(held ? -30000 : -10000); return true;
             case KeyEvent.KEYCODE_DPAD_RIGHT: skip(held ? 30000 : 10000); return true;
             case KeyEvent.KEYCODE_MEDIA_REWIND: skip(-30000); return true;
