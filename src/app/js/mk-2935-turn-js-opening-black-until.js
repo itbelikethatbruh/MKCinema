@@ -20,20 +20,20 @@ function opening(){const p=P();if(!p||p.hidden||!touch()||land()||!p.requestFull
   if(age>1400)return show()}; // the phone did not turn (rotation lock or no lock support): never stay black
  const iv=setInterval(chk,120);addEventListener('resize',chk);d.addEventListener('fullscreenchange',chk);d.addEventListener('fullscreenerror',show);chk()}
 function hook(){const p=P();if(!p||p._mkTurn)return;p._mkTurn=1;
- new MutationObserver(()=>{if(!p.hidden)opening();else{openJob++;R.classList.remove('mk-turn','mk-turn-in')}}).observe(p,{attributes:true,attributeFilter:['hidden']});
+ new MutationObserver(()=>{if(!p.hidden){if(p._mkWas!==1)p._mkLand0=land();p._mkWas=1;opening()}else{p._mkWas=0;openJob++;R.classList.remove('mk-turn','mk-turn-in')}}).observe(p,{attributes:true,attributeFilter:['hidden']});
  if(!p.hidden)opening();
  /* closing: black, leave full screen, turn upright, fade back to the page */
  if(typeof closePlayer!=='function'||closePlayer._mkTurn)return;const orig=closePlayer;
  const w=function(){const p=P(),fs=fsEl();
-  if(!p||p.hidden||window.MkKeepFull||!touch()||!fs||!(fs===p||p.contains(fs))||!land())return orig.apply(this,arguments);
+  if(!p||p.hidden||window.MkKeepFull||!touch()||!fs||!(fs===p||p.contains(fs))||!land()||p._mkLand0)return orig.apply(this,arguments);
   openJob++;R.classList.remove('mk-turn','mk-turn-in');
   let c=d.getElementById('mkTurnCover');if(c)c.remove();c=d.createElement('div');c.id='mkTurnCover';c.setAttribute('aria-hidden','true');d.body.appendChild(c);
   let r;window.MkKeepFull=true;try{r=orig.apply(this,arguments)}finally{window.MkKeepFull=false}
-  const t0=Date.now();let gone=false,turned=false;
+  const t0=Date.now();let gone=false,turned=false,tx=0;
   const lift=()=>{if(gone)return;gone=true;removeEventListener('resize',chk);clearInterval(iv);c.classList.add('out');setTimeout(()=>c.remove(),320)};
   const chk=()=>{if(gone||turned)return;const age=Date.now()-t0;
-   if(!land()||age>1500){turned=true;frames(()=>setTimeout(lift,60));return}
-   if(age>650&&!fsEl())turned=true,frames(()=>setTimeout(lift,60))}; // held sideways with auto-rotate: nothing turns
+   if(!land()||age>2000){turned=true;frames(()=>setTimeout(lift,60));return}
+   if(!fsEl()){if(!tx)tx=Date.now();if(Date.now()-tx>800)turned=true,frames(()=>setTimeout(lift,60))}}; // held sideways with auto-rotate: nothing turns
   const iv=setInterval(chk,120);
   // two frames so the full-screen picture is black before it is handed back, then leave full screen
   const leave=(n)=>{const q=P();

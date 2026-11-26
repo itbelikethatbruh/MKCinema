@@ -2254,7 +2254,8 @@ html.tv .br-grid .uni-card.br-tile{width:auto;min-width:0}
 @media (max-width:560px){#updBar .inrow .btn{flex:1 1 auto;justify-content:center}}
 </style>
 <style id="mk-2915-tv-player">
-#player .mk-nv-sub{position:absolute;left:6%;right:6%;bottom:7vh;z-index:3;text-align:center;white-space:pre-line;color:#fff;font-weight:600;line-height:1.25;text-shadow:0 0 4px #000,0 2px 6px #000,0 0 2px #000;pointer-events:none;transition:transform .25s ease}
+#player .mk-nv-sub{position:absolute;left:6%;right:6%;bottom:7vh;z-index:3;text-align:center;white-space:pre-line;color:var(--sub-color,#fff);font-family:var(--sub-font,inherit);font-weight:var(--sub-weight,600);line-height:1.32;text-shadow:var(--sub-shadow,0 0 4px #000,0 2px 6px #000,0 0 2px #000);pointer-events:none;transition:transform .25s ease}
+#player .mk-nv-sub>span{background:var(--sub-bg,transparent);padding:.04em .32em;border-radius:.12em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 #player .mk-nv-sub.top{bottom:auto;top:7vh}
 #player .mk-nv-sub.lift:not(.top){transform:translateY(-17vh)}
 </style>
@@ -5299,8 +5300,38 @@ const LiveMini = {
     this.cur = null;
   },
 };
+/* 2.95.7: closing a film fades its last picture into the page underneath instead of cutting to black (teardown empties the
+   video at once). The frame is copied into a canvas over the closing player and fades with it. Not in Snappy mode or with
+   reduced motion, not on TVs, not when a phone turns upright
+   on close (that close has its own black cover), not when no picture shows. */
+const PicFade = {
+  grab() {
+    try {
+      const de = document.documentElement, pl = $('#player'), v = video, old = document.getElementById('mkPicFade');
+      if (old) old.remove();
+      if (!pl || pl.hidden || !v || de.classList.contains('lite') || de.classList.contains('pip-mode') || IS_TV || CFG.reduceMotion) return;
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches || (typeof MiniPlay !== 'undefined' && MiniPlay.on)) return;
+      if (document.getElementById('mkTurnCover')) return; // 2.93.5's black turn cover is closing this film
+      if (v.readyState < 2 || !v.videoWidth || !v.videoHeight || ($('#ytwrap') && $('#ytwrap').firstChild)) return;
+      if (typeof Loader === 'object' && Loader.on) return;
+      const cs = getComputedStyle(v), r = v.getBoundingClientRect();
+      if (cs.visibility === 'hidden' || cs.display === 'none' || +cs.opacity < .5 || r.width < 40 || r.height < 40) return;
+      const k = Math.min(1, 1920 / v.videoWidth), c = document.createElement('canvas');
+      c.width = Math.round(v.videoWidth * k); c.height = Math.round(v.videoHeight * k);
+      c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+      c.id = 'mkPicFade'; c.setAttribute('aria-hidden', 'true');
+      const W = innerWidth || 1, H = innerHeight || 1, pc = (a, b) => (a / b * 100).toFixed(3) + '%';
+      Object.assign(c.style, { left: pc(r.left, W), top: pc(r.top, H), width: pc(r.width, W), height: pc(r.height, H),
+        objectFit: /cover|fill/.test(cs.objectFit) ? cs.objectFit : 'contain', objectPosition: cs.objectPosition });
+      document.body.appendChild(c);
+      requestAnimationFrame(() => requestAnimationFrame(() => c.classList.add('out')));
+      setTimeout(() => c.remove(), 520);
+    } catch (e) { const c = document.getElementById('mkPicFade'); if (c) c.remove(); }
+  },
+};
 async function closePlayer() {
   if (typeof MiniPlay !== 'undefined' && MiniPlay.on) MiniPlay.restore(true);
+  PicFade.grab();
   if (typeof PartyGuest !== 'undefined') PartyGuest.closed();
   playReq++; // a next episode or Smart Play still loading must not reopen the player
   const liveKeep = LiveMini.grab(), endedCtx = P.ctx;
@@ -11530,7 +11561,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.95.6';
+const APP_VERSION = '2.95.7';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -24581,6 +24612,11 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.95.7', date: '2026-11-25', items: [
+    ['better', 'Subtitle styles everywhere', 'Your subtitle Style, colour, background, outline and shadow now show when films play in MKCinema on Android phones, Windows and TVs, and changes apply straight away while you watch.'],
+    ['better', 'Smoother starts and finishes', 'The title fades into the film, and closing a film fades back to its page without a jump.'],
+    ['better', 'Phones use the whole screen', 'On Android phones the app now reaches right up to the camera and under the system bars, in app 1.17.13.'],
+  ] },
   { v: '2.95.6', date: '2026-11-25', items: [
     ['better', 'Steadier streams', 'Next episode and Continue watching keep the same copy you were watching. Sources show again sooner after an addon\'s busy moment. Lighter memory use on TV sticks.'],
   ] },
@@ -36772,7 +36808,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 </script>
 <!-- mk-lpcopy:end -->
 <style id="mkc-2591-phone">@media (max-width:760px) and (pointer:coarse){html:not(.tv) body .rail>.card:not(.wide):not(.ax-sq){width:clamp(132px,35vw,230px)}html:not(.tv) body .rail>.card.wide{width:clamp(250px,68vw,440px)!important}}</style>
-<script id="mkc-2591-phone-js">(function(){var w0=innerWidth,t=0;addEventListener('resize',function(){if(innerWidth===w0)return;w0=innerWidth;clearTimeout(t);t=setTimeout(function(){try{var c=JSON.parse(localStorage.getItem('mkc:cfg')||'{}')||{},ts=+c.textScale;if(typeof CFG!=='undefined'&&CFG)ts=+CFG.textScale;if(!(ts>=85&&ts<=130))ts=100;var v=ts/100*window.__mkBoost(),de=document.documentElement;if(v===1)de.style.removeProperty('--ts');else de.style.setProperty('--ts',String(+v.toFixed(3)))}catch(e){}},150)})})();</script>
+<script id="mkc-2591-phone-js">(function(){var w0=innerWidth,t=0;addEventListener('resize',function(){if(innerWidth===w0)return;w0=innerWidth;clearTimeout(t);var f=function(){try{var c=JSON.parse(localStorage.getItem('mkc:cfg')||'{}')||{},ts=+c.textScale;if(typeof CFG!=='undefined'&&CFG)ts=+CFG.textScale;if(!(ts>=85&&ts<=130))ts=100;var v=ts/100*window.__mkBoost(),de=document.documentElement,n=v===1?'':String(+v.toFixed(3));if(de.style.getPropertyValue('--ts')===n)return;if(!n)de.style.removeProperty('--ts');else de.style.setProperty('--ts',n)}catch(e){}};if(matchMedia('(pointer:coarse)').matches)f();else t=setTimeout(f,150)})})();</script>
 <!-- mk-steady-views:start -->
 <style>
 /* 2.59.1 steady views: switching Home, Movies, Series and the other pages no longer drops the screen to black
@@ -47550,7 +47586,7 @@ const MkNative = {
     if ('tracks' in n) this.tracks(st.tracks || []);
     const meta = st.dur > 0 && Array.isArray(st.tracks);
     if (!this.metaFired && (meta || n.loaded)) {
-      this.metaFired = true; ['loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough'].forEach((e) => this.fire(e));
+      this.metaFired = true; ['loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough'].forEach((e) => this.fire(e)); this.subStyle();
       setTimeout(() => { if (this.active) addEmbeddedSubs(); }, 50);
       // 2.91.7: ask libmpv whether it is playing (it never reports a pause that didn't change)
       if (!this.pSeen) { const g = this.gen, c = this.cur; this.cmd('get', 'pause').then((v) => { if (this.active && this.cur === c && this.gen === g && !this.pSeen && /^(no|false|0)$/i.test(String(v).trim())) this.ev({ gen: g, paused: false }); }).catch(() => {}); }
@@ -47579,7 +47615,7 @@ const MkNative = {
     if (!el || !el.isConnected) { el = this._sub = document.createElement('div'); el.className = 'mk-nv-sub'; el.setAttribute('aria-live', 'off'); $('#player').appendChild(el); }
     if (t !== undefined) {
       const txt = typeof t === 'string' ? t.replace(/\{\\[^}]*\}/g, '').replace(/<[^>]+>/g, '').replace(/\\N/g, '\n').trim() : '';
-      if (txt !== this._subT) { this._subT = txt; el.textContent = txt; el.hidden = !txt; el.style.fontSize = `${Math.round(3.4 * (Number(CFG.subSize) || 100)) / 100}vh`; el.classList.toggle('top', CFG.subPos === 'top'); }
+      if (txt !== this._subT) { this._subT = txt; el.textContent = ''; if (txt) { const sp = document.createElement('span'); sp.textContent = txt; el.appendChild(sp); } el.hidden = !txt; el.style.fontSize = `${Math.round(3.4 * (Number(CFG.subSize) || 100)) / 100}vh`; el.classList.toggle('top', CFG.subPos === 'top'); }
     }
     const lift = !$('#hud').classList.contains('idle');
     if (lift !== this._subLift) { this._subLift = lift; el.classList.toggle('lift', lift); }
@@ -47622,6 +47658,15 @@ const MkNative = {
     this.cmd('subdelay', P.subDelay || 0).catch(() => {});
     this.cmd('subscale', (Number(CFG.subSize) || 100) / 100).catch(() => {});
     this.cmd('subpos', { top: 8, higher: 88 }[CFG.subPos] || 96).catch(() => {});
+    /* 2.95.7 subtitle look */
+    /* The look from Settings › Subtitles: colour, background box, outline, bold, shadow and font. Apps older than
+       Android 1.17.14 / Windows 1.6.1 answer "unknown command" and keep their built-in look. */
+    const hex = (v, d) => (/^#[0-9a-f]{6}$/i.test(String(v || '')) ? String(v) : d);
+    const j = JSON.stringify({ color: hex(CFG.subColor, '#ffffff'), bg: hex(CFG.subBgColor, '#000000'), bga: Math.max(0, Math.min(100, Number(CFG.subBg) || 0)),
+      outline: CFG.subOutline !== false, bold: !!CFG.subBold, shadow: String(CFG.subShadow || 'soft'), font: String(CFG.subFont || 'sans') });
+    if (j === this._styJ && Date.now() - (this._styAt || 0) < 1500) return; // several settings hooks call this for one pick
+    this._styJ = j; this._styAt = Date.now();
+    this.cmd('substyle', j).catch(() => {});
   },
   vol() {
     if (!this.active) return;
@@ -47687,6 +47732,11 @@ const MkNative = {
     const b = this.bridge(); if (!b) return;
     b._ev = (n) => this.ev(n);
     this.probe();
+    CFG_HOOKS.push((k) => {
+      if (!this.active || !/^sub(Size|Pos|Color|Bg|BgColor|Outline|Bold|Shadow|Font|Look)$/.test(k)) return;
+      clearTimeout(this._styT); this._styT = setTimeout(() => this.subStyle(), 40); // a Style pick sets 7 values at once
+      const el = this._sub; if (el) { el.style.fontSize = `${Math.round(3.4 * (Number(CFG.subSize) || 100)) / 100}vh`; el.classList.toggle('top', CFG.subPos === 'top'); }
+    });
     const sec = typeof SECTIONS !== 'undefined' && SECTIONS.find((x) => x.id === 'playback');
     if (sec) {
       const rows = sec.rows;
@@ -57701,7 +57751,7 @@ html.mk-rx #player:has(#pLoad:not([hidden])) .skip-btn{opacity:0!important;point
 html.mk-rx #player:has(#pLoad:not([hidden])) .hud{opacity:1!important}
 html.mk-rx #player:has(#pLoad:not([hidden])) .hud::before{opacity:.6}
 html.mk-rx #player .hud-mid,html.mk-rx #player .hud-bot,html.mk-rx #player #rxTools{transition:opacity .35s ease}
-html.mk-rx #player #pLoad{animation:mkRxIn .3s ease both}
+html.mk-rx #player #pLoad{animation:mkRxIn .3s ease both}/* 2.95.7 smooth in and out */html.mk-rx #player #pLoad.out{animation:plOut .3s ease-in forwards}#mkPicFade{position:fixed;z-index:70;pointer-events:none;margin:0;opacity:1;transition:opacity .36s ease}#mkPicFade.out{opacity:0}
 @keyframes mkRxIn{from{opacity:0}to{opacity:1}}
 </style>
 <script id="mk-rx-start-js">
@@ -58266,20 +58316,20 @@ function opening(){const p=P();if(!p||p.hidden||!touch()||land()||!p.requestFull
   if(age>1400)return show()}; // the phone did not turn (rotation lock or no lock support): never stay black
  const iv=setInterval(chk,120);addEventListener('resize',chk);d.addEventListener('fullscreenchange',chk);d.addEventListener('fullscreenerror',show);chk()}
 function hook(){const p=P();if(!p||p._mkTurn)return;p._mkTurn=1;
- new MutationObserver(()=>{if(!p.hidden)opening();else{openJob++;R.classList.remove('mk-turn','mk-turn-in')}}).observe(p,{attributes:true,attributeFilter:['hidden']});
+ new MutationObserver(()=>{if(!p.hidden){if(p._mkWas!==1)p._mkLand0=land();p._mkWas=1;opening()}else{p._mkWas=0;openJob++;R.classList.remove('mk-turn','mk-turn-in')}}).observe(p,{attributes:true,attributeFilter:['hidden']});
  if(!p.hidden)opening();
  /* closing: black, leave full screen, turn upright, fade back to the page */
  if(typeof closePlayer!=='function'||closePlayer._mkTurn)return;const orig=closePlayer;
  const w=function(){const p=P(),fs=fsEl();
-  if(!p||p.hidden||window.MkKeepFull||!touch()||!fs||!(fs===p||p.contains(fs))||!land())return orig.apply(this,arguments);
+  if(!p||p.hidden||window.MkKeepFull||!touch()||!fs||!(fs===p||p.contains(fs))||!land()||p._mkLand0)return orig.apply(this,arguments);
   openJob++;R.classList.remove('mk-turn','mk-turn-in');
   let c=d.getElementById('mkTurnCover');if(c)c.remove();c=d.createElement('div');c.id='mkTurnCover';c.setAttribute('aria-hidden','true');d.body.appendChild(c);
   let r;window.MkKeepFull=true;try{r=orig.apply(this,arguments)}finally{window.MkKeepFull=false}
-  const t0=Date.now();let gone=false,turned=false;
+  const t0=Date.now();let gone=false,turned=false,tx=0;
   const lift=()=>{if(gone)return;gone=true;removeEventListener('resize',chk);clearInterval(iv);c.classList.add('out');setTimeout(()=>c.remove(),320)};
   const chk=()=>{if(gone||turned)return;const age=Date.now()-t0;
-   if(!land()||age>1500){turned=true;frames(()=>setTimeout(lift,60));return}
-   if(age>650&&!fsEl())turned=true,frames(()=>setTimeout(lift,60))}; // held sideways with auto-rotate: nothing turns
+   if(!land()||age>2000){turned=true;frames(()=>setTimeout(lift,60));return}
+   if(!fsEl()){if(!tx)tx=Date.now();if(Date.now()-tx>800)turned=true,frames(()=>setTimeout(lift,60))}}; // held sideways with auto-rotate: nothing turns
   const iv=setInterval(chk,120);
   // two frames so the full-screen picture is black before it is handed back, then leave full screen
   const leave=(n)=>{const q=P();
