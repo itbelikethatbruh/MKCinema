@@ -2,18 +2,24 @@
 /* 2.91.9 smooth title page opening. The page waits a moment (at most 1 s) for its picture, logo and full details, then
    fades in in steps: picture, logo, details line, buttons, the rest. Opacity and transform only, one time per opening,
    so it also runs in Snappy mode on TVs. */
-#detail.dp-hold #detailPanel .d-hero>img.bg,#detail.dp-hold #detailPanel .d-hero .d-body>*,#detail.dp-hold #detailPanel>.d-body{opacity:0!important}
+/* 2.95.17 steady open */
+/* the page waits whole and unseen, Home stays on screen under it (not faded away, so nothing goes dark) */
+html #detail.dp-hold{animation:none!important;opacity:0!important}
+html body.mk-dphold #app,html body.touch-ui.layer-open.mk-dphold #app{opacity:1!important;visibility:visible!important}
 #detail.dp-hold #detailPanel .logo3d.pop{animation:none!important}
-@keyframes dpFade{from{opacity:0}to{opacity:1}}
-@keyframes dpRise{from{opacity:0;transform:translate3d(0,14px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
-html #detail.dp-in #detailPanel .d-hero>img.bg.dp-a:not(.d-wait){animation:dpFade .6s cubic-bezier(.25,.6,.3,1) both!important}
-html #detail.dp-in #detailPanel .d-hero .d-body>.dp-a:not(.logo3d){animation:dpRise .5s cubic-bezier(.2,.75,.2,1) .08s both!important}
-html #detail.dp-in #detailPanel .d-hero .d-body>:nth-child(3){animation-delay:.15s!important}
-html #detail.dp-in #detailPanel .d-hero .d-body>:nth-child(n+4){animation-delay:.21s!important}
-html #detail.dp-in #detailPanel>.d-body.dp-a{animation:dpRise .55s cubic-bezier(.2,.75,.2,1) .27s both!important}
-html.lite #detail.dp-in #detailPanel .d-hero .d-body>.logo3d.dp-a,body:not(.fx) #detail.dp-in #detailPanel .d-hero .d-body>.logo3d.dp-a{animation:dpRise .5s cubic-bezier(.2,.75,.2,1) both!important}
-html #detail.dp-in #detailPanel .d-hero .d-body>.dp-a.dp-c,html #detail.dp-in #detailPanel>.d-body.dp-a.dp-c{animation-name:dpFade!important}
-html #detail.dp-in.dp-rm #detailPanel .d-hero .d-body>.dp-a,html #detail.dp-in.dp-rm #detailPanel>.d-body.dp-a{animation:dpFade .3s ease-out both!important}
+html #detail:is(.dp-hold,.dp-in) #detailPanel .d-hero>img.bg,html #detail:is(.dp-hold,.dp-in) #detailPanel .d-hero .hero-logo{transition:none!important}
+/* then it fades in once, all of it together: no part moves, rises or arrives on its own */
+/* the title logo keeps its rise, but shows with the page instead of fading in on its own afterwards */
+@keyframes mkLogoRise{from{transform:perspective(900px) translate3d(0,26px,-140px) rotateX(28deg) scale(.86)}to{transform:perspective(900px) translate3d(0,0,0) rotateX(0) scale(1)}}
+html #detail #detailPanel .logo3d.pop:not(.mk-popped){animation-name:mkLogoRise}
+html body.fx #detail #detailPanel .logo3d.pop:not(.mk-popped){animation-name:mkLogoRise,logoFloat}
+html.tv body.fx #detail #detailPanel .logo3d.pop:not(.mk-popped){animation-name:mkLogoRise}
+@keyframes dpOpen{from{opacity:0}to{opacity:1}}
+html #detail.dp-in{animation:dpOpen .3s cubic-bezier(.25,.6,.3,1) both!important}
+html #detail.dp-in.dp-rm,html #detail.dp-done{animation:none!important}
+/* an episode opened from Home: its panel covers the page, which is drawn under it plainly (no fades or rises running
+   under the panel; on Android those extra moving layers could show the page through the panel for a frame) */
+html #detail#detail.dp-under #detailPanel#detailPanel,html #detail#detail.dp-under #detailPanel#detailPanel *,html #detail#detail.dp-under #detailPanel#detailPanel *::before,html #detail#detail.dp-under #detailPanel#detailPanel *::after{animation:none!important;transition:none!important}
 /* a picture that arrives after the page is shown fades in, Snappy mode too */
 html #detail #detailPanel .d-hero>img.bg,html #detail #detailPanel .d-hero .hero-logo{transition:opacity .45s ease-out!important}
 html #detail #detailPanel .d-hero>img.bg.mk-under{transition:none!important}

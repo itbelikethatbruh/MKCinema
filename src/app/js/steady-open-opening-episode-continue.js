@@ -11,6 +11,7 @@
     const old = document.querySelector('#esHead .es-still img');
     const r = head.apply(this, arguments);
     this._vid = vidOf();
+    /* 2.95.17 steady open */ try { const st = document.querySelector('#esHead .es-still'), bg = D.meta && metaBg(D.meta); if (st && bg) st.style.background = `var(--n0b0b0c,#0b0b0c) url("${String(bg).replace(/"/g, '%22')}") center/cover no-repeat`; } catch (e) { /* plain dark box */ }
     try {
       const im = document.querySelector('#esHead .es-still img'); if (!im) return r;
       const src = im.getAttribute('src') || '';

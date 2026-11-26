@@ -30,8 +30,8 @@ document.addEventListener('focusin',e=>{const c=e.target&&e.target.closest&&e.ta
 document.addEventListener('pointerover',e=>{if(e.pointerType!=='mouse')return;const c=e.target&&e.target.closest&&e.target.closest(CARD);if(c)arm(c,160)},{passive:true});
 document.addEventListener('pointerdown',e=>{const c=e.target&&e.target.closest&&e.target.closest(CARD);if(c&&c!==wc){clearTimeout(wt);wc=c;warm(c)}},{passive:true,capture:true});
 /* staged opening */
-const CAP=1000;let st=null,seq=0,inT=0,mo=null,revAt=0,revId=null;
-const reveal=()=>{if(!st)return;clearTimeout(st.cap);st=null;
+const CAP=700;let st=null,seq=0,inT=0,mo=null,revAt=0,revId=null;/* 2.95.17 steady open */const hold=on=>document.body.classList.toggle('mk-dphold',!!on);
+const reveal=()=>{clearTimeout(det._mkHoldT);det._mkHoldT=setTimeout(()=>hold(false),det.hidden?0:340);if(!st)return;clearTimeout(st.cap);st=null;
   const lg=det.querySelector('#detailPanel .logo3d.pop');
   try{renderDetail.popAt=now()}catch(e){}revAt=now();try{revId=D.meta&&D.meta.id}catch(e){revId=null}if(lg)lg.style.setProperty('--t0','0s');
   let rm=false;try{rm=!!(CFG.reduceMotion||matchMedia('(prefers-reduced-motion: reduce)').matches)}catch(e){}
@@ -40,14 +40,13 @@ const reveal=()=>{if(!st)return;clearTimeout(st.cap);st=null;
      details arriving late) does not rise again: it only finishes the fade, opacity only, so it never moves and the TV
      remote focus never scrolls the page to follow a moving button */
   const t0=now(),pn=document.getElementById('detailPanel'),T='#detailPanel .d-hero>img.bg,#detailPanel .d-hero .d-body>*,#detailPanel>.d-body';
-  det.querySelectorAll(T).forEach(e=>e.classList.add('dp-a'));if(mo)mo.disconnect();
+  if(mo)mo.disconnect();
   const cont=el=>{const xs=[];if(el.matches(T))xs.push(el);if(el.querySelectorAll)xs.push(...el.querySelectorAll(T));const gone=now()-t0;if(gone>=900)return;
     for(const x of xs){if(x.classList.contains('logo3d'))x.style.setProperty('--t0',(gone/1000).toFixed(3)+'s');
       x.classList.add('dp-a','dp-c');const d=parseFloat(getComputedStyle(x).animationDelay)||0;
       x.style.setProperty('animation-delay',(d-gone/1000).toFixed(3)+'s','important')}};
-  mo=pn?new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes)if(n.nodeType===1)cont(n)}):null;
-  if(mo)mo.observe(pn,{childList:true,subtree:true});
-  clearTimeout(inT);inT=setTimeout(()=>{const g=Math.max(1.3,(now()-revAt)/1000).toFixed(3)+'s';det.querySelectorAll('#detailPanel .logo3d').forEach(x=>x.style.setProperty('--t0',g));det.querySelectorAll('#detailPanel .dp-c').forEach(x=>x.style.removeProperty('animation-delay'));det.querySelectorAll('#detailPanel .dp-a').forEach(x=>x.classList.remove('dp-a','dp-c'));det.classList.remove('dp-in','dp-rm');if(mo){mo.disconnect();mo=null}},1100)};
+  mo=null;
+  clearTimeout(inT);inT=setTimeout(()=>{det.classList.remove('dp-under');det.classList.add('dp-done');const g=Math.max(1.3,(now()-revAt)/1000).toFixed(3)+'s';det.querySelectorAll('#detailPanel .logo3d').forEach(x=>x.style.setProperty('--t0',g));det.querySelectorAll('#detailPanel .dp-c').forEach(x=>x.style.removeProperty('animation-delay'));det.querySelectorAll('#detailPanel .dp-a').forEach(x=>x.classList.remove('dp-a','dp-c'));det.classList.remove('dp-in','dp-rm');if(mo){mo.disconnect();mo=null}},1100)};
 const ready=tok=>{if(!st||st.tok!==tok)return;
   const left=Math.max(160,CAP-(now()-st.t0));
   const imgs=[...det.querySelectorAll('#detailPanel .d-hero>img.bg,#detailPanel .d-hero .hero-logo')].filter(i=>!i.hidden&&i.getAttribute('src'));
@@ -57,11 +56,15 @@ const od=openDetail;
 openDetail=function(){
   const a0=arguments[0];let other=false;try{other=!!(a0&&a0.id&&typeof D==='object'&&D&&D.meta&&String(a0.id)!==String(D.meta.id))}catch(e){}
   const fresh=det.hidden||other;let tok=0;
-  if(fresh){clearTimeout(inT);if(mo){mo.disconnect();mo=null}det.classList.remove('dp-in','dp-rm');if(st)clearTimeout(st.cap);tok=++seq;st={tok,t0:now(),cap:setTimeout(reveal,CAP)};det.classList.add('dp-hold')}
+  let ep=false;try{ep=!!(arguments[1]&&arguments[1].videoId&&typeof TOUCH_UI!=='undefined'&&TOUCH_UI&&!(typeof IS_TV!=='undefined'&&IS_TV))}catch(e){}
+  if(fresh&&ep){clearTimeout(inT);if(st)clearTimeout(st.cap);st=null;clearTimeout(det._mkHoldT);hold(false);det.classList.remove('dp-hold','dp-in','dp-rm','dp-done');det.classList.add('dp-under')}
+  else if(fresh){det.classList.remove('dp-under','dp-done');clearTimeout(inT);if(mo){mo.disconnect();mo=null}det.classList.remove('dp-in','dp-rm');if(st)clearTimeout(st.cap);tok=++seq;st={tok,t0:now(),cap:setTimeout(reveal,CAP)};det.classList.add('dp-hold');clearTimeout(det._mkHoldT);hold(true)}
   let r;try{r=od.apply(this,arguments)}catch(e){reveal();throw e}
   if(tok){if(det.hidden){reveal()}else Promise.resolve(r).then(()=>ready(tok),()=>ready(tok))}
   return r};
 try{openDetail._mkDp=1}catch(e){}
+/* 2.95.17: the episode panel closes onto a page that is already in place (its entrance is finished, not played) */
+try{if(typeof EpSheet==='object'&&EpSheet.close){const ec=EpSheet.close;EpSheet.close=function(){const r=ec.apply(this,arguments);if(det.classList.contains('dp-under')){det.classList.remove('dp-under');det.classList.add('dp-done');try{det.getAnimations({subtree:true}).forEach(a=>{try{const t=a.effect&&a.effect.getTiming();if(t&&t.iterations!==Infinity&&a.playState==='running')a.finish()}catch(e){}})}catch(e){}}return r}}}catch(e){}
 /* 2.91.10: when the page fills in more (a longer details line, a second row of genres, a tag added a moment later), the
    parts that move glide to their new place instead of jumping. Layout positions (offsetTop) ignore running animations. */
 const pnl=document.getElementById('detailPanel'),G='#detailPanel .d-hero .d-body>*,#detailPanel>.d-body';let rest=new Map();
