@@ -3,15 +3,16 @@
 Run from the repo root: python3 tools/build-guides.py
 Each page is plain HTML with one small inline stylesheet (same look as the home page), a canonical link,
 Open Graph tags and BreadcrumbList data. Edit the PAGES list below, then re-run."""
-import html, json, os, datetime
+import html
+import re, json, os, datetime
 
 SITE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'site')
 ORIGIN = 'https://mkcinema.app'
 TODAY = datetime.date.today().isoformat()
 
 CSS = """
-@font-face{font-family:"Fraunces";font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/fraunces-v1.woff2) format("woff2")}
-@font-face{font-family:"Fraunces";font-style:italic;font-weight:400 600;font-display:swap;src:url(/fonts/fraunces-italic-v1.woff2) format("woff2")}
+@font-face{font-family:"Fraunces";font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/fraunces-v1.woff2) format("woff2");unicode-range:U+0000-002F,U+003A-10FFFF}
+@font-face{font-family:"Fraunces";font-style:italic;font-weight:400 600;font-display:swap;src:url(/fonts/fraunces-italic-v1.woff2) format("woff2");unicode-range:U+0000-002F,U+003A-10FFFF}
 @font-face{font-family:"Onest";font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/onest-v1.woff2) format("woff2")}
 :root{--bg:#050505;--card:#0f0f0f;--ink:#f3f0e9;--ink2:#c9c5bc;--mute:#8f8b84;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);--gold:#d8c29a;--serif:"Fraunces",Georgia,serif;--sans:"Onest",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 *,*::before,*::after{box-sizing:border-box}
@@ -116,7 +117,7 @@ PAGES = [
 <ol>
 <li>Install the free <b>Downloader</b> app from the Amazon Appstore.</li>
 <li>In Fire TV <b>Settings › My Fire TV › Developer options</b>, allow <b>Install unknown apps</b> for Downloader.</li>
-<li>Open Downloader and type <code>tv.mkcinema.app</code> into the address box, then choose <b>Go</b>.</li>
+<li>Open Downloader and type the code <code>6400996</code> into the address box (or <code>tv.mkcinema.app</code>), then choose <b>Go</b>.</li>
 <li>When the download finishes, choose <b>Install</b>, then <b>Open</b>.</li>
 </ol>
 <p>The menu names on Fire TV change a little between versions. If you cannot find Developer options, the setting for unknown apps is also reachable from the Downloader prompt.</p>
@@ -181,7 +182,7 @@ PAGES = [
   eyebrow='How it works',
   h1='Play <em>MKV</em> files in the browser.',
   lead='Browsers do not normally play MKV files, and many films have Dolby or DTS sound that browsers drop without a warning. MKCinema deals with both inside the app.',
-  img=('shots/player-960.webp', 960, 600, 'The MKCinema player', 'The MKCinema player.'),
+  img=('shots/player-960.webp?v=292', 960, 600, 'The MKCinema player', 'The MKCinema player.'),
   body="""
 <h2>What happens <em>behind the scenes</em></h2>
 <ul>
@@ -208,7 +209,7 @@ PAGES = [
   eyebrow='Playback',
   h1='Skip <em>intros</em>, recaps and credits.',
   lead='MKCinema looks for the start and end of intros, recaps and credits and gives you a Skip button, or skips for you when you turn that on.',
-  img=('shots/player-960.webp', 960, 600, 'The MKCinema player', 'The MKCinema player.'),
+  img=('shots/player-960.webp?v=292', 960, 600, 'The MKCinema player', 'The MKCinema player.'),
   body="""
 <h2>Where the <em>times</em> come from</h2>
 <ul>
@@ -234,6 +235,12 @@ PAGES = [
 ]
 
 
+# kept in step with the live guide pages (language picker, analytics, footer tools); rerunning must not undo them
+LANG_HEAD = '<script id="mkc-lang">(function(){try{var L="es pt fr de it pl tr ru id vi tl sw ha sm ar fa ur hi mr bn pa gu ta te kn ml th zh ja ko nl uk ro el cs hu sv he ms ne my am uz af zu xh hr".split(" "),A={fil:"tl","in":"id",iw:"he",bs:"hr"},s=null;try{s=localStorage.getItem("mkc-lang")}catch(e){}var c=s||(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||"en"]).map(function(x){x=String(x).toLowerCase().split("-")[0];return A[x]||x}).filter(function(x){return x==="en"||L.indexOf(x)>=0})[0]||"en";if(c!=="en"&&L.indexOf(c)<0)c="en";var h=document.documentElement;h.setAttribute("data-lang",c);if(c!=="en"){h.className+=" i18n-wait";window.__sl=fetch("/i18n/"+c+".json");setTimeout(function(){h.classList.remove("i18n-wait")},1500)}}catch(e){}})()</script><style id="mkc-lang-css">.i18n-wait body{opacity:0}.lang-pick{-webkit-appearance:none;appearance:none;font:inherit;font-size:13px;line-height:1;color:inherit;background:transparent url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23bbb%27 stroke-width=%271.6%27%3E%3Ccircle cx=%2712%27 cy=%2712%27 r=%279%27/%3E%3Cpath d=%27M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z%27/%3E%3C/svg%3E") no-repeat 10px 50%/15px;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:8px 12px 8px 30px;max-width:132px;cursor:pointer}.lang-pick:hover,.lang-pick:focus-visible{border-color:rgba(255,255,255,.4);outline:none}.lang-pick option{color:#111;background:#fff}.lang-foot{margin-top:14px}.nav-in .lang-pick,.bar-in .lang-pick{margin-right:8px}.links .lang-menu{display:none}@media (max-width:860px){.nav-in>.lang-pick{display:none}.nav.open .links .lang-menu{display:block;max-width:none;margin:16px 0 4px;font-size:16px;padding:12px 16px 12px 36px}}@media (max-width:640px){.bar-in .lang-pick{width:40px;max-width:40px;padding:8px 0 8px 32px;color:transparent;margin-right:4px}}html:not([data-lang=en]) .links{gap:20px}html:not([data-lang=en]) .links a{white-space:nowrap}@media (min-width:861px) and (max-width:1560px){html:not([data-lang=en]) .links a[href="#different"],html:not([data-lang=en]) .links a[href="#everything"],html:not([data-lang=en]) .links a[href="#iphone"]{display:none}}@media (min-width:861px) and (max-width:1240px){html:not([data-lang=en]) .links a[href="#social"],html:not([data-lang=en]) .links a[href="#faq"]{display:none}}[data-rtl]{unicode-bidi:plaintext}html:not([data-lang=en]):not([data-lang=es]):not([data-lang=pt]):not([data-lang=fr]):not([data-lang=de]):not([data-lang=it]):not([data-lang=pl]):not([data-lang=tr]):not([data-lang=id]):not([data-lang=vi]):not([data-lang=tl]):not([data-lang=sw]):not([data-lang=ha]):not([data-lang=sm]):not([data-lang=ru]):not([data-lang=nl]):not([data-lang=ro]):not([data-lang=cs]):not([data-lang=hu]):not([data-lang=sv]):not([data-lang=ms]):not([data-lang=uz]):not([data-lang=af]):not([data-lang=zu]):not([data-lang=xh]):not([data-lang=hr]) body *{letter-spacing:0!important}</style>'
+DATE = '2026-11-08'  # dateModified of the guide text; change it when a guide's words change
+TOOLS = [('guides', 'All guides'), ('addon-check', 'Addon health check'), ('collections', 'Collection maker'), ('layouts', 'Layout Studio')]
+
+
 def page(p):
     url = f'{ORIGIN}/{p["slug"]}/'
     t, d = html.escape(p['title']), html.escape(p['desc'])
@@ -241,19 +248,22 @@ def page(p):
         {'@type': 'ListItem', 'position': 1, 'name': 'MKCinema', 'item': ORIGIN + '/'},
         {'@type': 'ListItem', 'position': 2, 'name': p['crumb'], 'item': url}]}
     art = {'@context': 'https://schema.org', '@type': 'Article', 'headline': p['title'].split(' · ')[0], 'description': p['desc'],
-           'dateModified': TODAY, 'mainEntityOfPage': url, 'image': ORIGIN + '/og.jpg',
+           'dateModified': p.get('date', DATE), 'mainEntityOfPage': url, 'image': ORIGIN + '/og.jpg',
            'author': {'@type': 'Person', 'name': 'Dee Lavish'}, 'publisher': {'@type': 'Organization', 'name': 'MKCinema', 'url': ORIGIN + '/'}}
     src, w, h, alt, cap = p['img']
     faq = ''.join(f'<details><summary>{html.escape(q)}</summary><div class="det"><p>{a}</p></div></details>' for q, a in p['faq'])
-    more = ''.join(f'<a href="/{s}/">{html.escape(n)}<span>MKCinema guide</span></a>' for s, n in GUIDES if s != p['slug'])
-    foot_links = ''.join(f'<a href="/{s}/">{html.escape(n)}</a>' for s, n in GUIDES)
+    more = ('<a href="/addon-check/">Addon health check<span>Free tool: find the slow or broken addon</span></a>' if p['slug'] == 'stremio-addons' else '') + ''.join(
+        f'<a href="/{s}/">{html.escape(n)}<span>MKCinema guide</span></a>' for s, n in GUIDES if s != p['slug'])
+    foot_links = ''.join(f'<a href="/{s}/">{html.escape(n)}</a>' for s, n in TOOLS + GUIDES)
     return f"""<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="utf-8">{LANG_HEAD}
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{t}</title>
 <meta name="description" content="{d}">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<meta name="author" content="Dee Lavish">
 <link rel="canonical" href="{url}">
 <meta name="theme-color" content="#050505">
 <meta name="color-scheme" content="dark">
@@ -275,6 +285,7 @@ def page(p):
 <script type="application/ld+json">{json.dumps(crumbs, separators=(',', ':'))}</script>
 <script type="application/ld+json">{json.dumps(art, separators=(',', ':'))}</script>
 <style>{CSS}</style>
+<script data-goatcounter="https://itbelikethatbruh.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -298,6 +309,7 @@ def page(p):
   <div class="foot"><a href="/">Home</a>{foot_links}<a href="/#download">Download</a><a href="https://github.com/itbelikethatbruh/MKCinema">GitHub</a><a href="https://ko-fi.com/mkcinema">Ko-fi</a></div>
   <p class="legal">MKCinema does not host, provide or link to any copyrighted content. It plays sources from third-party addons that users install themselves. Stremio is a trademark of its owner; MKCinema is an independent project, not affiliated with or endorsed by Stremio. © {datetime.date.today().year} MKCinema · Made by Dee Lavish · Free forever · Open source under GPL-3.0</p>
 </div></footer>
+<script src="/i18n/site.js" defer></script>
 </body>
 </html>
 """
@@ -307,10 +319,18 @@ def main():
     for p in PAGES:
         d = os.path.join(SITE, p['slug']); os.makedirs(d, exist_ok=True)
         open(os.path.join(d, 'index.html'), 'w', encoding='utf-8').write(page(p))
-    urls = [('/', '1.0')] + [(f'/{p["slug"]}/', '0.7') for p in PAGES]
-    xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join(
-        f'  <url><loc>{ORIGIN}{u}</loc><lastmod>{TODAY}</lastmod><priority>{pr}</priority></url>\n' for u, pr in urls) + '</urlset>\n'
-    open(os.path.join(SITE, 'sitemap.xml'), 'w', encoding='utf-8').write(xml)
+    sm = os.path.join(SITE, 'sitemap.xml')
+    old = open(sm, encoding='utf-8').read() if os.path.exists(sm) else ''
+    rows = re.findall(r'  <url><loc>[^<]+</loc>.*?</url>\n', old)
+    mine = {f'{ORIGIN}/{p["slug"]}/': p for p in PAGES}
+    seen = set(); out = []
+    for r in rows:
+        loc = re.search(r'<loc>([^<]+)</loc>', r).group(1); seen.add(loc)
+        out.append(f'  <url><loc>{loc}</loc><lastmod>{mine[loc].get("date", DATE)}</lastmod><priority>0.7</priority></url>\n' if loc in mine else r)
+    if f'{ORIGIN}/' not in seen: out.insert(0, f'  <url><loc>{ORIGIN}/</loc><lastmod>{TODAY}</lastmod><priority>1.0</priority></url>\n')
+    out += [f'  <url><loc>{u}</loc><lastmod>{p.get("date", DATE)}</lastmod><priority>0.7</priority></url>\n' for u, p in mine.items() if u not in seen]
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join(out) + '</urlset>\n'
+    open(sm, 'w', encoding='utf-8').write(xml)
     print('built', len(PAGES), 'pages')
 
 

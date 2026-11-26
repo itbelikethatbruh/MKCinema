@@ -10,7 +10,7 @@
 const VERSION = 'mkc-2.95.15';
 const PINNED = /^https:\/\/(?:(?:cdn\.jsdelivr\.net|unpkg\.com|cdnjs\.cloudflare\.com)\/\S*?(?:@|\/)\d+\.\d+\.\d+(?:\/|$)|fonts\.gstatic\.com\/)/;
 const REFRESHED = /^https:\/\/fonts\.googleapis\.com\//;
-const LOCAL = /\/(?:addons\/directory\.json|i18n\/[a-z]{2}\.json|kids\/ages\.json|universes(?:-home)?\.json|(?:net|rate|anime)\/[\w-]+\.(?:svg|webp|png)|manifest\.webmanifest|remote\.webmanifest|icon-[\w-]+\.png|apple-touch-icon\.png)$/;
+const LOCAL = /\/(?:addons\/directory\.json|i18n\/[a-z]{2}\.json|kids\/ages\.json|universes(?:-home)?\.json|browse-home\.json|browse\/[\w-]+\.json|networks\.json|(?:net|net\/ch|rate|anime)\/[\w-]+\.(?:svg|webp|png)|manifest\.webmanifest|remote\.webmanifest|icon-[\w-]+\.png|apple-touch-icon\.png)$/;
 const META = '__mkc-shell/'; // META + page -> { v, at }: the web version of the stored page
 const pending = {}; // page -> the refresh under way
 let lastCheck = 0, latestP = null, noVersion = false;
@@ -134,7 +134,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
   // font stylesheets, interface languages and the app's own artwork and data: the stored copy now, refreshed behind it
-  if (REFRESHED.test(req.url) || (url.origin === location.origin && !url.search && LOCAL.test(url.pathname))) {
+  if (REFRESHED.test(req.url) || (url.origin === location.origin && (!url.search || /^\?v=\d+$/.test(url.search)) && LOCAL.test(url.pathname))) {
     e.respondWith((async () => {
       const c = await caches.open(VERSION), hit = await c.match(req);
       const net = fetch(req).then((r) => { if (r.ok || r.type === 'opaque') c.put(req, r.clone()).catch(() => {}); return r; });

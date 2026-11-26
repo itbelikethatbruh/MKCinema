@@ -1,4 +1,6 @@
--- MKCinema backend: every database object the app uses. Safe to run more than once.
+-- MKCinema backend, core part: accounts, profiles and logs. Safe to run more than once.
+-- For a complete self-hosted copy (social hub, notes, Miko's AI counters, status notice and the rest) run
+-- supabase-full.sql instead: it is a superset of this file.
 -- Run in the Supabase dashboard: SQL Editor > New query > paste > Run.
 -- Then deploy the two relays in supabase/functions (debrid-relay, mal-relay) with "Verify JWT" OFF:
 --   supabase functions deploy debrid-relay --no-verify-jwt

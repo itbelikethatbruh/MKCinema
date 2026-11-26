@@ -4620,7 +4620,51 @@ const Plugins = {
     if (!$('#settings').hidden) this.repaint();
   },
 };
-Plugins.init();
+/*2.95.16-plugin-checks*/Object.assign(Plugins,{
+  async registry() {
+    if (this._reg && Date.now() - this._regAt < 10 * 60e3) return this._reg;
+    const [a, b] = await Promise.all([fetch(`${this.REPO}registry.json`, { cache: 'no-cache' }), fetch(`${this.REPO}registry.json.sig`, { cache: 'no-cache' }).catch(() => null)]);
+    if (!a.ok) throw new Error(`HTTP ${a.status}`);
+    const txt = await a.text(), sig = b && b.ok ? (await b.text()).trim() : '';
+    const ok = await this.verifySig(new TextEncoder().encode(txt), sig);
+    if (ok === false) throw new Error('its signature did not check out');
+    this._signed = ok === true;
+    const j = JSON.parse(txt); try { Store.raw.set('plgReg', { txt, sig }); } catch (e) { /* storage full */ }
+    this._reg = (j.items || []).filter((x) => x && x.id && /^[a-z0-9-]{2,40}$/.test(x.id) && (x.kind === 'plugin' || x.kind === 'theme') && /^[a-z0-9-]+\.(js|css)$/.test(x.file || '') && /^[0-9a-f]{64}$/.test(x.sha256 || ''));
+    this._regAt = Date.now(); return this._reg;
+  },
+  async signedReg() {
+    let txt = null, sig = null;
+    try { const [a, b] = await Promise.all([fetch(`${this.REPO}registry.json`, { cache: 'no-cache' }), fetch(`${this.REPO}registry.json.sig`, { cache: 'no-cache' })]); if (a.ok && b.ok) { txt = await a.text(); sig = (await b.text()).trim(); } } catch (e) { /* offline */ }
+    const fresh = txt != null;
+    if (!fresh) { const c = Store.raw.get('plgReg', null); if (c && typeof c.txt === 'string' && typeof c.sig === 'string') { txt = c.txt; sig = c.sig; } }
+    if (txt == null) return { ok: false, why: 'offline' };
+    const v = await this.verifySig(new TextEncoder().encode(txt), sig);
+    if (v === false) return { ok: false, why: 'bad' };
+    let items; try { items = (JSON.parse(txt).items || []).filter((x) => x && typeof x === 'object'); } catch (e) { return { ok: false, why: v === null ? 'nosig' : 'bad' }; }
+    if (fresh) Store.raw.set('plgReg', { txt, sig });
+    return v === true ? { ok: true, fresh, items } : { ok: false, why: 'nosig', fresh, items };
+  },
+  async verifyStored(list) {
+    let r; try { r = await this.signedReg(); } catch (e) { r = { ok: false, why: 'bad' }; }
+    // no list saved yet and offline: plugins the person already approved run, the rest wait for the next launch
+    if (!r.ok && r.why === 'offline') { list.forEach((p) => { if (p.ok) this.runOne(p); }); return; }
+    // a device that cannot check the signature still checks each plugin against the gallery list's checksums
+    const items = r.items || null;
+    if (!items && r.why === 'nosig') { list = list.filter((p) => { if (p.ok) { this.runOne(p); return false; } return true; }); if (!list.length) return; }
+    const held = [];
+    for (const p of list) {
+      const it = items ? items.find((x) => x.id === p.id && x.kind === p.kind && /^[0-9a-f]{64}$/.test(x.sha256 || '') && /^[a-z0-9-]+\.(js|css)$/.test(x.file || '')) : null;
+      let good = false; try { good = !!it && (await this.sha(String(p.code || ''))) === it.sha256; } catch (e) { good = false; }
+      if (!good && it && r.fresh) { try { const code = await this.fetchItem(it); this.save(this.list().map((x) => (x.id === p.id ? { ...x, code, ver: String(it.version || x.ver || '1') } : x))); p.code = code; good = true; } catch (e) { good = false; } }
+      if (good) this.runOne(p); else held.push(p.id);
+    }
+    if (!held.length) return;
+    this.save(this.list().map((p) => (held.includes(p.id) ? { ...p, on: false, ok: false, held: true } : p)));
+    toast(`${held.length === 1 ? 'A plugin' : `${held.length} plugins`} could not be checked against the gallery and ${held.length === 1 ? 'is' : 'are'} off. Turn ${held.length === 1 ? 'it' : 'them'} on in Settings › Plugins & themes to review`, 'info', 6500);
+    if (!$('#settings').hidden) this.repaint();
+  },
+});Plugins.init();
 
 /* 2.13.0: the Android and TV app (1.3.0+) has the same torrent engine, through MKAndroid.p2pStart/p2pStop. On a TV
    stick it keeps one torrent at a time and stops when free storage runs low. */
