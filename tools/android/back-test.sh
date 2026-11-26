@@ -33,7 +33,9 @@ backtest() { # $1 name, $2 how
   wait $rec; A pull /sdcard/$1.mp4 "$OUT/$1.mp4" > /dev/null 2>&1
   ffmpeg -loglevel error -y -i "$OUT/$1.mp4" -vf "fps=6,scale=240:-1,tile=8x7" -frames:v 1 "$OUT/$1-sheet.png" || true
   A logcat -d -s MKCPlayer:* MKCinema:* chromium:* > "$OUT/$1-logcat.txt" || true
+  grep -h "back in full screen\|curtain" "$OUT/$1-logcat.txt" | tail -3
 }
 start_app; play; A exec-out screencap -p > "$OUT/back-playing.png"; backtest back-key key
-start_app; A shell cmd overlay enable com.android.internal.systemui.navbar.gestural || true; sleep 3; play; backtest back-gesture swipe
+# gesture navigation first: switching it restarts the page
+A shell cmd overlay enable com.android.internal.systemui.navbar.gestural || true; sleep 5; start_app; play; backtest back-gesture swipe
 echo "back test done"
