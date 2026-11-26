@@ -71,7 +71,7 @@ public class MainActivity extends Activity {
     static final Set<String> APP_ORIGINS = new HashSet<>(Arrays.asList("https://" + HOST, "https://app.mkcinema.app"));
     static final int REQ_FILE = 1, REQ_MIC = 2, REQ_VOICE = 3, REQ_VOICE_MIC = 4, REQ_PLAY = 5, REQ_NOTIFY = 6, REQ_MIRROR = 7, REQ_MIRROR_MIC = 8;
     // must equal versionName in AndroidManifest.xml (build.sh stops the build when it does not)
-    static final String VER = "1.17.15";
+    static final String VER = "1.17.16";
     /** YouTube apps for TVs first (Fire TV, Android TV, Google TV), then the phone app. */
     static final String[] YT_APPS = { "com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube.googletv", "com.google.android.youtube" };
 
@@ -409,7 +409,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    /** 1.17.15: black over the whole window while a film closes from full screen on a phone. It lifts (fading) once
+    /** 1.17.16: black over the whole window while a film closes from full screen on a phone. It lifts (fading) once
         full screen has ended and the phone is upright, after 1.2 s if the phone stays sideways (auto-rotate), 2.4 s at most. */
     View curtain; long curtainT0;
     void curtainOn() {
@@ -617,7 +617,7 @@ public class MainActivity extends Activity {
             // 1.17.9: on a phone, Back while a film fills the screen closes the film and returns to the page it came from
             // (the page answers true); otherwise, or with an older page, it only leaves full screen as before
             if (tv) { exitFullscreen(); return; }
-            // 1.17.15: a black curtain goes over everything first, so the film is never seen turning upright while it
+            // 1.17.16: a black curtain goes over everything first, so the film is never seen turning upright while it
             // closes (the picture of MKCinema Player is a surface under the page, which the page's own cover can't hide)
             curtainOn();
             web.evaluateJavascript("(function(){try{return !!(window.MKFsBack&&MKFsBack())}catch(e){return false}})()", r -> {
@@ -637,7 +637,7 @@ public class MainActivity extends Activity {
 
     /** TV remotes: media keys drive the player. Arrows and OK reach the page, which already does D-pad navigation. */
     @Override public boolean dispatchKeyEvent(KeyEvent e) {
-        // 1.17.15: phones: Back (the key or the swipe) while a film fills the screen always comes here first, so the
+        // 1.17.16: phones: Back (the key or the swipe) while a film fills the screen always comes here first, so the
         // WebView's own full-screen view can never just leave full screen and turn the film upright
         if (!tv && customView != null && e.getKeyCode() == KeyEvent.KEYCODE_BACK) {
             if (e.getAction() == KeyEvent.ACTION_UP && !e.isCanceled()) onBackPressed();

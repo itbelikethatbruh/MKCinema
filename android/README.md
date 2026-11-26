@@ -309,3 +309,11 @@ mpv's `silencedetect` filter per channel under the label `@mkvad` (removed again
 `af-metadata/mkvad` as `vad`. The times are the film's own, so audio latency doesn't move them. The page reads the
 centre channel on 5.1 and 7.1 films and all channels on stereo, and stops listening once the subtitles are lined up.
 Needs web 2.95.9.
+
+## 1.17.16: Back closes the film on phones
+
+Back while a film fills the screen (the key or the edge swipe) always reaches `onBackPressed` first (`dispatchKeyEvent`
+takes `KEYCODE_BACK` while `customView` is set), so the WebView can't just leave full screen and show the film upright.
+A black curtain view goes over the whole window, the page's `MKFsBack()` closes the film, and the curtain fades out
+(260 ms) once the screen has been upright for 220 ms, at most 1.2 s after full screen ends (2.4 s in all). TVs are
+unchanged. Needs web 2.95.10. Checked by `tools/android/back-test.sh` on the emulator (Back key).
