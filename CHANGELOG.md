@@ -6,6 +6,8 @@ All notable changes to MKCinema. The web app version and the native app versions
 
 - On TVs, films now start with the picture and the sound together, including when the TV switches to the film's frame rate.
 - Back leaves a film right away on TVs, even while the controls are showing or the film is still loading.
+- Films with subtitles start sooner in MKCinema Player, and the remote's Stop button leaves the film.
+- A video opened from another app on a phone opens once, so one Back press closes it.
 
 ## Web app 2.95.16 (2026-11-26)
 

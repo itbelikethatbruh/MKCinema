@@ -56,6 +56,8 @@ back_leaves() { # $1 case name, $2 Back presses allowed
   done
   t1=$(date +%s%N); local ms=$(( (t1 - t0) / 1000000 ))
   A exec-out screencap -p > "$OUT/sweep/$1.png" 2>/dev/null
+  log; local opened; opened=$(grep -c "player screen opened" "$OUT/sweep/logcat.txt")
+  if [ "$opened" -gt 1 ]; then results+=("FAIL  $1: $opened player screens were opened for one film"); fails=$((fails + 1)); fi
   if player_up; then results+=("FAIL  $1: still in the film after $n Back presses"); fails=$((fails + 1))
   else results+=("PASS  $1: left after $n Back press(es), ${ms} ms"); fi
   log; cp "$OUT/sweep/logcat.txt" "$OUT/sweep/$1-logcat.txt"
