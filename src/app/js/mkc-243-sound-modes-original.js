@@ -264,7 +264,7 @@ const NextPrefetch = {
     const group = cur && cur.behaviorHints && cur.behaviorHints.bingeGroup;
     try {
       const { streams } = await engine.fetchStreams('series', id);
-      const pick = pickBest(streams, { bingeGroup: group }); if (!pick) return;
+      const pick = pickBest(streams, PickMemo.opts(meta, group)); if (!pick) return;
       this.got = { id, streams, pick, at: Date.now() };
       this.warm(pick);
     } catch (e) { /* the normal path fetches again when it is time */ }

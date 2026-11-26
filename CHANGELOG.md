@@ -2,6 +2,12 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.95.6 (2026-11-25)
+
+- Next episode and Continue watching keep the same copy you were watching.
+- Sources show again sooner after an addon's busy moment.
+- Lighter memory use on TV sticks.
+
 ## Web app 2.95.5 (2026-11-25)
 
 - Smarter choice of how to watch on first open: more phones are now pointed to the built-in MKCinema player.
