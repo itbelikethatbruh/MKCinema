@@ -1,4 +1,6 @@
 -- MKCinema backend, full: every table, policy and function the live project uses (exported 2026-11-26).
+-- SELF-HOSTING: mkcinema_is_owner() below names the owner's account id (fd0f579d-...). Replace it with your own
+-- account's id (Authentication > Users in the Supabase dashboard) before running, or owner-only tools stay locked.
 -- Run it once in a new Supabase project's SQL editor (it is safe to run again). app/supabase.sql is the short core
 -- (accounts, profiles, logs); this file is a superset of it and also has the social hub, notes, kudos, cards,
 -- Miko's built-in AI counters (miko_ai_usage / miko_ai_hit), the status notice, usage counts and the account format check.
