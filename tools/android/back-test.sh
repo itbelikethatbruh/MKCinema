@@ -5,16 +5,19 @@
 # the player closed. Run after player-test.sh (it serves $OUT/www on :8000). Used by .github/workflows/android-player.yml.
 set -uo pipefail
 OUT=${OUT:-out}; P=9333; D=$(dirname "$0")
-pip install -q websocket-client > /dev/null 2>&1 || true
+timeout 120 pip install -q websocket-client > /dev/null 2>&1 || true; echo "websocket-client: $(python3 -c 'import websocket;print(websocket.__version__)' 2>&1)"
 (cd "$OUT/www" && exec python3 -m http.server 8000 > /dev/null 2>&1) & srv=$!
 trap 'kill $srv 2>/dev/null || true' EXIT
-js() { python3 "$D/cdp.py" $P "$1" 2>&1 | tail -1; }
-rot() { adb shell dumpsys window displays 2>/dev/null | grep -o "mCurrentRotation=[^ ]*" | head -1; }
+js() { timeout 45 python3 "$D/cdp.py" $P "$1" 2>&1 | tail -1; }
+A() { timeout 60 adb "$@"; }
+rot() { A shell dumpsys window displays 2>/dev/null | grep -o "mCurrentRotation=[^ ]*" | head -1; }
 state() { js "JSON.stringify({player:!document.getElementById('player').hidden,fs:!!document.fullscreenElement,w:innerWidth,h:innerHeight,b:window.__mkb||[]})"; }
 start_app() {
-  adb shell am force-stop com.mkcinema.app; adb logcat -c
-  adb shell am start -W -n com.mkcinema.app/.MainActivity > /dev/null; sleep 25
-  local pid; pid=$(adb shell pidof com.mkcinema.app | tr -d '\r'); adb forward --remove-all; adb forward tcp:$P localabstract:webview_devtools_remote_$pid > /dev/null
+  A shell am force-stop com.mkcinema.app; A logcat -c
+  A shell am start -n com.mkcinema.app/.MainActivity > /dev/null; sleep 25
+  local pid; pid=$(A shell pidof com.mkcinema.app | tr -d '\r'); A forward --remove-all; A forward tcp:$P localabstract:webview_devtools_remote_$pid > /dev/null
+  echo "app pid $pid, sockets: $(A shell cat /proc/net/unix | grep -o 'webview_devtools_remote_[0-9]*' | sort -u | tr '\n' ' ')"
+  echo "pages: $(timeout 20 curl -s http://127.0.0.1:$P/json | head -c 400)"
   js "localStorage.setItem('mkc:toured','true');localStorage.setItem('mkc:langAsked','1');localStorage.setItem('mkc:prompt','1');location.reload();1"; sleep 20
   js "(()=>{window.__mkb=[];const f=window.MKFsBack;window.MKFsBack=function(){let r;try{r=f()}catch(e){r='throw '+e.message}window.__mkb.push(String(r));return r};return typeof f})()"
 }
@@ -23,14 +26,14 @@ play() {
   sleep 15; echo "playing: $(state) $(rot)"
 }
 backtest() { # $1 name, $2 how
-  adb shell screenrecord --time-limit 9 --bit-rate 4000000 /sdcard/$1.mp4 & rec=$!; sleep 1.5
-  if [ "$2" = key ]; then adb shell input keyevent KEYCODE_BACK
-  else read -r W H < <(adb shell wm size | tail -1 | grep -o '[0-9]*x[0-9]*' | tr x ' '); adb shell input swipe 1 $((H/2)) $((W/3)) $((H/2)) 180; fi
+  timeout 15 adb shell screenrecord --time-limit 9 --bit-rate 4000000 /sdcard/$1.mp4 & rec=$!; sleep 1.5
+  if [ "$2" = key ]; then A shell input keyevent KEYCODE_BACK
+  else read -r W H < <(A shell wm size | tail -1 | grep -o '[0-9]*x[0-9]*' | tr x ' '); A shell input swipe 1 $((H/2)) $((W/3)) $((H/2)) 180; fi
   sleep 1; echo "$1 +1s: $(state) $(rot)"; sleep 3; echo "$1 +4s: $(state) $(rot)"
-  wait $rec; adb pull /sdcard/$1.mp4 "$OUT/$1.mp4" > /dev/null 2>&1
+  wait $rec; A pull /sdcard/$1.mp4 "$OUT/$1.mp4" > /dev/null 2>&1
   ffmpeg -loglevel error -y -i "$OUT/$1.mp4" -vf "fps=6,scale=240:-1,tile=8x7" -frames:v 1 "$OUT/$1-sheet.png" || true
-  adb logcat -d -s MKCPlayer:* MKCinema:* chromium:* > "$OUT/$1-logcat.txt" || true
+  A logcat -d -s MKCPlayer:* MKCinema:* chromium:* > "$OUT/$1-logcat.txt" || true
 }
-start_app; play; adb exec-out screencap -p > "$OUT/back-playing.png"; backtest back-key key
-start_app; adb shell cmd overlay enable com.android.internal.systemui.navbar.gestural || true; sleep 3; play; backtest back-gesture swipe
+start_app; play; A exec-out screencap -p > "$OUT/back-playing.png"; backtest back-key key
+start_app; A shell cmd overlay enable com.android.internal.systemui.navbar.gestural || true; sleep 3; play; backtest back-gesture swipe
 echo "back test done"

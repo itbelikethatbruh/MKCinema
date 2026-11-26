@@ -57,6 +57,7 @@ jobs:
           APK="$RUNNER_TEMP/apk/MKCinema.apk" OUT="$RUNNER_TEMP/player" bash tools/android/player-test.sh
       - name: Back while a film fills a phone screen
         if: always()
+        timeout-minutes: 12
         run: |
           export PATH="$ANDROID_HOME/platform-tools:$PATH"
           OUT="$RUNNER_TEMP/player" bash tools/android/back-test.sh
