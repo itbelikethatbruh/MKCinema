@@ -94,6 +94,11 @@ echo "== subtitles list open"; open_film 8000; playing; key KEYCODE_DPAD_DOWN; k
 echo "== Stop key"; open_film 8000; playing; A shell input keyevent KEYCODE_MEDIA_STOP
 for _ in $(seq 1 15); do player_up || break; sleep 0.1; done
 if player_up; then results+=("FAIL  stop-key: Stop did not leave the film"); fails=$((fails + 1)); A shell input keyevent KEYCODE_BACK; else results+=("PASS  stop-key: Stop leaves the film"); fi
+echo "== Play pressed while the film is still opening"; open_film 8000; A shell input keyevent KEYCODE_MEDIA_PLAY
+# the press must not leave the film paused behind the start gate: the film still starts on its own
+if wait_for "start: " > /dev/null; then results+=("PASS  play-before-ready: $(grep -ho 'start: .*' "$OUT/sweep/logcat.txt" | head -1)")
+else results+=("FAIL  play-before-ready: the film stayed paused after Play was pressed while it opened"); fails=$((fails + 1)); fi
+back_leaves play-before-ready 1
 echo "== connection drops mid-film (buffering)"; open_film 8002; wait_for "start: " > /dev/null; sleep 12; log
 grep -h "start: " "$OUT/sweep/logcat.txt" | tail -1; back_leaves buffering-stalled 1
 
