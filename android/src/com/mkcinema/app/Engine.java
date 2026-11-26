@@ -18,6 +18,8 @@ interface Engine {
         void buffering(boolean on);
         void text(CharSequence t, Bitmap picture, float pictureWidth);
         void frameRate(float fps);
+        /** 1.17.17: the first picture of the film (or after a seek) is on screen; mpv only */
+        default void firstFrame() { }
     }
     /** a track for the Audio or Subtitles list: id is the engine's own, label is shown */
     final class Track { final String id, label; final boolean on; Track(String id, String label, boolean on) { this.id = id; this.label = label; this.on = on; } }
@@ -38,4 +40,7 @@ interface Engine {
     void release();
     /** 1.14.0: the video surface's new size in pixels (mpv draws to fit it) */
     default void resized(int w, int h) { }
+    /** 1.17.17: called before open(). True when this engine opens the film paused and waits for play(), so the TV can
+        switch to the film's frame rate before any sound plays. False: the engine starts on its own (the basic player). */
+    default boolean holdStart() { return false; }
 }

@@ -27,7 +27,14 @@ import org.json.JSONObject;
       says so, and the person can switch engine in Settings). */
 class MpvEngine implements Engine, MPVLib.EventObserver {
     final Context ctx; final Listener l; final Handler h = new Handler(Looper.getMainLooper());
-    MPVLib m; boolean embed, loaded, ended, dead, fpsSent, slow; int w, ht; String lastErr = "";
+    MPVLib m; boolean embed, loaded, ended, dead, fpsSent, slow, held; int w, ht; String lastErr = "";
+    /** 1.17.17: opens paused; PlayerActivity calls play() once the TV is ready for the picture */
+    public boolean holdStart() { held = true; return true; }
+    /** 1.17.17: the mpv being shut down after Back (see release), so the next film waits for it to let go of the
+        decoders and the sound output */
+    static volatile Thread closing;
+    static boolean closing() { Thread t = closing; return t != null && t.isAlive(); }
+    static void awaitClosed(long ms) { Thread t = closing; if (t != null) try { t.join(ms); } catch (InterruptedException ignored) { } }
     volatile double pos, dur; volatile boolean paused;
 
     MpvEngine(Context ctx, Listener l, boolean embed) { this.ctx = ctx; this.l = l; this.embed = embed; }
@@ -92,6 +99,7 @@ class MpvEngine implements Engine, MPVLib.EventObserver {
             opt("user-agent", ua != null ? ua : "MKCinema/" + MainActivity.VER + " (Linux; Android) mpv");
             if (hf.length() > 0) opt("http-header-fields", hf.toString());
             if (audioLang != null && !audioLang.isEmpty() && !"any".equals(audioLang)) opt("alang", audioLang + ",eng");
+            if (held) opt("pause", "yes");
             if (startMs > 0) opt("start", String.format(Locale.US, "%.3f", startMs / 1000.0));
             m.init();
             m.addObserver(this);
@@ -191,11 +199,28 @@ class MpvEngine implements Engine, MPVLib.EventObserver {
         dead = true; h.removeCallbacksAndMessages(null);
         if (m != null) { MPVLib x = m; m = null; try { x.removeObserver(this); x.detachSurface(); x.destroy(); } catch (Throwable ignored) { } }
     }
+    /** 1.17.17: mpv shuts down on its own thread, the way UnderPlayer does it. On a slow TV box (Fire TV Stick) closing
+        the decoders, the sound output and a network read in progress can take a while, and it used to run on the screen's
+        thread, so Back seemed to do nothing until it finished. The screen now closes at once. Switching to another engine
+        after an error still uses release(), which waits, so two players never hold the TV's decoders at once. */
+    void releaseAsync() {
+        dead = true; h.removeCallbacksAndMessages(null);
+        if (m == null) return;
+        final MPVLib x = m; m = null;
+        try { x.removeObserver(this); } catch (Throwable ignored) { }
+        Thread t = new Thread(() -> {
+            long t0 = android.os.SystemClock.uptimeMillis();
+            try { x.detachSurface(); x.destroy(); } catch (Throwable ignored) { }
+            android.util.Log.i("MKCPlayer", "mpv closed in " + (android.os.SystemClock.uptimeMillis() - t0) + " ms");
+        }, "mpv-close");
+        closing = t;
+        try { t.start(); } catch (Throwable e) { closing = null; try { x.detachSurface(); x.destroy(); } catch (Throwable ignored) { } }
+    }
 
     // ---- libmpv events (on mpv's thread) ----
     @Override public void event(int id) {
         if (id == 8) h.post(() -> { if (dead || loaded) return; loaded = true; ended = false; android.util.Log.i("MKCPlayer", "mpv ready " + (embed ? "embed" : "gpu")); l.ready(); }); // FILE_LOADED
-        else if (id == 21) h.post(() -> { if (!dead) l.buffering(false); }); // PLAYBACK_RESTART (after a seek)
+        else if (id == 21) h.post(() -> { if (!dead) { l.buffering(false); l.firstFrame(); } }); // PLAYBACK_RESTART (first picture on screen, and after a seek)
     }
     @Override public void eventEndFile(int reason, int error) {
         // reason 0: the end of the film; 4: an error (it never started, or the connection failed for good)

@@ -45,7 +45,9 @@ import java.util.Map;
     TV can't decode, sends request headers on every request, and keeps the buffer inside the app's memory budget. */
 class ExoEngine implements Engine {
     final Context ctx; final Listener l; final Handler h = new Handler(Looper.getMainLooper());
-    ExoPlayer p; MediaItem item; String url; File subs; boolean everReady, fpsSent, slow; int retries;
+    ExoPlayer p; MediaItem item; String url; File subs; boolean everReady, fpsSent, slow, held; int retries;
+    /** 1.17.17: opens paused; PlayerActivity calls play() once the TV is ready for the picture */
+    public boolean holdStart() { held = true; return true; }
 
     /** 1.9.0: full ASS/SSA styling through libass (see Ass), when PlayerActivity allows it */
     boolean wantAss; Ass.Hook ass;
@@ -141,7 +143,7 @@ class ExoEngine implements Engine {
             if (holder != null) p.setVideoSurfaceHolder(holder);
             item = build();
             p.setMediaItem(item, Math.max(0, startMs));
-            p.prepare(); p.setPlayWhenReady(true);
+            p.prepare(); p.setPlayWhenReady(!held);
         } catch (Throwable e) { h.post(() -> l.error("exo-open:" + e.getClass().getSimpleName(), true)); }
     }
     public void surface(SurfaceHolder holder) { if (p != null) { if (holder == null) p.clearVideoSurface(); else p.setVideoSurfaceHolder(holder); } }

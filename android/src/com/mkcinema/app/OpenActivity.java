@@ -12,6 +12,10 @@ import android.provider.OpenableColumns;
 public class OpenActivity extends Activity {
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
+        // 1.17.17: Android can rebuild this screen while the phone turns sideways for the film (the player asks for
+        // landscape). The rebuilt one used to start a second player under the first, so Back seemed to do nothing
+        // (it closed the top player and the hidden one started). Only the first start opens the film.
+        if (b != null) { finish(); return; }
         Intent in = getIntent(); Uri u = in == null ? null : in.getData();
         String s = u == null ? null : u.getScheme();
         if (u == null || !("content".equals(s) || "http".equals(s) || "https".equals(s))) { finish(); return; }
