@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Android 1.17.17 (2026-11-26)
+
+- On TVs, films now start with the picture and the sound together, including when the TV switches to the film's frame rate.
+- Back leaves a film right away on TVs, even while the controls are showing or the film is still loading.
+
 ## Web app 2.95.16 (2026-11-26)
 
 - Small performance and reliability improvements, and Home rows that work offline.

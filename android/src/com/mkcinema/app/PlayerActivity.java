@@ -61,6 +61,10 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     /** 1.9.0: skip times in ms: recap, intro, ending ({start, end}), and where the credits start (-1 unknown) */
     final String[] SEG = { "recap", "intro", "ed" }; final long[][] segs = new long[3][]; final boolean[] segUsed = new boolean[3];
     long creditsMs = -1; boolean hasNext, autoSkip, zap, zapFlip; int segCur = -1; long segShown; TextView skipBtn;
+    /** 1.17.17: the start gate. The film opens paused and plays only once the TV has switched to the film's frame rate
+        and had time to bring the picture back (see gateCheck), so the sound never runs ahead of the picture */
+    boolean gate, fpsWaiting, fpsWaited, fg = true, firstShown; float fps; long openedAt, waitedClose;
+    static final long SETTLE_MS = 2000;
 
     /** 1.13.0: an automatic update never installs while this player is open */
     static volatile boolean open;
@@ -222,7 +226,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
 
     void togglePlay() {
         if (!prepared || eng == null) return;
-        modeHold = false;
+        modeHold = false; if (gate) { gate = false; h.removeCallbacks(capGo); }
         if (eng.playing()) { eng.pause(); show(Long.MAX_VALUE / 4); } else { eng.play(); show(2500); }
     }
 
@@ -230,10 +234,20 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
 
     @Override public void surfaceCreated(SurfaceHolder holder) { surfaceReady = true; if (eng == null) maybeStart(); else eng.surface(holder); }
     @Override public void surfaceChanged(SurfaceHolder holder, int f, int w, int hh) { if (eng != null) eng.resized(w, hh); }
-    @Override public void surfaceDestroyed(SurfaceHolder holder) { surfaceReady = false; if (eng != null) eng.surface(null); }
+    @Override public void surfaceDestroyed(SurfaceHolder holder) {
+        surfaceReady = false; if (eng != null) eng.surface(null);
+        // 1.17.17: closing after Back: mpv lets go of this surface on its own thread (MpvEngine.release); the surface
+        // stays until it has, or 1.5 s at most. By now the screen behind is already showing.
+        else MpvEngine.awaitClosed(1500);
+    }
 
+    final Runnable startLater = this::maybeStart;
     void maybeStart() {
         if (eng != null || !surfaceReady || !subsWaited || isFinishing()) return;
+        // 1.17.17: the film closed a moment ago is still letting go of the decoders and the sound output: wait for it
+        // (4 s at most), or this film could open with no sound on a slow TV box (see stopPlayer)
+        if (MpvEngine.closing() && waitedClose < 4000) { waitedClose += 100; h.removeCallbacks(startLater); h.postDelayed(startLater, 100); return; }
+        openedAt = android.os.SystemClock.uptimeMillis();
         // 1.14.0: "mpv" (MKCinema Player, the default; "exo" from older app pages means the default too), "exoplayer", "system"
         try {
             if ("system".equals(engineName)) eng = new MpEngine(this, this);
@@ -242,10 +256,13 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         }
         catch (Throwable t) { fellBack = true; eng = new MpEngine(this, this); } // ExoPlayer missing or broken on this device
         DvFallback.used = false;
-        android.util.Log.i("MKCPlayer", "engine " + eng.name() + " for " + (url.startsWith("content:") ? "a local file" : "a stream"));
-        eng.open(url, hdr, subFile, audioLang, startMs, surface.getHolder());
+        android.util.Log.i("MKCPlayer", "engine " + eng.name() + " for " + (url.startsWith("content:") ? "a local file" : "a stream") + (waitedClose > 0 ? ", waited " + waitedClose + " ms for the last film to close" : ""));
+        open(eng);
         addOverlay();
     }
+
+    /** every engine opens through here, the fallbacks too, so each one starts behind the gate */
+    void open(Engine e) { gate = e.holdStart(); e.open(url, hdr, subFile, audioLang, startMs, surface.getHolder()); }
 
     Engine exo() { ExoEngine x = new ExoEngine(this, this); x.slow = slow; x.wantAss = assOk; return x; }
     /** 1.14.0: mpv couldn't open the file: ExoPlayer tries next (then the basic player, see error()) */
@@ -314,6 +331,34 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         if (fellBack) { note.setText("Playing with the basic player"); h.postDelayed(() -> { if (note.getText().toString().startsWith("Playing with")) note.setText(""); }, 4000); }
         else if (DvFallback.used) { note.setText("HDR10 (this TV can’t show this Dolby Vision)"); h.postDelayed(() -> { if (note.getText().toString().startsWith("HDR10")) note.setText(""); }, 5000); }
         else if (assCrashed) { note.setText("Styled subtitles were turned off after a problem"); h.postDelayed(() -> { if (note.getText().toString().startsWith("Styled")) note.setText(""); }, 5000); }
+        if (gate) { h.removeCallbacks(capGo); h.postDelayed(capGo, 9000); gateCheck(); }
+    }
+    @Override public void firstFrame() { if (!firstShown) { firstShown = true; android.util.Log.i("MKCPlayer", "first picture " + (android.os.SystemClock.uptimeMillis() - openedAt) + " ms after opening"); } }
+
+    /** 1.17.17: Fire TV and other TVs switch their refresh rate to the film's (24p without judder) when it starts. The
+        HDMI picture then goes black for 1 to 5 s while the TV locks on, but the sound comes back sooner, so films used
+        to start with sound over a black screen. The frame rate was also only matched once the film was playing, and on
+        ExoPlayer the pause for it was skipped because the film wasn't "playing" yet. Now the film waits, paused, with
+        its first picture ready: the TV switches first, gets SETTLE_MS to show pictures again, then the film plays. */
+    void gateCheck() {
+        if (!gate || !prepared || eng == null || isFinishing() || modeHold) return;
+        boolean can = matchRate && Build.VERSION.SDK_INT >= 23;
+        if (can && fps <= 0 && !fpsWaited) { // the frame rate comes a moment after the film opens
+            if (!fpsWaiting) { fpsWaiting = true; h.postDelayed(() -> { fpsWaited = true; gateCheck(); }, 600); }
+            return;
+        }
+        Display.Mode best = can && fps > 0 ? pickMode(fps) : null;
+        if (best == null) { go(can && fps > 0 ? "screen already at " + fps + " fps" : "no frame rate to match"); return; }
+        modeHold = true;
+        final float hz = best.getRefreshRate();
+        switchMode(best, () -> { modeHold = false; go(String.format(java.util.Locale.US, "screen switched to %.3f Hz", hz)); });
+    }
+    final Runnable capGo = () -> { modeHold = false; go("waited 9 s"); };
+    void go(String why) {
+        if (!gate || eng == null || isFinishing()) return;
+        gate = false; h.removeCallbacks(capGo);
+        android.util.Log.i("MKCPlayer", "start: " + why + ", playing " + (android.os.SystemClock.uptimeMillis() - openedAt) + " ms after opening");
+        if (fg) eng.play();
     }
     @Override public void size(int w, int hh, float p) { vw = w; vh = hh; par = p > 0 ? p : 1f; fit(); }
     @Override public void ended() { ended = true; finishWithResult(); }
@@ -326,7 +371,11 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(w, -2, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL); lp.bottomMargin = (int) (24 * getResources().getDisplayMetrics().density);
         subImg.setLayoutParams(lp); subImg.setVisibility(View.VISIBLE);
     }
-    @Override public void frameRate(float fps) { if (matchRate && Build.VERSION.SDK_INT >= 23) matchFrameRate(fps); }
+    @Override public void frameRate(float f) {
+        fps = f; if (!matchRate || Build.VERSION.SDK_INT < 23) return;
+        if (gate) gateCheck(); // before the film plays (ready() checks again if the film isn't open yet)
+        else matchFrameRate(f);
+    }
     @Override public void error(String code, boolean beforeReady) {
         // 1.7.0: a file ExoPlayer can't open gets one try in the basic player before MKCinema's own player takes over
         // 1.15.2: on a TV mpv first draws straight onto the screen (hardware decoder only). When that can't start, MKCinema Player
@@ -334,20 +383,20 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         if (beforeReady && eng instanceof MpvEngine && ((MpvEngine) eng).embed && !triedGpu && !isFinishing()) {
             triedGpu = true; chain("mpv-tv:" + code); eng.release(); eng = null; prepared = false; note.setText("Starting MKCinema Player…");
             MpvEngine x = new MpvEngine(this, this, false); x.slow = slow; eng = x;
-            eng.open(url, hdr, subFile, audioLang, startMs, surface.getHolder()); addOverlay();
+            open(eng); addOverlay();
             return;
         }
         if (beforeReady && eng instanceof MpvEngine && !triedExo && !isFinishing()) {
             chain("mpv:" + code);
             triedExo = true; eng.release(); eng = null; prepared = false; note.setText("Trying ExoPlayer… (" + code + ")");
             try { eng = exo(); } catch (Throwable t) { fellBack = true; eng = new MpEngine(this, this); }
-            eng.open(url, hdr, subFile, audioLang, startMs, surface.getHolder()); addOverlay();
+            open(eng); addOverlay();
             return;
         }
         if (beforeReady && eng instanceof ExoEngine && !fellBack && !isFinishing()) {
             chain("exo:" + code);
             fellBack = true; eng.release(); eng = null; prepared = false; note.setText("Trying the basic player…");
-            eng = new MpEngine(this, this); eng.open(url, hdr, subFile, audioLang, startMs, surface.getHolder()); addOverlay();
+            eng = new MpEngine(this, this); open(eng); addOverlay();
             return;
         }
         chain("final:" + code);
@@ -365,45 +414,58 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         if (assView != null) assView.setLayoutParams(new FrameLayout.LayoutParams((int) (w * r), (int) (vh * r), Gravity.CENTER));
     }
 
-    /** Asks the TV for a display mode at the same resolution whose refresh rate is a whole multiple of it. */
-    void matchFrameRate(float fps) {
-        if (fps < 20 || fps > 70) return;
-        final float want = Math.abs(fps - 24) < 0.6 ? 23.976f : fps;
-        h.post(() -> {
+    /** A display mode at the same resolution whose refresh rate is a whole multiple of the film's, or null when the
+        screen is already in it (or has none). */
+    Display.Mode pickMode(float f) {
+        if (f < 20 || f > 70) return null;
+        final float want = Math.abs(f - 24) < 0.6 ? 23.976f : f;
+        try {
             Display dsp = getWindowManager().getDefaultDisplay(); Display.Mode cur = dsp.getMode(), best = null; float bestErr = 1f;
             for (Display.Mode m : dsp.getSupportedModes()) {
                 if (m.getPhysicalWidth() != cur.getPhysicalWidth() || m.getPhysicalHeight() != cur.getPhysicalHeight()) continue;
                 float ratio = m.getRefreshRate() / want, err = Math.abs(ratio - Math.round(ratio));
                 if (Math.round(ratio) >= 1 && err < 0.01f && (best == null || err < bestErr || (err == bestErr && m.getRefreshRate() < best.getRefreshRate()))) { best = m; bestErr = err; }
             }
-            if (best != null && best.getModeId() != cur.getModeId()) {
-                holdForMode(best.getModeId());
-                WindowManager.LayoutParams lp = getWindow().getAttributes(); lp.preferredDisplayModeId = best.getModeId(); getWindow().setAttributes(lp);
-                note.setText(String.format(java.util.Locale.US, "%.3f Hz", best.getRefreshRate())); h.postDelayed(() -> { if ("".equals(note.getText().toString()) || note.getText().toString().endsWith("Hz")) note.setText(""); }, 3000);
-            }
+            return best != null && best.getModeId() != cur.getModeId() ? best : null;
+        } catch (Exception e) { return null; }
+    }
+
+    /** the frame rate became known while the film plays (the basic player reads it late): the film pauses for the switch */
+    void matchFrameRate(float f) {
+        h.post(() -> {
+            Display.Mode best = pickMode(f); if (best == null || eng == null || isFinishing()) return;
+            final boolean was = eng.playing();
+            modeHold = true; eng.pause();
+            switchMode(best, () -> { if (modeHold && eng != null && !isFinishing()) { modeHold = false; if (was) eng.play(); } });
         });
     }
 
     /** 1.11.1: while the TV switches its refresh rate the HDMI link restarts (picture and sound drop for 1 to 5 s on
-        most TVs and receivers). Sound sent in that gap can be lost for good on some boxes, so the film waits, paused,
-        until the new mode is on (or 5 s), then 1 s more for the sound link, and plays on. */
+        most TVs and receivers). Asks for the mode, waits until it is on (or 5 s), then SETTLE_MS more for the TV to show
+        pictures again (1.17.17: was 1 s, too short for the picture on many TVs), then runs done. */
     android.hardware.display.DisplayManager.DisplayListener modeL; boolean modeHold;
-    void holdForMode(int modeId) {
-        if (eng == null || !eng.playing()) return;
-        modeHold = true; eng.pause();
-        final Runnable go = () -> { unwatchMode(); h.postDelayed(() -> { if (modeHold && eng != null && !isFinishing()) { modeHold = false; eng.play(); } }, 1000); };
+    void switchMode(Display.Mode best, Runnable done) {
+        final int modeId = best.getModeId(); final boolean[] fired = { false };
+        final Runnable settled = () -> {
+            if (fired[0]) return; fired[0] = true; unwatchMode();
+            h.postDelayed(() -> { if (!isFinishing()) done.run(); }, SETTLE_MS);
+        };
         try {
             android.hardware.display.DisplayManager dm = (android.hardware.display.DisplayManager) getSystemService(DISPLAY_SERVICE);
             modeL = new android.hardware.display.DisplayManager.DisplayListener() {
                 @Override public void onDisplayAdded(int id) { }
                 @Override public void onDisplayRemoved(int id) { }
                 @Override public void onDisplayChanged(int id) {
-                    try { if (getWindowManager().getDefaultDisplay().getMode().getModeId() == modeId) { h.removeCallbacks(go); go.run(); } } catch (Exception ignored) { }
+                    try { if (getWindowManager().getDefaultDisplay().getMode().getModeId() == modeId) settled.run(); } catch (Exception ignored) { }
                 }
             };
             dm.registerDisplayListener(modeL, h);
         } catch (Exception ignored) { }
-        h.postDelayed(go, 5000);
+        h.postDelayed(settled, 5000);
+        android.util.Log.i("MKCPlayer", String.format(java.util.Locale.US, "switching the screen to %.3f Hz", best.getRefreshRate()));
+        WindowManager.LayoutParams lp = getWindow().getAttributes(); lp.preferredDisplayModeId = modeId; getWindow().setAttributes(lp);
+        note.setText(String.format(java.util.Locale.US, "%.3f Hz", best.getRefreshRate()));
+        h.postDelayed(() -> { if ("".equals(note.getText().toString()) || note.getText().toString().endsWith("Hz")) note.setText(""); }, 3000 + SETTLE_MS);
     }
     void unwatchMode() {
         if (modeL == null) return;
@@ -506,7 +568,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
             try {
                 int pos = pendingSeek >= 0 ? pendingSeek : (int) eng.pos(), dur = (int) eng.dur();
                 if (dur > 0) seek.setProgress((int) (pos * 1000L / dur));
-                time.setText(fmt(pos) + "  /  " + fmt(dur) + (eng.playing() || touch ? "" : "   Paused"));
+                time.setText(fmt(pos) + "  /  " + fmt(dur) + (eng.playing() || touch || gate || modeHold ? "" : "   Paused"));
                 if (touch) playBtn.setText(eng.playing() ? "❚❚  Pause" : "▶  Play");
             } catch (Exception ignored) { }
         }
@@ -538,13 +600,15 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
                 case KeyEvent.KEYCODE_DPAD_RIGHT: return true;
             }
         }
-        // the options row: Down opens it, Left/Right move, OK picks, Up or Back leaves it
+        // the options row: Down opens it, Left/Right move, OK picks, Up leaves it. 1.17.17: Back closes the player, like
+        // everywhere else in the film (it used to only leave the row, so Back seemed to do nothing while the bar showed)
         if (sel >= 0) {
             switch (k) {
                 case KeyEvent.KEYCODE_DPAD_LEFT: sel = Math.max(0, sel - 1); paintOpts(); show(8000); return true;
                 case KeyEvent.KEYCODE_DPAD_RIGHT: sel = Math.min(optBtns.size() - 1, sel + 1); paintOpts(); show(8000); return true;
                 case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER: runOpt((String) optBtns.get(sel).getTag()); return true;
-                case KeyEvent.KEYCODE_DPAD_UP: case KeyEvent.KEYCODE_BACK: case KeyEvent.KEYCODE_ESCAPE: sel = -1; paintOpts(); show(3000); return true;
+                case KeyEvent.KEYCODE_DPAD_UP: sel = -1; paintOpts(); show(3000); return true;
+                case KeyEvent.KEYCODE_BACK: case KeyEvent.KEYCODE_ESCAPE: android.util.Log.i("MKCPlayer", "back from the options row"); finishWithResult(); return true;
                 case KeyEvent.KEYCODE_DPAD_DOWN: show(8000); return true;
             }
         }
@@ -576,7 +640,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
             case KeyEvent.KEYCODE_DPAD_UP: show(4000); return true;
             case KeyEvent.KEYCODE_MENU: openTracks(false); return true;
             case KeyEvent.KEYCODE_MEDIA_NEXT: wantNext = true; finishWithResult(); return true;
-            case KeyEvent.KEYCODE_BACK: case KeyEvent.KEYCODE_ESCAPE: finishWithResult(); return true;
+            case KeyEvent.KEYCODE_BACK: case KeyEvent.KEYCODE_ESCAPE: android.util.Log.i("MKCPlayer", "back" + (prepared ? "" : " while opening")); finishWithResult(); return true;
         }
         return super.dispatchKeyEvent(e);
     }
@@ -594,16 +658,17 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     // the crash flag is only up while the libass layer draws on screen, so Android closing a paused player in the
     // background never counts as a crash
     // the place is handed back on every pause too: reopening the app from its icon closes this screen without Back
-    @Override protected void onPause() { super.onPause(); if (!isFinishing()) { try { setResult(RESULT_OK, result()); } catch (Exception ignored) { } } modeHold = false; if (eng != null && prepared && eng.playing()) eng.pause(); if (assView != null) liveAss(false); }
-    @Override protected void onResume() { super.onResume(); if (assView != null) liveAss(true); }
+    @Override protected void onPause() { super.onPause(); fg = false; if (!isFinishing()) { try { setResult(RESULT_OK, result()); } catch (Exception ignored) { } } modeHold = false; if (eng != null && prepared && eng.playing()) eng.pause(); if (assView != null) liveAss(false); }
+    @Override protected void onResume() { super.onResume(); fg = true; if (assView != null) liveAss(true); }
     @Override protected void onDestroy() { super.onDestroy(); open = false; stopPlayer(); liveAss(false); }
 
     /** 1.11.1: the player (its decoders and its audio output) is let go the moment this screen closes. Android runs
         onDestroy only once the screen behind is idle, which on a slow TV box can be seconds later: a film started again
-        in that time opened a second player while the first still held the audio output, and played with no sound. */
+        in that time opened a second player while the first still held the audio output, and played with no sound.
+        1.17.17: mpv shuts down on its own thread so Back is instant, and the next film waits for it (maybeStart). */
     @Override public void finish() { stopPlayer(); super.finish(); }
     void stopPlayer() {
         h.removeCallbacksAndMessages(null); unwatchMode();
-        if (eng != null) { Engine e = eng; eng = null; prepared = false; try { e.release(); } catch (Throwable ignored) { } }
+        if (eng != null) { Engine e = eng; eng = null; prepared = false; try { if (e instanceof MpvEngine) ((MpvEngine) e).releaseAsync(); else e.release(); } catch (Throwable ignored) { } }
     }
 }
