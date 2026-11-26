@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Phones: Back while a film fills the screen (MKCinema Player under the web page) must close the film and land on the
-# page it came from, without first showing the film turned upright. Plays the test film through the real web app
-# (app.mkcinema.app) in a debuggable build, presses Back (the key, then the gesture), records the screen, and checks
-# the player closed. Run after player-test.sh (it serves $OUT/www on :8000). Used by .github/workflows/android-player.yml.
+# page it came from, without first showing the film turned upright. Plays the test film under a
+# stand-in page in a debuggable build, presses Back (the key, then the gesture), records the screen, and checks
+# the player closed. Serves $OUT/www on :8000. Used by .github/workflows/android-player.yml.
 set -uo pipefail
 OUT=${OUT:-out}; P=9333; D=$(dirname "$0")
 timeout 120 mkdir -p "$OUT/www"; [ -f "$OUT/www/test.mkv" ] || ffmpeg -loglevel error -y -f lavfi -i testsrc2=size=1280x720:rate=24 -f lavfi -i sine=frequency=440:sample_rate=48000 -t 300 -c:v libx264 -preset veryfast -pix_fmt yuv420p -c:a aac -metadata:s:a:0 language=eng "$OUT/www/test.mkv"
@@ -13,18 +13,17 @@ js() { timeout 45 python3 "$D/cdp.py" $P "$1" 2>&1 | tail -1; }
 A() { timeout 60 adb "$@"; }
 rot() { A shell dumpsys window displays 2>/dev/null | grep -o "mCurrentRotation=[^ ]*" | head -1; }
 state() { js "JSON.stringify({player:!document.getElementById('player').hidden,fs:!!document.fullscreenElement,w:innerWidth,h:innerHeight,b:window.__mkb||[]})"; }
-start_app() {
+start_app() { # light page: the full web app crashes the emulator's software GPU, so the page here is a stand-in that
+  # does what the real page does on Back (MKFsBack closes the film and leaves full screen); MKCinema Player plays under it
   [ -n "${FIRST:-}" ] && A shell am force-stop com.mkcinema.app; FIRST=1; A logcat -c
-  A shell am start -n com.mkcinema.app/.MainActivity > /dev/null; sleep 25
+  A shell am start -n com.mkcinema.app/.MainActivity --es underTest http://10.0.2.2:8000/test.mkv > /dev/null; sleep 12
   local pid; pid=$(A shell pidof com.mkcinema.app | tr -d '\r'); A forward --remove-all; A forward tcp:$P localabstract:webview_devtools_remote_$pid > /dev/null
-  echo "app pid $pid, sockets: $(A shell cat /proc/net/unix | grep -o 'webview_devtools_remote_[0-9]*' | sort -u | tr '\n' ' ')"
-  echo "pages: $(timeout 20 curl -s http://127.0.0.1:$P/json | head -c 400)"
-  js "localStorage.setItem('mkc:toured','true');localStorage.setItem('mkc:langAsked','1');localStorage.setItem('mkc:prompt','1');location.reload();1"; sleep 20
-  js "(()=>{window.__mkb=[];const f=window.MKFsBack;window.MKFsBack=function(){let r;try{r=f()}catch(e){r='throw '+e.message}window.__mkb.push(String(r));return r};return typeof f})()"
+  echo "app pid $pid, pages: $(timeout 20 curl -s http://127.0.0.1:$P/json | head -c 300)"
+  js "(()=>{document.documentElement.style.background='transparent';document.body.style.cssText='margin:0;background:transparent';document.body.innerHTML='<div id=player style=\"position:fixed;inset:0;background:transparent\"><div style=\"position:absolute;left:20px;top:20px;color:#fff;font:40px sans-serif;background:#c00\">FILM</div></div><div id=page style=\"color:#fff;font:40px sans-serif;padding:200px 20px;background:#036\">TITLE PAGE</div>';window.__mkb=[];window.MKFsBack=function(){window.__mkb.push('called');const p=document.getElementById('player');if(!document.fullscreenElement)return false;p.hidden=true;document.exitFullscreen().catch(()=>{});return true};return 'ok'})()"
 }
 play() {
-  js "(async()=>{try{openDetail({id:'tt0111161',type:'movie',name:'Back test'})}catch(e){};await new Promise(r=>setTimeout(r,4000));playStream({meta:{id:'tt0111161',type:'movie',name:'Back test'},type:'movie'},{url:'http://10.0.2.2:8000/test.mkv',name:'Test',title:'Back.Test.1080p.WEB-DL.English'});return 'started'})()"
-  sleep 15; echo "playing: $(state) $(rot)"
+  js "document.getElementById('player').requestFullscreen().then(()=>'fs',e=>'fs failed '+e.message)"
+  sleep 4; echo "playing: $(state) $(rot)"
 }
 backtest() { # $1 name, $2 how
   timeout 15 adb shell screenrecord --time-limit 9 --bit-rate 4000000 /sdcard/$1.mp4 & rec=$!; sleep 1.5
