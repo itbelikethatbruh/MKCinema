@@ -1,4 +1,4 @@
-(()=>{
+(()=>{/* 2.95.19 sheet wait */
   'use strict';
   if (typeof EpSheet !== 'object' || !EpSheet || EpSheet._mk29518) return;
   EpSheet._mk29518 = true;
@@ -24,8 +24,16 @@
     const r = od.apply(this, arguments);
     try {
       if (det.classList.contains('dp-under') && !det.classList.contains('dp-landed')) {
-        clearTimeout(holdT); hold(true);
-        clearTimeout(landT); landT = setTimeout(land, es.hidden ? 120 : 700); // the panel may not open at all (no episode)
+        clearTimeout(holdT); hold(true); clearTimeout(landT);
+        /* 2.95.19 sheet wait: the panel may open only after the page has fetched the show. Wait for the panel: its
+           slide (or 0.7 s once it opens), or, when the page has finished and still no panel opened, show the page then */
+        if (!es.hidden) landT = setTimeout(land, 700);
+        else {
+          const tok = det._mkLandTok = (det._mkLandTok || 0) + 1;
+          const after = () => { if (det._mkLandTok === tok && es.hidden) land(); };
+          Promise.resolve(r).then(() => setTimeout(after, 60), () => setTimeout(after, 60));
+          landT = setTimeout(land, 6000); // never left hidden
+        }
       } else if (!det.classList.contains('dp-under')) det.classList.remove('dp-landed');
     } catch (e) { hold(false); }
     return r;
@@ -58,7 +66,11 @@
   let openAt = -1e9, first = false, tmr = 0;
   const mark = () => { openAt = now(); first = true; clearTimeout(tmr); };
   const eo = EpSheet.open;
-  EpSheet.open = function () { mark(); return eo.apply(this, arguments); };
+  EpSheet.open = function () {
+    mark(); const r = eo.apply(this, arguments);
+    try { if (det.classList.contains('dp-under') && !det.classList.contains('dp-landed')) { det._mkLandTok = (det._mkLandTok || 0) + 1; clearTimeout(landT); landT = setTimeout(land, 700); } } catch (e) { land(); }
+    return r;
+  };
   const od2 = openDetail;
   openDetail = function () { mark(); return od2.apply(this, arguments); };
   try { window.openDetail = openDetail; } catch (e) { /* the binding is enough */ }

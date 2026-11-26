@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.95.19 (2026-11-26)
+
+- Episodes open steadier: the episode panel opens at its full size and the page behind it waits until it is up.
+
 ## Android 1.17.17 (2026-11-26)
 
 - On TVs, films now start with the picture and the sound together, including when the TV switches to the film's frame rate.
