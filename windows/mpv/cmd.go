@@ -318,6 +318,14 @@ func Translate(c, arg string) ([]Op, error) {
 			return []Op{set("sub-visibility", "yes")}, nil
 		}
 		return nil, ErrBad
+	case "vad": // 1.6.2: auto-sync hears when people speak: silencedetect per channel at this level (dB), times come back as "vad"; "0" = off
+		off := cmd("af", "remove", "@mkvad")
+		if arg == "0" {
+			return []Op{off}, nil
+		}
+		if v, err = f(arg, -60, -10); err == nil {
+			return []Op{off, cmd("af", "append", "@mkvad:lavfi=[silencedetect=n="+v+"dB:d=0.25:mono=1]")}, nil
+		}
 	case "aspect":
 		if !aspectRe.MatchString(arg) {
 			return nil, ErrBad

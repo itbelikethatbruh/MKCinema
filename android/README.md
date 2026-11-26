@@ -303,3 +303,9 @@ app's `mpv.SubStyle`. Older apps answer "unknown command" and keep their built-i
 draws them like the web player (rounded box, the chosen font, upright italics). The page asks for `page` only for text
 tracks; picture (PGS, DVD) and ASS subtitles stay with mpv. Older apps refuse the command and keep drawing everything.
 Needs web 2.95.8.
+
+`vad` (a level in dB, or `0` for off) lets subtitle auto-sync hear when people speak in the MKCinema player. It adds
+mpv's `silencedetect` filter per channel under the label `@mkvad` (removed again with `0`) and reports its times from
+`af-metadata/mkvad` as `vad`. The times are the film's own, so audio latency doesn't move them. The page reads the
+centre channel on 5.1 and 7.1 films and all channels on stereo, and stops listening once the subtitles are lined up.
+Needs web 2.95.9.

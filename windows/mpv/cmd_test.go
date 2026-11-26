@@ -143,3 +143,26 @@ func TestSubDraw(t *testing.T) {
 		t.Errorf("stext %#v", s.vals["stext"])
 	}
 }
+
+func TestVad(t *testing.T) {
+	o := must(Translate("vad", "-32"))
+	if len(o) != 2 || strings.Join(o[0].Args, " ") != "af remove @mkvad" || strings.Join(o[1].Args, " ") != "af append @mkvad:lavfi=[silencedetect=n=-32dB:d=0.25:mono=1]" {
+		t.Errorf("on %v", o)
+	}
+	if o := must(Translate("vad", "-500")); !strings.Contains(o[1].Args[2], "n=-60dB") {
+		t.Errorf("clamp %v", o)
+	}
+	if o := must(Translate("vad", "0")); len(o) != 1 || o[0].Args[1] != "remove" {
+		t.Errorf("off %v", o)
+	}
+	for _, bad := range []string{"x", "-32dB,anullsink", ""} {
+		if _, err := Translate("vad", bad); err == nil {
+			t.Errorf("accepted %q", bad)
+		}
+	}
+	s := NewState()
+	s.Set("af-metadata/mkvad", `{"lavfi.silence_start.3":"12.5"}`, true)
+	if m, ok := s.vals["vad"].(map[string]any); !ok || m["lavfi.silence_start.3"] != "12.5" {
+		t.Errorf("vad %#v", s.vals["vad"])
+	}
+}
