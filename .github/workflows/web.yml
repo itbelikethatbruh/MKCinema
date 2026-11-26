@@ -22,7 +22,7 @@ concurrency:
 jobs:
   app:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -59,6 +59,19 @@ jobs:
         run: NODE_PATH="$RUNNER_TEMP/pw/node_modules" node tools/layout-check.mjs "$RUNNER_TEMP/web"
       - name: Opening smoothness, minified build
         run: NODE_PATH="$RUNNER_TEMP/pw/node_modules" node tools/open-check.mjs "$RUNNER_TEMP/web"
+      - name: Every main journey on a phone, a computer and a TV remote, minified build
+        run: |
+          command -v ffmpeg > /dev/null || { sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends ffmpeg > /dev/null; }
+          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node tools/journey-check.mjs "$RUNNER_TEMP/web" --out="$RUNNER_TEMP/journeys" --json="$RUNNER_TEMP/journeys/results.json"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: journey-frames
+          path: |
+            ${{ runner.temp }}/journeys/frames/*.jpg
+            ${{ runner.temp }}/journeys/results.json
+          retention-days: 7
+          if-no-files-found: ignore
 
   site:
     runs-on: ubuntu-latest
