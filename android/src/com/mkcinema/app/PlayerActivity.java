@@ -147,6 +147,21 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         FrameLayout.LayoutParams skl = new FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM | Gravity.END); skl.rightMargin = (int) (48 * d); skl.bottomMargin = (int) (150 * d);
         root.addView(skipBtn, skl);
         setContentView(root);
+        // 1.17.13: the picture fills the screen past the camera cutout on phones; the buttons keep clear of it
+        if (Build.VERSION.SDK_INT >= 28) {
+            WindowManager.LayoutParams wa = getWindow().getAttributes();
+            wa.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+            getWindow().setAttributes(wa);
+            final int skR = skl.rightMargin;
+            root.setOnApplyWindowInsetsListener((v, in) -> {
+                android.view.DisplayCutout dc = in.getDisplayCutout();
+                int l = dc == null ? 0 : dc.getSafeInsetLeft(), r = dc == null ? 0 : dc.getSafeInsetRight();
+                bar.setPadding(p + l, bar.getPaddingTop(), p + r, bar.getPaddingBottom());
+                FrameLayout.LayoutParams sk2 = (FrameLayout.LayoutParams) skipBtn.getLayoutParams();
+                if (sk2.rightMargin != skR + r) { sk2.rightMargin = skR + r; skipBtn.setLayoutParams(sk2); }
+                return in;
+            });
+        }
         touch = !getPackageManager().hasSystemFeature("android.software.leanback") && getResources().getConfiguration().touchscreen != android.content.res.Configuration.TOUCHSCREEN_NOTOUCH;
         if (touch) setupTouch(seekBox, d); else playBtn.setVisibility(View.GONE);
         note.setText("Loading…");

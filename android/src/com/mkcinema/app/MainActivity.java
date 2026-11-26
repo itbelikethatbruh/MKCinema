@@ -105,6 +105,8 @@ public class MainActivity extends Activity {
     PermissionRequest pendingPerm;
     String[] pendingWant;
     boolean tv;
+    /** 1.17.13: phones draw edge to edge, into the camera cutout and under the status and navigation bars */
+    boolean e2e;
     /** Phone picture-in-picture (1.2.6): the page reports when a film plays, and its shape */
     volatile boolean pipPlaying; volatile int pipW = 16, pipH = 9; boolean wasPip;
     volatile String pageHost = "";
@@ -143,6 +145,8 @@ public class MainActivity extends Activity {
         root = new FrameLayout(this);
         root.setBackgroundColor(Color.BLACK);
         setContentView(root);
+        e2e = !tv && Build.VERSION.SDK_INT >= 30 && webViewMajor() >= 144;
+        if (e2e) edgeToEdge();
         Iptv.load(this); // 1.10.0: the TV servers the person added (Live TV › Add playlist)
         buildWeb();
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -205,9 +209,10 @@ public class MainActivity extends Activity {
             }
             @Override public void onPageStarted(WebView v, String url, android.graphics.Bitmap icon) { pageHost = hostOf(url); iptvOrigin(); tvJsDone = false; giveKey(v); }
             @Override public void doUpdateVisitedHistory(WebView v, String url, boolean reload) { pageHost = hostOf(url); iptvOrigin(); }
-            @Override public void onPageCommitVisible(WebView v, String url) { giveKey(v); if (tv && !tvJsDone) { tvJsDone = true; v.evaluateJavascript(TV_JS, null); } }
+            @Override public void onPageCommitVisible(WebView v, String url) { giveKey(v); if (tv && !tvJsDone) { tvJsDone = true; v.evaluateJavascript(TV_JS, null); } if (e2e) v.evaluateJavascript(BARS_JS, null); }
             @Override public void onPageFinished(WebView v, String url) {
                 giveKey(v); if (tv && !tvJsDone) { tvJsDone = true; v.evaluateJavascript(TV_JS, null); }
+                if (e2e) v.evaluateJavascript(BARS_JS, null);
                 if (v == web && url != null && url.startsWith("http")) { pageReady = true; ArrayList<String[]> l = new ArrayList<>(pagePending); pagePending.clear(); for (String[] c : l) deliver(c[0], c[1], c[2], 24); }
             }
             @Override public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) { return cleartext(r); }
@@ -417,6 +422,15 @@ public class MainActivity extends Activity {
 
     @SuppressWarnings("deprecation")
     void immersive(boolean on) {
+        if (e2e) {
+            // 1.17.13: the bars hide for full-screen video and come back after; the page stays edge to edge throughout
+            android.view.WindowInsetsController c = getWindow().getInsetsController();
+            if (c != null) {
+                if (on) { c.setSystemBarsBehavior(android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE); c.hide(android.view.WindowInsets.Type.systemBars()); }
+                else c.show(android.view.WindowInsets.Type.systemBars());
+            }
+            return;
+        }
         View d = getWindow().getDecorView();
         d.setSystemUiVisibility(on ? View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_FULLSCREEN
                 | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
@@ -424,6 +438,71 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 28) getWindow().getAttributes().layoutInDisplayCutoutMode = on
                 ? WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
                 : WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT;
+        // 1.17.13: the cutout mode only reaches the window once the attributes are set again
+        if (!tv && Build.VERSION.SDK_INT >= 28) getWindow().setAttributes(getWindow().getAttributes());
+    }
+
+    /** the installed WebView's major version (0 when unknown). From 144 WebView hands the page the bars and the
+        cutout as env(safe-area-inset-*), which the page already uses for iPhones, so it can lay itself out around them. */
+    static int webViewMajor() {
+        try {
+            PackageInfo p = WebView.getCurrentWebViewPackage();
+            String v = p == null ? null : p.versionName;
+            if (v == null) return 0;
+            int dot = v.indexOf('.');
+            return Integer.parseInt(dot < 0 ? v : v.substring(0, dot));
+        } catch (Throwable t) { return 0; }
+    }
+
+    /** 1.17.13: phones use the whole screen. The page is drawn under see-through status and navigation bars and
+        into the camera cutout; WebView passes those areas to the page as safe-area insets, so its menus stay clear
+        of them. The keyboard still shrinks the page from below, as before. */
+    void edgeToEdge() {
+        android.view.Window w = getWindow();
+        w.setDecorFitsSystemWindows(false);
+        w.setStatusBarColor(Color.TRANSPARENT);
+        w.setNavigationBarColor(Color.TRANSPARENT);
+        w.setStatusBarContrastEnforced(false);
+        w.setNavigationBarContrastEnforced(false);
+        WindowManager.LayoutParams a = w.getAttributes();
+        a.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
+        w.setAttributes(a);
+        barIcons(false);
+        root.setOnApplyWindowInsetsListener((v, in) -> {
+            android.graphics.Insets ime = in.getInsets(android.view.WindowInsets.Type.ime());
+            int pad = customView != null ? 0 : ime.bottom;
+            if (v.getPaddingBottom() != pad) v.setPadding(0, 0, 0, pad);
+            if (pad == 0) return in;
+            // the keyboard covers the navigation bar, so the page gets no bottom inset while it is up
+            android.graphics.Insets nav = in.getInsets(android.view.WindowInsets.Type.navigationBars());
+            return new android.view.WindowInsets.Builder(in)
+                .setInsets(android.view.WindowInsets.Type.ime(), android.graphics.Insets.NONE)
+                .setInsets(android.view.WindowInsets.Type.navigationBars(), android.graphics.Insets.of(nav.left, nav.top, nav.right, 0))
+                .build();
+        });
+    }
+
+    /** dark status and navigation bar icons on the light looks, light icons on the dark ones */
+    void barIcons(boolean lightPage) {
+        if (!e2e) return;
+        android.view.WindowInsetsController c = getWindow().getInsetsController();
+        if (c == null) return;
+        int m = android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+        c.setSystemBarsAppearance(lightPage ? m : 0, m);
+    }
+
+    /** follows the page's theme-color (set by Settings › Appearance) for the bar icons */
+    static final String BARS_JS = "(function(){if(window.__mkBars)return;window.__mkBars=1;var l=null;"
+        + "function f(){var m=document.querySelector('meta[name=theme-color]'),c=m?m.getAttribute('content')||'':'';"
+        + "if(c!==l&&window.MKAndroid&&MKAndroid.bars){l=c;MKAndroid.bars(c)}}f();"
+        + "try{new MutationObserver(f).observe(document.head||document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['content']})}catch(e){}})()";
+
+    static boolean lightColor(String c) {
+        if (c == null) return false;
+        c = c.trim();
+        if (!c.matches("#[0-9a-fA-F]{6}")) return false;
+        int r = Integer.parseInt(c.substring(1, 3), 16), g = Integer.parseInt(c.substring(3, 5), 16), b = Integer.parseInt(c.substring(5, 7), 16);
+        return (0.299 * r + 0.587 * g + 0.114 * b) > 160;
     }
 
     String offline() {
@@ -571,6 +650,7 @@ public class MainActivity extends Activity {
             runOnUiThread(() -> voiceStart(lang, screen));
             return true;
         }
+        @JavascriptInterface public void bars(String k, String color) { if (ok(k)) { boolean l = lightColor(color); runOnUiThread(() -> barIcons(l)); } }
         @JavascriptInterface public void voiceStop(String k) { if (ok(k)) runOnUiThread(() -> { if (recognizer != null) recognizer.cancel(); }); }
         /** 1.17.5: the installed package's own versionName, so an update can never report an older version than it is
             (1.17.4 reported 1.17.3, and the page offered the same update again after every install) */
@@ -792,7 +872,7 @@ public class MainActivity extends Activity {
         "p2pAvailable", "dlStart", "dlSpace", "setSlow", "epEnable", "epOn", "epSync", "dlList", "dlRemove", "dlPlay", "pipState", "pip", "play",
         "setEngine", "update", "youtube", "exit", "iptvHosts", "recStart", "recStop", "recPlan", "recUnplan",
         "apScan", "apPlay", "apPin", "apCtl", "apForget", "apState", "signIn", "apAdd", "apDiag", "updateAuto", "updateInstall", "updateProgress", "mpv",
-        "mirrorStart", "mirrorSignal", "mirrorStop", "mirrorOn", "widgetOn", "widgetSync", "watchNextAll" };
+        "mirrorStart", "mirrorSignal", "mirrorStop", "mirrorOn", "widgetOn", "widgetSync", "watchNextAll", "bars" };
 
     static String newKey() {
         byte[] b = new byte[24]; new SecureRandom().nextBytes(b);
