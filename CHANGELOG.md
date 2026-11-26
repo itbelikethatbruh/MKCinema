@@ -14,6 +14,10 @@ All notable changes to MKCinema. The web app version and the native app versions
 
 - Long lists now look for more titles only while you scroll, which keeps the app lighter and saves battery.
 
+## Android 1.17.16 (2026-11-26)
+
+- Swiping Back during a film on a phone closes it smoothly, without the picture turning upright first.
+
 ## Web app 2.95.10 (2026-11-26)
 
 - Swiping Back during a film now closes it straight away.
