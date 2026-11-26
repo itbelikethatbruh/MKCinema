@@ -55,12 +55,8 @@ jobs:
           echo "emulator up after about $((i * 5)) s"
           adb shell settings put global window_animation_scale 0; adb shell settings put global transition_animation_scale 0
           APK="$RUNNER_TEMP/apk/MKCinema.apk" OUT="$RUNNER_TEMP/player" bash tools/android/player-test.sh
-      - name: Back while a film fills a phone screen
-        if: always()
-        timeout-minutes: 12
-        run: |
-          export PATH="$ANDROID_HOME/platform-tools:$PATH"
-          OUT="$RUNNER_TEMP/player" bash tools/android/back-test.sh
+          # the emulator lives only as long as this step: the Back test runs here too
+          OUT="$RUNNER_TEMP/player" timeout 600 bash tools/android/back-test.sh
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
