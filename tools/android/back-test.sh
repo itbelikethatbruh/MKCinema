@@ -5,6 +5,7 @@
 # the player closed. Run after player-test.sh (it serves $OUT/www on :8000). Used by .github/workflows/android-player.yml.
 set -uo pipefail
 OUT=${OUT:-out}; P=9333; D=$(dirname "$0")
+timeout 120 mkdir -p "$OUT/www"; [ -f "$OUT/www/test.mkv" ] || ffmpeg -loglevel error -y -f lavfi -i testsrc2=size=1280x720:rate=24 -f lavfi -i sine=frequency=440:sample_rate=48000 -t 300 -c:v libx264 -preset veryfast -pix_fmt yuv420p -c:a aac -metadata:s:a:0 language=eng "$OUT/www/test.mkv"
 timeout 120 pip install -q websocket-client > /dev/null 2>&1 || true; echo "websocket-client: $(python3 -c 'import websocket;print(websocket.__version__)' 2>&1)"
 (cd "$OUT/www" && exec python3 -m http.server 8000 > /dev/null 2>&1) & srv=$!
 trap 'kill $srv 2>/dev/null || true' EXIT
@@ -13,7 +14,7 @@ A() { timeout 60 adb "$@"; }
 rot() { A shell dumpsys window displays 2>/dev/null | grep -o "mCurrentRotation=[^ ]*" | head -1; }
 state() { js "JSON.stringify({player:!document.getElementById('player').hidden,fs:!!document.fullscreenElement,w:innerWidth,h:innerHeight,b:window.__mkb||[]})"; }
 start_app() {
-  A shell am force-stop com.mkcinema.app; A logcat -c
+  [ -n "${FIRST:-}" ] && A shell am force-stop com.mkcinema.app; FIRST=1; A logcat -c
   A shell am start -n com.mkcinema.app/.MainActivity > /dev/null; sleep 25
   local pid; pid=$(A shell pidof com.mkcinema.app | tr -d '\r'); A forward --remove-all; A forward tcp:$P localabstract:webview_devtools_remote_$pid > /dev/null
   echo "app pid $pid, sockets: $(A shell cat /proc/net/unix | grep -o 'webview_devtools_remote_[0-9]*' | sort -u | tr '\n' ' ')"

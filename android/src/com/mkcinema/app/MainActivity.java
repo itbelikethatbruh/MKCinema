@@ -250,6 +250,7 @@ public class MainActivity extends Activity {
             @Override public void onShowCustomView(View view, CustomViewCallback cb) {
                 if (customView != null) { cb.onCustomViewHidden(); return; }
                 customView = view; customCb = cb;
+                if (curtain != null && curtain.getParent() != null) { later.removeCallbacks(curtainWatch); curtain.animate().cancel(); root.removeView(curtain); }
                 root.addView(view, new FrameLayout.LayoutParams(-1, -1));
                 web.setVisibility(View.INVISIBLE); // 1.11.2: INVISIBLE keeps the page laid out, so leaving full screen does not jump
                 view.setFocusable(true); view.requestFocus();
@@ -406,6 +407,31 @@ public class MainActivity extends Activity {
         catch (ActivityNotFoundException e) {
             if ("market".equals(u.getScheme())) open(Uri.parse("https://play.google.com/store/apps/details?" + u.getQuery()));
         }
+    }
+
+    /** 1.17.15: black over the whole window while a film closes from full screen on a phone. It lifts (fading) once
+        full screen has ended and the phone is upright, after 1.2 s if the phone stays sideways (auto-rotate), 2.4 s at most. */
+    View curtain; long curtainT0;
+    void curtainOn() {
+        if (curtain == null) { curtain = new View(this); curtain.setBackgroundColor(Color.BLACK); curtain.setClickable(true); }
+        curtain.animate().cancel(); curtain.setAlpha(1f);
+        if (curtain.getParent() == null) root.addView(curtain, new FrameLayout.LayoutParams(-1, -1)); else curtain.bringToFront();
+        curtainT0 = android.os.SystemClock.uptimeMillis();
+        later.removeCallbacks(curtainWatch); later.postDelayed(curtainWatch, 120);
+    }
+    final Runnable curtainWatch = new Runnable() { @Override public void run() {
+        if (curtain == null || curtain.getParent() == null) return;
+        long age = android.os.SystemClock.uptimeMillis() - curtainT0;
+        boolean upright = root.getHeight() > root.getWidth();
+        if (customView == null && upright && curtainUp == 0) curtainUp = age;
+        if ((customView == null && curtainUp > 0 && age - curtainUp > 220) || (customView == null && age > 1200) || age > 2400) { curtainUp = 0; curtainOff(); return; }
+        later.postDelayed(this, 60);
+    } };
+    long curtainUp;
+    void curtainOff() {
+        if (curtain == null || curtain.getParent() == null) return;
+        final View c = curtain;
+        c.animate().alpha(0f).setDuration(260).withEndAction(() -> { if (c.getParent() != null && c.getAlpha() == 0f) root.removeView(c); }).start();
     }
 
     void exitFullscreen() {
@@ -588,7 +614,11 @@ public class MainActivity extends Activity {
             // 1.17.9: on a phone, Back while a film fills the screen closes the film and returns to the page it came from
             // (the page answers true); otherwise, or with an older page, it only leaves full screen as before
             if (tv) { exitFullscreen(); return; }
+            // 1.17.15: a black curtain goes over everything first, so the film is never seen turning upright while it
+            // closes (the picture of MKCinema Player is a surface under the page, which the page's own cover can't hide)
+            curtainOn();
             web.evaluateJavascript("(function(){try{return !!(window.MKFsBack&&MKFsBack())}catch(e){return false}})()", r -> {
+                android.util.Log.i("MKCPlayer", "back in full screen: page closed the film " + r);
                 if (!"true".equals(r)) { exitFullscreen(); return; }
                 later.postDelayed(this::exitFullscreen, 700); // the page leaves full screen itself; this is the safety net
             });
@@ -604,6 +634,12 @@ public class MainActivity extends Activity {
 
     /** TV remotes: media keys drive the player. Arrows and OK reach the page, which already does D-pad navigation. */
     @Override public boolean dispatchKeyEvent(KeyEvent e) {
+        // 1.17.15: phones: Back (the key or the swipe) while a film fills the screen always comes here first, so the
+        // WebView's own full-screen view can never just leave full screen and turn the film upright
+        if (!tv && customView != null && e.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+            if (e.getAction() == KeyEvent.ACTION_UP && !e.isCanceled()) onBackPressed();
+            return true;
+        }
         if (tv && e.getAction() == KeyEvent.ACTION_DOWN) {
             String k = null;
             switch (e.getKeyCode()) {

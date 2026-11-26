@@ -54,9 +54,10 @@ jobs:
           if [ -z "$booted" ]; then echo "the emulator did not start"; tail -60 "$RUNNER_TEMP/emulator.log"; exit 1; fi
           echo "emulator up after about $((i * 5)) s"
           adb shell settings put global window_animation_scale 0; adb shell settings put global transition_animation_scale 0
+          # the emulator lives only as long as this step. The Back test runs first, on a fresh emulator
+          adb install -r -g "$RUNNER_TEMP/apk/MKCinema.apk" > /dev/null
+          OUT="$RUNNER_TEMP/player" timeout 600 bash tools/android/back-test.sh || true
           APK="$RUNNER_TEMP/apk/MKCinema.apk" OUT="$RUNNER_TEMP/player" bash tools/android/player-test.sh
-          # the emulator lives only as long as this step: the Back test runs here too
-          OUT="$RUNNER_TEMP/player" timeout 600 bash tools/android/back-test.sh
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
