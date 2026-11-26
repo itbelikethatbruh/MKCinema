@@ -41,13 +41,13 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
     static final String[] WATCHED = { "time-pos", "duration", "pause", "paused-for-cache", "seeking", "eof-reached", "idle-active",
         "volume", "mute", "speed", "aid", "sid", "secondary-sid", "track-list", "chapter-list", "demuxer-cache-time",
         "video-params/w", "video-params/h", "video-params/gamma", "video-params/primaries", "hwdec-current", "video-codec",
-        "audio-codec-name", "audio-params/channel-count", "container-fps", "sub-delay", "audio-delay", "sub-text", "video-params/aspect" };
+        "audio-codec-name", "audio-params/channel-count", "container-fps", "sub-delay", "audio-delay", "sub-text", "video-params/aspect", "af-metadata/mkvad" };
     static final Map<String, String> KEYS = new HashMap<>();
     static {
         String[] k = { "time-pos", "t", "duration", "dur", "pause", "paused", "paused-for-cache", "buffering", "eof-reached", "ended",
             "idle-active", "idle", "demuxer-cache-time", "cached", "video-params/w", "w", "video-params/h", "h", "video-params/gamma", "gamma",
             "video-params/primaries", "prim", "track-list", "tracks", "chapter-list", "chapters", "hwdec-current", "hwdec",
-            "audio-params/channel-count", "channels", "container-fps", "fps", "sub-text", "stext", "video-params/aspect", "dar" };
+            "audio-params/channel-count", "channels", "container-fps", "fps", "sub-text", "stext", "video-params/aspect", "dar", "af-metadata/mkvad", "vad" };
         for (int i = 0; i < k.length; i += 2) KEYS.put(k[i], k[i + 1]);
     }
 
@@ -237,6 +237,10 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
             case "subscale": ops.add(set("sub-scale", num(arg, 0.3, 4))); return ops;
             case "subpos": ops.add(set("sub-pos", num(arg, 0, 150))); return ops;
             case "substyle": return subStyle(new JSONObject(arg));
+            // 1.17.15: the page draws text subtitles itself (rounded box, its fonts) from "stext"; mpv keeps picture and ASS subtitles
+            case "subdraw": if (!"page".equals(arg) && !"mpv".equals(arg)) throw new IllegalArgumentException("not allowed"); ops.add(set("sub-visibility", "page".equals(arg) ? "no" : "yes")); return ops;
+            // 1.17.15: auto-sync hears when people speak: silencedetect per channel, its times come back as "vad" (off: "0")
+            case "vad": ops.add(run("af", "remove", "@mkvad")); if (!"0".equals(arg)) ops.add(run("af", "append", "@mkvad:lavfi=[silencedetect=n=" + num(arg, -60, -10) + "dB:d=0.25:mono=1]")); return ops;
             case "aspect": if (!ASPECT.matcher(arg).matches()) throw new IllegalArgumentException("not allowed"); ops.add(set("video-aspect-override", arg)); return ops;
             case "fill": ops.add(set("panscan", "1".equals(arg) ? "1.0" : "0.0")); return ops;
             case "zoom": { double z = Double.parseDouble(num(arg, 0.25, 4)); ops.add(set("video-zoom", String.format(Locale.US, "%.4f", Math.log(z) / Math.log(2)))); return ops; }
@@ -371,6 +375,7 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
         if (raw == null) return JSONObject.NULL;
         switch (name) {
             case "track-list": case "chapter-list": try { return new JSONArray(raw); } catch (Exception e) { return JSONObject.NULL; }
+            case "af-metadata/mkvad": try { return new JSONObject(raw); } catch (Exception e) { return JSONObject.NULL; }
             case "pause": case "paused-for-cache": case "seeking": case "eof-reached": case "idle-active": case "mute": return "yes".equals(raw);
             case "aid": case "sid": case "secondary-sid": case "video-codec": case "audio-codec-name": case "hwdec-current": case "video-params/gamma": case "video-params/primaries": case "sub-text": return raw;
         }

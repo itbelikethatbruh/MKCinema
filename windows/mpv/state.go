@@ -13,7 +13,7 @@ var Watched = []string{
 	"volume", "mute", "speed", "aid", "sid", "secondary-sid", "track-list", "chapter-list",
 	"demuxer-cache-time", "video-params/w", "video-params/h", "video-params/gamma", "video-params/primaries",
 	"hwdec-current", "video-codec", "audio-codec-name", "audio-params/channel-count", "container-fps",
-	"sub-delay", "audio-delay",
+	"sub-delay", "audio-delay", "sub-text", "af-metadata/mkvad",
 }
 
 // State keeps the latest value of every watched property and which ones changed since the page last heard.
@@ -32,6 +32,7 @@ var keys = map[string]string{
 	"idle-active": "idle", "demuxer-cache-time": "cached", "video-params/w": "w", "video-params/h": "h",
 	"video-params/gamma": "gamma", "video-params/primaries": "prim", "track-list": "tracks", "chapter-list": "chapters",
 	"hwdec-current": "hwdec", "audio-params/channel-count": "channels", "container-fps": "fps",
+	"sub-text": "stext", "af-metadata/mkvad": "vad",
 }
 
 func parse(name, raw string, ok bool) any {
@@ -39,7 +40,7 @@ func parse(name, raw string, ok bool) any {
 		return nil
 	}
 	switch name {
-	case "track-list", "chapter-list":
+	case "track-list", "chapter-list", "af-metadata/mkvad":
 		var v any
 		if json.Unmarshal([]byte(raw), &v) == nil {
 			return v
@@ -47,7 +48,7 @@ func parse(name, raw string, ok bool) any {
 		return nil
 	case "pause", "paused-for-cache", "seeking", "eof-reached", "idle-active", "mute":
 		return raw == "yes"
-	case "aid", "sid", "secondary-sid", "video-codec", "audio-codec-name", "hwdec-current", "video-params/gamma", "video-params/primaries":
+	case "aid", "sid", "secondary-sid", "video-codec", "audio-codec-name", "hwdec-current", "video-params/gamma", "video-params/primaries", "sub-text":
 		return raw
 	}
 	if f, err := strconv.ParseFloat(strings.TrimSpace(raw), 64); err == nil {
