@@ -289,7 +289,7 @@ are missing. Only the AARs' classes.jar is used: ExoPlayer needs no Android reso
 `androidx.collection` (async MediaCodec queue on Android 12+), which is included. `android:largeHeap` is on so the
 buffer (a third of the large-heap budget, 48 to 160 MB) fits.
 
-## 1.17.13: subtitle look in the MKCinema player
+## 1.17.14: subtitle look in the MKCinema player
 
 The page sends `substyle` (JSON: `color`/`bg` as #rrggbb, `bga` box opacity 0-100, `outline`, `bold`, `shadow`
 none/soft/strong/drop) whenever Settings › Subtitles changes and when a film starts. `UnderPlayer.subStyle` turns it into
