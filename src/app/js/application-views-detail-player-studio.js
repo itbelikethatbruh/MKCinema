@@ -498,9 +498,9 @@ const Seasons = {
   ghost(list, scrolled) {
     const g = document.createElement('div');
     g.className = `${list.className} ss-ghost`.replace(/\bss-in\b/g, ''); g.setAttribute('aria-hidden', 'true'); g.inert = true;
+    const a = list.getBoundingClientRect();
     while (list.firstChild) g.appendChild(list.firstChild);
     g.querySelectorAll('[id],[data-vid],[data-nav],[tabindex]').forEach((e) => { e.removeAttribute('id'); e.removeAttribute('data-vid'); e.removeAttribute('data-nav'); e.setAttribute('tabindex', '-1'); });
-    const a = list.getBoundingClientRect();
     g.style.cssText = `width:${a.width}px;height:${a.height}px;max-height:none`;
     list.after(g);
     // placed from where it would sit (just after the list) back onto the list, whatever box it sits in

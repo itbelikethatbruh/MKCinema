@@ -88,7 +88,7 @@ if (CFG.cfgRev < 10) {
 const Usage = {
   q: new Map(), stack: [], lastIn: 0, party: null, started: false,
   HOSTS: /^(mkcinema\.pages\.dev|app\.mkcinema\.app)$/,
-  SENS: /name|key|url|token|pin|code|pass|mail|addon|secret|host|server|proxy|list|ip$|user|id$/i,
+  SENS: /name|key|url|token|pin|code|pass|mail|addon|secret|host|server|proxy|list|ip$|user|id$|word|text|term|note|label|nick|title|query|search|bio|msg|tag|phrase/i,
   on() { try { return CFG.anonStats !== false && this.HOSTS.test(location.hostname); } catch (e) { return false; } },
   clean(k) { return String(k == null ? '' : k).replace(/[^A-Za-z0-9_.:=/+-]/g, '_').slice(0, 64); },
   add(ev, k, n = 1, secs = 0) {
@@ -102,7 +102,8 @@ const Usage = {
     if (this.SENS.test(key)) return '';
     if (typeof v === 'boolean') return v ? 'on' : 'off';
     if (typeof v === 'number' && isFinite(v)) return String(Math.round(v * 100) / 100);
-    if (typeof v === 'string' && /^[a-z0-9_-]{1,20}$/i.test(v)) return v;
+    // a word is kept only for a choice setting (one that starts as a word, e.g. a theme), never typed text
+    if (typeof v === 'string' && /^[a-z0-9_-]{1,20}$/i.test(v)) { let dv; try { dv = CFG_DEFAULTS[key]; } catch (e) { /* early */ } return typeof dv === 'string' && /^[a-z0-9_-]{1,20}$/i.test(dv) ? v : ''; }
     return '';
   },
   // only changes a person made count (the app adjusting itself at start does not)
