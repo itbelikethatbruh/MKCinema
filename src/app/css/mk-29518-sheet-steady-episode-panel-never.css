@@ -1,0 +1,24 @@
+
+/* 2.95.18: the episode panel never fades. It is one solid panel that slides up from the bottom on phones (in from the
+   right on wide screens) and back down when it closes; only the dim behind it fades. Before, the whole panel faded in
+   and out, so Home or the title page showed through its text for a moment. Transform and opacity only. */
+html #epSheet{background:transparent!important}
+html #epSheet::before{content:"";position:absolute;inset:0;background:rgba(var(--n000000-c,0,0,0),.6);pointer-events:none}
+html #epSheet:not([hidden]),html #epSheet.leaving[hidden]{animation:none!important}
+html #epSheet:not([hidden])::before{animation:ovIn .26s ease-out}
+html #epSheet.leaving[hidden]::before{animation:ovOut .22s ease-in forwards}
+@keyframes mkEsIn{from{transform:translate3d(100%,0,0)}to{transform:none}}
+@keyframes mkEsOut{from{transform:none}to{transform:translate3d(100%,0,0)}}
+@keyframes mkEsUp{from{transform:translate3d(0,100%,0)}to{transform:none}}
+@keyframes mkEsDown{from{transform:none}to{transform:translate3d(0,100%,0)}}
+html #epSheet:not([hidden]) .ep-sheet{animation:mkEsIn .38s var(--ease) both!important}
+html #epSheet.leaving[hidden] .ep-sheet{animation:mkEsOut .22s ease-in forwards!important}
+@media (max-width:760px),(orientation:landscape) and (max-height:540px){
+  html #epSheet:not([hidden]) .ep-sheet{animation-name:mkEsUp!important}
+  html #epSheet.leaving[hidden] .ep-sheet{animation-name:mkEsDown!important}
+}
+/* an episode opened from Home: the title page waits unseen (Home stays as it is under the dim) until the panel is up,
+   then appears behind it; it is never seen fading in at the same time as the panel */
+html #detail.dp-under:not(.dp-landed){opacity:0!important;animation:none!important}
+html #detail.dp-under.dp-landed{animation:dpOpen .3s ease both!important}
+body.reduce-motion #epSheet .ep-sheet,body.reduce-motion #epSheet::before{animation:none!important}
