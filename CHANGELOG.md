@@ -2,6 +2,15 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.95.10 (2026-11-26)
+
+- Swiping Back during a film now closes it straight away.
+
+## Web app 2.95.9 (2026-11-26)
+
+- Simpler subtitle settings: Settings › Subtitles shows the few choices most people use, and everything else is under More choices.
+- Subtitles that line up by themselves: auto-sync listens for the dialogue when films play in MKCinema on Android phones and Windows (app 1.17.15 and 1.6.2).
+
 ## Web app 2.95.8 (2026-11-26)
 
 - Lists keep going: reach the bottom of any list, grid or guide and the next titles appear by themselves, with no Load more button, on phones, computers and TVs.

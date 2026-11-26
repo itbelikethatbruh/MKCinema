@@ -8,6 +8,13 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.95.10', date: '2026-11-26', items: [
+    ['better', 'Back closes the film', 'Swiping Back during a film now closes it straight away.'],
+  ] },
+  { v: '2.95.9', date: '2026-11-26', items: [
+    ['better', 'Simpler subtitle settings', 'Settings › Subtitles now shows just the few choices most people use. Everything else is still there under More choices.'],
+    ['better', 'Subtitles that line up by themselves', 'Auto-sync now listens for the dialogue when films play in MKCinema on Android phones and Windows, in app 1.17.15 and 1.6.2.'],
+  ] },
   { v: '2.95.8', date: '2026-11-26', items: [
     ['better', 'Lists keep going', 'Reach the bottom of any list, grid or guide and the next titles appear by themselves. No more Load more button, on phones, computers and TVs.'],
     ['better', 'Softer subtitles', 'Subtitles now sit in a soft rounded box in a clean modern font, and italic lines stay upright and easy to read.'],

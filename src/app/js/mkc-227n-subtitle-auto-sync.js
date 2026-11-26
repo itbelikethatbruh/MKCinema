@@ -128,6 +128,7 @@ const SubSync = {
         this.decide(i, r, 'file', auto, 5);
         return;
       }
+      if (typeof MkNative !== 'undefined' && MkNative.active && !MkNative.vadNo) { this.hear(i, sub, tok, auto); return; }
       if (DSP.attached || (!auto && DSP.clean() && DSP.attach())) { this.listen(i, sub, tok, auto); return; }
       if (!auto) toast('This film has no subtitles inside it to compare with, and this source doesn’t let the browser hear it. Use Sync on a timeline instead.', 'err', 7000, 'subsync');
     } catch (e) { MKLog.add('info', `Subtitle auto-sync: ${e.message}`); }
@@ -195,7 +196,71 @@ const SubSync = {
       if (sure || next > 150) { stop(); if (r) this.decide(i, r, 'speech', auto, 6); else if (!auto) toast('Not enough dialogue heard to line up the subtitles', 'err', 4200, 'subsync'); }
     }, 50);
   },
-  reset() { this.tok++; clearInterval(this.listenT); this.listenT = 0; this.listening = false; this.busy = false; P.subScale = 1; },
+  reset() { this.tok++; clearInterval(this.listenT); this.listenT = 0; this.listening = false; this.busy = false; P.subScale = 1; if (typeof MkNative !== 'undefined' && MkNative.vadLvl) MkNative.vad(0).catch(() => {}); },
+  /* 2.95.9 the MKCinema player: speech from mpv (see MkNative.vad). 5.1 and 7.1 films use the centre channel, where the
+     dialogue is; stereo counts a moment as quiet only when every channel is. Too few quiet moments (music under
+     everything) raises the level, too few loud ones lowers it, twice at most. Same checks and same sure-match rule as
+     listening in the browser. */
+  hear(i, sub, tok, auto) {
+    const N = MkNative; let lvl = -32, moved = 0, R = [], last = -1, next = 45, aligning = false;
+    const stop = () => { clearInterval(this.listenT); this.listenT = 0; this.listening = false; this.busy = false; if (N.vadLvl) N.vad(0).catch(() => {}); renderSubMenu(); };
+    const heard = () => this.total(R);
+    // speech = heard time minus the quiet spans of the chosen channels
+    const speech = () => {
+      const ev = N.vadEv || [], by = {};
+      for (const [c, k, t] of ev) (by[c] || (by[c] = [])).push([k, t]);
+      let chs = Object.keys(by);
+      if ((Number(N.st.channels) || 0) >= 5) chs = by['3'] ? ['3'] : [];
+      if (!R.length) return null;
+      if (!chs.length) return this.merge(R.map((x) => [x[0], x[1]])); // never quiet: music or noise under everything
+      const lo = R[0][0] - 5, hi = R[R.length - 1][1] + 5;
+      const quiet = chs.map((c) => {
+        const list = by[c].slice().sort((a, b) => a[1] - b[1]), out = []; let open = null;
+        if (list[0][0] === 'e') open = lo;
+        for (const [k, t] of list) { if (k === 's') { if (open == null) open = t; } else if (open != null) { out.push([open, t]); open = null; } }
+        if (open != null) out.push([open, hi]);
+        return this.merge(out);
+      });
+      // quiet only where every chosen channel is quiet
+      let Q = quiet[0];
+      for (const q of quiet.slice(1)) { const o = []; let a = 0, b = 0; while (a < Q.length && b < q.length) { const s0 = Math.max(Q[a][0], q[b][0]), e0 = Math.min(Q[a][1], q[b][1]); if (e0 > s0) o.push([s0, e0]); if (Q[a][1] < q[b][1]) a++; else b++; } Q = o; }
+      const S = []; for (const [a, b] of R) { let p = a; for (const [qa, qb] of Q) { if (qb <= p || qa >= b) continue; if (qa > p) S.push([p, qa]); p = Math.max(p, qb); } if (p < b) S.push([p, b]); }
+      return this.merge(S.filter((x) => x[1] - x[0] >= 0.2));
+    };
+    this.listening = true; renderSubMenu();
+    N.vad(lvl).then(() => {
+      if (tok !== this.tok) { N.vad(0).catch(() => {}); return; }
+      if (!auto) toast('Listening to the dialogue to line up the subtitles. Keep the film playing for a minute.', 'info', 5000, 'subsync');
+      const started = Date.now();
+      clearInterval(this.listenT);
+      this.listenT = setInterval(async () => {
+        if (tok !== this.tok || P.curSub !== i || $('#player').hidden || !N.active || Date.now() - started > 15 * 60000) { if (tok === this.tok) stop(); return; }
+        if (aligning || video.paused || video.seeking || N.st.buffering) { last = -1; return; }
+        const t = pNow();
+        if (last >= 0 && t > last && t - last < 1.5) { const r = R[R.length - 1]; if (r && Math.abs(r[1] - last) < 0.01) r[1] = t; else R.push([last, t]); }
+        last = t;
+        if (heard() < next) return;
+        next += 30; aligning = true;
+        try {
+          const S = speech(), U = this.merge(R), f = S ? this.total(S) / Math.max(1, this.total(U)) : 0;
+          // the level suits this film's mix? (no quiet moments at all: music under everything; nothing loud: very soft dialogue)
+          if (S && (f > 0.9 || f < 0.04) && moved < 2) { lvl += f > 0.9 ? 8 : -10; moved++; R = []; last = -1; next = 45; await N.vad(lvl).catch(() => {}); return; }
+          let r = null;
+          const near = S && U.length ? sub.filter((x) => x[1] > U[0][0] - 60 && x[0] < U[U.length - 1][1] + 60) : [];
+          if (S && near.length >= 12 && this.total(S) >= 15) r = await this.align(near, S, { range: 60, scales: [1], clip: U });
+          if (tok !== this.tok || P.curSub !== i) return;
+          const sure = r && r.z >= 6 && r.j >= 0.2 && r.j >= r.rival * 1.2 && r.j > r.j0 + 0.02;
+          if (sure || next > 165) { stop(); if (r) this.decide(i, r, 'speech', auto, 6); else if (!auto) toast('Not enough dialogue heard to line up the subtitles', 'err', 4200, 'subsync'); }
+        } finally { aligning = false; }
+      }, 250);
+    }, () => {
+      // an app from before Android 1.17.15 / Windows 1.6.2
+      N.vadNo = true; N.vadLvl = 0; N.vadEv = null;
+      if (tok !== this.tok) return;
+      this.listening = false; this.busy = false; renderSubMenu();
+      if (!auto) toast('This film has no subtitles inside it to compare with, and this source doesn’t let the browser hear it. Use Sync on a timeline instead.', 'err', 7000, 'subsync');
+    });
+  },
 };
 {
   // run after an add-on or device subtitle comes on

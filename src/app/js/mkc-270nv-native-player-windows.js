@@ -56,7 +56,7 @@ const MkNative = {
       .then((j) => { try { this.gen = JSON.parse(j || '{}').gen || 0; } catch (e) { /* ignore */ } })
       .catch((e) => this.fail(String((e && e.message) || e)));
     this.vol(); this.cmd('speed', CFG.speed || 1).catch(() => {}); this.cmd('tonemap', CFG.hdrMap === 'sdr' ? 'sdr' : 'auto').catch(() => {});
-    this.picture(); this.sound(); styleCues();
+    this.vadLvl = 0; this.vadEv = null; this.picture(); this.sound(); styleCues();
     this.fire('loadstart');
   },
   /* your audio language as libmpv's alang list (3- and 2-letter forms, so files tagged either way match) */
@@ -74,6 +74,7 @@ const MkNative = {
     if ('t' in n) this.tAt = performance.now();
     if ('dur' in n && n.dur !== was.dur) this.fire('durationchange');
     if (('w' in n || 'h' in n) && st.w) this.fire('resize');
+    if ('vad' in n) this.vadNews(n.vad);
     if ('tracks' in n) this.tracks(st.tracks || []);
     if ('tracks' in n || 'sid' in n) this.subDraw();
     const meta = st.dur > 0 && Array.isArray(st.tracks);
@@ -196,7 +197,21 @@ const MkNative = {
     this.cmd('zoom', P.zoom || 1).catch(() => {});
     if (typeof PxPicture !== 'undefined') { const p = PxPicture.get(); this.cmd('eq', JSON.stringify({ brightness: p.b - 100, contrast: p.c - 100, saturation: p.s - 100 })).catch(() => {}); }
   },
-  sound() { if (this.active && typeof SoundModes !== 'undefined') this.cmd('sound', { voices: 'voice', night: 'night' }[SoundModes.cur().k] || 'off').catch(() => {}); },
+  sound() { if (this.active && typeof SoundModes !== 'undefined') this.cmd('sound', { voices: 'voice', night: 'night' }[SoundModes.cur().k] || 'off').then(() => { if (this.vadLvl) this.cmd('vad', String(this.vadLvl)).catch(() => {}); }, () => {}); },
+  /* 2.95.9: speech detection for subtitle auto-sync (Android 1.17.15+, Windows 1.6.2+). mpv's silencedetect runs per
+     channel at this level (dB, 0 = off) and reports the film times where each channel goes quiet and comes back;
+     those are the film's own times, so the audio buffer doesn't shift them. A Sound mode change resets mpv's audio
+     filters, so it is put back after one. */
+  vad(lvl) { this.vadLvl = lvl; this.vadSeen = {}; this.vadEv = lvl ? [] : null; return this.cmd('vad', String(lvl)); },
+  vadNews(v) {
+    if (!this.vadEv || !v) return;
+    if (typeof v === 'string') { try { v = JSON.parse(v); } catch (e) { return; } }
+    for (const k of Object.keys(v)) {
+      const m = /^lavfi\.silence_(start|end)(?:\.(\d+))?$/.exec(k); if (!m) continue;
+      const t = Number(v[k]); if (!isFinite(t) || this.vadSeen[k] === v[k]) continue;
+      this.vadSeen[k] = v[k]; this.vadEv.push([m[2] || '0', m[1] === 'start' ? 's' : 'e', t]);
+    }
+  },
   /* ---- the <video> element answers from libmpv while a film plays natively ---- */
   attach() {
     if (this.active) return;
