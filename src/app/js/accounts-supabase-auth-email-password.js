@@ -338,7 +338,9 @@ const Account = {
       if (!/^https:\/\/[^/]+/.test(c.url)) throw new Error('The project URL should look like https://abcd1234.supabase.co');
       await this.loadLib();
       this.client = window.supabase.createClient(c.url.replace(/\/+$/, ''), c.anonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'mkc:auth' } });
-      this.loadProviders(c);
+      /* 2.95.23 signin steady: the form waits (at most 2.5 s) for the answer that says which sign-in buttons it has */
+      this.provWait = true; const provDone = () => { if (!this.provWait) return; this.provWait = false; this.render(); };
+      Promise.resolve(this.loadProviders(c)).finally(provDone); setTimeout(provDone, 2500);
       this.client.auth.onAuthStateChange((ev, session) => { this.session = session || null; setTimeout(() => this.setUser(session ? session.user : null, ev), 0); });
       const { data, error } = await this.client.auth.getSession();
       this.session = (data && data.session) || null;
@@ -885,7 +887,7 @@ const Account = {
       </div>`;
     }
     const proj = esc(c.url.replace(/^https:\/\//, ''));
-    if (!this.client) return `<div class="acct-card"><h4><i data-lucide="loader"></i>Connecting to ${proj}…</h4>${this.error ? `<p class="acct-err">${esc(this.error)}</p><div class="inrow"><button class="btn btn-ghost" type="button" id="acc-forget">Use a different project</button></div>` : ''}</div>`;
+    if (!this.client || (this.provWait && !this.user && !this.error)) return `<div class="acct-card"><h4><i data-lucide="loader"></i>Connecting to ${proj}…</h4>${this.error ? `<p class="acct-err">${esc(this.error)}</p><div class="inrow"><button class="btn btn-ghost" type="button" id="acc-forget">Use a different project</button></div>` : ''}</div>`;
     if (this.user) {
       const u = this.user, st = this.sync, prov = (u.app_metadata && u.app_metadata.provider) || 'email';
       const syncLine = CFG.cloudSync === false ? 'Cloud sync is off.' : st.state === 'syncing' ? 'Syncing…' : st.state === 'error' ? `<span class="acct-err">${esc(st.error)}</span>` : st.at ? `Last synced ${esc(new Date(st.at).toLocaleString(appLocale()))}` : 'Not synced yet.';

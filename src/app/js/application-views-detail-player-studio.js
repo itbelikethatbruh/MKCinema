@@ -2321,6 +2321,8 @@ const Nav = {
         if (!rr) continue;
       }
       const r = el.getBoundingClientRect(); if (!(r.width > 0 && r.height > 0) || el.closest('[hidden]')) continue;
+      /* 2.95.23 tv closed sections: inside a closed fold-out only its title row can be seen */
+      const shut = el.closest('details:not([open])'); if (shut && !(el.tagName === 'SUMMARY' && el.parentElement === shut)) continue;
       rects.set(el, r); out.push(el);
     }
     return out;
