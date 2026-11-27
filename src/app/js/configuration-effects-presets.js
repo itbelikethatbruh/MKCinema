@@ -94,14 +94,47 @@ const Health = {
       const ids = ['castLayer', 'partyLayer', 'player', 'trailer', 'tour', 'stremioImport', 'palette', 'epSheet', 'askLayer', 'tastePick', 'settings', 'addons', 'detail', 'rcLayer'];
       const open = ids.filter((i) => { const e = document.getElementById(i); return e && !e.hidden; });
       const h = document.documentElement, x = document.querySelector('.exit-ask, .focus-ask, .sup-ask, .x8-layer, #ezbMore:not([hidden])');
+      /* 2.96.9 health true */
+      const f = (fn) => { try { return fn(); } catch (e) { return ''; } };
+      const shown = (sel) => { const e = document.querySelector(sel); return e && !e.hidden ? 1 : 0; };
+      const pl = document.getElementById('player'), hud = document.getElementById('hud');
+      const more = [
+        pl && !pl.hidden ? ['#subMenu', '#optMenu', '#dspPop', '#subSync', '#xray', '#rescueBar', '#pMsg'].map(shown).join('') + document.querySelectorAll('#player .drawer.open').length + (hud && hud.classList.contains('idle') ? 'i' : 'a') : '',
+        document.body.classList.contains('side-open') ? 'side' : '', document.body.classList.contains('layer-open') ? 'layer' : '',
+        f(() => Saver.isOpen), f(() => Miko.on + ':' + document.getElementById('mikoSet').hidden), f(() => Peak.on + ':' + document.getElementById('pkHowBox').hidden),
+        document.getElementById('updBar') ? 'upd' : '', f(() => !!(Remote.hintEl && Remote.hintEl.isConnected)), f(() => People.canReturn()),
+        f(() => Music.page && S.view === 'music' ? JSON.stringify(Music.page).slice(0, 40) : ''), f(() => setPhoneHome),
+        f(() => (document.querySelector('#setNav .on') || {}).textContent || ''), f(() => X8.top()), f(() => !!ExitAsk.el),
+        document.querySelectorAll('.focus-ask, .sup-ask, .x8-layer').length,
+      ].join(',');
       return { any: open.length > 0 || h.classList.contains('ezb-menu-open') || !!x || !!document.fullscreenElement,
-        s: [open.join(','), h.classList.contains('ezb-menu-open'), !!x && x.className, !!document.fullscreenElement, (window.S && S.view) || ''].join('|') };
+        top: open[0] || (h.classList.contains('ezb-menu-open') ? 'menu' : x ? 'ask' : (window.S && S.view) || 'home'),
+        s: [open.join(','), h.classList.contains('ezb-menu-open'), !!x && x.className, !!document.fullscreenElement, (window.S && S.view) || '', more].join('|') };
     } catch (e) { return { any: false, s: '' }; }
   },
-  backCheck(before) { if (!before.any) return; setTimeout(() => { if (this.sig().s === before.s) this.add('err:back_noop', 20); }, 700); },
+  backCheck(before) { if (!before.any) return; setTimeout(() => { if (this.sig().s === before.s) { this.add('err:back_noop', 20); this.add(`err:back_noop:${before.top || ''}`, 20); } }, 700); },
+  // the film is drawn by the app's own engine under the page: is something solid drawn over it?
+  covered() {
+    const W = innerWidth, H = innerHeight, own = document.getElementById('video');
+    let hit = 0;
+    for (const [px, py] of [[0.25, 0.35], [0.75, 0.35], [0.5, 0.6]]) {
+      for (const e of document.elementsFromPoint(W * px, H * py)) {
+        if (e === own || e === document.documentElement || e === document.body) continue;
+        const c = getComputedStyle(e);
+        if (c.visibility === 'hidden') continue;
+        const solid = /^(IMG|CANVAS|VIDEO|IFRAME)$/.test(e.tagName) || /url\(/.test(c.backgroundImage) || (() => { const m = c.backgroundColor.match(/rgba?\(([^)]+)\)/); if (!m) return false; const a = m[1].split(/[ ,/]+/).filter(Boolean); return a.length < 4 || +a[3] >= 0.85; })();
+        if (!solid) continue;
+        let o = 1; for (let u = e; u && u.nodeType === 1; u = u.parentElement) o *= +getComputedStyle(u).opacity;
+        if (o >= 0.5) { hit++; break; }
+      }
+    }
+    return hit >= 2;
+  },
   play: null,
   init() {
-    addEventListener('error', (e) => { if (e && e.filename !== undefined && !e.target.tagName) this.add('err:js', 5); }, true);
+    addEventListener('error', (e) => { if (e && e.filename !== undefined && !e.target.tagName) { this.add('err:js', 5);
+      const t = String((e.error && e.error.name) || 'Error').replace(/[^A-Za-z]/g, '').slice(0, 20), fl = String(e.filename || '').split(/[?#]/)[0].split('/').pop().slice(0, 20) || 'page';
+      this.add(`err:js:${t}@${fl}:${e.lineno || 0}:${e.colno || 0}`, 5); } }, true);
     addEventListener('unhandledrejection', (e) => { const m = String((e.reason && (e.reason.name || e.reason.message)) || ''); if (!/Abort|NotAllowed|play\(\)|interrupted/i.test(m)) this.add('err:promise', 5); });
     // Back: the TV app calls back(); phones and browsers go through the page's history
     try { const prev = back; back = function () { const b = Health.sig(); const r = prev.apply(this, arguments); Health.backCheck(b); return r; }; } catch (e) { /* no back */ }
@@ -110,7 +143,15 @@ const Health = {
     addEventListener('popstate', () => { if (!tvq) this.backCheck(last); });
     if (typeof IS_TV !== 'undefined' && IS_TV) document.addEventListener('keydown', (e) => {
       if (!/^Arrow/.test(e.key)) return; const a = document.activeElement;
-      if ((!a || a === document.body) && document.getElementById('player').hidden) setTimeout(() => { const b = document.activeElement; if (!b || b === document.body) this.add('err:tv_no_focus', 5); }, 300);
+      if ((!a || a === document.body) && document.getElementById('player').hidden) setTimeout(() => { const b = document.activeElement; if (b && b !== document.body) return;
+        let where = 'app';
+        try {
+          const r = Nav.root(); where = r.id || 'app';
+          const ok = Nav.items(r).filter((el) => { const c = getComputedStyle(el); if (c.visibility === 'hidden') return false; const q = el.getBoundingClientRect(); return q.bottom > 0 && q.top < innerHeight && q.right > 0 && q.left < innerWidth; });
+          const m = Nav.mem.get(r), pick = (m && ok.includes(m) && m) || (ok.length ? Nav.start(r, ok) : null);
+          if (pick) Nav.focus(pick, true);
+        } catch (e) { /* leave it */ }
+        this.add('err:tv_no_focus', 5); this.add(`err:tv_no_focus:${where}`, 5); }, 300);
     }, true);
     // the film in the page's own player (a film handed to the Android or Windows player is counted there, not here)
     let v; try { v = video; } catch (e) { return; }
@@ -136,8 +177,14 @@ const Health = {
       if (x.started && x.waitAt && Date.now() - x.waitAt > 5000) { x.waitAt = 0; this.add('err:stall', 20); }
       // sound with no picture: the film runs but its picture is hidden or has not arrived
       if (x.started && !v.paused && !v.muted && v.volume > 0) {
+        if (document.documentElement.classList.contains('mk-native-on')) {
+          const noPic = v.readyState >= 2 && !v.videoWidth && !/audio|radio/i.test(v.currentSrc || '');
+          const cov = !noPic && this.covered();
+          if (noPic || cov) { if (++x.hid === 3) this.add(noPic ? 'err:sound_no_picture' : 'err:native_covered'); } else x.hid = 0;
+        } else {
         let o = 1; for (let e = v; e && e.nodeType === 1; e = e.parentElement) { const c = getComputedStyle(e); if (c.display === 'none' || c.visibility === 'hidden') { o = 0; break; } o *= +c.opacity; }
         if (o < 0.5 || (v.readyState >= 2 && !v.videoWidth && !/audio|radio/i.test(v.currentSrc))) { if (++x.hid === 2) this.add('err:sound_no_picture'); } else x.hid = 0;
+        }
       }
     }, 1000);
   },

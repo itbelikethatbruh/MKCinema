@@ -11,6 +11,9 @@ html.mk-rx #player #optMenu.menu,html.mk-rx #player #subMenu.menu,html.mk-rx #pl
 html[data-pcglass=clear].mk-rx #player #optMenu.menu,html[data-pcglass=clear].mk-rx #player #subMenu.menu,html[data-pcglass=clear].mk-rx #player #dspPop{
  background:linear-gradient(160deg,rgba(255,255,255,.13),rgba(255,255,255,.02) 40%),rgba(14,14,18,.2)!important;
  -webkit-backdrop-filter:blur(14px) saturate(160%)!important;backdrop-filter:blur(14px) saturate(160%)!important;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+/* 2.97.1 no blur on Android touch */
+html.pc-noblur.mk-rx #player #optMenu.menu,html.pc-noblur.mk-rx #player #subMenu.menu,html.pc-noblur.mk-rx #player #dspPop{background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.02) 40%),rgba(16,16,20,.88)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.pc-noblur[data-pcglass=clear].mk-rx #player #optMenu.menu,html.pc-noblur[data-pcglass=clear].mk-rx #player #subMenu.menu,html.pc-noblur[data-pcglass=clear].mk-rx #player #dspPop{background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.02) 40%),rgba(16,16,20,.74)!important}
 html.mk-native-on.mk-rx #player #optMenu.menu,html.mk-native-on.mk-rx #player #subMenu.menu,html.mk-native-on.mk-rx #player #dspPop{
  background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.02) 40%),rgba(14,14,18,.68)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 html.mk-native-on[data-pcglass=clear].mk-rx #player #optMenu.menu,html.mk-native-on[data-pcglass=clear].mk-rx #player #subMenu.menu,html.mk-native-on[data-pcglass=clear].mk-rx #player #dspPop{background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.02) 40%),rgba(14,14,18,.5)!important}
