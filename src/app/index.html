@@ -53,6 +53,9 @@ body.layer-open .rm-hint{opacity:0!important;pointer-events:none}</style>
 <style id="mk-tv-channels">@@src:css/mk-tv-channels-tv-channels-every.css@@</style>
 <style id="mk-2911-sweep">@@src:css/mk-2911-sweep-ui-sweep.css@@</style>
 <style id="mk-2915-tv-player">@@src:css/mk-2915-tv-player-player-mk-nv.css@@</style>
+<style id="mk-2963-hero-art-css">/* 2.96.3 hero art: a banner title still being checked stays unseen (opacity only) */
+#hero.mk-ha-hold .hero-body>*,#hero.mk-ha-hold #heroBg>img:last-child{opacity:0!important}
+</style>
 <style id="mk-2952-smooth-css">/* 2.95.2 smooth sources: the highlighted source keeps a little room from the list's edge, so the next one peeks in */
 #srcList .stream[data-si],#dStreams .stream[data-si]{scroll-margin-block:14px}</style>
 <style id="mk-2958-behind-clock">@@src:css/mk-2958-behind-clock-html-not-lk.css@@</style>
@@ -1065,6 +1068,8 @@ html.mk-pill .dock-wrap:before{height:100%!important;background:var(--void,#000)
 <script id="mk-296-sports">@@src:js/mk-296-sports-sports-match-centre.js@@</script>
 <!-- mk-296-sports:end -->
 
+<script id="mk-2963-hero-art">@@src:js/mk-2963-hero-art-hero-art-featured.js@@</script>
+<script id="mk-2964-right-film">@@src:js/mk-2964-right-film-right-film-title.js@@</script>
 <script id="mk-2952-smooth">@@src:js/mk-2952-smooth-smooth-sources-title.js@@</script>
 <script id="mk-2953-quick-back">@@src:js/mk-2953-quick-back-quick-back-leaving.js@@</script>
 </body>

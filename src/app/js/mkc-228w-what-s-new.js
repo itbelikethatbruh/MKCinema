@@ -8,6 +8,11 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.96.2', date: '2026-11-27', items: [
+    ['better', 'A real picture on the banner', 'The featured banner only shows titles with a real picture.'],
+    ['better', 'The right film, by its current name', 'Titles show their current name, and a source for another film is never offered.'],
+    ['better', 'Steady highlight on TVs', 'TVs: the highlight stays in place while Home finishes loading.'],
+  ] },
   { v: '2.96.1', date: '2026-11-27', items: [
     ['better', 'Steadier sign-in', 'The sign-in form appears in one piece instead of shifting as it loads.'],
     ['better', 'Smoother remote on title pages', 'The TV remote moves smoothly past the Where to watch box on film and series pages.'],
