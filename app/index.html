@@ -2306,6 +2306,7 @@ html.mk-pill.ezb-bar main{padding-top:calc(var(--dock-h) + 28px)}
    add only that half back, which gives the same 17px gap as a tablet with no inset. */
 html.mk-pill.mk-pad.ezb-bar main{padding-top:calc(var(--dock-h) + 28px + env(safe-area-inset-top,0px) / 2)}
 </style>
+<style id="mk-2976-ipad-top">@supports (-webkit-touch-callout:none){@media (display-mode:standalone){html.mk-pill.mk-pad{--mk-ios-top:30px}html.mk-pill.mk-pad .dock-wrap{padding-top:calc(8px + var(--mk-ios-top) + env(safe-area-inset-top,0px))}html.mk-pill.mk-pad .dock-wrap:before,html.mk-pill.mk-pad body .dock-wrap:before{height:calc(100% - 20px)!important;background:linear-gradient(var(--void,#000) calc(100% - 26px),rgba(var(--k000000-c,0,0,0),0))!important}html.mk-pill.mk-pad.ezb-bar body main{padding-top:calc(var(--dock-h) + 28px + var(--mk-ios-top) + env(safe-area-inset-top,0px) / 2)}}}</style>
 </head>
 <body class="locked">
 <script id="mk-2881-pre">
@@ -10153,6 +10154,21 @@ document.head.insertAdjacentHTML('beforeend', `<style id="mkc-237-rmsec">
 #mkGate{z-index:90}
 #mkGate .sc-p b.mono{font-size:calc(18px * var(--ts,1));letter-spacing:.18em}
 .mk-gate-acts{margin:10px -6px 0;padding:6px;gap:10px;flex-wrap:wrap}
+.mk-sq .x8-modal{max-width:440px;text-align:center}
+.mk-sq .x8-body{display:flex;flex-direction:column;align-items:center}
+.mk-sq .x8-h{margin:6px 0 0}
+.mk-sq-qr{width:min(300px,74vw);margin:18px auto 10px;padding:14px;box-shadow:0 18px 50px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.1)}
+html.tv .mk-sq .x8-modal{max-width:780px;width:min(780px,calc(100vw - 64px));text-align:left}
+html.tv .mk-sq .x8-body{display:grid;grid-template-columns:300px 1fr;column-gap:32px;align-items:center;justify-items:start}
+html.tv .mk-sq .x8-body>*{grid-column:2}
+html.tv .mk-sq-qr{grid-column:1!important;grid-row:1/span 4;width:300px;margin:4px 0}
+html.tv .mk-sq-how,html.tv .mk-sq-key{margin-left:0;text-align:left}
+html.tv .mk-sq .mk-gate-acts{justify-content:flex-start}
+@media (max-width:600px){.mk-sq-qr{width:min(250px,66vw);margin:14px auto 6px}}
+.mk-sq-how{max-width:36ch;margin:6px auto 8px}
+.mk-sq-key{display:flex;gap:8px;align-items:flex-start;text-align:left;max-width:40ch;margin:0 auto 6px;font-size:calc(13px * var(--ts,1));padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.mk-sq-key svg{flex:none;width:15px;height:15px;margin-top:2px;color:var(--gold)}
+.mk-sq .mk-gate-acts{justify-content:center}
 .pm-mk{margin-left:auto;flex:none;font-size:calc(11px * var(--ts,1));padding:5px 11px;border-radius:999px;border:1px solid rgba(var(--kffffff-c,255,255,255),.18);color:inherit;background:none;cursor:pointer}
 .pm-mk:hover,.pm-mk.nav-focus,.pm-mk:focus-visible{border-color:rgba(var(--kffffff-c,255,255,255),.5)}
 .tvl-chk{margin-top:8px}
@@ -12220,7 +12236,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.97.3';
+const APP_VERSION = '2.97.4';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -25440,6 +25456,11 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.97.4', date: '2026-11-27', items: [
+    ['new', 'Rotten Tomatoes for everyone', 'Rotten Tomatoes ratings now show on films for everyone, next to IMDb. With an MDBList key you also see the audience rating.'],
+    ['better', 'Share your setup with a QR code', 'Share my setup now shows a QR code. Point a phone or iPad camera at it to add the same addons there.'],
+    ['better', 'Removed addons stay removed', 'Addons you remove stay removed on every device.'],
+  ] },
   { v: '2.97.3', date: '2026-11-27', items: [
     ['better', 'Trailers play again', 'Trailers play again, and Back on the TV remote takes you to the menu first.'],
   ] },
@@ -27761,6 +27782,7 @@ const RateBadges = {
           if (v == null || Number(v) <= 0) return;
           if (src === 'tmdb') out.tmdb = pct(r.score || v);
           else if (src === 'tomatoes') out.tomatoes = `${Math.round(Number(v))}%`;
+          else if (src === 'popcorn') out.audience = `${Math.round(Number(v))}%`;
           else if (src === 'metacritic') out.metacritic = String(Math.round(Number(v)));
           else if (src === 'trakt') out.trakt = `${pct(r.score || v)}%`;
           else if (src === 'letterboxd') out.letterboxd = Number(v).toFixed(1);
@@ -27810,7 +27832,7 @@ const RateBadges = {
         const r = typeof rows === 'function' ? rows() : rows;
         const i = r.findIndex((d) => d && d.group === 'Posters');
         const add = [{ group: 'Scores' },
-          { key: 'moreRatings', label: 'Scores from other sites', help: 'IMDb shows on every title. With a free MDBList key you also see TMDB, Rotten Tomatoes, Metacritic, Trakt and Letterboxd on the Home banner and title pages. An OMDb, TMDB or Trakt key adds the ones it covers.', type: 'toggle', get: () => CFG.moreRatings !== false, set: (v) => setCfg('moreRatings', v) },
+          { key: 'moreRatings', label: 'Scores from other sites', help: 'IMDb shows on every title, and Rotten Tomatoes on many films. A free MDBList key adds Rotten Tomatoes for series and the audience score, plus TMDB, Metacritic, Trakt and Letterboxd. An OMDb, TMDB or Trakt key adds the ones it covers.', type: 'toggle', get: () => CFG.moreRatings !== false, set: (v) => setCfg('moreRatings', v) },
           { key: 'rateMdbKey', label: 'MDBList API key', help: 'Free at mdblist.com/preferences. The same key reads MDBList rows in Settings › Home. Syncs with your other keys.', type: 'secret', get: () => Keys.get().mdblist || '', set: (v) => setMdbKey(v) }];
         return i < 0 ? [...r, ...add] : [...r.slice(0, i), ...add, ...r.slice(i)];
       };
@@ -27818,6 +27840,49 @@ const RateBadges = {
   },
 };
 RateBadges.init();
+/* 2.97.5 rt scores */
+// Rotten Tomatoes for everyone: the critic score (Tomatometer) for films comes from Wikidata, free and with no key
+// (CC0 data, CORS open). An MDBList key still wins (fresher, and it also covers series), and now adds the audience score.
+{
+  RateBadges.NAME.audience = 'Rotten Tomatoes audience score';
+  RateBadges.ORDER.splice(RateBadges.ORDER.indexOf('tomatoes') + 1, 0, 'audience');
+  const WD = {
+    K: 'mkc:rtwd1', mem: null, busy: new Map(),
+    all() { if (!this.mem) { try { this.mem = JSON.parse(localStorage.getItem(this.K) || '{}') || {}; } catch (e) { this.mem = {}; } } return this.mem; },
+    keep(id, v) {
+      const a = this.all(); a[id] = { v, t: Date.now() };
+      const ks = Object.keys(a); if (ks.length > 800) ks.sort((x, y) => a[x].t - a[y].t).slice(0, ks.length - 600).forEach((x) => delete a[x]);
+      try { localStorage.setItem(this.K, JSON.stringify(a)); } catch (e) { /* full or private: memory only */ }
+    },
+    get(id) {
+      const h = this.all()[id];
+      if (h && Date.now() - h.t < (h.v ? 3 : 1) * 864e5) return Promise.resolve(h.v); // a score for 3 days, "none yet" for 1
+      if (this.busy.has(id)) return this.busy.get(id);
+      const q = `SELECT ?s ?d WHERE { ?f wdt:P345 "${id}" . ?f p:P444 ?x . ?x ps:P444 ?s . ?x pq:P447 wd:Q105584 . ?x pq:P459 wd:Q108403393 . OPTIONAL { ?x pq:P585 ?d } }`; // Tomatometer by Rotten Tomatoes
+      const p = netFetch(`https://query.wikidata.org/sparql?format=json&query=${encodeURIComponent(q)}`, {}, 8000).then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      }).then((j) => {
+        const best = ((j && j.results && j.results.bindings) || [])
+          .map((b) => ({ s: String((b.s && b.s.value) || '').trim(), d: String((b.d && b.d.value) || '') }))
+          .filter((b) => /^\d{1,3}%$/.test(b.s) && parseInt(b.s, 10) <= 100)
+          .sort((a, b) => b.d.localeCompare(a.d))[0]; // newest count
+        const v = best ? best.s : ''; this.keep(id, v); return v;
+      }).finally(() => this.busy.delete(id));
+      this.busy.set(id, p); return p;
+    },
+  };
+  const load = RateBadges.load;
+  RateBadges.load = async function (m, id) {
+    let out = null, err = null;
+    try { out = await load.call(this, m, id); } catch (e) { err = e; }
+    if (m.type !== 'series' && /^tt\d+$/.test(id) && !(out && out.tomatoes)) {
+      try { const v = await WD.get(id); if (v) { out = out || {}; out.tomatoes = v; } } catch (e) { if (!out) throw err || e; }
+    }
+    if (!out) { if (err) throw err; out = {}; }
+    return out;
+  };
+}
 </script>
 <style id="mkc-235css">
 /* 2.35.0 Script clock: Find a line, Notes, Last time, Phone subtitles, Couch match, Goodnight, party versions.
@@ -47019,8 +47084,9 @@ const SetupLink = {
     if (!d.addons.length) { toast('That setup link has no addons in it', 'err'); return; }
     if (!add.length) { toast('You already have every addon in that setup', 'ok'); return; }
     const host = (u) => { try { return new URL(u).host; } catch (e) { return u.slice(0, 50); } };
-    const ok = await Gate.ask({ icon: 'package-plus', eyebrow: 'Setup link', title: d.name ? `Add “${d.name}”?` : `Add ${add.length} addon${add.length === 1 ? '' : 's'}?`, yes: 'Add them', no: 'Not now',
+    const ok = await Gate.ask({ icon: 'package-plus', eyebrow: 'Setup link', title: d.name ? `Add “${d.name}”?` : `Add ${add.length} addon${add.length === 1 ? '' : 's'}?`, yes: 'Add them', no: SetupQR.iosTab() ? 'Copy for the Home Screen app' : 'Not now',
       html: `A link wants to add ${add.length} addon${add.length === 1 ? '' : 's'}: <b>${add.slice(0, 6).map((u) => esc(host(u))).join(', ')}${add.length > 6 ? '…' : ''}</b>. Nothing you have is removed or changed. Add them only if you trust whoever made the link.` });
+    if (ok === false && SetupQR.iosTab()) { copyText(SetupQR.fromHash(h), 'Link copied. Open MKCinema from your Home Screen and paste it in Addons', 9000); return; }
     if (ok !== true) return;
     let n = 0, bad = 0;
     for (const u of add) { try { await engine.install(u, { silent: true }); n++; } catch (e) { bad++; } }
@@ -47038,6 +47104,66 @@ const SetupLink = {
   },
 };
 window.MkSetupLink = SetupLink;
+/* 2.97.6 setup qr */
+/* Share my setup: a QR code to scan with a phone or iPad camera, plus the link.
+   The code carries exactly what the copied link carries: public addon links only. Addons that hold the person's own
+   key are never in it (they reach the person's own devices through the account's encrypted key sync). The link is
+   a #fragment, so the addon list is never sent to any server, mkcinema.app included. */
+const SetupQR = {
+  PUB: 'https://app.mkcinema.app',
+  MAXV: 30,   // QR version 30 = 137 modules: still scans from a phone screen or across a room from a TV
+  /* a phone must be able to open it: desktop apps and the LAN server run on localhost or a home address */
+  origin() {
+    const o = PUBLIC_ORIGIN || location.origin;
+    return /^https:\/\//i.test(o) && !/^https:\/\/(localhost|127\.|0\.0\.0\.0|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[)|\.local(:\d+)?$/i.test(o) ? o : this.PUB;
+  },
+  /* shortest form that every version since 2.68 reads: no https://, no /manifest.json (StremioEngine.normalize adds and drops them) */
+  short(u) { return String(u).replace(/^https:\/\//i, '').replace(/\/manifest\.json$/i, ''); },
+  link(addons) { return `${this.origin()}/#setup=${X8.b64e({ v: 1, addons: addons.map((u) => this.short(u)) })}`; },
+  fromHash(h) { return `${this.origin()}/#${h}`; },
+  ios() { const ua = navigator.userAgent; return /iP(hone|ad|od)/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1); },
+  /* an iPhone or iPad Safari tab: the Home Screen app keeps its own addons, apart from Safari's */
+  iosTab() { return this.ios() && !(navigator.standalone === true || matchMedia('(display-mode: standalone)').matches); },
+  code(link) {
+    for (const level of ['M', 'L']) {
+      try { const q = QR.encode(link, level); if (q.version <= this.MAXV) return QR.svg(link, { level, margin: 3 }); } catch (e) { /* too long at this level */ }
+    }
+    return '';
+  },
+  list() {
+    const all = engine.addons.filter((a) => !a.builtin && !a.virtual && !a.studio && a.enabled).map((a) => a.baseUrl);
+    const safe = all.filter((u) => !(typeof keyedAddon === 'function' && keyedAddon(u)));
+    return { safe, left: all.length - safe.length };
+  },
+  open() {
+    const { safe, left } = this.list();
+    if (!safe.length) { toast(left ? 'Every addon you have holds your own key, so there is nothing to share' : 'You have no addons to share yet', 'err', 5000); return; }
+    const link = this.link(safe), svg = this.code(link), n = safe.length;
+    const el = X8.layer('mkSetupQr', { label: 'Share my setup', icon: 'qr-code', eyebrow: 'Share my setup' }); el.classList.add('mk-sq');
+    const b = X8.body('mkSetupQr');
+    const share = !IS_TV && TOUCH_UI && typeof navigator.share === 'function';
+    b.innerHTML = `<h2 class="x8-h">${svg ? 'Scan to add my addons' : 'Copy the link to add my addons'}</h2>
+      ${svg ? `<div class="qr-wrap mk-sq-qr">${svg}</div>` : '<p class="sc-p">This setup is too big for one code. Copy the link and open it on the other device.</p>'}
+      <p class="sc-p mk-sq-how">${svg ? (n === 1 ? 'Point a phone or iPad camera at this code. MKCinema opens there and asks before it adds 1 addon. Nothing on that device is removed.' : `Point a phone or iPad camera at this code. MKCinema opens there and asks before it adds ${n} addons. Nothing on that device is removed.`) : (n === 1 ? 'The link adds 1 addon after a yes. Nothing on that device is removed.' : `The link adds ${n} addons after a yes. Nothing on that device is removed.`)}</p>
+      ${left ? `<p class="sc-p mk-sq-key"><i data-lucide="lock"></i><span>${left === 1 ? '1 addon that holds your own key is not in this code. Your own devices get it when they sign in to your account.' : `${left} addons that hold your own key are not in this code. Your own devices get them when they sign in to your account.`}</span></p>` : ''}
+      <div class="inrow mk-gate-acts">${IS_TV ? '' : '<button class="btn btn-prime" type="button" data-nav data-sq="copy"><i data-lucide="link"></i>Copy link</button>'}${share ? '<button class="btn btn-ghost" type="button" data-nav data-sq="share"><i data-lucide="share-2"></i>Share</button>' : ''}<button class="btn ${IS_TV ? 'btn-prime' : 'btn-ghost'}" type="button" data-nav data-x8close>Done</button></div>`;
+    const c = $('[data-sq="copy"]', b); if (c) c.onclick = () => copyText(link, left ? (left === 1 ? 'Setup link copied. 1 addon with your own key left out' : `Setup link copied. ${left} addons with your own key left out`) : 'Setup link copied', 6000);
+    const s = $('[data-sq="share"]', b); if (s) s.onclick = () => { navigator.share({ title: 'MKCinema setup', url: link }).catch(() => {}); };
+    icons(); X8.open('mkSetupQr');
+    setTimeout(() => { const f = $('#mkSetupQr .btn-prime'); if (f) { if (IS_TV) Nav.focus(f, true); else f.focus({ preventScroll: true }); } }, 80);
+  },
+};
+window.MkSetupQR = SetupQR;
+SetupLink.share = () => SetupQR.open();
+/* the Addons box takes a setup link too: an iPhone or iPad Home Screen app can paste one copied from Safari */
+{
+  const ia = installAddon;
+  installAddon = async function (url) {
+    const m = /#(setup(?:-url)?=[^\s]+)/.exec(String(url || '').trim());
+    if (m && !/\/manifest\.json/i.test(url.split('#')[0])) { const f = $('#addonUrl'); if (f) f.value = ''; await SetupLink.handle(m[1]); return null; }
+    return ia.apply(this, arguments);
+  };
+}
 
 /* ---------------- Home folders ---------------- */
 const Folders = {
@@ -47340,7 +47466,7 @@ window.MkHeroText = HeroText; HeroText.init();
     scAddRows('streams', 'showTrailers', [
       { key: 'srcView', label: 'Source list', help: 'Detailed shows every line an addon sends. Compact keeps one line and the badges, so more sources fit.', type: 'select', options: [['detailed', 'Detailed'], ['compact', 'Compact']], get: () => CFG.srcView || 'detailed', set: (v) => { setCfg('srcView', v); SrcLook.apply(); } },
       { key: 'srcBadges', label: 'Quality badges on sources', help: 'The small 4K, HDR, sound and size tags on each source.', type: 'toggle', get: () => CFG.srcBadges !== false, set: (v) => { setCfg('srcBadges', v); SrcLook.apply(); } },
-      { key: 'shareSetup', label: 'Share my setup', help: 'Copies a link that adds your addons on another device or for a friend in one press. Addons that hold your own key are left out.', type: 'button', text: 'Copy setup link', icon: 'link', run: () => SetupLink.share() },
+      { key: 'shareSetup', label: 'Share my setup', help: 'Shows a QR code and a link that add your addons on another phone, iPad or computer, or for a friend, in one press. Addons that hold your own key are left out.', type: 'button', text: 'Show code and link', icon: 'qr-code', run: () => SetupLink.share() },
     ]);
     scAddRows('help', 'speedRun', [
       { key: 'srcSpeed', label: 'Test the last source', help: 'Checks how fast the server of the last film you played sends it, so you know whether a pause is the source or your internet.', type: 'button', text: 'Test the source', icon: 'server', run: (b) => SrcSpeed.run(b) },
@@ -47360,7 +47486,7 @@ window.MkHeroText = HeroText; HeroText.init();
   safe('commands', () => {
     COMMANDS.push(
       { label: 'Your cloud (files in your debrid account)', icon: 'cloud', run: () => MyCloud.open() },
-      { label: 'Copy a link to my setup', icon: 'link', run: () => SetupLink.share() },
+      { label: 'Share my setup with a QR code', icon: 'qr-code', run: () => SetupLink.share() },
     );
   });
   safe('look', () => { SrcLook.apply(); CFG_HOOKS.push((k) => { if (k === 'srcView' || k === 'srcBadges') SrcLook.apply(); }); });
@@ -61993,6 +62119,51 @@ body.touch-ui #player:has(#pLoad:not([hidden]):not(.soft)) .hud-mid{visibility:h
   ['play', 'seeking', 'emptied'].forEach((ev) => video.addEventListener(ev, stop));
 })();
 </script>
+<!-- mk-addonstay:start -->
+<script id="mkc-addonstay">"use strict";(()=>{if(typeof Account>"u"||typeof engine>"u"||!Account.merge||!Account.compose||!engine.persist||!engine.mount||Account._addonStay)return;Account._addonStay=1;
+const A=Account,E=engine,DAY=864e5,
+own=a=>a&&a.baseUrl&&!a.builtin&&!a.virtual&&!a.studio,
+norm=u=>{try{return StremioEngine.normalize(u)}catch{return u}},
+both=l=>new Set([...l,...l.map(norm)]),
+strs=v=>Array.isArray(v)?v.filter(x=>typeof x=="string"&&x):[],
+uid=()=>A.user&&A.user.id||"",
+hash=u=>{let h=0xcbf29ce4,l=0x84222325;const s=uid()+"|"+norm(u);for(let i=0;i<s.length;i++){l^=s.charCodeAt(i);const a=Math.imul(l,0x1b3),b=Math.imul(h,0x1b3)+Math.imul(l,0x100)+(a/4294967296>>>0);l=a>>>0;h=b>>>0}return h.toString(36)+l.toString(36)},
+gk=()=>`mkc:addonGone:${uid()}`,
+load=()=>{try{const o=JSON.parse(localStorage.getItem(gk())||"{}");return o&&typeof o=="object"&&!Array.isArray(o)?o:{}}catch{return{}}},
+save=o=>{const cut=Date.now()-90*DAY,e=Object.entries(o).filter(([k,t])=>typeof k=="string"&&k.length<40&&+t>cut).sort((a,b)=>b[1]-a[1]).slice(0,300);try{localStorage.setItem(gk(),JSON.stringify(Object.fromEntries(e)))}catch{}return Object.fromEntries(e)};
+// addons this device has loaded or been told to remove in this session
+const seen=new Set,gone=new Set,mark=(s,u)=>{s.add(u);s.add(norm(u))};
+E.addons.forEach(a=>a&&a.baseUrl&&mark(seen,a.baseUrl));
+let first=!!E.booting||!(typeof S<"u"&&S.booted);
+const mt=E.mount;E.mount=function(u){try{mark(seen,u)}catch{}return mt.apply(this,arguments)};
+const ph=E.placeholder;E.placeholder&&(E.placeholder=function(u){try{mark(seen,u)}catch{}return ph.apply(this,arguments)});
+const rm=E.remove;
+E.remove=function(u){try{mark(gone,u);const a=this.addons.find(x=>x.baseUrl===u);if(uid()&&own(a)){const o=load();o[hash(u)]=Date.now();save(o)}}catch{}return rm.apply(this,arguments)};
+const ins=E.install;
+E.install=function(u){try{gone.delete(u);gone.delete(norm(u));if(!this.booting&&uid()){const o=load(),k=hash(u);k in o&&(delete o[k],save(o))}}catch{}return ins.apply(this,arguments)};
+const ps=E.persist;
+E.persist=function(){if(!this.booting)try{const st=strs(Store.get("addons",[]));
+ // 1. a sync that landed while this device was still loading its old list wins over that list
+ if(first){first=!1;const w=both(st);this.addons=this.addons.filter(a=>!own(a)||w.has(a.baseUrl)||w.has(norm(a.baseUrl)))}
+ // 2. an addon from the account that could not load here yet stays in the list instead of being dropped
+ const have=both(this.addons.filter(own).map(a=>a.baseUrl));
+ st.forEach(u=>{if(!have.has(u)&&!have.has(norm(u))&&!seen.has(u)&&!seen.has(norm(u))&&!gone.has(u)&&!gone.has(norm(u)))this.placeholder(u,u.replace(/^https?:\/\//,""),"Could not load yet",!0)})
+}catch{}return ps.apply(this,arguments)};
+// 3. removed addons are remembered (hashed, per account) so a device with an old list cannot bring them back
+const cp=A.compose;
+A.compose=function(){const r=cp.apply(this,arguments),d=r&&r.doc;try{if(d&&d._sync&&uid()){const o=save(load());Object.keys(o).length&&(d._sync={...d._sync,ag:o})}}catch{}return r};
+const ar=A.applyRemote;let remote=null;
+ar&&(A.applyRemote=function(n){n&&Array.isArray(n.addons)&&(remote=strs(n.addons));return ar.apply(this,arguments)});
+const mg=A.merge;
+A.merge=async function(e){
+ if(!e||typeof e!="object"||!uid())return mg.apply(this,arguments);
+ try{const g=e._sync&&e._sync.ag;if(g&&typeof g=="object"){const o=load();Object.entries(g).forEach(([k,t])=>{+t>(+o[k]||0)&&(o[k]=+t)});save(o)}}catch{}
+ remote=null;let c=await mg.apply(this,arguments);
+ try{if(remote){const acc=both(remote),o=load(),cur=strs(Store.get("addons",[])),old=cur.filter(u=>!acc.has(u)&&!acc.has(norm(u))&&hash(u)in o);
+  if(old.length){Store.set("addons",cur.filter(u=>!old.includes(u)));old.forEach(u=>{mark(gone,u);E.addons=E.addons.filter(a=>!(own(a)&&(a.baseUrl===u||a.baseUrl===norm(u))))});E.clearCache&&E.clearCache();E.emit&&E.emit("addons");c=!0;try{A.schedule&&A.schedule()}catch{}}}}catch{}
+ remote=null;return c};
+})();</script>
+<!-- mk-addonstay:end -->
 <script id="mk-2952-smooth">/* 2.95.2 smooth sources: the title page Streams list and the player's Sources panel step one row at a time with the
    remote, and picking another source in the MKCinema Player (Android app) swaps the film without tearing the picture down */
 (()=>{

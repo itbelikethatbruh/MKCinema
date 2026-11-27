@@ -89,6 +89,7 @@ const RateBadges = {
           if (v == null || Number(v) <= 0) return;
           if (src === 'tmdb') out.tmdb = pct(r.score || v);
           else if (src === 'tomatoes') out.tomatoes = `${Math.round(Number(v))}%`;
+          else if (src === 'popcorn') out.audience = `${Math.round(Number(v))}%`;
           else if (src === 'metacritic') out.metacritic = String(Math.round(Number(v)));
           else if (src === 'trakt') out.trakt = `${pct(r.score || v)}%`;
           else if (src === 'letterboxd') out.letterboxd = Number(v).toFixed(1);
@@ -138,7 +139,7 @@ const RateBadges = {
         const r = typeof rows === 'function' ? rows() : rows;
         const i = r.findIndex((d) => d && d.group === 'Posters');
         const add = [{ group: 'Scores' },
-          { key: 'moreRatings', label: 'Scores from other sites', help: 'IMDb shows on every title. With a free MDBList key you also see TMDB, Rotten Tomatoes, Metacritic, Trakt and Letterboxd on the Home banner and title pages. An OMDb, TMDB or Trakt key adds the ones it covers.', type: 'toggle', get: () => CFG.moreRatings !== false, set: (v) => setCfg('moreRatings', v) },
+          { key: 'moreRatings', label: 'Scores from other sites', help: 'IMDb shows on every title, and Rotten Tomatoes on many films. A free MDBList key adds Rotten Tomatoes for series and the audience score, plus TMDB, Metacritic, Trakt and Letterboxd. An OMDb, TMDB or Trakt key adds the ones it covers.', type: 'toggle', get: () => CFG.moreRatings !== false, set: (v) => setCfg('moreRatings', v) },
           { key: 'rateMdbKey', label: 'MDBList API key', help: 'Free at mdblist.com/preferences. The same key reads MDBList rows in Settings › Home. Syncs with your other keys.', type: 'secret', get: () => Keys.get().mdblist || '', set: (v) => setMdbKey(v) }];
         return i < 0 ? [...r, ...add] : [...r.slice(0, i), ...add, ...r.slice(i)];
       };
@@ -146,3 +147,46 @@ const RateBadges = {
   },
 };
 RateBadges.init();
+/* 2.97.5 rt scores */
+// Rotten Tomatoes for everyone: the critic score (Tomatometer) for films comes from Wikidata, free and with no key
+// (CC0 data, CORS open). An MDBList key still wins (fresher, and it also covers series), and now adds the audience score.
+{
+  RateBadges.NAME.audience = 'Rotten Tomatoes audience score';
+  RateBadges.ORDER.splice(RateBadges.ORDER.indexOf('tomatoes') + 1, 0, 'audience');
+  const WD = {
+    K: 'mkc:rtwd1', mem: null, busy: new Map(),
+    all() { if (!this.mem) { try { this.mem = JSON.parse(localStorage.getItem(this.K) || '{}') || {}; } catch (e) { this.mem = {}; } } return this.mem; },
+    keep(id, v) {
+      const a = this.all(); a[id] = { v, t: Date.now() };
+      const ks = Object.keys(a); if (ks.length > 800) ks.sort((x, y) => a[x].t - a[y].t).slice(0, ks.length - 600).forEach((x) => delete a[x]);
+      try { localStorage.setItem(this.K, JSON.stringify(a)); } catch (e) { /* full or private: memory only */ }
+    },
+    get(id) {
+      const h = this.all()[id];
+      if (h && Date.now() - h.t < (h.v ? 3 : 1) * 864e5) return Promise.resolve(h.v); // a score for 3 days, "none yet" for 1
+      if (this.busy.has(id)) return this.busy.get(id);
+      const q = `SELECT ?s ?d WHERE { ?f wdt:P345 "${id}" . ?f p:P444 ?x . ?x ps:P444 ?s . ?x pq:P447 wd:Q105584 . ?x pq:P459 wd:Q108403393 . OPTIONAL { ?x pq:P585 ?d } }`; // Tomatometer by Rotten Tomatoes
+      const p = netFetch(`https://query.wikidata.org/sparql?format=json&query=${encodeURIComponent(q)}`, {}, 8000).then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      }).then((j) => {
+        const best = ((j && j.results && j.results.bindings) || [])
+          .map((b) => ({ s: String((b.s && b.s.value) || '').trim(), d: String((b.d && b.d.value) || '') }))
+          .filter((b) => /^\d{1,3}%$/.test(b.s) && parseInt(b.s, 10) <= 100)
+          .sort((a, b) => b.d.localeCompare(a.d))[0]; // newest count
+        const v = best ? best.s : ''; this.keep(id, v); return v;
+      }).finally(() => this.busy.delete(id));
+      this.busy.set(id, p); return p;
+    },
+  };
+  const load = RateBadges.load;
+  RateBadges.load = async function (m, id) {
+    let out = null, err = null;
+    try { out = await load.call(this, m, id); } catch (e) { err = e; }
+    if (m.type !== 'series' && /^tt\d+$/.test(id) && !(out && out.tomatoes)) {
+      try { const v = await WD.get(id); if (v) { out = out || {}; out.tomatoes = v; } } catch (e) { if (!out) throw err || e; }
+    }
+    if (!out) { if (err) throw err; out = {}; }
+    return out;
+  };
+}
