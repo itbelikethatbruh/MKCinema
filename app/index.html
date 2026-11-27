@@ -2844,6 +2844,7 @@ const PRESET_ORDER = ['high', 'balanced', 'low'];
 
 const CFG_DEFAULTS = {
   // appearance
+  pxAccent: 'champagne', pxGlass: 'frosted', // 2.97 player colour + panel look
   look: 'noir', cardInfo: 'hover', uiScale: 100, reduceMotion: false, contrast: 'high',
   cardSize: 'm', banner: 'full', lsMenu: null,   // 2.77 Layout Studio
   ambient: null, eggs: null,   // 2.82 Ambient Studio recipe (photos stay on each device) and secrets found
@@ -7221,6 +7222,8 @@ const isSecretKey = (k) => {
    the sealed box). The key never leaves the device except inside the already sealed "Sign in with your phone" hand-off,
    or sealed to a new device's one-time key by Link a device (DevLink). */
 const SYNC_V = 4, SYNC_V_OLD = 3, SYNC_AV_MAX = 40000;
+/* 2.96.8 own size: screen sizes belong to the device, never synced */
+const DEVICE_CFG = new Set(['uiScale', 'textScale']);
 const SYNC_SECTIONS = ['cfg', 'watchlist', 'progress', 'watched', 'addons', 'disabled', 'studio', 'taste', 'homeLayout', 'homeArrange', 'avatar', 'lists', 'channels', 'seats', 'secrets'];
 const SYNC_ITEMS = ['watchlist', 'progress', 'watched'];
 const SYNC_NEWER = 'A newer MKCinema saved your account. Reload to update, then sync again.';
@@ -7651,7 +7654,7 @@ const Account = {
     if (!was || this.applying) return;
     const m = this.m(), t = Date.now(); let hit = false;
     new Set([...Object.keys(was), ...Object.keys(cur)]).forEach((k) => {
-      if (k === 'cfgRev' || JSON.stringify(was[k]) === JSON.stringify(cur[k])) return;
+      if (k === 'cfgRev' || DEVICE_CFG.has(k) || JSON.stringify(was[k]) === JSON.stringify(cur[k])) return;
       m.cf[k] = Math.max(SyncClock.now(), (m.rcf[k] || 0) + 1); hit = true;
     });
     if (!hit) return;
@@ -7669,7 +7672,7 @@ const Account = {
   dirty() {
     const m = this.m();
     const out = SYNC_SECTIONS.filter((s) => s !== 'cfg' && (m.at[s] || 0) > (m.rat[s] || 0) && (s !== 'secrets' || (CFG.syncKeys !== false && this.canWriteSecrets())));
-    if (Object.keys(m.cf).some((k) => m.cf[k] > (m.rcf[k] || 0) && !(typeof CFG[k] === 'string' && CFG[k].length > SYNC_AV_MAX))) out.push('cfg');
+    if (Object.keys(m.cf).some((k) => !DEVICE_CFG.has(k) && m.cf[k] > (m.rcf[k] || 0) && !(typeof CFG[k] === 'string' && CFG[k].length > SYNC_AV_MAX))) out.push('cfg');
     return out;
   },
   schedule(fast) {
@@ -7804,7 +7807,7 @@ const Account = {
     if (R.cfg && typeof R.cfg === 'object') {
       const rcf = sy ? sy.cf || {} : null, win = {};
       Object.keys(R.cfg).forEach((k) => {
-        if (k === 'cfgRev') return;
+        if (k === 'cfgRev' || DEVICE_CFG.has(k)) return;
         const rt = rcf ? +rcf[k] || 0 : rowT;
         if (rt > (m.cf[k] || 0)) { if (JSON.stringify(R.cfg[k]) !== JSON.stringify(CFG[k])) win[k] = R.cfg[k]; m.cf[k] = rt; }
         m.rcf[k] = rt;
@@ -7908,7 +7911,7 @@ const Account = {
     SYNC_SECTIONS.forEach((s) => { at[s] = Math.max(m.at[s] || 0, m.rat[s] || 0) || 1; });
     const keep = (s) => { at[s] = m.rat[s] || 1; };
     // settings: very large values (pictures) stay on the device
-    out.cfg = { ...CFG }; Object.keys(out.cfg).forEach((k) => { if (typeof out.cfg[k] === 'string' && out.cfg[k].length > SYNC_AV_MAX) delete out.cfg[k]; else cf[k] = Math.max(m.cf[k] || 0, m.rcf[k] || 0) || 1; });
+    out.cfg = { ...CFG }; DEVICE_CFG.forEach((k) => delete out.cfg[k]); Object.keys(out.cfg).forEach((k) => { if (typeof out.cfg[k] === 'string' && out.cfg[k].length > SYNC_AV_MAX) delete out.cfg[k]; else cf[k] = Math.max(m.cf[k] || 0, m.rcf[k] || 0) || 1; });
     // keys: sealed on this device; a device that cannot seal (locked, or key sync off) leaves the account's copy as it is
     const plain = JSON.stringify({ vault: Store.get('vault', {}), keys: Store.get('keys', {}) }), sc = this.secCache;
     if (CFG.syncKeys !== false && this.canWriteSecrets() && sc && sc.uid === uid && sc.plain === plain && sc.salt === this.keyRec.salt) out.secrets = sc.box;
@@ -12165,7 +12168,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.96.3';
+const APP_VERSION = '2.97.0';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -22215,7 +22218,7 @@ const PxLayout = {
 /* ---- Options menu as tabs ---- */
 const PxMenu = {
   tab: 'play',
-  TABS: [['play', 'Playback'], ['pic', 'Picture'], ['audio', 'Sound'], ['more', 'More']],
+  TABS: [['play', 'Playback'], ['pic', 'Picture'], ['audio', 'Sound'], ['more', 'More'], ['colours', 'Colours']],
   where(h) {
     const k = String(h || '').trim().toLowerCase();
     if (/^(speed|quality|tools|subtitle timing)/.test(k)) return 'play';
@@ -22225,6 +22228,7 @@ const PxMenu = {
   },
   open(tab) {
     const m = $('#optMenu'); if (tab) this.tab = tab;
+    if (tab && window.RxSimple) RxSimple.full(); // 2.97: a named tab opens that tab, not the Quick card
     $('#subMenu').hidden = true; $('#dspPop').hidden = true; closeDrawers();
     if (!m.hidden && tab && m.dataset.tab === tab) { m.hidden = true; return; }
     m.hidden = false; renderOptMenu(); wakeHud(true);
@@ -22246,7 +22250,7 @@ const PxMenu = {
       if (!seg) { seg = { tab: 'more', r: 50, els: [] }; segs.push(seg); }
       seg.els.push(el);
     });
-    const groups = { play: [], pic: [], audio: [], more: [] };
+    const groups = { play: [], pic: [], audio: [], more: [], colours: [] };
     segs.map((x, i) => ({ ...x, i })).sort((a, b) => a.r - b.r || a.i - b.i).forEach((x) => groups[x.tab].push(...x.els));
     // extra speeds next to the usual ones
     const sr = $('[data-speed]', m) && $('[data-speed]', m).parentElement;
@@ -22258,10 +22262,12 @@ const PxMenu = {
     const amb = $('[data-amb]', m); if (amb && !PX_TV && !PX_TOUCH()) { amb.innerHTML = `<i data-lucide="monitor"></i>Theatre view · ${PxLayout.theatre() ? 'on' : 'off'}`; amb.onclick = () => PxLayout.setTheatre(!PxLayout.theatre()); }
     m.innerHTML = '';
     const bar = document.createElement('div'); bar.className = 'px-tabs'; bar.setAttribute('role', 'tablist');
-    this.TABS.forEach(([k, l]) => { if (!groups[k].length) return; const b = document.createElement('button'); b.type = 'button'; b.dataset.pxtab = k; b.setAttribute('role', 'tab'); b.textContent = l; b.className = k === this.tab ? 'on' : ''; b.setAttribute('aria-selected', String(k === this.tab)); bar.appendChild(b); });
-    if (!groups[this.tab].length) this.tab = 'play';
+    this.TABS.forEach(([k, l]) => { if (!groups[k].length && !(k === 'colours' && window.PlayerLook)) return; const b = document.createElement('button'); b.type = 'button'; b.dataset.pxtab = k; b.setAttribute('role', 'tab'); b.textContent = l; b.className = k === this.tab ? 'on' : ''; b.setAttribute('aria-selected', String(k === this.tab)); bar.appendChild(b); });
+    if (!groups[this.tab].length && !(this.tab === 'colours' && window.PlayerLook)) this.tab = 'play';
     m.appendChild(bar);
     this.TABS.forEach(([k]) => { const p = document.createElement('div'); p.className = 'px-pane'; p.dataset.pane = k; p.hidden = k !== this.tab; groups[k].forEach((el) => p.appendChild(el)); m.appendChild(p); });
+    if (window.PlayerLook) PlayerLook.fill($('.px-pane[data-pane="colours"]', m)); // 2.97 Colours tab
+    if (window.RxSimple) RxSimple.tab(bar); // 2.97 Quick tab in front
     m.dataset.tab = this.tab;
     $$('[data-pxtab]', bar).forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); this.tab = b.dataset.pxtab; this.show(); }));
     PxAudio.bind(m); PxPicture.bind(m); PxMore.bind(m);
@@ -25342,6 +25348,10 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.97.0', date: '2026-11-27', items: [
+    ['new', 'A new look for settings while you watch', 'One clean panel with Quick, Playback, Picture, Sound, More and a new Colours tab. Pick your highlight colour for the progress bar and buttons, and choose see-through, frosted or solid.'],
+    ['better', 'Sizes stay on each device', 'Interface size and Text size now stay on the device where you set them.'],
+  ] },
   { v: '2.96.3', date: '2026-11-27', items: [
     ['better', 'Home holds still on TVs', 'TVs: Home no longer moves rows out from under you while it finishes loading.'],
     ['better', 'Steady subtitles', 'Subtitles now stay in one place when the controls appear, and open menus always sit above them.'],
@@ -37258,8 +37268,8 @@ const TourDeep = {
         pts: [['filter', 'Filter and sort', 'Only HDR or Atmos, biggest or smallest first.'], ['layers', 'No repeats', 'The same file found by several addons is shown once.'], ['sliders-horizontal', 'Your rules', 'Lowest resolution, file size, HDR, audio language and words to block.']],
         where: 'Sources on a film page · Settings › Source rules' },
       { id: 'player', ch: 'watch', t: 'A player made for films', art: 'player',
-        lede: 'Edge to edge, with everything in four tabs: Playback, Picture, Audio and More. It remembers your speed for each title and your subtitle timing for each file.',
-        pts: [['skip-forward', 'Skip intro, recap and credits', 'And the next episode is found a few minutes early, so it starts right away.'], ['volume-2', 'Sound that suits the room', 'Clear voices, Night, audio delay and volume up to 200 %.'],
+        lede: 'Edge to edge, with everything in one glass panel: Quick, Playback, Picture, Sound, More and Colours. It remembers your speed for each title and your subtitle timing for each file.',
+        pts: [['skip-forward', 'Skip intro, recap and credits', 'And the next episode is found a few minutes early, so it starts right away.'], ['volume-2', 'Sound that suits the room', 'Clear voices, Night, audio delay and volume up to 200 %.'], ['palette', 'Your colours', 'Choose a highlight colour for the progress bar and buttons, and a see-through, frosted or solid panel.'],
           tv ? ['tv', 'Smooth on a TV', 'In the Android TV app, the TV player uses the TV’s own hardware for MKV, HEVC, HDR and Dolby Vision.'] : ['hand', 'Phone gestures', 'Hold for 2× speed, swipe for brightness and volume, swipe sideways to seek.']],
         where: 'Start anything, then Options' },
       { id: 'subtitles', ch: 'watch', t: 'Subtitles that line up', art: 'subtitles',
@@ -58670,31 +58680,181 @@ html.tv.mk-rx #player .rs-chips button:focus,html.tv.mk-rx #player .rs-all:focus
 </style>
 <script id="mk-rx-simple-js">
 (()=>{const d=document,m=()=>d.getElementById('optMenu');
+/* 2.97: the short card is the "Quick" tab of the one Settings panel. Its tab row matches the full menu, so Quick,
+   Playback, Picture, Sound, More and Colours sit together; picking another tab shows that tab in the same panel. */
 const ROWS=[['Speed','speed',[['0.5','0.5×'],['0.75','0.75×'],['1','1×'],['1.25','1.25×'],['1.5','1.5×'],['2','2×']]],
  ['Picture','picp',[['normal','Normal'],['vivid','Vivid'],['dark','Brighter']]],
  ['Screen','fit',[['fit','Fit'],['fill','Fill'],['crop','Crop bars']]],
- ['Sleep timer','sleep',[['0','Off'],['15','15'],['30','30'],['60','60'],['end','End of film']]]];
-let full=false,busy=false,sleepPick='0';
+ ['Sleep timer','sleep',[['0','Off'],['15','15'],['30','30'],['60','60'],['end','End']]]];
+let full=false,busy=false,sleepPick='0',fresh=false;
+const tv=()=>typeof IS_TV!=='undefined'&&IS_TV;
+const navTo=n=>{if(n&&tv()&&typeof Nav!=='undefined'&&Nav.focus)try{Nav.focus(n,!0)}catch{}};
 const isOn=(k,v,x)=>{if(k!=='sleep')return x.classList.contains('on');const l=(m().querySelector('.tl-sleep .tl-k')||{}).textContent||'';if(/off/i.test(l))sleepPick='0';return v===sleepPick};
 const src=(k,v)=>{const e=m();return e&&e.querySelector(`[data-pane] [data-${k}="${v}"]`)};
+const X='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+const tabs=e=>`<div class="px-tabs rs-tabs" role="tablist"><button type="button" role="tab" data-rstab="quick" class="on" aria-selected="true">Quick</button>`+
+ [...e.querySelectorAll('.px-tabs [data-pxtab]')].map(b=>`<button type="button" role="tab" data-rstab="${b.dataset.pxtab}" aria-selected="false">${b.textContent.trim()}</button>`).join('')+
+ (tv()?'':`<button type="button" class="px-x rs-x" aria-label="Close">${X}</button>`)+`</div>`;
+function go(k){const e=m();if(!e)return;full=true;paint();if(typeof PxMenu!=='undefined'){PxMenu.tab=k;PxMenu.show()}navTo(e.querySelector(`.px-tabs [data-pxtab="${k}"]`))}
 function paint(){const e=m();if(!e||busy)return;busy=true;try{
  if(full){e.classList.remove('rx-simple');const o=e.querySelector('.rx-simple-pane');o&&o.remove();return}
+ if(!e.querySelector('.px-tabs [data-pxtab]'))return;
  e.classList.add('rx-simple');let pane=e.querySelector('.rx-simple-pane');
  if(!pane){pane=d.createElement('div');pane.className='rx-simple-pane';e.prepend(pane);
   pane.addEventListener('click',ev=>{ev.stopPropagation();const b=ev.target.closest('button');if(!b)return;
-   if(b.classList.contains('rs-all')){full=true;paint();const t=e.querySelector('[data-pxtab].on')||e.querySelector('[data-pxtab]');if(t&&typeof IS_TV!=='undefined'&&IS_TV&&window.Nav)try{Nav.focus(t,!0)}catch{}return}
+   if(b.classList.contains('rs-x')){e.hidden=true;return}
+   if(b.dataset.rstab){if(b.dataset.rstab!=='quick')go(b.dataset.rstab);return}
    const x=src(b.dataset.k,b.dataset.v);if(x){if(b.dataset.k==='sleep')sleepPick=b.dataset.v;x.click();setTimeout(paint,30)}})}
- const html=`<h4>Settings</h4>`+ROWS.map(([label,k,opts])=>{const shown=opts.filter(([v])=>src(k,v));if(!shown.length)return'';
-  return `<div class="rs-row"><span>${label}</span><div class="rs-chips">${shown.map(([v,t])=>{const x=src(k,v);return `<button type="button" data-k="${k}" data-v="${v}" class="${x&&isOn(k,v,x)?'on':''}">${t}</button>`}).join('')}</div></div>`}).join('')+`<button type="button" class="rs-all">All settings <span aria-hidden="true">›</span></button>`;
- if(pane.dataset.h!==html){const f=d.activeElement&&pane.contains(d.activeElement)?[d.activeElement.dataset.k,d.activeElement.dataset.v]:null;pane.innerHTML=html;pane.dataset.h=html;
-  if(f){const n=pane.querySelector(`[data-k="${f[0]}"][data-v="${f[1]}"]`)||pane.querySelector('.rs-all');n&&n.focus()}}
+ const html=tabs(e)+`<div class="rs-body">`+ROWS.map(([label,k,opts])=>{const shown=opts.filter(([v])=>src(k,v));if(!shown.length)return'';
+  return `<div class="rs-row"><span>${label}</span><div class="rs-chips">${shown.map(([v,t])=>{const x=src(k,v);return `<button type="button" data-k="${k}" data-v="${v}" class="${x&&isOn(k,v,x)?'on':''}">${t}</button>`}).join('')}</div></div>`}).join('')+`</div>`;
+ if(pane.dataset.h!==html){const a=d.activeElement,f=a&&pane.contains(a)?(a.dataset.rstab?['rstab',a.dataset.rstab]:[a.dataset.k,a.dataset.v]):null;pane.innerHTML=html;pane.dataset.h=html;
+  if(f){const n=f[0]==='rstab'?pane.querySelector(`[data-rstab="${f[1]}"]`):pane.querySelector(`[data-k="${f[0]}"][data-v="${f[1]}"]`);n&&n.focus()}}
  if(e.firstChild!==pane)e.prepend(pane);
+ if(fresh){fresh=false;if(tv())setTimeout(()=>{if(!pane.contains(d.activeElement))navTo(pane.querySelector('.rs-chips button.on')||pane.querySelector('.rs-chips button'))},90)}
 }finally{busy=false}}
+window.RxSimple={
+ full(){full=true;paint()},
+ quick(){const e=m();full=false;paint();e&&navTo(e.querySelector('.rx-simple-pane .rs-chips button.on'))},
+ /* the full menu's tab row gets a Quick tab in front, back to the short card */
+ tab(bar){if(!bar||bar.querySelector('[data-rstab]'))return;const q=d.createElement('button');q.type='button';q.dataset.rstab='quick';q.setAttribute('role','tab');q.setAttribute('aria-selected','false');q.textContent='Quick';
+  q.addEventListener('click',ev=>{ev.stopPropagation();RxSimple.quick()});bar.prepend(q)}};
 function hook(){const e=m();if(!e)return;
- new MutationObserver(()=>{if(e.hidden){full=false;return}paint()}).observe(e,{attributes:true,attributeFilter:['hidden']});
+ new MutationObserver(()=>{if(e.hidden){full=false;const a=d.activeElement,o=d.getElementById('pOpts');if(tv()&&o&&!d.getElementById('player').hidden&&(!a||a===d.body||e.contains(a)))navTo(o);return}fresh=true;paint()}).observe(e,{attributes:true,attributeFilter:['hidden']});
  new MutationObserver(()=>{if(!e.hidden&&!busy)paint()}).observe(e,{childList:true});
  if(!e.hidden)paint()}
 d.readyState==='loading'?d.addEventListener('DOMContentLoaded',hook):hook();
+})();
+</script>
+<style id="mk-297-glass">
+/* 2.97 player glass: Settings, Audio & subtitles and Share open as liquid-glass panels; the player colour (progress bar,
+   picked buttons, remote highlight) and the panel look are the viewer's choice. TVs, Low graphics and the lite build get
+   the solid panel (no backdrop-filter); in the Android app's own player the film is under the page, so there is nothing to
+   blur and the panel gets a deeper tint instead. Only transform/opacity animate. */
+html.mk-rx #player #optMenu.menu,html.mk-rx #player #subMenu.menu,html.mk-rx #player #dspPop{
+ background:linear-gradient(160deg,rgba(255,255,255,.15),rgba(255,255,255,.04) 36%,rgba(255,255,255,.015)),rgba(14,14,18,.42)!important;
+ -webkit-backdrop-filter:blur(28px) saturate(170%)!important;backdrop-filter:blur(28px) saturate(170%)!important;
+ border:1px solid rgba(255,255,255,.16)!important;border-radius:28px!important;color:#f4f2ee;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.26),inset 0 -1px 0 rgba(255,255,255,.04),0 30px 80px -20px rgba(0,0,0,.65)!important}
+html[data-pcglass=clear].mk-rx #player #optMenu.menu,html[data-pcglass=clear].mk-rx #player #subMenu.menu,html[data-pcglass=clear].mk-rx #player #dspPop{
+ background:linear-gradient(160deg,rgba(255,255,255,.13),rgba(255,255,255,.02) 40%),rgba(14,14,18,.2)!important;
+ -webkit-backdrop-filter:blur(14px) saturate(160%)!important;backdrop-filter:blur(14px) saturate(160%)!important;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+html.mk-native-on.mk-rx #player #optMenu.menu,html.mk-native-on.mk-rx #player #subMenu.menu,html.mk-native-on.mk-rx #player #dspPop{
+ background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.02) 40%),rgba(14,14,18,.68)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.mk-native-on[data-pcglass=clear].mk-rx #player #optMenu.menu,html.mk-native-on[data-pcglass=clear].mk-rx #player #subMenu.menu,html.mk-native-on[data-pcglass=clear].mk-rx #player #dspPop{background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.02) 40%),rgba(14,14,18,.5)!important}
+html[data-pcglass=solid].mk-rx #player #optMenu.menu,html[data-pcglass=solid].mk-rx #player #subMenu.menu,html[data-pcglass=solid].mk-rx #player #dspPop{
+ background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,0) 42%),#131316!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;text-shadow:none}
+
+/* one panel shape: tab row on top, the chosen tab scrolls under it */
+html.mk-rx #player #optMenu.menu:not([hidden]){display:flex!important;flex-direction:column;overflow:hidden!important;padding:14px!important;gap:0}
+html.mk-rx #player #optMenu .rx-simple-pane{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
+html.mk-rx #player #optMenu .px-tabs{position:static!important;flex:none;display:flex;align-items:center;gap:2px;margin:0 0 14px!important;padding:4px!important;border-radius:999px;background:rgba(0,0,0,.26)!important;border:1px solid rgba(255,255,255,.08)!important;overflow-x:auto;scrollbar-width:none}
+html.mk-rx #player #optMenu .px-tabs::-webkit-scrollbar{display:none}
+html.mk-rx #player #optMenu .px-tabs button{flex:1 0 auto;width:auto;min-height:0;padding:8px 10px!important;border:0!important;border-radius:999px!important;background:transparent!important;color:rgba(255,255,255,.7)!important;font:500 calc(13px * var(--ts,1)) var(--f-body)!important;white-space:nowrap;box-shadow:none}
+html.mk-rx #player #optMenu .px-tabs button.on{background:rgba(255,255,255,.92)!important;color:#111!important;font-weight:600!important;box-shadow:0 2px 10px rgba(0,0,0,.25)!important;text-shadow:none}
+html.mk-rx #player #optMenu .px-tabs .px-x{flex:0 0 32px;width:32px;height:32px;padding:0!important;display:grid;place-items:center;margin-left:4px;background:rgba(255,255,255,.1)!important;color:rgba(255,255,255,.85)!important}
+html.mk-rx #player #optMenu .px-tabs .px-x svg{width:16px;height:16px}
+html.tv.mk-rx #player #optMenu .px-tabs .px-x{display:none}
+html.mk-rx #player #optMenu .px-pane,html.mk-rx #player #optMenu .rs-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent;padding:0 2px}
+html.mk-rx #player #optMenu .px-pane[hidden]{display:none!important}
+
+/* where it opens: on the right, clear of the progress bar and the buttons */
+html.mk-rx #player #optMenu.menu{left:auto!important;right:max(var(--rx-gx,24px),env(safe-area-inset-right,0px))!important;top:calc(var(--rx-cap,64px) + 36px)!important;bottom:auto!important;
+ width:min(460px,calc(100vw - 32px))!important;max-height:calc(100% - 2 * var(--rx-cap,64px) - 150px)!important}
+html.tv.mk-rx #player #optMenu.menu{width:min(480px,calc(100vw - 48px))!important;max-height:calc(100% - var(--rx-cap,60px) - 70px)!important}
+/* phones on their side: a floating sheet down the right */
+@media (pointer:coarse) and (max-height:500px){
+ html.mk-rx #player #optMenu.menu,html.mk-rx body.mk-phone #player #optMenu.menu{top:10px!important;bottom:10px!important;left:auto!important;right:max(10px,env(safe-area-inset-right,0px))!important;width:min(440px,58vw)!important;max-height:none!important;padding:10px!important;border-radius:26px!important}
+ html.mk-rx #player #optMenu .px-tabs{margin-bottom:10px!important;padding-top:4px!important}
+ html.mk-rx #player #optMenu .rs-row{margin-bottom:10px!important}
+}
+/* phones upright: the bottom sheet, in glass */
+@media (pointer:coarse) and (max-width:760px) and (min-height:501px){
+ html.mk-rx #player #optMenu.menu,html.mk-rx body.mk-phone #player #optMenu.menu{top:auto!important;bottom:0!important;left:0!important;right:0!important;width:auto!important;max-height:min(70vh,640px)!important;border-radius:28px 28px 0 0!important;border-bottom:0!important;padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px))!important}
+ html.mk-rx #player #subMenu.menu{border-radius:28px 28px 0 0!important;border-bottom:0!important}
+}
+
+/* narrow phones: six tabs fit without the close button (the sheet closes with Back or a tap outside) */
+@media (max-width:480px){
+ html.mk-rx #player #optMenu .px-tabs button{padding:7px 5px!important;font-size:calc(12px * var(--ts,1))!important}
+ html.mk-rx #player #optMenu .rs-chips button,html.mk-rx #player #optMenu .seg-row>button{font-size:calc(13px * var(--ts,1))!important;padding-left:3px!important;padding-right:3px!important}
+ html.mk-rx #player #optMenu .px-tabs .px-x{display:none}
+}
+
+/* the Quick tab: one label, one even bar of choices per row, never wrapping */
+html.mk-rx #player #optMenu .rx-simple-pane h4{display:none}
+html.mk-rx #player #optMenu .rs-row{display:block!important;padding:0!important;border:0!important;margin:0 0 16px}
+html.mk-rx #player #optMenu .rs-row>span{display:block;margin:0 4px 8px;font:500 calc(13px * var(--ts,1)) var(--f-body);color:rgba(255,255,255,.64)}
+html.mk-rx #player #optMenu .rs-chips{display:flex!important;flex-wrap:nowrap!important;gap:2px;padding:3px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09)}
+html.mk-rx #player #optMenu .rs-chips button{flex:1 1 auto!important;min-width:0;width:auto!important;margin:0!important;justify-content:center;border:0!important;border-radius:11px!important;background:transparent!important;color:rgba(255,255,255,.88)!important;padding:9px 4px!important;font:500 calc(14px * var(--ts,1))/1.15 var(--f-body)!important;font-variant-numeric:tabular-nums;white-space:normal;text-align:center;hyphens:auto;overflow:hidden;box-shadow:none}
+
+/* the full tabs: the same bars, softer headings */
+html.mk-rx #player #optMenu .px-pane h5{margin:16px 4px 8px!important;padding:0!important;font:500 calc(13px * var(--ts,1)) var(--f-body)!important;letter-spacing:0!important;text-transform:none!important;color:rgba(255,255,255,.64)!important}
+html.mk-rx #player #optMenu .px-pane>h5:first-child{margin-top:2px!important}
+html.mk-rx #player #optMenu .seg-row{display:flex!important;flex-wrap:wrap;gap:2px!important;margin:0 0 4px!important;padding:3px!important;border-radius:14px!important;background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.09)!important;overflow:visible!important}
+html.mk-rx #player #optMenu .seg-row>button{flex:1 0 auto;width:auto!important;min-width:44px;min-height:0!important;margin:0!important;justify-content:center;border:0!important;border-radius:11px!important;background:transparent!important;color:rgba(255,255,255,.88)!important;padding:9px 10px!important;font:500 calc(14px * var(--ts,1)) var(--f-body)!important;white-space:nowrap;box-shadow:none}
+html.mk-rx #player #optMenu .seg-row>button+button{border-left:0!important}
+html.mk-rx #player #optMenu .seg-row>.tl-k{flex:1 0 100%;display:block;padding:4px 8px 2px;font:500 calc(12px * var(--ts,1)) var(--f-body);color:rgba(255,255,255,.55);background:none}
+html.mk-rx #player #optMenu .rs-chips button.on,html.mk-rx #player #optMenu .seg-row>button.on{background:rgba(var(--pc-acc-rgb,216,194,154),.24)!important;color:#fff!important;box-shadow:inset 0 0 0 1px rgba(var(--pc-acc-rgb,216,194,154),.78)!important}
+html.mk-rx #player #optMenu .px-pane>button,html.mk-rx #player #optMenu .px-pane section>button,html.mk-rx #player #optMenu .mk-td-go{border-radius:14px!important}
+html.mk-rx #player #optMenu input[type=range],html.mk-rx #player #subMenu input[type=range]{accent-color:var(--pc-acc,#d8c29a)}
+@media (hover:hover){html.mk-rx #player #optMenu .rs-chips button:not(.on):hover,html.mk-rx #player #optMenu .seg-row>button:not(.on):hover{background:rgba(255,255,255,.08)!important}}
+
+/* Colours tab */
+html.mk-rx #player #optMenu .pl-sec{margin:0 0 18px}
+html.mk-rx #player #optMenu .pl-h{display:flex;justify-content:space-between;margin:2px 4px 10px;font:500 calc(13px * var(--ts,1)) var(--f-body);color:rgba(255,255,255,.64)}
+html.mk-rx #player #optMenu .pl-sw{display:flex;justify-content:space-between;gap:6px;padding:5px 5px 2px}
+html.mk-rx #player #optMenu .pl-sw button{position:relative;flex:none;width:38px;height:38px;min-height:0;margin:0;padding:0!important;border:0!important;border-radius:50%!important;background:var(--c)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 4px 12px rgba(0,0,0,.3)!important}
+html.mk-rx #player #optMenu .pl-sw button.on::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid #fff}
+html.mk-rx #player #optMenu .pl-sw button.on::before{content:"";position:absolute;left:50%;top:46%;width:7px;height:13px;border:solid #111;border-width:0 2.5px 2.5px 0;transform:translate(-50%,-50%) rotate(45deg)}
+html.mk-rx #player #optMenu .pl-prev{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:rgba(0,0,0,.24);border:1px solid rgba(255,255,255,.07);font:500 calc(13px * var(--ts,1)) var(--f-body);color:rgba(255,255,255,.74)}
+html.mk-rx #player #optMenu .pl-prev i{position:relative;flex:1;height:4px;border-radius:4px;background:rgba(255,255,255,.25)}
+html.mk-rx #player #optMenu .pl-prev i::before{content:"";position:absolute;left:0;top:0;bottom:0;width:60%;border-radius:4px;background:var(--pc-acc,#d8c29a)}
+html.mk-rx #player #optMenu .pl-prev i::after{content:"";position:absolute;left:60%;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--pc-acc,#d8c29a)}
+html.mk-rx #player #optMenu .pl-note{margin:12px 4px 2px;font:400 calc(12px * var(--ts,1))/1.45 var(--f-body);color:rgba(255,255,255,.52)}
+
+/* the player colour on the progress bar and the remote highlight */
+html.mk-rx #player .seek .cur{background:var(--pc-acc,#fff)!important}
+html.mk-rx #player .seek .knob{background:var(--pc-acc,#d8c29a)!important}
+html.tv.mk-rx #player .ibtn:focus,html.tv.mk-rx #player .ibtn.nav-focus,html.mk-rx #player .ibtn:focus-visible{box-shadow:0 0 0 3px rgba(var(--pc-acc-rgb,216,194,154),.92)!important}
+html.tv.mk-rx #player #optMenu button:focus,html.tv.mk-rx #player #optMenu button.nav-focus,html.tv.mk-rx #player #subMenu button:focus,html.tv.mk-rx #player #subMenu button.nav-focus{outline:none!important;box-shadow:0 0 0 3px rgba(var(--pc-acc-rgb,216,194,154),.95)!important}
+html.tv.mk-rx #player #optMenu .pl-sw button:focus,html.tv.mk-rx #player #optMenu .pl-sw button.nav-focus{transform:scale(1.12)}
+html.mk-rx:not(.tv) #player #optMenu button:focus-visible{outline:2px solid rgba(var(--pc-acc-rgb,216,194,154),.95)!important;outline-offset:1px}
+
+/* opening: a short rise and fade (transform/opacity only) */
+@keyframes pcIn{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
+html.mk-rx:not(.tv) #player #optMenu.menu:not([hidden]),html.mk-rx:not(.tv) #player #subMenu.menu:not([hidden]){animation:pcIn .22s cubic-bezier(.2,.8,.2,1)}
+@media (prefers-reduced-motion:reduce){html.mk-rx #player #optMenu.menu,html.mk-rx #player #subMenu.menu{animation:none!important}}
+</style>
+<script id="mk-297-glass-js">
+(()=>{const d=document,R=d.documentElement;
+/* 2.97 player colours: the viewer picks the player colour and the panel look; both live in CFG (pxAccent, pxGlass) */
+const ACC=[['champagne','#d8c29a','Champagne'],['pearl','#f2f0ea','Pearl'],['ice','#8fd3ff','Ice'],['rose','#ff8fb1','Rose'],['ember','#ff8a4c','Ember'],['jade','#5fe0a8','Jade'],['violet','#b69cff','Violet'],['gold','#ffd24a','Gold']];
+const GL=[['clear','See-through'],['frosted','Frosted glass'],['solid','Solid']];
+const cfg=(k,v)=>{try{return (typeof CFG!=='undefined'&&CFG[k])||v}catch{return v}};
+/* TVs, Low graphics and the lite build always get the solid panel */
+const forced=()=>{try{return (typeof IS_TV!=='undefined'&&IS_TV)||R.classList.contains('tv')||R.classList.contains('lite')||(typeof CFG!=='undefined'&&CFG.quality==='low')}catch{return false}};
+const acc=()=>ACC.find(a=>a[0]===cfg('pxAccent','champagne'))||ACC[0];
+const glass=()=>{const g=cfg('pxGlass','frosted');return forced()?'solid':GL.some(x=>x[0]===g)?g:'frosted'};
+function apply(){const h=acc()[1],n=parseInt(h.slice(1),16);R.style.setProperty('--pc-acc',h);R.style.setProperty('--pc-acc-rgb',`${n>>16&255},${n>>8&255},${n&255}`);R.dataset.pcglass=glass()}
+function set(k,v){if(typeof setCfg==='function')setCfg(k,v);else if(typeof CFG!=='undefined')CFG[k]=v;apply()}
+function html(){const a=acc()[0],g=glass();
+ return `<div class="pl-sec"><div class="pl-h"><span>Highlight colour</span></div><div class="pl-sw" role="radiogroup">`+
+  ACC.map(([k,h,l])=>`<button type="button" role="radio" data-pcacc="${k}" aria-label="${l}" title="${l}" aria-checked="${k===a}" class="${k===a?'on':''}" style="--c:${h}"></button>`).join('')+`</div></div>`+
+  (forced()?'':`<div class="pl-sec"><div class="pl-h"><span>Panel look</span></div><div class="rs-chips">${GL.map(([k,l])=>`<button type="button" data-pcglass="${k}" class="${k===g?'on':''}">${l}</button>`).join('')}</div></div>`)+
+  `<div class="pl-prev"><span>Preview</span><i></i><span class="tnum">1:36:12</span></div><p class="pl-note">Colours the progress bar, the buttons you pick and the remote highlight.</p>`}
+function mark(p){p.querySelectorAll('[data-pcacc]').forEach(x=>{const on=x.dataset.pcacc===acc()[0];x.classList.toggle('on',on);x.setAttribute('aria-checked',String(on))});
+ p.querySelectorAll('[data-pcglass]').forEach(x=>x.classList.toggle('on',x.dataset.pcglass===glass()))}
+function fill(p){if(!p)return;p.innerHTML=html();
+ p.onclick=e=>{const b=e.target.closest('button');if(!b||!p.contains(b))return;
+  if(b.dataset.pcacc)set('pxAccent',b.dataset.pcacc);else if(b.dataset.pcglass)set('pxGlass',b.dataset.pcglass);else return;
+  e.stopPropagation();mark(p)}}
+/* a tab row wider than the panel (long words, small phones) scrolls the chosen tab into view */
+function seen(){const m=d.getElementById('optMenu');if(!m)return;m.querySelectorAll('.px-tabs').forEach(t=>{if(t.scrollWidth<=t.clientWidth+1||!t.getClientRects().length)return;const on=t.querySelector('button.on');if(!on)return;const l=on.offsetLeft-t.offsetLeft,r=l+on.offsetWidth;if(l<t.scrollLeft)t.scrollLeft=l-8;else if(r>t.scrollLeft+t.clientWidth)t.scrollLeft=r-t.clientWidth+8})}
+function hook(){const m=d.getElementById('optMenu');if(!m)return;m.addEventListener('click',e=>{if(e.target.closest('.px-tabs'))setTimeout(seen,0)},true);new MutationObserver(()=>{if(!m.hidden)requestAnimationFrame(seen)}).observe(m,{childList:true,attributes:true,attributeFilter:['hidden']})}
+d.readyState==='loading'?d.addEventListener('DOMContentLoaded',hook):hook();
+window.PlayerLook={apply,fill};
+apply();
+try{CFG_HOOKS.push(k=>{if(k==='pxAccent'||k==='pxGlass'||k==='quality')apply()})}catch{}
 })();
 </script>
 <style id="mk-293-kids-ask">
@@ -61685,7 +61845,9 @@ body.touch-ui #player:has(#pLoad:not([hidden]):not(.soft)) .hud-mid{visibility:h
           if (!s || s._mkPageAsked || p == null || MEDIA.test(p)) return f0(msg);
           s._mkPageAsked = true;
           AddonPage.html(s.url).then((h) => {
-            if (!h || P.stream !== s || $('#player').hidden) return f0(msg);
+            // the person moved on (another source, or closed the player): this old error belongs to nobody now
+            if (P.stream !== s || MkNative.cur !== s || $('#player').hidden) return undefined;
+            if (!h) return f0(msg);
             AddonPage.log(s, 'web page'); AddonPage.inPlayer(s, true);
             return undefined;
           });

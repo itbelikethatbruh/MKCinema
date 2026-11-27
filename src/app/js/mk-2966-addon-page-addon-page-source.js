@@ -105,7 +105,9 @@
           if (!s || s._mkPageAsked || p == null || MEDIA.test(p)) return f0(msg);
           s._mkPageAsked = true;
           AddonPage.html(s.url).then((h) => {
-            if (!h || P.stream !== s || $('#player').hidden) return f0(msg);
+            // the person moved on (another source, or closed the player): this old error belongs to nobody now
+            if (P.stream !== s || MkNative.cur !== s || $('#player').hidden) return undefined;
+            if (!h) return f0(msg);
             AddonPage.log(s, 'web page'); AddonPage.inPlayer(s, true);
             return undefined;
           });

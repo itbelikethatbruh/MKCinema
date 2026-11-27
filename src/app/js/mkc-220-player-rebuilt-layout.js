@@ -65,7 +65,7 @@ const PxLayout = {
 /* ---- Options menu as tabs ---- */
 const PxMenu = {
   tab: 'play',
-  TABS: [['play', 'Playback'], ['pic', 'Picture'], ['audio', 'Sound'], ['more', 'More']],
+  TABS: [['play', 'Playback'], ['pic', 'Picture'], ['audio', 'Sound'], ['more', 'More'], ['colours', 'Colours']],
   where(h) {
     const k = String(h || '').trim().toLowerCase();
     if (/^(speed|quality|tools|subtitle timing)/.test(k)) return 'play';
@@ -75,6 +75,7 @@ const PxMenu = {
   },
   open(tab) {
     const m = $('#optMenu'); if (tab) this.tab = tab;
+    if (tab && window.RxSimple) RxSimple.full(); // 2.97: a named tab opens that tab, not the Quick card
     $('#subMenu').hidden = true; $('#dspPop').hidden = true; closeDrawers();
     if (!m.hidden && tab && m.dataset.tab === tab) { m.hidden = true; return; }
     m.hidden = false; renderOptMenu(); wakeHud(true);
@@ -96,7 +97,7 @@ const PxMenu = {
       if (!seg) { seg = { tab: 'more', r: 50, els: [] }; segs.push(seg); }
       seg.els.push(el);
     });
-    const groups = { play: [], pic: [], audio: [], more: [] };
+    const groups = { play: [], pic: [], audio: [], more: [], colours: [] };
     segs.map((x, i) => ({ ...x, i })).sort((a, b) => a.r - b.r || a.i - b.i).forEach((x) => groups[x.tab].push(...x.els));
     // extra speeds next to the usual ones
     const sr = $('[data-speed]', m) && $('[data-speed]', m).parentElement;
@@ -108,10 +109,12 @@ const PxMenu = {
     const amb = $('[data-amb]', m); if (amb && !PX_TV && !PX_TOUCH()) { amb.innerHTML = `<i data-lucide="monitor"></i>Theatre view · ${PxLayout.theatre() ? 'on' : 'off'}`; amb.onclick = () => PxLayout.setTheatre(!PxLayout.theatre()); }
     m.innerHTML = '';
     const bar = document.createElement('div'); bar.className = 'px-tabs'; bar.setAttribute('role', 'tablist');
-    this.TABS.forEach(([k, l]) => { if (!groups[k].length) return; const b = document.createElement('button'); b.type = 'button'; b.dataset.pxtab = k; b.setAttribute('role', 'tab'); b.textContent = l; b.className = k === this.tab ? 'on' : ''; b.setAttribute('aria-selected', String(k === this.tab)); bar.appendChild(b); });
-    if (!groups[this.tab].length) this.tab = 'play';
+    this.TABS.forEach(([k, l]) => { if (!groups[k].length && !(k === 'colours' && window.PlayerLook)) return; const b = document.createElement('button'); b.type = 'button'; b.dataset.pxtab = k; b.setAttribute('role', 'tab'); b.textContent = l; b.className = k === this.tab ? 'on' : ''; b.setAttribute('aria-selected', String(k === this.tab)); bar.appendChild(b); });
+    if (!groups[this.tab].length && !(this.tab === 'colours' && window.PlayerLook)) this.tab = 'play';
     m.appendChild(bar);
     this.TABS.forEach(([k]) => { const p = document.createElement('div'); p.className = 'px-pane'; p.dataset.pane = k; p.hidden = k !== this.tab; groups[k].forEach((el) => p.appendChild(el)); m.appendChild(p); });
+    if (window.PlayerLook) PlayerLook.fill($('.px-pane[data-pane="colours"]', m)); // 2.97 Colours tab
+    if (window.RxSimple) RxSimple.tab(bar); // 2.97 Quick tab in front
     m.dataset.tab = this.tab;
     $$('[data-pxtab]', bar).forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); this.tab = b.dataset.pxtab; this.show(); }));
     PxAudio.bind(m); PxPicture.bind(m); PxMore.bind(m);

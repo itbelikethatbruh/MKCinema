@@ -24,6 +24,7 @@ const PRESET_ORDER = ['high', 'balanced', 'low'];
 
 const CFG_DEFAULTS = {
   // appearance
+  pxAccent: 'champagne', pxGlass: 'frosted', // 2.97 player colour + panel look
   look: 'noir', cardInfo: 'hover', uiScale: 100, reduceMotion: false, contrast: 'high',
   cardSize: 'm', banner: 'full', lsMenu: null,   // 2.77 Layout Studio
   ambient: null, eggs: null,   // 2.82 Ambient Studio recipe (photos stay on each device) and secrets found

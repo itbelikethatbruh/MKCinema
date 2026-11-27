@@ -23,6 +23,8 @@ const isSecretKey = (k) => {
    the sealed box). The key never leaves the device except inside the already sealed "Sign in with your phone" hand-off,
    or sealed to a new device's one-time key by Link a device (DevLink). */
 const SYNC_V = 4, SYNC_V_OLD = 3, SYNC_AV_MAX = 40000;
+/* 2.96.8 own size: screen sizes belong to the device, never synced */
+const DEVICE_CFG = new Set(['uiScale', 'textScale']);
 const SYNC_SECTIONS = ['cfg', 'watchlist', 'progress', 'watched', 'addons', 'disabled', 'studio', 'taste', 'homeLayout', 'homeArrange', 'avatar', 'lists', 'channels', 'seats', 'secrets'];
 const SYNC_ITEMS = ['watchlist', 'progress', 'watched'];
 const SYNC_NEWER = 'A newer MKCinema saved your account. Reload to update, then sync again.';
@@ -453,7 +455,7 @@ const Account = {
     if (!was || this.applying) return;
     const m = this.m(), t = Date.now(); let hit = false;
     new Set([...Object.keys(was), ...Object.keys(cur)]).forEach((k) => {
-      if (k === 'cfgRev' || JSON.stringify(was[k]) === JSON.stringify(cur[k])) return;
+      if (k === 'cfgRev' || DEVICE_CFG.has(k) || JSON.stringify(was[k]) === JSON.stringify(cur[k])) return;
       m.cf[k] = Math.max(SyncClock.now(), (m.rcf[k] || 0) + 1); hit = true;
     });
     if (!hit) return;
@@ -471,7 +473,7 @@ const Account = {
   dirty() {
     const m = this.m();
     const out = SYNC_SECTIONS.filter((s) => s !== 'cfg' && (m.at[s] || 0) > (m.rat[s] || 0) && (s !== 'secrets' || (CFG.syncKeys !== false && this.canWriteSecrets())));
-    if (Object.keys(m.cf).some((k) => m.cf[k] > (m.rcf[k] || 0) && !(typeof CFG[k] === 'string' && CFG[k].length > SYNC_AV_MAX))) out.push('cfg');
+    if (Object.keys(m.cf).some((k) => !DEVICE_CFG.has(k) && m.cf[k] > (m.rcf[k] || 0) && !(typeof CFG[k] === 'string' && CFG[k].length > SYNC_AV_MAX))) out.push('cfg');
     return out;
   },
   schedule(fast) {
@@ -606,7 +608,7 @@ const Account = {
     if (R.cfg && typeof R.cfg === 'object') {
       const rcf = sy ? sy.cf || {} : null, win = {};
       Object.keys(R.cfg).forEach((k) => {
-        if (k === 'cfgRev') return;
+        if (k === 'cfgRev' || DEVICE_CFG.has(k)) return;
         const rt = rcf ? +rcf[k] || 0 : rowT;
         if (rt > (m.cf[k] || 0)) { if (JSON.stringify(R.cfg[k]) !== JSON.stringify(CFG[k])) win[k] = R.cfg[k]; m.cf[k] = rt; }
         m.rcf[k] = rt;
@@ -710,7 +712,7 @@ const Account = {
     SYNC_SECTIONS.forEach((s) => { at[s] = Math.max(m.at[s] || 0, m.rat[s] || 0) || 1; });
     const keep = (s) => { at[s] = m.rat[s] || 1; };
     // settings: very large values (pictures) stay on the device
-    out.cfg = { ...CFG }; Object.keys(out.cfg).forEach((k) => { if (typeof out.cfg[k] === 'string' && out.cfg[k].length > SYNC_AV_MAX) delete out.cfg[k]; else cf[k] = Math.max(m.cf[k] || 0, m.rcf[k] || 0) || 1; });
+    out.cfg = { ...CFG }; DEVICE_CFG.forEach((k) => delete out.cfg[k]); Object.keys(out.cfg).forEach((k) => { if (typeof out.cfg[k] === 'string' && out.cfg[k].length > SYNC_AV_MAX) delete out.cfg[k]; else cf[k] = Math.max(m.cf[k] || 0, m.rcf[k] || 0) || 1; });
     // keys: sealed on this device; a device that cannot seal (locked, or key sync off) leaves the account's copy as it is
     const plain = JSON.stringify({ vault: Store.get('vault', {}), keys: Store.get('keys', {}) }), sc = this.secCache;
     if (CFG.syncKeys !== false && this.canWriteSecrets() && sc && sc.uid === uid && sc.plain === plain && sc.salt === this.keyRec.salt) out.secrets = sc.box;
