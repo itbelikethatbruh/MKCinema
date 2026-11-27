@@ -8,6 +8,9 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.97.2', date: '2026-11-27', items: [
+    ['better', 'Accounts on older TV sticks', 'Sign-in and sync now work on older TV sticks.'],
+  ] },
   { v: '2.97.0', date: '2026-11-27', items: [
     ['new', 'A new look for settings while you watch', 'One clean panel with Quick, Playback, Picture, Sound, More and a new Colours tab. Pick your highlight colour for the progress bar and buttons, and choose see-through, frosted or solid.'],
     ['better', 'Sizes stay on each device', 'Interface size and Text size now stay on the device where you set them.'],
