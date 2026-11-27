@@ -2254,11 +2254,11 @@ html.tv .br-grid .uni-card.br-tile{width:auto;min-width:0}
 @media (max-width:560px){#updBar .inrow .btn{flex:1 1 auto;justify-content:center}}
 </style>
 <style id="mk-2915-tv-player">
-#player .mk-nv-sub{position:absolute;left:6%;right:6%;bottom:7vh;z-index:3;text-align:center;white-space:pre-line;color:var(--sub-color,#fff);font-family:var(--sub-font,inherit);font-weight:var(--sub-weight,600);line-height:1.32;text-shadow:var(--sub-shadow,0 0 4px #000,0 2px 6px #000,0 0 2px #000);pointer-events:none;transition:transform .25s ease}
+#player .mk-nv-sub{position:absolute;left:6%;right:6%;bottom:7vh;z-index:2;text-align:center;white-space:pre-line;color:var(--sub-color,#fff);font-family:var(--sub-font,inherit);font-weight:var(--sub-weight,600);line-height:1.32;text-shadow:var(--sub-shadow,0 0 4px #000,0 2px 6px #000,0 0 2px #000);pointer-events:none;transition:transform .25s ease}
 #player .mk-nv-sub.higher{bottom:17vh}
 #player .mk-nv-sub>span{background:var(--sub-bg,transparent);display:inline-block;max-width:100%;box-sizing:content-box;vertical-align:top;text-wrap:balance;line-height:1.3;padding:.14em .55em .16em;border-radius:.5em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 #player .mk-nv-sub.top{bottom:auto;top:7vh}
-#player .mk-nv-sub.lift:not(.top){transform:translateY(-17vh)}
+#player .mk-nv-sub.lift:not(.top){transform:none}
 </style>
 <style id="mk-2963-hero-art-css">/* 2.96.3 hero art: a banner title still being checked stays unseen (opacity only) */
 #hero.mk-ha-hold .hero-body>*,#hero.mk-ha-hold #heroBg>img:last-child{opacity:0!important}
@@ -12165,7 +12165,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.96.2';
+const APP_VERSION = '2.96.3';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -17575,13 +17575,15 @@ const SimpleHome = {
     const rows = $('#homeRows'); if (!rows) return;
     const seriesFirst = /^series/.test((Layout.get() || {}).focus || '');
     const kids = [...rows.children], idx = new Map(kids.map((el, i) => [el, i]));
-    const want = kids.slice().sort((a, b) => (this.rank(a, seriesFirst) - this.rank(b, seriesFirst)) || (idx.get(a) - idx.get(b)));
+    let want = kids.slice().sort((a, b) => (this.rank(a, seriesFirst) - this.rank(b, seriesFirst)) || (idx.get(a) - idx.get(b)));
+    const fr = IS_TV && document.activeElement && kids.find((el) => el.contains(document.activeElement)); /* 2.96.4 tv rows stay */
+    if (fr) { const fi = kids.indexOf(fr), below = new Set(kids.slice(fi + 1)); want = [...kids.slice(0, fi + 1), ...want.filter((el) => below.has(el))]; }
     if (want.every((el, i) => el === kids[i])) return;
     // keep the focused element's place on TV: moving nodes does not drop focus, but remember it just in case
     const a = document.activeElement; /* 2.96.3 tv steady rows */
     const anc = a && rows.contains(a) ? a : (scrollY > 0 ? kids.find((el) => el.getBoundingClientRect().bottom > 0) : null);
     const top0 = anc ? anc.getBoundingClientRect().top : 0;
-    want.forEach((el) => rows.appendChild(el));
+    const first = want.findIndex((el, i) => el !== kids[i]); want.slice(first).forEach((el) => rows.appendChild(el));
     if (a && a.isConnected && document.activeElement !== a) a.focus({ preventScroll: true });
     if (anc && anc.isConnected) { const d = anc.getBoundingClientRect().top - top0; if (Math.abs(d) > 1) window.scrollTo({ top: scrollY + d, behavior: 'instant' }); }
   },
@@ -25340,6 +25342,11 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.96.3', date: '2026-11-27', items: [
+    ['better', 'Home holds still on TVs', 'TVs: Home no longer moves rows out from under you while it finishes loading.'],
+    ['better', 'Steady subtitles', 'Subtitles now stay in one place when the controls appear, and open menus always sit above them.'],
+    ['better', 'Back on the film\'s page', 'When a movie ends, you\'re back on its page.'],
+  ] },
   { v: '2.96.2', date: '2026-11-27', items: [
     ['better', 'A real picture on the banner', 'The featured banner only shows titles with a real picture.'],
     ['better', 'The right film, by its current name', 'Titles show their current name, and a source for another film is never offered.'],
@@ -28629,7 +28636,7 @@ body.pxup-on #player video::cue{color:transparent;background:transparent;text-sh
 #pxUpSub > div{transition:transform .25s ease}
 #pxUpSub span{display:inline-block;max-width:100%;box-sizing:content-box;vertical-align:top;text-wrap:balance;font-size:var(--sub-size);line-height:1.3;color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.14em .55em .16em;border-radius:.5em;-webkit-box-decoration-break:clone;box-decoration-break:clone;white-space:pre-line}
 #pxUpSub:not(.on){visibility:hidden}
-#player:has(#hud:not(.idle)) #pxUpSub:not([data-pos="top"]) > div{transform:translateY(-96px)}
+
 html.pip-mode #pxUp,html.pip-mode #pxUpSub{display:none!important}
 .menu .pxup-note{margin:0;padding:0 12px 8px;font-size:calc(12px * var(--ts,1));line-height:1.45;color:var(--mute)}
 </style>
@@ -48448,12 +48455,12 @@ const MkNative = {
   /* 2.91.5: TVs (Android 1.17.7+): the decoder draws straight onto the screen, so the subtitle words come as text */
   stext(t) {
     let el = this._sub;
-    if (!el || !el.isConnected) { el = this._sub = document.createElement('div'); el.className = 'mk-nv-sub'; el.setAttribute('aria-live', 'off'); $('#player').appendChild(el); }
+    if (!el || !el.isConnected) { el = this._sub = document.createElement('div'); el.className = 'mk-nv-sub'; el.setAttribute('aria-live', 'off'); /* 2.96.3 steady subtitles */ const st = $('#stage'), hud = st && $('#hud', st); if (hud && hud.parentNode === st) st.insertBefore(el, hud); else (st || $('#player')).appendChild(el); }
     if (t !== undefined) {
       const txt = typeof t === 'string' ? (typeof SubText !== 'undefined' ? SubText.unmangle(t) : t).replace(/\{\\[^}]*\}/g, '').replace(/<[^>]+>/g, '').replace(/\\N/g, '\n').trim() : '';
       if (txt !== this._subT) { this._subT = txt; el.textContent = ''; if (txt) { const sp = document.createElement('span'); sp.textContent = txt; el.appendChild(sp); } el.hidden = !txt; this.subFit(el); }
     }
-    const lift = !$('#hud').classList.contains('idle');
+    const lift = false;
     if (lift !== this._subLift) { this._subLift = lift; el.classList.toggle('lift', lift); }
   },
   subFit(el) {
@@ -58541,7 +58548,7 @@ html.mk-rx #player #optMenu .seg-row button{border-radius:999px}
 html.mk-rx #player #optMenu .seg-row button.on{background:var(--rx-ink);color:#0b0b0b}
 /* subtitles step above the taller controls */
 @media not ((max-width:760px) and (orientation:portrait)){html.mk-rx #player:has(#hud:not(.idle)) #video::-webkit-media-text-track-container{transform:translateY(calc(-1 * var(--rx-lift,96px)))!important}}
-html.mk-rx #player .mk-nv-sub.lift:not(.top){transform:translateY(-24vh)}
+html.mk-rx #player .mk-nv-sub.lift:not(.top){transform:none}
 /* picture-in-picture: only the picture and the subtitle words */
 html.pip-mode #player .hud,html.pip-mode #player .hud-mid,html.pip-mode #player .menu,html.pip-mode #player .drawer,html.pip-mode #player .pp-ui,html.pip-mode #player .skip-btn,html.pip-mode #player .seek-fx,html.pip-mode #player .unlock,html.pip-mode #player .reacts,html.pip-mode #player .upnext,html.pip-mode #mkClock,html.pip-mode body>*:not(#player):not(script):not(style){display:none!important}
 html.pip-mode #player .mk-nv-sub{font-size:max(11px,7vh)!important;bottom:4vh;left:3%;right:3%;transform:none!important}
@@ -59784,6 +59791,7 @@ html.tv .sbe-chips button.nav-focus,html.tv .sbe-more.nav-focus{outline:3px soli
     lift(p) {
       const el = this.el; if (!el) return;
       let up = 0;
+      /* 2.96.3 steady subtitles */ if (el.style.transform) el.style.transform = ''; return;
       const hud = document.getElementById('hud');
       if (posNow() !== 'top' && hud && !hud.classList.contains('idle') && !el.hidden) {
         // Stay above the title and controls: the redesigned player marks its title block #rxInfo; older layouts .hud-bot.
@@ -61367,7 +61375,14 @@ const HeroArt = {
       if (tok !== this.tok) return; h.classList.remove('mk-ha-hold');
       const hb = $('#hero .hero-body'); if (hb) { hb.classList.remove('swap'); requestAnimationFrame(() => hb.classList.add('swap')); }
     };
-    const t = setTimeout(rel, 2500);
+    // still unknown after 2.5 s: move on to a title already known to be fine, and only show this one when none is
+    const late = () => {
+      if (tok !== this.tok) return;
+      const n = S.hero.length;
+      for (let k = 1; k < n; k++) { const j = (S.heroIdx + k) % n; if (this.allowed(this.state(S.hero[j]))) { showHero(j, 1); return; } }
+      rel();
+    };
+    const t = setTimeout(late, 2500);
     this.check(m).then((st) => {
       if (tok !== this.tok) return; clearTimeout(t);
       if (S.hero[S.heroIdx] === m && st !== undefined && !this.allowed(st)) { this.drop(m); if (tok === this.tok) rel(); } else rel();
@@ -61416,7 +61431,7 @@ HeroArt.init();
 </script>
 <script id="mk-2964-right-film">/* 2.96.4 right film: a title always carries its real name, and a movie source from another film never plays */
 const RightFilm = {
-  KEY: 'nameFix', TTL: 7 * 864e5, mem: null, wait: new Map(), skipped: 0,
+  KEY: 'nameFix2', TTL: 7 * 864e5, mem: null, wait: new Map(), skipped: 0,
   STOP: new Set(['the', 'a', 'an', 'of', 'and', 'in', 'on', 'to', 'for', 'la', 'le', 'el', 'les', 'der', 'die', 'das']),
   tt(id) { const i = String(id || '').split(':')[0]; return /^tt\d{5,10}$/.test(i) ? i : null; },
   y4(v) { const m = String(v || '').match(/(18|19|20)\d\d/); return m ? Number(m[0]) : 0; },
@@ -61435,19 +61450,21 @@ const RightFilm = {
     return this.mem;
   },
   save() { const m = this.store(); while (m.size > 600) m.delete(m.keys().next().value); clearTimeout(this.saveT); this.saveT = setTimeout(() => Store.raw.set(this.KEY, Object.fromEntries(m)), 600); },
-  // TMDB's English title and year for an IMDb id: the viewer's own TMDB key, else MKCinema's lookup (no key in the app)
+  // TMDB's English title and year for an IMDb id: the viewer's own TMDB key, else MKCinema's lookup (no key in the app).
+  // NONE = TMDB answered and has no such title (kept); null = no answer this time (busy, offline, 429/503: asked again next open)
+  NONE: { n: '', o: '', y: 0 },
   async tmdb(tt, type) {
     if (TMDB.key()) {
       const f = await TMDB.find(tt); if (!f) return null;
       const x = type === 'series' ? (f.tv_results || [])[0] : (f.movie_results || [])[0];
-      return x ? { n: String(x.title || x.name || ''), o: String(x.original_title || x.original_name || ''), y: this.y4(x.release_date || x.first_air_date) } : null;
+      return x ? { n: String(x.title || x.name || ''), o: String(x.original_title || x.original_name || ''), y: this.y4(x.release_date || x.first_air_date) } : this.NONE;
     }
     const c = typeof Account !== 'undefined' && Account.config && Account.config() || {};
     if (!c.url) return null;
     const r = await netFetch(`${String(c.url).replace(/\/+$/, '')}/functions/v1/tmdb-person?a=title&tt=${tt}&lang=en-US`, { headers: { apikey: c.anonKey || '', accept: 'application/json' } }, 8e3);
     if (!r.ok) return null;
     const j = await r.json(), x = j && j.title;
-    if (!x || (type === 'series') !== (x.kind === 'tv')) return null;
+    if (!x || (type === 'series') !== (x.kind === 'tv')) return this.NONE;
     return { n: String(x.title || x.name || ''), o: '', y: this.y4(x.release_date || x.first_air_date) };
   },
   // TMDB's answer per IMDb id, looked up once and kept on the device (7 days): { t: name, o: original, y: year }
@@ -61455,7 +61472,8 @@ const RightFilm = {
     const hit = this.store().get(tt); if (hit) return Promise.resolve(hit);
     if (this.wait.has(tt)) return this.wait.get(tt);
     const p = this.tmdb(tt, type).then((t) => {
-      const v = { t: t && t.n || '', o: t && t.o || '', y: t && t.y || 0, at: Date.now() };
+      if (!t) return null;
+      const v = { t: t.n || '', o: t.o || '', y: t.y || 0, at: Date.now() };
       this.store().set(tt, v); this.save(); return v;
     }).catch(() => null).finally(() => this.wait.delete(tt));
     this.wait.set(tt, p); return p;
@@ -61543,6 +61561,173 @@ const RightFilm = {
   },
 };
 try { RightFilm.init(); } catch (e) { try { console.warn('[right-film]', e && e.message); } catch {} }
+</script>
+<style id="mk-2966-addon-page-css">/* 2.96.6 addon page message */
+.mk-apg-q{margin:0 0 18px;padding:12px 14px;border-left:3px solid var(--gold,#c9a45c);border-radius:10px;background:rgba(255,255,255,.04);text-align:left;display:grid;gap:4px;font-size:calc(13.5px * var(--ts,1));line-height:1.45;color:var(--text,#eee);overflow-wrap:anywhere}
+.mk-apg-q b{font-weight:600;color:var(--mute,#9a9aa0);font-size:.92em}
+.mk-pnote{flex-wrap:wrap;align-items:center;gap:8px}
+.mk-pnote>span{flex:1 1 220px}
+/* 2.96.6 phone held sideways: the loading title stays two lines and never sits under the play buttons */
+.p-load .pl-art b{font-size:min(calc(clamp(22px,4vw,40px) * var(--ts,1)),9vh);line-height:1.15;max-width:100%;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+body.touch-ui #player:has(#pLoad:not([hidden]):not(.soft)) .hud-mid{visibility:hidden}
+/* a player message on a short screen: below the top buttons, scrolls if it must, and the title and 0:00 bar step aside */
+@media (max-height:600px){
+  .p-msg{padding:76px 16px 12px;align-items:start}
+  .p-msg .box{max-height:100%;overflow:auto;padding:18px 20px}
+  .p-msg p{margin-bottom:12px}
+  #player:has(#pMsg:not([hidden])) #hud .hud-bot{opacity:0;pointer-events:none}
+}
+</style>
+<script id="mk-2966-addon-page">/* 2.96.6 addon page: a source that is really a web page (an addon's "please reinstall / set me up again" notice, whose link
+   is its settings page) is shown as the addon's message with a button to that page. It is never handed to a player, so
+   the MKCinema Player is not blamed for it and the web player never sits at 0:00 on it. */
+(() => {
+  if (typeof engine === 'undefined' || typeof playStream !== 'function') return;
+  const MEDIA = /\.(m3u8?|mpd|ts|m2ts|mts|mp4|m4v|m4s|mkv|webm|mov|avi|wmv|flv|mpe?g|ogv|ogg|oga|mp3|aac|ac3|flac|m4a|opus|wav|ism)$/i;
+  // a Stremio addon's own pages: never a video
+  const PAGE = /\/(configure|install|login|signin|sign-in|signup|sign-up|register|subscribe|upgrade|donate|account)\/?$/i;
+  const WORDS = /\bre-?install\b|\breconfigure\b|\bnew addon link\b|\bconfigure\b[^\n]{0,40}\baddon\b|\baddon\b[^\n]{0,40}\b(configure|re-?install|new link)\b/i;
+  const txt = (v, n) => String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, n);
+  const host = (u) => { try { return new URL(u).host; } catch (e) { return ''; } };
+  const pathOf = (u) => { try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.pathname : null; } catch (e) { return null; } };
+  const AddonPage = {
+    notes: new Map(),
+    is(s) {
+      if (!s || typeof s !== 'object' || typeof s.url !== 'string' || s.infoHash || s.ytId || s._local || s._handoff || s.externalUrl || s._addon === 'Channels') return false;
+      const p = pathOf(s.url);
+      if (p == null || MEDIA.test(p)) return false;
+      if (PAGE.test(p)) return true;
+      return WORDS.test([s.name, s.title, s.description].filter((x) => typeof x === 'string').join(' '));
+    },
+    addon(s) { const a = (engine.addons || []).find((x) => x && x.manifest && x.manifest.id === s._addonId); return (a && a.manifest && a.manifest.name) || s._addon || ''; },
+    note(s) { const addon = txt(this.addon(s), 40), name = txt(s.name, 60); return { addon, title: name && name.toLowerCase() !== addon.toLowerCase() ? name : '', text: txt(s.title || s.description, 220), url: typeof safeHref === 'function' ? safeHref(s.url) : s.url }; },
+    log(s, why) { try { MKLog.add('play', `addon page instead of a video (${why}): ${host(s.url)}`); } catch (e) { /* no log */ } },
+    quote(n) { return n.title || n.text ? `<blockquote class="mk-apg-q">${n.addon ? `<b>${esc(n.addon)}</b>` : ''}${n.title ? `<span>${esc(n.title)}</span>` : ''}${n.text ? `<span>${esc(n.text)}</span>` : ''}</blockquote>` : ''; },
+    link(n, prime) { return n.url ? `<a class="btn ${prime ? 'btn-prime' : 'btn-ghost'}" href="${esc(n.url)}" target="_blank" rel="noopener"><i data-lucide="external-link"></i>Open the addon’s page</a>` : ''; },
+    others(ctx, s) { try { return visibleStreams((ctx && ctx.streams) || []).some((x) => x && x !== s && !AddonPage.is(x) && (x.url || x.infoHash || x.ytId)); } catch (e) { return false; } },
+    TITLE: 'The addon sent a message, not a video',
+    BODY: 'This source is a web page from the addon, not a video. Usually the addon needs to be set up again on its own page.',
+    PAGE_TITLE: 'This source is a web page, not a video',
+    PAGE_BODY: 'The addon gave a link to a web page instead of a video. Open the page to see what the addon says, or pick another source.',
+    // the player is already open: the same box as its other messages
+    inPlayer(s, page) {
+      const n = this.note(s);
+      try { if (window.MkNative && MkNative.active) MkNative.stop(); } catch (e) { /* ignore */ }
+      try { video.pause(); video.removeAttribute('src'); video.load(); } catch (e) { /* ignore */ }
+      try { Loader.hold = false; Loader.hide(); } catch (e) { /* ignore */ }
+      showMsg(page ? this.PAGE_TITLE : this.TITLE, esc(page ? this.PAGE_BODY : this.BODY), `${this.link(n, true)}${this.others(P.ctx, s) ? '<button class="btn btn-ghost" type="button" data-act="sources"><i data-lucide="layers"></i>Other sources</button>' : ''}`);
+      const p = $('#pMsg .box p'); if (p) p.insertAdjacentHTML('afterend', this.quote(n));
+    },
+    // not playing yet: a sheet, and the player never opens
+    sheet(s) {
+      const n = this.note(s);
+      X8.layer('addonPage', { label: 'Message from the addon', icon: 'message-square-text', eyebrow: n.addon || 'Addon' });
+      const b = X8.body('addonPage');
+      b.innerHTML = `<h3 class="x8-h">${esc(this.TITLE)}</h3><p class="sub">${esc(this.BODY)}</p>${this.quote(n)}<div class="actions x8-wrap">${this.link(n, true)}<button class="btn btn-ghost" type="button" data-apg="close"><i data-lucide="x"></i>Close</button></div>`;
+      $$('[data-apg="close"]', b).forEach((x) => x.addEventListener('click', () => X8.close('addonPage')));
+      icons(); X8.open('addonPage');
+    },
+    // only the answer's type is read (the body is dropped); a site that doesn't allow the question counts as "not a page"
+    async html(u) {
+      const c = typeof AbortController === 'function' ? new AbortController() : null;
+      const t = setTimeout(() => { try { if (c) c.abort(); } catch (e) { /* ignore */ } }, 2500);
+      try {
+        const r = await fetch(u, { method: 'GET', credentials: 'omit', cache: 'no-store', signal: c ? c.signal : undefined });
+        const ct = String(r.headers.get('content-type') || '');
+        try { if (c) c.abort(); } catch (e) { /* ignore */ }
+        return /text\/html|application\/xhtml/i.test(ct);
+      } catch (e) { return false; } finally { clearTimeout(t); }
+    },
+    init() {
+      // 1. the source list: the notice becomes the addon's note above the sources (with its link), not a source to play
+      const fs = engine.fetchStreams.bind(engine);
+      engine.fetchStreams = async function (type, id) {
+        const r = await fs.apply(this, arguments);
+        try {
+          const k = `${type}/${id}`, pages = (r && Array.isArray(r.streams) ? r.streams : []).filter((s) => AddonPage.is(s));
+          // with real sources beside it the notice leaves the list; alone, it stays so Play shows the message (never a player)
+          if (pages.length) { if (pages.length < r.streams.length) r.streams = r.streams.filter((s) => !pages.includes(s)); AddonPage.notes.set(k, pages.slice(0, 2).map((s) => AddonPage.note(s))); pages.forEach((s) => AddonPage.log(s, 'list')); }
+          else AddonPage.notes.delete(k);
+        } catch (e) { /* the plain list still works */ }
+        return r;
+      };
+      if (typeof AddonStatusRows !== 'undefined' && typeof AddonStatusRows.render === 'function') {
+        const rr = AddonStatusRows.render.bind(AddonStatusRows);
+        AddonStatusRows.render = function () {
+          const out = rr.apply(this, arguments);
+          try {
+            const box = $('#dStreams'), tgt = typeof detailStreamTarget === 'function' && detailStreamTarget();
+            const list = box && tgt && AddonPage.notes.get(`${tgt.type}/${tgt.id}`), at = box && $('.chips', box);
+            if (list && list.length && at && !$('.mk-pnote', box)) {
+              at.insertAdjacentHTML('beforebegin', list.map((n) => `<div class="status-line mk-snote mk-snote-warn mk-pnote"><i data-lucide="alert-triangle"></i><span>${n.addon ? `<b>${esc(n.addon)}</b> ` : ''}${n.title ? `${esc(n.title)}: ` : ''}${esc(n.text)}</span>${n.url ? `<a class="btn btn-ghost btn-sm" href="${esc(n.url)}" target="_blank" rel="noopener"><i data-lucide="external-link"></i>Open the addon’s page</a>` : ''}</div>`).join(''));
+              icons();
+            }
+          } catch (e) { /* ignore */ }
+          return out;
+        };
+      }
+      // 2. any other way in (a saved source, the sports Watch button, the next source): never handed to a player
+      const ps = playStream;
+      playStream = function (ctx, s) {
+        if (AddonPage.is(s)) {
+          AddonPage.log(s, 'play');
+          try { if (s._tel) s._tel.webReady = false; } catch (e) { /* ignore */ }
+          if (!$('#player').hidden && P.ctx) { P.stream = s; AddonPage.inPlayer(s); } else AddonPage.sheet(s);
+          return undefined;
+        }
+        return ps.apply(this, arguments);
+      };
+      // 3. the MKCinema Player could not open a link that turns out to be a web page: say so instead of the web-player fallback
+      if (window.MkNative && typeof MkNative.fail === 'function') {
+        const f0 = MkNative.fail.bind(MkNative);
+        MkNative.fail = function (msg) {
+          const s = this.cur, p = s && pathOf(s.url);
+          if (!s || s._mkPageAsked || p == null || MEDIA.test(p)) return f0(msg);
+          s._mkPageAsked = true;
+          AddonPage.html(s.url).then((h) => {
+            if (!h || P.stream !== s || $('#player').hidden) return f0(msg);
+            AddonPage.log(s, 'web page'); AddonPage.inPlayer(s, true);
+            return undefined;
+          });
+          return undefined;
+        };
+      }
+    },
+  };
+  window.MkAddonPage = AddonPage;
+  AddonPage.init();
+})();
+</script>
+<script id="mk-2967-film-end">/* 2.96.7 film end: when a film plays to its end, the player closes and the film's page shows (Owner 2026-11-27: the
+   player used to stay open on the last picture until Back). Episodes that go on to the next one are left alone. */
+(() => {
+  let t = 0;
+  const stop = () => { clearTimeout(t); t = 0; };
+  const done = () => {
+    stop();
+    try {
+      if ($('#player').hidden || !P.ctx || !P.stream || P.stream.ytId) return;
+      if (typeof MkChan !== 'undefined' && MkChan.on) return;            // channel surfing plays the next title itself
+      if (typeof Party !== 'undefined' && Party.code) return;            // a watch party decides together
+      const ctx = P.ctx, st = P.stream;
+      // an episode with a next one: Up next (or autoplay) takes it from here
+      if (ctx.video && typeof nextVideo === 'function' && nextVideo(ctx.meta, ctx.video)) return;
+      t = setTimeout(() => {
+        t = 0;
+        if (P.ctx !== ctx || P.stream !== st || $('#player').hidden) return;
+        const m = ctx.meta;
+        Promise.resolve(closePlayer()).then(() => {
+          if ($('#detail').hidden && m && m.id && !String(m.id).startsWith('local:') && (m.type === 'movie' || m.type === 'series')) {
+            try { openDetail(m, ctx.video ? { videoId: ctx.video.id } : {}); } catch (e) { /* Home stays */ }
+          }
+        }).catch(() => {});
+      }, 1500);
+    } catch (e) { /* never block the end of a film */ }
+  };
+  video.addEventListener('ended', done);
+  // played again or moved back within the moment before closing: stay
+  ['play', 'seeking', 'emptied'].forEach((ev) => video.addEventListener(ev, stop));
+})();
 </script>
 <script id="mk-2952-smooth">/* 2.95.2 smooth sources: the title page Streams list and the player's Sources panel step one row at a time with the
    remote, and picking another source in the MKCinema Player (Android app) swaps the film without tearing the picture down */

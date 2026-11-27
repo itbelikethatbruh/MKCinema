@@ -124,6 +124,7 @@
     lift(p) {
       const el = this.el; if (!el) return;
       let up = 0;
+      /* 2.96.3 steady subtitles */ if (el.style.transform) el.style.transform = ''; return;
       const hud = document.getElementById('hud');
       if (posNow() !== 'top' && hud && !hud.classList.contains('idle') && !el.hidden) {
         // Stay above the title and controls: the redesigned player marks its title block #rxInfo; older layouts .hud-bot.

@@ -2831,13 +2831,15 @@ const SimpleHome = {
     const rows = $('#homeRows'); if (!rows) return;
     const seriesFirst = /^series/.test((Layout.get() || {}).focus || '');
     const kids = [...rows.children], idx = new Map(kids.map((el, i) => [el, i]));
-    const want = kids.slice().sort((a, b) => (this.rank(a, seriesFirst) - this.rank(b, seriesFirst)) || (idx.get(a) - idx.get(b)));
+    let want = kids.slice().sort((a, b) => (this.rank(a, seriesFirst) - this.rank(b, seriesFirst)) || (idx.get(a) - idx.get(b)));
+    const fr = IS_TV && document.activeElement && kids.find((el) => el.contains(document.activeElement)); /* 2.96.4 tv rows stay */
+    if (fr) { const fi = kids.indexOf(fr), below = new Set(kids.slice(fi + 1)); want = [...kids.slice(0, fi + 1), ...want.filter((el) => below.has(el))]; }
     if (want.every((el, i) => el === kids[i])) return;
     // keep the focused element's place on TV: moving nodes does not drop focus, but remember it just in case
     const a = document.activeElement; /* 2.96.3 tv steady rows */
     const anc = a && rows.contains(a) ? a : (scrollY > 0 ? kids.find((el) => el.getBoundingClientRect().bottom > 0) : null);
     const top0 = anc ? anc.getBoundingClientRect().top : 0;
-    want.forEach((el) => rows.appendChild(el));
+    const first = want.findIndex((el, i) => el !== kids[i]); want.slice(first).forEach((el) => rows.appendChild(el));
     if (a && a.isConnected && document.activeElement !== a) a.focus({ preventScroll: true });
     if (anc && anc.isConnected) { const d = anc.getBoundingClientRect().top - top0; if (Math.abs(d) > 1) window.scrollTo({ top: scrollY + d, behavior: 'instant' }); }
   },

@@ -118,12 +118,12 @@ const MkNative = {
   /* 2.91.5: TVs (Android 1.17.7+): the decoder draws straight onto the screen, so the subtitle words come as text */
   stext(t) {
     let el = this._sub;
-    if (!el || !el.isConnected) { el = this._sub = document.createElement('div'); el.className = 'mk-nv-sub'; el.setAttribute('aria-live', 'off'); $('#player').appendChild(el); }
+    if (!el || !el.isConnected) { el = this._sub = document.createElement('div'); el.className = 'mk-nv-sub'; el.setAttribute('aria-live', 'off'); /* 2.96.3 steady subtitles */ const st = $('#stage'), hud = st && $('#hud', st); if (hud && hud.parentNode === st) st.insertBefore(el, hud); else (st || $('#player')).appendChild(el); }
     if (t !== undefined) {
       const txt = typeof t === 'string' ? (typeof SubText !== 'undefined' ? SubText.unmangle(t) : t).replace(/\{\\[^}]*\}/g, '').replace(/<[^>]+>/g, '').replace(/\\N/g, '\n').trim() : '';
       if (txt !== this._subT) { this._subT = txt; el.textContent = ''; if (txt) { const sp = document.createElement('span'); sp.textContent = txt; el.appendChild(sp); } el.hidden = !txt; this.subFit(el); }
     }
-    const lift = !$('#hud').classList.contains('idle');
+    const lift = false;
     if (lift !== this._subLift) { this._subLift = lift; el.classList.toggle('lift', lift); }
   },
   subFit(el) {
