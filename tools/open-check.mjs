@@ -18,7 +18,7 @@
        * the panel is see-through at any moment while it opens or closes (Home or the title page shows through its text),
        * on a phone, the title page under it is half shown while the panel is still sliding up (three screens at once),
        * on a phone, anything on the title page under the panel is animating while the panel is open,
-       * the source list is drawn more than twice in the first 1.5 s (a half list replaced a frame later),
+       * the source list is drawn more than twice in the first 2.5 s (a half list replaced a frame later),
        * the panel jumps (grows or moves) after it is up,
        * the panel's picture box is an empty black box when it appears.
    It also prints the time from the tap to the first frame that shows the page.
@@ -46,7 +46,7 @@ const server = http.createServer((req, res) => {
   if (url === '/oc-a/manifest.json') return json(res, { ...MAN, id: 'oc.a', name: 'Check A' });
   if (url === '/oc-b/manifest.json') return json(res, { ...MAN, id: 'oc.b', name: 'Check B' });
   if (url.startsWith('/oc-a/stream/')) return json(res, { streams: [{ name: 'A 1080p', title: 'Check.1080p.WEB-DL.English', url: 'https://example.invalid/a.mp4' }] });
-  if (url.startsWith('/oc-b/stream/')) return void setTimeout(() => json(res, { streams: Array.from({ length: 36 }, (_, i) => ({ name: `B ${i % 3 ? '1080p' : '2160p'}`, title: `Check.${i % 3 ? '1080p' : '2160p'}.WEB-DL.English.${i}`, url: `https://example.invalid/b${i}.mp4` })) }), 700);
+  if (url.startsWith('/oc-b/stream/')) return void setTimeout(() => json(res, { streams: Array.from({ length: 36 }, (_, i) => ({ name: `B ${i % 3 ? '1080p' : '2160p'}`, title: `Check.${i % 3 ? '1080p' : '2160p'}.WEB-DL.English.${i}`, url: `https://example.invalid/b${i}.mp4` })) }), Number(process.env.OC_ADDON_MS) || 700);
   const file = path.join(root, url.endsWith('/') ? url + 'index.html' : url);
   if (!file.startsWith(root) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); res.end(); return; }
   res.writeHead(200, { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream' });
@@ -170,8 +170,8 @@ function judgeEpisode(fr, dev) {
     const half = fr.slice(first).find((r) => r.t < up.t && r.det > 0.05 && r.det < 0.95);
     if (half) out.push(`the title page was half shown while the panel was still sliding up (${Math.round(half.det * 100)}% at ${Math.round(half.t)} ms)`);
   }
-  const d0 = fr[first].draws, early = fr.filter((r) => r.t <= fr[first].t + 1500).pop();
-  if (early && early.draws - d0 > 1) out.push(`the source list was drawn ${early.draws - d0 + 1} times in the first 1.5 s`);
+  const d0 = fr[first].draws, early = fr.filter((r) => r.t <= fr[first].t + 2500).pop();
+  if (early && early.draws - d0 > 1) out.push(`the source list was drawn ${early.draws - d0 + 1} times in the first 2.5 s`);
   // a phone panel covers the page; on a computer it sits beside it, so the page may move there
   const worst = fr.slice(first).reduce((a, r) => (r.anim > a.anim ? r : a), { anim: 0 });
   if (dev === 'phone' && worst.anim > 0) out.push(`${worst.anim} animation(s) running on the title page under the episode panel (${worst.animOn})`);
@@ -192,6 +192,8 @@ for (const dev of DEVS) {
         const box = await cardBox(p); if (!box) { skip = 'no card to open'; continue; }
         const cdp = await ctx.newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: DEV[dev].cpu });
         await p.waitForTimeout(400);
+        if (process.env.OC_TRACE) await p.evaluate(() => { window.__ocT = []; const t0 = performance.now(); const d = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
+          Object.defineProperty(Element.prototype, 'innerHTML', { configurable: true, get() { return d.get.call(this); }, set(v) { if (this.id === 'dStreams') window.__ocT.push(Math.round(performance.now() - t0) + ' ' + String(v).replace(/\s+/g, ' ').slice(0, 90) + ' | ' + new Error().stack.split('\n').slice(2, 9).map((x) => x.trim().replace(/^at /, '').replace(/https?:\/\/[^ )]*\//, '')).join(' < ')); d.set.call(this, v); } }); });
         await p.evaluate(recorder); await press(p, DEV[dev].input, box);
         if (test !== 'title') {
           await p.waitForTimeout(3600);
@@ -200,6 +202,7 @@ for (const dev of DEVS) {
           await p.waitForTimeout(3000);
         } else await p.waitForTimeout(6800);
         const fr = await p.evaluate(() => window.__oc);
+        if (process.env.OC_TRACE) console.log((await p.evaluate(() => window.__ocT)).join('\n'));
         if (process.env.OC_DUMP) console.log(JSON.stringify(fr.filter((r, i) => i % 3 === 0).map((r) => [Math.round(r.t), +r.det.toFixed(2), +r.app.toFixed(2), +(+r.panel).toFixed(2), r.ptop, r.draws])));
         const j = test === 'title' ? judgeTitle(fr) : judgeEpisode(fr, dev);
         if (j.first != null) firsts.push(Math.round(j.first));
