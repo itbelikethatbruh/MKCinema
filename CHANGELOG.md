@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.95.21 (2026-11-26)
+
+- Episode sources appear in one step: the list waits until every addon has answered instead of being drawn again while it opens.
+- Open check counts draws over 2.5 s and can slow its test addon (OC_ADDON_MS).
+
 ## Web app 2.95.20 (2026-11-26)
 
 - Cleaner subtitles: lines that stack share one rounded box, and music notes, accents and other special letters show correctly even in subtitle files that were saved wrongly.

@@ -62,8 +62,8 @@
   /* The source list: while the addons are still answering in the first moment after a page or episode opens, it shows
      one steady "asking" state and draws the answers once (when all have answered, or at 0.9 s), instead of drawing a
      half list, a filter row and a trailer line that are replaced a frame later. */
-  const SETTLE = 900;
-  let openAt = -1e9, first = false, tmr = 0;
+  const SETTLE = 1800;
+  let openAt = -1e9, first = false, tmr = 0, phKey = '';
   const mark = () => { openAt = now(); first = true; clearTimeout(tmr); };
   const eo = EpSheet.open;
   EpSheet.open = function () {
@@ -76,12 +76,23 @@
   try { window.openDetail = openDetail; } catch (e) { /* the binding is enough */ }
   const rs = renderStreamsPanel;
   const w = function () {
-    let pend = false; try { pend = !!(typeof D === 'object' && D && D.status && D.status.pending); } catch (e) { pend = false; }
+    /* 2.95.21 one draw: no search started yet counts as still asking too */
+    let pend = false; try { pend = !!(typeof D === 'object' && D && (!D.status || D.status.pending)); } catch (e) { pend = false; }
     const age = now() - openAt;
-    if (!pend || age >= SETTLE) { clearTimeout(tmr); return rs.apply(this, arguments); }
-    clearTimeout(tmr); tmr = setTimeout(() => { try { renderStreamsPanel(); } catch (e) { /* the next answer draws it */ } }, SETTLE - age + 10);
-    if (!first) return; // the steady "asking" state is already on screen
-    first = false;
+    let fin = false;
+    try {
+      const t = pend && D.status && typeof detailStreamTarget === 'function' && detailStreamTarget();
+      const total = t ? engine.addons.filter((a) => engine.supports(a, 'stream', t.type, t.id)).length : 0;
+      fin = !!(t && total > 0 && D.status.answered >= total);
+    } catch (e) { fin = false; }
+    if (!pend || (age >= SETTLE && !fin)) { clearTimeout(tmr); return rs.apply(this, arguments); }
+    clearTimeout(tmr); tmr = setTimeout(() => { try { renderStreamsPanel(); } catch (e) { /* the next answer draws it */ } }, Math.max(fin ? 400 : 0, SETTLE - age + 10));
+    if (age >= SETTLE) return; // all answered, the search is closing: its final draw comes in a moment
+    // the same episode's steady "asking" state already in the box is not drawn again
+    let key = ''; try { key = (D.meta && D.meta.id) + '|' + (D.video ? (D.video.id || D.video.season + 'x' + D.video.episode) : ''); } catch (e) { key = ''; }
+    const bx = document.getElementById('dStreams');
+    if (key && key === phKey && bx && bx.querySelector('.status-line .spin')) return;
+    phKey = key; first = false;
     const keep = D.streams; D.streams = [];
     try { return rs.apply(this, arguments); } finally { D.streams = keep; }
   };
