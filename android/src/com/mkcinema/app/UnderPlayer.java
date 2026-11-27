@@ -313,8 +313,9 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
             long n = android.os.SystemClock.uptimeMillis(); max[0] = Math.max(max[0], n - last[0]); last[0] = n; if (run[0]) mh.postDelayed(this, 16); } };
         mh.post(beat); Thread.sleep(300); synchronized (max) { max[0] = 0; }
         u.cmd("sid", "no"); u.cmd("vad", "0"); u.cmd("stop", ""); u.cmd("show", "0");
-        Thread.sleep(6000); run[0] = false; Thread.sleep(50);
-        return max[0];
+        Thread.sleep(6000); run[0] = false;
+        // a screen thread still held now never ran the beat at all: count the time since its last beat too
+        return Math.max(max[0], android.os.SystemClock.uptimeMillis() - last[0]);
     }
     double num(String k) { synchronized (lock) { Object v = vals.get(k); return v instanceof Number ? ((Number) v).doubleValue() : 0; } }
     String str(String k) { synchronized (lock) { Object v = vals.get(k); return v == null ? "" : String.valueOf(v); } }

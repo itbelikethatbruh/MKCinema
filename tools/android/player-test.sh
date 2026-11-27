@@ -96,7 +96,7 @@ class H(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         n = os.path.getsize(F); self.send_response(200); self.send_header('Content-Type', 'video/x-matroska')
         self.send_header('Content-Length', str(n)); self.end_headers()
-        with open(F, 'rb') as f: self.wfile.write(f.read(3_000_000)); self.wfile.flush()
+        with open(F, 'rb') as f: self.wfile.write(f.read(n * 2 // 5)); self.wfile.flush()
         time.sleep(120)
     def log_message(self, *a): pass
 socketserver.ThreadingTCPServer.allow_reuse_address = True
