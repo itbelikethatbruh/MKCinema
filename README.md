@@ -5,8 +5,9 @@
 <h1 align="center">MKCinema</h1>
 
 <p align="center">
-  <b>Tomorrow's cinema. For the whole house.</b><br>
-  A free home cinema app for the whole family, on every screen you own.
+  <b>Plays what others can't. Anywhere.</b><br>
+  MKV, Dolby, DTS and TrueHD right in your browser, the full app on iPhone and iPad with no App Store,<br>
+  and a free home cinema for the whole family on every screen you own.
 </p>
 
 <p align="center">
@@ -14,6 +15,7 @@
   <a href="https://github.com/itbelikethatbruh/MKCinema/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/itbelikethatbruh/MKCinema?style=flat-square&label=release"></a>
   <a href="https://github.com/itbelikethatbruh/MKCinema/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/itbelikethatbruh/MKCinema/total?style=flat-square&label=downloads&color=2ea44f"></a>
   <img alt="Platforms" src="https://img.shields.io/badge/platforms-Web%20%7C%20Android%20%7C%20TV%20%7C%20Windows%20%7C%20macOS%20%7C%20Linux-2ea44f?style=flat-square">
+  <a href="https://github.com/itbelikethatbruh/MKCinema/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/itbelikethatbruh/MKCinema?style=flat-square&label=stars&color=d8c29a"></a>
   <a href="LICENSE"><img alt="License: GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square"></a>
   <a href="https://ko-fi.com/mkcinema"><img alt="Support on Ko-fi" src="https://img.shields.io/badge/Ko--fi-support-72a4f2?style=flat-square&logo=kofi&logoColor=white"></a>
 </p>
@@ -29,14 +31,7 @@
 
 <p align="center"><img src="docs/screenshots/app-home.webp" width="100%" alt="MKCinema Home with the featured banner and Top 10 films today"></p>
 
-MKCinema brings everything you watch into one place and turns the evening into an event. It finds something everyone likes, plays it with a player made for films, gives every person in the house their own seat, and connects every screen you own, from the TV in the living room to the phone in your pocket. Friends on other sofas can join with voice and cameras. Grandparents can get help from across town.
-
-You bring the sources: Stremio-compatible addons, your own Plex, Jellyfin or Emby server, live TV playlists, or the streaming services you already pay for. MKCinema is free forever, with no ads, no paywalls and no account needed.
-
-> [!IMPORTANT]
-> **New in 2.63:** **Friends.** Pick a username, add friends, see who's online and what they're watching, chat, send watch party invites, and call with voice or camera, never during a film. Xtream TV logins now bring live channels, catch-up, films and series. 2.62 brought a Top 10 you can filter by country, network, category and year, homes for Films and Series, and Miko on every screen. [See what's new](CHANGELOG.md).
-
-## A powerhouse player, right in the browser
+## Plays what browsers can't
 
 Most web players give up at the first MKV file and send you off to VLC. MKCinema doesn't. Its player engine runs inside the browser and handles what browsers can't on their own:
 
@@ -47,6 +42,27 @@ Most web players give up at the first MKV file and send you off to VLC. MKCinema
 - **iPhone and iPad** play MKV files in Safari, with nothing to install.
 
 For almost everything you watch, you won't need another app. Handing off to VLC is still one press away for the odd file the browser really can't decode, such as 4K HEVC on a phone.
+
+## The Apple problem, solved
+
+Apps like MKCinema rarely make it into the App Store, so iPhone and iPad owners are usually told to use something else. MKCinema skips that problem: the whole app runs in Safari, and Add to Home Screen turns it into a real app.
+
+| On iPhone and iPad | What MKCinema does |
+|---|---|
+| Safari won't open MKV files | Repackages them on the phone as they play, so Safari can show them |
+| Dolby and DTS sound plays silent | Converts the sound on the phone, so you hear every film |
+| Web apps feel like websites | Full screen with its own icon, a proper full-screen player, and updates without App Store reviews |
+
+Open [app.mkcinema.app](https://app.mkcinema.app) in Safari, tap Share, then Add to Home Screen.
+
+## For the whole house
+
+MKCinema brings everything you watch into one place and turns the evening into an event. It finds something everyone likes, plays it with a player made for films, gives every person in the house their own seat, and connects every screen you own, from the TV in the living room to the phone in your pocket. Friends on other sofas can join with voice and cameras. Grandparents can get help from across town.
+
+You bring the sources: Stremio-compatible addons, your own Plex, Jellyfin or Emby server, live TV playlists, or the streaming services you already pay for. MKCinema is free forever, with no ads, no paywalls and no account needed.
+
+> [!IMPORTANT]
+> **New in 2.63:** **Friends.** Pick a username, add friends, see who's online and what they're watching, chat, send watch party invites, and call with voice or camera, never during a film. Xtream TV logins now bring live channels, catch-up, films and series. 2.62 brought a Top 10 you can filter by country, network, category and year, homes for Films and Series, and Miko on every screen. [See what's new](CHANGELOG.md).
 
 ## One house, every screen
 
