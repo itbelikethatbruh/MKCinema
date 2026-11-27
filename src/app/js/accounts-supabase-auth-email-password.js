@@ -11,9 +11,9 @@ const SUPABASE_PROJECT = { url: 'https://wogffhgdixgrayowewnf.supabase.co', anon
 const SUPABASE_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 const SUPABASE_SRI = 'sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R'; // change together with SUPABASE_LIB
 /* 2.97.2 old TV accounts: the same library with its syntax lowered for engines before Chromium 85, which cannot read `||=`
-   (rebuild with patches/2.97.2-old-tv-accounts/build-old-lib.cjs whenever SUPABASE_LIB changes) */
-const SUPABASE_LIB_OLD = 'vendor/supabase-2.117.3-old.js';
-const SUPABASE_SRI_OLD = 'sha384-r6tIsCnkVzzAhNRdujPXh1fG3nnnEl+wN7TrxSfbPi2tNlKofWOo48AcPcnko+wT';
+   (rebuild with patches/2.97.3-old-tv-accounts-69/build-old-lib.cjs whenever SUPABASE_LIB changes) */
+const SUPABASE_LIB_OLD = 'vendor/supabase-2.117.3-es2019.js'; // 2.97.3: lowered to chrome69 (engines before 80 too)
+const SUPABASE_SRI_OLD = 'sha384-nZe+rjwBay+XS776jQ/2rp7ibMA328BNSU7jRZHnvRxWkic7lN6zsDiDiL19YFFF';
 const SUPABASE_OLD_ENGINE = (() => { try { new Function('var a; a ||= 1'); return false; } catch (e) { return true; } })();
 const SYNC_TABLE = 'mkcinema_profiles';
 
