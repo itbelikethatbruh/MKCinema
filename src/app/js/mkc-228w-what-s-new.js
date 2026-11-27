@@ -8,6 +8,10 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.97.0', date: '2026-11-27', items: [
+    ['new', 'A new look for settings while you watch', 'One clean panel with Quick, Playback, Picture, Sound, More and a new Colours tab. Pick your highlight colour for the progress bar and buttons, and choose see-through, frosted or solid.'],
+    ['better', 'Sizes stay on each device', 'Interface size and Text size now stay on the device where you set them.'],
+  ] },
   { v: '2.96.3', date: '2026-11-27', items: [
     ['better', 'Home holds still on TVs', 'TVs: Home no longer moves rows out from under you while it finishes loading.'],
     ['better', 'Steady subtitles', 'Subtitles now stay in one place when the controls appear, and open menus always sit above them.'],

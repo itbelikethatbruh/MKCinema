@@ -1,0 +1,99 @@
+
+/* 2.97 player glass: Settings, Audio & subtitles and Share open as liquid-glass panels; the player colour (progress bar,
+   picked buttons, remote highlight) and the panel look are the viewer's choice. TVs, Low graphics and the lite build get
+   the solid panel (no backdrop-filter); in the Android app's own player the film is under the page, so there is nothing to
+   blur and the panel gets a deeper tint instead. Only transform/opacity animate. */
+html.mk-rx #player #optMenu.menu,html.mk-rx #player #subMenu.menu,html.mk-rx #player #dspPop{
+ background:linear-gradient(160deg,rgba(255,255,255,.15),rgba(255,255,255,.04) 36%,rgba(255,255,255,.015)),rgba(14,14,18,.42)!important;
+ -webkit-backdrop-filter:blur(28px) saturate(170%)!important;backdrop-filter:blur(28px) saturate(170%)!important;
+ border:1px solid rgba(255,255,255,.16)!important;border-radius:28px!important;color:#f4f2ee;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.26),inset 0 -1px 0 rgba(255,255,255,.04),0 30px 80px -20px rgba(0,0,0,.65)!important}
+html[data-pcglass=clear].mk-rx #player #optMenu.menu,html[data-pcglass=clear].mk-rx #player #subMenu.menu,html[data-pcglass=clear].mk-rx #player #dspPop{
+ background:linear-gradient(160deg,rgba(255,255,255,.13),rgba(255,255,255,.02) 40%),rgba(14,14,18,.2)!important;
+ -webkit-backdrop-filter:blur(14px) saturate(160%)!important;backdrop-filter:blur(14px) saturate(160%)!important;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+html.mk-native-on.mk-rx #player #optMenu.menu,html.mk-native-on.mk-rx #player #subMenu.menu,html.mk-native-on.mk-rx #player #dspPop{
+ background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.02) 40%),rgba(14,14,18,.68)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.mk-native-on[data-pcglass=clear].mk-rx #player #optMenu.menu,html.mk-native-on[data-pcglass=clear].mk-rx #player #subMenu.menu,html.mk-native-on[data-pcglass=clear].mk-rx #player #dspPop{background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.02) 40%),rgba(14,14,18,.5)!important}
+html[data-pcglass=solid].mk-rx #player #optMenu.menu,html[data-pcglass=solid].mk-rx #player #subMenu.menu,html[data-pcglass=solid].mk-rx #player #dspPop{
+ background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,0) 42%),#131316!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;text-shadow:none}
+
+/* one panel shape: tab row on top, the chosen tab scrolls under it */
+html.mk-rx #player #optMenu.menu:not([hidden]){display:flex!important;flex-direction:column;overflow:hidden!important;padding:14px!important;gap:0}
+html.mk-rx #player #optMenu .rx-simple-pane{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
+html.mk-rx #player #optMenu .px-tabs{position:static!important;flex:none;display:flex;align-items:center;gap:2px;margin:0 0 14px!important;padding:4px!important;border-radius:999px;background:rgba(0,0,0,.26)!important;border:1px solid rgba(255,255,255,.08)!important;overflow-x:auto;scrollbar-width:none}
+html.mk-rx #player #optMenu .px-tabs::-webkit-scrollbar{display:none}
+html.mk-rx #player #optMenu .px-tabs button{flex:1 0 auto;width:auto;min-height:0;padding:8px 10px!important;border:0!important;border-radius:999px!important;background:transparent!important;color:rgba(255,255,255,.7)!important;font:500 calc(13px * var(--ts,1)) var(--f-body)!important;white-space:nowrap;box-shadow:none}
+html.mk-rx #player #optMenu .px-tabs button.on{background:rgba(255,255,255,.92)!important;color:#111!important;font-weight:600!important;box-shadow:0 2px 10px rgba(0,0,0,.25)!important;text-shadow:none}
+html.mk-rx #player #optMenu .px-tabs .px-x{flex:0 0 32px;width:32px;height:32px;padding:0!important;display:grid;place-items:center;margin-left:4px;background:rgba(255,255,255,.1)!important;color:rgba(255,255,255,.85)!important}
+html.mk-rx #player #optMenu .px-tabs .px-x svg{width:16px;height:16px}
+html.tv.mk-rx #player #optMenu .px-tabs .px-x{display:none}
+html.mk-rx #player #optMenu .px-pane,html.mk-rx #player #optMenu .rs-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent;padding:0 2px}
+html.mk-rx #player #optMenu .px-pane[hidden]{display:none!important}
+
+/* where it opens: on the right, clear of the progress bar and the buttons */
+html.mk-rx #player #optMenu.menu{left:auto!important;right:max(var(--rx-gx,24px),env(safe-area-inset-right,0px))!important;top:calc(var(--rx-cap,64px) + 36px)!important;bottom:auto!important;
+ width:min(460px,calc(100vw - 32px))!important;max-height:calc(100% - 2 * var(--rx-cap,64px) - 150px)!important}
+html.tv.mk-rx #player #optMenu.menu{width:min(480px,calc(100vw - 48px))!important;max-height:calc(100% - var(--rx-cap,60px) - 70px)!important}
+/* phones on their side: a floating sheet down the right */
+@media (pointer:coarse) and (max-height:500px){
+ html.mk-rx #player #optMenu.menu,html.mk-rx body.mk-phone #player #optMenu.menu{top:10px!important;bottom:10px!important;left:auto!important;right:max(10px,env(safe-area-inset-right,0px))!important;width:min(440px,58vw)!important;max-height:none!important;padding:10px!important;border-radius:26px!important}
+ html.mk-rx #player #optMenu .px-tabs{margin-bottom:10px!important;padding-top:4px!important}
+ html.mk-rx #player #optMenu .rs-row{margin-bottom:10px!important}
+}
+/* phones upright: the bottom sheet, in glass */
+@media (pointer:coarse) and (max-width:760px) and (min-height:501px){
+ html.mk-rx #player #optMenu.menu,html.mk-rx body.mk-phone #player #optMenu.menu{top:auto!important;bottom:0!important;left:0!important;right:0!important;width:auto!important;max-height:min(70vh,640px)!important;border-radius:28px 28px 0 0!important;border-bottom:0!important;padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px))!important}
+ html.mk-rx #player #subMenu.menu{border-radius:28px 28px 0 0!important;border-bottom:0!important}
+}
+
+/* narrow phones: six tabs fit without the close button (the sheet closes with Back or a tap outside) */
+@media (max-width:480px){
+ html.mk-rx #player #optMenu .px-tabs button{padding:7px 5px!important;font-size:calc(12px * var(--ts,1))!important}
+ html.mk-rx #player #optMenu .rs-chips button,html.mk-rx #player #optMenu .seg-row>button{font-size:calc(13px * var(--ts,1))!important;padding-left:3px!important;padding-right:3px!important}
+ html.mk-rx #player #optMenu .px-tabs .px-x{display:none}
+}
+
+/* the Quick tab: one label, one even bar of choices per row, never wrapping */
+html.mk-rx #player #optMenu .rx-simple-pane h4{display:none}
+html.mk-rx #player #optMenu .rs-row{display:block!important;padding:0!important;border:0!important;margin:0 0 16px}
+html.mk-rx #player #optMenu .rs-row>span{display:block;margin:0 4px 8px;font:500 calc(13px * var(--ts,1)) var(--f-body);color:rgba(255,255,255,.64)}
+html.mk-rx #player #optMenu .rs-chips{display:flex!important;flex-wrap:nowrap!important;gap:2px;padding:3px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09)}
+html.mk-rx #player #optMenu .rs-chips button{flex:1 1 auto!important;min-width:0;width:auto!important;margin:0!important;justify-content:center;border:0!important;border-radius:11px!important;background:transparent!important;color:rgba(255,255,255,.88)!important;padding:9px 4px!important;font:500 calc(14px * var(--ts,1))/1.15 var(--f-body)!important;font-variant-numeric:tabular-nums;white-space:normal;text-align:center;hyphens:auto;overflow:hidden;box-shadow:none}
+
+/* the full tabs: the same bars, softer headings */
+html.mk-rx #player #optMenu .px-pane h5{margin:16px 4px 8px!important;padding:0!important;font:500 calc(13px * var(--ts,1)) var(--f-body)!important;letter-spacing:0!important;text-transform:none!important;color:rgba(255,255,255,.64)!important}
+html.mk-rx #player #optMenu .px-pane>h5:first-child{margin-top:2px!important}
+html.mk-rx #player #optMenu .seg-row{display:flex!important;flex-wrap:wrap;gap:2px!important;margin:0 0 4px!important;padding:3px!important;border-radius:14px!important;background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.09)!important;overflow:visible!important}
+html.mk-rx #player #optMenu .seg-row>button{flex:1 0 auto;width:auto!important;min-width:44px;min-height:0!important;margin:0!important;justify-content:center;border:0!important;border-radius:11px!important;background:transparent!important;color:rgba(255,255,255,.88)!important;padding:9px 10px!important;font:500 calc(14px * var(--ts,1)) var(--f-body)!important;white-space:nowrap;box-shadow:none}
+html.mk-rx #player #optMenu .seg-row>button+button{border-left:0!important}
+html.mk-rx #player #optMenu .seg-row>.tl-k{flex:1 0 100%;display:block;padding:4px 8px 2px;font:500 calc(12px * var(--ts,1)) var(--f-body);color:rgba(255,255,255,.55);background:none}
+html.mk-rx #player #optMenu .rs-chips button.on,html.mk-rx #player #optMenu .seg-row>button.on{background:rgba(var(--pc-acc-rgb,216,194,154),.24)!important;color:#fff!important;box-shadow:inset 0 0 0 1px rgba(var(--pc-acc-rgb,216,194,154),.78)!important}
+html.mk-rx #player #optMenu .px-pane>button,html.mk-rx #player #optMenu .px-pane section>button,html.mk-rx #player #optMenu .mk-td-go{border-radius:14px!important}
+html.mk-rx #player #optMenu input[type=range],html.mk-rx #player #subMenu input[type=range]{accent-color:var(--pc-acc,#d8c29a)}
+@media (hover:hover){html.mk-rx #player #optMenu .rs-chips button:not(.on):hover,html.mk-rx #player #optMenu .seg-row>button:not(.on):hover{background:rgba(255,255,255,.08)!important}}
+
+/* Colours tab */
+html.mk-rx #player #optMenu .pl-sec{margin:0 0 18px}
+html.mk-rx #player #optMenu .pl-h{display:flex;justify-content:space-between;margin:2px 4px 10px;font:500 calc(13px * var(--ts,1)) var(--f-body);color:rgba(255,255,255,.64)}
+html.mk-rx #player #optMenu .pl-sw{display:flex;justify-content:space-between;gap:6px;padding:5px 5px 2px}
+html.mk-rx #player #optMenu .pl-sw button{position:relative;flex:none;width:38px;height:38px;min-height:0;margin:0;padding:0!important;border:0!important;border-radius:50%!important;background:var(--c)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 4px 12px rgba(0,0,0,.3)!important}
+html.mk-rx #player #optMenu .pl-sw button.on::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid #fff}
+html.mk-rx #player #optMenu .pl-sw button.on::before{content:"";position:absolute;left:50%;top:46%;width:7px;height:13px;border:solid #111;border-width:0 2.5px 2.5px 0;transform:translate(-50%,-50%) rotate(45deg)}
+html.mk-rx #player #optMenu .pl-prev{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:rgba(0,0,0,.24);border:1px solid rgba(255,255,255,.07);font:500 calc(13px * var(--ts,1)) var(--f-body);color:rgba(255,255,255,.74)}
+html.mk-rx #player #optMenu .pl-prev i{position:relative;flex:1;height:4px;border-radius:4px;background:rgba(255,255,255,.25)}
+html.mk-rx #player #optMenu .pl-prev i::before{content:"";position:absolute;left:0;top:0;bottom:0;width:60%;border-radius:4px;background:var(--pc-acc,#d8c29a)}
+html.mk-rx #player #optMenu .pl-prev i::after{content:"";position:absolute;left:60%;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--pc-acc,#d8c29a)}
+html.mk-rx #player #optMenu .pl-note{margin:12px 4px 2px;font:400 calc(12px * var(--ts,1))/1.45 var(--f-body);color:rgba(255,255,255,.52)}
+
+/* the player colour on the progress bar and the remote highlight */
+html.mk-rx #player .seek .cur{background:var(--pc-acc,#fff)!important}
+html.mk-rx #player .seek .knob{background:var(--pc-acc,#d8c29a)!important}
+html.tv.mk-rx #player .ibtn:focus,html.tv.mk-rx #player .ibtn.nav-focus,html.mk-rx #player .ibtn:focus-visible{box-shadow:0 0 0 3px rgba(var(--pc-acc-rgb,216,194,154),.92)!important}
+html.tv.mk-rx #player #optMenu button:focus,html.tv.mk-rx #player #optMenu button.nav-focus,html.tv.mk-rx #player #subMenu button:focus,html.tv.mk-rx #player #subMenu button.nav-focus{outline:none!important;box-shadow:0 0 0 3px rgba(var(--pc-acc-rgb,216,194,154),.95)!important}
+html.tv.mk-rx #player #optMenu .pl-sw button:focus,html.tv.mk-rx #player #optMenu .pl-sw button.nav-focus{transform:scale(1.12)}
+html.mk-rx:not(.tv) #player #optMenu button:focus-visible{outline:2px solid rgba(var(--pc-acc-rgb,216,194,154),.95)!important;outline-offset:1px}
+
+/* opening: a short rise and fade (transform/opacity only) */
+@keyframes pcIn{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
+html.mk-rx:not(.tv) #player #optMenu.menu:not([hidden]),html.mk-rx:not(.tv) #player #subMenu.menu:not([hidden]){animation:pcIn .22s cubic-bezier(.2,.8,.2,1)}
+@media (prefers-reduced-motion:reduce){html.mk-rx #player #optMenu.menu,html.mk-rx #player #subMenu.menu{animation:none!important}}
