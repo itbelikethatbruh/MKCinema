@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.95.22 (2026-11-27)
+
+- Episode sources stay steady when you press Previous or Next in the episode panel.
+- Open check has an ep-next case.
+
 ## Web app 2.95.21 (2026-11-26)
 
 - Episode sources appear in one step: the list waits until every addon has answered instead of being drawn again while it opens.
