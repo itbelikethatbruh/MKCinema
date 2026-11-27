@@ -2,6 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.96.1 (2026-11-27)
+
+- Sports: the Watch button only offers channels from playlists shown on this seat, and a game's kick-off shows without reopening the page.
+- The sign-in form appears in one piece instead of shifting as it loads.
+- The TV remote moves smoothly past the Where to watch box on film and series pages.
+- Journey check: TV highlight-on-focus check, JC_SEED, JC_SLOW and JC_PAGE.
+
 ## Web app 2.96.0 (2026-11-27)
 
 - Sports match centre: live scores, stats, events, line-ups on a pitch, standings and match facts, a Watch button that finds the game in your own channels and TV guide, Keep score on screen, and a portrait layout for phones.

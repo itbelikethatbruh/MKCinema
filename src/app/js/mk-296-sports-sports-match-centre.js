@@ -97,8 +97,11 @@
     },
     async beat() {
       if (!this.isOpen()) { clearInterval(this.tick); this.tick = 0; return; }
-      const g = this.cur(), live = this.games().some((x) => x.state === 'in');
-      if (!live && !(g && g.state === 'in')) return;
+      const g = this.cur(), live = this.games().some((x) => x.state === 'in'), now = Date.now();
+      // a listed game that should have started: check now and then, so kick-off shows without reopening
+      const due = !live && this.games().some((x) => x.state === 'pre' && x.date <= now + 60e3 && x.date > now - 3 * 3600e3) && now - (this._dueAt || 0) > 120e3;
+      if (!live && !due && !(g && g.state === 'in')) return;
+      if (due) this._dueAt = now;
       await this.day(this.st.day, true);
       if (g && g.state !== 'post') await this.summary(g, true);
       this.paintSoft();
@@ -113,12 +116,15 @@
       const out = [], seen = new Set(), add = (o) => { const k = o.ch.url || o.ch.name; if (seen.has(k)) return; seen.add(k); out.push(o); };
       if (!g || typeof Channels === 'undefined' || !Channels.data) return out;
       const sum = this.sum(g), nets = [...new Set([...(g.nets || []), ...((sum && sum.broadcasts) || []).map((b) => b.media && (b.media.shortName || b.media.name)).filter(Boolean)])];
-      let all = []; try { all = Channels.all() || []; } catch (e) { /* no playlists */ }
+      // slv-seat-lists: only playlists shown on this seat (hidden ones can still be loaded in Channels.data)
+      let vis = null; try { vis = new Set((Channels.lists() || []).map((l) => l.id)); } catch (e) { vis = null; }
+      const shown = (id) => !vis || vis.has(id);
+      let all = []; try { all = (Channels.all() || []).filter((c) => shown(c.list)); } catch (e) { /* no playlists */ }
       for (const n of nets) { const k = this.norm(n); if (!k) continue; all.filter((c) => { const m = this.norm(c.name); return m === k || m.startsWith(`${k} `); }).slice(0, 3).forEach((ch) => add({ ch, how: 'net', net: n })); }
       const t0 = g.date - 45 * 60e3, t1 = g.date + 3.5 * 3600e3;
       try {
-        for (const d of Channels.data.values()) {
-          if (!d.epg || !d.epg.size) continue;
+        for (const [id, d] of Channels.data) {
+          if (!shown(id) || !d.epg || !d.epg.size) continue;
           for (const ch of d.channels) {
             const progs = d.epg.get(Channels.key(ch)); if (!progs) continue;
             for (const p of progs) { if (!p.title || p.end < t0 || p.start > t1) continue; if (this.hit(p.title, g.home) && this.hit(p.title, g.away)) { add({ ch, how: 'guide', p }); break; } }

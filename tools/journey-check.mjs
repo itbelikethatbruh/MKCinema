@@ -51,6 +51,11 @@ const JOURNEYS = opt('journeys', ['home', 'title', 'series', 'play', 'search', '
 const OUT = path.resolve(opt('out', ['journey-out'])[0]);
 const JSON_OUT = opt('json', [''])[0];
 const VERBOSE = !!process.env.JC_VERBOSE;
+// JC_SEED='{"mkc:keys":"{\"tmdb\":\"...\"}"}' adds saved settings, e.g. a TMDB key so a local build shows the parts
+// (Where to watch, cast) that the live app gets from its own server
+const PAGE = process.env.JC_PAGE || '';
+const SLOW = String(process.env.JC_SLOW || '').split(',').filter(Boolean).map((x) => { const i = x.lastIndexOf(':'); return [x.slice(0, i), Number(x.slice(i + 1)) || 0]; });
+const SEED = (() => { try { return JSON.parse(process.env.JC_SEED || '{}'); } catch (e) { return {}; } })();
 fs.mkdirSync(OUT, { recursive: true });
 
 /* ---------- the test film, the test addon and the app ---------- */
@@ -163,6 +168,13 @@ function probe() {
     const r = a.getBoundingClientRect(), o = op(a);
     const info = { el: name(a), x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height) };
     if (!(r.width > 0 && r.height > 0)) return { ...info, ok: false, why: 'the highlighted item has no size (it is hidden)' };
+    // TV: the drawn highlight and the real focus must be the same item. A hidden item (inside a closed section) takes
+    // the highlight class but cannot take focus, so the remote seems to vanish while focus stays where it was.
+    const nf = document.querySelector('.nav-focus');
+    // (a text box shows its own caret, so a leftover highlight class elsewhere is not what the remote user goes by)
+    const typing = a.matches('input:not([type=button]):not([type=checkbox]):not([type=radio]):not([type=range]), textarea, [contenteditable="true"]');
+    if (document.documentElement.classList.contains('tv') && !typing && nf && nf !== a && !nf.contains(a) && !a.contains(nf))
+      return { ...info, ok: false, why: `the highlight is drawn on ${name(nf)}, but the remote is still on this item` };
     if (o < 0.3) return { ...info, ok: false, why: `the highlighted item is see-through (${Math.round(o * 100)}%)` };
     const cx = Math.min(Math.max(r.left + r.width / 2, 1), innerWidth - 1), cy = Math.min(Math.max(r.top + r.height / 2, 1), innerHeight - 1);
     if (r.bottom < 4 || r.top > innerHeight - 4 || r.right < 4 || r.left > innerWidth - 4) return { ...info, ok: false, why: 'the highlighted item is off screen' };
@@ -275,10 +287,23 @@ class Run {
   async open() {
     const { D } = this;
     this.ctx = await browser.newContext({ ...D.ctx, serviceWorkers: 'block', ignoreHTTPSErrors: !!proxy });
-    await this.ctx.addInitScript(({ addon }) => { try { if (sessionStorage.getItem('jc')) return; sessionStorage.setItem('jc', '1');
+    await this.ctx.addInitScript(({ addon, extra }) => { try { if (sessionStorage.getItem('jc')) return; sessionStorage.setItem('jc', '1');
       const seed = { 'mkc:toured': 'true', 'mkc:langAsked': '1', 'mkc:whatsNewOff': 'true', 'mkc:seenVer': '"9.99.99"', 'mkc:playerAsked': '1', 'mkc:prompt': '1', 'mkc:addons': JSON.stringify([addon]) };
-      for (const [k, v] of Object.entries(seed)) localStorage.setItem(k, v); } catch (e) { /* storage off */ } }, { addon: `${base}/addon/manifest.json` });
+      Object.assign(seed, extra); for (const [k, v] of Object.entries(seed)) localStorage.setItem(k, v); } catch (e) { /* storage off */ } }, { addon: `${base}/addon/manifest.json`, extra: SEED });
     await this.ctx.addInitScript(probe);
+    // JC_PAGE=<folder>/index.html: on the live address, serve this page instead of the live one (tests a patched
+    // build with everything the live address unlocks, such as Google sign-in and Where to watch)
+    if (LIVE && PAGE) await this.ctx.route((u) => u.origin === new URL(APP).origin && (u.pathname === '/' || u.pathname === '/index.html'), (route) => route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: fs.readFileSync(PAGE) }));
+    // the checker is not a person: its visits never go into the app's anonymous usage and problem counts
+    // (JC_USAGE=1 prints the problem counts the app would have sent, to compare with what the checker saw)
+    // (keepalive requests skip the browser's request hook, so the count request is sent without it here)
+    await this.ctx.addInitScript(() => { const f = window.fetch; window.fetch = function (u, o) { if (o && o.keepalive && /\/rpc\/mkc_usage_add/.test(String(u))) o = { ...o, keepalive: false }; return f.call(this, u, o); }; });
+    await this.ctx.route((u) => u.pathname.endsWith('/rpc/mkc_usage_add'), (route) => {
+      if (process.env.JC_USAGE) { try { const b = JSON.parse(route.request().postData() || '{}'); for (const [ev, k, n] of b.rows || []) if (ev === 'feat' && /^(err|play_wait):/.test(k)) console.log(`USAGE ${this.dev} ${curJourney} ${k} x${n}`); } catch (e) { /* not ours */ } }
+      return route.fulfill({ status: 200, contentType: 'application/json', body: '0' });
+    });
+    // a slow server answer, as on a weak connection: JC_SLOW='auth/v1/settings:2500' holds matching requests that long
+    for (const [part, ms] of SLOW) await this.ctx.route((u) => u.href.includes(part), async (route) => { await new Promise((r) => setTimeout(r, ms)); await route.continue().catch(() => {}); });
     this.p = await this.ctx.newPage();
     this.pageErrs = [];
     this.p.on('pageerror', (e) => this.pageErrs.push(e.message.slice(0, 200)));
