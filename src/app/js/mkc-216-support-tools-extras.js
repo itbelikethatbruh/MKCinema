@@ -423,7 +423,7 @@ Marks.init();
 const AppleTrailer = {
   mem: new Map(),
   norm: (s) => String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/&/g, 'and').replace(/^the\s+/, '').replace(/[^a-z0-9]+/g, ''),
-  cache() { try { return JSON.parse(localStorage.getItem('mkc:apl') || '{}'); } catch (e) { return {}; } },
+  cache() { try { return JSON.parse(localStorage.getItem('mkc:apl2') || '{}'); } catch (e) { return {}; } },
   async find(meta) {
     // a title with no Latin letters or digits cleans to nothing, and nothing matches every film: no Apple match then
     if (!meta || meta.type !== 'movie' || !meta.name || !this.norm(meta.name)) return null;
@@ -432,13 +432,13 @@ const AppleTrailer = {
     if (this.mem.has(meta.id)) return this.mem.get(meta.id);
     const p = (async () => {
       const y = parseInt(yearOf(meta), 10), cc = (() => { try { return WhereToWatch.region().toLowerCase(); } catch (e) { return 'us'; } })();
-      const r = await fetch(`https://itunes.apple.com/search?media=movie&entity=movie&limit=12&country=${encodeURIComponent(cc)}&term=${encodeURIComponent(meta.name)}`);
+      const r = await fetch(`https://itunes.apple.com/search?media=all&attribute=movieTerm&limit=50&country=${encodeURIComponent(cc)}&term=${encodeURIComponent(meta.name)}`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const j = await r.json(), want = this.norm(meta.name);
-      const m = (j.results || []).filter((x) => x.previewUrl && this.norm(x.trackName) === want && (!y || !x.releaseDate || Math.abs(new Date(x.releaseDate).getFullYear() - y) <= 1))[0];
+      const m = (j.results || []).filter((x) => x.previewUrl && (!x.kind || x.kind === 'feature-movie') && this.norm(x.trackName) === want && (!y || !x.releaseDate || Math.abs(new Date(x.releaseDate).getFullYear() - y) <= 1))[0];
       const out = m ? { u: m.previewUrl.replace(/^http:(?=\/\/[^/]*apple\.com)/, 'https:'), page: m.trackViewUrl || '', at: Date.now() } : { u: '', at: Date.now() };
       const all = this.cache(); all[meta.id] = out; const keys = Object.keys(all); if (keys.length > 300) keys.slice(0, keys.length - 300).forEach((k) => delete all[k]);
-      try { localStorage.setItem('mkc:apl', JSON.stringify(all)); } catch (e) { /* full */ }
+      try { localStorage.setItem('mkc:apl2', JSON.stringify(all)); } catch (e) { /* full */ }
       return out.u ? out : null;
     })().catch((e) => { MKLog.add('info', `Apple trailer lookup: ${e.message}`); return null; });
     this.mem.set(meta.id, p); return p;
@@ -1221,6 +1221,46 @@ const UiSound = {
 };
 UiSound.init();
 
+/* 2.97.4 trailers home */
+{
+  const hc = (k) => { try { Health.add(`err:trailer:${k}`, 10); } catch (e) { /* counts off */ } };
+  const ytApp = () => { try { return !!(window.MKAndroid && typeof MKAndroid.youtube === 'function'); } catch (e) { return false; } };
+  // YouTube refused (or never started) inside the Android app: the YouTube app on the device plays it instead
+  const base = trMsg;
+  trMsg = function (html) {
+    if (html && /YouTube|blocks embedded|did not load|timed out/i.test(html) && ytApp() && TR.id && !/^apple:/.test(TR.id)) {
+      const id = TR.id; let ok = false; try { ok = MKAndroid.youtube(String(id)); } catch (e) { ok = false; }
+      hc(ok ? 'to_app' : 'no_app');
+      if (ok) { closeTrailer(); return; }
+    }
+    return base.apply(this, arguments);
+  };
+  const ot = openTrailer;
+  openTrailer = async function (id) {
+    const r = await ot.apply(this, arguments);
+    try { if (TR.yt && TR.yt.addEventListener && TR.id === id) TR.yt.addEventListener('onError', (e) => hc(String(e && e.data))); } catch (e) { /* older API */ }
+    if (ytApp()) setTimeout(() => {
+      if (TR.id !== id || $('#trailer').hidden || !$('#trMsg').hidden) return;
+      let st = -1; try { st = TR.yt && TR.yt.getPlayerState ? TR.yt.getPlayerState() : -1; } catch (e) { st = -1; }
+      if ([0, 1, 2, 3].includes(st)) return;
+      hc('stuck'); trMsg('<p>YouTube will not play this trailer inside other sites.</p>');
+    }, 12000);
+    return r;
+  };
+}
+// TV remote: Back goes to the menu first (Home in the menu), then asks before leaving
+{
+  const r0 = ExitAsk.root.bind(ExitAsk);
+  ExitAsk.root = function () {
+    if (!IS_TV || document.fullscreenElement) return r0();
+    const h = $('#tabs .tab'); if (!h) return r0();
+    const a = document.activeElement, inBar = !!(a && a.closest && a.closest('#tabs'));
+    const toBar = () => { try { scrollTo({ top: 0, behavior: 'auto' }); } catch (e) { scrollTo(0, 0); } if (h.isConnected) Nav.focus(h, true); };
+    if (!h.classList.contains('on')) { h.click(); toBar(); setTimeout(() => { const b = document.activeElement; if (!(b && b.closest && b.closest('#tabs'))) toBar(); }, 350); return; }
+    if (!inBar) { toBar(); return; }
+    return r0();
+  };
+}
 /* ---------------- Trailer source: a default and a fallback ---------------- */
 {
   if (CFG.appleTrailers === false && !CFG.trailerSource) CFG.trailerSource = 'youtube';

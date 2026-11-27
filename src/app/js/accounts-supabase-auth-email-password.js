@@ -10,6 +10,11 @@
 const SUPABASE_PROJECT = { url: 'https://wogffhgdixgrayowewnf.supabase.co', anonKey: 'sb_publishable_ZpiFwB_oM579GwCunYpHWg_jelRazT-' };
 const SUPABASE_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 const SUPABASE_SRI = 'sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R'; // change together with SUPABASE_LIB
+/* 2.97.2 old TV accounts: the same library with its syntax lowered for engines before Chromium 85, which cannot read `||=`
+   (rebuild with patches/2.97.3-old-tv-accounts-69/build-old-lib.cjs whenever SUPABASE_LIB changes) */
+const SUPABASE_LIB_OLD = 'vendor/supabase-2.117.3-es2019.js'; // 2.97.3: lowered to chrome69 (engines before 80 too)
+const SUPABASE_SRI_OLD = 'sha384-nZe+rjwBay+XS776jQ/2rp7ibMA328BNSU7jRZHnvRxWkic7lN6zsDiDiL19YFFF';
+const SUPABASE_OLD_ENGINE = (() => { try { new Function('var a; a ||= 1'); return false; } catch (e) { return true; } })();
 const SYNC_TABLE = 'mkcinema_profiles';
 
 const isSecretKey = (k) => {
@@ -320,7 +325,7 @@ const Account = {
   async loadLib() {
     if (window.supabase && window.supabase.createClient) return;
     await new Promise((res, rej) => {
-      const s = document.createElement('script'); s.src = SUPABASE_LIB; s.async = true; s.integrity = SUPABASE_SRI; s.crossOrigin = 'anonymous';
+      const s = document.createElement('script'); s.src = SUPABASE_OLD_ENGINE ? SUPABASE_LIB_OLD : SUPABASE_LIB; s.async = true; s.integrity = SUPABASE_OLD_ENGINE ? SUPABASE_SRI_OLD : SUPABASE_SRI; s.crossOrigin = 'anonymous';
       s.onload = res; s.onerror = () => rej(new Error('Could not load the Supabase library (check your connection)'));
       document.head.appendChild(s);
     });

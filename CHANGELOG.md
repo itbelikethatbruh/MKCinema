@@ -2,6 +2,16 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.97.3 (2026-11-27)
+
+- Trailers play again.
+- Back on the TV remote takes you to the menu first.
+- Sign-in and sync also work on TV sticks older than the ones covered in 2.97.2.
+
+## Web app 2.97.2 (2026-11-27)
+
+- Sign-in and sync now work on older TV sticks.
+
 ## Web app 2.97.1 (2026-11-27)
 
 - The settings panel uses a tinted look instead of blur on Android phones and tablets, so it opens and scrolls smoothly.
