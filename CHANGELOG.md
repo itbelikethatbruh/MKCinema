@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.97.1 (2026-11-27)
+
+- The settings panel uses a tinted look instead of blur on Android phones and tablets, so it opens and scrolls smoothly.
+
 ## Web app 2.97.0 (2026-11-27)
 
 - Settings while you watch are one glass panel with Quick, Playback, Picture, Sound, More and a new Colours tab: pick a highlight colour for the progress bar and buttons, and a see-through, frosted or solid look (TVs and Low graphics keep the solid panel).

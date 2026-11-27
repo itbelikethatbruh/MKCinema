@@ -8,7 +8,8 @@ const cfg=(k,v)=>{try{return (typeof CFG!=='undefined'&&CFG[k])||v}catch{return 
 const forced=()=>{try{return (typeof IS_TV!=='undefined'&&IS_TV)||R.classList.contains('tv')||R.classList.contains('lite')||(typeof CFG!=='undefined'&&CFG.quality==='low')}catch{return false}};
 const acc=()=>ACC.find(a=>a[0]===cfg('pxAccent','champagne'))||ACC[0];
 const glass=()=>{const g=cfg('pxGlass','frosted');return forced()?'solid':GL.some(x=>x[0]===g)?g:'frosted'};
-function apply(){const h=acc()[1],n=parseInt(h.slice(1),16);R.style.setProperty('--pc-acc',h);R.style.setProperty('--pc-acc-rgb',`${n>>16&255},${n>>8&255},${n&255}`);R.dataset.pcglass=glass()}
+const noblur=()=>{try{return /Android/i.test(navigator.userAgent)&&matchMedia('(pointer:coarse)').matches&&!forced()}catch{return false}};
+function apply(){R.classList.toggle('pc-noblur',noblur());const h=acc()[1],n=parseInt(h.slice(1),16);R.style.setProperty('--pc-acc',h);R.style.setProperty('--pc-acc-rgb',`${n>>16&255},${n>>8&255},${n&255}`);R.dataset.pcglass=glass()}
 function set(k,v){if(typeof setCfg==='function')setCfg(k,v);else if(typeof CFG!=='undefined')CFG[k]=v;apply()}
 function html(){const a=acc()[0],g=glass();
  return `<div class="pl-sec"><div class="pl-h"><span>Highlight colour</span></div><div class="pl-sw" role="radiogroup">`+
