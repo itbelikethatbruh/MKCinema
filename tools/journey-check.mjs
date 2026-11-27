@@ -171,7 +171,9 @@ function probe() {
     // TV: the drawn highlight and the real focus must be the same item. A hidden item (inside a closed section) takes
     // the highlight class but cannot take focus, so the remote seems to vanish while focus stays where it was.
     const nf = document.querySelector('.nav-focus');
-    if (document.documentElement.classList.contains('tv') && nf && nf !== a && !nf.contains(a) && !a.contains(nf))
+    // (a text box shows its own caret, so a leftover highlight class elsewhere is not what the remote user goes by)
+    const typing = a.matches('input:not([type=button]):not([type=checkbox]):not([type=radio]):not([type=range]), textarea, [contenteditable="true"]');
+    if (document.documentElement.classList.contains('tv') && !typing && nf && nf !== a && !nf.contains(a) && !a.contains(nf))
       return { ...info, ok: false, why: `the highlight is drawn on ${name(nf)}, but the remote is still on this item` };
     if (o < 0.3) return { ...info, ok: false, why: `the highlighted item is see-through (${Math.round(o * 100)}%)` };
     const cx = Math.min(Math.max(r.left + r.width / 2, 1), innerWidth - 1), cy = Math.min(Math.max(r.top + r.height / 2, 1), innerHeight - 1);
