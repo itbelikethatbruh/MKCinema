@@ -189,6 +189,7 @@ async function renderHome() {
    Hero billboard
    ===================================================================== */
 function setHeroList(list) {
+  if (window.__mkFastHero && list) { const k = list.findIndex((m) => m && m.id === window.__mkFastHero); if (k > 0) list = [...list.slice(k), ...list.slice(0, k)]; window.__mkFastHero = ''; } /* 2.96.2 tv speed */
   S.hero = list.map(remember); S.heroIdx = 0;
   $('#heroDots').innerHTML = S.hero.map((_, i) => `<button type="button" aria-label="Show featured ${i + 1}"></button>`).join('');
   $$('#heroDots button').forEach((b, i) => b.addEventListener('click', () => showHero(i, i < S.heroIdx ? -1 : 1)));
@@ -2418,6 +2419,7 @@ const Nav = {
     if (!cur) { if (IS_TV || this.kb) this.restore(fast); else this.focus(list[0]); return; }
     // 2.67.1 tv-playback: a lane (a film's cast and crew names) is one stop going up or down; Left and Right walk its names
     const lane = cur.closest('[data-nav-lane]'), vert = dir === 'up' || dir === 'down';
+    if (vert) { const to = cur.getAttribute(dir === 'down' ? 'data-nav-down' : 'data-nav-up'); if (to) { const t = [...root.querySelectorAll(to)].find((x) => x !== cur && !x.closest('[hidden]')); if (t) { this.focus(t, fast); return; } } }
     if (lane && !vert) { const m = list.filter((x) => lane.contains(x)), n = m[m.indexOf(cur) + (dir === 'right' ? 1 : -1)]; if (n) { this.rects.clear(); this.focus(n, fast); return; } }
     // leaving a lane up or down starts from its left edge, so the row below gets its first item, not the one under a name
     const a = cur.getBoundingClientRect(), ax = lane && vert ? Math.min(a.left + a.width / 2, lane.getBoundingClientRect().left + 40) : a.left + a.width / 2, ay = a.top + a.height / 2;
@@ -2549,6 +2551,24 @@ function handleKey(e) {
   if (k === '/' && $('#palette').hidden && $('#player').hidden) { e.preventDefault(); openPalette(); }
 }
 document.addEventListener('keydown', handleKey);
+/* 2.96.2 tv speed */
+if (IS_TV) {
+  let kSeen = null;
+  document.addEventListener('keydown', (e) => {
+    const t = e.target, k = e.key;
+    if (!/^Arrow/.test(k) || !t || !(t.tagName === 'INPUT' || t.tagName === 'TEXTAREA') || /^(checkbox|radio|range|button|submit|color|file)$/.test(t.type)) return;
+    let a = null, z = null; try { a = t.selectionStart; z = t.selectionEnd; } catch (x) { /* no caret */ }
+    const rec = kSeen = { ok: false };
+    setTimeout(() => {
+      if (rec.ok || e.defaultPrevented || document.activeElement !== t) return;   // the page or the box handled it
+      let edge = k === 'ArrowUp' || k === 'ArrowDown';
+      if (edge && t.tagName === 'TEXTAREA') return;
+      if (!edge) edge = a == null || (k === 'ArrowLeft' ? a === 0 && z === 0 : a === t.value.length);
+      if (edge) try { Nav.move(k.slice(5).toLowerCase(), e.repeat); } catch (x) { /* never break typing */ }
+    }, 0);
+  }, true);
+  document.addEventListener('keydown', () => { if (kSeen) kSeen.ok = true; });
+}
 document.addEventListener('pointerdown', () => { if (Pad.echo()) return; $$('.nav-focus').forEach((x) => x.classList.remove('nav-focus')); Nav.kbOff(); }, { passive: true });
 
 const Pad = {

@@ -449,13 +449,13 @@ const Remote = {
   hint() {
     if (!IS_TV || this.hintEl || this.peers.size || Store.get('rmPaired', false)) return;
     // never over the welcome tour or an open panel: wait for the home screen
-    if (this.layerOpen() || (window.MKCalm ? MKCalm.busy() : document.body.classList.contains('intro-on'))) { clearTimeout(this.hintT); this.hintT = setTimeout(() => this.hint(), 3000); return; }
+    if (this.layerOpen() || (typeof S !== 'undefined' && S.view !== 'home') || (window.MKCalm ? MKCalm.busy() : document.body.classList.contains('intro-on'))) { clearTimeout(this.hintT); this.hintT = setTimeout(() => this.hint(), 3000); return; }
     const n = Store.get('rmHint', 0), link = this.link(this.code); if (n >= 3 || !link) return; Store.set('rmHint', n + 1);
     const el = this.hintEl = document.createElement('div'); el.className = 'rm-hint'; el.setAttribute('role', 'status');
     el.innerHTML = `<div class="qr-wrap">${QR.svg(link, { margin: 2 })}</div><div class="rm-hint-t"><small>Phone remote</small><b>Use your phone as a remote</b><span>Scan with your phone camera, or open ${esc(this.link().replace(/^https?:\/\//, ''))} and type <b class="mono">${esc(this.code)}</b></span></div>`;
     document.body.appendChild(el); requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on'))); tvBackHook();
     setTimeout(() => this.unhint(), 18000);
-    clearInterval(this.hintW); this.hintW = setInterval(() => { if (!this.hintEl) { clearInterval(this.hintW); return; } if (this.layerOpen() || document.documentElement.classList.contains('ezb-menu-open') || !$('#player').hidden) this.unhint(); }, 400);
+    clearInterval(this.hintW); this.hintW = setInterval(() => { if (!this.hintEl) { clearInterval(this.hintW); return; } if (this.layerOpen() || document.documentElement.classList.contains('ezb-menu-open') || !$('#player').hidden || (typeof S !== 'undefined' && S.view !== 'home') || (typeof SportsLive !== 'undefined' && SportsLive.isOpen && SportsLive.isOpen())) this.unhint(); }, 400); /* 2.96.2 tv speed */
   },
   unhint() { clearInterval(this.hintW); const el = this.hintEl; if (!el) return; this.hintEl = null; el.classList.remove('on'); if (el.id === 'remote') el.removeAttribute('id'); tvBackHook(); setTimeout(() => el.remove(), 700); },
 };

@@ -2361,6 +2361,8 @@ html.mk-pill.mk-pad.ezb-bar main{padding-top:calc(var(--dock-h) + 28px + env(saf
 
 <!-- ============ App ============ -->
 <style id="mk-seatgate">html.seat-gate #app{visibility:hidden}</style><script>/* 2.48 seat-first: Home stays hidden until a seat is picked */(function(){try{var d=document.documentElement,c=window.__CFG0||JSON.parse(localStorage.getItem("mkc:cfg")||"{}")||{},l=JSON.parse(localStorage.getItem("mkc:seats")||"[]"),ok=false;try{ok=sessionStorage.getItem("mkc:seatOk")==="1"}catch(e){}if(!ok)try{if(/MKCinemaAndroid/.test(navigator.userAgent)){var n=Date.now(),me=localStorage.getItem("mkc:seat")||"",L=JSON.parse(localStorage.getItem("mkc:seatLive")||"null"),H=JSON.parse(localStorage.getItem("mkc:tvHandoff")||"null");ok=!!(L&&n-L.at<12e4&&(L.seat||"")===me)||!!(H&&H.meta&&n-H.at<144e5&&(H.seat||"")===me)}}catch(e){}if(Array.isArray(l)&&l.length&&c.seatAsk!==false&&!ok){d.classList.add("seat-gate");setTimeout(function(){var p=document.getElementById("seatPick");if(!p||p.hidden)d.classList.remove("seat-gate")},15000)}}catch(e){}})();</script>
+<style id="mk-2962-bar-wait">html.tv.mk-bar-wait .dock-wrap{opacity:0}html.tv.mk-bar-in .dock-wrap{transition:transform .35s var(--ease),opacity .3s ease}</style>
+<script id="mk-2962-bar-wait-js">/* 2.96.2 tv speed: the TV top bar shows once, complete */(function(){var de=document.documentElement;if(!de.classList.contains('tv'))return;de.classList.add('mk-bar-wait');var t0=Date.now(),iv=0;var done=function(){if(!de.classList.contains('mk-bar-wait'))return;clearInterval(iv);try{if(typeof DockFit!=='undefined')DockFit.run()}catch(e){}requestAnimationFrame(function(){de.classList.add('mk-bar-in');de.classList.remove('mk-bar-wait');window.MK_BAR_READY=1;try{window.dispatchEvent(new Event('mk-bar-ready'))}catch(e){}setTimeout(function(){de.classList.remove('mk-bar-in')},450)})};iv=setInterval(function(){if(document.getElementById('ezbMenuB')||document.readyState!=='loading'||Date.now()-t0>12000)done()},100);document.addEventListener('focusin',function(e){if(e.target&&e.target.closest&&e.target.closest('.dock-wrap'))done()},true)})();</script>
 <script id="mk-289-fast-show">
 /* 2.89 instant Home (TVs). While the app loads, show a picture of the Home screen as it looked last time, in place
    of the plain start cover. It is drawn from a small saved list of positions, pictures and titles, cannot be clicked,
@@ -2374,13 +2376,16 @@ html.mk-pill.mk-pad.ezb-bar main{padding-top:calc(var(--dock-h) + 28px + env(saf
     var esc = function (t) { return String(t).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); };
     var url = function (u) { return /^(https?:|\/|data:image\/)/i.test(u) ? esc(u) : ''; };
     var box = function (o) { return 'position:absolute;left:' + (+o.x) + 'px;top:' + (+o.y) + 'px;width:' + (+o.w) + 'px;height:' + (+o.h) + 'px;' + (o.r ? 'border-radius:' + esc(o.r) + ';' : ''); };
-    var h = '';
+    var h = '', hb = '', bar = null; /* 2.96.2 tv speed */
+    for (var n0 = 0; n0 < s.i.length; n0++) if (s.i[n0].k === 'box') bar = s.i[n0];
+    var inBar = function (o) { return bar && o.k !== 'hero' && o.k !== 'img' && o.y >= bar.y - 2 && o.y + o.h <= bar.y + bar.h + 2; };
     for (var n = 0; n < s.i.length; n++) {
-      var o = s.i[n];
+      var o = s.i[n], h0 = h;
       if (o.k === 'hero') {
         h += '<div style="' + box(o) + 'overflow:hidden;background:#0b0b0d">' + (url(o.src) ? '<img alt="" src="' + url(o.src) + '" style="position:absolute;left:' + (+o.ix) + 'px;top:' + (+o.iy) + 'px;width:' + (+o.iw) + 'px;height:' + (+o.ih) + 'px;object-fit:cover;object-position:' + esc(o.op || '50% 50%') + ';opacity:' + (+o.io || 1) + (o.fl ? ';filter:' + esc(o.fl) : '') + '">' : '') +
           (o.sc ? o.sc.split('|').map(function (g) { return '<div style="position:absolute;inset:0;background:' + esc(g) + '"></div>'; }).join('') + (o.bd ? '<div style="position:absolute;inset:0;border-radius:inherit;box-sizing:border-box;border:' + esc(o.bd) + '"></div>' : '') + '</div>' :
           '<div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.88) 0%,rgba(0,0,0,.55) 38%,rgba(0,0,0,0) 72%),linear-gradient(0deg,rgba(0,0,0,.7) 0%,rgba(0,0,0,0) 45%)"></div></div>');
+        if (o.hid) window.__mkFastHero = String(o.hid);
       } else if (o.k === 'img') {
         if (url(o.src)) h += '<img alt="" src="' + url(o.src) + '" style="' + box(o) + 'object-fit:' + (o.fit === 'contain' ? 'contain;object-position:left bottom' : 'cover') + '">';
       } else if (o.k === 'box') {
@@ -2388,16 +2393,23 @@ html.mk-pill.mk-pad.ezb-bar main{padding-top:calc(var(--dock-h) + 28px + env(saf
       } else if (o.k === 'txt') {
         h += '<div style="' + box(o) + 'box-sizing:border-box;overflow:hidden;font:' + esc(o.f) + ';color:' + esc(o.c) + ';' + (o.wr ? 'white-space:normal;line-height:' + esc(o.wr) + ';' : 'display:flex;align-items:center;white-space:nowrap;justify-content:' + (o.ce ? 'center' : 'flex-start') + ';') + (o.ls ? 'letter-spacing:' + esc(o.ls) + ';' : '') + (o.tt ? 'text-transform:' + esc(o.tt) + ';' : '') + (o.bd ? 'border:' + esc(o.bd) + ';' : '') + (o.bg ? 'background:' + esc(o.bg) + ';' : '') + '">' + esc(o.t) + '</div>';
       }
+      if (inBar(o)) { hb += h.slice(h0.length); h = h0; }
     }
+    var eb = null;
+    if (hb) { eb = document.createElement('div'); eb.id = 'mkFastBar'; eb.setAttribute('aria-hidden', 'true'); eb.style.cssText = 'position:fixed;inset:0;z-index:81;overflow:hidden;pointer-events:none;transition:opacity .3s ease'; eb.innerHTML = '<div style="position:absolute;left:0;top:0;width:' + (+s.w) + 'px;height:' + (+s.h) + 'px;transform-origin:0 0">' + hb + '</div>'; document.body.appendChild(eb); }
     var el = document.createElement('div'); el.id = 'mkFast'; el.setAttribute('aria-hidden', 'true');
     el.style.cssText = 'position:fixed;inset:0;z-index:80;background:' + esc(s.bg || '#000') + ';overflow:hidden;pointer-events:none;transition:opacity .35s ease';
-    el.innerHTML='<div style="position:absolute;left:0;top:0;width:'+(+s.w)+'px;height:'+(+s.h)+'px;transform-origin:0 0">'+h+'</div>';document.body.appendChild(el),(function(){var f=function(){var k=innerWidth/s.w;if(el.firstChild)el.firstChild.style.transform=Math.abs(k-1)<.002?'':'scale('+k+')'};f();addEventListener('resize',f)})();
+    el.innerHTML='<div style="position:absolute;left:0;top:0;width:'+(+s.w)+'px;height:'+(+s.h)+'px;transform-origin:0 0">'+h+'</div>';document.body.appendChild(el),(function(){var f=function(){var k=innerWidth/s.w;if(el.firstChild)el.firstChild.style.transform=Math.abs(k-1)<.002?'':'scale('+k+')';if(eb&&eb.firstChild)eb.firstChild.style.transform=el.firstChild.style.transform};f();addEventListener('resize',f)})();
     var t0 = Date.now(), gone = false;
-    var out = function () { if (gone) return; gone = true; clearInterval(iv); el.style.opacity = '0'; setTimeout(function () { el.remove(); }, 400); };
+    var barOut = function () { if (!eb || eb.dataset.out) return; eb.dataset.out = '1'; eb.style.opacity = '0'; setTimeout(function () { eb.remove(); }, 400); };
+    if (eb) { addEventListener('mk-bar-ready', barOut); setTimeout(barOut, 12000); }
+    var out = function () { if (gone) return; gone = true; clearInterval(iv); el.style.opacity = '0'; setTimeout(function () { el.remove(); }, 400); if (window.MK_BAR_READY || !de.classList.contains('mk-bar-wait')) barOut(); };
     var iv = setInterval(function () {
       if (Date.now() - t0 > 9000) return out();
-      if (document.readyState === 'loading') return;
-      if (!de.classList.contains('booting') || de.classList.contains('seat-gate')) setTimeout(out, 200);
+      if (de.classList.contains('seat-gate')) return out();
+      if (de.classList.contains('booting')) return;
+      var hm = document.getElementById('homeRows'), bi = document.querySelector('#heroBg img'), cd = hm && hm.querySelector('.card img');
+      if ((cd && cd.complete && cd.naturalWidth) || (bi && bi.complete && bi.naturalWidth) || document.readyState !== 'loading') setTimeout(out, 120);
     }, 100);
     window.addEventListener('error', function () { setTimeout(out, 800); });
   } catch (e) { /* the normal start cover shows instead */ }
@@ -2909,8 +2921,9 @@ const Health = {
     addEventListener('unhandledrejection', (e) => { const m = String((e.reason && (e.reason.name || e.reason.message)) || ''); if (!/Abort|NotAllowed|play\(\)|interrupted/i.test(m)) this.add('err:promise', 5); });
     // Back: the TV app calls back(); phones and browsers go through the page's history
     try { const prev = back; back = function () { const b = Health.sig(); const r = prev.apply(this, arguments); Health.backCheck(b); return r; }; } catch (e) { /* no back */ }
-    let last = this.sig(); setInterval(() => { last = this.sig(); }, 400);
-    addEventListener('popstate', () => this.backCheck(last));
+    const tvq = typeof IS_TV !== 'undefined' && IS_TV; /* 2.96.2 tv speed */
+    let last = this.sig(); if (!tvq) setInterval(() => { last = this.sig(); }, 400);
+    addEventListener('popstate', () => { if (!tvq) this.backCheck(last); });
     if (typeof IS_TV !== 'undefined' && IS_TV) document.addEventListener('keydown', (e) => {
       if (!/^Arrow/.test(e.key)) return; const a = document.activeElement;
       if ((!a || a === document.body) && document.getElementById('player').hidden) setTimeout(() => { const b = document.activeElement; if (!b || b === document.body) this.add('err:tv_no_focus', 5); }, 300);
@@ -4476,6 +4489,7 @@ async function renderHome() {
    Hero billboard
    ===================================================================== */
 function setHeroList(list) {
+  if (window.__mkFastHero && list) { const k = list.findIndex((m) => m && m.id === window.__mkFastHero); if (k > 0) list = [...list.slice(k), ...list.slice(0, k)]; window.__mkFastHero = ''; } /* 2.96.2 tv speed */
   S.hero = list.map(remember); S.heroIdx = 0;
   $('#heroDots').innerHTML = S.hero.map((_, i) => `<button type="button" aria-label="Show featured ${i + 1}"></button>`).join('');
   $$('#heroDots button').forEach((b, i) => b.addEventListener('click', () => showHero(i, i < S.heroIdx ? -1 : 1)));
@@ -6705,6 +6719,7 @@ const Nav = {
     if (!cur) { if (IS_TV || this.kb) this.restore(fast); else this.focus(list[0]); return; }
     // 2.67.1 tv-playback: a lane (a film's cast and crew names) is one stop going up or down; Left and Right walk its names
     const lane = cur.closest('[data-nav-lane]'), vert = dir === 'up' || dir === 'down';
+    if (vert) { const to = cur.getAttribute(dir === 'down' ? 'data-nav-down' : 'data-nav-up'); if (to) { const t = [...root.querySelectorAll(to)].find((x) => x !== cur && !x.closest('[hidden]')); if (t) { this.focus(t, fast); return; } } }
     if (lane && !vert) { const m = list.filter((x) => lane.contains(x)), n = m[m.indexOf(cur) + (dir === 'right' ? 1 : -1)]; if (n) { this.rects.clear(); this.focus(n, fast); return; } }
     // leaving a lane up or down starts from its left edge, so the row below gets its first item, not the one under a name
     const a = cur.getBoundingClientRect(), ax = lane && vert ? Math.min(a.left + a.width / 2, lane.getBoundingClientRect().left + 40) : a.left + a.width / 2, ay = a.top + a.height / 2;
@@ -6836,6 +6851,24 @@ function handleKey(e) {
   if (k === '/' && $('#palette').hidden && $('#player').hidden) { e.preventDefault(); openPalette(); }
 }
 document.addEventListener('keydown', handleKey);
+/* 2.96.2 tv speed */
+if (IS_TV) {
+  let kSeen = null;
+  document.addEventListener('keydown', (e) => {
+    const t = e.target, k = e.key;
+    if (!/^Arrow/.test(k) || !t || !(t.tagName === 'INPUT' || t.tagName === 'TEXTAREA') || /^(checkbox|radio|range|button|submit|color|file)$/.test(t.type)) return;
+    let a = null, z = null; try { a = t.selectionStart; z = t.selectionEnd; } catch (x) { /* no caret */ }
+    const rec = kSeen = { ok: false };
+    setTimeout(() => {
+      if (rec.ok || e.defaultPrevented || document.activeElement !== t) return;   // the page or the box handled it
+      let edge = k === 'ArrowUp' || k === 'ArrowDown';
+      if (edge && t.tagName === 'TEXTAREA') return;
+      if (!edge) edge = a == null || (k === 'ArrowLeft' ? a === 0 && z === 0 : a === t.value.length);
+      if (edge) try { Nav.move(k.slice(5).toLowerCase(), e.repeat); } catch (x) { /* never break typing */ }
+    }, 0);
+  }, true);
+  document.addEventListener('keydown', () => { if (kSeen) kSeen.ok = true; });
+}
 document.addEventListener('pointerdown', () => { if (Pad.echo()) return; $$('.nav-focus').forEach((x) => x.classList.remove('nav-focus')); Nav.kbOff(); }, { passive: true });
 
 const Pad = {
@@ -9796,13 +9829,13 @@ const Remote = {
   hint() {
     if (!IS_TV || this.hintEl || this.peers.size || Store.get('rmPaired', false)) return;
     // never over the welcome tour or an open panel: wait for the home screen
-    if (this.layerOpen() || (window.MKCalm ? MKCalm.busy() : document.body.classList.contains('intro-on'))) { clearTimeout(this.hintT); this.hintT = setTimeout(() => this.hint(), 3000); return; }
+    if (this.layerOpen() || (typeof S !== 'undefined' && S.view !== 'home') || (window.MKCalm ? MKCalm.busy() : document.body.classList.contains('intro-on'))) { clearTimeout(this.hintT); this.hintT = setTimeout(() => this.hint(), 3000); return; }
     const n = Store.get('rmHint', 0), link = this.link(this.code); if (n >= 3 || !link) return; Store.set('rmHint', n + 1);
     const el = this.hintEl = document.createElement('div'); el.className = 'rm-hint'; el.setAttribute('role', 'status');
     el.innerHTML = `<div class="qr-wrap">${QR.svg(link, { margin: 2 })}</div><div class="rm-hint-t"><small>Phone remote</small><b>Use your phone as a remote</b><span>Scan with your phone camera, or open ${esc(this.link().replace(/^https?:\/\//, ''))} and type <b class="mono">${esc(this.code)}</b></span></div>`;
     document.body.appendChild(el); requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on'))); tvBackHook();
     setTimeout(() => this.unhint(), 18000);
-    clearInterval(this.hintW); this.hintW = setInterval(() => { if (!this.hintEl) { clearInterval(this.hintW); return; } if (this.layerOpen() || document.documentElement.classList.contains('ezb-menu-open') || !$('#player').hidden) this.unhint(); }, 400);
+    clearInterval(this.hintW); this.hintW = setInterval(() => { if (!this.hintEl) { clearInterval(this.hintW); return; } if (this.layerOpen() || document.documentElement.classList.contains('ezb-menu-open') || !$('#player').hidden || (typeof S !== 'undefined' && S.view !== 'home') || (typeof SportsLive !== 'undefined' && SportsLive.isOpen && SportsLive.isOpen())) this.unhint(); }, 400); /* 2.96.2 tv speed */
   },
   unhint() { clearInterval(this.hintW); const el = this.hintEl; if (!el) return; this.hintEl = null; el.classList.remove('on'); if (el.id === 'remote') el.removeAttribute('id'); tvBackHook(); setTimeout(() => el.remove(), 700); },
 };
@@ -12111,7 +12144,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.95.22';
+const APP_VERSION = '2.96.0';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -25283,6 +25316,10 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.96.0', date: '2026-11-27', items: [
+    ['new', 'Sports match centre', 'Sports gets a new match centre: live scores, stats, events, line-ups on a pitch, standings and match facts, a Watch button that finds the game in your own channels and TV guide, Keep score on screen, and a portrait layout for phones.'],
+    ['better', 'Quicker on TVs', 'TVs: Home is ready sooner on a repeat start, the top bar appears once and stays still, and the remote moves on from text boxes.'],
+  ] },
   { v: '2.95.21', date: '2026-11-26', items: [
     ['better', 'Episodes open in one step', 'Episode sources appear in one step instead of the list being drawn again while it opens.'],
   ] },
@@ -37313,9 +37350,9 @@ const TourDeep = {
         lede: 'Charts, artists and albums, live radio from around the world, and synced lyrics on a big Now Playing screen. Music keeps playing while you browse.',
         pts: [['server', 'Your own music in full', 'From your Plex, Jellyfin, Emby or Navidrome server, or files on this device.'], ['radio', 'Live radio', 'Thousands of stations, playing their own streams.'], ['mic-vocal', 'Lyrics that follow along', 'Line by line, in time with the song.']],
         where: 'Music, in the main menu' },
-      { id: 'scores', ch: 'discover', t: 'Scores and tables', art: 'scores',
-        lede: 'Twenty-two leagues with game pages, league tables and your own teams first, plus a switch that hides every score.',
-        pts: [['star', 'Follow your teams', 'Their games come first, with score alerts while MKCinema is open.'], ['table', 'League tables', 'Football, basketball, hockey, baseball and more.'], ['eye-off', 'Hide scores', 'Watch it later without spoilers.']],
+      { id: 'scores', ch: 'discover', t: 'Sports match centre', art: 'scores',
+        lede: 'Live scores, stats, events, line-ups on a pitch, standings and match facts, with your own teams first.',
+        pts: [['tv', 'Watch the game', 'A Watch button finds the game in your own channels and TV guide.'], ['trophy', 'Keep score on screen', 'The score stays in a corner while you browse or watch.'], ['eye-off', 'Hide scores', 'Watch it later without spoilers.']],
         where: 'Live TV › Scores and tables' },
     ];
     return F.filter((f) => !f.when || f.when());
@@ -50637,7 +50674,7 @@ html.tv .lh-g.nav-focus,html.tv .lh-sw button.nav-focus{outline:2px solid #f3efe
         <span class="lh-gt">${this.logo(g.away, 'lh-sl')}${esc(g.away.abbr)}</span><span class="lh-gm">${live ? `<i class="lh-dot"></i>${esc(g.away.score)}-${esc(g.home.score)}` : esc(new Date(g.date).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }))}<small>${live ? esc(g.detail) : esc(this.day(g).split(' · ')[0])}</small></span><span class="lh-gt r">${esc(g.home.abbr)}${this.logo(g.home, 'lh-sl')}</span></span></button>`;
     },
     switcher(view) {
-      return `<div class="segc lh-sw" role="tablist" aria-label="Live"><button type="button" role="tab" data-nav data-lhv="tv" class="${view === 'tv' ? 'on' : ''}" aria-selected="${view === 'tv'}"><i data-lucide="radio-tower"></i>Channels</button><button type="button" role="tab" data-nav data-lhv="sports" class="${view === 'sports' ? 'on' : ''}" aria-selected="${view === 'sports'}"><i data-lucide="trophy"></i>Sports in your sources</button></div>`;
+      return `<div class="segc lh-sw" role="tablist" aria-label="Live" data-nav-band><button type="button" role="tab" data-nav data-lhv="tv" class="${view === 'tv' ? 'on' : ''}" aria-selected="${view === 'tv'}"><i data-lucide="radio-tower"></i>Channels</button><button type="button" role="tab" data-nav data-lhv="sports" class="${view === 'sports' ? 'on' : ''}" aria-selected="${view === 'sports'}"><i data-lucide="trophy"></i>Sports in your sources</button></div>`;
     },
     host() { return q('#view-tv.on') ? 'tv' : q('#view-sports.on') ? 'sports' : ''; },
     async show() {
@@ -52860,6 +52897,8 @@ const SportsPlus = {
   },
   /* ---------------- the page ---------------- */
   async open(lg) {
+    // 2.96: the match centre (mk-296-sports) is the sports page now
+    if (window.SportsLive) { SportsLive.open(lg); return; }
     if (lg) this.st.lg = lg;
     X8.layer('sportsPlus', { label: 'Scores and tables', full: true }); $('#sportsPlus').classList.add('spx');
     X8.open('sportsPlus'); this.render();
@@ -57081,7 +57120,7 @@ Spot.init();
       if (typeof Seats !== 'undefined' && Seats.list && Seats.list().length > 1) return false;
       const out = [], hero = document.getElementById('hero');
       if (hero && !hero.hidden) {
-        const r = R(hero), bg = document.querySelector('#heroBg img'), o = { k: 'hero', ...r, r: getComputedStyle(hero).borderRadius };
+        const r = R(hero), bg = document.querySelector('#heroBg img'), o = { k: 'hero', ...r, r: getComputedStyle(hero).borderRadius, hid: (S.hero && S.hero[S.heroIdx] && S.hero[S.heroIdx].id) || '' };
         if (bg && bg.complete && bg.naturalWidth) { const b = R(bg); const bc = getComputedStyle(bg); Object.assign(o, { src: src(bg), ix: b.x - r.x, iy: b.y - r.y, iw: b.w, ih: b.h, op: bc.objectPosition, io: bc.opacity, fl: bc.filter === 'none' ? '' : bc.filter }); }
         o.sc = [[hero, '::before'], [hero, '::after'], [document.getElementById('heroBg'), '::before'], [document.getElementById('heroBg'), '::after']].map(([e, p]) => { try { const c = getComputedStyle(e, p); return c.content !== 'none' && c.backgroundImage !== 'none' && c.display !== 'none' ? c.backgroundImage : ''; } catch (e2) { return ''; } }).filter(Boolean).join('|').slice(0, 1500);
         o.bd = `${getComputedStyle(hero).borderTopWidth} solid ${getComputedStyle(hero).borderTopColor}`;
@@ -57122,6 +57161,11 @@ Spot.init();
   const wait = setInterval(() => { if (!de.classList.contains('booting')) { clearInterval(wait); later(3500); } }, 300);
   // a different account or profile must never see the last one's Home
   try { if (typeof Account !== 'undefined' && Account.signedOut) { const so = Account.signedOut; Account.signedOut = function () { clear(); return so.apply(this, arguments); }; } } catch (e) { /* no accounts */ }
+  /* 2.96.2 tv speed */
+  let lastSave = 0, idleT = 0;
+  const quiet = () => { if (Date.now() - lastSave < 20000 || de.classList.contains('ezb-menu-open') || document.querySelector('.focus-ask, .sup-ask')) return; if (take()) lastSave = Date.now(); };
+  document.addEventListener('keydown', () => { clearTimeout(idleT); idleT = setTimeout(quiet, 2500); }, true);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { lastSave = 0; quiet(); } });
   window.MkFastHome = { take, clear };
 })();
 </script>
@@ -60449,6 +60493,739 @@ body.reduce-motion #epSheet .ep-sheet,body.reduce-motion #epSheet::before{animat
   };
   renderStreamsPanel = w; try { window.renderStreamsPanel = w; } catch (e) { /* the binding is enough */ }
 })();</script>
+<!-- mk-296-sports:start -->
+<style id="mk-296-sports-css">
+/* 2.96 Sports: the match centre. Scores, stats, events, line-ups, tables and the channels in the person's own playlists
+   that show a game, in one screen: three columns on TVs and computers, one column on phones held upright.
+   Opacity and transform animations only; no backdrop-filter. */
+#sportsPlus.slv .x8-fullbox{background:var(--n060607,#060607);height:100%;overflow:hidden;display:block;width:100%;max-width:100vw}
+.slv-in{--ln:rgba(var(--kffffff-c,255,255,255),.075);--ln2:rgba(var(--kffffff-c,255,255,255),.13);--mu:rgba(var(--kffffff-c,255,255,255),.55);--mu2:rgba(var(--kffffff-c,255,255,255),.36);--sf:rgba(var(--kffffff-c,255,255,255),.035);--sf2:rgba(var(--kffffff-c,255,255,255),.06);--ch:var(--champ,#d9d4c7);--c1:#f28800;--c2:#0606fa;--live:#e5484d;
+  position:relative;height:100%;color:var(--kffffff,#fff);font-family:var(--f-body);overflow:hidden;
+  background:radial-gradient(1100px 480px at 55% -10%,color-mix(in srgb,var(--c1) 15%,transparent),transparent 70%),radial-gradient(800px 460px at 104% 26%,color-mix(in srgb,var(--c2) 12%,transparent),transparent 70%)}
+.slv-in *{box-sizing:border-box}
+.slv-in [translate=no]{unicode-bidi:plaintext}
+.slv-dot{width:8px;height:8px;border-radius:50%;background:var(--live);box-shadow:0 0 0 3px #e5484d40;display:inline-block;flex:none;animation:slvPulse 1.6s ease-in-out infinite}
+@keyframes slvPulse{50%{opacity:.45}}
+@keyframes slvIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.slv-fade{animation:slvIn .28s cubic-bezier(.25,.6,.3,1) both}
+html.lite .slv-fade,html.tv .slv-fade{animation:none}
+.slv-top{display:flex;align-items:center;gap:14px;height:64px;padding:0 28px}
+.slv-top h1{font-family:var(--f-display);font-size:calc(22px * var(--ts,1));font-weight:700;margin:0;letter-spacing:-.01em}
+.slv-top .sp{flex:1}
+.slv-ib{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--sf2);border:1px solid var(--ln);color:inherit;cursor:pointer;flex:none}
+.slv-ib svg{width:18px;height:18px}
+.slv-ib.on{background:var(--plat);color:#000}
+.slv-grid{display:grid;grid-template-columns:clamp(250px,18vw,330px) minmax(0,1fr) clamp(380px,27vw,520px);gap:20px;height:calc(100% - 64px);padding:0 28px 24px}
+.slv-col{min-height:0;display:flex;flex-direction:column;gap:14px}
+.slv-pan{background:linear-gradient(180deg,var(--sf),rgba(var(--kffffff-c,255,255,255),.012));border:1px solid var(--ln);border-radius:22px;min-height:0}
+.slv-scroll{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+.slv-scroll::-webkit-scrollbar{display:none}
+/* rail */
+.slv-rail{flex:1;padding:10px 8px}
+.slv-rh{font-family:var(--f-mono);font-size:calc(10.5px * var(--ts,1));letter-spacing:.2em;color:var(--mu2);padding:16px 14px 6px;text-transform:uppercase}
+.slv-ri{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:14px;font:inherit;font-size:calc(15px * var(--ts,1));color:rgba(var(--kffffff-c,255,255,255),.86);background:none;border:0;text-align:left;cursor:pointer}
+.slv-ri .n{margin-left:auto;font-family:var(--f-mono);font-size:calc(12px * var(--ts,1));color:var(--mu);display:flex;align-items:center;gap:6px}
+.slv-ri .n .slv-dot{width:6px;height:6px;box-shadow:none}
+.slv-ri.on{background:var(--sf2);color:var(--kffffff,#fff);box-shadow:inset 0 0 0 1px var(--ln2)}
+.slv-ri:focus-visible,.slv-ri.nav-focus{background:var(--plat);color:#000;outline:0}
+.slv-ri:focus-visible .n,.slv-ri.nav-focus .n{color:#333}
+.slv-ic{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:var(--sf2);border:1px solid var(--ln);font-size:calc(10px * var(--ts,1));font-family:var(--f-mono);color:var(--ch);flex:none;overflow:hidden}
+.slv-ic svg{width:14px;height:14px}
+.slv-days{display:flex;gap:4px;padding:6px 6px 2px}
+.slv-days button{flex:1;font:inherit;font-size:calc(12.5px * var(--ts,1));padding:7px 0;border-radius:99px;border:1px solid var(--ln);background:none;color:var(--mu);cursor:pointer}
+.slv-days button.on{background:var(--sf2);color:var(--kffffff,#fff);border-color:var(--ln2)}
+/* match header */
+.slv-hero{padding:22px 26px 20px;position:relative;overflow:hidden;flex:none}
+.slv-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,color-mix(in srgb,var(--c1) 22%,transparent),transparent 38%,transparent 62%,color-mix(in srgb,var(--c2) 26%,transparent));pointer-events:none}
+.slv-hero>*{position:relative}
+.slv-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:calc(11.5px * var(--ts,1));color:var(--mu);font-family:var(--f-mono);letter-spacing:.12em;text-transform:uppercase}
+.slv-meta b{color:var(--ch);font-weight:500}
+.slv-hrow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;margin-top:14px;gap:8px}
+.slv-tm{display:flex;align-items:center;gap:16px;min-width:0}
+.slv-tm.r{flex-direction:row-reverse;text-align:right}
+.slv-lg{width:clamp(56px,4.6vw,84px);height:clamp(56px,4.6vw,84px);padding:8px;border-radius:22px;background:var(--sf2);border:1px solid var(--ln);flex:none;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;color:var(--ch)}
+.slv-lg img{width:100%;height:100%;object-fit:contain;display:block}
+.slv-tm h2{font-family:var(--f-display);font-size:clamp(18px,1.6vw,30px);font-weight:700;letter-spacing:-.01em;line-height:1.12;margin:0;overflow-wrap:normal;word-break:normal;hyphens:none}
+.slv-tm h2.sm{font-size:clamp(15px,1.25vw,24px)}
+.slv-tm h2.xs{font-size:clamp(13px,1.05vw,20px);overflow:hidden;text-overflow:ellipsis}
+.slv-form{display:flex;gap:4px;margin-top:8px}
+.slv-tm.r .slv-form{justify-content:flex-end}
+.slv-form i{width:19px;height:19px;border-radius:6px;font-style:normal;font-size:calc(10px * var(--ts,1));font-family:var(--f-mono);display:grid;place-items:center;background:var(--sf2);color:var(--mu)}
+.slv-form i.W{background:#1f3b2b;color:#7fe0a5}.slv-form i.L{background:#3b1f22;color:#ff9a9e}
+.slv-sc{text-align:center;padding:0 18px}
+.slv-big{font-family:var(--f-display);font-weight:800;font-size:clamp(46px,4.4vw,84px);letter-spacing:-.03em;line-height:1;white-space:nowrap}
+.slv-big span{color:var(--mu2);margin:0 .14em;font-weight:400}
+.slv-big.sm{font-size:clamp(24px,2vw,36px);font-weight:700}
+.slv-st{margin-top:8px;font-family:var(--f-mono);font-size:calc(12.5px * var(--ts,1));color:var(--ch);letter-spacing:.14em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px}
+.slv-st.live{color:#ff9a9e}
+.slv-per{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin-top:10px}
+.slv-per div{font-family:var(--f-mono);font-size:calc(11.5px * var(--ts,1));color:var(--mu);background:rgba(0,0,0,.35);border:1px solid var(--ln);border-radius:10px;padding:5px 9px;white-space:nowrap}
+.slv-per b{color:var(--kffffff,#fff);margin-left:6px;font-weight:600}
+.slv-goals{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:12px;font-size:calc(13.5px * var(--ts,1));color:rgba(var(--kffffff-c,255,255,255),.8)}
+.slv-goals div:last-child{text-align:right}
+.slv-acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.slv-btn{display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:calc(14.5px * var(--ts,1));padding:11px 18px;border-radius:99px;border:1px solid var(--ln2);background:var(--sf2);color:inherit;font-weight:500;white-space:nowrap;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.slv-btn svg{width:16px;height:16px;flex:none}
+.slv-btn.p{background:var(--plat);color:#000;border-color:transparent;font-weight:600}
+.slv-btn.on{border-color:var(--ch);color:var(--ch)}
+.slv-btn:disabled{opacity:.5;cursor:default}
+.slv-evs .m.nav-focus,.slv-plays li.nav-focus,.slv-tab-t td.nav-focus,.slv-fact.nav-focus,.slv-body.nav-focus{outline:2px solid var(--kffffff,#fff);outline-offset:2px;border-radius:8px}
+.slv-btn.nav-focus,.slv-ib.nav-focus,.slv-tab.nav-focus,.slv-ch.nav-focus,.slv-g.nav-focus,.slv-chip.nav-focus,.slv-days button.nav-focus{outline:3px solid var(--kffffff,#fff);outline-offset:3px}
+/* tabs */
+.slv-tabs{display:flex;gap:3px;padding:4px;border-radius:99px;background:var(--n0e0e11,#0e0e11);border:1px solid var(--ln);align-self:flex-start;flex:none;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.slv-tabs::-webkit-scrollbar{display:none}
+.slv-tab{font:inherit;font-size:calc(14px * var(--ts,1));padding:8px 18px;border-radius:99px;color:var(--mu);background:none;border:0;cursor:pointer;white-space:nowrap}
+.slv-tab.on{background:var(--sf2);color:var(--kffffff,#fff);box-shadow:inset 0 0 0 1px var(--ln2)}
+.slv-body{flex:1;padding:20px 24px}
+.slv-note{color:var(--mu);font-size:calc(14px * var(--ts,1));line-height:1.5;padding:8px 2px}
+/* stats */
+.slv-sg{display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(18px,2.4vw,40px);align-items:center;min-height:100%}
+.slv-ring{position:relative;width:clamp(150px,11.5vw,220px);aspect-ratio:1}
+.slv-ring svg{width:100%;height:100%;display:block}
+.slv-ring .c{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.slv-ring .c b{font-family:var(--f-display);font-size:clamp(26px,2.1vw,40px);font-weight:700;display:block;line-height:1}
+.slv-ring .c small{font-family:var(--f-mono);font-size:calc(10px * var(--ts,1));letter-spacing:.2em;color:var(--mu);text-transform:uppercase}
+.slv-ring .c em{font-style:normal;font-size:calc(13px * var(--ts,1));color:var(--mu);display:block;margin-top:6px}
+.slv-bars{display:flex;flex-direction:column;gap:clamp(12px,1.6vh,19px)}
+.slv-bar{display:grid;grid-template-columns:58px minmax(0,1fr) 58px;align-items:center;gap:12px}
+.slv-bar .v{font-family:var(--f-display);font-weight:700;font-size:calc(18px * var(--ts,1))}
+.slv-bar .v.r{text-align:right}
+.slv-bar .v.lo{color:var(--mu)}
+.slv-bar small{display:block;text-align:center;font-size:calc(12.5px * var(--ts,1));color:var(--mu);margin-bottom:6px}
+.slv-tr{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.slv-tr i{height:6px;border-radius:9px;background:var(--sf2);position:relative;overflow:hidden;display:block}
+.slv-tr i b{position:absolute;top:0;bottom:0;width:100%;border-radius:9px;transition:transform .5s cubic-bezier(.25,.6,.3,1)}
+.slv-tr i:first-child b{right:0;background:var(--c1);transform-origin:right}
+.slv-tr i:last-child b{left:0;background:var(--c2);transform-origin:left}
+.slv-tr i b.dim{opacity:.38}
+.slv-poss{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.slv-poss b{font-family:var(--f-display);font-size:calc(21px * var(--ts,1))}
+.slv-poss .pb{flex:1;height:10px;border-radius:9px;overflow:hidden;display:flex;gap:3px}
+.slv-poss .pb i{display:block;height:100%;border-radius:9px}
+/* events */
+.slv-evs{display:grid;grid-template-columns:minmax(0,1fr) 70px minmax(0,1fr);row-gap:7px;font-size:calc(14px * var(--ts,1));align-items:center}
+.slv-evs .m{text-align:center;font-family:var(--f-mono);font-size:calc(12px * var(--ts,1));color:var(--mu)}
+.slv-evs .l{display:flex;justify-content:flex-end;align-items:center;gap:10px;text-align:right}
+.slv-evs .rr{display:flex;align-items:center;gap:10px}
+.slv-evs .sep{grid-column:1/-1;text-align:center;font-family:var(--f-mono);font-size:calc(11px * var(--ts,1));letter-spacing:.2em;color:var(--ch);padding:5px 0;border-top:1px solid var(--ln);border-bottom:1px solid var(--ln);text-transform:uppercase}
+.slv-evs .g{font-weight:600;color:var(--kffffff,#fff)}
+.slv-card{width:11px;height:15px;border-radius:2px;display:inline-block;flex:none}
+.slv-card.y{background:#f5c542}.slv-card.r{background:#e5484d}
+.slv-ball{width:16px;height:16px;border-radius:50%;flex:none;background:#fff;box-shadow:inset 0 0 0 4px #fff,inset 0 0 0 6px #000}
+.slv-sub{font-family:var(--f-mono);font-size:calc(11px * var(--ts,1));color:#7fe0a5;flex:none}
+.slv-plays{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.slv-plays li{display:grid;grid-template-columns:90px minmax(0,1fr) auto;gap:14px;align-items:start;padding:10px 14px;border-radius:14px;background:var(--sf);border:1px solid var(--ln);font-size:calc(14px * var(--ts,1))}
+.slv-plays li span{font-family:var(--f-mono);font-size:calc(12px * var(--ts,1));color:var(--mu)}
+.slv-plays li em{font-style:normal;font-family:var(--f-display);font-weight:700}
+/* line-ups */
+.slv-pitch{position:relative;width:100%;height:100%;min-height:360px;border-radius:18px;overflow:hidden;background:repeating-linear-gradient(90deg,#0c1a10 0 9%,#0e1f13 9% 18%);border:1px solid var(--ln)}
+.slv-pitch .ln{position:absolute;border:1.5px solid rgba(255,255,255,.14)}
+.slv-pitch .pl{position:absolute;transform:translate(-50%,-50%);text-align:center;width:110px}
+.slv-pitch .pl i{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;margin:0 auto 4px;font-style:normal;font-family:var(--f-display);font-weight:700;font-size:13.5px;box-shadow:0 0 0 3px #00000088}
+.slv-pitch .pl.h i{background:var(--c1);color:var(--hc,#111)}
+.slv-pitch .pl.a i{background:#f3f0e8;color:var(--ac,#111)}
+.slv-pitch .pl span{font-size:12px;color:#eee;text-shadow:0 1px 3px #000;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slv-pitch .fm{position:absolute;font-family:var(--f-mono);font-size:calc(11.5px * var(--ts,1));letter-spacing:.14em;color:var(--ch)}
+.slv-lu{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.slv-lu ol{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:calc(14px * var(--ts,1))}
+.slv-lu li{display:flex;gap:10px}
+.slv-lu li span{font-family:var(--f-mono);color:var(--mu);width:28px;text-align:right}
+.slv-lu li small{color:var(--mu);margin-left:auto}
+.slv-bench{margin-top:14px;font-size:calc(13px * var(--ts,1));color:var(--mu);line-height:1.6}
+/* table */
+.slv-tab-t{width:100%;border-collapse:collapse;font-size:calc(14px * var(--ts,1))}
+.slv-tab-t th{font-family:var(--f-mono);font-weight:500;font-size:calc(11px * var(--ts,1));letter-spacing:.12em;color:var(--mu);text-align:right;padding:6px 8px;border-bottom:1px solid var(--ln)}
+.slv-tab-t td{text-align:right;padding:7px 8px;border-bottom:1px solid var(--ln);font-variant-numeric:tabular-nums}
+.slv-tab-t .l{text-align:left}
+.slv-tab-t tr.me td{background:var(--sf2);color:var(--kffffff,#fff)}
+.slv-tab-t tr.me td:first-child{box-shadow:inset 3px 0 0 var(--ch)}
+.slv-tn{display:flex;align-items:center;gap:10px}
+.slv-tn img{width:20px;height:20px;object-fit:contain}
+.slv-tab-h{font-family:var(--f-display);font-size:calc(15px * var(--ts,1));margin:14px 0 6px}
+/* facts */
+.slv-facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.slv-fact{padding:14px 16px;border-radius:16px;background:var(--sf);border:1px solid var(--ln)}
+.slv-fact small{display:block;font-family:var(--f-mono);font-size:calc(10.5px * var(--ts,1));letter-spacing:.16em;color:var(--mu);text-transform:uppercase;margin-bottom:6px}
+.slv-fact b{font-size:calc(16px * var(--ts,1));font-weight:600;display:block;line-height:1.3}
+.slv-fact .slv-form{margin-top:4px}
+.slv-fact .slv-btn{margin-top:10px;padding:8px 14px;font-size:calc(13px * var(--ts,1))}
+/* watch + games */
+.slv-wh{display:flex;align-items:center;gap:10px;padding:16px 18px 6px}
+.slv-wh h3{font-family:var(--f-display);font-size:calc(18px * var(--ts,1));font-weight:600;margin:0}
+.slv-wh .t{margin-left:auto;font-size:calc(11px * var(--ts,1));color:var(--mu);font-family:var(--f-mono);letter-spacing:.12em;text-transform:uppercase}
+.slv-now{margin:8px 14px 6px;aspect-ratio:16/8.4;border-radius:16px;overflow:hidden;position:relative;background:#000;border:1px solid var(--ln);flex:none}
+.slv-now .pic{position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 120%,color-mix(in srgb,var(--c1) 38%,#0b1a0f) 0,#0d2213 45%,#060d08 100%)}
+.slv-now .pic::before{content:"";position:absolute;left:9%;right:9%;top:38%;bottom:-30%;border:2px solid rgba(255,255,255,.16);border-radius:6px;transform:perspective(300px) rotateX(48deg)}
+.slv-now .chl{position:absolute;right:16px;top:14px;width:64px;height:64px;border-radius:16px;background:#f3f0e8;display:grid;place-items:center;overflow:hidden;color:#111;font-family:var(--f-display);font-weight:800;font-size:13px}
+.slv-now .chl img{width:84%;height:84%;object-fit:contain}
+.slv-bug{position:absolute;left:14px;top:14px;display:flex;align-items:center;gap:8px;background:rgba(6,6,7,.84);border:1px solid var(--ln2);border-radius:12px;padding:7px 11px;font-family:var(--f-mono);font-size:12.5px}
+.slv-bug img{width:18px;height:18px;object-fit:contain}
+.slv-bug b{font-family:var(--f-display);font-size:15px}
+.slv-now .cap{position:absolute;left:14px;bottom:12px;right:14px;font-size:calc(13px * var(--ts,1));color:#ddd}
+.slv-now .cap b{font-family:var(--f-display);font-size:calc(16px * var(--ts,1));display:block;color:#fff}
+.slv-ch{display:flex;align-items:center;gap:12px;width:calc(100% - 16px);margin:0 8px;padding:10px 12px;border-radius:14px;background:none;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.slv-ch.on{background:var(--sf2);box-shadow:inset 0 0 0 1px var(--ln2)}
+.slv-cl{width:44px;height:44px;border-radius:12px;background:#f3f0e8;color:#111;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:12px;flex:none;overflow:hidden}
+.slv-cl img{width:86%;height:86%;object-fit:contain}
+.slv-ct{flex:1;min-width:0}
+.slv-ct b{display:block;font-size:calc(15.5px * var(--ts,1));font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slv-ct small{display:block;font-size:calc(12.5px * var(--ts,1));color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.slv-prog{height:3px;border-radius:3px;background:var(--sf2);margin-top:7px;overflow:hidden}
+.slv-prog i{display:block;height:100%;width:100%;background:var(--ch);transform-origin:left}
+.slv-tag{font-family:var(--f-mono);font-size:calc(9.5px * var(--ts,1));letter-spacing:.14em;text-transform:uppercase;color:var(--ch);border:1px solid color-mix(in srgb,var(--ch) 30%,transparent);padding:4px 7px;border-radius:7px;white-space:nowrap;flex:none}
+.slv-g{display:grid;grid-template-columns:minmax(0,1fr) 72px minmax(0,1fr);align-items:center;gap:8px;width:calc(100% - 16px);margin:0 8px;padding:8px 10px;border-radius:12px;font:inherit;font-size:calc(14px * var(--ts,1));background:none;border:0;color:inherit;cursor:pointer}
+.slv-g.on{background:var(--sf2);box-shadow:inset 0 0 0 1px var(--ln2)}
+.slv-g.solo{grid-template-columns:minmax(0,1fr) 72px}
+.slv-g.solo .h span{white-space:normal}
+.slv-ev{font-family:var(--f-display);font-weight:700;font-size:calc(30px * var(--ts,1));line-height:1.15;margin:14px 0 6px}
+.slv-g .a{display:flex;align-items:center;gap:8px;justify-content:flex-end;text-align:right;min-width:0}
+.slv-g .h{display:flex;align-items:center;gap:8px;min-width:0}
+.slv-g .a span,.slv-g .h span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slv-g img{width:20px;height:20px;object-fit:contain;flex:none}
+.slv-g .s{text-align:center;font-family:var(--f-display);font-weight:700;font-size:calc(14.5px * var(--ts,1));background:var(--sf2);border-radius:9px;padding:4px 0;border:1px solid var(--ln)}
+.slv-g .s small{display:block;font-family:var(--f-mono);font-size:calc(9px * var(--ts,1));color:var(--mu);font-weight:500;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px}
+.slv-g .s.live small{color:#ff9a9e}
+.slv-lgh{font-family:var(--f-mono);font-size:calc(10.5px * var(--ts,1));letter-spacing:.18em;color:var(--mu2);text-transform:uppercase;padding:12px 18px 4px}
+.slv-empty{padding:28px;text-align:center;color:var(--mu);font-size:calc(14.5px * var(--ts,1));line-height:1.55}
+.slv-empty b{display:block;color:var(--kffffff,#fff);font-family:var(--f-display);font-size:calc(19px * var(--ts,1));margin-bottom:6px}
+.slv-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.slv-tile{display:flex;align-items:center;gap:12px;padding:12px;border-radius:16px;background:var(--sf);border:1px solid var(--ln);font:inherit;color:inherit;text-align:left;cursor:pointer;min-width:0}
+.slv-tile.nav-focus{outline:3px solid var(--kffffff,#fff);outline-offset:2px}
+/* the score kept on screen */
+#slvBug{position:fixed;right:max(16px,env(safe-area-inset-right,0px));top:calc(14px + env(safe-area-inset-top,0px));z-index:2147483000;display:flex;align-items:center;gap:8px;padding:7px 8px 7px 12px;border-radius:14px;background:rgba(6,6,7,.88);border:1px solid rgba(255,255,255,.14);color:#fff;font-family:var(--f-mono);font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.45);pointer-events:auto;animation:slvIn .3s ease both}
+#slvBug img{width:20px;height:20px;object-fit:contain}
+#slvBug b{font-family:var(--f-display);font-size:16px}
+#slvBug .st{color:#d9d4c7;font-size:11.5px;letter-spacing:.08em}
+#slvBug button{width:26px;height:26px;border-radius:50%;border:0;background:rgba(255,255,255,.1);color:#fff;display:grid;place-items:center;cursor:pointer;padding:0}
+#slvBug button svg{width:13px;height:13px}
+/* phones held upright (and narrow windows): one column, a list then a match page */
+.slv-in.nar .slv-top{height:56px;padding:0 16px;padding-top:env(safe-area-inset-top,0px);height:calc(56px + env(safe-area-inset-top,0px))}
+.slv-in.nar .slv-one{height:calc(100% - 56px - env(safe-area-inset-top,0px));overflow-y:auto;padding:0 0 calc(28px + env(safe-area-inset-bottom,0px))}
+.slv-chips{display:flex;gap:8px;padding:2px 16px 12px;overflow-x:auto;scrollbar-width:none}
+.slv-chips::-webkit-scrollbar{display:none}
+.slv-chip{display:inline-flex;align-items:center;gap:7px;font:inherit;font-size:calc(13.5px * var(--ts,1));padding:8px 14px;border-radius:99px;border:1px solid var(--ln2);color:rgba(var(--kffffff-c,255,255,255),.86);background:none;flex:none;cursor:pointer;white-space:nowrap}
+.slv-chip.on{background:var(--plat);color:#000;border-color:transparent;font-weight:600}
+.slv-chip em{font-style:normal;font-family:var(--f-mono);font-size:calc(11px * var(--ts,1));color:var(--mu)}
+.slv-chip.on em{color:#444}
+.slv-chip .slv-dot{width:7px;height:7px;box-shadow:none}
+.slv-in.nar .slv-hero{margin:0 14px;border-radius:24px;padding:16px 14px 14px;border:1px solid var(--ln)}
+.slv-in.nar .slv-hrow{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);margin-top:10px}
+.slv-in.nar .slv-tm,.slv-in.nar .slv-tm.r{flex-direction:column;text-align:center;gap:8px}
+.slv-in.nar .slv-tm h2{font-size:calc(15px * var(--ts,1))}
+.slv-in.nar .slv-lg{width:54px;height:54px;border-radius:17px}
+.slv-in.nar .slv-form{justify-content:center}
+.slv-in.nar .slv-big{font-size:44px}
+.slv-in.nar .slv-big.sm{font-size:22px}
+.slv-in.nar .slv-sc{padding:0 6px}
+.slv-in.nar .slv-goals{grid-template-columns:1fr;gap:4px;text-align:center}
+.slv-in.nar .slv-goals div:last-child{text-align:center}
+.slv-in.nar .slv-meta{justify-content:center;font-size:calc(10.5px * var(--ts,1))}
+.slv-pacts{display:flex;gap:8px;margin:12px 14px 0}
+.slv-pacts .slv-btn.p{flex:1;justify-content:center}
+.slv-pacts .slv-btn.i{padding:11px 13px}
+.slv-in.nar .slv-tabs{margin:14px 14px 0;display:flex;align-self:auto}
+.slv-in.nar .slv-tab{flex:1 0 auto;padding:8px 10px;font-size:calc(13px * var(--ts,1))}
+.slv-sec{margin:14px 14px 0;padding:16px;border-radius:20px;background:var(--n0e0e11,#0e0e11);border:1px solid var(--ln)}
+.slv-sec h4{font-family:var(--f-mono);font-weight:500;font-size:calc(10.5px * var(--ts,1));letter-spacing:.2em;color:var(--mu);text-transform:uppercase;margin:0 0 12px}
+.slv-in.nar .slv-bar{grid-template-columns:38px minmax(0,1fr) 38px;gap:10px}
+.slv-in.nar .slv-bar .v{font-size:calc(16px * var(--ts,1))}
+.slv-in.nar .slv-ch{width:calc(100% + 12px);margin:0 -6px;padding:9px 6px}
+.slv-in.nar .slv-g.solo{grid-template-columns:48px minmax(0,1fr)}
+.slv-in.nar .slv-ev{font-size:calc(22px * var(--ts,1));margin:10px 0 4px}
+.slv-in.nar .slv-g{width:calc(100% - 28px);margin:0 14px 8px;display:grid;grid-template-columns:48px minmax(0,1fr) auto;padding:12px 14px;border-radius:16px;background:var(--n0e0e11,#0e0e11);border:1px solid var(--ln);text-align:left}
+.slv-mt{display:flex;flex-direction:column;gap:7px;min-width:0}
+.slv-mt div{display:flex;align-items:center;gap:9px;font-size:calc(14.5px * var(--ts,1));min-width:0}
+.slv-mt div span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slv-mt img{width:22px;height:22px}
+.slv-ms{display:flex;flex-direction:column;gap:7px;font-family:var(--f-display);font-weight:700;font-size:calc(15px * var(--ts,1));text-align:right}
+.slv-mw{font-family:var(--f-mono);font-size:calc(11px * var(--ts,1));color:var(--mu);text-align:center;border-right:1px solid var(--ln);padding-right:8px;letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis}
+.slv-mw.live{color:#ff9a9e}
+.slv-secT{display:flex;align-items:center;gap:8px;padding:18px 18px 10px;font-family:var(--f-display);font-weight:600;font-size:calc(16.5px * var(--ts,1))}
+.slv-secT small{margin-left:auto;font-family:var(--f-mono);font-size:calc(10.5px * var(--ts,1));color:var(--mu);letter-spacing:.12em;font-weight:500;text-transform:uppercase}
+.slv-chrow{display:flex;gap:10px;padding:0 14px;overflow-x:auto;scrollbar-width:none}
+.slv-chrow::-webkit-scrollbar{display:none}
+.slv-chc{flex:none;width:156px;padding:12px;border-radius:16px;background:var(--n0e0e11,#0e0e11);border:1px solid var(--ln);font:inherit;color:inherit;text-align:left;cursor:pointer}
+.slv-chc b{display:block;font-size:calc(14px * var(--ts,1));margin-top:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slv-chc small{display:block;font-size:calc(12px * var(--ts,1));color:var(--mu);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slv-in.nar .slv-pitch{min-height:0;height:auto;aspect-ratio:68/100;background:repeating-linear-gradient(0deg,#0c1a10 0 9%,#0e1f13 9% 18%)}
+.slv-in.nar .slv-pitch .pl{width:78px}
+.slv-in.nar .slv-pitch .pl i{width:30px;height:30px;font-size:12px}
+.slv-in.nar .slv-pitch .pl span{font-size:10.5px}
+.slv-in.nar .slv-lu{grid-template-columns:1fr}
+.slv-in.nar .slv-evs{grid-template-columns:minmax(0,1fr) 54px minmax(0,1fr);font-size:calc(13px * var(--ts,1))}
+.slv-in.nar .slv-plays li{grid-template-columns:64px minmax(0,1fr) auto}
+.slv-in.nar .slv-tab-t{font-size:calc(13px * var(--ts,1))}
+.slv-in.nar .slv-tab-t th,.slv-in.nar .slv-tab-t td{padding:6px 5px}
+html[data-look=daylight] .slv-in,html[data-look=linen] .slv-in{--c1:#c86f00}
+</style>
+<script id="mk-296-sports">
+/* 2.96 Sports: the match centre (replaces the old "Scores and tables" page; SportsPlus keeps its data, follows,
+   Hide scores and alerts). A game's page has Stats, Events, Line-ups, Table and Match facts, and finds every channel
+   in the person's own playlists that shows it: the networks the scoreboard lists, and the programmes in their own TV
+   guides whose title names both teams. Game data comes from a public scoreboard feed; MKCinema plays nothing from it.
+   Hidden on kids seats. Updates itself every 30 seconds while a game is live and the page is open. */
+(() => {
+  if (window.SportsLive) return;
+  const q = (s, r) => (r || document).querySelector(s), qa = (s, r) => [...(r || document).querySelectorAll(s)];
+  const E = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const tv = () => { try { return !!IS_TV; } catch (e) { return false; } };
+  const SP = () => (typeof SportsPlus !== 'undefined' ? SportsPlus : null);
+  const loc = () => { try { return appLocale(); } catch (e) { return undefined; } };
+  const hm = (t) => new Date(t).toLocaleTimeString(loc(), { hour: 'numeric', minute: '2-digit' });
+  const I = {
+    play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5v14l12-7z"/></svg>',
+    pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5M8 3h8l-1 6 3 4H6l3-4z"/></svg>',
+    grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+    star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>',
+    starOn: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>',
+    back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+    eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+    eyeOff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.7 8.4 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>',
+    x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+    live: '<span class="slv-dot"></span>',
+    tv: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="m17 2-5 5-5-5"/></svg>',
+  };
+  const SOCCER_STATS = [['totalShots', 'Shots'], ['shotsOnTarget', 'On target'], ['wonCorners', 'Corners'], ['saves', 'Saves'], ['foulsCommitted', 'Fouls'], ['offsides', 'Offsides'], ['yellowCards', 'Yellow cards'], ['redCards', 'Red cards'], ['accuratePasses', 'Accurate passes'], ['effectiveTackles', 'Tackles won']];
+  const STOP = new Set(['fc', 'afc', 'cf', 'sc', 'ac', 'as', 'cd', 'ud', 'sd', 'rc', 'club', 'city', 'united', 'utd', 'town', 'real', 'sporting', 'athletic', 'atletico', 'the', 'and', 'de', 'del', 'la', 'le', 'los', 'las', 'of', 'st', 'saint', 'hove', 'albion', 'county', 'rovers', 'wanderers', 'state', 'university', 'college', 'new', 'san', 'los', 'north', 'south', 'east', 'west']);
+  const SL = window.SportsLive = {
+    st: { pick: 'live', day: 0, game: null, tab: 'stats', screen: 'list', cat: '' },
+    days: {}, sums: {}, tables: {}, tick: 0, bug: null,
+    sport(lg) { return String(lg || '').split('/')[0]; },
+    soccer(g) { return this.sport(g && g.lg) === 'soccer'; },
+    lgName(lg) { const l = SP() && SP().LEAGUES.find((x) => x[0] === lg); return l ? l[1] : ''; },
+    kids() { try { return SP().kids(); } catch (e) { return false; } },
+    hide() { try { return SP().hide(); } catch (e) { return false; } },
+    sc(x) { return this.hide() ? '•' : E(x == null ? '' : x); },
+    narrow() { return !tv() && (innerWidth < 900 || (innerWidth < 1100 && innerHeight > innerWidth)); },
+    open(arg) {
+      this._k = '';
+      if (this.kids()) { toast('Not on the kids seat', 'err', 2400); return; }
+      try { Usage.add('feat', 'sportsLive'); } catch (e) { /* counts off */ }
+      if (arg && typeof arg === 'object' && arg.id) { this.st.game = { id: String(arg.id), lg: arg.lg || arg.path || '' }; this.st.screen = 'match'; }
+      else if (typeof arg === 'string' && arg) { this.st.pick = arg; this.st.game = null; this.st.screen = 'list'; }
+      X8.layer('sportsPlus', { label: 'Sports', full: true });
+      const el = q('#sportsPlus'); el.classList.remove('spx'); el.classList.add('slv');
+      X8.open('sportsPlus');
+      if (!this._back) { this._back = 1; X8.backHook.sportsPlus = () => { if (this.narrow() && this.st.screen === 'match') { this.st.screen = 'list'; this.render(); return true; } return false; }; }
+      this.render(true); this.load();
+      try { if (typeof SportsHub !== 'undefined') SportsHub.refresh().then(() => this.paintSoft()).catch(() => {}); } catch (e) { /* no hub */ }
+      clearInterval(this.tick); this.tick = setInterval(() => this.beat(), 30000);
+      if (!this._rs) { this._rs = 1; let t = 0; addEventListener('resize', () => { clearTimeout(t); t = setTimeout(() => { if (this.isOpen() && this._nar !== this.narrow()) this.render(); }, 200); }); }
+    },
+    isOpen() { const el = q('#sportsPlus.slv'); return !!(el && !el.hidden); },
+    /* ---------------- data ---------------- */
+    async day(off, force) {
+      const c = this.days[off], anyLive = c && c.games.some((g) => g.state === 'in');
+      if (!force && c && Date.now() - c.at < (anyLive ? 25e3 : 4 * 60e3)) return c.games;
+      if (c && c.busy) return c.busy;
+      const busy = (async () => {
+        const out = [], sp = SP(); if (!sp) return out;
+        await Promise.all(sp.LEAGUES.map(async ([lg]) => { try { (await sp.scoreboard(lg, off)).forEach((g) => { if (!out.some((x) => x.id === g.id)) out.push(g); }); } catch (e) { /* this league stays out */ } }));
+        out.sort((a, b) => (a.state === 'in' ? 0 : a.state === 'pre' ? 1 : 2) - (b.state === 'in' ? 0 : b.state === 'pre' ? 1 : 2) || a.date - b.date);
+        this.days[off] = { at: Date.now(), games: out }; return out;
+      })();
+      this.days[off] = { ...(c || { at: 0, games: [] }), busy };
+      try { return await busy; } finally { if (this.days[off]) delete this.days[off].busy; }
+    },
+    games() { const c = this.days[this.st.day]; return c ? c.games : []; },
+    async load(force) {
+      const tok = this.tok = (this.tok || 0) + 1;
+      await this.day(this.st.day, force);
+      if (tok !== this.tok || !this.isOpen()) return;
+      const g = this.cur();
+      if (!g && !this.narrow()) { const list = this.list(), f = list.find((x) => !this.solo(x)) || list[0]; if (f) this.st.game = { id: f.id, lg: f.lg }; }
+      this.render();
+      const now = this.cur(); if (now) this.summary(now, force).then(() => { if (tok === this.tok) this.render(); });
+    },
+    cur() { const s = this.st.game; if (!s) return null; for (const k of Object.keys(this.days)) { const g = (this.days[k].games || []).find((x) => x.id === s.id); if (g) return g; } return s.g || null; },
+    async summary(g, force) {
+      const c = this.sums[g.id];
+      if (!force && c && Date.now() - c.at < (g.state === 'in' ? 25e3 : 10 * 60e3)) return c.d;
+      try { const d = await SP().j(`${SP().API}${g.lg}/summary?event=${encodeURIComponent(g.id)}`); this.sums[g.id] = { at: Date.now(), d }; return d; } catch (e) { if (c && c.d) return c.d; this.sums[g.id] = { at: Date.now(), d: null, fail: 1 }; return null; }
+    },
+    sum(g) { const c = g && this.sums[g.id]; return c ? c.d : null; },
+    failed(g) { const c = g && this.sums[g.id]; return !!(c && c.fail && !c.d); },
+    /* a race or other event without two teams */
+    solo(g) { return !!g && !(g.home && g.away && g.home.name && g.away.name); },
+    list() {
+      const all = this.games(), p = this.st.pick, sp = SP();
+      if (p === 'live') { const l = all.filter((g) => g.state === 'in'); return l.length ? l : all.filter((g) => g.state === 'pre').slice(0, 20); }
+      if (p === 'today') return all;
+      if (p === 'mine') return all.filter((g) => sp.isF(g.home.id) || sp.isF(g.away.id));
+      if (p.startsWith('ch:')) return [];
+      return all.filter((g) => g.lg === p);
+    },
+    async beat() {
+      if (!this.isOpen()) { clearInterval(this.tick); this.tick = 0; return; }
+      const g = this.cur(), live = this.games().some((x) => x.state === 'in');
+      if (!live && !(g && g.state === 'in')) return;
+      await this.day(this.st.day, true);
+      if (g && g.state !== 'post') await this.summary(g, true);
+      this.paintSoft();
+    },
+    /* repaint without pulling the remote's place out from under the person */
+    paintSoft() { if (this.isOpen()) this.render(); },
+    /* ---------------- channels: the person's own playlists and guides ---------------- */
+    norm(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/^[a-z]{2,3}\s*[:|\-]\s*/, '').replace(/\b(hd|fhd|uhd|4k|sd|east|west|usa|us|uk)\b/g, '').replace(/[^a-z0-9+]+/g, ' ').trim(); },
+    toks(t) { const w = new Set(); [t.name, t.short].forEach((s) => this.norm(s).split(' ').forEach((x) => { if (x.length >= 4 && !STOP.has(x)) w.add(x); })); const s = this.norm(t.short); if (s.length >= 3) w.add(s); return [...w]; },
+    hit(title, t) { const n = ` ${this.norm(title)} `; return this.toks(t).some((w) => n.includes(` ${w} `)); },
+    watch(g) {
+      const out = [], seen = new Set(), add = (o) => { const k = o.ch.url || o.ch.name; if (seen.has(k)) return; seen.add(k); out.push(o); };
+      if (!g || typeof Channels === 'undefined' || !Channels.data) return out;
+      const sum = this.sum(g), nets = [...new Set([...(g.nets || []), ...((sum && sum.broadcasts) || []).map((b) => b.media && (b.media.shortName || b.media.name)).filter(Boolean)])];
+      let all = []; try { all = Channels.all() || []; } catch (e) { /* no playlists */ }
+      for (const n of nets) { const k = this.norm(n); if (!k) continue; all.filter((c) => { const m = this.norm(c.name); return m === k || m.startsWith(`${k} `); }).slice(0, 3).forEach((ch) => add({ ch, how: 'net', net: n })); }
+      const t0 = g.date - 45 * 60e3, t1 = g.date + 3.5 * 3600e3;
+      try {
+        for (const d of Channels.data.values()) {
+          if (!d.epg || !d.epg.size) continue;
+          for (const ch of d.channels) {
+            const progs = d.epg.get(Channels.key(ch)); if (!progs) continue;
+            for (const p of progs) { if (!p.title || p.end < t0 || p.start > t1) continue; if (this.hit(p.title, g.home) && this.hit(p.title, g.away)) { add({ ch, how: 'guide', p }); break; } }
+            if (out.length >= 12) break;
+          }
+        }
+      } catch (e) { /* guides not loaded */ }
+      return out;
+    },
+    tune(o) { if (!o) return; X8.close('sportsPlus'); try { Channels.tune(o.ch); } catch (e) { toast('That channel did not start', 'err'); } },
+    split(o) { if (!o) return; X8.close('sportsPlus'); try { Split.open({ name: o.ch.name, url: o.ch.url, headers: o.ch.headers, poster: o.ch.logo || null, live: true }); } catch (e) { toast('Split Screen did not open', 'err'); } },
+    /* sports channels and games from the person's playlists and addons, sorted by sport (SportsHub reads them) */
+    hub() { try { return (typeof SportsHub !== 'undefined' && SportsHub.items) || []; } catch (e) { return []; } },
+    hubCats() { const c = {}; this.hub().forEach((x) => { c[x.cat] = (c[x.cat] || 0) + 1; }); try { return SportsHub.CATS.filter(([id]) => c[id]).map(([id, l]) => [id, l, c[id]]); } catch (e) { return []; } },
+    leagueOf(it) { const t = this.norm(`${it.name} ${it.tag || ''} ${(it.iptv && it.iptv.group) || ''}`); const sp = SP(); if (!sp) return ''; const l = sp.LEAGUES.find(([, n]) => t.includes(this.norm(n))); return l ? l[1] : ''; },
+    /* ---------------- pieces ---------------- */
+    logo(t, cls) { return `<span class="${cls || 'slv-lg'}">${t.logo ? `<img src="${E(t.logo)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-gone>` : E((t.abbr || t.short || '?').slice(0, 3))}</span>`; },
+    img(t) { return t.logo ? `<img src="${E(t.logo)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-gone>` : ''; },
+    status(g) { if (g.state === 'in') return this.hide() ? 'Live' : g.detail; if (g.state === 'post') return this.hide() ? 'Final' : (g.detail || 'Final'); return `${new Date(g.date).toLocaleDateString(loc(), { weekday: 'short' })} ${hm(g.date)}`; },
+    short(g) { return g.state === 'pre' ? hm(g.date) : g.state === 'in' ? (this.hide() ? 'Live' : g.detail) : (g.detail || 'FT'); },
+    colors(g, sum) {
+      const pick = (t, side) => { let c = t.color || '444444'; try { const cc = sum && sum.header.competitions[0].competitors.find((x) => x.homeAway === side).team; if (cc && cc.color) c = cc.color; } catch (e) { /* scoreboard colour */ } return /^[0-9a-f]{6}$/i.test(c) ? c : '444444'; };
+      let h = pick(g.home, 'home'), a = pick(g.away, 'away');
+      const near = (x, y) => { const v = (s) => [0, 2, 4].map((i) => parseInt(s.slice(i, i + 2), 16)); const p = v(x), r = v(y); return Math.abs(p[0] - r[0]) + Math.abs(p[1] - r[1]) + Math.abs(p[2] - r[2]) < 120; };
+      const dark = (x) => Math.max(...[0, 2, 4].map((i) => parseInt(x.slice(i, i + 2), 16))) < 70;
+      if (dark(h)) h = 'd9d4c7'; if (dark(a)) a = '8d8b93';
+      if (near(h, a)) a = 'f3f0e8';
+      return { h, a };
+    },
+    gameRow(g, i, on) {
+      if (this.solo(g)) {
+        if (this.narrow()) return `<button type="button" class="slv-g solo" data-nav data-k="g${E(g.id)}" data-slvg="${E(g.id)}"><span class="slv-mw ${g.state === 'in' ? 'live' : ''}" translate="no">${E(this.short(g))}</span><span class="slv-mt"><div><span translate="no">${E(g.name)}</span></div></span></button>`;
+        return `<button type="button" class="slv-g solo${on ? ' on' : ''}" data-nav data-k="g${E(g.id)}" data-slvg="${E(g.id)}"><span class="h"><span translate="no">${E(g.name)}</span></span><span class="s ${g.state === 'in' ? 'live' : ''}"><span style="font-size:.86em" translate="no">${E(g.state === 'pre' ? hm(g.date) : this.short(g))}</span><small translate="no">${E(new Date(g.date).toLocaleDateString(loc(), { weekday: 'short' }))}</small></span></button>`;
+      }
+      if (this.narrow()) {
+        const live = g.state === 'in', show = g.state !== 'pre';
+        return `<button type="button" class="slv-g" data-nav data-k="g${E(g.id)}" data-slvg="${E(g.id)}"><span class="slv-mw ${live ? 'live' : ''}" translate="no">${E(this.short(g))}</span><span class="slv-mt"><div>${this.img(g.home)}<span translate="no">${E(g.home.short || g.home.name)}</span></div><div>${this.img(g.away)}<span translate="no">${E(g.away.short || g.away.name)}</span></div></span><span class="slv-ms">${show ? `<span>${this.sc(g.home.score)}</span><span>${this.sc(g.away.score)}</span>` : ''}</span></button>`;
+      }
+      return `<button type="button" class="slv-g${on ? ' on' : ''}" data-nav data-k="g${E(g.id)}" data-slvg="${E(g.id)}"><span class="a"><span translate="no">${E(g.home.short || g.home.name)}</span>${this.img(g.home)}</span><span class="s ${g.state === 'in' ? 'live' : ''}">${g.state === 'pre' ? `<span style="font-size:.86em">${E(hm(g.date))}</span>` : `${this.sc(g.home.score)}–${this.sc(g.away.score)}`}<small translate="no">${E(g.state === 'pre' ? new Date(g.date).toLocaleDateString(loc(), { weekday: 'short' }) : this.short(g))}</small></span><span class="h">${this.img(g.away)}<span translate="no">${E(g.away.short || g.away.name)}</span></span></button>`;
+    },
+    form(sum, id) {
+      try { const f = (sum.lastFiveGames || []).find((x) => String(x.team && x.team.id) === String(id)); const r = ((f && f.events) || []).map((e) => e.gameResult).filter(Boolean).slice(0, 5); return r.length ? `<div class="slv-form">${r.map((x) => `<i class="${E(x)}">${E(x)}</i>`).join('')}</div>` : ''; } catch (e) { return ''; }
+    },
+    periods(g, sum) {
+      try {
+        const cs = sum.header.competitions[0].competitors, h = cs.find((x) => x.homeAway === 'home'), a = cs.find((x) => x.homeAway === 'away');
+        const hl = (h.linescores || []).map((x) => x.displayValue), al = (a.linescores || []).map((x) => x.displayValue); if (!hl.length || this.hide()) return '';
+        const s = this.sport(g.lg), halves = /college-basketball/.test(g.lg), name = (i) => halves ? (i < 2 ? `H${i + 1}` : 'OT') : s === 'soccer' ? ['1st half', '2nd half', 'Extra time', 'Extra time', 'Penalties'][i] || `${i + 1}` : s === 'hockey' ? (i < 3 ? `P${i + 1}` : 'OT') : s === 'baseball' ? `${i + 1}` : (s === 'basketball' || s === 'football') ? (i < 4 ? `Q${i + 1}` : 'OT') : `${i + 1}`;
+        return `<div class="slv-per">${hl.slice(0, 12).map((v, i) => `<div>${E(name(i))}<b>${E(v)}–${E(al[i] == null ? '' : al[i])}</b></div>`).join('')}</div>`;
+      } catch (e) { return ''; }
+    },
+    keyEv(sum) { return (sum && sum.keyEvents) || []; },
+    who(k) { try { const p = (k.participants || [])[0]; if (p && p.athlete) return p.athlete.shortName || p.athlete.displayName; } catch (e) { /* text */ } const m = String(k.text || '').match(/\.\s*([^.(]+?)\s*\(/); return m ? m[1] : ''; },
+    hero(g, sum, wt) {
+      if (this.solo(g)) {
+        const o = wt[0], nar = this.narrow(), lg = this.lgName(g.lg);
+        const acts = `<div class="${nar ? 'slv-pacts' : 'slv-acts'}">${o ? `<button type="button" class="slv-btn p" data-nav data-k="watch" data-slvw="0">${I.play}<span>Watch on ${E(o.ch.name)}</span></button>` : (nar ? '' : `<button type="button" class="slv-btn" disabled>${I.tv}Not in your playlists</button>`)}${o ? `<button type="button" class="slv-btn${nar ? ' i' : ''}" data-nav data-k="split" data-slvsplit${nar ? ' aria-label="Add to Split Screen"' : ''}>${I.grid}${nar ? '' : 'Add to Split Screen'}</button>` : ''}</div>`;
+        return `<section class="slv-hero slv-pan"><div class="slv-meta"><b translate="no">${E(lg)}</b>${g.venue ? `<span>·</span><span translate="no">${E(g.venue)}</span>` : ''}</div><h2 class="slv-ev" translate="no">${E(g.name)}</h2><div class="slv-st ${g.state === 'in' ? 'live' : ''}" style="justify-content:flex-start">${g.state === 'in' ? I.live : ''}<span translate="no">${E(this.status(g))}</span></div>${nar ? '' : acts}</section>${nar && (o) ? acts : ''}`;
+      }
+      const sp = SP(), started = g.state !== 'pre', venue = (sum && sum.gameInfo && sum.gameInfo.venue) || null, lg = this.lgName(g.lg);
+      const goals = this.soccer(g) && started && !this.hide() ? this.keyEv(sum).filter((k) => k.scoringPlay) : [];
+      const reds = this.soccer(g) && started && !this.hide() ? this.keyEv(sum).filter((k) => /red card/i.test((k.type && k.type.text) || '')) : [];
+      const side = (id) => [...goals.filter((k) => String(k.team && k.team.id) === String(id)).map((k) => `⚽ ${this.who(k)} ${(k.clock && k.clock.displayValue) || ''}`), ...reds.filter((k) => String(k.team && k.team.id) === String(id)).map((k) => `🟥 ${this.who(k)} ${(k.clock && k.clock.displayValue) || ''}`)].join(' · ');
+      const first = wt[0], nar = this.narrow();
+      const team = (t, r) => `<div class="slv-tm${r ? ' r' : ''}">${this.logo(t)}<div style="min-width:0"><h2 translate="no"${!nar && t.short && t.short !== t.name ? ` data-short="${E(t.short)}"` : ''}>${E(nar ? (t.short || t.name) : t.name)}</h2>${nar ? '' : this.form(sum, t.id)}</div></div>`;
+      const acts = nar
+        ? `<div class="slv-pacts">${first ? `<button type="button" class="slv-btn p" data-nav data-k="watch" data-slvw="0">${I.play}<span>Watch on ${E(first.ch.name)}</span></button>` : ''}<button type="button" class="slv-btn i${this.bug && this.bug.id === g.id ? ' on' : ''}" data-nav data-k="pin" data-slvpin aria-label="Keep score on screen">${I.pin}</button>${first ? `<button type="button" class="slv-btn i" data-nav data-k="split" data-slvsplit aria-label="Add to Split Screen">${I.grid}</button>` : ''}</div>`
+        : `<div class="slv-acts">${first ? `<button type="button" class="slv-btn p" data-nav data-k="watch" data-slvw="0">${I.play}<span>Watch on ${E(first.ch.name)}</span></button>` : `<button type="button" class="slv-btn" disabled>${I.tv}Not in your playlists</button>`}
+          <button type="button" class="slv-btn${this.bug && this.bug.id === g.id ? ' on' : ''}" data-nav data-k="pin" data-slvpin>${I.pin}${this.bug && this.bug.id === g.id ? 'Score stays on screen' : 'Keep score on screen'}</button>
+          ${first ? `<button type="button" class="slv-btn" data-nav data-k="split" data-slvsplit>${I.grid}Add to Split Screen</button>` : ''}
+          <button type="button" class="slv-btn${sp.isF(g.home.id) ? ' on' : ''}" data-nav data-k="fh" data-slvf="home">${sp.isF(g.home.id) ? I.starOn : I.star}<span translate="no">${E(g.home.short || g.home.name)}</span></button>
+          <button type="button" class="slv-btn${sp.isF(g.away.id) ? ' on' : ''}" data-nav data-k="fa" data-slvf="away">${sp.isF(g.away.id) ? I.starOn : I.star}<span translate="no">${E(g.away.short || g.away.name)}</span></button></div>`;
+      return `<section class="slv-hero slv-pan"><div class="slv-meta"><b translate="no">${E(lg)}</b>${venue && venue.fullName ? `<span>·</span><span translate="no">${E(venue.fullName)}</span>` : ''}${!nar && sum && sum.gameInfo && sum.gameInfo.attendance ? `<span>·</span><span>${Number(sum.gameInfo.attendance).toLocaleString(loc())}</span>` : ''}</div>
+        <div class="slv-hrow">${team(g.home)}<div class="slv-sc">${started ? `<div class="slv-big" data-slv-score>${this.sc(g.home.score)}<span>–</span>${this.sc(g.away.score)}</div>` : `<div class="slv-big sm">${E(hm(g.date))}</div>`}<div class="slv-st ${g.state === 'in' ? 'live' : ''}">${g.state === 'in' ? I.live : ''}<span translate="no">${E(this.status(g))}</span></div>${nar ? '' : this.periods(g, sum)}</div>${team(g.away, 1)}</div>${nar ? this.periods(g, sum) : ''}
+        ${goals.length || reds.length ? `<div class="slv-goals"><div translate="no">${E(side(g.home.id))}</div><div translate="no">${E(side(g.away.id))}</div></div>` : ''}
+        ${nar ? '' : acts}</section>${nar ? acts : ''}`;
+    },
+    tabs(g, sum) {
+      const t = [['stats', 'Stats'], ['events', 'Events'], ['lineups', 'Line-ups'], ['table', 'Standings'], ['facts', this.narrow() ? 'Facts' : 'Match facts']];
+      if (!this.soccer(g) && !((sum && sum.rosters) || []).some((r) => (r.roster || []).length)) t.splice(2, 1);
+      if (this.solo(g)) t.splice(0, t.length - 1);
+      else if (!sum && this.failed(g)) { for (const k of ['stats', 'events', 'lineups']) { const i = t.findIndex((x) => x[0] === k); if (i >= 0) t.splice(i, 1); } }
+      if (!t.some((x) => x[0] === this.st.tab)) this.st.tab = t[0][0];
+      return `<div class="slv-tabs" role="tablist">${t.map(([k, l]) => `<button type="button" role="tab" class="slv-tab${this.st.tab === k ? ' on' : ''}" aria-selected="${this.st.tab === k}" data-nav data-nav-down=".slv-body[data-nav], .slv-body [data-nav], .slv-sec [data-nav]" data-k="t${k}" data-slvtab="${k}">${l}</button>`).join('')}</div>`;
+    },
+    bar(h, a, label) {
+      const hv = parseFloat(h) || 0, av = parseFloat(a) || 0, m = Math.max(hv, av) || 1;
+      return `<div class="slv-bar"><span class="v ${hv < av ? 'lo' : ''}">${E(h)}</span><div><small>${E(label)}</small><div class="slv-tr"><i><b class="${hv < av ? 'dim' : ''}" style="transform:scaleX(${(hv / m).toFixed(3)})"></b></i><i><b class="${av < hv ? 'dim' : ''}" style="transform:scaleX(${(av / m).toFixed(3)})"></b></i></div></div><span class="v r ${av < hv ? 'lo' : ''}">${E(a)}</span></div>`;
+    },
+    statsOf(g, sum) {
+      const teams = (sum && sum.boxscore && sum.boxscore.teams) || []; if (teams.length !== 2) return null;
+      const by = (t) => { const o = {}; (t.statistics || []).forEach((s) => { o[s.name] = s; }); return o; };
+      const hT = teams.find((t) => String(t.team && t.team.id) === String(g.home.id)) || teams[1], aT = teams.find((t) => t !== hT) || teams[0];
+      return { h: by(hT), a: by(aT) };
+    },
+    pct(v) { const n = parseFloat(v); if (!isFinite(n)) return v; return `${Math.round(n <= 1 ? n * 100 : n)}%`; },
+    body(g, sum) {
+      const tab0 = this.st.tab;
+      if (!sum && !this.solo(g) && !(this.failed(g) && (tab0 === 'facts' || tab0 === 'table'))) return this.failed(g) ? '<div class="slv-note">No details for this game.</div>' : `<div class="slv-note"><span class="spin"></span> Loading the game…</div>`;
+      if (this.hide() && g.state !== 'pre' && /^(stats|events)$/.test(this.st.tab)) return '<div class="slv-note">Scores are hidden. Turn off Hide scores (the eye at the top) to see what happened.</div>';
+      const tab = this.st.tab, nar = this.narrow();
+      if (tab === 'stats') {
+        const s = this.statsOf(g, sum); if (!s || g.state === 'pre') return `<div class="slv-note">${g.state === 'pre' ? 'Stats start at kick-off.' : 'No stats for this game yet.'}</div>`;
+        let rows = [], ring = '';
+        if (this.soccer(g)) {
+          rows = SOCCER_STATS.filter(([k]) => s.h[k] && s.a[k]).slice(0, nar ? 6 : 8).map(([k, l]) => this.bar(s.h[k].displayValue, s.a[k].displayValue, l));
+          if (s.h.possessionPct) {
+            const ph = Math.round(parseFloat(s.h.possessionPct.displayValue) || 0), pa = Math.max(0, 100 - ph);
+            if (nar) ring = `<div class="slv-poss"><b>${ph}%</b><div class="pb"><i style="width:${ph}%;background:var(--c1)"></i><i style="width:${pa}%;background:var(--c2)"></i></div><b>${pa}%</b></div>`;
+            else { const r = 96, C = 2 * Math.PI * r, gp = 6; ring = `<div class="slv-ring"><svg viewBox="0 0 220 220"><circle cx="110" cy="110" r="${r}" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="14"/><circle cx="110" cy="110" r="${r}" fill="none" stroke="var(--c1)" stroke-width="14" stroke-linecap="round" stroke-dasharray="${Math.max(0, ph / 100 * C - gp)} ${C}" transform="rotate(-90 110 110)"/><circle cx="110" cy="110" r="${r}" fill="none" stroke="var(--c2)" stroke-width="14" stroke-linecap="round" stroke-dasharray="${Math.max(0, pa / 100 * C - gp)} ${C}" transform="rotate(${-90 + ph * 3.6} 110 110)"/></svg><div class="c"><div><small>Possession</small><b>${ph}%</b><em translate="no">${pa}% ${E(g.away.abbr || g.away.short)}</em></div></div></div>`; }
+          }
+        } else {
+          const keys = Object.keys(s.h).filter((k) => s.a[k] && /^[\d.]+%?$/.test(String(s.h[k].displayValue)) && /^[\d.]+%?$/.test(String(s.a[k].displayValue))).slice(0, nar ? 7 : 9);
+          rows = keys.map((k) => { const l = s.h[k].label || k, pc = /%|pct/i.test(`${l} ${k}`); return this.bar(pc ? this.pct(s.h[k].displayValue) : s.h[k].displayValue, pc ? this.pct(s.a[k].displayValue) : s.a[k].displayValue, l); });
+        }
+        if (!rows.length && !ring) return '<div class="slv-note">No stats for this game yet.</div>';
+        return nar ? `${ring}<div class="slv-bars">${rows.join('')}</div>` : `<div class="slv-sg" style="${ring ? '' : 'grid-template-columns:1fr'}">${ring}<div class="slv-bars">${rows.join('')}</div></div>`;
+      }
+      if (tab === 'events') {
+        if (this.soccer(g)) {
+          let html = '';
+          for (const k of this.keyEv(sum)) {
+            const ty = (k.type && k.type.text) || '', min = (k.clock && k.clock.displayValue) || '';
+            if (/^halftime$/i.test(ty)) { html += `<div class="sep">Half time</div>`; continue; }
+            let ic = '', tx = '';
+            if (k.scoringPlay) { ic = '<span class="slv-ball"></span>'; tx = `<span class="g" translate="no">${E(this.who(k))}${/own goal/i.test(ty) ? ' (o.g.)' : ''}</span>`; }
+            else if (/yellow card/i.test(ty)) { ic = '<span class="slv-card y"></span>'; tx = `<span translate="no">${E(this.who(k))}</span>`; }
+            else if (/red card/i.test(ty)) { ic = '<span class="slv-card r"></span>'; tx = `<span translate="no">${E(this.who(k))}</span>`; }
+            else if (/substitution/i.test(ty)) { const m = String(k.text || '').match(/\.\s*(.+?) replaces (.+?)(?: because|\.|$)/); ic = '<span class="slv-sub">⇅</span>'; tx = `<span translate="no">${E(m ? `${m[1]} ↔ ${m[2]}` : this.who(k))}</span>`; }
+            else continue;
+            const home = String(k.team && k.team.id) === String(g.home.id);
+            html += `<div class="l">${home ? tx + ic : ''}</div><div class="m">${E(min)}</div><div class="rr">${home ? '' : ic + tx}</div>`;
+          }
+          if (g.state === 'post') html += `<div class="sep">Full time</div>`;
+          return html ? `<div class="slv-evs">${html}</div>` : `<div class="slv-note">${g.state === 'pre' ? 'Goals, cards and changes show here once the game starts.' : 'Nothing has happened yet.'}</div>`;
+        }
+        const plays = (sum.scoringPlays || []).slice(-40).reverse();
+        return plays.length ? `<ol class="slv-plays">${plays.map((p) => `<li><span>${E((p.clock && p.clock.displayValue) || '')}${p.period && p.period.number ? ` · ${E(p.period.number)}` : ''}</span><b translate="no">${E(p.text || (p.type && p.type.text) || '')}</b>${p.homeScore != null ? `<em>${E(p.homeScore)}–${E(p.awayScore)}</em>` : ''}</li>`).join('')}</ol>` : `<div class="slv-note">${g.state === 'pre' ? 'Scoring shows here once the game starts.' : 'No scoring list for this game.'}</div>`;
+      }
+      if (tab === 'lineups') return this.lineups(g, sum);
+      if (tab === 'table') {
+        const t = this.tables[g.lg];
+        if (!t) { SP().standings(g.lg).then((x) => { this.tables[g.lg] = x; this.paintSoft(); }).catch(() => { this.tables[g.lg] = []; this.paintSoft(); }); return '<div class="slv-note"><span class="spin"></span> Loading the table…</div>'; }
+        if (!t.length || !t.some((x) => x.rows.length)) return '<div class="slv-note">No table for this one.</div>';
+        const soc = this.soccer(g), cols = soc ? [['gamesPlayed', 'P'], ['wins', 'W'], ['ties', 'D'], ['losses', 'L'], ['pointDifferential', 'GD'], ['points', 'Pts']] : [['wins', 'W'], ['losses', 'L'], ...(/hockey/.test(g.lg) ? [['otLosses', 'OTL'], ['points', 'Pts']] : [['winPercent', 'PCT'], ['gamesBehind', 'GB']])];
+        const ids = [String(g.home.id), String(g.away.id)];
+        const groups = t.filter((x) => x.rows.length).sort((a, b) => (b.rows.some((r) => ids.includes(String(r.t.id))) ? 1 : 0) - (a.rows.some((r) => ids.includes(String(r.t.id))) ? 1 : 0)).slice(0, 4);
+        return groups.map((gr) => `${t.length > 1 ? `<div class="slv-tab-h" translate="no">${E(gr.name)}</div>` : ''}<table class="slv-tab-t"><thead><tr><th class="l">#</th><th class="l"></th>${cols.map(([, l]) => `<th>${l}</th>`).join('')}</tr></thead><tbody>${gr.rows.map((r, i) => `<tr class="${ids.includes(String(r.t.id)) ? 'me' : ''}"><td class="l">${i + 1}</td><td class="l"><span class="slv-tn">${this.img(r.t)}<span translate="no">${E(nar ? (r.t.short || r.t.name) : r.t.name)}</span></span></td>${cols.map(([k]) => `<td>${E(r.s[k] == null ? '' : r.s[k])}</td>`).join('')}</tr>`).join('')}</tbody></table>`).join('');
+      }
+      // match facts
+      const gi = (sum && sum.gameInfo) || {}, v = gi.venue || {}, f = [];
+      f.push(['Kick-off', new Date(g.date).toLocaleString(loc(), { weekday: 'long', hour: 'numeric', minute: '2-digit' })]);
+      if (!v.fullName && g.venue) f.push(['Ground', g.venue]);
+      if (v.fullName) f.push(['Ground', `${v.fullName}${v.address && v.address.city ? `, ${v.address.city}` : ''}`]);
+      if (gi.attendance) f.push(['Crowd', Number(gi.attendance).toLocaleString(loc())]);
+      if (gi.weather && gi.weather.temperature != null) f.push(['Weather', `${gi.weather.temperature}°${gi.weather.displayValue ? ` · ${gi.weather.displayValue}` : ''}`]);
+      const refs = (gi.officials || []).map((o) => o.displayName || o.fullName).filter(Boolean); if (refs.length) f.push(['Referee', refs[0]]);
+      if ((g.nets || []).length) f.push(['On TV', g.nets.slice(0, 4).join(', ')]);
+      const sp = SP(), card = (t, side) => `<div class="slv-fact"><small>Recent form</small><b translate="no">${E(t.name)}</b>${this.form(sum, t.id) || '<span class="slv-note" style="padding:0">Not listed</span>'}${nar ? `<button type="button" class="slv-btn${sp.isF(t.id) ? ' on' : ''}" data-nav data-k="f${side}" data-slvf="${side}">${sp.isF(t.id) ? I.starOn : I.star}${sp.isF(t.id) ? 'Following' : 'Follow'}</button>` : ''}</div>`;
+      return `<div class="slv-facts">${f.map(([k, val]) => `<div class="slv-fact"><small>${E(k)}</small><b translate="no">${E(val)}</b></div>`).join('')}${this.solo(g) ? '' : card(g.home, 'home') + card(g.away, 'away')}</div>`;
+    },
+    lineups(g, sum) {
+      const rs = ((sum && sum.rosters) || []).filter((r) => (r.roster || []).length);
+      if (!rs.length) return `<div class="slv-note">${g.state === 'pre' ? 'Line-ups usually arrive about an hour before kick-off.' : 'No line-ups for this game.'}</div>`;
+      const hR = rs.find((r) => String(r.team && r.team.id) === String(g.home.id)) || rs[0], aR = rs.find((r) => r !== hR) || null;
+      const nar = this.narrow(), bench = (r) => (r.roster || []).filter((p) => !p.starter).map((p) => `${p.jersey ? `${p.jersey} ` : ''}${(p.athlete && (p.athlete.shortName || p.athlete.displayName)) || ''}`).join(' · ');
+      if (!this.soccer(g) || !aR) {
+        return `<div class="slv-lu">${[hR, aR].filter(Boolean).map((r) => `<div><b translate="no">${E((r.team && r.team.displayName) || '')}</b><ol>${(r.roster || []).filter((p) => p.starter).map((p) => `<li><span>${E(p.jersey || '')}</span><span translate="no" style="width:auto;text-align:left;color:inherit;font-family:inherit">${E((p.athlete && p.athlete.displayName) || '')}</span><small>${E((p.position && p.position.abbreviation) || '')}</small></li>`).join('')}</ol></div>`).join('')}</div>`;
+      }
+      const line = (pos) => { const p = String(pos || '').toUpperCase(); if (p === 'G' || p === 'GK') return 0; if (/^(CD|CB|LB|RB|LWB|RWB|D|SW)/.test(p)) return 1; if (/^(DM|CDM)/.test(p)) return 2; if (/^(CM|LM|RM|M)(-|$)/.test(p)) return 3; if (/^(AM|CAM|LW|RW|W)/.test(p)) return 4; return 5; };
+      const lat = (pos) => { const p = String(pos || '').toUpperCase(); return /^L/.test(p) ? -2 : /-L$/.test(p) ? -1 : /^R/.test(p) ? 2 : /-R$/.test(p) ? 1 : 0; };
+      const place = (r, side) => {
+        const xi = (r.roster || []).filter((p) => p.starter); const by = {};
+        xi.forEach((p) => { const l = line(p.position && p.position.abbreviation); (by[l] = by[l] || []).push(p); });
+        const ls = Object.keys(by).map(Number).sort((a, b) => a - b), n = ls.length;
+        return ls.map((l, li) => { const ps = by[l].sort((a, b) => lat(a.position && a.position.abbreviation) - lat(b.position && b.position.abbreviation) || Number(a.formationPlace || 0) - Number(b.formationPlace || 0));
+          const x = n > 1 ? .06 + li * (.38 / (n - 1)) : .06;
+          return ps.map((p, i) => { const y = (i + 1) / (ps.length + 1); let X = side === 'h' ? x : 1 - x, Y = side === 'h' ? y : 1 - y; if (nar) [X, Y] = [Y, 1 - X];
+            return `<div class="pl ${side}" style="left:${(X * 100).toFixed(1)}%;top:${(Y * 100).toFixed(1)}%"><i>${E(p.jersey || '')}</i><span translate="no">${E((p.athlete && (p.athlete.shortName || p.athlete.displayName)) || '')}</span></div>`; }).join(''); }).join('');
+      };
+      const c = this.colors(g, sum), ink = (hex) => { const [r, gg, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16)); return r * .3 + gg * .59 + b * .11 > 150 ? '#111' : '#fff'; };
+      const lines = nar
+        ? '<div class="ln" style="inset:12px"></div><div class="ln" style="left:12px;right:12px;top:50%;height:0;border-width:1.5px 0 0"></div><div class="ln" style="left:50%;top:50%;width:26%;aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%)"></div><div class="ln" style="left:25%;right:25%;top:12px;height:14%;border-top:0"></div><div class="ln" style="left:25%;right:25%;bottom:12px;height:14%;border-bottom:0"></div>'
+        : '<div class="ln" style="inset:14px"></div><div class="ln" style="top:14px;bottom:14px;left:50%;width:0;border-width:0 0 0 1.5px"></div><div class="ln" style="left:50%;top:50%;height:26%;aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%)"></div><div class="ln" style="top:25%;bottom:25%;left:14px;width:11%;border-left:0"></div><div class="ln" style="top:25%;bottom:25%;right:14px;width:11%;border-right:0"></div>';
+      const fm = nar
+        ? `<span class="fm" style="left:20px;bottom:20px" translate="no">${E(g.home.abbr || '')} · ${E(hR.formation || '')}</span><span class="fm" style="left:20px;top:20px" translate="no">${E(aR.formation || '')} · ${E(g.away.abbr || '')}</span>`
+        : `<span class="fm" style="left:26px;top:22px" translate="no">${E(g.home.abbr || '')} · ${E(hR.formation || '')}</span><span class="fm" style="right:26px;top:22px" translate="no">${E(aR.formation || '')} · ${E(g.away.abbr || '')}</span>`;
+      return `<div class="slv-pitch" style="--hc:${ink(c.h)};--ac:${ink('f3f0e8')}">${lines}${fm}${place(hR, 'h')}${place(aR, 'a')}</div>${nar ? `<div class="slv-bench"><b translate="no">${E(g.home.short)}</b> · ${E(bench(hR))}<br><b translate="no">${E(g.away.short)}</b> · ${E(bench(aR))}</div>` : ''}`;
+    },
+    chRow(o, i) {
+      const now = Date.now(), p = o.p;
+      const sub = o.how === 'guide' ? `<span translate="no">${E(p.title)}</span> · ${E(hm(p.start))}–${E(hm(p.end))}` : `<span translate="no">${E(o.net)}</span>`;
+      const prog = p && p.start < now && p.end > now ? `<div class="slv-prog"><i style="transform:scaleX(${((now - p.start) / (p.end - p.start)).toFixed(3)})"></i></div>` : '';
+      return `<button type="button" class="slv-ch${i === 0 && !this.narrow() ? ' on' : ''}" data-nav data-k="w${i}" data-slvw="${i}"><span class="slv-cl">${o.ch.logo ? `<img src="${E(o.ch.logo)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-gone>` : E(String(o.ch.name).replace(/[^\p{L}\p{N}]/gu, '').slice(0, 4).toUpperCase())}</span><span class="slv-ct"><b translate="no">${E(o.ch.name)}</b><small>${sub}</small>${prog}</span><span class="slv-tag">${o.how === 'guide' ? 'In your guide' : 'Shows this game'}</span></button>`;
+    },
+    watchPanel(g, sum, wt) {
+      const head = `<div class="slv-wh"><h3>Watch</h3><span class="t">${wt.length ? (wt.length === 1 ? '1 channel found' : `${wt.length} channels found`) : ''}</span></div>`;
+      if (!g) return head + '<div class="slv-empty">Pick a game to see where it is on.</div>';
+      const o = wt[0];
+      const card = `<div class="slv-now"><div class="pic"></div>${g.state !== 'pre' && !this.solo(g) ? `<div class="slv-bug">${this.img(g.home)}<b>${this.sc(g.home.score)}–${this.sc(g.away.score)}</b>${this.img(g.away)}<span style="color:var(--mu)" translate="no">${E(this.short(g))}</span></div>` : ''}${o ? `<span class="chl">${o.ch.logo ? `<img src="${E(o.ch.logo)}" alt="" referrerpolicy="no-referrer" data-gone>` : E(String(o.ch.name).slice(0, 4))}</span>` : ''}<div class="cap"><b translate="no">${E(o ? o.ch.name : (g.nets || []).slice(0, 2).join(', ') || this.lgName(g.lg))}</b><span translate="no">${this.solo(g) ? E(g.name) : `${E(g.home.short)} – ${E(g.away.short)}`}</span></div></div>`;
+      const rows = wt.length ? wt.map((x, i) => this.chRow(x, i)).join('') : `<div class="slv-note" style="padding:4px 18px 8px">None of the channels in your playlists or TV guides show this game.</div>${(g.nets || []).length ? `<div class="slv-note" style="padding:0 18px 8px"><span translate="no">${E(g.nets.slice(0, 3).join(', '))}</span></div>` : ''}`;
+      return head + card + rows;
+    },
+    /* ---------------- screens ---------------- */
+    top(nar) {
+      const back = nar && this.st.screen === 'match';
+      return `<div class="slv-top"><button type="button" class="slv-ib" data-nav data-k="close" ${back ? 'data-slvback' : 'data-x8close'} aria-label="${back ? 'Back' : 'Close'}">${I.back}</button><h1>${back ? `<span translate="no">${E(this.lgName((this.cur() || {}).lg) || 'Sports')}</span>` : 'Sports'}</h1><span class="sp"></span>
+        <button type="button" class="slv-ib${this.hide() ? ' on' : ''}" data-nav data-k="hide" data-slvhide aria-label="${this.hide() ? 'Show scores' : 'Hide scores'}" title="${this.hide() ? 'Show scores' : 'Hide scores'}">${this.hide() ? I.eyeOff : I.eye}</button></div>`;
+    },
+    rail() {
+      const all = this.games(), sp = SP(), p = this.st.pick, live = all.filter((g) => g.state === 'in').length, mine = all.filter((g) => sp.isF(g.home.id) || sp.isF(g.away.id)).length;
+      const ri = (k, ic, label, n, liveN) => `<button type="button" class="slv-ri${p === k ? ' on' : ''}" data-nav data-k="r${E(k)}" data-slvpick="${E(k)}"><span class="slv-ic">${ic}</span><span translate="${/^(soccer|football|basketball|hockey|baseball|mma|racing)\//.test(k) ? 'no' : 'yes'}">${label}</span><span class="n">${liveN ? I.live : ''}${n == null ? '' : n}</span></button>`;
+      const lgs = sp.LEAGUES.map(([lg, n]) => { const gs = all.filter((g) => g.lg === lg); return [lg, n, gs.length, gs.filter((g) => g.state === 'in').length]; }).filter((x) => x[2] || x[0] === p).sort((a, b) => b[3] - a[3]);
+      const cats = this.hubCats();
+      const day = (o, l) => `<button type="button" class="${this.st.day === o ? 'on' : ''}" data-nav data-k="d${o}" data-slvday="${o}">${l}</button>`;
+      return `<div class="slv-pan slv-rail slv-scroll" data-scroll="rail">
+        ${ri('live', I.live, 'Live now', live, 0)}${ri('today', '<span>✦</span>', this.st.day === 0 ? 'All today' : 'All games', all.length)}${sp.follows().length ? ri('mine', I.starOn.replace('<svg', '<svg width="13" height="13"'), 'My teams', mine) : ''}
+        ${lgs.length ? `<div class="slv-rh">Leagues</div>${lgs.map(([lg, n, c, l]) => ri(lg, E(n.split(/\s+/).map((w) => w[0]).join('').slice(0, 3)), E(n), c, l)).join('')}` : ''}
+        ${cats.length ? `<div class="slv-rh">Your sports channels</div>${cats.map(([id, l, c]) => ri(`ch:${id}`, I.tv, E(l), c)).join('')}` : ''}<div class="slv-rh">Day</div><div class="slv-days">${day(-1, 'Yesterday')}${day(0, 'Today')}${day(1, 'Tomorrow')}</div></div>`;
+    },
+    chTiles(cat) {
+      const items = this.hub().filter((x) => x.cat === cat), now = Date.now();
+      if (!items.length) return '<div class="slv-empty">Nothing here right now.</div>';
+      const groups = {}; items.forEach((it) => { const k = cat === 'football' ? (this.leagueOf(it) || 'More football') : ''; (groups[k] = groups[k] || []).push(it); });
+      const tile = (it) => { const i = this.hub().indexOf(it), sub = it.ev ? `${it.ev.start <= now ? 'On now' : hm(it.ev.start)} · ${it.ev.ch}` : (it.tag || it.source || ''); return `<button type="button" class="slv-tile" data-nav data-k="h${i}" data-slvhub="${i}"><span class="slv-cl">${it.logo ? `<img src="${E(it.logo)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-gone>` : E(String(it.name).replace(/[^\p{L}\p{N}]/gu, '').slice(0, 4).toUpperCase())}</span><span class="slv-ct"><b translate="no">${E(it.name)}</b><small translate="no">${E(sub)}</small></span>${it.live ? '<span class="slv-tag" style="color:#ff9a9e">Live</span>' : ''}</button>`; };
+      return Object.keys(groups).sort((a, b) => (a === 'More football') - (b === 'More football')).map((k) => `${k ? `<div class="slv-tab-h" translate="no">${E(k)}</div>` : ''}<div class="slv-tiles">${groups[k].slice(0, 120).map(tile).join('')}</div>`).join('');
+    },
+    wide() {
+      const g = this.cur(), sum = this.sum(g), list = this.list(), p = this.st.pick;
+      const c = g ? this.colors(g, sum) : { h: 'd9d4c7', a: '8d8b93' };
+      const wt = this.watch(g);
+      let main;
+      if (p.startsWith('ch:')) main = `<section class="slv-pan slv-body slv-scroll" data-scroll="main"><div class="slv-wh" style="padding:0 0 12px"><h3>${E((this.hubCats().find((x) => `ch:${x[0]}` === p) || [0, ''])[1])}</h3><span class="t">From your playlists and addons</span></div>${this.chTiles(p.slice(3))}</section>`;
+      else if (!g) main = `<section class="slv-pan slv-body"><div class="slv-empty">${this.days[this.st.day] ? `<b>No games here</b>${p === 'live' ? 'Nothing is live right now. Pick a league or another day on the left.' : 'Pick another league or day on the left.'}` : '<span class="spin"></span> Loading games…'}</div></section>`;
+      else main = `${this.hero(g, sum, wt)}${this.tabs(g, sum)}<section class="slv-pan slv-body slv-scroll" data-scroll="body">${this.body(g, sum)}</section>`;
+      const gl = p.startsWith('ch:') ? [] : list;
+      let lastLg = '';
+      const games = gl.length ? gl.map((x, i) => { const head = (p === 'live' || p === 'today' || p === 'mine') && x.lg !== lastLg ? `<div class="slv-lgh" translate="no">${E(this.lgName(x.lg))}</div>` : ''; lastLg = x.lg; return head + this.gameRow(x, i, g && x.id === g.id); }).join('') : '';
+      return `<div class="slv-grid" style="--c1:#${c.h};--c2:#${c.a}"><div class="slv-col">${this.rail()}</div><div class="slv-col">${main}</div>
+        <div class="slv-col"><div class="slv-pan slv-scroll" data-scroll="side" style="flex:1">${p.startsWith('ch:') ? '' : this.watchPanel(g, sum, wt)}${games ? `<div class="slv-wh" style="padding-top:18px"><h3>${p === 'live' && this.games().some((x) => x.state === 'in') ? 'Live scores' : 'Games'}</h3><span class="t">${gl.length}</span></div>${games}` : ''}<div style="height:12px"></div></div></div></div>`;
+    },
+    narrowList() {
+      const all = this.games(), sp = SP(), p = this.st.pick, live = all.filter((x) => x.state === 'in');
+      const chip = (k, label, n, dot) => `<button type="button" class="slv-chip${p === k ? ' on' : ''}" data-nav data-k="r${E(k)}" data-slvpick="${E(k)}">${dot ? I.live : ''}<span>${label}</span>${n != null ? `<em>${n}</em>` : ''}</button>`;
+      const lgs = sp.LEAGUES.filter(([lg]) => all.some((x) => x.lg === lg) || lg === p);
+      const chips = `<div class="slv-chips">${chip('live', 'Live', live.length, 1)}${chip('today', this.st.day === 0 ? 'Today' : 'All games', all.length)}${sp.follows().length ? chip('mine', 'My teams', null) : ''}${lgs.map(([lg, n]) => chip(lg, `<span translate="no">${E(n)}</span>`, all.filter((x) => x.lg === lg).length)).join('')}${this.hubCats().map(([id, l, c]) => chip(`ch:${id}`, E(l), c)).join('')}</div>`;
+      const days = `<div class="slv-chips" style="padding-top:0">${[[-1, 'Yesterday'], [0, 'Today'], [1, 'Tomorrow']].map(([o, l]) => `<button type="button" class="slv-chip${this.st.day === o ? ' on' : ''}" data-nav data-k="d${o}" data-slvday="${o}" style="padding:6px 12px">${l}</button>`).join('')}</div>`;
+      if (p.startsWith('ch:')) return chips + `<div style="padding:4px 14px">${this.chTiles(p.slice(3))}</div>`;
+      const list = this.list(), feat = list.filter((x) => !this.solo(x)).find((x) => x.state === 'in') || list.find((x) => !this.solo(x));
+      let html = chips + days;
+      if (!this.days[this.st.day]) return html + '<div class="slv-empty"><span class="spin"></span> Loading games…</div>';
+      if (feat) {
+        const c = this.colors(feat, this.sum(feat)), wt = this.watch(feat);
+        html += `<div style="--c1:#${c.h};--c2:#${c.a}"><section class="slv-hero slv-pan" style="padding:14px"><div class="slv-meta">${feat.state === 'in' ? `${I.live}<b style="color:#ff9a9e" translate="no">${E(this.status(feat))}</b><span>·</span>` : ''}<span translate="no">${E(this.lgName(feat.lg))}</span></div>
+          <div class="slv-hrow"><div class="slv-tm">${this.logo(feat.home)}<h2 translate="no">${E(feat.home.short || feat.home.name)}</h2></div><div class="slv-sc">${feat.state === 'pre' ? `<div class="slv-big sm">${E(hm(feat.date))}</div>` : `<div class="slv-big" style="font-size:38px">${this.sc(feat.home.score)}<span>–</span>${this.sc(feat.away.score)}</div>`}</div><div class="slv-tm r">${this.logo(feat.away)}<h2 translate="no">${E(feat.away.short || feat.away.name)}</h2></div></div>
+          <div style="display:flex;gap:8px;margin-top:12px">${wt[0] ? `<button type="button" class="slv-btn p" style="flex:1;justify-content:center" data-nav data-k="fw" data-slvfw="${E(feat.id)}">${I.play}<span translate="no">${E(wt[0].ch.name)}</span></button>` : ''}<button type="button" class="slv-btn" style="${wt[0] ? '' : 'flex:1;justify-content:center'}" data-nav data-k="fo" data-slvg="${E(feat.id)}">Match centre</button></div></section></div>`;
+      }
+      const onNow = this.hub().filter((x) => x.ev && x.ev.start <= Date.now() && x.ev.end > Date.now()).slice(0, 14);
+      if (onNow.length) html += `<div class="slv-secT">On your channels now<small>From your guide</small></div><div class="slv-chrow">${onNow.map((it) => { const i = this.hub().indexOf(it); return `<button type="button" class="slv-chc" data-nav data-k="h${i}" data-slvhub="${i}"><span class="slv-cl">${it.logo ? `<img src="${E(it.logo)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-gone>` : E(String(it.ev.ch).slice(0, 4))}</span><b translate="no">${E(it.ev.ch)}</b><small translate="no">${E(it.name)}</small><div class="slv-prog"><i style="transform:scaleX(${((Date.now() - it.ev.start) / (it.ev.end - it.ev.start)).toFixed(3)})"></i></div></button>`; }).join('')}</div>`;
+      if (!list.length) return html + `<div class="slv-empty"><b>No games here</b>${p === 'live' ? 'Nothing is live right now.' : 'Try another day or league.'}</div>`;
+      const by = []; list.forEach((x) => { let gr = by.find((b) => b.lg === x.lg); if (!gr) { gr = { lg: x.lg, gs: [] }; by.push(gr); } gr.gs.push(x); });
+      return html + by.map((gr) => `<div class="slv-secT"><span translate="no">${E(this.lgName(gr.lg))}</span><small>${gr.gs.length === 1 ? '1 game' : `${gr.gs.length} games`}</small></div>${gr.gs.map((x, i) => this.gameRow(x, i)).join('')}`).join('');
+    },
+    narrowMatch() {
+      const g = this.cur(); if (!g) { this.st.screen = 'list'; return this.narrowList(); }
+      const sum = this.sum(g), wt = this.watch(g), c = this.colors(g, sum);
+      return `<div style="--c1:#${c.h};--c2:#${c.a}">${this.hero(g, sum, wt)}${this.tabs(g, sum)}<div class="slv-sec">${this.body(g, sum)}</div>
+        <div class="slv-sec"><h4><span>Watch</span>${wt.length ? ` · <span>${wt.length === 1 ? '1 channel found' : `${wt.length} channels found`}</span>` : ''}</h4>${wt.length ? wt.map((x, i) => this.chRow(x, i)).join('') : `<div class="slv-note" style="padding:0">None of the channels in your playlists or TV guides show this game.</div>`}</div></div>`;
+    },
+    /* team names break only between words: a name whose longest word does not fit, or that runs past three lines, gets smaller, then the short name */
+    fitNames(box) {
+      qa('.slv-tm h2[data-short]', box).forEach((h) => {
+        const bad = () => h.scrollWidth > h.clientWidth + 1 || h.offsetHeight > parseFloat(getComputedStyle(h).lineHeight) * 3.2;
+        if (!bad()) return; h.classList.add('sm'); if (!bad()) return; h.textContent = h.dataset.short; if (bad()) h.classList.add('xs');
+      });
+    },
+    render(first) {
+      const box = X8.body('sportsPlus'); if (!box) return;
+      const nar = this._nar = this.narrow();
+      // keep the remote's place and each column's scroll across repaints
+      const act = document.activeElement, k = (act && box.contains(act) && act.dataset && act.dataset.k) || this._k || '';
+      if (!box._slvK) { box._slvK = 1; box.addEventListener('focusin', (e) => { const t = e.target.closest && e.target.closest('[data-k]'); if (t) this._k = t.dataset.k; }); }
+      const scr = {}; qa('[data-scroll]', box).forEach((s) => { scr[s.dataset.scroll] = s.scrollTop; });
+      const one = q('.slv-one', box), oneTop = one ? one.scrollTop : 0;
+      const g = this.cur(), c = g ? this.colors(g, this.sum(g)) : null;
+      box.innerHTML = `<div class="slv-in${nar ? ' nar' : ''}${first ? ' slv-fade' : ''}" ${c ? `style="--c1:#${c.h};--c2:#${c.a}"` : ''}>${this.top(nar)}${nar ? `<div class="slv-one" data-scroll="one">${this.st.screen === 'match' ? this.narrowMatch() : this.narrowList()}</div>` : this.wide()}</div>`;
+      qa('[data-scroll]', box).forEach((s) => { if (scr[s.dataset.scroll] != null) s.scrollTop = scr[s.dataset.scroll]; });
+      if (one && q('.slv-one', box) && !this._jump) q('.slv-one', box).scrollTop = oneTop; this._jump = false;
+      this.bind(box);
+      try { icons(); } catch (e) { /* plain */ }
+      this.fitNames(box);
+      if (tv()) {
+        qa('.slv-evs .m, .slv-plays li, .slv-tab-t tbody tr td:first-child, .slv-fact, .slv-tile', box).forEach((x) => { if (!x.hasAttribute('data-nav')) { x.setAttribute('data-nav', ''); x.tabIndex = 0; } });
+        qa('[data-scroll="body"]', box).forEach((x) => { if (!q('[data-nav]', x)) { x.setAttribute('data-nav', ''); x.dataset.k = 'body'; x.tabIndex = 0; } x.setAttribute('data-nav-band', ''); });
+        const el = (k && q(`[data-k="${CSS.escape(k)}"]`, box)) || q('[data-k="watch"]', box) || q('.slv-ri.on', box) || q('.slv-chip.on', box) || q('[data-nav]', box);
+        if (el) try { Nav.focus(el, true); } catch (e) { el.focus({ preventScroll: true }); }
+        try { Nav.settle(); } catch (e) { /* remote not ready */ }
+      }
+    },
+    pickGame(id) {
+      const g = this.games().find((x) => x.id === id) || Object.values(this.days).flatMap((d) => d.games || []).find((x) => x.id === id); if (!g) return;
+      this.st.game = { id: g.id, lg: g.lg, g }; if (this.narrow()) { this.st.screen = 'match'; this._jump = true; const one = q('#sportsPlus .slv-one'); if (one) one.scrollTop = 0; }
+      this.render(); this.summary(g).then(() => { if (this.st.game && this.st.game.id === g.id) this.render(); });
+    },
+    bind(box) {
+      const on = (sel, fn) => qa(sel, box).forEach((b) => b.addEventListener('click', (e) => { e.preventDefault(); fn(b); }));
+      on('[data-slvpick]', (b) => { this.st.pick = b.dataset.slvpick; const l = this.list(); if (!this.narrow() && l[0] && !(this.cur() && l.some((x) => x.id === this.cur().id))) { this.st.game = { id: l[0].id, lg: l[0].lg }; this.summary(l[0]).then(() => this.paintSoft()); } this.render(); });
+      on('[data-slvday]', (b) => { this.st.day = Number(b.dataset.slvday); this.st.game = null; this.render(); this.load(); });
+      on('[data-slvg]', (b) => this.pickGame(b.dataset.slvg));
+      on('[data-slvtab]', (b) => { this.st.tab = b.dataset.slvtab; this.render(); });
+      on('[data-slvback]', () => { this.st.screen = 'list'; this.render(); });
+      on('[data-slvhide]', () => { setCfg('hideScores', !CFG.hideScores); document.body.classList.toggle('no-scores', !!CFG.hideScores); this.render(); if (this.bug) this.paintBug(); });
+      on('[data-slvw]', (b) => { const g = this.cur(); this.tune(this.watch(g)[Number(b.dataset.slvw)]); });
+      on('[data-slvfw]', (b) => { const g = this.games().find((x) => x.id === b.dataset.slvfw); this.tune(this.watch(g)[0]); });
+      on('[data-slvsplit]', () => { const g = this.cur(); this.split(this.watch(g)[0]); });
+      on('[data-slvpin]', () => { const g = this.cur(); if (!g || this.solo(g)) return; if (this.bug && this.bug.id === g.id) this.unpin(); else this.pin(g); this.render(); });
+      on('[data-slvf]', (b) => { const g = this.cur(); if (!g || this.solo(g)) return; const t = g[b.dataset.slvf]; SP().follow({ id: t.id, name: t.name, logo: t.logo, lg: g.lg }); this.render(); });
+      on('[data-slvhub]', (b) => { const it = this.hub()[Number(b.dataset.slvhub)]; if (!it) return; X8.close('sportsPlus'); try { SportsHub.open(it); } catch (e) { toast('That did not open', 'err'); } });
+    },
+    /* ---------------- the score kept on screen (over the app and its player; outside players cannot show it) ---------------- */
+    pin(g) { this.bug = { id: g.id, lg: g.lg, g }; try { Store.set('slvBug', { id: g.id, lg: g.lg, at: Date.now() }); } catch (e) { /* not kept */ } this.paintBug(); clearInterval(this.bugT); this.bugT = setInterval(() => this.bugBeat(), 45000); toast('The score stays on screen while you watch. Tap × on it to remove it.', 'ok', 4200, 'slvbug'); },
+    unpin() { this.bug = null; clearInterval(this.bugT); try { Store.set('slvBug', null); } catch (e) { /* fine */ } const b = q('#slvBug'); if (b) b.remove(); },
+    async bugBeat() {
+      const b = this.bug; if (!b) return;
+      try { const list = await SP().scoreboard(b.lg, 0); let g = list.find((x) => x.id === b.id); if (!g) { const y = await SP().scoreboard(b.lg, -1); g = y.find((x) => x.id === b.id); } if (g) { b.g = g; if (g.state === 'post' && Date.now() - (b.end || (b.end = Date.now())) > 15 * 60e3) { this.unpin(); return; } } } catch (e) { /* try next time */ }
+      this.paintBug();
+    },
+    paintBug() {
+      const b = this.bug; if (!b) return; const g = b.g; let el = q('#slvBug');
+      if (!el) { el = document.createElement('div'); el.id = 'slvBug'; el.setAttribute('role', 'status'); document.body.appendChild(el); el.addEventListener('click', (e) => { if (e.target.closest('button')) this.unpin(); }); }
+      el.innerHTML = `${this.img(g.home)}<b>${this.sc(g.home.score)}–${this.sc(g.away.score)}</b>${this.img(g.away)}<span class="st" translate="no">${E(g.state === 'pre' ? hm(g.date) : this.short(g))}</span><button type="button" aria-label="Remove the score">${I.x}</button>`;
+    },
+    init() {
+      try { const b = Store.get('slvBug', null); if (b && b.id && Date.now() - b.at < 4 * 3600e3) { this.bug = { id: b.id, lg: b.lg, g: { id: b.id, lg: b.lg, home: { score: '' }, away: { score: '' }, state: 'pre', date: Date.now() } }; this.bugBeat(); this.bugT = setInterval(() => this.bugBeat(), 45000); } } catch (e) { /* none kept */ }
+      // the Live hub's featured game opens its match page
+      document.addEventListener('click', (e) => {
+        const f = e.target.closest && e.target.closest('#lhHub .lh-feat');
+        if (!f || e.target.closest('button')) return;
+        try { const g = MKLiveHub.games[MKLiveHub.pick]; const path = SP().LEAGUES.find(([, n]) => n === g.short); this.open(path ? { id: g.id, lg: path[0] } : undefined); } catch (x) { this.open(); }
+      });
+    },
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => SL.init(), { once: true }); else SL.init();
+})();
+</script>
+<!-- mk-296-sports:end -->
+
 <script id="mk-2952-smooth">/* 2.95.2 smooth sources: the title page Streams list and the player's Sources panel step one row at a time with the
    remote, and picking another source in the MKCinema Player (Android app) swaps the film without tearing the picture down */
 (()=>{

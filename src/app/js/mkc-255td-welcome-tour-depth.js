@@ -177,9 +177,9 @@ const TourDeep = {
         lede: 'Charts, artists and albums, live radio from around the world, and synced lyrics on a big Now Playing screen. Music keeps playing while you browse.',
         pts: [['server', 'Your own music in full', 'From your Plex, Jellyfin, Emby or Navidrome server, or files on this device.'], ['radio', 'Live radio', 'Thousands of stations, playing their own streams.'], ['mic-vocal', 'Lyrics that follow along', 'Line by line, in time with the song.']],
         where: 'Music, in the main menu' },
-      { id: 'scores', ch: 'discover', t: 'Scores and tables', art: 'scores',
-        lede: 'Twenty-two leagues with game pages, league tables and your own teams first, plus a switch that hides every score.',
-        pts: [['star', 'Follow your teams', 'Their games come first, with score alerts while MKCinema is open.'], ['table', 'League tables', 'Football, basketball, hockey, baseball and more.'], ['eye-off', 'Hide scores', 'Watch it later without spoilers.']],
+      { id: 'scores', ch: 'discover', t: 'Sports match centre', art: 'scores',
+        lede: 'Live scores, stats, events, line-ups on a pitch, standings and match facts, with your own teams first.',
+        pts: [['tv', 'Watch the game', 'A Watch button finds the game in your own channels and TV guide.'], ['trophy', 'Keep score on screen', 'The score stays in a corner while you browse or watch.'], ['eye-off', 'Hide scores', 'Watch it later without spoilers.']],
         where: 'Live TV › Scores and tables' },
     ];
     return F.filter((f) => !f.when || f.when());
