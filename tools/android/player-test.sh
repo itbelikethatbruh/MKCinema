@@ -88,7 +88,23 @@ echo "MKCinema Player: Back leaves at once while opening and from the options ro
 # plays the film under a blank page using the page's own commands (UnderPlayer.selfTest) and logs what mpv reports.
 adb shell am force-stop com.mkcinema.app || true
 adb logcat -c || true
-adb shell am start -W -n com.mkcinema.app/.MainActivity --es underTest http://10.0.2.2:8000/test.mkv
+# 1.17.18: a server that sends the start of the film and then stops answering, like a busy debrid server
+cat > "$OUT/stall.py" <<'PY'
+import http.server, socketserver, sys, time, os
+F = sys.argv[1]
+class H(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        n = os.path.getsize(F); self.send_response(200); self.send_header('Content-Type', 'video/x-matroska')
+        self.send_header('Content-Length', str(n)); self.end_headers()
+        with open(F, 'rb') as f: self.wfile.write(f.read(3_000_000)); self.wfile.flush()
+        time.sleep(120)
+    def log_message(self, *a): pass
+socketserver.ThreadingTCPServer.allow_reuse_address = True
+socketserver.ThreadingTCPServer(('', 8001), H).serve_forever()
+PY
+python3 "$OUT/stall.py" "$OUT/www/test.mkv" & stall=$!
+trap 'kill $srv $stall 2>/dev/null || true' EXIT
+adb shell am start -W -n com.mkcinema.app/.MainActivity --es underTest http://10.0.2.2:8000/test.mkv --es underSlow http://10.0.2.2:8001/test.mkv
 wait_for "under-test: PASS\|under-test: FAIL"
 sleep 1; shot under-playing; log
 grep "under-test\|under:" "$OUT/logcat.txt"
@@ -98,3 +114,8 @@ Y=$(ffmpeg -loglevel error -i "$OUT/under-playing.png" -vf "signalstats,metadata
 echo "screenshot average brightness: $Y"
 python3 -c "import sys; sys.exit(0 if float('${Y:-0}') > 40 else 1)" || { echo "MKCinema Player under the web player: mpv played but the screen is black"; exit 1; }
 echo "MKCinema Player under the web player: played, both languages and the subtitle listed, switched live"
+# 1.17.18: leaving the film never holds the screen (taps on the page wait on Android's screen thread)
+wait_for "under-close: PASS\|under-close: FAIL"
+grep -h "under-close\|under: " "$OUT/logcat.txt" | tail -30
+grep -q "under-close: PASS" "$OUT/logcat.txt" || { echo "MKCinema Player under the web player: closing the film held the screen"; exit 1; }
+echo "MKCinema Player under the web player: closing the film never holds the screen"

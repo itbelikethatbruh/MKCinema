@@ -284,8 +284,37 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
                 boolean ok = t1 >= 2 && au == 2 && su == 1 && "1".equals(a1) && "2".equals(u.str("aid")) && "1".equals(u.str("sid")) && t2 > t1 && t3 > t2 && "yes".equals(refused);
                 android.util.Log.i(T, "under-test: local path refused=" + refused);
                 android.util.Log.i(T, ok ? "under-test: PASS" : "under-test: FAIL");
+                // 1.17.18: leaving the film the way the page does (subtitles off, auto-sync off, stop, hide the picture)
+                // must never hold the screen: the page and every tap wait on Android's screen thread
+                Thread.sleep(8000); // the test script takes its screenshot of the playing film first
+                long g1 = closeGap(u);
+                android.util.Log.i(T, "under-close: fast film, screen held " + g1 + " ms at most");
+                String slow = a.getIntent() == null ? null : a.getIntent().getStringExtra("underSlow");
+                long g2 = -1;
+                if (webUrl(slow)) {
+                    u.cmd("show", "1"); Thread.sleep(1200);
+                    u.cmd("open", new JSONObject().put("url", slow).put("start", 0).put("title", "Slow").toString());
+                    for (int i = 0; i < 40 && u.num("t") < 1; i++) Thread.sleep(500);
+                    Thread.sleep(4000); // the server has stopped sending: mpv is waiting inside a network read
+                    android.util.Log.i(T, "under-close: slow film playing t=" + u.num("t"));
+                    g2 = closeGap(u);
+                    android.util.Log.i(T, "under-close: stalled film, screen held " + g2 + " ms at most");
+                }
+                android.util.Log.i(T, g1 < 400 && g2 < 400 ? "under-close: PASS" : "under-close: FAIL");
             } catch (Throwable e) { android.util.Log.e(T, "under-test: FAIL " + e); }
         }).start();
+    }
+    /** test only: closes the film with the page's own commands (from this thread, like the JavaScript bridge) and returns
+        the longest time Android's screen thread was held during the next 6 s */
+    static long closeGap(UnderPlayer u) throws Exception {
+        final Handler mh = new Handler(Looper.getMainLooper()); final long[] last = { android.os.SystemClock.uptimeMillis() }, max = { 0 };
+        final boolean[] run = { true };
+        Runnable beat = new Runnable() { @Override public void run() {
+            long n = android.os.SystemClock.uptimeMillis(); max[0] = Math.max(max[0], n - last[0]); last[0] = n; if (run[0]) mh.postDelayed(this, 16); } };
+        mh.post(beat); Thread.sleep(300); synchronized (max) { max[0] = 0; }
+        u.cmd("sid", "no"); u.cmd("vad", "0"); u.cmd("stop", ""); u.cmd("show", "0");
+        Thread.sleep(6000); run[0] = false; Thread.sleep(50);
+        return max[0];
     }
     double num(String k) { synchronized (lock) { Object v = vals.get(k); return v instanceof Number ? ((Number) v).doubleValue() : 0; } }
     String str(String k) { synchronized (lock) { Object v = vals.get(k); return v == null ? "" : String.valueOf(v); } }
