@@ -342,7 +342,7 @@
         <span class="lh-gt">${this.logo(g.away, 'lh-sl')}${esc(g.away.abbr)}</span><span class="lh-gm">${live ? `<i class="lh-dot"></i>${esc(g.away.score)}-${esc(g.home.score)}` : esc(new Date(g.date).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }))}<small>${live ? esc(g.detail) : esc(this.day(g).split(' · ')[0])}</small></span><span class="lh-gt r">${esc(g.home.abbr)}${this.logo(g.home, 'lh-sl')}</span></span></button>`;
     },
     switcher(view) {
-      return `<div class="segc lh-sw" role="tablist" aria-label="Live"><button type="button" role="tab" data-nav data-lhv="tv" class="${view === 'tv' ? 'on' : ''}" aria-selected="${view === 'tv'}"><i data-lucide="radio-tower"></i>Channels</button><button type="button" role="tab" data-nav data-lhv="sports" class="${view === 'sports' ? 'on' : ''}" aria-selected="${view === 'sports'}"><i data-lucide="trophy"></i>Sports in your sources</button></div>`;
+      return `<div class="segc lh-sw" role="tablist" aria-label="Live" data-nav-band><button type="button" role="tab" data-nav data-lhv="tv" class="${view === 'tv' ? 'on' : ''}" aria-selected="${view === 'tv'}"><i data-lucide="radio-tower"></i>Channels</button><button type="button" role="tab" data-nav data-lhv="sports" class="${view === 'sports' ? 'on' : ''}" aria-selected="${view === 'sports'}"><i data-lucide="trophy"></i>Sports in your sources</button></div>`;
     },
     host() { return q('#view-tv.on') ? 'tv' : q('#view-sports.on') ? 'sports' : ''; },
     async show() {

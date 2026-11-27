@@ -8,6 +8,10 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.96.0', date: '2026-11-27', items: [
+    ['new', 'Sports match centre', 'Sports gets a new match centre: live scores, stats, events, line-ups on a pitch, standings and match facts, a Watch button that finds the game in your own channels and TV guide, Keep score on screen, and a portrait layout for phones.'],
+    ['better', 'Quicker on TVs', 'TVs: Home is ready sooner on a repeat start, the top bar appears once and stays still, and the remote moves on from text boxes.'],
+  ] },
   { v: '2.95.21', date: '2026-11-26', items: [
     ['better', 'Episodes open in one step', 'Episode sources appear in one step instead of the list being drawn again while it opens.'],
   ] },

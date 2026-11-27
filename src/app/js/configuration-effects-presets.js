@@ -104,8 +104,9 @@ const Health = {
     addEventListener('unhandledrejection', (e) => { const m = String((e.reason && (e.reason.name || e.reason.message)) || ''); if (!/Abort|NotAllowed|play\(\)|interrupted/i.test(m)) this.add('err:promise', 5); });
     // Back: the TV app calls back(); phones and browsers go through the page's history
     try { const prev = back; back = function () { const b = Health.sig(); const r = prev.apply(this, arguments); Health.backCheck(b); return r; }; } catch (e) { /* no back */ }
-    let last = this.sig(); setInterval(() => { last = this.sig(); }, 400);
-    addEventListener('popstate', () => this.backCheck(last));
+    const tvq = typeof IS_TV !== 'undefined' && IS_TV; /* 2.96.2 tv speed */
+    let last = this.sig(); if (!tvq) setInterval(() => { last = this.sig(); }, 400);
+    addEventListener('popstate', () => { if (!tvq) this.backCheck(last); });
     if (typeof IS_TV !== 'undefined' && IS_TV) document.addEventListener('keydown', (e) => {
       if (!/^Arrow/.test(e.key)) return; const a = document.activeElement;
       if ((!a || a === document.body) && document.getElementById('player').hidden) setTimeout(() => { const b = document.activeElement; if (!b || b === document.body) this.add('err:tv_no_focus', 5); }, 300);

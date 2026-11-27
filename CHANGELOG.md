@@ -2,6 +2,11 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.96.0 (2026-11-27)
+
+- Sports match centre: live scores, stats, events, line-ups on a pitch, standings and match facts, a Watch button that finds the game in your own channels and TV guide, Keep score on screen, and a portrait layout for phones.
+- TVs: Home is ready sooner on a repeat start, the top bar appears once and stays still, and the remote moves on from text boxes.
+
 ## Web app 2.95.22 (2026-11-27)
 
 - Episode sources stay steady when you press Previous or Next in the episode panel.

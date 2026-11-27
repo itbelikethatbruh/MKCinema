@@ -752,6 +752,8 @@ const SportsPlus = {
   },
   /* ---------------- the page ---------------- */
   async open(lg) {
+    // 2.96: the match centre (mk-296-sports) is the sports page now
+    if (window.SportsLive) { SportsLive.open(lg); return; }
     if (lg) this.st.lg = lg;
     X8.layer('sportsPlus', { label: 'Scores and tables', full: true }); $('#sportsPlus').classList.add('spx');
     X8.open('sportsPlus'); this.render();
