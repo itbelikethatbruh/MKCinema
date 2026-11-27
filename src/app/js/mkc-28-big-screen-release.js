@@ -2834,9 +2834,12 @@ const SimpleHome = {
     const want = kids.slice().sort((a, b) => (this.rank(a, seriesFirst) - this.rank(b, seriesFirst)) || (idx.get(a) - idx.get(b)));
     if (want.every((el, i) => el === kids[i])) return;
     // keep the focused element's place on TV: moving nodes does not drop focus, but remember it just in case
-    const a = document.activeElement;
+    const a = document.activeElement; /* 2.96.3 tv steady rows */
+    const anc = a && rows.contains(a) ? a : (scrollY > 0 ? kids.find((el) => el.getBoundingClientRect().bottom > 0) : null);
+    const top0 = anc ? anc.getBoundingClientRect().top : 0;
     want.forEach((el) => rows.appendChild(el));
     if (a && a.isConnected && document.activeElement !== a) a.focus({ preventScroll: true });
+    if (anc && anc.isConnected) { const d = anc.getBoundingClientRect().top - top0; if (Math.abs(d) > 1) window.scrollTo({ top: scrollY + d, behavior: 'instant' }); }
   },
   dedupe() {
     const seen = new Set();

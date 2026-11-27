@@ -2,6 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.96.2 (2026-11-27)
+
+- The featured banner only shows titles with a real picture and logo.
+- Titles show their current name, and a source for a different film with the same name is never offered.
+- TVs: the highlight stays in place while Home finishes loading, and the arrows move on from the ends of a text box.
+- TVs: Settings no longer shows Shortcuts.
+
 ## Web app 2.96.1 (2026-11-27)
 
 - Sports: the Watch button only offers channels from playlists shown on this seat, and a game's kick-off shows without reopening the page.

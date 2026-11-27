@@ -2569,7 +2569,20 @@ if (IS_TV) {
       if (edge) try { Nav.move(k.slice(5).toLowerCase(), e.repeat); } catch (x) { /* never break typing */ }
     }, 0);
   }, true);
-  document.addEventListener('keydown', () => { if (kSeen) kSeen.ok = true; });
+  document.addEventListener('keydown', (e) => { if (kSeen && !(e.target && e.target.tagName === 'TEXTAREA')) kSeen.ok = true; }); /* 2.96.3 tv steady rows */
+  (() => {
+    let keyAt = 0, t = 0;
+    document.addEventListener('keydown', () => { keyAt = performance.now(); }, true);
+    const fix = () => {
+      clearTimeout(t); t = 0; const rows = document.getElementById('homeRows'), a = document.activeElement;
+      if (!rows || !a || !rows.contains(a) || S.view !== 'home') return;
+      if (performance.now() - keyAt < 700) { t = setTimeout(fix, 750); return; }
+      const r = a.getBoundingClientRect(); if (r.bottom > 0 && r.top < innerHeight) return;
+      try { a.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' }); } catch (x) { /* old web view */ }
+    };
+    const watch = () => { const rows = document.getElementById('homeRows'); if (rows && window.ResizeObserver) new ResizeObserver(fix).observe(rows); };
+    if (document.getElementById('homeRows')) watch(); else document.addEventListener('DOMContentLoaded', watch);
+  })();
 }
 document.addEventListener('pointerdown', () => { if (Pad.echo()) return; $$('.nav-focus').forEach((x) => x.classList.remove('nav-focus')); Nav.kbOff(); }, { passive: true });
 
