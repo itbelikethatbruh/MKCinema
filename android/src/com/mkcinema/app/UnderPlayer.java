@@ -95,6 +95,7 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
             if (open) {
                 for (int i = 0; i < 50 && want && !hasSurface; i++) Thread.sleep(50); // the picture surface comes up a moment after "show"
                 synchronized (lock) { if (g != gen) return; } // a newer film was asked for meanwhile
+                attach(); // 1.17.18: the surface is attached on this thread; make sure it is before the film opens
                 note("open gen " + g + " surface " + hasSurface + " shown " + shown);
             }
             Exception last = null;
@@ -344,7 +345,7 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
             x.addObserver(this);
             for (String w : WATCHED) x.observeProperty(w, 1);
             m = x;
-            if (hasSurface && sv != null) surfaceCreated(sv.getHolder()); // the picture surface came up before the player did
+            if (hasSurface) try { work.execute(this::attach); } catch (Exception ignored) { } // the surface came up before the player did
             android.util.Log.i("MKCPlayer", "under: mpv ready");
             h.post(pump);
         } catch (Throwable e) { initErr = "the player could not start (" + e.getClass().getSimpleName() + ")"; android.util.Log.w("MKCPlayer", "under: " + initErr); }
@@ -353,7 +354,45 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
 
     // ---- the picture: a surface under the page (UI thread) ----
 
+    /* 1.17.18: closing a film never holds the screen. Android destroys the picture surface on its screen thread, and mpv
+       had to let go of it right there (surfaceDestroyed). mpv answers only once it has finished stopping the film, which
+       with a network read in progress (a slow or busy server) took seconds; every tap and the whole page waited on it,
+       so after leaving a film the app looked frozen. Now the page turns opaque at once, mpv lets go of the surface on its
+       own thread, and only then is the surface hidden. Attaching a new surface happens on mpv's thread too. */
+    final Object surf = new Object(); volatile SurfaceHolder holder; volatile boolean attached; // the screen thread never takes surf
+    void attach() {
+        MPVLib x = m; if (x == null) return;
+        synchronized (surf) {
+            SurfaceHolder hd = holder;
+            if (attached || !hasSurface || hd == null) return;
+            try {
+                x.attachSurface(hd.getSurface());
+                android.graphics.Rect r = hd.getSurfaceFrame(); if (r.width() > 0) x.setPropertyString("android-surface-size", r.width() + "x" + r.height());
+                x.setOptionString("force-window", "yes"); x.setPropertyString("vo", a.tv ? "mediacodec_embed" : "gpu");
+                attached = true;
+            } catch (Throwable e) { note("attach failed: " + e.getMessage()); }
+        }
+    }
+    void detach() {
+        MPVLib x = m; if (x == null) return;
+        synchronized (surf) {
+            if (!attached) return;
+            long t0 = android.os.SystemClock.uptimeMillis();
+            try { x.setPropertyString("vo", "null"); x.setOptionString("force-window", "no"); x.detachSurface(); } catch (Throwable ignored) { }
+            attached = false;
+            note("surface let go in " + (android.os.SystemClock.uptimeMillis() - t0) + " ms");
+        }
+    }
     void show(boolean on) {
+        if (!on) {
+            // the page is opaque again at once; the surface is hidden once mpv has let go of it (see above)
+            shown = false;
+            if (a.web != null) a.web.setBackgroundColor(Color.BLACK);
+            android.util.Log.i("MKCPlayer", "under: show false");
+            try { work.execute(() -> { detach(); h.post(() -> { if (!want && sv != null) sv.setVisibility(View.GONE); }); }); }
+            catch (Exception e) { if (sv != null) sv.setVisibility(View.GONE); } // the player was already released
+            return;
+        }
         if (on && sv == null) {
             sv = new SurfaceView(a); sv.getHolder().addCallback(this); sv.setVisibility(View.GONE);
             a.root.addView(sv, 0, new FrameLayout.LayoutParams(-1, -1));
@@ -361,7 +400,8 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
             if (a.tv) a.root.addOnLayoutChangeListener((v, l, t, r, bt, ol, ot, or, ob) -> { if (r - l != or - ol || bt - t != ob - ot) h.post(this::fit); });
         }
         shown = on;
-        if (sv != null) { below(); sv.setVisibility(on ? View.VISIBLE : View.GONE); if (on) fit(); }
+        if (sv != null) { below(); sv.setVisibility(View.VISIBLE); fit(); }
+        try { work.execute(this::attach); } catch (Exception ignored) { } // the surface may still be up from the last film
         if (a.web != null) a.web.setBackgroundColor(on ? Color.TRANSPARENT : Color.BLACK);
         android.util.Log.i("MKCPlayer", "under: show " + on);
     }
@@ -369,17 +409,20 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
     void below() { if (sv != null && a.root.indexOfChild(sv) != 0) { android.view.ViewGroup.LayoutParams lp = sv.getLayoutParams(); a.root.removeView(sv); a.root.addView(sv, 0, lp != null ? lp : new FrameLayout.LayoutParams(-1, -1)); } }
 
     @Override public void surfaceCreated(SurfaceHolder hd) {
-        hasSurface = true; MPVLib x = m; if (x == null) return;
-        try {
-            x.attachSurface(hd.getSurface());
-            android.graphics.Rect r = hd.getSurfaceFrame(); if (r.width() > 0) x.setPropertyString("android-surface-size", r.width() + "x" + r.height());
-            x.setOptionString("force-window", "yes"); x.setPropertyString("vo", a.tv ? "mediacodec_embed" : "gpu");
-        } catch (Throwable ignored) { }
+        holder = hd; hasSurface = true;
+        try { work.execute(this::attach); } catch (Exception ignored) { } // on mpv's thread (1.17.18)
     }
-    @Override public void surfaceChanged(SurfaceHolder hd, int f, int w, int ht) { MPVLib x = m; if (x != null && w > 0) try { x.setPropertyString("android-surface-size", w + "x" + ht); } catch (Throwable ignored) { } }
+    @Override public void surfaceChanged(SurfaceHolder hd, int f, int w, int ht) {
+        // 1.17.18: on mpv's thread (the phone turns upright as the film closes, while mpv may still be stopping it)
+        final MPVLib x = m; if (x == null || w <= 0) return;
+        try { work.execute(() -> { try { if (attached) x.setPropertyString("android-surface-size", w + "x" + ht); } catch (Throwable ignored) { } }); } catch (Exception ignored) { }
+    }
     @Override public void surfaceDestroyed(SurfaceHolder hd) {
-        hasSurface = false; MPVLib x = m; if (x == null) return;
-        try { x.setPropertyString("vo", "null"); x.setOptionString("force-window", "no"); x.detachSurface(); } catch (Throwable ignored) { }
+        hasSurface = false;
+        if (!attached || m == null) return; // the usual case since 1.17.18: mpv let go before the surface was hidden
+        // the app went to the background with a film open: mpv must let go before this returns, but the screen waits 1.5 s at most
+        try { work.submit(this::detach).get(1500, java.util.concurrent.TimeUnit.MILLISECONDS); }
+        catch (Exception e) { note("surface gone before mpv let go (" + e.getClass().getSimpleName() + ")"); }
     }
 
     /** the app was closed: mpv goes too */
@@ -391,7 +434,7 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
         catch (Exception e) { try { y.removeObserver(this); y.detachSurface(); y.destroy(); } catch (Throwable ignored) { } }
     }
     /** the app went to the background (not picture in picture): the film pauses, like a web video */
-    void pauseForBackground() { MPVLib x = m; if (x != null && shown) try { x.setPropertyString("pause", "yes"); } catch (Throwable ignored) { } }
+    void pauseForBackground() { final MPVLib x = m; if (x != null && shown) try { work.execute(() -> { try { x.setPropertyString("pause", "yes"); } catch (Throwable ignored) { } }); } catch (Exception ignored) { } } // 1.17.18: on mpv's thread
 
     // ---- mpv's news, gathered and handed to the page at most 8 times a second ----
 
