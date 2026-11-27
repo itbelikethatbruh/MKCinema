@@ -63,7 +63,7 @@
      one steady "asking" state and draws the answers once (when all have answered, or at 0.9 s), instead of drawing a
      half list, a filter row and a trailer line that are replaced a frame later. */
   const SETTLE = 1800;
-  let openAt = -1e9, first = false, tmr = 0, phKey = '';
+  let openAt = -1e9, first = false, tmr = 0, phKey = '', tgKey = '';
   const mark = () => { openAt = now(); first = true; clearTimeout(tmr); };
   const eo = EpSheet.open;
   EpSheet.open = function () {
@@ -76,6 +76,8 @@
   try { window.openDetail = openDetail; } catch (e) { /* the binding is enough */ }
   const rs = renderStreamsPanel;
   const w = function () {
+    /* 2.95.22 ep step: another episode (Previous / Next, a pick) starts the quiet first moment again */
+    try { const k = (D.meta && D.meta.id) + '|' + (D.video ? (D.video.id || D.video.season + 'x' + D.video.episode) : ''); if (k !== tgKey) { tgKey = k; openAt = now(); } } catch (e) { /* keep the window */ }
     /* 2.95.21 one draw: no search started yet counts as still asking too */
     let pend = false; try { pend = !!(typeof D === 'object' && D && (!D.status || D.status.pending)); } catch (e) { pend = false; }
     const age = now() - openAt;

@@ -13,7 +13,8 @@
        * a part moves by more than 2 px while the page is visible,
        * the page fades out again after it has faded in (a second fade).
    - episode and ep-cold (The Simpsons, from a New episodes card, then closed with its X; ep-cold: Home knows only the
-     show's name, so the page fetches the show before the panel opens): from the tap until the panel has closed
+     show's name, so the page fetches the show before the panel opens; ep-next: Next episode is pressed in the open panel,
+     and the new episode's list may be drawn at most twice, asking then answers): from the tap until the panel has closed
      again. Two test addons answer, one at once and one 0.7 s later, like real ones. Fails when
        * the panel is see-through at any moment while it opens or closes (Home or the title page shows through its text),
        * on a phone, the title page under it is half shown while the panel is still sliding up (three screens at once),
@@ -33,7 +34,7 @@ const { chromium } = require('playwright');
 const args = process.argv.slice(2);
 const root = path.resolve(args.find((a) => !a.startsWith('--')) || 'app');
 const opt = (k, d) => { const a = args.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1].split(',') : d; };
-const ONLY = opt('only', ['title', 'episode', 'ep-cold']);
+const ONLY = opt('only', ['title', 'episode', 'ep-cold', 'ep-next']);
 const DEVS = opt('devices', ['phone', 'desktop', 'tv']);
 const RUNS = Number(opt('runs', ['2'])[0]) || 2;
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
@@ -110,7 +111,7 @@ async function press(p, input, box) {
 function recorder() {
   const vis = (e) => { if (!e || !e.isConnected) return -1; let o = 1; for (let x = e; x && x.nodeType === 1; x = x.parentElement) { if (x.hidden && !x.classList.contains('leaving')) return 0; const c = getComputedStyle(x); if (c.display === 'none' || c.visibility === 'hidden') return 0; o *= +c.opacity; } return o; };
   const PARTS = { picture: '#detailPanel .d-hero>img.bg', logo: '#detailPanel .d-hero .logo3d, #detailPanel .d-hero h1', play: '#dSmart', story: '#detailPanel .d-desc, #detailPanel .d-hero .d-body p' };
-  const t0 = performance.now(); window.__oc = [];
+  const t0 = performance.now(); window.__oc = []; window.__ocT0 = t0;
   const f = () => {
     const det = document.getElementById('detail'), app = document.getElementById('app'), es = document.getElementById('epSheet');
     const r = { t: performance.now() - t0, app: vis(app), det: vis(det), sheet: vis(es), parts: {}, anim: 0, still: '', panel: -1, ptop: 0, draws: window.__ocDraws || 0 };
@@ -125,7 +126,7 @@ function recorder() {
       const st = document.querySelector('#esHead .es-still'), im = st && st.querySelector('img');
       r.still = !st ? 'none' : (im && im.complete && im.naturalWidth && vis(im) > 0.5) ? 'picture' : (st.style.backgroundImage || getComputedStyle(st).backgroundImage) !== 'none' ? 'backdrop' : 'empty';
     }
-    window.__oc.push(r); if (r.t < 6500) requestAnimationFrame(f);
+    window.__oc.push(r); if (r.t < 10000) requestAnimationFrame(f);
   };
   // each time the source list is drawn again (its rows replaced), counted
   window.__ocDraws = 0;
@@ -155,7 +156,7 @@ function judgeTitle(fr) {
   if (move) out.push(`${move.k} moved ${move.m.toFixed(1)} px while showing (at ${Math.round(move.t)} ms)`);
   return { fail: out, first: fr[first].t };
 }
-function judgeEpisode(fr, dev) {
+function judgeEpisode(fr, dev, tNext) {
   const out = [], first = fr.findIndex((r) => r.sheet > 0.05);
   if (first < 0) return { fail: ['the episode panel never showed'], first: null };
   const see = fr.find((r) => r.panel > 0.02 && r.panel < 0.98);
@@ -172,6 +173,10 @@ function judgeEpisode(fr, dev) {
   }
   const d0 = fr[first].draws, early = fr.filter((r) => r.t <= fr[first].t + 2500).pop();
   if (early && early.draws - d0 > 1) out.push(`the source list was drawn ${early.draws - d0 + 1} times in the first 2.5 s`);
+  if (tNext != null) { // after Next: the new episode's list, asking then answers
+    const a = fr.filter((r) => r.t <= tNext).pop(), b = fr.filter((r) => r.t <= tNext + 2500).pop();
+    if (a && b && b.draws - a.draws > 2) out.push(`after Next episode the source list was drawn ${b.draws - a.draws} times in 2.5 s`);
+  }
   // a phone panel covers the page; on a computer it sits beside it, so the page may move there
   const worst = fr.slice(first).reduce((a, r) => (r.anim > a.anim ? r : a), { anim: 0 });
   if (dev === 'phone' && worst.anim > 0) out.push(`${worst.anim} animation(s) running on the title page under the episode panel (${worst.animOn})`);
@@ -179,7 +184,7 @@ function judgeEpisode(fr, dev) {
   return { fail: out, first: fr[first].t };
 }
 
-const CASES = { title: { id: 'tt0111161', type: 'movie' }, episode: { id: 'tt0096697', type: 'series', vid: true }, 'ep-cold': { id: 'tt0096697', type: 'series', vid: 'cold' } };
+const CASES = { title: { id: 'tt0111161', type: 'movie' }, episode: { id: 'tt0096697', type: 'series', vid: true }, 'ep-cold': { id: 'tt0096697', type: 'series', vid: 'cold' }, 'ep-next': { id: 'tt0096697', type: 'series', vid: true } };
 for (const dev of DEVS) {
   for (const test of ONLY) {
     if (test !== 'title' && dev === 'tv') continue;
@@ -197,14 +202,19 @@ for (const dev of DEVS) {
         await p.evaluate(recorder); await press(p, DEV[dev].input, box);
         if (test !== 'title') {
           await p.waitForTimeout(3600);
+          if (test === 'ep-next') { // Next episode inside the open panel, after the first list has settled
+            const nb = await p.evaluate(() => { const b = document.getElementById('esNext'); if (!b || b.disabled || !b.getClientRects().length) return null; const r = b.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+            if (nb) { await p.evaluate(() => { window.__ocNext = performance.now() - window.__ocT0; }); if (DEV[dev].input === 'tap') await p.touchscreen.tap(nb.x, nb.y); else await p.mouse.click(nb.x, nb.y); }
+            await p.waitForTimeout(3000);
+          }
           const x = await p.evaluate(() => { const b = document.getElementById('esClose'); if (!b || !b.getClientRects().length) return null; const r = b.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
           if (x) { if (DEV[dev].input === 'tap') await p.touchscreen.tap(x.x, x.y); else await p.mouse.click(x.x, x.y); }
           await p.waitForTimeout(3000);
         } else await p.waitForTimeout(6800);
-        const fr = await p.evaluate(() => window.__oc);
+        const fr = await p.evaluate(() => window.__oc); const tNext = await p.evaluate(() => window.__ocNext);
         if (process.env.OC_TRACE) console.log((await p.evaluate(() => window.__ocT)).join('\n'));
         if (process.env.OC_DUMP) console.log(JSON.stringify(fr.filter((r, i) => i % 3 === 0).map((r) => [Math.round(r.t), +r.det.toFixed(2), +r.app.toFixed(2), +(+r.panel).toFixed(2), r.ptop, r.draws])));
-        const j = test === 'title' ? judgeTitle(fr) : judgeEpisode(fr, dev);
+        const j = test === 'title' ? judgeTitle(fr) : judgeEpisode(fr, dev, tNext);
         if (j.first != null) firsts.push(Math.round(j.first));
         fails.push(...j.fail.map((x) => `run ${run + 1}: ${x}`));
         if (errs.length) fails.push(`run ${run + 1}: page error ${errs[0]}`);
