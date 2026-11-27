@@ -1,6 +1,6 @@
 /* 2.96.4 right film: a title always carries its real name, and a movie source from another film never plays */
 const RightFilm = {
-  KEY: 'nameFix', TTL: 7 * 864e5, mem: null, wait: new Map(), skipped: 0,
+  KEY: 'nameFix2', TTL: 7 * 864e5, mem: null, wait: new Map(), skipped: 0,
   STOP: new Set(['the', 'a', 'an', 'of', 'and', 'in', 'on', 'to', 'for', 'la', 'le', 'el', 'les', 'der', 'die', 'das']),
   tt(id) { const i = String(id || '').split(':')[0]; return /^tt\d{5,10}$/.test(i) ? i : null; },
   y4(v) { const m = String(v || '').match(/(18|19|20)\d\d/); return m ? Number(m[0]) : 0; },
@@ -19,19 +19,21 @@ const RightFilm = {
     return this.mem;
   },
   save() { const m = this.store(); while (m.size > 600) m.delete(m.keys().next().value); clearTimeout(this.saveT); this.saveT = setTimeout(() => Store.raw.set(this.KEY, Object.fromEntries(m)), 600); },
-  // TMDB's English title and year for an IMDb id: the viewer's own TMDB key, else MKCinema's lookup (no key in the app)
+  // TMDB's English title and year for an IMDb id: the viewer's own TMDB key, else MKCinema's lookup (no key in the app).
+  // NONE = TMDB answered and has no such title (kept); null = no answer this time (busy, offline, 429/503: asked again next open)
+  NONE: { n: '', o: '', y: 0 },
   async tmdb(tt, type) {
     if (TMDB.key()) {
       const f = await TMDB.find(tt); if (!f) return null;
       const x = type === 'series' ? (f.tv_results || [])[0] : (f.movie_results || [])[0];
-      return x ? { n: String(x.title || x.name || ''), o: String(x.original_title || x.original_name || ''), y: this.y4(x.release_date || x.first_air_date) } : null;
+      return x ? { n: String(x.title || x.name || ''), o: String(x.original_title || x.original_name || ''), y: this.y4(x.release_date || x.first_air_date) } : this.NONE;
     }
     const c = typeof Account !== 'undefined' && Account.config && Account.config() || {};
     if (!c.url) return null;
     const r = await netFetch(`${String(c.url).replace(/\/+$/, '')}/functions/v1/tmdb-person?a=title&tt=${tt}&lang=en-US`, { headers: { apikey: c.anonKey || '', accept: 'application/json' } }, 8e3);
     if (!r.ok) return null;
     const j = await r.json(), x = j && j.title;
-    if (!x || (type === 'series') !== (x.kind === 'tv')) return null;
+    if (!x || (type === 'series') !== (x.kind === 'tv')) return this.NONE;
     return { n: String(x.title || x.name || ''), o: '', y: this.y4(x.release_date || x.first_air_date) };
   },
   // TMDB's answer per IMDb id, looked up once and kept on the device (7 days): { t: name, o: original, y: year }
@@ -39,7 +41,8 @@ const RightFilm = {
     const hit = this.store().get(tt); if (hit) return Promise.resolve(hit);
     if (this.wait.has(tt)) return this.wait.get(tt);
     const p = this.tmdb(tt, type).then((t) => {
-      const v = { t: t && t.n || '', o: t && t.o || '', y: t && t.y || 0, at: Date.now() };
+      if (!t) return null;
+      const v = { t: t.n || '', o: t.o || '', y: t.y || 0, at: Date.now() };
       this.store().set(tt, v); this.save(); return v;
     }).catch(() => null).finally(() => this.wait.delete(tt));
     this.wait.set(tt, p); return p;

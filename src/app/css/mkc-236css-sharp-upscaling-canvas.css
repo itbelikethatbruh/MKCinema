@@ -9,6 +9,6 @@ body.pxup-on #player video::cue{color:transparent;background:transparent;text-sh
 #pxUpSub > div{transition:transform .25s ease}
 #pxUpSub span{display:inline-block;max-width:100%;box-sizing:content-box;vertical-align:top;text-wrap:balance;font-size:var(--sub-size);line-height:1.3;color:var(--sub-color);background:var(--sub-bg);font-family:var(--sub-font);text-shadow:var(--sub-shadow);font-weight:var(--sub-weight,400);padding:.14em .55em .16em;border-radius:.5em;-webkit-box-decoration-break:clone;box-decoration-break:clone;white-space:pre-line}
 #pxUpSub:not(.on){visibility:hidden}
-#player:has(#hud:not(.idle)) #pxUpSub:not([data-pos="top"]) > div{transform:translateY(-96px)}
+
 html.pip-mode #pxUp,html.pip-mode #pxUpSub{display:none!important}
 .menu .pxup-note{margin:0;padding:0 12px 8px;font-size:calc(12px * var(--ts,1));line-height:1.45;color:var(--mute)}

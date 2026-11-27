@@ -100,7 +100,14 @@ const HeroArt = {
       if (tok !== this.tok) return; h.classList.remove('mk-ha-hold');
       const hb = $('#hero .hero-body'); if (hb) { hb.classList.remove('swap'); requestAnimationFrame(() => hb.classList.add('swap')); }
     };
-    const t = setTimeout(rel, 2500);
+    // still unknown after 2.5 s: move on to a title already known to be fine, and only show this one when none is
+    const late = () => {
+      if (tok !== this.tok) return;
+      const n = S.hero.length;
+      for (let k = 1; k < n; k++) { const j = (S.heroIdx + k) % n; if (this.allowed(this.state(S.hero[j]))) { showHero(j, 1); return; } }
+      rel();
+    };
+    const t = setTimeout(late, 2500);
     this.check(m).then((st) => {
       if (tok !== this.tok) return; clearTimeout(t);
       if (S.hero[S.heroIdx] === m && st !== undefined && !this.allowed(st)) { this.drop(m); if (tok === this.tok) rel(); } else rel();

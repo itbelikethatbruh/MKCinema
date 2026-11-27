@@ -613,7 +613,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 .lv-pill .lv-sub{letter-spacing:.08em;text-transform:none;font-weight:500;color:var(--mute);font-size:12.5px}
 .lv-dot{position:relative;width:8px;height:8px;border-radius:50%;background:#e8c46c;box-shadow:0 0 10px rgba(232,196,108,.8)}
 .lv-dot::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:1.5px solid rgba(232,196,108,.7);opacity:0}
-.lv-row{display:grid;grid-template-columns:repeat(3,1fr);margin-top:16px}
+.lv-row{display:grid;grid-template-columns:repeat(4,1fr);margin-top:16px}
 .lv-s{position:relative;display:grid;justify-items:center;gap:6px;padding:4px 8px}
 .lv-s+.lv-s::before{content:"";position:absolute;left:0;top:12%;bottom:12%;width:1px;background:linear-gradient(180deg,transparent,rgba(216,194,154,.35),transparent)}
 .lv-n{display:inline-block;font:400 clamp(30px,6.4vw,52px)/1 var(--serif);font-variant-numeric:tabular-nums;letter-spacing:-.01em;background:linear-gradient(180deg,#fff8e4 0,#ecd49a 55%,#c9a24a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;transform-origin:50% 70%;white-space:nowrap}
@@ -630,7 +630,41 @@ footer{border-top:1px solid var(--line);padding:44px 0 calc(44px + env(safe-area
 @keyframes lvping{0%{opacity:.9;transform:scale(.5)}80%,100%{opacity:0;transform:scale(1.6)}}
 @keyframes lvbump{0%{transform:none}40%{transform:scale(1.08)}100%{transform:none}}
 @keyframes lvyou{0%{opacity:0;transform:translate(-50%,8px) scale(.9)}15%{opacity:1;transform:translate(-50%,-10px) scale(1)}75%{opacity:1;transform:translate(-50%,-14px)}100%{opacity:0;transform:translate(-50%,-26px)}}
+
+.lv-gh{color:inherit;text-decoration:none;border-radius:14px;transition:background .3s}
+.lv-gh:hover{background:rgba(216,194,154,.06)}
+.lv-star{color:var(--gold);margin-right:5px}
+@media (max-width:560px){.lv-n{font-size:clamp(24px,7vw,30px)}.lv-l{font-size:9.5px;letter-spacing:.06em}}
 /* /mkc-live-css */
+/* mkc-br-css */
+.hx-eng{display:inline-flex;align-items:center;gap:10px;margin:22px auto 0;max-width:100%;padding:10px 16px;border-radius:999px;border:1px solid rgba(216,194,154,.28);background:rgba(216,194,154,.06);color:var(--ink2);font:500 14px/1.35 var(--sans);text-decoration:none;text-align:left;transition:border-color .3s,background .3s}
+.hx-eng:hover{border-color:rgba(216,194,154,.55);background:rgba(216,194,154,.1);color:var(--ink)}
+.hx-eng svg{flex:none;color:var(--gold)}
+.hx-eng-dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px rgba(216,194,154,.7)}
+.br-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-top:clamp(28px,4vw,44px)}
+.br-t{display:flex;flex-direction:column;gap:8px;background:var(--bg2);padding:24px 22px 26px;color:inherit;text-decoration:none;min-width:0}
+.br-t h3{margin:0;font:500 clamp(19px,1.8vw,22px)/1.2 var(--serif);color:var(--ink)}
+.br-t p{margin:0;color:var(--ink2);font-size:15px;line-height:1.55}
+.br-k{font:500 10.5px/1.3 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.br-k::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:rgba(229,72,77,.75);margin-right:8px;vertical-align:1px}
+.br-ios{background:linear-gradient(160deg,rgba(216,194,154,.09),transparent 60%),var(--bg2);transition:background .3s}
+.br-ios:hover{background:linear-gradient(160deg,rgba(216,194,154,.15),transparent 60%),var(--bg2)}
+.br-ios h3::after{content:" →";color:var(--gold)}
+.br-more{display:flex;flex-wrap:wrap;gap:10px 14px;justify-content:center;margin-top:22px;color:var(--mute);font-size:15px}
+.br-more a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(216,194,154,.35)}
+.br-more a:hover{border-bottom-color:var(--gold)}
+@media (max-width:960px){.br-grid{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.br-grid{grid-template-columns:1fr}.br-t{padding:20px 18px 22px}.hx-eng{font-size:13px;border-radius:16px}}
+.ap-g{display:grid;grid-template-columns:1.25fr .75fr;gap:clamp(32px,6vw,80px);align-items:center}
+.ap-copy{min-width:0}
+.ap-fix{list-style:none;margin:26px 0 0;padding:0;display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.ap-fix li{display:grid;gap:6px;background:var(--bg2);padding:16px 18px}
+.ap-fix b{font-weight:500;color:var(--ink);font-size:15.5px;line-height:1.45}
+.ap-ph{justify-self:center;width:min(300px,62vw);padding:10px;border-radius:46px;background:linear-gradient(160deg,#2a2926,#0d0d0c);box-shadow:0 50px 120px -30px rgba(0,0,0,.95),0 0 0 1px rgba(255,255,255,.12)}
+.ap-ph img{display:block;width:100%;height:auto;border-radius:37px}
+@media (max-width:860px){.ap-g{grid-template-columns:1fr}.ap-ph{order:-1}}
+.ap-copy .lead{margin-top:18px}
+/* /mkc-br-css */
 </style>
 <script data-goatcounter="https://itbelikethatbruh.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </head>
@@ -709,12 +743,15 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
   <div class="beam" aria-hidden="true"></div>
   <div class="wrap">
     <span class="eyebrow fade">Free forever · Open source<span class="hx-wide"> · Every screen</span></span>
-    <h1><span class="ln"><span>Tomorrow’s cinema.</span></span><span class="ln"><span><em>For the whole house.</em></span></span></h1>
+    <h1><span class="ln"><span>Plays what others can’t.</span></span><span class="ln"><span><em>Anywhere.</em></span></span></h1>
     <p class="lead fade d1">The home cinema app for the whole family, with serious engineering under a calm surface. One tap picks a stream that plays, an assistant finds tonight’s film, and friends watch in sync from anywhere. Bring your own addons, servers and services. No ads, and no account needed.</p>
     <div class="cta fade d2">
       <a class="btn btn-plat" href="https://app.mkcinema.app/"><svg><use href="#i-play"/></svg>Open MKCinema</a>
       <a class="btn btn-ghost" href="#download" id="heroDl"><svg><use href="#i-down"/></svg><span>Download the app</span></a>
     </div>
+<!-- mkc-br-hero -->
+<a class="hx-eng fade d2" href="#browser"><span class="hx-eng-dot" aria-hidden="true"></span><span>Plays MKV, Dolby, DTS and TrueHD right in your browser. iPhone without the App Store.</span><svg aria-hidden="true" viewBox="0 0 16 16" width="14" height="14"><path d="M8 3v10M3.5 8.5 8 13l4.5-4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+<!-- /mkc-br-hero -->
     <div class="quick fade d3" aria-label="Direct downloads">
       <a href="download/MKCinema.apk" download="MKCinema.apk"><svg><use href="#b-android"/></svg>Android</a>
       <a href="download/MKCinema.exe" download="MKCinema.exe"><svg><use href="#b-windows"/></svg>Windows</a>
@@ -726,9 +763,10 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
     <div class="lv fade d3" id="live" role="group" aria-label="MKCinema in numbers">
       <div class="lv-pill"><span class="lv-dot" aria-hidden="true"></span><span>Live now</span><span class="lv-sep" aria-hidden="true">·</span><span class="lv-sub">Growing every minute</span></div>
       <div class="lv-row">
-        <div class="lv-s"><span class="lv-you" hidden><span translate="no">+1 · </span><span>that’s you</span></span><b class="lv-n" translate="no" data-lv="visits">20.3k</b><span class="lv-l">visits</span></div>
-        <div class="lv-s"><b class="lv-n" translate="no" data-lv="downloads">11.3k</b><span class="lv-l">downloads</span></div>
-        <div class="lv-s"><b class="lv-n" translate="no" data-lv="countries">116</b><span class="lv-l">countries</span></div>
+        <div class="lv-s"><span class="lv-you" hidden><span translate="no">+1 · </span><span>that’s you</span></span><b class="lv-n" translate="no" data-lv="visits">21.8k</b><span class="lv-l">visits</span></div>
+        <div class="lv-s"><b class="lv-n" translate="no" data-lv="downloads">12.2k</b><span class="lv-l">downloads</span></div>
+        <div class="lv-s"><b class="lv-n" translate="no" data-lv="countries">119</b><span class="lv-l">countries</span></div>
+        <a class="lv-s lv-gh" href="https://github.com/itbelikethatbruh/MKCinema" target="_blank" rel="noopener"><b class="lv-n" translate="no" data-lv="stars">72</b><span class="lv-l"><span class="lv-star" aria-hidden="true">★</span>GitHub stars</span></a>
       </div>
     </div>
 <!-- /mkc-live -->
@@ -744,6 +782,55 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
 
 <hr class="hr">
 
+<!-- mkc-br -->
+<section class="sec br" id="browser" aria-labelledby="br-h">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="eyebrow">The engine</span>
+      <h2 id="br-h">Right in your browser. <em>Nothing to install.</em></h2>
+      <p class="lead">Most web players stop at MKV files, go silent on Dolby sound and drop Blu-ray subtitles. MKCinema handles all of it on your own device, in any modern browser. iPhone and iPad get the whole app without the App Store.</p>
+    </div>
+    <div class="br-grid rv">
+      <div class="br-t"><span class="br-k">Most web players: won’t open</span><h3>MKV and TS files</h3><p>Played as they stream. The picture is copied as it is, never re-encoded.</p></div>
+      <div class="br-t"><span class="br-k">Most web players: silence</span><h3>Dolby, DTS and TrueHD sound</h3><p>Converted on your device so you hear it, in 5.1 where your speakers have it.</p></div>
+      <div class="br-t"><span class="br-k">Most web players: first track only</span><h3>Every audio language</h3><p>Switch between the audio tracks of a multi-language film right in the player.</p></div>
+      <div class="br-t"><span class="br-k">Most web players: not shown</span><h3>Blu-ray and anime subtitles</h3><p>Blu-ray picture subtitles drawn over the film. Styled anime subtitles keep their fonts, signs and karaoke.</p></div>
+      <div class="br-t"><span class="br-k">Most web players: black screen</span><h3>HEVC on computers</h3><p>A built-in decoder plays HEVC films up to 1080p where the browser can’t.</p></div>
+      <a class="br-t br-ios" href="#iphone"><span class="br-k">Usually: App Store only</span><h3>iPhone and iPad, no App Store</h3><p>Open it in Safari and add it to your Home Screen. Full screen, its own icon, and it updates itself.</p></a>
+    </div>
+    <p class="br-more rv"><a href="mkv-in-browser/">How it works</a><span aria-hidden="true">·</span><a href="iphone-ipad/">Set it up on iPhone</a></p>
+  </div>
+</section>
+
+<hr class="hr">
+
+<section class="sec iph ap" id="iphone" aria-labelledby="iph-h">
+  <div class="wrap">
+    <div class="ap-g">
+      <div class="ap-copy rv">
+        <span class="eyebrow">iPhone and iPad</span>
+        <h2 id="iph-h">The Apple problem, <em>solved.</em></h2>
+        <p class="lead">No App Store and no native app. Apps like MKCinema rarely make it into the App Store, so iPhone and iPad owners are usually told to use something else. We built around that. The whole app runs in Safari, and Add to Home Screen turns it into a real app on your phone.</p>
+        <ul class="ap-fix">
+          <li><span class="br-k">Safari won’t open MKV files</span><b>MKCinema repackages them on the phone as they play, so Safari can show them.</b></li>
+          <li><span class="br-k">Dolby and DTS sound plays silent</span><b>The sound is converted on the phone, so you hear every film.</b></li>
+          <li><span class="br-k">Web apps feel like websites</span><b>Full screen with its own icon, a proper full-screen player, and it updates itself without App Store reviews.</b></li>
+        </ul>
+        <ol class="iph-steps">
+          <li><b>Open Safari</b><span>Go to app.mkcinema.app. There is nothing to download.</span></li>
+          <li><b>Add it to your Home Screen</b><span>Tap Share, then Add to Home Screen.</span></li>
+          <li><b>Open it from the icon</b><span>Same library, progress and addons as your other screens.</span></li>
+        </ol>
+        <div class="ab-links"><a class="btn btn-plat" href="https://app.mkcinema.app/"><svg aria-hidden="true"><use href="#i-play"/></svg>Open MKCinema</a><a class="btn btn-ghost" href="/iphone-ipad/"><svg aria-hidden="true"><use href="#i-phone"/></svg>iPhone and iPad guide</a></div>
+      </div>
+      <div class="ap-ph rv" aria-hidden="true"><img src="shots/phone-home.webp?v=292" srcset="shots/phone-home-320.webp?v=292 320w, shots/phone-home-480.webp?v=292 480w, shots/phone-home.webp?v=292 600w" sizes="(max-width: 860px) 62vw, 300px" width="600" height="1301" alt="" loading="lazy" decoding="async"></div>
+    </div>
+  </div>
+</section>
+
+<hr class="hr">
+<!-- /mkc-br -->
+
 <section class="sec" id="features" aria-labelledby="fx-h">
   <div class="wrap">
     <div class="head rv">
@@ -751,7 +838,7 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
       <h2 id="fx-h">Advanced where it counts. <em>Simple where you touch it.</em></h2>
       <p class="lead">A player that picks and repairs its own sources, an assistant that knows film, and sync that follows the dialogue instead of the clock.</p>
     </div>
-    <div class="hx-strip fx-strip rv"><span><b>271</b>features, all free</span><span><b>48</b>languages</span><span><b>8</b>platforms</span><span><b>0</b>ads, paywalls or cookies</span></div>
+    <div class="hx-strip fx-strip rv"><span><b>272</b>features, all free</span><span><b>48</b>languages</span><span><b>8</b>platforms</span><span><b>0</b>ads, paywalls or cookies</span></div>
     <div class="fxs">
       <article class="fx rv">
         <div class="fx-copy">
@@ -862,27 +949,6 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
 
 <hr class="hr">
 
-<section class="sec iph" id="iphone" aria-labelledby="iph-h">
-  <div class="wrap">
-    <div class="iph-g iph-txt">
-      <div class="iph-copy rv">
-        <span class="eyebrow">iPhone and iPad</span>
-        <h2 id="iph-h">No App Store. <em>No “do you have an app?”</em></h2>
-        <p class="lead">On iPhone and iPad, MKCinema runs in Safari. Go to app.mkcinema.app and you are in. Add it to your Home Screen and it opens full screen with its own icon, like any other app.</p>
-        <ol class="iph-steps">
-          <li><b>Open Safari</b><span>Type app.mkcinema.app. There is nothing to download.</span></li>
-          <li><b>Add it to your Home Screen</b><span>Tap Share, then Add to Home Screen.</span></li>
-          <li><b>Pick a film and press play</b><span>Smart Play chooses the stream. Most MKV files play right in Safari.</span></li>
-        </ol>
-        <p class="iph-note">Works the same on iPhone and iPad. Sign in and your library, progress and addons follow you from your other screens. If Safari can’t decode a file, MKCinema hands it to a player app in one tap.</p>
-        <div class="ab-links"><a class="btn btn-plat" href="https://app.mkcinema.app/"><svg aria-hidden="true"><use href="#i-play"/></svg>Open MKCinema</a><a class="btn btn-ghost" href="/iphone-ipad/"><svg aria-hidden="true"><use href="#i-phone"/></svg>iPhone and iPad guide</a></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<hr class="hr">
-
 <section class="cur" id="different" aria-labelledby="tk-h">
   <div class="cur-pin" aria-hidden="true"><div class="cur-stage">
     <div class="cur-glow l"></div><div class="cur-glow r"></div>
@@ -932,10 +998,10 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
   <div class="wrap">
     <div class="head rv">
       <span class="eyebrow">Everything inside</span>
-      <h2 id="all-h">271 features. <em>All free.</em></h2>
+      <h2 id="all-h">272 features. <em>All free.</em></h2>
       <p class="lead">The whole list, in one place. Nothing here is locked, and nothing ever will be.</p>
     </div>
-    <details class="allf rv"><summary><span>See all 271 features</span></summary>
+    <details class="allf rv"><summary><span>See all 272 features</span></summary>
     <div class="cats">
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-puzzle"/></svg></span><h3>Addons</h3><span class="cnt">13</span></div><ul><li>Any Stremio addon by link</li><li>Addons start instantly from a saved copy</li><li>Ratings, notices and settings, made better</li><li>Find addons in the app</li><li>Addon health check</li><li>Addon Studio</li><li>Setup links: your whole addon setup in one link</li><li>Manage addons from your phone</li><li>Import from Stremio</li><li>Plex, Jellyfin and Emby as sources</li><li>Every catalog from your addons gets its own Home row.</li><li>Addons kept on GitHub install even on networks that block GitHub’s file address.</li><li>Similar addons in Find addons</li></ul></div>
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-bolt"/></svg></span><h3>Sources</h3><span class="cnt">21</span></div><ul><li>Debrid built in, your own key</li><li>Cloud convert from your own service</li><li>Smart Play</li><li>Your cloud: play what is already in your debrid account</li><li>Search again and a source speed test</li><li>Automatic failover</li><li>Source Check and source rules</li><li>Duplicate sources folded</li><li>Sources grouped by addon</li><li>More anime sources and intro skips</li><li>Picks a source your device can play</li><li>Starts on the first try</li><li>Browser only mode</li><li>One tap to hand a film to VLC.</li><li>Slow internet mode</li><li>Remembers the source you pick for each show and tries it first next time.</li><li>Sources grouped by picture quality, with a line on when to pick each</li><li>Stream badges: edition, release type, 10-bit, 60 fps, audio languages and subtitles on every source</li><li>Nine badge styles, with a switch for each group of labels</li><li>Short placeholder clips are skipped and the next source plays</li><li>First-choice addon: its sources are tried first for everything</li></ul></div>
@@ -945,7 +1011,7 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-users"/></svg></span><h3>Together</h3><span class="cnt">25</span></div><ul><li>Friends, by username</li><li>See who is online and chat</li><li>Profiles with your favourites</li><li>Trophies and kudos</li><li>Friends activity, sharing off until you choose</li><li>Watch party with voice and chat</li><li>Listen on phone</li><li>Phone remote with keyboard and voice</li><li>Party voice on your phone</li><li>Party cameras, your phone as the camera</li><li>Ask the host to pause</li><li>Cast and details on your phone</li><li>Miko on every screen, and she remembers you</li><li>Miko chats with everyone, free, no key needed</li><li>Miko’s natural voice, made on your device</li><li>Catch up to the room</li><li>Film night</li><li>Take it with you</li><li>Your language on your phone</li><li>Guests by link: anyone you send the party link joins in one tap, with camera and microphone, no account or setup. Guests without MKCinema see your screen, never your sources or keys.</li><li>Show everyone: the watch party host brings every guest to a title page</li><li>Point and draw on the picture in a watch party</li><li>Start together: a 3-2-1 countdown on every screen</li><li>A 4-digit PIN for a watch party</li><li>Party alerts when someone joins or writes</li></ul></div>
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-film"/></svg></span><h3>Discover</h3><span class="cnt">37</span></div><ul><li>Discover page: trending, brand-new and little-known titles</li><li>Arrange Home</li><li>Folders on the Home screen, shared with a code</li><li>The Home screen opens instantly and keeps your place</li><li>Trakt reviews, spoilers covered</li><li>Top 10, Networks and 142 Universes</li><li>Top 10 by country, network and year</li><li>Films and Series homes</li><li>More like this</li><li>Scores and Where to watch</li><li>Your Picks, on your device</li><li>Peak Cinema</li><li>MDBList rows</li><li>Endless rows</li><li>Your apps, with Watch on</li><li>Other ways to watch</li><li>MK Channel</li><li>Anime tab</li><li>Peak Cinema on Home is optional: remove it with one press, or bring it back in Settings.</li><li>Collections on Home: folders with a cover, a description and their own rows, shared by code or link.</li><li>Optional trailer previews on Home, muted, in YouTube’s own player.</li><li>Music: charts, artists, albums, live radio and lyrics that follow the song, with a mini player on every screen</li><li>A Networks row: ABC, NBC, CBS, HBO, FX, BBC One and more, each with its most popular series</li><li>Swipe to choose: swipe right to save a title, left to skip it</li><li>Critics' Pick: one acclaimed film or series a day</li><li>Calendar countdown to the next episode or film, with Remind me</li><li>A holiday row on Home for Christmas, Halloween, Thanksgiving, Valentine's Day and New Year</li><li>New film, New series, New season and New episodes labels on the Home banner</li><li>A trailer picker with a picture for every trailer of a title</li><li>Reviews from TMDB next to Trakt reviews</li><li>Filler and recap labels on anime episodes</li><li>Award winners: Oscars, Cannes, Venice, Berlin, BAFTA, Golden Globes, Emmys and anime awards</li><li>Calendar filters and the most anticipated films and series</li><li>Top rows for the streaming apps you picked</li><li>Family night row: popular films for the whole family</li><li>Browse by studio, animation studio, film collection, TV universe, decade, genre and source (true stories, books, comics, games). Hide any row or tile.</li></ul></div>
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-list"/></svg></span><h3>Library</h3><span class="cnt">24</span></div><ul><li>Watchlist, lists and progress</li><li>Airing calendar</li><li>New-episode alerts</li><li>Trakt, Simkl, AniList, MyAnimeList</li><li>Downloads, TVs included</li><li>Sync across devices</li><li>Mark watched or remove from Continue watching</li><li>Jellyfin and Emby libraries as rows</li><li>Sign in with Google</li><li>Backup code</li><li>Your stats</li><li>Ticket stubs</li><li>Simkl connects with a QR code: scan, say yes, done.</li><li>The Calendar shows films from your watchlist as they reach cinemas and homes in your region.</li><li>Rate films and shows with half stars; Continue watching shows how many episodes are left</li><li>Group your library by decade, genre or rating, and sort by your own stars</li><li>Jump by letter in the library on phones</li><li>4K and HDR labels on posters, with switches for labels and progress bars</li><li>Smart downloads: the next episodes download on their own and watched ones are cleared</li><li>Search and sort the episodes of a series: newest first, highest rated or unwatched first</li><li>Dim or hide films you have watched in Home rows</li><li>Continue watching can open the title page instead of playing</li><li>Calendar in List, Week and Month views</li><li>MDBList tracking: playback is scrobbled and watched history syncs both ways</li></ul></div>
-        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-tv"/></svg></span><h3>Live</h3><span class="cnt">20</span></div><ul><li>Split Screen, up to four, subtitles in each</li><li>Live TV with an XMLTV guide</li><li>M3U and Xtream</li><li>Record live TV and catch-up</li><li>Plain http TV services in the Windows and Mac apps</li><li>Sports</li><li>Live TV made for the remote: channel switching, numbers, last channel, now and next, hide groups, a guide that looks ahead.</li><li>Live TV keeps playing in a corner while you browse the guide.</li><li>Sports shows games from your own TV guide, matched to the channel that shows them.</li><li>Live hub: Live TV and Sports on one page, with the next big game, a countdown and the games coming up</li><li>Scores and tables: 22 leagues with game pages, league tables, your teams first and score alerts</li><li>Save a playlist as an .m3u file</li><li>Record every episode of a show from the TV guide</li><li>Rewind live TV and jump back to live, on channels that allow it</li><li>Rename a channel or change its logo, and tidy channel names</li><li>Schedule a recording by time, once or every day</li><li>A backup channel takes over when a channel will not play</li><li>A clock on screen while you watch</li><li>Each channel remembers the audio language and subtitles you chose</li><li>Record new episodes only: repeats are skipped when the guide marks them</li></ul></div>
+        <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-tv"/></svg></span><h3>Live</h3><span class="cnt">21</span></div><ul><li>Split Screen, up to four, subtitles in each</li><li>Live TV with an XMLTV guide</li><li>M3U and Xtream</li><li>Record live TV and catch-up</li><li>Plain http TV services in the Windows and Mac apps</li><li>Sports</li><li>Live TV made for the remote: channel switching, numbers, last channel, now and next, hide groups, a guide that looks ahead.</li><li>Live TV keeps playing in a corner while you browse the guide.</li><li>Sports shows games from your own TV guide, matched to the channel that shows them.</li><li>Live hub: Live TV and Sports on one page, with the next big game, a countdown and the games coming up</li><li>Scores and tables: 22 leagues with game pages, league tables, your teams first and score alerts</li><li>Sports match centre: live scores, stats, events, line-ups on a pitch, standings and a Watch button that finds the game in your own channels and TV guide</li><li>Save a playlist as an .m3u file</li><li>Record every episode of a show from the TV guide</li><li>Rewind live TV and jump back to live, on channels that allow it</li><li>Rename a channel or change its logo, and tidy channel names</li><li>Schedule a recording by time, once or every day</li><li>A backup channel takes over when a channel will not play</li><li>A clock on screen while you watch</li><li>Each channel remembers the audio language and subtitles you chose</li><li>Record new episodes only: repeats are skipped when the guide marks them</li></ul></div>
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-palette"/></svg></span><h3>Looks</h3><span class="cnt">25</span></div><ul><li>Noir, Midnight, Velvet, Sepia, Anime</li><li>Colour wheel</li><li>Nine fonts and text size</li><li>Custom poster URL</li><li>Plugins & themes</li><li>Ambient Mode</li><li>Forty-eight languages</li><li>Light looks, Daylight and Linen, for bright rooms.</li><li>Layout Studio: pick a look, card size and banner, move and hide rows, preview it on computer, TV and phone, and share it with a link.</li><li>One floating menu bar: Home, Movies, Series, Anime, Live TV and Library, with Search and a labelled menu for everything else</li><li>One Play button on every film page, with Watchlist and More beside it; the source list opens when you want it</li><li>Ambient Studio: your own photos and effects on the screensaver, sent from your phone to the TV</li><li>Logo effects: the logo of the featured title lifts into place with a light sweep, on by default where the device keeps up</li><li>Settings in six clear groups, in the same look as Home</li><li>Interface sizes up to 200%</li><li>Your own font and background picture</li><li>Look files to save, open on another screen or send to a friend</li><li>Six film page styles</li><li>Pick your look when you first start</li><li>Poster glow around the title you point at, in a colour you pick or taken from each film</li><li>Choose what the featured banner shows: films, series or your own watchlist</li><li>Spotlight Home: the banner stays on top and shows the poster you highlight</li><li>Phone menus within thumb reach: sections on top, Search and Menu in a bar at the bottom that tucks away</li><li>Top 10 numbers with metal edges and a soft glow</li><li>Pick your language the first time you open MKCinema: 48 languages, each with its flag and its own name, with your device's language already chosen. Works by touch, mouse or TV remote.</li></ul></div>
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-shield"/></svg></span><h3>Household</h3><span class="cnt">12</span></div><ul><li>Suggest a feature or say thanks</li><li>Seats with pictures and PINs</li><li>New seats can copy another seat’s choices</li><li>Kids seats by age rating</li><li>Shows per day for kids</li><li>Family Helper</li><li>Every seat its own language</li><li>Updates in one place: Settings › Updates shows what each device runs and updates it with one tap.</li><li>Alerts for new episodes and reminders to your own Discord channel or Telegram chat</li><li>Each seat can leave out Live TV, Sports, Music, Anime or Calendar</li><li>Ask a grown-up: allow single titles for a kids seat</li><li>Parent notes on title pages: age ratings and rating-board warnings</li></ul></div>
         <div class="cat rv"><div class="cat-h"><span class="ic"><svg><use href="#i-monitor"/></svg></span><h3>Everywhere</h3><span class="cnt">23</span></div><ul><li>Web app, nothing to install</li><li>iPhone and iPad from Safari</li><li>iPad menu bar with Miko in the middle</li><li>Picture in picture on iPhone and iPad</li><li>Faster film start on iPhone and iPad</li><li>Android with its own player</li><li>Android TV and Fire TV</li><li>LG and Samsung (beta)</li><li>Windows, Mac and Linux</li><li>Discord status on Windows</li><li>Bigger tablet layout</li><li>Screen mirroring: show an Android phone or a computer on any MKCinema screen with a code. iPhones use AirPlay.</li><li>Continue watching widget for Android home screens, with one-tap Resume</li><li>Continue watching on your TV's home screen: pick a title and it carries on where you stopped</li><li>Link a phone, TV or computer with a code: your synced keys and addons arrive without typing a password</li><li>Menus that fit every screen: dropdowns instead of long button rows, and whatever does not fit sits under More</li><li>Every slider and setting works with a TV remote</li><li>The screensaver can step aside so the TV goes to sleep</li><li>Carousel rows for the TV remote</li><li>A TV keyboard with A to Z or QWERTY keys</li><li>Snappy mode: the fastest MKCinema on any device, switched on automatically on Fire TV Sticks</li><li>Instant Home on TVs: your Home screen is drawn the moment the app opens</li><li>Ask Claude or ChatGPT for a film and it opens on your TV</li></ul></div>
@@ -1002,7 +1068,7 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
         <div class="top"><svg><use href="#b-android"/></svg><h3>Android</h3></div>
         <p>Phones and tablets, with a full-screen player and one-tap hand-off to VLC.</p>
         <div class="acts"><a class="btn btn-plat" href="download/MKCinema.apk" download="MKCinema.apk"><svg><use href="#i-down"/></svg>Download APK</a><a class="btn btn-ghost" href="obtainium://add/https://github.com/itbelikethatbruh/MKCinema" rel="nofollow">Get updates with Obtainium</a></div>
-        <span class="meta">Version 1.17.16 · 52 MB · Android 7 or later</span>
+        <span class="meta">Version 1.17.17 · 52 MB · Android 7 or later</span>
       </div>
       <div class="dev rv" data-os="android-remote" id="remote-app">
         <div class="top"><svg><use href="#b-android"/></svg><h3>MK Remote</h3></div>
@@ -1051,7 +1117,7 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
         <div class="top"><svg><use href="#b-amazonfiretv"/></svg><h3>Smart TV</h3></div>
         <p>Android TV and Fire TV, plus LG webOS and Samsung in beta. On Fire TV, open Downloader and enter the code <b>6400996</b> (or type <b>tv.mkcinema.app</b>).</p>
         <div class="acts"><a class="btn btn-plat" href="download/MKCinema-TV.apk" download="MKCinema-TV.apk"><svg><use href="#i-down"/></svg>Android TV &amp; Fire TV</a><a class="btn btn-ghost" href="download/com.mkcinema.app_1.1.0_all.ipk" download>LG .ipk</a></div>
-        <span class="meta">Version 1.17.16 · 52 MB · Android TV 7 or later</span>
+        <span class="meta">Version 1.17.17 · 52 MB · Android TV 7 or later</span>
       </div>
       <div class="dev rv" data-os="web">
         <div class="top"><svg class="st"><use href="#i-globe"/></svg><h3>Any browser</h3></div>
@@ -1545,7 +1611,7 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
    no per-person data). Between refreshes the counters climb at the real pace of the last 24 hours, and your own visit adds one. */
 (() => {
   const box = document.getElementById('live'); if (!box) return;
-  const SNAP = {"visits":20370,"visits_per_hour":60.9,"site_downloads":5160,"site_downloads_per_hour":4.0,"gh_downloads":6156,"countries":116,"snapshot_at":"2026-11-26T00:27:15Z"};
+  const SNAP = {"visits":21880,"visits_per_hour":58.7,"site_downloads":5469,"site_downloads_per_hour":16.5,"gh_downloads":6733,"countries":119,"snapshot_at":"2026-11-27T00:27:14Z","stars":72};
   const API = 'https://wogffhgdixgrayowewnf.supabase.co/rest/v1/rpc/mkc_public_stats', KEY = 'sb_publishable_ZpiFwB_oM579GwCunYpHWg_jelRazT-';
   const GH = 'https://api.github.com/repos/itbelikethatbruh/MKCinema/releases?per_page=100';
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1563,47 +1629,61 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
       visits: Math.floor(s.visits + s.visits_per_hour * PACE * h) + mine,
       downloads: Math.floor(s.site_downloads + s.site_downloads_per_hour * PACE * h + s.gh_downloads),
       countries: s.countries,
+      stars: s.stars || 0,
     };
   };
   const shown = {};
   const put = (k, v) => { shown[k] = v; const t = short(v); if (els[k].textContent === t) return false; els[k].textContent = t; return true; };
   const bump = (k) => { if (reduce) return; const e = els[k]; e.classList.remove('lv-bump'); void e.offsetWidth; e.classList.add('lv-bump'); };
-  let started = false;
+  let started = false, counting = false, anim = 0;
   if (!reduce) for (const k in els) put(k, 0);
+  // Glide every counter from where it is to the target in dur ms (one animation at a time).
+  const glide = (t, dur, done) => {
+    const from = Object.assign({}, shown), id = ++anim; let t0 = null;
+    const step = (now) => {
+      if (id !== anim) return;
+      if (t0 == null) t0 = now;
+      const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+      for (const k in els) put(k, Math.round((from[k] || 0) + (t[k] - (from[k] || 0)) * e));
+      if (p < 1) requestAnimationFrame(step); else if (done) done();
+    };
+    requestAnimationFrame(step);
+  };
   const countUp = () => {
     started = true;
     const t = target();
     if (reduce) { for (const k in els) put(k, t[k]); return; }
-    box.classList.add('lv-go');
-    const dur = 2200; let t0 = null;
-    const step = (now) => {
-      if (t0 == null) t0 = now;
-      const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 4);
-      for (const k in els) put(k, Math.round(t[k] * e));
-      if (p < 1) requestAnimationFrame(step);
-      else {
-        for (const k in els) bump(k);
-        const you = box.querySelector('.lv-you');
-        if (mine && you) { you.hidden = false; you.classList.add('lv-show'); setTimeout(() => { you.hidden = true; }, 2700); }
-      }
-    };
-    requestAnimationFrame(step);
+    box.classList.add('lv-go'); counting = true;
+    glide(t, 1100, () => {
+      counting = false;
+      for (const k in els) bump(k);
+      const you = box.querySelector('.lv-you');
+      if (mine && you) { you.hidden = false; you.classList.add('lv-show'); setTimeout(() => { you.hidden = true; }, 2700); }
+      catchUp();
+    });
+  };
+  // Fresh numbers that arrive after the count-up: reach them at once instead of creeping.
+  const catchUp = () => {
+    if (!started || counting) return;
+    const t = target();
+    if (reduce) { for (const k in els) put(k, t[k]); return; }
+    if (Object.keys(els).some((k) => t[k] - (shown[k] || 0) > 3)) glide(t, 700, () => { for (const k in els) bump(k); });
   };
   // Keep climbing: check every few seconds, step up one at a time so each new visit or download is felt.
   setInterval(() => {
-    if (!started || document.hidden) return;
+    if (!started || counting || document.hidden) return;
     const t = target();
     for (const k in els) {
       if (shown[k] == null) continue;
-      if (t[k] > shown[k] && put(k, shown[k] + Math.max(1, Math.ceil((t[k] - shown[k]) / 6)))) bump(k);
+      if (t[k] > shown[k] && put(k, shown[k] + Math.max(1, Math.ceil((t[k] - shown[k]) / 2)))) bump(k);
     }
   }, 2500);
   // Fresh numbers: the public summary, then GitHub release downloads straight from GitHub.
   const ctl = 'AbortController' in window ? new AbortController() : null;
   if (ctl) setTimeout(() => ctl.abort(), 6000);
-  fetch(API, { method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' }, body: '{}', signal: ctl && ctl.signal })
+  const fresh = fetch(API, { method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' }, body: '{}', signal: ctl && ctl.signal })
     .then((r) => (r.ok ? r.json() : null))
-    .then((d) => { if (d && d.visits >= s.visits && d.snapshot_at) Object.assign(s, { visits: +d.visits, visits_per_hour: +d.visits_per_hour, site_downloads: +d.site_downloads, site_downloads_per_hour: +d.site_downloads_per_hour, gh_downloads: Math.max(s.gh_downloads, +d.gh_downloads || 0), countries: Math.max(s.countries, +d.countries || 0), snapshot_at: d.snapshot_at }); })
+    .then((d) => { if (d && d.visits >= s.visits && d.snapshot_at) Object.assign(s, { visits: +d.visits, visits_per_hour: +d.visits_per_hour, site_downloads: +d.site_downloads, site_downloads_per_hour: +d.site_downloads_per_hour, gh_downloads: Math.max(s.gh_downloads, +d.gh_downloads || 0), countries: Math.max(s.countries, +d.countries || 0), snapshot_at: d.snapshot_at }); catchUp(); })
     .catch(() => {})
     .then(() => {
       const cached = ss('mkc-lv-gh');
@@ -1613,11 +1693,17 @@ const done=()=>t.remove();t.lastElementChild.addEventListener('animationend',don
         if (n) ss('mkc-lv-gh', String(n)); return n;
       }).catch(() => 0);
     })
-    .then((gh) => { if (gh > s.gh_downloads) s.gh_downloads = gh; })
+    .then((gh) => { if (gh > s.gh_downloads) { s.gh_downloads = gh; catchUp(); } })
     .catch(() => {});
-  // Start counting when the box is on screen.
-  const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); setTimeout(countUp, reduce ? 0 : 450); } }, { threshold: 0.3 }) : null;
-  if (io) io.observe(box); else countUp();
+  // GitHub stars, straight from GitHub (cached for the visit).
+  const stars = (() => { const c = ss('mkc-lv-stars'); if (c) return Promise.resolve(+c);
+    return fetch('https://api.github.com/repos/itbelikethatbruh/MKCinema').then((r) => (r.ok ? r.json() : null)).then((d) => { const n = d && +d.stargazers_count; if (n) ss('mkc-lv-stars', String(n)); return n || 0; }).catch(() => 0); })();
+  stars.then((n) => { if (n > (s.stars || 0)) { s.stars = n; catchUp(); } });
+  // Start counting when the box is on screen, with the fresh summary if it comes within 0.8 s.
+  const summary = fresh.then(() => {}, () => {});
+  const go = () => Promise.race([summary, new Promise((r) => setTimeout(r, 800))]).then(countUp);
+  const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); go(); } }, { threshold: 0.1 }) : null;
+  if (io) io.observe(box); else go();
 })();</script>
 </body>
 </html>

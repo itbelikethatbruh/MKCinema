@@ -1,9 +1,9 @@
 {
-  "web": "2.96.2",
-  "android": "1.17.17",
+  "web": "2.96.3",
+  "android": "1.11.0",
   "apk": "https://mkcinema.app/download/MKCinema.apk",
-  "windows": "1.6.2",
+  "windows": "1.6.0",
   "windowsUrl": "https://mkcinema.app/download/MKCinema.exe",
-  "mac": "1.3.2",
-  "macUrl": "https://mkcinema.app/download/MKCinema-1.3.2-mac.zip"
+  "mac": "1.3.1",
+  "macUrl": "https://mkcinema.app/download/MKCinema-1.3.1-mac.zip"
 }

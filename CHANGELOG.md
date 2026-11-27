@@ -2,6 +2,18 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.96.3 (2026-11-27)
+
+- TVs: Home no longer moves rows out from under you while it finishes loading.
+- Subtitles stay in one place when the controls appear, and open menus always sit above them.
+- When a movie ends, you're back on its page.
+- When an addon sends a message instead of a video, the message shows with a link to the addon's page.
+- The featured banner moves on to a checked title when a picture is slow, and film names refresh after a lookup that failed for a moment.
+
+## Website (2026-11-27)
+
+- New headline, a GitHub stars number in the Live now box, and a "Right in your browser" section.
+
 ## Web app 2.96.2 (2026-11-27)
 
 - The featured banner only shows titles with a real picture and logo.

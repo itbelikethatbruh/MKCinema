@@ -1,0 +1,15 @@
+/* 2.96.6 addon page message */
+.mk-apg-q{margin:0 0 18px;padding:12px 14px;border-left:3px solid var(--gold,#c9a45c);border-radius:10px;background:rgba(255,255,255,.04);text-align:left;display:grid;gap:4px;font-size:calc(13.5px * var(--ts,1));line-height:1.45;color:var(--text,#eee);overflow-wrap:anywhere}
+.mk-apg-q b{font-weight:600;color:var(--mute,#9a9aa0);font-size:.92em}
+.mk-pnote{flex-wrap:wrap;align-items:center;gap:8px}
+.mk-pnote>span{flex:1 1 220px}
+/* 2.96.6 phone held sideways: the loading title stays two lines and never sits under the play buttons */
+.p-load .pl-art b{font-size:min(calc(clamp(22px,4vw,40px) * var(--ts,1)),9vh);line-height:1.15;max-width:100%;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+body.touch-ui #player:has(#pLoad:not([hidden]):not(.soft)) .hud-mid{visibility:hidden}
+/* a player message on a short screen: below the top buttons, scrolls if it must, and the title and 0:00 bar step aside */
+@media (max-height:600px){
+  .p-msg{padding:76px 16px 12px;align-items:start}
+  .p-msg .box{max-height:100%;overflow:auto;padding:18px 20px}
+  .p-msg p{margin-bottom:12px}
+  #player:has(#pMsg:not([hidden])) #hud .hud-bot{opacity:0;pointer-events:none}
+}

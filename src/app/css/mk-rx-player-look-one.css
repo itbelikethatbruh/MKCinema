@@ -80,7 +80,7 @@ html.mk-rx #player #optMenu .seg-row button{border-radius:999px}
 html.mk-rx #player #optMenu .seg-row button.on{background:var(--rx-ink);color:#0b0b0b}
 /* subtitles step above the taller controls */
 @media not ((max-width:760px) and (orientation:portrait)){html.mk-rx #player:has(#hud:not(.idle)) #video::-webkit-media-text-track-container{transform:translateY(calc(-1 * var(--rx-lift,96px)))!important}}
-html.mk-rx #player .mk-nv-sub.lift:not(.top){transform:translateY(-24vh)}
+html.mk-rx #player .mk-nv-sub.lift:not(.top){transform:none}
 /* picture-in-picture: only the picture and the subtitle words */
 html.pip-mode #player .hud,html.pip-mode #player .hud-mid,html.pip-mode #player .menu,html.pip-mode #player .drawer,html.pip-mode #player .pp-ui,html.pip-mode #player .skip-btn,html.pip-mode #player .seek-fx,html.pip-mode #player .unlock,html.pip-mode #player .reacts,html.pip-mode #player .upnext,html.pip-mode #mkClock,html.pip-mode body>*:not(#player):not(script):not(style){display:none!important}
 html.pip-mode #player .mk-nv-sub{font-size:max(11px,7vh)!important;bottom:4vh;left:3%;right:3%;transform:none!important}
