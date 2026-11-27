@@ -698,6 +698,21 @@ document.head.insertAdjacentHTML('beforeend', `<style id="mkc-237-rmsec">
 #mkGate{z-index:90}
 #mkGate .sc-p b.mono{font-size:calc(18px * var(--ts,1));letter-spacing:.18em}
 .mk-gate-acts{margin:10px -6px 0;padding:6px;gap:10px;flex-wrap:wrap}
+.mk-sq .x8-modal{max-width:440px;text-align:center}
+.mk-sq .x8-body{display:flex;flex-direction:column;align-items:center}
+.mk-sq .x8-h{margin:6px 0 0}
+.mk-sq-qr{width:min(300px,74vw);margin:18px auto 10px;padding:14px;box-shadow:0 18px 50px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.1)}
+html.tv .mk-sq .x8-modal{max-width:780px;width:min(780px,calc(100vw - 64px));text-align:left}
+html.tv .mk-sq .x8-body{display:grid;grid-template-columns:300px 1fr;column-gap:32px;align-items:center;justify-items:start}
+html.tv .mk-sq .x8-body>*{grid-column:2}
+html.tv .mk-sq-qr{grid-column:1!important;grid-row:1/span 4;width:300px;margin:4px 0}
+html.tv .mk-sq-how,html.tv .mk-sq-key{margin-left:0;text-align:left}
+html.tv .mk-sq .mk-gate-acts{justify-content:flex-start}
+@media (max-width:600px){.mk-sq-qr{width:min(250px,66vw);margin:14px auto 6px}}
+.mk-sq-how{max-width:36ch;margin:6px auto 8px}
+.mk-sq-key{display:flex;gap:8px;align-items:flex-start;text-align:left;max-width:40ch;margin:0 auto 6px;font-size:calc(13px * var(--ts,1));padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.mk-sq-key svg{flex:none;width:15px;height:15px;margin-top:2px;color:var(--gold)}
+.mk-sq .mk-gate-acts{justify-content:center}
 .pm-mk{margin-left:auto;flex:none;font-size:calc(11px * var(--ts,1));padding:5px 11px;border-radius:999px;border:1px solid rgba(var(--kffffff-c,255,255,255),.18);color:inherit;background:none;cursor:pointer}
 .pm-mk:hover,.pm-mk.nav-focus,.pm-mk:focus-visible{border-color:rgba(var(--kffffff-c,255,255,255),.5)}
 .tvl-chk{margin-top:8px}

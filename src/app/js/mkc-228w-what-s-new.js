@@ -8,6 +8,11 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.97.4', date: '2026-11-27', items: [
+    ['new', 'Rotten Tomatoes for everyone', 'Rotten Tomatoes ratings now show on films for everyone, next to IMDb. With an MDBList key you also see the audience rating.'],
+    ['better', 'Share your setup with a QR code', 'Share my setup now shows a QR code. Point a phone or iPad camera at it to add the same addons there.'],
+    ['better', 'Removed addons stay removed', 'Addons you remove stay removed on every device.'],
+  ] },
   { v: '2.97.3', date: '2026-11-27', items: [
     ['better', 'Trailers play again', 'Trailers play again, and Back on the TV remote takes you to the menu first.'],
   ] },

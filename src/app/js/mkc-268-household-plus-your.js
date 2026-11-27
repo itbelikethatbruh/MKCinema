@@ -365,8 +365,9 @@ const SetupLink = {
     if (!d.addons.length) { toast('That setup link has no addons in it', 'err'); return; }
     if (!add.length) { toast('You already have every addon in that setup', 'ok'); return; }
     const host = (u) => { try { return new URL(u).host; } catch (e) { return u.slice(0, 50); } };
-    const ok = await Gate.ask({ icon: 'package-plus', eyebrow: 'Setup link', title: d.name ? `Add “${d.name}”?` : `Add ${add.length} addon${add.length === 1 ? '' : 's'}?`, yes: 'Add them', no: 'Not now',
+    const ok = await Gate.ask({ icon: 'package-plus', eyebrow: 'Setup link', title: d.name ? `Add “${d.name}”?` : `Add ${add.length} addon${add.length === 1 ? '' : 's'}?`, yes: 'Add them', no: SetupQR.iosTab() ? 'Copy for the Home Screen app' : 'Not now',
       html: `A link wants to add ${add.length} addon${add.length === 1 ? '' : 's'}: <b>${add.slice(0, 6).map((u) => esc(host(u))).join(', ')}${add.length > 6 ? '…' : ''}</b>. Nothing you have is removed or changed. Add them only if you trust whoever made the link.` });
+    if (ok === false && SetupQR.iosTab()) { copyText(SetupQR.fromHash(h), 'Link copied. Open MKCinema from your Home Screen and paste it in Addons', 9000); return; }
     if (ok !== true) return;
     let n = 0, bad = 0;
     for (const u of add) { try { await engine.install(u, { silent: true }); n++; } catch (e) { bad++; } }
@@ -384,6 +385,66 @@ const SetupLink = {
   },
 };
 window.MkSetupLink = SetupLink;
+/* 2.97.6 setup qr */
+/* Share my setup: a QR code to scan with a phone or iPad camera, plus the link.
+   The code carries exactly what the copied link carries: public addon links only. Addons that hold the person's own
+   key are never in it (they reach the person's own devices through the account's encrypted key sync). The link is
+   a #fragment, so the addon list is never sent to any server, mkcinema.app included. */
+const SetupQR = {
+  PUB: 'https://app.mkcinema.app',
+  MAXV: 30,   // QR version 30 = 137 modules: still scans from a phone screen or across a room from a TV
+  /* a phone must be able to open it: desktop apps and the LAN server run on localhost or a home address */
+  origin() {
+    const o = PUBLIC_ORIGIN || location.origin;
+    return /^https:\/\//i.test(o) && !/^https:\/\/(localhost|127\.|0\.0\.0\.0|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[)|\.local(:\d+)?$/i.test(o) ? o : this.PUB;
+  },
+  /* shortest form that every version since 2.68 reads: no https://, no /manifest.json (StremioEngine.normalize adds and drops them) */
+  short(u) { return String(u).replace(/^https:\/\//i, '').replace(/\/manifest\.json$/i, ''); },
+  link(addons) { return `${this.origin()}/#setup=${X8.b64e({ v: 1, addons: addons.map((u) => this.short(u)) })}`; },
+  fromHash(h) { return `${this.origin()}/#${h}`; },
+  ios() { const ua = navigator.userAgent; return /iP(hone|ad|od)/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1); },
+  /* an iPhone or iPad Safari tab: the Home Screen app keeps its own addons, apart from Safari's */
+  iosTab() { return this.ios() && !(navigator.standalone === true || matchMedia('(display-mode: standalone)').matches); },
+  code(link) {
+    for (const level of ['M', 'L']) {
+      try { const q = QR.encode(link, level); if (q.version <= this.MAXV) return QR.svg(link, { level, margin: 3 }); } catch (e) { /* too long at this level */ }
+    }
+    return '';
+  },
+  list() {
+    const all = engine.addons.filter((a) => !a.builtin && !a.virtual && !a.studio && a.enabled).map((a) => a.baseUrl);
+    const safe = all.filter((u) => !(typeof keyedAddon === 'function' && keyedAddon(u)));
+    return { safe, left: all.length - safe.length };
+  },
+  open() {
+    const { safe, left } = this.list();
+    if (!safe.length) { toast(left ? 'Every addon you have holds your own key, so there is nothing to share' : 'You have no addons to share yet', 'err', 5000); return; }
+    const link = this.link(safe), svg = this.code(link), n = safe.length;
+    const el = X8.layer('mkSetupQr', { label: 'Share my setup', icon: 'qr-code', eyebrow: 'Share my setup' }); el.classList.add('mk-sq');
+    const b = X8.body('mkSetupQr');
+    const share = !IS_TV && TOUCH_UI && typeof navigator.share === 'function';
+    b.innerHTML = `<h2 class="x8-h">${svg ? 'Scan to add my addons' : 'Copy the link to add my addons'}</h2>
+      ${svg ? `<div class="qr-wrap mk-sq-qr">${svg}</div>` : '<p class="sc-p">This setup is too big for one code. Copy the link and open it on the other device.</p>'}
+      <p class="sc-p mk-sq-how">${svg ? (n === 1 ? 'Point a phone or iPad camera at this code. MKCinema opens there and asks before it adds 1 addon. Nothing on that device is removed.' : `Point a phone or iPad camera at this code. MKCinema opens there and asks before it adds ${n} addons. Nothing on that device is removed.`) : (n === 1 ? 'The link adds 1 addon after a yes. Nothing on that device is removed.' : `The link adds ${n} addons after a yes. Nothing on that device is removed.`)}</p>
+      ${left ? `<p class="sc-p mk-sq-key"><i data-lucide="lock"></i><span>${left === 1 ? '1 addon that holds your own key is not in this code. Your own devices get it when they sign in to your account.' : `${left} addons that hold your own key are not in this code. Your own devices get them when they sign in to your account.`}</span></p>` : ''}
+      <div class="inrow mk-gate-acts">${IS_TV ? '' : '<button class="btn btn-prime" type="button" data-nav data-sq="copy"><i data-lucide="link"></i>Copy link</button>'}${share ? '<button class="btn btn-ghost" type="button" data-nav data-sq="share"><i data-lucide="share-2"></i>Share</button>' : ''}<button class="btn ${IS_TV ? 'btn-prime' : 'btn-ghost'}" type="button" data-nav data-x8close>Done</button></div>`;
+    const c = $('[data-sq="copy"]', b); if (c) c.onclick = () => copyText(link, left ? (left === 1 ? 'Setup link copied. 1 addon with your own key left out' : `Setup link copied. ${left} addons with your own key left out`) : 'Setup link copied', 6000);
+    const s = $('[data-sq="share"]', b); if (s) s.onclick = () => { navigator.share({ title: 'MKCinema setup', url: link }).catch(() => {}); };
+    icons(); X8.open('mkSetupQr');
+    setTimeout(() => { const f = $('#mkSetupQr .btn-prime'); if (f) { if (IS_TV) Nav.focus(f, true); else f.focus({ preventScroll: true }); } }, 80);
+  },
+};
+window.MkSetupQR = SetupQR;
+SetupLink.share = () => SetupQR.open();
+/* the Addons box takes a setup link too: an iPhone or iPad Home Screen app can paste one copied from Safari */
+{
+  const ia = installAddon;
+  installAddon = async function (url) {
+    const m = /#(setup(?:-url)?=[^\s]+)/.exec(String(url || '').trim());
+    if (m && !/\/manifest\.json/i.test(url.split('#')[0])) { const f = $('#addonUrl'); if (f) f.value = ''; await SetupLink.handle(m[1]); return null; }
+    return ia.apply(this, arguments);
+  };
+}
 
 /* ---------------- Home folders ---------------- */
 const Folders = {
@@ -686,7 +747,7 @@ window.MkHeroText = HeroText; HeroText.init();
     scAddRows('streams', 'showTrailers', [
       { key: 'srcView', label: 'Source list', help: 'Detailed shows every line an addon sends. Compact keeps one line and the badges, so more sources fit.', type: 'select', options: [['detailed', 'Detailed'], ['compact', 'Compact']], get: () => CFG.srcView || 'detailed', set: (v) => { setCfg('srcView', v); SrcLook.apply(); } },
       { key: 'srcBadges', label: 'Quality badges on sources', help: 'The small 4K, HDR, sound and size tags on each source.', type: 'toggle', get: () => CFG.srcBadges !== false, set: (v) => { setCfg('srcBadges', v); SrcLook.apply(); } },
-      { key: 'shareSetup', label: 'Share my setup', help: 'Copies a link that adds your addons on another device or for a friend in one press. Addons that hold your own key are left out.', type: 'button', text: 'Copy setup link', icon: 'link', run: () => SetupLink.share() },
+      { key: 'shareSetup', label: 'Share my setup', help: 'Shows a QR code and a link that add your addons on another phone, iPad or computer, or for a friend, in one press. Addons that hold your own key are left out.', type: 'button', text: 'Show code and link', icon: 'qr-code', run: () => SetupLink.share() },
     ]);
     scAddRows('help', 'speedRun', [
       { key: 'srcSpeed', label: 'Test the last source', help: 'Checks how fast the server of the last film you played sends it, so you know whether a pause is the source or your internet.', type: 'button', text: 'Test the source', icon: 'server', run: (b) => SrcSpeed.run(b) },
@@ -706,7 +767,7 @@ window.MkHeroText = HeroText; HeroText.init();
   safe('commands', () => {
     COMMANDS.push(
       { label: 'Your cloud (files in your debrid account)', icon: 'cloud', run: () => MyCloud.open() },
-      { label: 'Copy a link to my setup', icon: 'link', run: () => SetupLink.share() },
+      { label: 'Share my setup with a QR code', icon: 'qr-code', run: () => SetupLink.share() },
     );
   });
   safe('look', () => { SrcLook.apply(); CFG_HOOKS.push((k) => { if (k === 'srcView' || k === 'srcBadges') SrcLook.apply(); }); });

@@ -2,6 +2,14 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.97.4 (2026-11-27)
+
+- Rotten Tomatoes ratings now show on films for everyone, next to IMDb. With an MDBList key you also see the audience rating.
+- Share my setup now shows a QR code. Point a phone or iPad camera at it to add the same addons there.
+- Addons you remove stay removed on every device.
+- Cleaner top bar on iPad.
+- Website: Rotten Tomatoes in the feature list (274 features).
+
 ## Web app 2.97.3 (2026-11-27)
 
 - Trailers play again.
