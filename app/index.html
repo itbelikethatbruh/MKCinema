@@ -7243,8 +7243,8 @@ async function boot() {
   icons();
   S.booted = true;
   const views = ['movie', 'series', 'tv', 'library', 'studio', 'calendar'], first = Layout.get().start;
-  if (views.includes(start)) go(start); else if (views.includes(first) && !/^(play\?|resume\?|remote=|party=|mirror=|login=)/.test(start)) go(first); else renderHome();
-  if (!/^login=/.test(start)) maybeTour();
+  if (views.includes(start)) go(start); else if (views.includes(first) && !/^(play\?|resume\?|remote=|party=|mirror=|login=|tvlist=)/.test(start)) go(first); else renderHome();
+  if (!/^(login|tvlist)=/.test(start)) maybeTour();
   Deep.handle(); Governor.init(); PWA.init(); Support.maybe();
   setTimeout(() => Layout.ask(), 1500);
   if (IS_TV) { setTimeout(() => Nav.settle(), 1200); setTimeout(() => Nav.settle(), 3500); }
@@ -10690,6 +10690,88 @@ const TvLogin = {
     setTimeout(() => bus.close(), 10 * 60000);
   },
 };
+/* 2.98.2 phone and tuner */
+/* 2.98.2 Add a TV playlist from a phone. The TV shows a QR code with a room code and a one-time key. The phone types
+   the playlist (link and guide, or Xtream login) and sends it encrypted with that key (AES-GCM, as TvLogin does); the
+   TV fills in Add playlist with it and the person adds it there. The key is only ever in the QR code, and nothing is
+   kept on the phone. */
+const PhoneList = {
+  bus: null, code: '', key: '', t: 0,
+  open() {
+    this.stop();
+    X8.layer('plPhone', { label: 'Add from your phone', icon: 'smartphone', eyebrow: 'Channels' });
+    X8.onClose.plPhone = () => this.stop();
+    const b = X8.body('plPhone');
+    if (!appLink('x') || !(window.crypto && crypto.subtle)) { b.innerHTML = '<h3 class="x8-h">Type it on your phone</h3><p class="sub">This needs MKCinema opened from its web address, such as app.mkcinema.app.</p>'; X8.open('plPhone'); return; }
+    this.code = roomCode(); this.key = b64url.enc(crypto.getRandomValues(new Uint8Array(16)));
+    const link = appLink(`tvlist=${this.code}.${this.key}`);
+    b.innerHTML = `<h3 class="x8-h">Type it on your phone</h3><p class="sub">Scan this with your phone camera. Type the playlist link or Xtream login there, and it fills in here.</p>
+      <div class="qr-wrap">${QR.svg(link, { margin: 2 })}</div><p class="tour-note" id="plpMsg" role="status">Getting a code ready…</p>
+      <div class="actions"><button class="btn btn-ghost" type="button" data-nav data-x8close>Cancel</button></div>`;
+    icons(); X8.open('plPhone');
+    const say = (t) => { const el = $('#plpMsg'); if (el) el.textContent = t; };
+    const bus = this.bus = new Bus(`pl-${this.code}`, (m) => this.onMsg(m, bus, say));
+    bus.connect().then((ok) => { if (this.bus === bus) say(ok ? 'Waiting for your phone… The code works for 10 minutes.' : 'Could not reach the link service. Check the connection and try again.'); });
+    this.t = setTimeout(() => { if (this.bus === bus) { this.stop(); say('That code expired. Close this and open it again.'); } }, 10 * 60000);
+  },
+  stop() { clearTimeout(this.t); if (this.bus) this.bus.close(); this.bus = null; },
+  async onMsg(m, bus, say) {
+    if (bus !== this.bus) return;
+    if (m.t === 'hello') { say('Phone connected. Type the playlist there.'); return; }
+    if (m.t !== 'list') return;
+    try {
+      const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64url.dec(m.iv) }, await TvLogin.aes(this.key), b64url.dec(m.data));
+      const x = JSON.parse(new TextDecoder().decode(plain)), s = (v) => String(v == null ? '' : v).trim().slice(0, 2000);
+      const kind = ['m3u', 'xtream'].includes(x.kind) ? x.kind : 'm3u';
+      const l = { kind, name: s(x.name).slice(0, 80), url: s(x.url), server: s(x.server), user: s(x.user), pass: s(x.pass), epg: s(x.epg) };
+      bus.send({ t: 'done' });
+      this.stop(); X8.close('plPhone');
+      Channels.openAdd(null, l);
+      toast('Your playlist arrived from your phone. Check it, then add it.', 'ok', 5000);
+    } catch (e) { bus.send({ t: 'fail', msg: 'The TV could not read that. Scan the code again.' }); }
+  },
+  /* the phone, opened from the QR code */
+  join(code, key) {
+    if (!/^[A-Z0-9]{6}$/.test(code) || !key) { toast('That code is not complete. Scan it again.', 'err'); return; }
+    const body = $('#castBody'); openLayer('castLayer');
+    let kind = 'm3u', sent = 0;
+    const msg = (t) => { const el = $('#plp-msg'); if (el) el.textContent = t; };
+    const bus = new Bus(`pl-${code}`, (m) => {
+      if (m.t === 'done') { sent = 0; msg('Sent. Your TV shows the playlist now: press Add playlist there.'); toast('Playlist sent to your TV', 'ok'); setTimeout(() => { bus.close(); closeLayer('castLayer'); }, 2500); }
+      else if (m.t === 'fail') { sent = 0; const s = $('#plp-send'); if (s) s.disabled = false; msg(m.msg || 'The TV could not read that. Scan the code again.'); }
+    });
+    const ready = bus.connect().then((ok) => { bus.send({ t: 'hello' }); return ok; });
+    const paint = () => {
+      body.innerHTML = `<h2>Add a playlist to your TV</h2><p class="sub">What you type here goes straight to your TV, encrypted. Nothing is kept on this phone.</p>
+        <div class="segc" role="radiogroup" aria-label="Playlist type">${[['m3u', 'Playlist link'], ['xtream', 'Xtream login']].map(([v, t]) => `<button type="button" data-plk="${v}" class="${kind === v ? 'on' : ''}">${t}</button>`).join('')}</div>
+        <form id="plpForm" autocomplete="off">
+          <label class="fld"><span>Name (optional)</span><input class="inp" id="plp-name" placeholder="My TV"></label>
+          ${kind === 'm3u' ? '<label class="fld"><span>Playlist address (.m3u or .m3u8)</span><input class="inp mono" id="plp-url" inputmode="url" spellcheck="false" autocapitalize="off" placeholder="https://…/playlist.m3u"></label><label class="fld"><span>TV guide (XMLTV, optional)</span><input class="inp mono" id="plp-epg" inputmode="url" spellcheck="false" autocapitalize="off" placeholder="https://…/guide.xml or .xml.gz"></label>'
+            : '<label class="fld"><span>Server</span><input class="inp mono" id="plp-server" inputmode="url" spellcheck="false" autocapitalize="off" placeholder="https://provider.example:8080"></label><label class="fld"><span>User name</span><input class="inp mono" id="plp-user" spellcheck="false" autocapitalize="off"></label><label class="fld"><span>Password</span><input class="inp mono" id="plp-pass" type="password"></label>'}
+          <p class="tour-note" id="plp-msg" role="status"></p>
+          <div class="actions"><button class="btn btn-prime" type="submit" id="plp-send"><i data-lucide="tv"></i>Send to TV</button></div></form>`;
+      icons();
+      $$('[data-plk]', body).forEach((b) => b.addEventListener('click', () => { kind = b.dataset.plk; paint(); }));
+      $('#plpForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const v = (id) => { const el = $(`#${id}`); return el ? el.value.trim() : ''; };
+        const x = { kind, name: v('plp-name'), url: v('plp-url'), epg: v('plp-epg'), server: v('plp-server'), user: v('plp-user'), pass: v('plp-pass') };
+        if (kind === 'm3u' && !/^https?:\/\//i.test(x.url)) { msg('Paste the full playlist address, starting with https:// or http://'); return; }
+        if (kind === 'xtream' && (!/^https?:\/\//i.test(x.server) || !x.user || !x.pass)) { msg('Fill in the server address (with http:// or https://), the user name and the password.'); return; }
+        const btn = $('#plp-send'); btn.disabled = true; msg('Sending…');
+        try {
+          if (!(await ready)) throw new Error('offline');
+          const iv = crypto.getRandomValues(new Uint8Array(12));
+          const data = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await TvLogin.aes(key), new TextEncoder().encode(JSON.stringify(x)));
+          bus.send({ t: 'list', iv: b64url.enc(iv), data: b64url.enc(new Uint8Array(data)) });
+          const mine = ++sent;
+          setTimeout(() => { if (sent === mine) { sent = 0; const s = $('#plp-send'); if (s) s.disabled = false; msg('No answer from the TV yet. Is the code still on its screen? Try again.'); } }, 12000);
+        } catch (er) { btn.disabled = false; msg('Could not reach your TV. Check this phone’s connection and try again.'); }
+      });
+    };
+    paint();
+  },
+};
 /* ---------------- Deep links: QR handoff, remote and party invites ---------------- */
 const Deep = {
   async handle() {
@@ -10698,6 +10780,7 @@ const Deep = {
     if (h.startsWith('play?')) { history.replaceState(null, '', location.pathname); const q = new URLSearchParams(h.slice(5)); if (await this.askPlay(q)) await this.play(q); }
     else if (h.startsWith('remote=')) { const c = h.slice(7).toUpperCase(); if (RM_CODE.test(c)) { location.replace(Remote.link(c)); return; } history.replaceState(null, '', location.pathname); }
     else if (h.startsWith('login=')) { history.replaceState(null, '', location.pathname); const [code, key, ver] = h.slice(6).split('.'); TvLogin.join((code || '').toUpperCase(), key, ver); }
+    else if (h.startsWith('tvlist=')) { history.replaceState(null, '', location.pathname); const [code, key] = h.slice(7).split('.'); PhoneList.join((code || '').toUpperCase(), key); }
     else if (h.startsWith('keylink=')) { history.replaceState(null, '', location.pathname); if (typeof DevLink !== 'undefined') DevLink.fromLink(h.slice(8)); }
     else if (h.startsWith('lssend=')) { history.replaceState(null, '', location.pathname); LayStudio.sendLink(h.slice(7)); }
     else if (h.startsWith('ambsend=')) { history.replaceState(null, '', location.pathname); AmbStudio.sendLink(h.slice(8)); }
@@ -10727,7 +10810,7 @@ const Deep = {
   },
   async play(q) {},
 };
-addEventListener('hashchange', () => { if (/^#(play\?|resume\?|remote=|party=|mirror=|login=|keylink=|layout=|lssend=|ambsend=|ambient$|studio$)/.test(location.hash)) Deep.handle(); });
+addEventListener('hashchange', () => { if (/^#(play\?|resume\?|remote=|party=|mirror=|login=|tvlist=|keylink=|layout=|lssend=|ambsend=|ambient$|studio$)/.test(location.hash)) Deep.handle(); });
 
 COMMANDS.push(
   { label: 'Start or join a watch party', icon: 'users', run: () => Party.openPanel() },
@@ -12292,7 +12375,7 @@ SET_PHONE.addEventListener('change', () => { if (!$('#settings').hidden) markSet
 }
 /* ---------------- About & licenses ----------------
    Third-party notices, verbatim. Stremio's MIT notice comes first because MKCinema builds on Stremio's add-on SDK and protocol. */
-const APP_VERSION = '2.98.0';
+const APP_VERSION = '2.98.1';
 const LIC_TEXT = {"stremio": "The MIT License (MIT)\n=====================\n\nCopyright © 2019 SmartCode OOD\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the “Software”), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.", "hls": "Copyright (c) 2017 Dailymotion (http://www.dailymotion.com)\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\nsrc/remux/mp4-generator.js and src/demux/exp-golomb.ts implementation in this project\nare derived from the HLS library for video.js (https://github.com/videojs/videojs-contrib-hls)\n\nThat work is also covered by the Apache 2 License, following copyright:\nCopyright (c) 2013-2015 Brightcove\n\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.", "lucide": "ISC License\n\nCopyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.", "supa": "MIT License\n\nCopyright (c) 2020 Supabase\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "webvlc": "MIT License\n\nCopyright (c) 2026 Addy Osmani\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "express": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "cors": "(The MIT License)\n\nCopyright (c) 2013 Troy Goode <troygoode@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.", "nf": "The MIT License (MIT)\n\nCopyright (c) 2016 David Frank\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.", "ofl": "-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."};
 const OFL = `This Font Software is licensed under the SIL Open Font License, Version 1.1.\n\n${LIC_TEXT.ofl}`;
 const LIC_GROUPS = [
@@ -15100,7 +15183,17 @@ const Channels = {
     const base = String(l.server || '').replace(/\/+$/, ''), q = `username=${encodeURIComponent(l.user || '')}&password=${encodeURIComponent(l.pass || '')}`;
     return { m3u: `${base}/get.php?${q}&type=m3u_plus&output=m3u8`, epg: `${base}/xmltv.php?${q}` };
   },
-  src(l) { return l.kind === 'xtream' ? this.xtream(l) : { m3u: l.url, epg: l.epg || '' }; },
+  src(l) { return l.kind === 'xtream' ? this.xtream(l) : l.kind === 'hdhr' ? { m3u: `${this.hdNorm(l.url)}/lineup.json`, epg: l.epg || '' } : { m3u: l.url, epg: l.epg || '' }; },
+  /* 2.98.2 HDHomeRun: a tuner on the home network answers lineup.json with its channels. Only the Android and Android
+     TV app can reach it (it fetches the person's own TV servers itself), so only there is the kind offered */
+  hdOk() { try { return typeof this.nat === 'function' && this.nat(); } catch (e) { return false; } },
+  hdNorm(u) { u = String(u || '').trim(); if (!u) return ''; if (!/^https?:\/\//i.test(u)) u = `http://${u}`; try { const x = new URL(u); return `${x.protocol}//${x.host}`; } catch (e) { return ''; } },
+  hdhrM3u(text) {
+    let a; try { a = JSON.parse(text); } catch (e) { throw new Error('That address did not answer like an HDHomeRun tuner. Check it in the HDHomeRun app.'); }
+    if (!Array.isArray(a)) throw new Error('That address did not answer like an HDHomeRun tuner. Check it in the HDHomeRun app.');
+    const q = (v) => String(v == null ? '' : v).replace(/["\r\n]/g, ' ').trim();
+    return `#EXTM3U\n${a.filter((c) => c && c.URL && !c.DRM).map((c) => `#EXTINF:-1 tvg-chno="${q(c.GuideNumber)}" tvg-id="${q(c.GuideNumber)}" group-title="${c.HD ? 'HD' : 'Antenna'}",${q([c.GuideNumber, c.GuideName].filter(Boolean).join(' '))}\n${q(c.URL)}`).join('\n')}\n`;
+  },
 
   /* ---- fetching ---- */
   async text(url, { gz } = {}) {
@@ -15208,7 +15301,7 @@ const Channels = {
     if (!fresh && this.data.has(l.id)) { const d = this.data.get(l.id); if (d.epgUrl && !d.epgBusy && Date.now() - (d.epgAt || d.at) > 3 * 3600e3) this.loadEpg(l, d, true); return d; }
     const src = this.src(l);
     const text = l.kind === 'file' ? (await this.cached(l.id, 'm3u', false, async () => { if (this.uploads.has(l.id)) return this.uploads.get(l.id); throw new Error('Upload the playlist file again'); })) : await this.cached(l.id, 'm3u', fresh, () => this.text(src.m3u));
-    const { channels, epg } = this.parseM3U(text, l);
+    const { channels, epg } = this.parseM3U(l.kind === 'hdhr' ? this.hdhrM3u(text) : text, l);
     const d = { channels, epg: new Map(), at: Date.now(), epgUrl: src.epg || epg || '' };
     this.data.set(l.id, d);
     if (d.epgUrl) this.loadEpg(l, d, fresh);
@@ -15221,26 +15314,28 @@ const Channels = {
   all() { return [...this.data.values()].flatMap((d) => d.channels); },
 
   /* ---- adding and editing ---- */
-  openAdd(edit) {
+  openAdd(edit, pre) {
     X8.layer('chAdd', { label: 'Add a playlist', icon: 'list-video', eyebrow: 'Channels' });
-    const l = edit || { kind: 'm3u' }, b = X8.body('chAdd');
+    const l = edit || pre || { kind: 'm3u' }, b = X8.body('chAdd');
     const paint = () => {
       b.innerHTML = `<h3 class="x8-h">${edit ? 'Edit playlist' : 'Add your own channels'}</h3>
         <p class="sub">Bring a playlist from a service you subscribe to. MKCinema ships no channels, and your playlist stays on this device${CFG.syncKeys !== false ? ' and in your own account' : ''}.</p>
-        <div class="segc" role="radiogroup" aria-label="Playlist type">${[['m3u', 'Playlist link'], ['xtream', 'Xtream login'], ['file', 'Playlist file']].map(([v, t]) => `<button type="button" data-nav data-k="${v}" class="${l.kind === v ? 'on' : ''}">${t}</button>`).join('')}</div>
+        <div class="segc" role="radiogroup" aria-label="Playlist type">${[['m3u', 'Playlist link'], ['xtream', 'Xtream login'], ['file', 'Playlist file'], ...(this.hdOk() || l.kind === 'hdhr' ? [['hdhr', 'HDHomeRun']] : [])].map(([v, t]) => `<button type="button" data-nav data-k="${v}" class="${l.kind === v ? 'on' : ''}">${t}</button>`).join('')}</div>
         <div class="x8-form">
           <label>Name<input class="inp" id="chName" value="${esc(l.name || '')}" placeholder="My TV" autocomplete="off"></label>
+          ${l.kind === 'hdhr' ? `<label>Tuner address<input class="inp mono" id="chUrl" value="${esc(l.url || '')}" placeholder="192.168.1.50" spellcheck="false" autocomplete="off" inputmode="url"></label><p class="tour-note">The HDHomeRun app shows it under the tuner’s settings. Its channels and numbers come from the tuner itself.</p>` : ''}
           ${l.kind === 'm3u' ? `<label>Playlist address (.m3u or .m3u8)<input class="inp mono" id="chUrl" value="${esc(l.url || '')}" placeholder="https://…/playlist.m3u" spellcheck="false" autocomplete="off"></label>` : ''}
           ${l.kind === 'xtream' ? `<label>Server<input class="inp mono" id="chServer" value="${esc(l.server || '')}" placeholder="https://provider.example:8080" spellcheck="false" autocomplete="off"></label>
             <div class="x8-2"><label>User name<input class="inp mono" id="chUser" value="${esc(l.user || '')}" autocomplete="off" spellcheck="false"></label><label>Password<input class="inp mono" id="chPass" type="password" ${SecretFill.attr(l.pass)} autocomplete="off"></label></div>` : ''}
           ${l.kind === 'file' ? `<label>Playlist file<input class="inp" id="chFile" type="file" accept=".m3u,.m3u8,audio/x-mpegurl,application/x-mpegurl,application/vnd.apple.mpegurl,text/plain"></label>` : ''}
           ${l.kind !== 'xtream' ? `<label>TV guide (XMLTV, optional)<input class="inp mono" id="chEpg" value="${esc(l.epg || '')}" placeholder="https://…/guide.xml or .xml.gz" spellcheck="false" autocomplete="off"></label>` : '<p class="tour-note">The guide comes from your Xtream login automatically.</p>'}
         </div>
-        <p class="tour-note" id="chMsg"></p>
+        <p class="tour-note" id="chMsg"></p>${!edit && typeof PhoneList !== 'undefined' && (IS_TV || !TOUCH_UI) && l.kind !== 'file' && l.kind !== 'hdhr' ? '<div class="actions"><button class="btn btn-ghost btn-sm" type="button" data-nav id="chPhone"><i data-lucide="smartphone"></i>Type it on my phone</button></div>' : ''}
         <div class="actions"><button class="btn btn-prime" type="button" data-nav id="chSave"><i data-lucide="check"></i>${edit ? 'Save' : 'Add playlist'}</button>${edit ? '<button class="btn btn-ghost" type="button" data-nav id="chExport"><i data-lucide="download"></i>Save as .m3u</button>' : ''}${edit ? '<button class="btn btn-ghost danger" type="button" data-nav id="chDel"><i data-lucide="trash-2"></i>Remove</button>' : ''}</div>`;
       icons();
       $$('[data-k]', b).forEach((x) => x.addEventListener('click', () => { Object.assign(l, this.readForm(b, l)); l.kind = x.dataset.k; paint(); }));
       $('#chSave').onclick = () => this.submit(b, l, !!edit);
+      { const ph = $('#chPhone'); if (ph) ph.onclick = () => { X8.close('chAdd'); PhoneList.open(); }; }
       { const ex = $('#chExport'); if (ex) ex.onclick = () => this.exportM3u(l); }
       const del = $('#chDel'); if (del) del.onclick = () => confirmTwice(del, () => { const d = this.get(); d.lists = d.lists.filter((x) => x.id !== l.id); d.favs = d.favs.filter((k) => !k.startsWith(`${l.id}|`)); this.save(d); this.data.delete(l.id); X8.close('chAdd'); S.tvFilter = ''; renderTV(); toast('Playlist removed'); });
     };
@@ -15269,9 +15364,10 @@ const Channels = {
   async submit(b, l, edit) {
     Object.assign(l, this.readForm(b, l));
     const msg = $('#chMsg', b), say = (t, bad) => { msg.textContent = t; msg.style.color = bad ? 'var(--bad)' : ''; };
+    if (l.kind === 'hdhr') { l.url = this.hdNorm(l.url); if (!l.url) return say('Type the tuner’s address, such as 192.168.1.50. The HDHomeRun app shows it.', true); }
     if (l.kind === 'm3u' && !/^https?:\/\//i.test(l.url || '')) return say('Paste the full playlist address, starting with https:// or http://', true);
     if (l.kind === 'xtream' && (!/^https?:\/\//i.test(l.server || '') || !l.user || !l.pass)) return say('Fill in the server address (with http:// or https://), the user name and the password.', true);
-    l.id = l.id || `p${Date.now().toString(36)}`; l.name = l.name || (l.kind === 'xtream' ? (l.server || '').replace(/^https?:\/\//, '').split(/[:/]/)[0] : 'My channels');
+    l.id = l.id || `p${Date.now().toString(36)}`; l.name = l.name || (l.kind === 'xtream' ? (l.server || '').replace(/^https?:\/\//, '').split(/[:/]/)[0] : l.kind === 'hdhr' ? 'HDHomeRun' : 'My channels');
     say('Reading the playlist…');
     // 2.67.1 tv-playback: the playlist being added counts as one of yours while it is read, so the Android app may fetch
     // its server (before, only saved playlists did, and a new plain-http or no-CORS service could never be added)
@@ -15494,7 +15590,7 @@ const Split = {
   fromPlayer() {
     const s = P.stream, ctx = P.ctx || {}, d = pDur(), live = !isFinite(d);
     const ok = s && !s.ytId && !s._local && /^https?:\/\//i.test(s.url || '');
-    this.open(ok ? { name: streamTitle(ctx), url: s.url, headers: s.behaviorHints && s.behaviorHints.proxyHeaders && s.behaviorHints.proxyHeaders.request, poster: ctx.meta ? metaPoster(ctx.meta) : null, startAt: live ? 0 : pNow(), live, list: ctx.meta && ctx.meta._iptv ? ctx.meta._iptv.list : undefined, ...this.playerSubs(ctx) } : null);
+    this.open(ok ? { name: streamTitle(ctx), url: s.url, headers: s.behaviorHints && s.behaviorHints.proxyHeaders && s.behaviorHints.proxyHeaders.request, poster: ctx.meta ? metaPoster(ctx.meta) : null, startAt: live ? 0 : pNow(), live, list: s && s._mkBackup ? s._mkBackup.list : ctx.meta && ctx.meta._iptv ? ctx.meta._iptv.list : undefined, ...this.playerSubs(ctx) } : null);
   },
   setCount(n) {
     Usage.add('feat', `split:${Number(n) || 0}`);
@@ -25551,6 +25647,10 @@ try { FromStremio.init(); } catch (e) { console.warn('From Stremio:', e); }
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.98.1', date: '2026-11-27', items: [
+    ['new', 'Add a TV playlist from your phone', 'Scan the code on your TV, type the link or login on your phone, and it fills in on the TV.'],
+    ['new', 'HDHomeRun tuners', 'In the Android and Android TV app, watch your antenna channels next to your playlists.'],
+  ] },
   { v: '2.98.0', date: '2026-11-27', items: [
     ['new', 'Live TV keeps going', 'If a channel drops while you watch, MKCinema reconnects it. If it stays down, the same channel from your other playlist takes over.'],
     ['new', 'All channels in one guide', 'With two or more TV playlists, Live TV can show them as one guide. A channel both playlists have shows once, and uses whichever playlist has its TV guide.'],
@@ -41944,6 +42044,14 @@ const PeakUp = {
     k.tried.add(b.url); k.n = 0; k.wait = false; k.since = Date.now();
     const st = C.stream(b); return natPlay(c, st, k, msg(st.name));
   };
+  /* 2.98.3 live fixes */
+  // the backup search waits (up to 8 s) for playlists not read yet this session, as the MKCinema player's does
+  const natSwapAll = async (c, k, msg) => {
+    if (natSwap(c, k, msg)) return true;
+    if (CFG.chBackup === false || !C.loadAll || !C.lists().some((l) => !C.data.has(l.id))) return false;
+    await C.loadAll(8000);
+    return natSwap(c, k, msg);
+  };
   // failed: the last try would not start again
   const natKeep = (c, failed) => {
     const k = keepOf(c), now = Date.now(), view = S.view;
@@ -41966,13 +42074,14 @@ const PeakUp = {
         if (live && !err && (ended || act === 'dropped')) { if (c.keep && pos > 3000) c.keep.wait = false; natKeep(c, false); return; }
         if (live && err && !(pos > 0) && c.keep && c.keep.n > 0 && natKeep(c, true)) return;   // a try to open it again failed
         // a channel that won't start: its backups in the app's player first
-        if (live && err && !(pos > 0) && natSwap(c, keepOf(c), (n) => `That channel would not start. Trying the same channel in ${n}…`)) return;
-        if (err && !(pos > 0)) {
+        const fallback = () => {
           // the in-app player can't read MPEG-TS, so a live channel is asked for as HLS
           const st = { ...c.st, url: c.st.url.replace(/(\/live\/[^?#]+)\.ts$/, '$1.m3u8'), _noNative: true };
           if (!X8.mixedBlocked(st.url)) { toast('Playing in the MKCinema player instead', 'info', 3000); playStream({ meta: c.meta, video: null, streams: [st] }, st); }
           else toast(`${c.meta.name} would not play. The service may be busy or the channel offline.`, 'err', 6000);
-        }
+        };
+        if (live && err && !(pos > 0)) { const view = S.view; natSwapAll(c, keepOf(c), (n) => `That channel would not start. Trying the same channel in ${n}…`).then((ok) => { if (!ok && S.view === view && !natCur) fallback(); }); return; }
+        if (err && !(pos > 0)) fallback();
         return;
       }
       return done0.apply(this, arguments);

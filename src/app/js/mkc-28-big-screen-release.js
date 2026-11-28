@@ -229,7 +229,17 @@ const Channels = {
     const base = String(l.server || '').replace(/\/+$/, ''), q = `username=${encodeURIComponent(l.user || '')}&password=${encodeURIComponent(l.pass || '')}`;
     return { m3u: `${base}/get.php?${q}&type=m3u_plus&output=m3u8`, epg: `${base}/xmltv.php?${q}` };
   },
-  src(l) { return l.kind === 'xtream' ? this.xtream(l) : { m3u: l.url, epg: l.epg || '' }; },
+  src(l) { return l.kind === 'xtream' ? this.xtream(l) : l.kind === 'hdhr' ? { m3u: `${this.hdNorm(l.url)}/lineup.json`, epg: l.epg || '' } : { m3u: l.url, epg: l.epg || '' }; },
+  /* 2.98.2 HDHomeRun: a tuner on the home network answers lineup.json with its channels. Only the Android and Android
+     TV app can reach it (it fetches the person's own TV servers itself), so only there is the kind offered */
+  hdOk() { try { return typeof this.nat === 'function' && this.nat(); } catch (e) { return false; } },
+  hdNorm(u) { u = String(u || '').trim(); if (!u) return ''; if (!/^https?:\/\//i.test(u)) u = `http://${u}`; try { const x = new URL(u); return `${x.protocol}//${x.host}`; } catch (e) { return ''; } },
+  hdhrM3u(text) {
+    let a; try { a = JSON.parse(text); } catch (e) { throw new Error('That address did not answer like an HDHomeRun tuner. Check it in the HDHomeRun app.'); }
+    if (!Array.isArray(a)) throw new Error('That address did not answer like an HDHomeRun tuner. Check it in the HDHomeRun app.');
+    const q = (v) => String(v == null ? '' : v).replace(/["\r\n]/g, ' ').trim();
+    return `#EXTM3U\n${a.filter((c) => c && c.URL && !c.DRM).map((c) => `#EXTINF:-1 tvg-chno="${q(c.GuideNumber)}" tvg-id="${q(c.GuideNumber)}" group-title="${c.HD ? 'HD' : 'Antenna'}",${q([c.GuideNumber, c.GuideName].filter(Boolean).join(' '))}\n${q(c.URL)}`).join('\n')}\n`;
+  },
 
   /* ---- fetching ---- */
   async text(url, { gz } = {}) {
@@ -337,7 +347,7 @@ const Channels = {
     if (!fresh && this.data.has(l.id)) { const d = this.data.get(l.id); if (d.epgUrl && !d.epgBusy && Date.now() - (d.epgAt || d.at) > 3 * 3600e3) this.loadEpg(l, d, true); return d; }
     const src = this.src(l);
     const text = l.kind === 'file' ? (await this.cached(l.id, 'm3u', false, async () => { if (this.uploads.has(l.id)) return this.uploads.get(l.id); throw new Error('Upload the playlist file again'); })) : await this.cached(l.id, 'm3u', fresh, () => this.text(src.m3u));
-    const { channels, epg } = this.parseM3U(text, l);
+    const { channels, epg } = this.parseM3U(l.kind === 'hdhr' ? this.hdhrM3u(text) : text, l);
     const d = { channels, epg: new Map(), at: Date.now(), epgUrl: src.epg || epg || '' };
     this.data.set(l.id, d);
     if (d.epgUrl) this.loadEpg(l, d, fresh);
@@ -350,26 +360,28 @@ const Channels = {
   all() { return [...this.data.values()].flatMap((d) => d.channels); },
 
   /* ---- adding and editing ---- */
-  openAdd(edit) {
+  openAdd(edit, pre) {
     X8.layer('chAdd', { label: 'Add a playlist', icon: 'list-video', eyebrow: 'Channels' });
-    const l = edit || { kind: 'm3u' }, b = X8.body('chAdd');
+    const l = edit || pre || { kind: 'm3u' }, b = X8.body('chAdd');
     const paint = () => {
       b.innerHTML = `<h3 class="x8-h">${edit ? 'Edit playlist' : 'Add your own channels'}</h3>
         <p class="sub">Bring a playlist from a service you subscribe to. MKCinema ships no channels, and your playlist stays on this device${CFG.syncKeys !== false ? ' and in your own account' : ''}.</p>
-        <div class="segc" role="radiogroup" aria-label="Playlist type">${[['m3u', 'Playlist link'], ['xtream', 'Xtream login'], ['file', 'Playlist file']].map(([v, t]) => `<button type="button" data-nav data-k="${v}" class="${l.kind === v ? 'on' : ''}">${t}</button>`).join('')}</div>
+        <div class="segc" role="radiogroup" aria-label="Playlist type">${[['m3u', 'Playlist link'], ['xtream', 'Xtream login'], ['file', 'Playlist file'], ...(this.hdOk() || l.kind === 'hdhr' ? [['hdhr', 'HDHomeRun']] : [])].map(([v, t]) => `<button type="button" data-nav data-k="${v}" class="${l.kind === v ? 'on' : ''}">${t}</button>`).join('')}</div>
         <div class="x8-form">
           <label>Name<input class="inp" id="chName" value="${esc(l.name || '')}" placeholder="My TV" autocomplete="off"></label>
+          ${l.kind === 'hdhr' ? `<label>Tuner address<input class="inp mono" id="chUrl" value="${esc(l.url || '')}" placeholder="192.168.1.50" spellcheck="false" autocomplete="off" inputmode="url"></label><p class="tour-note">The HDHomeRun app shows it under the tuner’s settings. Its channels and numbers come from the tuner itself.</p>` : ''}
           ${l.kind === 'm3u' ? `<label>Playlist address (.m3u or .m3u8)<input class="inp mono" id="chUrl" value="${esc(l.url || '')}" placeholder="https://…/playlist.m3u" spellcheck="false" autocomplete="off"></label>` : ''}
           ${l.kind === 'xtream' ? `<label>Server<input class="inp mono" id="chServer" value="${esc(l.server || '')}" placeholder="https://provider.example:8080" spellcheck="false" autocomplete="off"></label>
             <div class="x8-2"><label>User name<input class="inp mono" id="chUser" value="${esc(l.user || '')}" autocomplete="off" spellcheck="false"></label><label>Password<input class="inp mono" id="chPass" type="password" ${SecretFill.attr(l.pass)} autocomplete="off"></label></div>` : ''}
           ${l.kind === 'file' ? `<label>Playlist file<input class="inp" id="chFile" type="file" accept=".m3u,.m3u8,audio/x-mpegurl,application/x-mpegurl,application/vnd.apple.mpegurl,text/plain"></label>` : ''}
           ${l.kind !== 'xtream' ? `<label>TV guide (XMLTV, optional)<input class="inp mono" id="chEpg" value="${esc(l.epg || '')}" placeholder="https://…/guide.xml or .xml.gz" spellcheck="false" autocomplete="off"></label>` : '<p class="tour-note">The guide comes from your Xtream login automatically.</p>'}
         </div>
-        <p class="tour-note" id="chMsg"></p>
+        <p class="tour-note" id="chMsg"></p>${!edit && typeof PhoneList !== 'undefined' && (IS_TV || !TOUCH_UI) && l.kind !== 'file' && l.kind !== 'hdhr' ? '<div class="actions"><button class="btn btn-ghost btn-sm" type="button" data-nav id="chPhone"><i data-lucide="smartphone"></i>Type it on my phone</button></div>' : ''}
         <div class="actions"><button class="btn btn-prime" type="button" data-nav id="chSave"><i data-lucide="check"></i>${edit ? 'Save' : 'Add playlist'}</button>${edit ? '<button class="btn btn-ghost" type="button" data-nav id="chExport"><i data-lucide="download"></i>Save as .m3u</button>' : ''}${edit ? '<button class="btn btn-ghost danger" type="button" data-nav id="chDel"><i data-lucide="trash-2"></i>Remove</button>' : ''}</div>`;
       icons();
       $$('[data-k]', b).forEach((x) => x.addEventListener('click', () => { Object.assign(l, this.readForm(b, l)); l.kind = x.dataset.k; paint(); }));
       $('#chSave').onclick = () => this.submit(b, l, !!edit);
+      { const ph = $('#chPhone'); if (ph) ph.onclick = () => { X8.close('chAdd'); PhoneList.open(); }; }
       { const ex = $('#chExport'); if (ex) ex.onclick = () => this.exportM3u(l); }
       const del = $('#chDel'); if (del) del.onclick = () => confirmTwice(del, () => { const d = this.get(); d.lists = d.lists.filter((x) => x.id !== l.id); d.favs = d.favs.filter((k) => !k.startsWith(`${l.id}|`)); this.save(d); this.data.delete(l.id); X8.close('chAdd'); S.tvFilter = ''; renderTV(); toast('Playlist removed'); });
     };
@@ -398,9 +410,10 @@ const Channels = {
   async submit(b, l, edit) {
     Object.assign(l, this.readForm(b, l));
     const msg = $('#chMsg', b), say = (t, bad) => { msg.textContent = t; msg.style.color = bad ? 'var(--bad)' : ''; };
+    if (l.kind === 'hdhr') { l.url = this.hdNorm(l.url); if (!l.url) return say('Type the tuner’s address, such as 192.168.1.50. The HDHomeRun app shows it.', true); }
     if (l.kind === 'm3u' && !/^https?:\/\//i.test(l.url || '')) return say('Paste the full playlist address, starting with https:// or http://', true);
     if (l.kind === 'xtream' && (!/^https?:\/\//i.test(l.server || '') || !l.user || !l.pass)) return say('Fill in the server address (with http:// or https://), the user name and the password.', true);
-    l.id = l.id || `p${Date.now().toString(36)}`; l.name = l.name || (l.kind === 'xtream' ? (l.server || '').replace(/^https?:\/\//, '').split(/[:/]/)[0] : 'My channels');
+    l.id = l.id || `p${Date.now().toString(36)}`; l.name = l.name || (l.kind === 'xtream' ? (l.server || '').replace(/^https?:\/\//, '').split(/[:/]/)[0] : l.kind === 'hdhr' ? 'HDHomeRun' : 'My channels');
     say('Reading the playlist…');
     // 2.67.1 tv-playback: the playlist being added counts as one of yours while it is read, so the Android app may fetch
     // its server (before, only saved playlists did, and a new plain-http or no-CORS service could never be added)
@@ -623,7 +636,7 @@ const Split = {
   fromPlayer() {
     const s = P.stream, ctx = P.ctx || {}, d = pDur(), live = !isFinite(d);
     const ok = s && !s.ytId && !s._local && /^https?:\/\//i.test(s.url || '');
-    this.open(ok ? { name: streamTitle(ctx), url: s.url, headers: s.behaviorHints && s.behaviorHints.proxyHeaders && s.behaviorHints.proxyHeaders.request, poster: ctx.meta ? metaPoster(ctx.meta) : null, startAt: live ? 0 : pNow(), live, list: ctx.meta && ctx.meta._iptv ? ctx.meta._iptv.list : undefined, ...this.playerSubs(ctx) } : null);
+    this.open(ok ? { name: streamTitle(ctx), url: s.url, headers: s.behaviorHints && s.behaviorHints.proxyHeaders && s.behaviorHints.proxyHeaders.request, poster: ctx.meta ? metaPoster(ctx.meta) : null, startAt: live ? 0 : pNow(), live, list: s && s._mkBackup ? s._mkBackup.list : ctx.meta && ctx.meta._iptv ? ctx.meta._iptv.list : undefined, ...this.playerSubs(ctx) } : null);
   },
   setCount(n) {
     Usage.add('feat', `split:${Number(n) || 0}`);

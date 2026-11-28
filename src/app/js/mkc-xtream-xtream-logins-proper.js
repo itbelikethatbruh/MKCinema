@@ -139,6 +139,14 @@
     k.tried.add(b.url); k.n = 0; k.wait = false; k.since = Date.now();
     const st = C.stream(b); return natPlay(c, st, k, msg(st.name));
   };
+  /* 2.98.3 live fixes */
+  // the backup search waits (up to 8 s) for playlists not read yet this session, as the MKCinema player's does
+  const natSwapAll = async (c, k, msg) => {
+    if (natSwap(c, k, msg)) return true;
+    if (CFG.chBackup === false || !C.loadAll || !C.lists().some((l) => !C.data.has(l.id))) return false;
+    await C.loadAll(8000);
+    return natSwap(c, k, msg);
+  };
   // failed: the last try would not start again
   const natKeep = (c, failed) => {
     const k = keepOf(c), now = Date.now(), view = S.view;
@@ -161,13 +169,14 @@
         if (live && !err && (ended || act === 'dropped')) { if (c.keep && pos > 3000) c.keep.wait = false; natKeep(c, false); return; }
         if (live && err && !(pos > 0) && c.keep && c.keep.n > 0 && natKeep(c, true)) return;   // a try to open it again failed
         // a channel that won't start: its backups in the app's player first
-        if (live && err && !(pos > 0) && natSwap(c, keepOf(c), (n) => `That channel would not start. Trying the same channel in ${n}…`)) return;
-        if (err && !(pos > 0)) {
+        const fallback = () => {
           // the in-app player can't read MPEG-TS, so a live channel is asked for as HLS
           const st = { ...c.st, url: c.st.url.replace(/(\/live\/[^?#]+)\.ts$/, '$1.m3u8'), _noNative: true };
           if (!X8.mixedBlocked(st.url)) { toast('Playing in the MKCinema player instead', 'info', 3000); playStream({ meta: c.meta, video: null, streams: [st] }, st); }
           else toast(`${c.meta.name} would not play. The service may be busy or the channel offline.`, 'err', 6000);
-        }
+        };
+        if (live && err && !(pos > 0)) { const view = S.view; natSwapAll(c, keepOf(c), (n) => `That channel would not start. Trying the same channel in ${n}…`).then((ok) => { if (!ok && S.view === view && !natCur) fallback(); }); return; }
+        if (err && !(pos > 0)) fallback();
         return;
       }
       return done0.apply(this, arguments);

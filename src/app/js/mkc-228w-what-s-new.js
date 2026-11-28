@@ -8,6 +8,10 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.98.1', date: '2026-11-27', items: [
+    ['new', 'Add a TV playlist from your phone', 'Scan the code on your TV, type the link or login on your phone, and it fills in on the TV.'],
+    ['new', 'HDHomeRun tuners', 'In the Android and Android TV app, watch your antenna channels next to your playlists.'],
+  ] },
   { v: '2.98.0', date: '2026-11-27', items: [
     ['new', 'Live TV keeps going', 'If a channel drops while you watch, MKCinema reconnects it. If it stays down, the same channel from your other playlist takes over.'],
     ['new', 'All channels in one guide', 'With two or more TV playlists, Live TV can show them as one guide. A channel both playlists have shows once, and uses whichever playlist has its TV guide.'],
