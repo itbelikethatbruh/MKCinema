@@ -268,7 +268,8 @@ func mkPlayer(c, arg string) (string, error) {
 		gen = np.st.Opened()
 	}
 	for _, o := range ops {
-		if e := cl.Do(o); e != nil && (c != "open" || len(o.Args) > 0) {
+		// removing a labelled filter that isn't there may answer an error in some mpv versions: nothing to undo then
+		if e := cl.Do(o); e != nil && (c != "open" || len(o.Args) > 0) && !undoFilter(o) {
 			log.Printf("player: %s: %v", c, e)
 			err = e
 		}
@@ -278,6 +279,10 @@ func mkPlayer(c, arg string) (string, error) {
 		return string(b), err
 	}
 	return "", err
+}
+
+func undoFilter(o mpv.Op) bool {
+	return len(o.Args) == 3 && (o.Args[0] == "vf" || o.Args[0] == "af") && o.Args[1] == "remove" && strings.HasPrefix(o.Args[2], "@")
 }
 
 func errString(err error) string {
