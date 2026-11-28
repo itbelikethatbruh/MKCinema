@@ -373,6 +373,8 @@ func Translate(c, arg string) ([]Op, error) {
 		case "sdr":
 			return []Op{set("target-colorspace-hint", "no"), set("tone-mapping", "bt.2390"), set("hdr-compute-peak", "yes")}, nil
 		}
+	case "upscale": // 1.6.3: Sharp upscaling (upscale.go)
+		return Upscale(arg)
 	case "deband":
 		return []Op{set("deband", map[bool]string{true: "yes", false: "no"}[arg == "1"])}, nil
 	default:

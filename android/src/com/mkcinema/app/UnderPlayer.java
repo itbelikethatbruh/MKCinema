@@ -41,13 +41,13 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
     static final String[] WATCHED = { "time-pos", "duration", "pause", "paused-for-cache", "seeking", "eof-reached", "idle-active",
         "volume", "mute", "speed", "aid", "sid", "secondary-sid", "track-list", "chapter-list", "demuxer-cache-time",
         "video-params/w", "video-params/h", "video-params/gamma", "video-params/primaries", "hwdec-current", "video-codec",
-        "audio-codec-name", "audio-params/channel-count", "container-fps", "sub-delay", "audio-delay", "sub-text", "video-params/aspect", "af-metadata/mkvad" };
+        "audio-codec-name", "audio-params/channel-count", "container-fps", "sub-delay", "audio-delay", "sub-text", "video-params/aspect", "af-metadata/mkvad", "frame-drop-count" };
     static final Map<String, String> KEYS = new HashMap<>();
     static {
         String[] k = { "time-pos", "t", "duration", "dur", "pause", "paused", "paused-for-cache", "buffering", "eof-reached", "ended",
             "idle-active", "idle", "demuxer-cache-time", "cached", "video-params/w", "w", "video-params/h", "h", "video-params/gamma", "gamma",
             "video-params/primaries", "prim", "track-list", "tracks", "chapter-list", "chapters", "hwdec-current", "hwdec",
-            "audio-params/channel-count", "channels", "container-fps", "fps", "sub-text", "stext", "video-params/aspect", "dar", "af-metadata/mkvad", "vad" };
+            "audio-params/channel-count", "channels", "container-fps", "fps", "sub-text", "stext", "video-params/aspect", "dar", "af-metadata/mkvad", "vad", "frame-drop-count", "drops" };
         for (int i = 0; i < k.length; i += 2) KEYS.put(k[i], k[i + 1]);
     }
 
@@ -61,7 +61,7 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
         switch (c) {
             case "probe": {
                 JSONObject o = new JSONObject();
-                boolean ok = client() != null; o.put("ok", ok); o.put("api", "android"); o.put("err", ok ? "" : initErr); o.put("tv", a.tv); o.put("embed", a.tv); return o.toString();
+                boolean ok = client() != null; o.put("ok", ok); o.put("api", "android"); o.put("err", ok ? "" : initErr); o.put("tv", a.tv); o.put("embed", a.tv); o.put("up", ok && !a.tv && shaderDir != null); o.put("vsr", ""); return o.toString();
             }
             case "show": { final boolean on = !"0".equals(arg); want = on; a.runOnUiThread(() -> show(on)); return ""; }
             case "get": {
@@ -178,6 +178,21 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
         Only fixed property names; colours must be #rrggbb. Same steps as the Windows app's mpv.SubStyle. Fonts are left
         alone on Android: the player only has its built-in subtitle font. */
     static String hex6(String v, String d) { String x = v == null ? "" : v.trim(); if (x.startsWith("#")) x = x.substring(1); return x.matches("^[0-9A-Fa-f]{6}$") ? x.toUpperCase(Locale.US) : d; }
+    /** 1.17.18: where Sharp upscaling's shaders were copied (mpv reads shaders from files); null on TVs, whose decoder
+        draws straight onto the screen with no shader stage */
+    static volatile String shaderDir;
+    static String copyShaders(android.content.Context c) {
+        try {
+            java.io.File d = new java.io.File(c.getFilesDir(), "shaders"); if (!d.isDirectory() && !d.mkdirs()) return null;
+            for (String n : new String[] { "mk-sharpen-soft.glsl", "mk-sharpen-crisp.glsl" }) {
+                java.io.ByteArrayOutputStream b = new java.io.ByteArrayOutputStream();
+                try (java.io.InputStream in = c.getAssets().open("shaders/" + n)) { byte[] buf = new byte[8192]; int k; while ((k = in.read(buf)) > 0) b.write(buf, 0, k); }
+                java.io.File f = new java.io.File(d, n); byte[] want = b.toByteArray();
+                if (!f.isFile() || f.length() != want.length) try (java.io.FileOutputStream out = new java.io.FileOutputStream(f)) { out.write(want); }
+            }
+            return d.getAbsolutePath();
+        } catch (Exception e) { android.util.Log.w("MKCPlayer", "under: upscaling shaders: " + e); return null; }
+    }
     static List<Op> subStyle(JSONObject o) {
         List<Op> ops = new ArrayList<>();
         String col = hex6(o.optString("color"), "FFFFFF"), bg = hex6(o.optString("bg"), "000000"), sh = o.optString("shadow", "soft");
@@ -251,6 +266,18 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
             case "frame": ops.add(run("prev".equals(arg) ? "frame-back-step" : "frame-step")); return ops;
             case "chapter": { int n = Integer.parseInt(arg.trim()); if (n < 0 || n >= 1000) throw new IllegalArgumentException("not allowed"); ops.add(set("chapter", String.valueOf(n))); return ops; }
             case "deband": ops.add(set("deband", "1".equals(arg) ? "yes" : "no")); return ops;
+            // 1.17.18: Sharp upscaling, the same modes as the Windows app's mpv.Upscale (minus the PC graphics card's own
+            // super resolution). Phones keep mpv's lanczos scaler for both, because a polar scaler costs battery and heat;
+            // the sharpening runs at the film's own size and only when the picture is shown clearly bigger than the file.
+            case "upscale": {
+                String m = arg; try { m = new JSONObject(arg).optString("mode", arg); } catch (Exception ignored) { }
+                ops.add(run("change-list", "glsl-shaders", "clr", "")); ops.add(set("scale", "lanczos"));
+                if ("off".equals(m)) return ops;
+                if (!"soft".equals(m) && !"crisp".equals(m)) throw new IllegalArgumentException("not allowed");
+                String f = shaderDir == null ? null : shaderDir + "/mk-sharpen-" + m + ".glsl";
+                if (f == null || !new java.io.File(f).isFile()) throw new IllegalArgumentException("no upscaling shaders");
+                ops.add(run("change-list", "glsl-shaders", "append", f)); return ops;
+            }
         }
         throw new IllegalArgumentException("unknown command " + c);
     }
@@ -311,6 +338,7 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
             if (ca != null) { x.setOptionString("tls-ca-file", ca); x.setOptionString("tls-verify", "yes"); }
             for (String[] kv : o) x.setOptionString(kv[0], kv[1]);
             x.init();
+            if (!a.tv) shaderDir = copyShaders(a.getApplicationContext());
             x.addObserver(this);
             for (String w : WATCHED) x.observeProperty(w, 1);
             m = x;
