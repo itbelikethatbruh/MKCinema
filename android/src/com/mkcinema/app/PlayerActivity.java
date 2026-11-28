@@ -220,9 +220,10 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         playBtn.setOnClickListener(v -> togglePlay());
         seekBox.setOnTouchListener((v, e) -> {
             if (!prepared || eng == null) return true;
-            int dur = (int) eng.dur(); if (dur <= 0) return true;
+            int dur = (int) eng.dur(); long[] lr = zap ? eng.liveRange() : null; if (dur <= 0 && lr == null) return true;
             float f = Math.max(0f, Math.min(1f, e.getX() / Math.max(1, v.getWidth())));
-            pendingSeek = (int) (f * dur); show(4000); tick.run(); h.removeCallbacks(tick); h.postDelayed(tick, 500);
+            // 1.17.18: on a live channel the bar is the stretch it has kept, its right end is live
+            pendingSeek = lr != null ? (int) Math.min(lr[1] - 1500, lr[0] + 500 + (long) (f * (lr[1] - lr[0]))) : (int) (f * dur); show(4000); tick.run(); h.removeCallbacks(tick); h.postDelayed(tick, 500);
             if (e.getAction() == android.view.MotionEvent.ACTION_UP || e.getAction() == android.view.MotionEvent.ACTION_CANCEL) { h.removeCallbacks(doSeek); doSeek.run(); }
             return true;
         });
@@ -255,7 +256,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         // 1.14.0: "mpv" (MKCinema Player, the default; "exo" from older app pages means the default too), "exoplayer", "system"
         try {
             if ("system".equals(engineName)) eng = new MpEngine(this, this);
-            else if (!"exoplayer".equals(engineName) && MpvEngine.available()) { MpvEngine x = new MpvEngine(this, this, !touch); x.slow = slow; eng = x; }
+            else if (!"exoplayer".equals(engineName) && MpvEngine.available()) { MpvEngine x = new MpvEngine(this, this, !touch); x.slow = slow; x.live = zap; eng = x; }
             else eng = exo();
         }
         catch (Throwable t) { fellBack = true; eng = new MpEngine(this, this); } // ExoPlayer missing or broken on this device
@@ -387,7 +388,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         // tries again with its own renderer, which also decodes in software, BEFORE ExoPlayer: same engine, every audio and subtitle track stays listed.
         if (beforeReady && eng instanceof MpvEngine && ((MpvEngine) eng).embed && !triedGpu && !isFinishing()) {
             triedGpu = true; chain("mpv-tv:" + code); eng.release(); eng = null; prepared = false; note.setText("Starting MKCinema Player…");
-            MpvEngine x = new MpvEngine(this, this, false); x.slow = slow; eng = x;
+            MpvEngine x = new MpvEngine(this, this, false); x.slow = slow; x.live = zap; eng = x;
             open(eng); addOverlay();
             return;
         }
@@ -404,6 +405,9 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
             eng = new MpEngine(this, this); open(eng); addOverlay();
             return;
         }
+        // 1.17.18: a live channel that breaks off while it plays goes straight back to MKCinema, which opens it again or
+        // plays the same channel from another playlist (web 2.98 live steady); before, it closed like Back
+        if (!beforeReady && prepared && zap && !isFinishing()) { chain("live:" + code); action = "dropped"; note.setText("Reconnecting…"); h.postDelayed(this::finishWithResult, 300); return; }
         chain("final:" + code);
         note.setText("This source won’t play here");
         if (!beforeReady && prepared) { h.postDelayed(this::finishWithResult, 1800); return; } // keeps the position so it is saved
@@ -572,8 +576,17 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         if (prepared && eng != null) {
             try {
                 int pos = pendingSeek >= 0 ? pendingSeek : (int) eng.pos(), dur = (int) eng.dur();
+                String paused = eng.playing() || touch || gate || modeHold ? "" : "   Paused";
+                long[] lr = zap ? eng.liveRange() : null;
+                if (zap) {
+                    // 1.17.18: live channels show how far behind live they are, and the bar is the kept stretch
+                    long behind = lr != null ? Math.max(0, lr[1] - pos) : 0;
+                    if (lr != null && lr[1] > lr[0]) seek.setProgress((int) Math.max(0, Math.min(1000, (pos - lr[0]) * 1000L / (lr[1] - lr[0]))));
+                    time.setText((behind > 6000 ? fmt((int) behind) + " behind live" : "Live") + paused);
+                } else {
                 if (dur > 0) seek.setProgress((int) (pos * 1000L / dur));
-                time.setText(fmt(pos) + "  /  " + fmt(dur) + (eng.playing() || touch || gate || modeHold ? "" : "   Paused"));
+                time.setText(fmt(pos) + "  /  " + fmt(dur) + paused);
+                }
                 if (touch) playBtn.setText(eng.playing() ? "❚❚  Pause" : "▶  Play");
             } catch (Exception ignored) { }
         }
@@ -588,6 +601,10 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     void skip(int ms) {
         if (!prepared) return;
         int base = pendingSeek >= 0 ? pendingSeek : (int) eng.pos(), dur = (int) eng.dur();
+        // 1.17.18: a live channel moves only inside what it has kept (Right stops at live)
+        long[] lr = zap ? eng.liveRange() : null;
+        if (lr != null) { pendingSeek = (int) Math.max(lr[0] + 500, Math.min(lr[1] - 1500, base + ms)); h.removeCallbacks(doSeek); h.postDelayed(doSeek, 450); show(3500); tick.run(); h.removeCallbacks(tick); h.postDelayed(tick, 500); return; }
+        if (zap && dur <= 0) { show(2500); return; } // a live channel with nothing kept: there is nowhere to go
         pendingSeek = Math.max(0, Math.min(dur > 0 ? dur - 1000 : Integer.MAX_VALUE, base + ms));
         h.removeCallbacks(doSeek); h.postDelayed(doSeek, 450); show(3500); tick.run(); h.removeCallbacks(tick); h.postDelayed(tick, 500);
     }
