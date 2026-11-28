@@ -29,3 +29,4 @@ site/download/*
 
 # Miko natural voice engine (pinned third-party files, deployed from the shared folder)
 app/vendor/kokoro-1.2.1/
+journey-out/
