@@ -66,6 +66,7 @@ const SoundModes = {
     set(n.comp.threshold, c.threshold); set(n.comp.knee, c.knee); set(n.comp.ratio, c.ratio);
     n.comp.attack.setValueAtTime(c.attack, t); n.comp.release.setValueAtTime(c.release, t);
     set(n.makeup.gain, Math.pow(10, p.makeup / 20)); set(n.dry.gain, 1); set(n.wet.gain, 0);
+    if (window.MkPhones) MkPhones.apply(n, p, t);   // 3.0
   },
   host(s) { try { return new URL(s.url).host; } catch (e) { return ''; } },
   /* attach to what is playing now, if that can be done without a reload */

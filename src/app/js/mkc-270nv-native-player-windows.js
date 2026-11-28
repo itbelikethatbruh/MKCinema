@@ -46,13 +46,14 @@ const MkNative = {
   open(stream, startAt) {
     const bh = stream.behaviorHints || {}, h = (bh.proxyHeaders && bh.proxyHeaders.request) || {};
     this.attach();
+    if (window.MkAudioRx) MkAudioRx.said = '';   // 2.99
     this.subClear(); this.cur = stream; this.st = { paused: true }; this.pSeen = false; this._adv = 0; this.tAt = 0; this.subIds = []; this.lastEnd = null; this.loadedFired = false; this.metaFired = false; this.err = null;
     // whatever was on screen under the player (a title page, Home) hides, so the see-through page shows only the film
     if (!this.under) { this.under = [...document.body.children].filter((el) => el.id !== 'player' && el.id !== 'toasts' && !/^(SCRIPT|STYLE|LINK|TEMPLATE)$/.test(el.tagName) && !el.hidden); this.under.forEach((el) => el.classList.add('mk-nv-under')); }
     document.documentElement.classList.add('mk-native-on');
     this.cmd('show', '1').catch(() => {});
     Failover.arm(stream);
-    this.cmd('open', JSON.stringify({ url: stream.url, headers: h, start: startAt || 0, title: (P.ctx && P.ctx.meta && P.ctx.meta.name) || '', alang: this.alang(), slang: '' }))
+    this.cmd('open', JSON.stringify({ url: stream.url, headers: h, start: startAt || 0, title: (P.ctx && P.ctx.meta && P.ctx.meta.name) || '', alang: this.alang(), slang: '', ...(this.bridge() && this.bridge().droid && window.MkAudioRx ? MkAudioRx.open() : {}) }))
       .then((j) => { try { this.gen = JSON.parse(j || '{}').gen || 0; } catch (e) { /* ignore */ } })
       .catch((e) => this.fail(String((e && e.message) || e)));
     this.vol(); this.cmd('speed', CFG.speed || 1).catch(() => {}); this.cmd('tonemap', CFG.hdrMap === 'sdr' ? 'sdr' : 'auto').catch(() => {});
@@ -75,6 +76,7 @@ const MkNative = {
     if ('dur' in n && n.dur !== was.dur) this.fire('durationchange');
     if (('w' in n || 'h' in n) && st.w) this.fire('resize');
     if ('vad' in n) this.vadNews(n.vad);
+    if ('aout' in n && window.MkAudioRx) MkAudioRx.news(n.aout);   // 2.99 sound to a receiver
     if ('tracks' in n) this.tracks(st.tracks || []);
     if ('tracks' in n || 'sid' in n) this.subDraw();
     const meta = st.dur > 0 && Array.isArray(st.tracks);
@@ -198,7 +200,7 @@ const MkNative = {
     this.cmd('zoom', P.zoom || 1).catch(() => {});
     if (typeof PxPicture !== 'undefined') { const p = PxPicture.get(); this.cmd('eq', JSON.stringify({ brightness: p.b - 100, contrast: p.c - 100, saturation: p.s - 100 })).catch(() => {}); }
   },
-  sound() { if (this.active && typeof SoundModes !== 'undefined') this.cmd('sound', { voices: 'voice', night: 'night' }[SoundModes.cur().k] || 'off').then(() => { if (this.vadLvl) this.cmd('vad', String(this.vadLvl)).catch(() => {}); }, () => {}); },
+  sound() { if (this.active && typeof SoundModes !== 'undefined') this.cmd('sound', { voices: 'voice', night: 'night', headphones: 'headphones' }[SoundModes.cur().k] || 'off').then(() => { if (this.vadLvl) this.cmd('vad', String(this.vadLvl)).catch(() => {}); }, () => {}); },
   /* 2.95.9: speech detection for subtitle auto-sync (Android 1.17.15+, Windows 1.6.2+). mpv's silencedetect runs per
      channel at this level (dB, 0 = off) and reports the film times where each channel goes quiet and comes back;
      those are the film's own times, so the audio buffer doesn't shift them. A Sound mode change resets mpv's audio

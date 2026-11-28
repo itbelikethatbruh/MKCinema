@@ -1,0 +1,33 @@
+/* 2.99 w1 */
+.tb.grp{display:inline-flex;align-items:center;gap:4px;color:#e8d7b8;border-color:rgba(205,180,126,.45);background:rgba(205,180,126,.12)}
+.tb.grp.t3{color:var(--mute);background:transparent;border-color:var(--line-soft)}
+.tb.grp svg,.tb.chk svg{width:12px;height:12px}
+html.mk-noname .s-also,html.mk-noname .s-why{display:none!important}
+.d-ready{display:flex;align-items:center;gap:8px;margin:8px 0 2px;min-height:calc(20px * var(--ts,1));opacity:0;transition:opacity .3s ease;font-size:calc(14px * var(--ts,1));color:var(--mute)}
+.d-ready b{color:var(--ink);font-weight:650}
+.d-ready svg{width:16px;height:16px;color:#9ccfb0}
+html.tv .d-ready{margin:10px 0 14px}
+.d-ready.on{opacity:1}
+.d-ready:not(.on){visibility:hidden}
+/* 2.99 w2 */
+.d-about{margin:10px 0 4px}
+.ab-box{display:flex;flex-direction:column;gap:2px;max-height:min(64vh,640px);overflow:auto;outline:none;padding-right:4px}
+.ab-h{margin:14px 0 4px;font-size:calc(12px * var(--ts,1));letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:650}
+.ab-h:first-child{margin-top:2px}
+.ab-r{display:grid;grid-template-columns:minmax(110px,34%) 1fr;gap:12px;padding:7px 0;border-bottom:1px solid var(--line-soft);font-size:calc(14px * var(--ts,1))}
+.ab-r span{color:var(--mute)}
+.ab-r b{font-weight:550;color:var(--ink)}
+.ab-r small{color:var(--mute);margin-left:6px}
+.ab-tag{font-style:italic;color:var(--mute)}
+/* 2.99 w3 */
+.se-filt{display:flex;flex-direction:column;gap:6px;margin:8px 0 6px}
+.se-filt small{color:var(--mute);font-size:calc(12.5px * var(--ts,1))}
+.se-filt-l{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 6px}
+.se-filt .btn{align-self:flex-start}
+.d-filt{display:flex;align-items:center;gap:8px;margin:8px 0 2px;padding:8px 12px;border-radius:12px;background:rgba(var(--kffffff-c,255,255,255),.06);font-size:calc(13.5px * var(--ts,1));color:var(--mute)}
+.d-filt b{color:var(--ink)}
+.d-filt svg{width:16px;height:16px;flex:none}
+/* 2.99 w4 */
+.own-fonts{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.own-f{display:inline-flex;align-items:center;gap:2px}
+.own-f .ibtn{width:30px;height:30px}

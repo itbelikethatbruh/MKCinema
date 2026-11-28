@@ -76,6 +76,7 @@ const DSP = {
       // Haas widener: left straight through, right 14 ms late, blended under the dry signal
       n.makeup.connect(n.split); n.split.connect(n.merge, 0, 0); n.split.connect(n.haas, 1); n.haas.connect(n.merge, 0, 1); n.merge.connect(n.wet); n.wet.connect(n.duck);
       n.duck.connect(n.an); n.an.connect(ctx.destination);
+      if (window.MkPhones) MkPhones.build(ctx, n);   // 3.0 Headphones
       this.attached = true; this.apply(CFG.dsp, true);
       if (ctx.state !== 'running') ctx.resume().catch(() => {});
       return true;
@@ -227,6 +228,7 @@ const Failover = {
     const n = this.candidates(failed)[0]; if (!n) return false;
     this.hops = (this.hops || 0) + 1;
     const why = /not supported|blocked|decode/i.test(reason) ? 'won’t play in this browser' : /3\.5 s|start/i.test(reason) ? 'was slow to start' : /stalled/i.test(reason) ? 'stalled' : /cached/i.test(reason) ? 'isn’t cached yet' : 'didn’t work';
+    if (window.MkKeepPick && MkKeepPick.hold(failed, reason)) { this.hops = Math.max(0, this.hops - 1); return false; }
     toast(this.hops > 1 ? `Still looking for a source that plays here… (try ${this.hops + 1})` : `That source ${why}. Trying the next best one…`, 'info', 4200, 'failover');
     playStream(P.ctx, n, { startAt: at != null ? at : pNow() });
     return true;

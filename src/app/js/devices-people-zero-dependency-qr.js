@@ -1009,7 +1009,7 @@ const Cloner = {
     return d;
   },
   async code(opts) {
-    let bytes = new TextEncoder().encode(JSON.stringify(this.snapshot(opts)));
+    let bytes = new TextEncoder().encode(JSON.stringify(window.MkBackup ? await MkBackup.pack(this.snapshot(opts), opts) : this.snapshot(opts)));   // 2.99 every seat, sealed keys
     if (window.CompressionStream) return `mkc://g.${b64url.enc(await pipeBytes(bytes, new CompressionStream('gzip')))}`;
     return `mkc://j.${b64url.enc(bytes)}`;
   },
@@ -1024,7 +1024,7 @@ const Cloner = {
     return JSON.parse(text);
   },
   async file(opts) {
-    const blob = new Blob([JSON.stringify(this.snapshot(opts), null, 1)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(window.MkBackup ? await MkBackup.pack(this.snapshot(opts), opts) : this.snapshot(opts), null, 1)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `MKCinema setup ${new Date().toISOString().slice(0, 10)}.mkcinema`;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 30000);
   },
@@ -1057,6 +1057,7 @@ const Cloner = {
       const off = new Set(d.disabled || []); engine.addons.forEach((a) => { a.enabled = !off.has(a.baseUrl); }); Store.set('disabled', [...off]);
       engine.applyOrder(); engine.clearCache(); engine.emit('addons');
     }
+    if (window.MkBackup) MkBackup.restoreSeats(d, opt);   // 2.99
     rerender(); if (S.view === 'home') renderHome(); if (S.view === 'library') renderLibrary();
     if (!$('#settings').hidden) renderSettings();
     return { added, removed };

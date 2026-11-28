@@ -155,6 +155,7 @@ const Preflight = {
     const next = Failover.next.bind(Failover);
     Failover.next = function (failed, reason, at) {
       if (failed && failed._mkKeep && failed._mkKeep.wait && Failover.liveOn(failed) && Failover.liveKeep(failed, 'did not open again')) return true;   // 2.98
+      if (window.MkKeepPick && MkKeepPick.hold(failed, reason)) return false;   // 2.99 a source picked by hand stays
       if (!Preflight.on() || !P.ctx) return next(failed, reason, at);
       if (Preflight.busy && P.stream === failed) return true; // a switch is already being chosen
       Preflight.mark(failed, 'bad', reason);

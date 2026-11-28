@@ -196,7 +196,7 @@
     hookDone();
     const h = st.behaviorHints && st.behaviorHints.proxyHeaders && st.behaviorHints.proxyHeaders.request;
     let ok = false;
-    try { ok = MKAndroid.play(JSON.stringify({ url: st.url, title: meta.name || '', sub, startMs: 0, matchRate: CFG.matchRate !== false, audioLang: CFG.audioOnly || '', headers: h && Object.keys(h).length ? h : undefined, zap: !!(meta && meta._iptv), zapFlip: !!CFG.zapFlip })); } catch (e) { ok = false; }
+    try { ok = MKAndroid.play(JSON.stringify({ url: st.url, title: meta.name || '', sub, startMs: 0, matchRate: CFG.matchRate !== false, audioLang: CFG.audioOnly || '', headers: h && Object.keys(h).length ? h : undefined, zap: !!(meta && meta._iptv), zapFlip: !!CFG.zapFlip, ...(window.MkAudioRx ? MkAudioRx.open() : {}) })); } catch (e) { ok = false; }
     if (ok) { natCur = { st, meta, sub }; natGen++; }
     return ok;
   };

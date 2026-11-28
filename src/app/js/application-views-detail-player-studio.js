@@ -39,6 +39,7 @@ const genresOf = (m) => (m.genres || m.genre || []).filter(Boolean);
 // Rating colour: green for great, gold for good, coral for weak
 function rateTier(r) { const n = parseFloat(r); return !(n > 0) ? 'r-na' : n >= 7.5 ? 'r-hi' : n >= 6 ? 'r-mid' : 'r-lo'; }
 function cardHTML(m, { wide = false, progress = null, sub = '' } = {}) {
+  if (!progress && window.MkFilt && MkFilt.why(m)) return '';   // 2.99 content filters
   remember(m);
   const q = engine.qualityCache.get(m.id);
   const rp = !wide && Ratings.poster(m);
@@ -189,6 +190,7 @@ async function renderHome() {
    Hero billboard
    ===================================================================== */
 function setHeroList(list) {
+  if (window.MkFilt && MkFilt.on()) list = (list || []).filter((m) => !MkFilt.why(m));   // 2.99
   if (window.__mkFastHero && list) { const k = list.findIndex((m) => m && m.id === window.__mkFastHero); if (k > 0) list = [...list.slice(k), ...list.slice(0, k)]; window.__mkFastHero = ''; } /* 2.96.2 tv speed */
   S.hero = list.map(remember); S.heroIdx = 0;
   $('#heroDots').innerHTML = S.hero.map((_, i) => `<button type="button" aria-label="Show featured ${i + 1}"></button>`).join('');
@@ -711,6 +713,7 @@ function renderDetail(loading) {
       ${window.MkLookKit ? MkLookKit.poster(m) : ''}<div class="d-body" style="padding-top:80px;width:100%">
         <div class="logo3d pop${logo ? ' has-logo' : ''}" style="--t0:${t0}s${logo ? `;--logo:url(&quot;${esc(logo)}&quot;)` : ''}">${logo ? imgTag(logo, m.name, m.id, { nofb: true, cls: 'hero-logo', lazy: false }) : ''}<h1 class="hero-title" data-logo-alt ${logo ? 'hidden' : ''}>${esc(m.name)}</h1>${logo ? '<span class="lg-sheen" aria-hidden="true"><i></i></span>' : ''}</div>
         <div class="metaline${loading ? ' ml-wait' : ''}">${[m.imdbRating ? `<span class="imdb ${rateTier(m.imdbRating)}"><b>IMDb</b>${esc(m.imdbRating)}</span>` : '', yearOf(m) ? `<span>${esc(yearOf(m))}</span>` : '', m.runtime ? `<span>${esc(m.runtime)}</span>` : '', genresOf(m).slice(0, 4).map(esc).join(' · '), `<span class="tag-s">${esc(m.type)}</span>`, m._addon ? `<span class="tag-s v">${esc(m._addon)}</span>` : ''].filter(Boolean).join('')}</div>
+        <div class="d-ready" id="dReady"${CFG.readyLine === false ? ' hidden' : ''}></div>${window.MkFilt ? MkFilt.line(m) : ''}${window.MkStatusLine ? MkStatusLine.html(m) : ''}
         <div class="actions">
           <button class="btn btn-bolt cta" type="button" id="dSmart" data-nav><span class="cta-ring" aria-hidden="true"></span><i data-lucide="play"></i><span class="sp-l">Smart Play<small>Best stream</small></span></button>
           <button class="btn btn-ghost" type="button" id="dTrailer" data-nav><i data-lucide="clapperboard"></i>Trailer</button>
@@ -726,6 +729,7 @@ function renderDetail(loading) {
           ${loading ? '<div class="status-line"><span class="spin"></span>Loading full details…</div>' : ''}
           <p class="d-desc">${esc(m.description || 'No synopsis available.')}</p>
           <div class="credits">${directors && directors.length ? `<b>Director</b><span>${esc(directors.slice(0, 3).join(', '))}</span>` : ''}${writers && writers.length ? `<b>Writers</b><span>${esc(writers.slice(0, 3).join(', '))}</span>` : ''}${cast && cast.length ? `<b>Cast</b><span>${esc(cast.slice(0, 8).join(', '))}</span>` : ''}${m.country ? `<b>Country</b><span>${esc(m.country)}</span>` : ''}${m.awards ? `<b>Awards</b><span>${esc(m.awards)}</span>` : ''}</div>
+          <button class="chip d-about" type="button" data-nav id="dAbout"><i data-lucide="info"></i>About this title</button>
           ${seasons.length ? `<h3 class="sec-title"><i data-lucide="list-video"></i>Episodes<button class="chip sg-chip ${CFG.spoilerGuard ? 'on' : ''}" type="button" id="dSpoil" data-nav title="Blur episodes you have not watched"><i data-lucide="${CFG.spoilerGuard ? 'eye-off' : 'eye'}"></i>Spoiler Guard</button></h3>
             <div class="seasons" id="dSeasons">${seasons.map(([s, l]) => `<button class="chip ${s === D.season ? 'on' : ''}" type="button" data-nav data-season="${s}">${s === 0 ? 'Specials' : `Season ${s}`} <span class="tag-s">${l.length}</span></button>`).join('')}</div>
             <div class="eps" id="dEps">${episodesHTML(m, D.season, D.video)}</div>` : ''}
@@ -741,6 +745,7 @@ function renderDetail(loading) {
   if (keepF) { const f = panel.querySelector(keepF); if (f) { if (typeof Nav !== 'undefined' && (IS_TV || f.classList.contains('nav-focus') || fa.classList.contains('nav-focus'))) Nav.focus(f, true); else f.focus({ preventScroll: true }); } }
   panel.querySelector('[data-close]').onclick = () => { closeLayer('detail'); };
   $('#dSmart').onclick = () => smartPlayDetail();
+  { const ab = $('#dAbout'); if (ab) ab.onclick = () => window.MkAbout && MkAbout.open(D.meta); }   // 2.99
   const sg = $('#dSpoil'); if (sg) sg.onclick = () => { setCfg('spoilerGuard', !CFG.spoilerGuard); renderDetail(false); $$('#toasts .toast').forEach((t) => { if (/^Spoiler Guard/.test(t.dataset.msg || '')) t.remove(); }); toast(CFG.spoilerGuard ? 'Spoiler Guard on: unwatched episodes are hidden' : 'Spoiler Guard off', 'info', 2200); };
   Ratings.critics(m);
   $('#dTrailer').onclick = () => playTrailer(m);
@@ -893,7 +898,7 @@ function filterStreams(streams, f) {
 }
 function filterChips(streams, cur) {
   const addons = [...new Set(visibleStreams(streams).map((s) => s._addon))];
-  const opts = [['all', 'All', filterStreams(streams, 'all').length], ['4k', '4K UHD', filterStreams(streams, '4k').length], ['web', 'Instant Web-Ready', filterStreams(streams, 'web').length], ...(filterStreams(streams, 'cached').length ? [['cached', 'Cached', filterStreams(streams, 'cached').length]] : []), ...addons.map((a) => [`addon:${a}`, a, filterStreams(streams, `addon:${a}`).length])];
+  const opts = [['all', 'All', filterStreams(streams, 'all').length], ['4k', '4K UHD', filterStreams(streams, '4k').length], ['web', 'Instant Web-Ready', filterStreams(streams, 'web').length], ...(filterStreams(streams, 'cached').length ? [['cached', 'Cached', filterStreams(streams, 'cached').length]] : []), ...addons.map((a, i) => [`addon:${a}`, CFG.hideSrcNames ? `Source ${i + 1}` : a, filterStreams(streams, `addon:${a}`).length])];
   return opts.map(([v, l, n]) => `<button class="chip ${cur === v ? 'on' : ''}" type="button" data-nav data-filter="${esc(v)}">${esc(l)} <span class="tag-s">${n}</span></button>`).join('');
 }
 // Release names read like titles ("Project Hail Mary 2026 IMAX …"): dots and underscores become spaces,
@@ -903,11 +908,11 @@ const prettyRelease = (n) => String(n).replace(/[._]/g, (m, i, x) => /(^|\D)\d$/
 const STAT_LINE = /[\u{1F464}\u{1F4BE}\u{2699}\u{1F465}\u{1F4E6}\u{1F310}]/u;
 function streamRowHTML(s, idx, { best, current } = {}) {
   const t = s._tel;
-  const headline = t.lines[0] || t.headline || 'Stream';
+  const hideN = !!CFG.hideSrcNames, headline = t.lines[0] || (hideN ? [t.res, t.hdr, t.size].filter(Boolean).join(' · ') : t.headline) || 'Stream';
   const tracker = (t.lines.join(' ').match(/\u{2699}\u{FE0F}?\s*([^\n\u{1F464}\u{1F4BE}]+)/u) || [])[1];
   const rest = t.lines.slice(1).filter((l) => !STAT_LINE.test(l)).slice(0, 2).join('\n');
   const icon = t.kind === 'p2p' || t.kind === 'ext' ? 'external-link' : t.kind === 'yt' ? 'youtube' : 'play';
-  const meta = [t.codec, t.size, t.seeds ? `${t.seeds} peers` : '', tracker && tracker.trim(), s._addon].filter(Boolean);
+  const meta = [t.codec, t.size, t.seeds ? `${t.seeds} peers` : '', !hideN && tracker && tracker.trim(), hideN ? [...AudioPref.langs(s).langs].map(langName).join(', ') : s._addon].filter(Boolean);
   return `<button class="stream ${best ? 'best' : ''} ${current ? 'cur' : ''}" type="button" data-nav data-si="${idx}" title="${esc(headline)}">
     <div class="s-main">${best ? '<span class="s-best"><i data-lucide="zap"></i>Best match</span>' : ''}<div class="t1">${esc(prettyRelease(headline))}</div><div class="tele">${Telemetry.badges(s, t, '', true)}</div>${meta.length ? `<div class="s-meta">${meta.map((m) => `<span>${esc(m)}</span>`).join('')}</div>` : ''}${rest ? `<div class="t2">${esc(rest)}</div>` : ''}</div>
     <span class="go"><i data-lucide="${icon}"></i></span></button>`;
@@ -920,6 +925,7 @@ function renderStreamsPanel() {
   const st = D.status || { pending: true, answered: 0, total: 0, errors: [] };
   const total = engine.addons.filter((a) => engine.supports(a, 'stream', tgt.type, tgt.id)).length;
   const list = filterStreams(D.streams, D.filter), best = pickBest(D.streams, PickMemo.opts(D.meta));
+  if (window.MkReady) MkReady.paint(best);
   box.innerHTML = `
     <div class="status-line">${st.pending ? '<span class="spin"></span>' : '<i data-lucide="radar"></i>'}<span>${st.pending ? `Asking ${total} addon${total === 1 ? '' : 's'} in parallel · ${st.answered} answered` : `${total} addon${total === 1 ? '' : 's'} answered`} · ${D.streams.length} stream${D.streams.length === 1 ? '' : 's'}</span></div>
     ${CFG.browserOnly && D.streams.length ? `<div class="status-line bo-line"><i data-lucide="globe"></i><span>Only sources that play here: ${D.streams.length - visibleStreams(D.streams).length} source${D.streams.length - visibleStreams(D.streams).length === 1 ? '' : 's'} that need VLC or another player are hidden. Change it in Settings › Playback.</span></div>` : ''}
@@ -1255,6 +1261,7 @@ async function playStream(ctx, stream, { startAt, _cin } = {}) {
   if (!_cin && typeof CinemaMode !== 'undefined' && await CinemaMode.hold(ctx, stream, startAt)) return;
   if (!stream) return;
   playReq++; Usage.add('feat', 'play'); Usage.add('feat', `play:${(ctx && ctx.type) || 'other'}`);
+  if (window.MkKeepPick) MkKeepPick.mark(stream);
   if (stream.ytId) { if (!$('#player').hidden) closePlayer(); openTrailer(stream.ytId); return; }
   stream._tel = stream._tel || Telemetry.parse(stream);
   if (stream._tel.kind !== 'ext' && stream._tel.kind !== 'p2p' && extPlayer() && handoffUrl(stream) && !P.force) {
@@ -1271,7 +1278,7 @@ async function playStream(ctx, stream, { startAt, _cin } = {}) {
   const key = ctx.video ? ctx.video.id : ctx.meta.id;
   if (startAt == null) { const p = CFG.resume && S.progress[key]; startAt = p && p.t > 20 && p.t < p.d * .95 ? p.t : 0; }
   $('#pTitle').textContent = ctx.meta.name || '';
-  $('#pSub').textContent = [ctx.video ? `S${ctx.video.season} · E${ctx.video.episode} · ${ctx.video.name || ctx.video.title || ''}` : yearOf(ctx.meta), stream._addon, stream._tel.res, stream._tel.source].filter(Boolean).join('  ·  ');
+  $('#pSub').textContent = [ctx.video ? `S${ctx.video.season} · E${ctx.video.episode} · ${ctx.video.name || ctx.video.title || ''}` : yearOf(ctx.meta), CFG.hideSrcNames ? '' : stream._addon, stream._tel.res, stream._tel.source].filter(Boolean).join('  ·  ');
   $('#pEpsBtn').hidden = !(ctx.meta.type === 'series' && ctx.meta.videos && ctx.meta.videos.length);
   $('#pNext').hidden = !(ctx.video && nextVideo(ctx.meta, ctx.video));
   teardown();
@@ -2218,6 +2225,7 @@ function titleItem(m, q, why) {
   return { kind: 'title', group: m.type === 'series' ? 'Series' : m.type === 'movie' ? 'Movies' : 'Channels & more', m, label: m.name, sub: why || [yearOf(m), genresOf(m).slice(0, 2).join(', ')].filter(Boolean).join(' · '), run: () => { rememberSearch(q); openDetail(m); } };
 }
 function palCompose(q, titles, pending) {
+  if (window.MkFilt && MkFilt.on()) titles = (titles || []).filter((m) => !MkFilt.why(m));   // 2.99
   const t = q.trim(), lt = t.toLowerCase(), items = [];
   if (t && (PAL.ask || looksLikeAsk(t))) items.push({ kind: 'row', group: 'Your Picks', label: `Get picks for “${t}”`, sub: 'Plain-language recommendations, made on this device', icon: 'sparkles', run: () => { rememberSearch(t); showAsk(t); } });
   if (titles.length) {

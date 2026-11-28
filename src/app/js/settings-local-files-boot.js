@@ -39,7 +39,7 @@ function applyAll() {
   body.toggle('ci-hover', cardInfoMode() === 'hover'); body.toggle('ci-below', cardInfoMode() === 'below');
   { const de = document.documentElement.classList; de.toggle('ls-cs-s', CFG.cardSize === 's'); de.toggle('ls-cs-l', CFG.cardSize === 'l'); de.toggle('ls-hero-short', CFG.banner === 'short'); de.toggle('ls-hero-off', CFG.banner === 'off'); if (typeof LayStudio !== 'undefined') LayStudio.menuSync(); }
   root.setProperty('--sub-size', `${CFG.subSize}%`); root.setProperty('--sub-color', CFG.subColor);
-  root.setProperty('--sub-bg', `rgba(0,0,0,${CFG.subBg / 100})`); root.setProperty('--sub-font', SUB_FONTS[CFG.subFont] || SUB_FONTS.sans); loadSubFont(CFG.subFont);
+  root.setProperty('--sub-bg', `rgba(0,0,0,${CFG.subBg / 100})`); root.setProperty('--sub-font', (window.MkOwnFont && MkOwnFont.family(CFG.subFont)) || SUB_FONTS[CFG.subFont] || SUB_FONTS.sans); if (!/^own:/.test(String(CFG.subFont || ''))) loadSubFont(CFG.subFont);
   { const sh = { none: '', soft: '', strong: '2px 2px 4px #000,3px 3px 8px rgba(0,0,0,.85)', drop: '3px 3px 0 #000' }[CFG.subShadow] || '';
     root.setProperty('--sub-shadow', [CFG.subOutline ? '0 0 3px #000,0 0 2px #000,1px 1px 2px #000' : '', sh].filter(Boolean).join(',') || 'none');
     root.setProperty('--sub-weight', CFG.subBold ? '700' : (CFG.subFont === 'stream' ? '500' : '400')); }
@@ -422,7 +422,9 @@ Cloner.preview = function (d) {
 };
 async function importData(text) {
   let d; try { d = await Cloner.parse(text); if (!d || d.app !== 'MKCinema') throw new Error('That is not an MKCinema setup'); } catch (e) { toast(`Could not restore: ${e.message}`, 'err', 6000); return; }
+  if (window.MkBackup) d = await MkBackup.unseal(d);   // 2.99
   const opt = await Cloner.preview(d); if (!opt) return;
+  if (window.MkBackup && !MkBackup.safety()) toast('No safety copy fits on this device. The restore goes ahead.', 'info', 4000);
   try { const r = await Cloner.restore(d, opt); toast(`Setup restored${r.added || r.removed ? ` · ${r.added} addon${r.added === 1 ? '' : 's'} added, ${r.removed} removed` : ''}`, 'ok', 5000); }
   catch (e) { toast(`Could not restore: ${e.message}`, 'err', 6000); }
 }
