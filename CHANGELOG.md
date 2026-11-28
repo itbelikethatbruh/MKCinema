@@ -2,6 +2,15 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.99.0 (2026-11-28)
+
+- Seats: content filters for each seat, Settings that only the main seat can change, a quick "who's watching?" after a break, and PINs typed with the remote's arrows.
+- Title pages: About this title (dates, ages, studios, box office) and a Ready line with the best copy's resolution, HDR and sound.
+- Library: History and Not watched yet.
+- Sources: well-known release groups rank higher, addon names can be hidden, a length check asks before playing a copy much longer or shorter than the film, and the copy you pick stays picked.
+- Set up for this screen tunes quality, HDR and frame rate. Backups carry every seat sealed with a PIN, with undo. You can add your own subtitle fonts.
+- Website: 296 features listed.
+
 ## Android 1.17.18 and Windows 1.6.3 (2026-11-28, release v1.39)
 
 - Sharp upscaling now works in the Windows and Android apps. Windows PCs with an NVIDIA RTX or Intel Arc graphics card can use the card's AI upscaling.

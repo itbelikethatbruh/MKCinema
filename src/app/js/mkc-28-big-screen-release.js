@@ -1903,9 +1903,10 @@ const Seats = {
     const paint = () => {
       box.innerHTML = `<div class="modal glass-solid pp-modal seat-pad">${this.avatar(s, true)}<h3 class="x8-h">${esc(title || `PIN for ${s.name}`)}</h3><div class="pin-dots">${[0, 1, 2, 3].map((i) => `<i class="${i < v.length ? 'on' : ''}"></i>`).join('')}</div>
         <div class="pin-keys">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 'x', 0, 'ok'].map((k) => `<button type="button" data-nav data-pk="${k}" ${k === 'ok' ? 'class="pk-ok"' : ''}>${k === 'x' ? '<i data-lucide="delete"></i>' : k === 'ok' ? '<i data-lucide="check"></i>' : k}</button>`).join('')}</div>
-        <button class="btn btn-ghost btn-sm" type="button" data-nav id="pinCancel">Cancel</button></div>`;
+        ${IS_TV && window.MkPinArrows ? `<button class="btn btn-ghost btn-sm" type="button" data-nav id="pinArrows" aria-pressed="${MkPinArrows.on()}"><i data-lucide="move"></i>${MkPinArrows.label()}</button>` : ''}<button class="btn btn-ghost btn-sm" type="button" data-nav id="pinCancel">Cancel</button></div>`;
       icons(); $$('[data-pk]', box).forEach((x) => x.addEventListener('click', () => press(x.dataset.pk)));
       $('#pinCancel').onclick = () => { box.hidden = true; Nav.settle(); };
+      { const pa = $('#pinArrows'); if (pa) pa.onclick = () => { Store.raw.set('pinArrows', !MkPinArrows.on()); paint(); const f = $('#pinArrows'); if (f) Nav.focus(f, true); }; }   // 2.99
     };
     const press = async (k) => {
       if (k === 'x') v = v.slice(0, -1); else if (k === 'ok' || v.length >= 4) { /* check below */ } else v += k;
@@ -1919,6 +1920,7 @@ const Seats = {
       }
       paint(); const f = $(`[data-pk="${k}"]`, box); if (IS_TV && f) Nav.focus(f, true);
     };
+    Seats._pinPress = press;   // 2.99 PIN with the remote's arrows
     box.hidden = false; paint(); if (IS_TV) Nav.settle();
     box.onkeydown = (e) => { if (/^\d$/.test(e.key)) { e.preventDefault(); e.stopPropagation(); press(e.key); } if (e.key === 'Backspace') { e.preventDefault(); e.stopPropagation(); press('x'); } };
     box.tabIndex = -1; if (!IS_TV) box.focus();
@@ -1976,7 +1978,7 @@ const Seats = {
       <div class="seat-colors" role="radiogroup" aria-label="Colour" id="seCols"${s.av === 'letter' ? '' : ' hidden'}>${this.COLORS.map((c) => `<button type="button" data-nav data-col="${c}" class="${c === s.color ? 'on' : ''}" style="--sc:${c}" aria-label="Colour ${c}"></button>`).join('')}</div>
       ${s.id !== '' ? `<div class="set-row"><div><b>Kids seat</b><small>Only Animation and Family titles, no Live TV, and the grown-up PIN for Settings and Addons.</small></div><div class="set-ctl"><button class="switch ${s.kids ? 'on' : ''}" type="button" id="seKids" role="switch" aria-checked="${!!s.kids}" aria-label="Kids seat"></button></div></div>` : ''}
       ${s.id !== '' && !this.owner().pin ? '<label id="seGrownL">Grown-up PIN (4 digits). A kids seat needs one, so only a grown-up can leave it or open Settings<input class="inp mono" id="seGrown" inputmode="numeric" maxlength="4" placeholder="Set a grown-up PIN" autocomplete="off"></label>' : ''}
-      ${SeatHide.html(s)}
+      ${SeatHide.html(s)}${window.MkFilt ? MkFilt.html(s) : ''}${window.MkSetLock ? MkSetLock.html(s) : ''}
       <label>${s.id === '' ? 'Grown-up PIN (4 digits, guards kids seats too)' : 'PIN (4 digits, optional)'}<input class="inp mono" id="sePin" inputmode="numeric" maxlength="4" placeholder="${s.pin ? '•••• (leave empty to keep)' : 'No PIN'}" autocomplete="off"></label>
       ${s.pin ? '<button class="btn btn-ghost btn-sm" type="button" data-nav id="seNoPin"><i data-lucide="lock-open"></i>Remove the PIN</button>' : ''}</div>
       <div class="actions"><button class="btn btn-prime" type="button" data-nav id="seSave"><i data-lucide="check"></i>Save</button>${!isNew && s.id !== '' && s.id !== SEAT ? '<button class="btn btn-ghost danger" type="button" data-nav id="seDel"><i data-lucide="trash-2"></i>Remove seat</button>' : ''}</div>`;
@@ -1990,7 +1992,7 @@ const Seats = {
     $('#seRoll', b).onclick = () => { let r; do r = SeatArt.random(); while (r === s.av); rolled = r; s.av = r; paintAvs(); face(); };
     $('#seName', b).addEventListener('input', () => { if (s.av === 'letter') face(); });
     $$('[data-col]', b).forEach((x) => x.addEventListener('click', () => { s.color = x.dataset.col; $$('[data-col]', b).forEach((y) => y.classList.toggle('on', y === x)); face(); }));
-    SeatHide.bind(b, s);
+    SeatHide.bind(b, s); if (window.MkFilt) MkFilt.bind(b, s); if (window.MkSetLock) MkSetLock.bind(b);
     const k = $('#seKids', b); if (k) k.onclick = () => { s.kids = !s.kids; k.classList.toggle('on', s.kids); k.setAttribute('aria-checked', s.kids); };
     const np = $('#seNoPin', b); if (np) np.onclick = () => { s.pin = ''; np.remove(); toast('PIN will be removed when you save'); };
     $('#sePin', b).addEventListener('keydown', (e) => e.stopPropagation());
@@ -2009,6 +2011,7 @@ const Seats = {
       if (s.id === '') { Store.raw.set('ownerSeatName', s.name); Store.raw.set('ownerPin', s.pin || ''); Store.raw.set('ownerAv', s.av || ''); Store.raw.set('ownerColor', s.color || ''); Store.raw.set('ownerHide', SeatHide.clean(s.hide)); Account.schedule(); }
       else { const l = this.list(), i = l.findIndex((x) => x.id === s.id), row = { ...(i >= 0 ? l[i] : {}), id: s.id, name: s.name, color: s.color, kids: !!s.kids, pin: s.pin || '', av: s.av || '', hide: SeatHide.clean(s.hide) }; if (i >= 0) l[i] = row; else l.push(row); this.saveList(l); }
       { const cp = $('#seCopy'); if (isNew && cp && cp.value && window.MkSeatCopy) MkSeatCopy.copy(cp.value === '@main' ? '' : cp.value, s.id); }
+      if (window.MkFilt) MkFilt.save(s);
       X8.close('seatEdit'); this.refresh(); toast(isNew ? `${s.name} has a seat` : 'Seat saved', 'ok');
     });
     const del = $('#seDel'); if (del) del.onclick = () => confirmTwice(del, () => this.guard(() => {
@@ -3553,6 +3556,7 @@ const Library = {
       Object.entries(w).forEach(([id, at]) => { const base = id.split(':')[0], m = S.metas.get(base) || S.watchlist.find((x) => x.id === base) || (Object.values(S.progress).find((p) => p.metaId === base) && { id: base, type: 'series', name: Object.values(S.progress).find((p) => p.metaId === base).name }); if (m && (!out.has(base) || out.get(base)._added < at)) out.set(base, { ...m, id: base, _added: at }); });
       return [...out.values()].filter((m) => m.name);
     }
+    if ((t === 'history' || t === 'unwatched') && window.MkLibMore) return MkLibMore.items(t);   // 2.99
     const l = this.lists().find((x) => x.id === t); return l ? l.items.map((m, i) => ({ ...m, _added: l.items.length - i })) : [];
   },
   view() {
@@ -3560,14 +3564,14 @@ const Library = {
     let l = this.items().filter((m) => (s.type === 'all' || m.type === s.type) && (!q || String(m.name || '').toLowerCase().includes(q)));
     if (s.hide && s.tab !== 'watched') l = l.filter((m) => !(m.type === 'movie' && isWatched(m.id)));
     const yr = (m) => Number(String(m.releaseInfo || m.year || yearOf(m) || '').slice(0, 4)) || 0;
-    const by = { added: (a, b) => (b._added || 0) - (a._added || 0), az: (a, b) => String(a.name).localeCompare(String(b.name)), year: (a, b) => yr(b) - yr(a), rating: (a, b) => (parseFloat(b.imdbRating) || 0) - (parseFloat(a.imdbRating) || 0), mine: (a, b) => LibGroups.mine(b) - LibGroups.mine(a) || String(a.name).localeCompare(String(b.name)) }[s.sort] || ((a, b) => (b._added || 0) - (a._added || 0));
+    const by = { added: (a, b) => (b._added || 0) - (a._added || 0), az: (a, b) => String(a.name).localeCompare(String(b.name)), year: (a, b) => yr(b) - yr(a), rating: (a, b) => (parseFloat(b.imdbRating) || 0) - (parseFloat(a.imdbRating) || 0), mine: (a, b) => LibGroups.mine(b) - LibGroups.mine(a) || String(a.name).localeCompare(String(b.name)) }[s.tab === 'history' ? 'added' : s.sort] || ((a, b) => (b._added || 0) - (a._added || 0));
     return l.sort(by);
   },
   render() {
     const root = $('#libRows'); if (!root) return;
     const s = this.st, lists = this.lists();
-    if (s.tab !== 'watchlist' && s.tab !== 'progress' && s.tab !== 'watched' && !lists.some((x) => x.id === s.tab)) s.tab = 'watchlist';
-    const tabs = [['watchlist', `Watchlist`, S.watchlist.length], ['progress', 'In progress', new Set(continueItems().map((p) => p.metaId)).size], ['watched', 'Watched', null], ...lists.map((x) => [x.id, x.name, x.items.length])];
+    if (s.tab !== 'watchlist' && s.tab !== 'progress' && s.tab !== 'watched' && !((s.tab === 'history' || s.tab === 'unwatched') && window.MkLibMore) && !lists.some((x) => x.id === s.tab)) s.tab = 'watchlist';
+    const tabs = [['watchlist', `Watchlist`, S.watchlist.length], ['progress', 'In progress', new Set(continueItems().map((p) => p.metaId)).size], ['watched', 'Watched', null], ...(window.MkLibMore ? [['history', 'History', null], ['unwatched', 'Not watched yet', MkLibMore.count()]] : []), ...lists.map((x) => [x.id, x.name, x.items.length])];
     const list = this.view();
     const old = $('#libX'); const hadFocus = old && old.contains(document.activeElement) ? document.activeElement.dataset : null, hadId = hadFocus ? document.activeElement.id : '';
     const box = document.createElement('div'); box.id = 'libX';
@@ -3576,12 +3580,12 @@ const Library = {
         <div class="segc" role="radiogroup" aria-label="Type">${[['all', 'All'], ['movie', 'Films'], ['series', 'Series']].map(([v, t]) => `<button type="button" class="${s.type === v ? 'on' : ''}" role="radio" aria-checked="${s.type === v}" data-nav data-ltype="${v}">${t}</button>`).join('')}</div>
         <select class="inp lib-sort" id="libSort" aria-label="Sort" data-nav>${[['added', 'Date added'], ['az', 'A to Z'], ['year', 'Newest first'], ['rating', 'Highest rated'], ['mine', 'My rating']].map(([v, t]) => `<option value="${v}"${s.sort === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
         <select class="inp lib-sort" id="libGroup" aria-label="Group" data-nav>${LibGroups.OPTS.map(([v, t]) => `<option value="${v}"${(s.group || '') === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
-        ${s.tab !== 'watched' ? `<button type="button" class="chip${s.hide ? ' on' : ''}" data-nav id="libHide" aria-pressed="${s.hide}">Hide watched</button>` : ''}
+        ${s.tab !== 'watched' && s.tab !== 'history' && s.tab !== 'unwatched' ? `<button type="button" class="chip${s.hide ? ' on' : ''}" data-nav id="libHide" aria-pressed="${s.hide}">Hide watched</button>` : ''}
         <input class="inp lib-q" id="libQ" type="search" placeholder="Filter" value="${esc(s.q)}" autocomplete="off" aria-label="Filter by title">
         ${s.tab === 'progress' && continueItems().length ? '<button type="button" class="btn btn-ghost btn-sm" data-nav id="libClear"><i data-lucide="trash-2"></i>Clear progress</button>' : ''}
         ${lists.some((x) => x.id === s.tab) ? '<button type="button" class="btn btn-ghost btn-sm" data-nav id="libDel"><i data-lucide="trash-2"></i>Delete list</button>' : ''}
       </div>
-      <div class="grid lib-grid">${LibGroups.html(list, s) || `<div class="empty">${{ watchlist: 'Use the Watchlist button on any title to save it here.', progress: 'Start something and it shows up here.', watched: 'Finished films and episodes show up here.' }[s.tab] || 'Add titles from a film page with the Lists button.'}</div>`}</div>`;
+      <div class="grid lib-grid">${LibGroups.html(list, s) || `<div class="empty">${{ watchlist: 'Use the Watchlist button on any title to save it here.', progress: 'Start something and it shows up here.', watched: 'Finished films and episodes show up here.', history: 'What you start or finish shows up here, newest first.', unwatched: 'Titles in your watchlist that you have not started show up here.' }[s.tab] || 'Add titles from a film page with the Lists button.'}</div>`}</div>`;
     if (old) old.replaceWith(box); else root.prepend(box);
     icons();
     $$('[data-ltab]', box).forEach((b) => b.addEventListener('click', () => { s.tab = b.dataset.ltab; this.render(); }));
@@ -3728,7 +3732,7 @@ const TvPlayer = {
       (async () => {
         const [subUrl, tvx] = await Promise.all([TvPlayer.subUrl(ctx), typeof TvParity !== 'undefined' ? TvParity.prep(ctx).catch(() => ({})) : Promise.resolve({})]);
         if (P.stream !== stream) return;
-        const ok = (() => { try { return MKAndroid.play(JSON.stringify({ url: src, title: ctx.meta.name || '', sub: v ? `S${v.season} · E${v.episode}${v.name || v.title ? ` · ${v.name || v.title}` : ''}` : [yearOf(ctx.meta), stream._tel && stream._tel.res].filter(Boolean).join(' · '), startMs: Math.round((startAt || 0) * 1000), subUrl, matchRate: CFG.matchRate !== false, audioLang: (typeof MkAudioWant === 'function' ? MkAudioWant() : CFG.audioOnly) || '', headers: nativeHdr ? headers : undefined, ...tvx })); } catch (e) { return false; } })();
+        const ok = (() => { try { return MKAndroid.play(JSON.stringify({ url: src, title: ctx.meta.name || '', sub: v ? `S${v.season} · E${v.episode}${v.name || v.title ? ` · ${v.name || v.title}` : ''}` : [yearOf(ctx.meta), stream._tel && stream._tel.res].filter(Boolean).join(' · '), startMs: Math.round((startAt || 0) * 1000), subUrl, matchRate: CFG.matchRate !== false, audioLang: (typeof MkAudioWant === 'function' ? MkAudioWant() : CFG.audioOnly) || '', headers: nativeHdr ? headers : undefined, ...tvx, ...(window.MkAudioRx ? MkAudioRx.open() : {}) })); } catch (e) { return false; } })();
         if (!ok) { TvPlayer.cur = null; lu.call(this, stream, startAt); return; }
         Loader.hide && Loader.hide();
       })();

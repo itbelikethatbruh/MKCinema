@@ -410,11 +410,13 @@ const Telemetry = {
     const rank = { '4K UHD': 4, '1440p': 3.5, '1080p': 3, '720p': 2, SD: 1 }, ceiling = { '4k': 4, '1080': 3, '720': 2 }[CFG.maxQuality] || 4;
     if (res && rank[res] > ceiling) score -= 250;
     if ((CFG.preferFormat === 'hls' && kind === 'hls') || (CFG.preferFormat === 'mp4' && kind === 'http')) score += 40;
-    return { res, hdr, audio, codec, size, sizeBytes, seeds, source, kind, isTrailer, mkv, is3d, webReady, proxied, lines, headline, score };
+    /* 2.99 release tiers */ const rt = window.MkRelTier && !isTrailer ? MkRelTier.of(s) : null; if (rt) score += rt.bonus;
+    return { res, hdr, audio, codec, size, sizeBytes, seeds, source, kind, isTrailer, mkv, is3d, webReady, proxied, lines, headline, score, tier: rt ? rt.t : 0, group: rt ? rt.g : '' };
   },
   // compact: one audio tag and no codec/size/peers boxes (the stream row prints those as quiet text)
   badges(s, tel, addonName, compact) {
     const b = [];
+    if (tel.tier && window.MkRelTier) b.push(MkRelTier.badge(tel));
     if (tel.res) b.push(`<span class="tb res ${tel.res === '4K UHD' ? 'k4' : ''}">${tel.res}</span>`);
     if (tel.hdr) b.push(`<span class="tb hdr">${tel.hdr}</span>`);
     if (tel.is3d) b.push('<span class="tb hdr" title="Two pictures side by side, for 3D TVs and glasses">3D</span>');

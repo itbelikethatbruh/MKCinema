@@ -227,6 +227,7 @@ const Failover = {
     const n = this.candidates(failed)[0]; if (!n) return false;
     this.hops = (this.hops || 0) + 1;
     const why = /not supported|blocked|decode/i.test(reason) ? 'won’t play in this browser' : /3\.5 s|start/i.test(reason) ? 'was slow to start' : /stalled/i.test(reason) ? 'stalled' : /cached/i.test(reason) ? 'isn’t cached yet' : 'didn’t work';
+    if (window.MkKeepPick && MkKeepPick.hold(failed, reason)) { this.hops = Math.max(0, this.hops - 1); return false; }
     toast(this.hops > 1 ? `Still looking for a source that plays here… (try ${this.hops + 1})` : `That source ${why}. Trying the next best one…`, 'info', 4200, 'failover');
     playStream(P.ctx, n, { startAt: at != null ? at : pNow() });
     return true;

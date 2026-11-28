@@ -8,6 +8,13 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.99.0', date: '2026-11-28', items: [
+    ['new', 'More for the whole house', 'Content filters for each seat, Settings only the main seat can change, a quick "who\'s watching?" after a break, and PINs typed with the remote\'s arrows.'],
+    ['new', 'About this title', 'Title pages show dates, ages, studios and box office, plus a Ready line. Library adds History and Not watched yet.'],
+    ['better', 'Smarter sources', 'Sources rank well-known release groups, can hide addon names, check a film\'s length, and stay on the copy you pick.'],
+    ['new', 'Set up for this screen', 'Tunes quality, HDR and frame rate for your screen. Backups carry every seat sealed with a PIN, and you can add your own subtitle fonts.'],
+    ['new', 'New in the Windows and Android apps', 'Sharp upscaling now works in both apps, and Windows PCs with an NVIDIA RTX or Intel Arc graphics card can use the card\'s AI upscaling. In the Android app you can pause and rewind live channels.'],
+  ] },
   { v: '2.98.1', date: '2026-11-27', items: [
     ['new', 'Add a TV playlist from your phone', 'Scan the code on your TV, type the link or login on your phone, and it fills in on the TV.'],
     ['new', 'HDHomeRun tuners', 'In the Android and Android TV app, watch your antenna channels next to your playlists.'],
