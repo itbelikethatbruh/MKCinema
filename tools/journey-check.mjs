@@ -120,7 +120,12 @@ const DEV = {
 const proxy = process.env.HTTPS_PROXY || process.env.https_proxy;
 // JC_PUBLIC=1: treat the proxy as a public address, as on the GitHub runner (no proxy there), so the live page is a
 // public site reaching the test addon on this machine, and the browser's local-network rules apply as they do there
-const PUBLIC = process.env.JC_PUBLIC && proxy ? [`--ip-address-space-overrides=${new URL(proxy).host}=public`] : [];
+// (the override takes an IP address, so a proxy given by name is looked up first)
+const PUBLIC = [];
+if (process.env.JC_PUBLIC && proxy) {
+  const pu = new URL(proxy), ip = (await (await import('node:dns')).promises.lookup(pu.hostname)).address;
+  PUBLIC.push(`--ip-address-space-overrides=${ip.includes(':') ? `[${ip}]` : ip}:${pu.port || (pu.protocol === 'https:' ? 443 : 80)}=public`);
+}
 const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required', ...PUBLIC], ...(proxy ? { proxy: { server: proxy, bypass: '127.0.0.1,localhost' } } : {}) });
 
 /* ---------- the in-page probe ---------- */
