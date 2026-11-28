@@ -173,6 +173,9 @@
       col.classList.add('ezb-srccol');
       const want = local.get('mk:srcOpen') === '1';
       grid.classList.toggle('ezb-src-off', !want);
+      /* 2.97.7 series row steady */ // a series still waiting for its full details: the full page lists episodes, not sources,
+      // so the source row would vanish when they arrive and pull Play down with it
+      if (typeof D !== 'undefined' && D.meta && D.meta.type === 'series' && q('#detail .metaline.ml-wait')) { grid.classList.add('ezb-src-off'); const o = q('.ezb-src', act.parentElement); if (o) o.remove(); return; }
       let s = q('.ezb-src', act.parentElement);
       if (!s) {
         s = document.createElement('div'); s.className = 'ezb-src';

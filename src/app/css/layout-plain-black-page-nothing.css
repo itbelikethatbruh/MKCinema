@@ -1547,6 +1547,9 @@ body.fx .lg-sheen{display:block;position:absolute;inset:0;overflow:hidden;pointe
 #heroLogoWrap .hero-title{margin:0}
 .hero .metaline{flex-wrap:nowrap;white-space:nowrap;overflow:hidden;height:22px;-webkit-mask:linear-gradient(90deg,var(--n000000,#000) 88%,transparent);mask:linear-gradient(90deg,var(--n000000,#000) 88%,transparent)}
 .hero .metaline>*{flex:none}
+.hero .metaline.hm-fit{-webkit-mask:none;mask:none}
+.metaline:not(#heroMeta) .rbadges{flex-wrap:wrap;flex:0 1 auto;min-width:0;max-width:100%;row-gap:8px;white-space:normal}
+.metaline:not(#heroMeta) .rbadge{flex:none;white-space:nowrap}
 .hero .hero-desc{line-height:1.5;height:4.5em}
 @media (orientation:landscape) and (max-height:540px){
   .hero{--hl:76px}

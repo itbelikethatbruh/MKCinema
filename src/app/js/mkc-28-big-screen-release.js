@@ -3592,7 +3592,9 @@ const Library = {
     // lists travel with the account
     const ex = exportData; exportData = function () { const d = ex.apply(this, arguments); d.lists = Library.lists(); return d; };
     const ap = Account.applyRemote.bind(Account); Account.applyRemote = function (d) { const r = ap(d); if (d && Array.isArray(d.lists)) Store.set('lists', d.lists); return r; };
-    if (S.view === 'library') renderLibrary();
+    /* 2.97.7 library start */ // first draw after every script has run (the group picker and others are defined further down)
+    const first = () => { if (S.view === 'library') try { renderLibrary(); } catch (e) { /* drawn again on the next visit */ } };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', first, { once: true }); else first();
   },
 };
 Library.init();
