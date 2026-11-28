@@ -174,6 +174,8 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
         SOUND.put("off", "");
         SOUND.put("voice", "lavfi=[highpass=f=120,equalizer=f=2500:t=q:w=1.2:g=5,acompressor=threshold=-20dB:ratio=3:attack=10:release=200]");
         SOUND.put("night", "lavfi=[acompressor=threshold=-28dB:ratio=6:attack=5:release=250:makeup=6dB,alimiter=limit=0.9]");
+        // Headphones: surround folded to two channels, then each ear hears a little of the other side, like speakers in a room
+        SOUND.put("headphones", "lavfi=[aformat=channel_layouts=stereo,crossfeed=strength=0.4:range=0.5]");
     }
 
     /** 1.17.13: Settings › Subtitles (Style, colour, background box, outline, bold, shadow) for subtitles mpv draws.
