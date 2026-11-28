@@ -304,7 +304,36 @@ const Channels = {
     map.forEach((l) => l.sort((x, y) => x.start - y.start));
     return map;
   },
+  /* 2.98.1 all channels */
+  /* every playlist in one guide. A channel that two playlists both have (same name once tidied, or the same guide id
+     unless many channels of its playlist share it) shows once: the first playlist's copy, with the other playlist's
+     guide when its own has none. "All channels" is never kept in Channels.data, so Channels.all() stays the real lists */
+  listOf(id) { return id === 'all' ? { id: 'all', kind: 'all', name: 'All channels' } : this.lists().find((x) => x.id === id); },
+  async loadMerged(fresh) {
+    const ls = this.lists();
+    await Promise.all(ls.map((l) => this.load(l, fresh).catch(() => null)));
+    const ds = ls.map((l) => [l, this.data.get(l.id)]).filter(([, d]) => d && Array.isArray(d.channels));
+    const sig = ds.map(([l, d]) => `${l.id}:${d.at}:${d.channels.length}:${d.epg ? d.epg.size : 0}`).join(',');
+    if (this._mg && this._mg.sig === sig) return this._mg.d;
+    const nameOf = this.twinName || ((c) => String(c.name || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ''));
+    const gid = (c) => String(c.tvgId || '').trim().toLowerCase();
+    const byN = new Map(), byI = new Map(), channels = [], epg = new Map();
+    ds.forEach(([, d]) => {
+      const ids = new Map(); d.channels.forEach((c) => { const g = gid(c); if (g) ids.set(g, (ids.get(g) || 0) + 1); });
+      d.channels.forEach((c) => {
+        const n = nameOf(c), g = gid(c), gOk = g.length > 1 && ids.get(g) <= 6;
+        const first = (n && byN.get(n)) || (gOk && byI.get(g)), progs = d.epg && d.epg.get(this.key(c));
+        if (first && first.list !== c.list) { const fk = this.key(first); if (progs && progs.length && !(epg.get(fk) || []).length) epg.set(fk, progs); return; }
+        channels.push(c); if (progs) epg.set(this.key(c), progs);
+        if (n && !byN.has(n)) byN.set(n, c); if (gOk && !byI.has(g)) byI.set(g, c);
+      });
+    });
+    const d = { channels, epg, at: Date.now(), epgUrl: ds.some(([, x]) => x.epgUrl) ? 'all' : '', epgError: '', vod: [], _n: true };
+    this._mg = { sig, d };
+    return d;
+  },
   async load(l, fresh = false) {
+    if (l && l.kind === 'all') return this.loadMerged(fresh);
     if (!fresh && this.data.has(l.id)) { const d = this.data.get(l.id); if (d.epgUrl && !d.epgBusy && Date.now() - (d.epgAt || d.at) > 3 * 3600e3) this.loadEpg(l, d, true); return d; }
     const src = this.src(l);
     const text = l.kind === 'file' ? (await this.cached(l.id, 'm3u', false, async () => { if (this.uploads.has(l.id)) return this.uploads.get(l.id); throw new Error('Upload the playlist file again'); })) : await this.cached(l.id, 'm3u', fresh, () => this.text(src.m3u));
@@ -316,7 +345,7 @@ const Channels = {
   },
   loadEpg(l, d, fresh) {
     d.epgBusy = true; d.epgAt = Date.now();
-    this.cached(l.id, 'epg', fresh, () => this.text(d.epgUrl)).then((x) => { d.epg = this.parseXMLTV(x, d.channels); d.epgError = ''; if (S.view === 'tv' && S.tvFilter === `iptv:${l.id}`) this.renderGuide(); }).catch((e) => { d.epgError = e.message; }).then(() => { d.epgBusy = false; });
+    this.cached(l.id, 'epg', fresh, () => this.text(d.epgUrl)).then((x) => { d.epg = this.parseXMLTV(x, d.channels); d.epgError = ''; if (S.view === 'tv' && (S.tvFilter === `iptv:${l.id}` || S.tvFilter === 'iptv:all')) this.renderGuide(); }).catch((e) => { d.epgError = e.message; }).then(() => { d.epgBusy = false; });
   },
   all() { return [...this.data.values()].flatMap((d) => d.channels); },
 
@@ -396,7 +425,7 @@ const Channels = {
   st: { group: '', q: '', page: 1 },
   chips() {
     const box = $('#tvSources'); if (!box || $('#chAddChip')) return;
-    const mine = this.lists().map((l) => `<button class="chip ${S.tvFilter === `iptv:${l.id}` ? 'on' : ''}" type="button" data-nav data-iptv="${esc(l.id)}"><i data-lucide="list-video"></i>${esc(l.name)}</button>`).join('');
+    const mine = (this.lists().length > 1 ? [this.listOf('all')] : []).concat(this.lists()).map((l) => `<button class="chip ${S.tvFilter === `iptv:${l.id}` ? 'on' : ''}" type="button" data-nav data-iptv="${esc(l.id)}"><i data-lucide="${l.kind === 'all' ? 'layers' : 'list-video'}"></i>${esc(l.name)}</button>`).join('');
     box.insertAdjacentHTML('beforeend', `${mine}<button class="chip" type="button" data-nav id="chAddChip"><i data-lucide="plus"></i>Add playlist</button><button class="chip" type="button" data-nav id="chSplitChip"><i data-lucide="layout-grid"></i>Split Screen</button>${window.MkRec ? '<button class="chip" type="button" data-nav id="chRecChip"><span class="rec-dot"></span>Recordings</button>' : ''}`);
     $$('[data-iptv]', box).forEach((b) => b.addEventListener('click', () => { S.tvFilter = `iptv:${b.dataset.iptv}`; this.st = { group: '', q: '', page: 1 }; renderTV(); }));
     $('#chAddChip').onclick = () => this.openAdd();
@@ -411,9 +440,9 @@ const Channels = {
     $$('#tvSources [data-src]').forEach((b) => b.addEventListener('click', () => { S.tvFilter = b.dataset.src; renderTV(); }));
   },
   async renderGuide() {
-    const id = S.tvFilter.slice(5), l = this.lists().find((x) => x.id === id), epg = $('#epg');
+    const id = S.tvFilter.slice(5), l = this.listOf(id), epg = $('#epg');
     if (!l) { S.tvFilter = ''; return renderTV(); }
-    if (!this.data.has(id)) epg.innerHTML = '<div style="padding:22px" class="status-line"><span class="spin"></span>Reading your playlist…</div>';
+    if (!(id === 'all' ? this._mg : this.data.has(id))) epg.innerHTML = `<div style="padding:22px" class="status-line"><span class="spin"></span>${id === 'all' ? 'Reading your playlists…' : 'Reading your playlist…'}</div>`;
     const want = S.tvFilter, moved = () => S.tvFilter !== want || S.view !== 'tv';   // another source was picked meanwhile: its own answer draws
     let d; try { d = await this.load(l); } catch (e) {
       if (moved()) return;
@@ -446,9 +475,9 @@ const Channels = {
         <div class="ch-search"><i data-lucide="search"></i><input class="inp" id="chQ" type="search" placeholder="Find a channel in ${esc(l.name)}" value="${esc(this.st.q)}" autocomplete="off"></div>
         <select class="sel" id="chGroup" aria-label="Group"><option value="">All groups · ${d.channels.length}</option><option value="★" ${this.st.group === '★' ? 'selected' : ''}>★ Favourites · ${d.channels.filter((c) => favs.has(this.key(c))).length}</option>${groups.map((g) => `<option value="${esc(g)}" ${this.st.group === g ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select>
         <button class="btn btn-ghost btn-sm" type="button" data-nav id="chRefresh" title="Read the playlist again"><i data-lucide="refresh-cw"></i>Refresh</button>
-        <button class="btn btn-ghost btn-sm" type="button" data-nav id="chEdit"><i data-lucide="pencil"></i>Edit</button>
+        ${l.kind === 'all' ? '' : '<button class="btn btn-ghost btn-sm" type="button" data-nav id="chEdit"><i data-lucide="pencil"></i>Edit</button>'}
       </div>
-      ${d.epgError ? `<p class="tour-note ch-note">The guide could not be read (${esc(d.epgError)}). Channels still play.</p>` : !d.epgUrl ? '<p class="tour-note ch-note">No TV guide for this playlist. Add an XMLTV address under Edit to see what is on.</p>' : ''}
+      ${d.epgError ? `<p class="tour-note ch-note">The guide could not be read (${esc(d.epgError)}). Channels still play.</p>` : !d.epgUrl ? (l.kind === 'all' ? '<p class="tour-note ch-note">None of your playlists has a TV guide. Add an XMLTV address to a playlist to see what is on.</p>' : '<p class="tour-note ch-note">No TV guide for this playlist. Add an XMLTV address under Edit to see what is on.</p>') : ''}
       <div id="chRes">${res}</div>`;
     icons();
     const sc = $('#epg .epg-scroll'); if (sc) sc.scrollLeft = this.st.off ? 0 : Math.max(0, x(now) - 120);
@@ -459,7 +488,7 @@ const Channels = {
     const qi = $('#chQ'); qi.addEventListener('input', debounce(() => { this.st.q = qi.value; this.st.page = 1; this._qOnly = true; this.renderGuide().then(() => { const n = $('#chQ'); if (n && !TOUCH_UI) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }); }, 250));
     $('#chGroup').onchange = (e) => { this.st.group = e.target.value; this.st.page = 1; this.renderGuide(); };
     $('#chRefresh').onclick = async () => { this.data.delete(id); toast('Reading the playlist again…', 'info', 1800, 'chr'); await this.load(l, true).catch(() => {}); this.renderGuide(); };
-    $('#chEdit').onclick = () => this.openAdd(l);
+    { const ce = $('#chEdit'); if (ce) ce.onclick = () => this.openAdd(l); }
     const more = $('#chMore'); if (more) more.onclick = () => { this.st.page++; this.renderGuide(); };
   },
   stream(c) {
@@ -594,7 +623,7 @@ const Split = {
   fromPlayer() {
     const s = P.stream, ctx = P.ctx || {}, d = pDur(), live = !isFinite(d);
     const ok = s && !s.ytId && !s._local && /^https?:\/\//i.test(s.url || '');
-    this.open(ok ? { name: streamTitle(ctx), url: s.url, headers: s.behaviorHints && s.behaviorHints.proxyHeaders && s.behaviorHints.proxyHeaders.request, poster: ctx.meta ? metaPoster(ctx.meta) : null, startAt: live ? 0 : pNow(), live, ...this.playerSubs(ctx) } : null);
+    this.open(ok ? { name: streamTitle(ctx), url: s.url, headers: s.behaviorHints && s.behaviorHints.proxyHeaders && s.behaviorHints.proxyHeaders.request, poster: ctx.meta ? metaPoster(ctx.meta) : null, startAt: live ? 0 : pNow(), live, list: ctx.meta && ctx.meta._iptv ? ctx.meta._iptv.list : undefined, ...this.playerSubs(ctx) } : null);
   },
   setCount(n) {
     Usage.add('feat', `split:${Number(n) || 0}`);
@@ -724,6 +753,14 @@ const Split = {
     if (!keep) { if (t) this.stopVideo(t); t = this.slots[i] = { name: src.name || 'Stream', poster: src.poster || null, startAt: src.startAt || 0, live: !!src.live, ctx: src.ctx || null, vid: src.vid || null, subs: src.subs || null }; if (src.subK >= 0) setTimeout(() => { if (this.slots.includes(t) && t.subK == null) this.pickSub(t, src.subK); }, 0); }
     else this.stopVideo(t);
     t.err = ''; clearTimeout(t.wd);
+    // 2.98: a TV service plays only so many channels at once (its Xtream account says how many). Past that, the same
+    // channel from another of your playlists plays here, or the screen says why
+    if (!keep && src.list && typeof Channels === 'object' && Channels.room) {
+      const r = Channels.room(src, this.slots.filter((x) => x !== t && x.list && x.state !== 'empty' && x.state !== 'err'));
+      if (r && r.full) { t.state = 'err'; t.err = r.full; this.paint(); return; }
+      if (r) { toast(r.msg, 'info', 4200, 'sproom'); src = { ...src, ...r.src }; }
+    }
+    t.list = src.list || (keep ? t.list : null);
     let url = src.url;
     if (X8.mixedBlocked(url)) { if (S.proxy) url = proxify(url, src.headers); else { t.state = 'err'; t.err = 'Plain http:// links need your MKCinema server as the proxy (Addons › MKCinema proxy).'; this.paint(); return; } }
     else if (src.headers && Object.keys(src.headers).length && S.proxy) url = proxify(url, src.headers);
@@ -880,7 +917,7 @@ const Split = {
       if (!$('#spList')) return;
       const nq = normTitle(q), hits = sorted.filter((c) => !nq || normTitle(c.name).includes(nq)).slice(0, 60);
       $('#spList').innerHTML = hits.map((c) => `<button type="button" class="sp-item" data-nav data-pi="${all.indexOf(c)}">${c.logo ? `<img src="${esc(c.logo)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-gone>` : '<i data-lucide="tv"></i>'}<span><b>${favs.has(Channels.key(c)) ? '★ ' : ''}${esc(c.name)}</b><small>${esc(c.group)}</small></span></button>`).join('') || `<p class="sub">${all.length ? 'No channels match.' : waiting ? 'Reading your playlists…' : 'No playlists yet. Add one in Live TV, or paste a stream link above.'}</p>`;
-      icons(); $$('#spList [data-pi]').forEach((b) => b.addEventListener('click', () => { const c = all[Number(b.dataset.pi)]; this.closePick(); this.add({ at: i, name: c.name, url: c.url, headers: c.headers, poster: c.logo || null, live: true }); }));
+      icons(); $$('#spList [data-pi]').forEach((b) => b.addEventListener('click', () => { const c = all[Number(b.dataset.pi)]; this.closePick(); this.add({ at: i, name: c.name, url: c.url, headers: c.headers, poster: c.logo || null, live: true, list: c.list }); }));
     };
     const q = $('#spQ'); this.inputKeys(q); q.addEventListener('input', () => draw(q.value)); draw('');
     lists.forEach((l) => Channels.load(l).catch(() => {}).then(() => { waiting--; if (this.pickAt !== i || this.tab !== 'live' || !$('#spQ')) return; grab(); draw($('#spQ').value); }));

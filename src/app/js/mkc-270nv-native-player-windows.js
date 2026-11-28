@@ -272,3 +272,113 @@ const MkNative = {
 };
 window.MkNative = MkNative; // the hooks in the base player look for window.MkNative
 MkNative.init();
+/* 2.98 native upscale */
+/* Sharp upscaling in the MKCinema player (Windows app 1.6.3+, Android phone and tablet app 1.17.18+). The web player's
+   Settings › Playback › Sharp upscaling (2.36) never ran while a film played in the apps' own player, because that
+   picture is drawn by mpv under the page, not by the browser. Now the same setting drives mpv:
+     Natural  light contrast-adaptive sharpening at the film's own size, then mpv's lanczos upscale
+     Crisp    stronger sharpening (Windows also uses a sharper polar scaler)
+     AI upscaling  Windows with an NVIDIA RTX or Intel Arc / Iris Xe card only: the card's own Video Super Resolution
+   The sharpening only runs when the picture is shown clearly bigger than the file, so a film that already matches
+   the screen plays untouched. AI falls back to Crisp for HDR films and for films the card doesn't decode itself.
+   If mpv starts dropping frames it switches off until MKCinema is reopened, like the web player. TVs: never (their
+   decoder draws straight onto the screen). Older apps answer "unknown command" and keep playing as before. */
+const NvUp = {
+  caps: null, sent: '', want: '', why: '', g: null, strikes: 0,
+  load() {
+    if (this._p) return this._p;
+    return (this._p = MkNative.probe().then((ok) => (ok ? MkNative.cmd('probe').then((j) => { const r = JSON.parse(j || '{}'); this.caps = { up: !!r.up, vsr: String(r.vsr || '') }; }) : (this.caps = { up: false, vsr: '' })))
+      .catch(() => { this.caps = { up: false, vsr: '' }; }).then(() => { if (typeof renderOptMenu === 'function' && $('#player') && !$('#player').hidden) try { renderOptMenu(); } catch (e) { /* menu closed */ } }));
+  },
+  usable() { return !PX_TV && !!(this.caps && this.caps.up); },
+  /* what mpv should do now: {mode} or {mode:'vsr', f} */
+  pick() {
+    const st = MkNative.st || {}, m = PxUp.blocked ? 'off' : (PxUp.SHARP[CFG.pxUp] != null ? CFG.pxUp : 'off');
+    this.why = m;
+    if (m !== 'ai') return { mode: m };
+    if (!this.caps.vsr) { this.why = 'crisp'; return { mode: 'crisp' }; }
+    const w = Number(st.w) || 0, h = Number(st.h) || 0;
+    if (!w || !h) return null; // wait for the picture size
+    if (/pq|hlg/i.test(String(st.gamma || '')) || !/d3d11/i.test(String(st.hwdec || ''))) { this.why = 'aiNo'; return { mode: 'crisp' }; }
+    const dpr = window.devicePixelRatio || 1, f = Math.min(4, (screen.width * dpr) / w, (screen.height * dpr) / h);
+    if (f < 1.12) { this.why = 'aiFit'; return { mode: 'off' }; }
+    return { mode: 'vsr', f: Math.round(f * 100) / 100 };
+  },
+  apply() {
+    if (!(window.MkNative && MkNative.active) || !this.caps) return;
+    if (!this.usable()) return;
+    const p = this.pick(); if (!p) return;
+    const j = JSON.stringify(p); if (j === this.sent) return;
+    this.sent = j;
+    MkNative.cmd('upscale', j).catch((e) => {
+      const msg = String((e && e.message) || e);
+      try { MKLog.add('play', `native upscale ${p.mode}: ${msg}`); } catch (x) { /* ignore */ }
+      if (/unknown command/i.test(msg)) { this.caps.up = false; return; }
+      if (p.mode === 'vsr') { this.why = 'aiNo'; this.sent = JSON.stringify({ mode: 'crisp' }); MkNative.cmd('upscale', this.sent).catch(() => {}); }
+    });
+  },
+  /* the same honesty as the web player: dropping frames (over 10 % for two 4-second checks) switches it off */
+  watch(n) {
+    if (!('drops' in n) && !('t' in n)) return;
+    const st = MkNative.st || {}, now = performance.now();
+    if (this.sent === '' || /"off"/.test(this.sent) || st.paused || st.buffering || st.seeking) { this.g = null; return; }
+    const d = Number(st.drops) || 0, g = this.g;
+    if (!g) { this.g = { t: now, d }; return; }
+    if (now - g.t < 4000) return;
+    const fps = Number(st.fps) || 24, frames = ((now - g.t) / 1000) * fps, dd = d - g.d;
+    this.g = { t: now, d };
+    this.strikes = dd >= 0 && frames > 20 && dd / frames > 0.1 ? this.strikes + 1 : 0;
+    if (this.strikes >= 2) {
+      this.strikes = 0; PxUp.blocked = true; this.apply();
+      toast('Sharp upscaling switched off: this device was dropping frames. It stays off until you reopen MKCinema.', 'info', 6000);
+      try { MKLog.add('play', `native upscale: off after drops (${dd}/${Math.round(frames)})`); } catch (e) { /* ignore */ }
+    }
+  },
+  status() {
+    if (!this.caps) return 'Starts when the video does.';
+    if (!this.caps.up) return 'Update the MKCinema app to get sharp upscaling here.';
+    if (PxUp.blocked) return 'Switched off for now: this device was dropping frames.';
+    if (PxUp.mode() === 'off') return 'Upscaling is off, so films keep their own sharpness.';
+    if (this.why === 'aiNo') return 'This film can’t use your graphics card’s upscaler (HDR, or not decoded by the card), so it is sharpened on this device instead.';
+    if (this.why === 'aiFit') return 'Not needed: this film already fills your screen’s pixels, so it plays untouched.';
+    if (this.why === 'vsr' || (this.why === 'ai' && this.caps.vsr)) return 'Your graphics card upscales films smaller than your screen (NVIDIA RTX or Intel Video Super Resolution). If nothing changes, turn on Super Resolution in your graphics card’s app.';
+    return 'On: films smaller than your screen are sharpened and upscaled on this device. Films that already match your screen play untouched.';
+  },
+  init() {
+    if (PX_TV || !window.MkNative || !MkNative.bridge()) return;
+    PxUp.SHARP.ai = PxUp.SHARP.crisp; // the web player (no AI there) treats AI as Crisp
+    const base = PxUp.MODES;
+    Object.defineProperty(PxUp, 'MODES', { configurable: true, get: () => (NvUp.caps && NvUp.caps.vsr ? [...base, ['ai', 'AI']] : base) });
+    const st0 = PxUp.status.bind(PxUp);
+    PxUp.status = function () { return MkNative.active ? NvUp.status() : st0(); };
+    // a pick while a film plays natively only tells mpv (the web player's own pick would reconnect the stream)
+    const set0 = PxUp.set.bind(PxUp);
+    PxUp.set = function (v) { if (MkNative.active) { setCfg('pxUp', v); return Promise.resolve(); } return set0(v); };
+    const op = MkNative.open.bind(MkNative);
+    MkNative.open = function (stream, at) {
+      // mpv keeps its filters from film to film: the card's upscaler comes off before the next film loads
+      if (/"vsr"/.test(NvUp.sent)) { NvUp.sent = JSON.stringify({ mode: 'crisp' }); MkNative.cmd('upscale', NvUp.sent).catch(() => {}); }
+      NvUp.g = null; NvUp.strikes = 0;
+      const r = op(stream, at);
+      NvUp.load().then(() => NvUp.apply());
+      return r;
+    };
+    const ev = MkNative.ev.bind(MkNative);
+    MkNative.ev = function (n) {
+      const r = ev(n);
+      if (n && MkNative.active && NvUp.caps) { if ('w' in n || 'h' in n || 'hwdec' in n || 'gamma' in n) NvUp.apply(); NvUp.watch(n); }
+      return r;
+    };
+    CFG_HOOKS.push((k) => { if (k === 'pxUp') { NvUp.apply(); } });
+    window.addEventListener('resize', () => { if (MkNative.active && /"vsr"/.test(NvUp.sent)) { clearTimeout(NvUp._rt); NvUp._rt = setTimeout(() => NvUp.apply(), 600); } });
+    // Settings › Playback: the help line names the AI choice where this PC has it
+    const pbs = typeof SECTIONS !== 'undefined' && SECTIONS.find((x) => x.id === 'playback');
+    if (pbs) {
+      const rows = pbs.rows;
+      pbs.rows = () => (typeof rows === 'function' ? rows() : rows).map((r) => (r && r.key === 'pxUp' && NvUp.caps && NvUp.caps.vsr
+        ? Object.assign({}, r, { options: PxUp.MODES, help: 'Sharpens and upscales videos that are smaller than your screen. AI upscaling uses your graphics card’s own upscaler (NVIDIA RTX or Intel Video Super Resolution).' }) : r));
+    }
+    setTimeout(() => NvUp.load(), 1500);
+  },
+};
+NvUp.init();

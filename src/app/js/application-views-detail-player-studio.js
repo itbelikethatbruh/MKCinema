@@ -1507,7 +1507,10 @@ video.addEventListener('timeupdate', () => {
   PlayerPlus.tick(t, d);
   if (!live && P.ctx && P.ctx.video && d > 120 && !P.upNextDismissed && (d - t < (Number(CFG.upNextAt) || 45) || Skip.inCredits(t))) showUpNext();
 });
-video.addEventListener('ended', () => { saveProgress(true); if (CFG.autoNext && P.ctx && P.ctx.video && nextVideo(P.ctx.meta, P.ctx.video)) playNext(true); });
+video.addEventListener('ended', () => {
+  // 2.98: a live channel never ends by itself, so an end is a dropped connection
+  if (typeof Failover !== 'undefined' && Failover.liveOn()) { const s = P.stream; if (!Failover.liveKeep(s, 'ended')) playbackFailed(s, 'The channel stopped and did not come back'); return; }
+  saveProgress(true); if (CFG.autoNext && P.ctx && P.ctx.video && nextVideo(P.ctx.meta, P.ctx.video)) playNext(true); });
 video.addEventListener('volumechange', () => { if (P.ducking || Rescue.userMuted != null) return; $('#pMute').innerHTML = `<i data-lucide="${video.muted || video.volume === 0 ? 'volume-x' : 'volume-2'}"></i>`; $('#pVol').value = video.muted ? 0 : video.volume; icons(); Store.set('volume', video.volume); });
 video.volume = CFG.rememberVolume ? Store.get('volume', 1) : 1;
 const togglePlay = () => { if (video.srcObject || video.currentSrc) (video.paused ? video.play().catch(() => {}) : video.pause()); };

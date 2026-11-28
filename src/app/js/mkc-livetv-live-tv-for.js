@@ -173,7 +173,7 @@
 
   C.loadEpg = function (l, d, fresh) {
     d.epgBusy = true; d.epgAt = Date.now();
-    this.cached(l.id, 'epg', fresh, () => this.texts(d.epgUrl)).then((x) => { d.epg = this.parseXMLTV(x, d.channels); d.epgError = ''; if (S.view === 'tv' && S.tvFilter === `iptv:${l.id}` && (this.st.mode || 'live') === 'live') this.renderGuide(); }).catch((e) => { d.epgError = e.message; }).then(() => { d.epgBusy = false; });
+    this.cached(l.id, 'epg', fresh, () => this.texts(d.epgUrl)).then((x) => { d.epg = this.parseXMLTV(x, d.channels); d.epgError = ''; if (S.view === 'tv' && (S.tvFilter === `iptv:${l.id}` || S.tvFilter === 'iptv:all') && (this.st.mode || 'live') === 'live') this.renderGuide(); }).catch((e) => { d.epgError = e.message; }).then(() => { d.epgBusy = false; });
   };
 
   /* ---------- loading: keep films and episodes apart, number the channels ---------- */
@@ -194,7 +194,7 @@
   const MTABS = [['live', 'Live TV'], ['movie', 'Movies'], ['series', 'Series']];
   const rg1 = C.renderGuide.bind(C);
   C.renderGuide = async function () {
-    const id = String(S.tvFilter || '').slice(5), l = this.lists().find((x) => x.id === id);
+    const id = String(S.tvFilter || '').slice(5), l = this.listOf(id);
     const d0 = l && this.data.get(id), mode = this.st.mode || 'live';
     if (l && l.kind !== 'xtream' && d0 && d0.vod && d0.vod.length && mode !== 'live') return this.m3uVod(l, d0, mode);
     const r = await rg1();
@@ -204,7 +204,7 @@
   };
   C.decorate = function (l) {
     const epg = $('#epg'); if (!epg || !l) return;
-    const d = this.data.get(l.id); if (!d) return;
+    const d = l.kind === 'all' ? (this._mg && this._mg.d) : this.data.get(l.id); if (!d) return;
     const mode = this.st.mode || 'live';
     // playlist films and episodes: their own tabs
     if (l.kind !== 'xtream' && d.vod && d.vod.length && !$('.lt-tabs', epg)) {

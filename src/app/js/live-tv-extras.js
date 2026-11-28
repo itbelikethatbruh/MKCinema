@@ -140,15 +140,40 @@
     };
   });
 
-  /* ---- backup channel: same name in another group or playlist ---- */
+  /* ---- backup channel: the same channel in another group or playlist ----
+     2.98: the same name once tidied, or the same guide id (unless many channels of its playlist share that id), other
+     playlists first (a service that is down takes its own copies with it), at most four. o.native: for the app's own
+     player, which also plays plain http:// */
   const norm = (n) => tidy(n).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+  C.twinName = (c) => norm(c._on || c.name);   // 2.98.1 All channels folds twins with this
+  const gid = (c) => String((c && c.tvgId) || '').trim().toLowerCase();
+  C.backups = (c0, o = {}) => {
+    if (!c0 || !c0.url) return [];
+    const n0 = norm(c0._on || c0.name), id0 = gid(c0), all = C.all();
+    const idOk = id0.length > 1 && all.filter((c) => c.list === c0.list && gid(c) === id0).length <= 6;
+    const same = (c) => !!n0 && norm(c._on || c.name) === n0;
+    return all.filter((c) => c !== c0 && c.url && c.url !== c0.url && (same(c) || (idOk && gid(c) === id0)) && (o.native || !X8.mixedBlocked(c.url)))
+      .sort((a, b) => ((b.list !== c0.list) - (a.list !== c0.list)) || (same(b) - same(a))).slice(0, 4);
+  };
+  // every saved playlist not read yet this time (from the device's copy when it has one), 8 s at most
+  C.loadAll = (ms) => Promise.race([Promise.all(C.lists().filter((l) => !C.data.has(l.id)).map((l) => C.load(l).catch(() => null))), new Promise((r) => setTimeout(r, ms || 8000))]);
+  // how many channels a TV service plays at once: its Xtream account says so (max_connections); others have no limit we know
+  C.cap = (id) => { const d = C.data.get(id), u = d && d.xt && d.xt.user_info, m = Number(u && u.max_connections); return m > 0 ? m : Infinity; };
+  C.room = (src, tiles) => {
+    const used = (id) => tiles.filter((x) => x.list === id).length, max = C.cap(src.list);
+    if (used(src.list) < max) return null;
+    const nm = (id) => (C.lists().find((l) => l.id === id) || {}).name || 'Your TV service';
+    const c0 = C.all().find((c) => c.list === src.list && c.url === src.url);
+    const b = c0 && C.backups(c0).find((c) => c.list !== src.list && used(c.list) < C.cap(c.list));
+    if (b) return { src: { list: b.list, url: b.url, headers: b.headers }, msg: `Playing this one from ${nm(b.list)}, because ${nm(src.list)} has no free screens` };
+    return { full: max === 1 ? `${nm(src.list)} plays one channel at a time, and it is already on screen. Remove it first.` : `${nm(src.list)} plays ${max} channels at once, and they are all on screen. Remove one first.` };
+  };
   safe(() => {
     const ps = playStream;
     playStream = function (ctx, stream, opts) {
       safe(() => {
         if (CFG.chBackup === false || !ctx || !ctx.meta || !ctx.meta._iptv || !Array.isArray(ctx.streams) || ctx.streams.length !== 1 || ctx._mkBk) return;
-        const c0 = ctx.meta._iptv, n0 = norm(c0._on || c0.name); if (!n0) return;
-        const alts = C.all().filter((c) => c !== c0 && c.url && c.url !== c0.url && norm(c._on || c.name) === n0 && !X8.mixedBlocked(c.url)).slice(0, 4);
+        const alts = C.backups(ctx.meta._iptv);
         if (!alts.length) return;
         ctx._mkBk = true;
         alts.forEach((c) => { const st = C.stream(c); st._tel.score -= 1; st._mkBackup = c; ctx.streams.push(st); });
@@ -180,7 +205,7 @@
     pb.rows = () => [...rows(),
       { group: 'Live TV' },
       { key: 'chClean', label: 'Tidy channel names', help: 'Takes country tags, quality tags and 24/7 off channel names, so “US: CNN HD” shows as “CNN”. Your own names always win.', type: 'toggle' },
-      { key: 'chBackup', label: 'Switch to a backup channel', help: 'If a channel won’t play, the same channel from another group or playlist takes over.', type: 'toggle', get: () => CFG.chBackup !== false },
+      { key: 'chBackup', label: 'Switch to a backup channel', help: 'If a channel won’t play or drops while you watch, the same channel from another group or playlist takes over.', type: 'toggle', get: () => CFG.chBackup !== false },
       { key: 'clockShow', label: 'Clock on screen', help: 'The time in the corner while you watch.', type: 'seg', options: [['off', 'Off'], ['controls', 'With the controls'], ['always', 'Always']] }];
   });
 })();
