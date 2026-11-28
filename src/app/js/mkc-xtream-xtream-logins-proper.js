@@ -118,7 +118,7 @@
         let channels = []; try { channels = JSON.parse(raw); } catch (e) { channels = []; }
         const d = { channels, epg: new Map(), at: Date.now(), epgUrl: this.xtream(l).epg, xt: info };
         this.data.set(l.id, d);
-        this.cached(l.id, 'epg', fresh, () => this.text(d.epgUrl)).then((x) => { d.epg = this.parseXMLTV(x, channels); if (S.view === 'tv' && S.tvFilter === `iptv:${l.id}` && (this.st.mode || 'live') === 'live') this.renderGuide(); }).catch((e) => { d.epgError = e.message; });
+        this.cached(l.id, 'epg', fresh, () => this.text(d.epgUrl)).then((x) => { d.epg = this.parseXMLTV(x, channels); if (S.view === 'tv' && (S.tvFilter === `iptv:${l.id}` || S.tvFilter === 'iptv:all') && (this.st.mode || 'live') === 'live') this.renderGuide(); }).catch((e) => { d.epgError = e.message; });
         return d;
       }
     }
@@ -127,12 +127,41 @@
 
   /* ---------- playing: the app's own player when there is one ---------- */
   let natCur = null;
+  /* 2.98 live steady, in the app's own player: a live channel that stopped by itself opens again (three times in three
+     minutes), then the same channel from another group or playlist plays; a channel that won't start tries its
+     backups in the app's player before the MKCinema player */
+  const keepOf = (c) => c.keep || (c.keep = { n: 0, since: Date.now(), tried: new Set([c.st.url]) });
+  const natPlay = (c, st, k, msg) => { if (msg) toast(msg, 'info', 4200, 'failover'); if (!C.playNative(st, c.meta, c.sub)) return false; if (natCur) natCur.keep = k; return true; };
+  const natGone = (c) => toast(`${c.meta.name} stopped and did not come back. The service may be busy or the channel offline.`, 'err', 6000);
+  const natSwap = (c, k, msg) => {
+    if (CFG.chBackup === false || !C.backups || !c.meta || !c.meta._iptv) return false;
+    const b = C.backups(c.meta._iptv, { native: true }).find((x) => !k.tried.has(x.url)); if (!b) return false;
+    k.tried.add(b.url); k.n = 0; k.wait = false; k.since = Date.now();
+    const st = C.stream(b); return natPlay(c, st, k, msg(st.name));
+  };
+  // failed: the last try would not start again
+  const natKeep = (c, failed) => {
+    const k = keepOf(c), now = Date.now(), view = S.view;
+    if (now - k.since > 180000) { k.n = 0; k.since = now; }
+    if (!k.warm && CFG.chBackup !== false && C.loadAll) { k.warm = true; C.loadAll(8000); }
+    if ((failed || k.wait || k.n >= 3) && natSwap(c, k, (n) => `The channel dropped. Switched to the same channel in ${n}`)) return true;
+    if (k.n >= 3) { natGone(c); return true; }
+    k.n++; k.wait = true; toast('Reconnecting the channel…', 'info', 2600, 'livekeep');
+    setTimeout(() => { if (S.view === view && $('#player').hidden && !natCur) natPlay(c, c.st, k); }, [300, 2000, 5000][k.n - 1]);
+    return true;
+  };
   const hookDone = () => {
     const N = window.MKNative; if (!N || N._xt) return;
     const done0 = N.done;
-    N.done = function (pos, dur, ended, next, err) {
+    N.done = function (pos, dur, ended, next, err, act) {
       if (natCur && !(typeof TvPlayer !== 'undefined' && TvPlayer.cur)) {
         const c = natCur; natCur = null;
+        // 2.98: the stream ended by itself (app 1.17.18+ also says "dropped" when it broke off while playing)
+        const live = !!(c.meta && c.meta._iptv && /^iptv:/.test(String(c.meta.id || '')));
+        if (live && !err && (ended || act === 'dropped')) { if (c.keep && pos > 3000) c.keep.wait = false; natKeep(c, false); return; }
+        if (live && err && !(pos > 0) && c.keep && c.keep.n > 0 && natKeep(c, true)) return;   // a try to open it again failed
+        // a channel that won't start: its backups in the app's player first
+        if (live && err && !(pos > 0) && natSwap(c, keepOf(c), (n) => `That channel would not start. Trying the same channel in ${n}…`)) return;
         if (err && !(pos > 0)) {
           // the in-app player can't read MPEG-TS, so a live channel is asked for as HLS
           const st = { ...c.st, url: c.st.url.replace(/(\/live\/[^?#]+)\.ts$/, '$1.m3u8'), _noNative: true };
@@ -152,7 +181,7 @@
     const h = st.behaviorHints && st.behaviorHints.proxyHeaders && st.behaviorHints.proxyHeaders.request;
     let ok = false;
     try { ok = MKAndroid.play(JSON.stringify({ url: st.url, title: meta.name || '', sub, startMs: 0, matchRate: CFG.matchRate !== false, audioLang: CFG.audioOnly || '', headers: h && Object.keys(h).length ? h : undefined, zap: !!(meta && meta._iptv), zapFlip: !!CFG.zapFlip })); } catch (e) { ok = false; }
-    if (ok) natCur = { st, meta };
+    if (ok) natCur = { st, meta, sub };
     return ok;
   };
   C.playAny = function (st, meta, sub) {
@@ -188,7 +217,7 @@
 
   const rg0 = C.renderGuide.bind(C);
   C.renderGuide = async function () {
-    const id = S.tvFilter.slice(5), l = this.lists().find((x) => x.id === id), epg = $('#epg');
+    const id = S.tvFilter.slice(5), l = this.listOf(id), epg = $('#epg');
     if (!l || !epg) return rg0();
     const mode = this.st.mode || 'live';
     const d = this.data.get(id);

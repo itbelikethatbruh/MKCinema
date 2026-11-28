@@ -134,7 +134,7 @@ const Preflight = {
     const n = Math.max(1, Failover.tried ? Failover.tried.size : 0);
     const checked = (ctx.streams || []).filter((s) => this.bad(s) && !(Failover.tried && Failover.tried.has(s))).length;
     try { MKLog.add('err', `no source played after ${n} tries, ${checked} more checked (${reason || 'unknown'})`); } catch (e) { /* no log */ }
-    const what = ctx.meta.type === 'series' ? 'episode' : 'film';
+    const what = ctx.meta._iptv ? 'channel' : ctx.meta.type === 'series' ? 'episode' : 'film';
     const body = `MKCinema tried ${n === 1 ? 'the best source' : `${n} sources`} for this ${what}${checked ? ` and checked ${checked} more in the background` : ''}. None of them would play on this device right now. Pick one from the list, or open it in VLC, which plays nearly every file.`;
     showMsg('None of the sources would start', body,
       `<button class="btn btn-prime" type="button" data-act="sources"><i data-lucide="layers"></i>Sources</button><button class="btn btn-ghost" type="button" id="pfRetry"><i data-lucide="refresh-cw"></i>Try again</button>${stream ? handoffHTML(stream) : ''}${vlcButtons()}`);
@@ -154,6 +154,7 @@ const Preflight = {
     };
     const next = Failover.next.bind(Failover);
     Failover.next = function (failed, reason, at) {
+      if (failed && failed._mkKeep && failed._mkKeep.wait && Failover.liveOn(failed) && Failover.liveKeep(failed, 'did not open again')) return true;   // 2.98
       if (!Preflight.on() || !P.ctx) return next(failed, reason, at);
       if (Preflight.busy && P.stream === failed) return true; // a switch is already being chosen
       Preflight.mark(failed, 'bad', reason);

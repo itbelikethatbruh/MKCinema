@@ -8,6 +8,7 @@
     try {
       if ($('#player').hidden || !P.ctx || !P.stream || P.stream.ytId) return;
       if (typeof MkChan !== 'undefined' && MkChan.on) return;            // channel surfing plays the next title itself
+      if (P.ctx.meta && P.ctx.meta._iptv && /^iptv:/.test(String(P.ctx.meta.id || ''))) return;   // 2.98: a live channel opens again instead (Failover.liveKeep)
       if (typeof Party !== 'undefined' && Party.code) return;            // a watch party decides together
       const ctx = P.ctx, st = P.stream;
       // an episode with a next one: Up next (or autoplay) takes it from here

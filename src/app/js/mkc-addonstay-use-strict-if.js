@@ -1,5 +1,6 @@
 "use strict";(()=>{if(typeof Account>"u"||typeof engine>"u"||!Account.merge||!Account.compose||!engine.persist||!engine.mount||Account._addonStay)return;Account._addonStay=1;
 const A=Account,E=engine,DAY=864e5,
+now=()=>{try{return typeof SyncClock<"u"&&SyncClock.now?SyncClock.now():Date.now()}catch{return Date.now()}},
 own=a=>a&&a.baseUrl&&!a.builtin&&!a.virtual&&!a.studio,
 norm=u=>{try{return StremioEngine.normalize(u)}catch{return u}},
 both=l=>new Set([...l,...l.map(norm)]),
@@ -19,9 +20,9 @@ let first=!!E.booting||!(typeof S<"u"&&S.booted);
 const mt=E.mount;E.mount=function(u){try{mark(seen,u)}catch{}return mt.apply(this,arguments)};
 const ph=E.placeholder;E.placeholder&&(E.placeholder=function(u){try{mark(seen,u)}catch{}return ph.apply(this,arguments)});
 const rm=E.remove;
-E.remove=function(u){try{mark(gone,u);const a=this.addons.find(x=>x.baseUrl===u);if(uid()&&(own(a)||!a&&strs(Store.get("addons",[])).some(x=>x===u||norm(x)===norm(u)))){const o=load();o[hash(u)]=Date.now();save(o)}}catch{}return rm.apply(this,arguments)};
+E.remove=function(u){try{mark(gone,u);const a=this.addons.find(x=>x.baseUrl===u);if(uid()&&(own(a)||!a&&strs(Store.get("addons",[])).some(x=>x===u||norm(x)===norm(u)))){const o=load();o[hash(u)]=now();save(o)}}catch{}return rm.apply(this,arguments)};
 const ins=E.install;
-E.install=function(u){try{gone.delete(u);gone.delete(norm(u));if(!this.booting&&!inRemote&&uid()){const ad=load("Add");ad[hash(u)]=Date.now();save(ad,"Add")}}catch{}return ins.apply(this,arguments)};
+E.install=function(u){try{gone.delete(u);gone.delete(norm(u));if(!this.booting&&!inRemote&&uid()){const ad=load("Add");ad[hash(u)]=now();save(ad,"Add")}}catch{}return ins.apply(this,arguments)};
 const ps=E.persist;
 E.persist=function(){if(!this.booting)try{const st=strs(Store.get("addons",[]));
  // 1. a sync that landed while this device was still loading its old list wins over that list

@@ -2,6 +2,14 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.98.0 (2026-11-28)
+
+- Live TV keeps going: if a channel drops while you watch, MKCinema reconnects it, and if it stays down the same channel from your other playlist takes over.
+- All channels: with two or more TV playlists, Live TV can show them as one guide.
+- Split Screen keeps to the number of screens your TV service allows.
+- Groundwork for sharp upscaling in the Windows and Android apps' own playback (arrives with the next app updates).
+- Website: three new Live features (277 features).
+
 ## Web app 2.97.5 (2026-11-28)
 
 - Removed addons stay removed even when this device's list is the newer one.

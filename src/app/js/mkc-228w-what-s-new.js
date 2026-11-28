@@ -8,6 +8,11 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '2.98.0', date: '2026-11-27', items: [
+    ['new', 'Live TV keeps going', 'If a channel drops while you watch, MKCinema reconnects it. If it stays down, the same channel from your other playlist takes over.'],
+    ['new', 'All channels in one guide', 'With two or more TV playlists, Live TV can show them as one guide. A channel both playlists have shows once, and uses whichever playlist has its TV guide.'],
+    ['better', 'Split Screen knows your screen limit', 'Split Screen now keeps to the number of screens your TV service allows.'],
+  ] },
   { v: '2.97.4', date: '2026-11-27', items: [
     ['new', 'Rotten Tomatoes for everyone', 'Rotten Tomatoes ratings now show on films for everyone, next to IMDb. With an MDBList key you also see the audience rating.'],
     ['better', 'Share your setup with a QR code', 'Share my setup now shows a QR code. Point a phone or iPad camera at it to add the same addons there.'],

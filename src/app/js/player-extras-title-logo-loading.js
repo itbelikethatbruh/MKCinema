@@ -231,7 +231,56 @@ const Failover = {
     playStream(P.ctx, n, { startAt: at != null ? at : pNow() });
     return true;
   },
+  /* 2.98 live steady */
+  /* a playlist channel that drops while it plays (it ends, stalls or fails after it started) opens again by itself, up
+     to three times in three minutes (after 1, 3 and 6 s); then the same channel from another group or playlist takes
+     over (Channels.backups; Settings > Playback > Switch to a backup channel) */
+  keepT: 0,
+  liveOn(s) {
+    const m = P.ctx && P.ctx.meta; s = s || P.stream;
+    return !!(m && m._iptv && /^iptv:/.test(String(m.id || '')) && s && s._mkOn && P.stream === s && !$('#player').hidden);
+  },
+  liveKeep(s, why) {
+    if (!this.liveOn(s)) return false;
+    const now = Date.now(), k = s._mkKeep || (s._mkKeep = { n: 0, since: now }), C = typeof Channels === 'object' ? Channels : null, ctx = P.ctx;
+    if (now - k.since > 180000) { k.n = 0; k.since = now; }
+    clearTimeout(this.keepT); clearTimeout(this.stallT); clearTimeout(this.healT); clearTimeout(this.t);
+    // the other playlists are read now, in the background, so their copies of this channel are ready as backups
+    if (CFG.chBackup !== false && C && C.loadAll && !ctx._mkWarm) ctx._mkWarm = C.loadAll(8000).then(() => { ctx._mkWarmed = true; });
+    // a backup takes over when the last try did not play again, when the stream already reconnected itself for 15 s
+    // (MkHeal.hls), or after three tries; while the other playlists are still being read it waits for them (8 s at most)
+    if (k.wait || k.n >= 3 || (P.hls && why !== 'ended')) {
+      if (this.liveSwap(s)) return true;
+      if (ctx._mkWarm && !ctx._mkWarmed) {
+        try { Loader.wait(); } catch (e) { /* no loader */ }
+        ctx._mkWarm.then(() => { if (P.stream === s && !$('#player').hidden && !this.liveSwap(s) && !this.liveRe(s, k, why)) playbackFailed(s, 'The channel stopped and did not come back'); });
+        return true;
+      }
+    }
+    return this.liveRe(s, k, why);
+  },
+  liveRe(s, k, why) {
+    if (k.n >= 3 || navigator.onLine === false) return false;
+    k.n++; k.wait = true;
+    try { MKLog.add('play', `live channel ${why}: opening it again (try ${k.n})`); } catch (e) { /* no log */ }
+    toast('Reconnecting the channel…', 'info', 2600, 'livekeep');
+    try { Loader.wait(); } catch (e) { /* no loader */ }
+    this.keepT = setTimeout(() => { if (P.stream === s && !$('#player').hidden) loadUrl(s, 0); }, [1000, 3000, 6000][k.n - 1]);
+    return true;
+  },
+  liveSwap(s) {
+    const ctx = P.ctx, C = typeof Channels === 'object' ? Channels : null;
+    if (CFG.chBackup === false || !C || !C.backups || !ctx || !ctx.meta || !ctx.meta._iptv) return false;
+    const have = new Set((ctx.streams || []).map((x) => x && x.url));
+    C.backups(ctx.meta._iptv).forEach((c) => { if (have.has(c.url)) return; const st = C.stream(c); st._tel.score -= 1; st._mkBackup = c; ctx.streams.push(st); have.add(c.url); });
+    const n = (ctx.streams || []).find((x) => x && x !== s && x._mkBackup && !this.tried.has(x));
+    if (!n) return false;
+    try { MKLog.add('play', `live channel dropped: switching to ${n.name}`); } catch (e) { /* no log */ }
+    toast(`The channel dropped. Switched to the same channel in ${n.name}`, 'info', 4200, 'failover');
+    playStream(ctx, n, { startAt: 0 }); return true;
+  },
   onError(stream, reason) {
+    if (P.ctx && P.stream === stream && !Rescue.active && this.liveKeep(stream, reason)) return true;
     if (!CFG.failover || !P.ctx || stream._local || P.stream !== stream) return false;
     if (Rescue.active) return false;
     return this.next(stream, `failed (${reason})`, P.startAt || (isFinite(pDur()) ? pNow() : 0));
@@ -240,18 +289,19 @@ const Failover = {
 video.addEventListener('waiting', () => {
   clearTimeout(Failover.stallT);
   if (!P.stream || P.remux || video.readyState < 1) return;
-  const s = P.stream, at = pNow(), heal = MkHeal.can(s);
-  if (!heal && !CFG.failover) return;
+  const s = P.stream, at = pNow(), heal = MkHeal.can(s), live = Failover.liveOn(s);
+  if (!heal && !CFG.failover && !live) return;
   // most mid-film stalls are a dropped or frozen connection to the host, not a bad file: the same copy reconnects at the
   // same second first (after 6 s), and the next copy only takes over if that does not help, so audio and subtitles stay
   Failover.stallT = setTimeout(() => {
     if (P.stream !== s || video.readyState >= 3 || video.paused) return;
     if (heal && MkHeal.reconnect(s, at)) return;
+    if (live && Failover.liveKeep(s, 'stalled')) return;
     if (CFG.failover) Failover.next(s, 'stalled for 12 s', at);
-  }, heal ? 6000 : 12000);
+  }, heal ? 6000 : live ? 8000 : 12000);
 });
 ['playing', 'pause', 'seeking'].forEach((ev) => video.addEventListener(ev, () => clearTimeout(Failover.stallT)));
-video.addEventListener('playing', () => clearTimeout(Failover.healT));
+video.addEventListener('playing', () => { clearTimeout(Failover.healT); clearTimeout(Failover.keepT); const s = P.stream; if (s) { s._mkOn = true; if (s._mkKeep) s._mkKeep.wait = false; } });
 video.addEventListener('loadedmetadata', () => clearTimeout(Failover.t));
 
 /* ---------------- Audio rescue: MKV files with EAC3, AC3, DTS or TrueHD audio play silently in browsers ----------------
