@@ -38,7 +38,7 @@ import java.nio.charset.StandardCharsets;
     Dolby Vision (DvFallback), and Skip intro / recap / ending plus Next episode from the times MKCinema found
     (AniSkip, TheIntroDB, chapters, addons, your own earlier skips). */
 public class PlayerActivity extends Activity implements SurfaceHolder.Callback, Engine.Listener {
-    Engine eng; boolean fellBack, slow; String engineName; File subFile; boolean subsWaited;
+    Engine eng; boolean fellBack, slow; String spdif = ""; String engineName; File subFile; boolean subsWaited;
     ImageView subImg; int vw, vh; float par = 1f;
     SurfaceView surface;
     FrameLayout root;
@@ -83,6 +83,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         startMs = i.getIntExtra("startMs", 0); matchRate = i.getBooleanExtra("matchRate", true);
         engineName = i.getStringExtra("engine"); if (engineName == null || engineName.isEmpty()) engineName = "exo";
         slow = i.getBooleanExtra("slow", false);
+        spdif = AudioOut.clean(i.getStringExtra("spdif")); // 1.17.19: Sound to a receiver
         // 1.9.0: a crash while libass was drawing turns styled subtitles off on this app version (see onDestroy)
         android.content.SharedPreferences sp = getSharedPreferences("mk", MODE_PRIVATE);
         if (sp.getBoolean("assLive", false)) {
@@ -256,7 +257,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         // 1.14.0: "mpv" (MKCinema Player, the default; "exo" from older app pages means the default too), "exoplayer", "system"
         try {
             if ("system".equals(engineName)) eng = new MpEngine(this, this);
-            else if (!"exoplayer".equals(engineName) && MpvEngine.available()) { MpvEngine x = new MpvEngine(this, this, !touch); x.slow = slow; x.live = zap; eng = x; }
+            else if (!"exoplayer".equals(engineName) && MpvEngine.available()) { MpvEngine x = new MpvEngine(this, this, !touch); x.slow = slow; x.live = zap; x.spdif = spdif; eng = x; }
             else eng = exo();
         }
         catch (Throwable t) { fellBack = true; eng = new MpEngine(this, this); } // ExoPlayer missing or broken on this device
@@ -269,7 +270,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     /** every engine opens through here, the fallbacks too, so each one starts behind the gate */
     void open(Engine e) { gate = e.holdStart(); e.open(url, hdr, subFile, audioLang, startMs, surface.getHolder()); }
 
-    Engine exo() { ExoEngine x = new ExoEngine(this, this); x.slow = slow; x.wantAss = assOk; return x; }
+    Engine exo() { ExoEngine x = new ExoEngine(this, this); x.slow = slow; x.wantAss = assOk; x.spdif = getIntent().hasExtra("spdif") ? spdif : null; return x; }
     /** 1.14.0: mpv couldn't open the file: ExoPlayer tries next (then the basic player, see error()) */
     boolean triedExo, triedGpu; String errChain = "";
     void chain(String what) { errChain += (errChain.isEmpty() ? "" : " > ") + what; android.util.Log.w("MKCPlayer", "player: " + errChain); }
@@ -388,7 +389,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         // tries again with its own renderer, which also decodes in software, BEFORE ExoPlayer: same engine, every audio and subtitle track stays listed.
         if (beforeReady && eng instanceof MpvEngine && ((MpvEngine) eng).embed && !triedGpu && !isFinishing()) {
             triedGpu = true; chain("mpv-tv:" + code); eng.release(); eng = null; prepared = false; note.setText("Starting MKCinema Player…");
-            MpvEngine x = new MpvEngine(this, this, false); x.slow = slow; x.live = zap; eng = x;
+            MpvEngine x = new MpvEngine(this, this, false); x.slow = slow; x.live = zap; x.spdif = spdif; eng = x;
             open(eng); addOverlay();
             return;
         }

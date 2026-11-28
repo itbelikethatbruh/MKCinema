@@ -51,6 +51,9 @@ class ExoEngine implements Engine {
 
     /** 1.9.0: full ASS/SSA styling through libass (see Ass), when PlayerActivity allows it */
     boolean wantAss; Ass.Hook ass;
+    /** 1.17.19: Sound to a receiver. null = ExoPlayer's own choice (what the HDMI connection takes goes out untouched);
+        a list = only those formats go out untouched, the rest are decoded here ("" = all decoded) */
+    String spdif;
 
     ExoEngine(Context ctx, Listener l) { this.ctx = ctx; this.l = l; }
     /** the libass picture layer, laid over the video by PlayerActivity; null without ASS styling */
@@ -94,6 +97,17 @@ class ExoEngine implements Engine {
                             .setAllowedJoiningTimeMs(joinMs).setEnableDecoderFallback(fallback).setEventHandler(eh).setEventListener(el)
                             .setMaxDroppedFramesToNotify(MAX_DROPPED_VIDEO_FRAME_COUNT_TO_NOTIFY)));
                     } catch (Throwable t) { super.buildVideoRenderers(c, mode, sel, fallback, eh, el, joinMs, out); }
+                }
+                @Override protected androidx.media3.exoplayer.audio.AudioSink buildAudioSink(Context c, boolean flt, boolean params) {
+                    if (spdif == null) return super.buildAudioSink(c, flt, params);
+                    try {
+                        androidx.media3.exoplayer.audio.AudioCapabilities dev = androidx.media3.exoplayer.audio.AudioCapabilities.getCapabilities(c);
+                        List<Integer> keep = new ArrayList<>();
+                        for (int e : AudioOut.encodings(spdif)) if (!keep.contains(e) && (e == android.media.AudioFormat.ENCODING_PCM_16BIT || dev.supportsEncoding(e))) keep.add(e);
+                        int[] k = new int[keep.size()]; for (int i = 0; i < k.length; i++) k[i] = keep.get(i);
+                        return new androidx.media3.exoplayer.audio.DefaultAudioSink.Builder().setEnableFloatOutput(flt).setEnableAudioTrackPlaybackParams(params)
+                            .setAudioCapabilities(new androidx.media3.exoplayer.audio.AudioCapabilities(k, Math.max(2, dev.getMaxChannelCount()))).build();
+                    } catch (Throwable t) { return super.buildAudioSink(c, flt, params); }
                 }
             }.setEnableDecoderFallback(true);
             ExtractorsFactory exf = ex; androidx.media3.exoplayer.RenderersFactory rff = rf;

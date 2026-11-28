@@ -27,7 +27,7 @@ import org.json.JSONObject;
       says so, and the person can switch engine in Settings). */
 class MpvEngine implements Engine, MPVLib.EventObserver {
     final Context ctx; final Listener l; final Handler h = new Handler(Looper.getMainLooper());
-    MPVLib m; boolean embed, loaded, ended, dead, fpsSent, slow, held, live; int w, ht; String lastErr = "";
+    String spdif = ""; MPVLib m; boolean embed, loaded, ended, dead, fpsSent, slow, held, live; int w, ht; String lastErr = "";
     /** 1.17.17: opens paused; PlayerActivity calls play() once the TV is ready for the picture */
     public boolean holdStart() { held = true; return true; }
     /** 1.17.17: the mpv being shut down after Back (see release), so the next film waits for it to let go of the
@@ -81,6 +81,7 @@ class MpvEngine implements Engine, MPVLib.EventObserver {
             else { opt("vo", "gpu"); opt("gpu-context", "android"); opt("opengl-es", "yes"); opt("hwdec", "mediacodec-copy"); }
             opt("hwdec-codecs", "all");
             opt("ao", "audiotrack,opensles"); opt("audio-channels", "auto-safe");
+            if (!spdif.isEmpty()) opt("audio-spdif", spdif); // 1.17.19: Sound to a receiver (AudioOut)
             // a large read-ahead so debrid links ride out slow patches; Slow internet mode keeps more
             opt("cache", "yes"); opt("demuxer-max-bytes", bufferMb() + "MiB"); opt("demuxer-max-back-bytes", "32MiB");
             opt("demuxer-readahead-secs", slow ? "240" : "60"); opt("cache-pause-wait", slow ? "10" : "2");
