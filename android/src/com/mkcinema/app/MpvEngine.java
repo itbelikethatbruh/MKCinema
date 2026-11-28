@@ -27,7 +27,7 @@ import org.json.JSONObject;
       says so, and the person can switch engine in Settings). */
 class MpvEngine implements Engine, MPVLib.EventObserver {
     final Context ctx; final Listener l; final Handler h = new Handler(Looper.getMainLooper());
-    MPVLib m; boolean embed, loaded, ended, dead, fpsSent, slow, held; int w, ht; String lastErr = "";
+    MPVLib m; boolean embed, loaded, ended, dead, fpsSent, slow, held, live; int w, ht; String lastErr = "";
     /** 1.17.17: opens paused; PlayerActivity calls play() once the TV is ready for the picture */
     public boolean holdStart() { held = true; return true; }
     /** 1.17.17: the mpv being shut down after Back (see release), so the next film waits for it to let go of the
@@ -85,6 +85,17 @@ class MpvEngine implements Engine, MPVLib.EventObserver {
             opt("cache", "yes"); opt("demuxer-max-bytes", bufferMb() + "MiB"); opt("demuxer-max-back-bytes", "32MiB");
             opt("demuxer-readahead-secs", slow ? "240" : "60"); opt("cache-pause-wait", slow ? "10" : "2");
             opt("network-timeout", "30");
+            // 1.17.18 pause live TV: a live channel keeps what it has read in a file in the app's cache (a quarter of the
+            // free space, 64 MB to 2 GB, half behind and half ahead), so Pause holds the channel and Left goes back in it.
+            // mpv deletes the file itself; the folder is emptied again on each channel.
+            if (live) {
+                File dir = new File(ctx.getCacheDir(), "timeshift"); File[] old = dir.listFiles(); if (old != null) for (File f : old) f.delete(); dir.mkdirs();
+                long mb = Math.max(64L, Math.min(2048L, dir.getUsableSpace() / 4L / (1L << 20)));
+                opt("cache-on-disk", "yes"); opt("demuxer-cache-dir", dir.getAbsolutePath());
+                opt("demuxer-max-bytes", (mb / 2) + "MiB"); opt("demuxer-max-back-bytes", (mb / 2) + "MiB");
+                opt("cache-secs", "7200"); opt("demuxer-readahead-secs", "7200"); opt("force-seekable", "yes");
+                android.util.Log.i("MKCPlayer", "live channel: keeps up to " + mb + " MB to pause and go back");
+            }
             opt("stream-lavf-o", "reconnect=1,reconnect_streamed=1,reconnect_on_network_error=1,reconnect_delay_max=8");
             // subtitles: big and readable at a distance, files' own styling kept
             opt("sub-font-size", "46"); opt("sub-border-size", "2.6"); opt("sub-shadow-offset", "1"); opt("sub-ass-override", "scale");
@@ -140,6 +151,18 @@ class MpvEngine implements Engine, MPVLib.EventObserver {
         m.setPropertyBoolean("pause", false);
     }
     public void pause() { if (m != null) m.setPropertyBoolean("pause", true); }
+    /** 1.17.18: mpv's demuxer-cache-state (a node, read as JSON): the first seekable range, and the cache's end */
+    @Override public long[] liveRange() {
+        if (m == null || !live) return null;
+        try {
+            String j = m.getPropertyString("demuxer-cache-state"); if (j == null || j.isEmpty()) return null;
+            org.json.JSONObject o = new org.json.JSONObject(j); org.json.JSONArray r = o.optJSONArray("seekable-ranges");
+            double end = o.optDouble("cache-end", -1), start = -1;
+            if (r != null && r.length() > 0) { org.json.JSONObject x = r.getJSONObject(r.length() - 1); start = x.optDouble("start", -1); end = Math.max(end, x.optDouble("end", -1)); }
+            if (start < 0 || end <= start) return null;
+            return new long[] { (long) (start * 1000), (long) (end * 1000) };
+        } catch (Exception e) { return null; }
+    }
     public long pos() { return (long) (Math.max(0, pos) * 1000); }
     public long dur() { return (long) (Math.max(0, dur) * 1000); }
     public void seek(long ms) { if (m != null) { ended = false; m.command(new String[] { "seek", String.format(Locale.US, "%.3f", ms / 1000.0), "absolute" }); } }

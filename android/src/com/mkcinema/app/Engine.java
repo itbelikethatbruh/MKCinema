@@ -43,4 +43,7 @@ interface Engine {
     /** 1.17.17: called before open(). True when this engine opens the film paused and waits for play(), so the TV can
         switch to the film's frame rate before any sound plays. False: the engine starts on its own (the basic player). */
     default boolean holdStart() { return false; }
+    /** 1.17.18: a live channel's buffered stretch {first, last} in ms of its timeline (Pause and Left go back inside
+        it, Right comes forward to its end, which is live); null when the engine keeps none (mpv only) */
+    default long[] liveRange() { return null; }
 }
