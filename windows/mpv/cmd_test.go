@@ -1,6 +1,7 @@
 package mpv
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -164,5 +165,12 @@ func TestVad(t *testing.T) {
 	s.Set("af-metadata/mkvad", `{"lavfi.silence_start.3":"12.5"}`, true)
 	if m, ok := s.vals["vad"].(map[string]any); !ok || m["lavfi.silence_start.3"] != "12.5" {
 		t.Errorf("vad %#v", s.vals["vad"])
+	}
+}
+
+func TestSoundHeadphones(t *testing.T) {
+	o := must(Translate("sound", "headphones"))
+	if s := fmt.Sprint(o); len(o) != 1 || !strings.Contains(s, "crossfeed") || !strings.Contains(s, "channel_layouts=stereo") {
+		t.Errorf("headphones %v", o)
 	}
 }
