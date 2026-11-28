@@ -41,13 +41,13 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
     static final String[] WATCHED = { "time-pos", "duration", "pause", "paused-for-cache", "seeking", "eof-reached", "idle-active",
         "volume", "mute", "speed", "aid", "sid", "secondary-sid", "track-list", "chapter-list", "demuxer-cache-time",
         "video-params/w", "video-params/h", "video-params/gamma", "video-params/primaries", "hwdec-current", "video-codec",
-        "audio-codec-name", "audio-params/channel-count", "container-fps", "sub-delay", "audio-delay", "sub-text", "video-params/aspect", "af-metadata/mkvad", "frame-drop-count" };
+        "audio-codec-name", "audio-params/channel-count", "container-fps", "sub-delay", "audio-delay", "sub-text", "video-params/aspect", "af-metadata/mkvad", "frame-drop-count", "audio-out-params/format" };
     static final Map<String, String> KEYS = new HashMap<>();
     static {
         String[] k = { "time-pos", "t", "duration", "dur", "pause", "paused", "paused-for-cache", "buffering", "eof-reached", "ended",
             "idle-active", "idle", "demuxer-cache-time", "cached", "video-params/w", "w", "video-params/h", "h", "video-params/gamma", "gamma",
             "video-params/primaries", "prim", "track-list", "tracks", "chapter-list", "chapters", "hwdec-current", "hwdec",
-            "audio-params/channel-count", "channels", "container-fps", "fps", "sub-text", "stext", "video-params/aspect", "dar", "af-metadata/mkvad", "vad", "frame-drop-count", "drops" };
+            "audio-params/channel-count", "channels", "container-fps", "fps", "sub-text", "stext", "video-params/aspect", "dar", "af-metadata/mkvad", "vad", "frame-drop-count", "drops", "audio-out-params/format", "aout" };
         for (int i = 0; i < k.length; i += 2) KEYS.put(k[i], k[i + 1]);
     }
 
@@ -63,6 +63,8 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
                 JSONObject o = new JSONObject();
                 boolean ok = client() != null; o.put("ok", ok); o.put("api", "android"); o.put("err", ok ? "" : initErr); o.put("tv", a.tv); o.put("embed", a.tv); o.put("up", ok && !a.tv && shaderDir != null); o.put("vsr", ""); return o.toString();
             }
+            // 1.17.19: what the HDMI connection says it takes (Sound to a receiver)
+            case "audiocaps": return AudioOut.caps(a.getApplicationContext()).toString();
             case "show": { final boolean on = !"0".equals(arg); want = on; a.runOnUiThread(() -> show(on)); return ""; }
             case "get": {
                 // 1.17.8: answered from the news already gathered, so the page never waits on the player
@@ -229,6 +231,7 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
                 ops.add(set("start", num(String.valueOf(r.optDouble("start", 0)), 0, 1e7)));
                 ops.add(set("alang", langs(r.optString("alang")))); String sl = langs(r.optString("slang"));
                 ops.add(set("slang", sl)); ops.add(set("force-media-title", clean(r.optString("title"), 300)));
+                if (r.has("spdif")) ops.add(set("audio-spdif", AudioOut.clean(r.optString("spdif"))));
                 ops.add(set("sid", sl.isEmpty() ? "no" : "auto")); ops.add(set("aid", "auto")); ops.add(set("pause", "no"));
                 ops.add(run("loadfile", url, "replace")); return ops;
             }
@@ -238,6 +241,8 @@ final class UnderPlayer implements MPVLib.EventObserver, SurfaceHolder.Callback 
                 else if (!webUrl(src)) throw new IllegalArgumentException("not allowed");
                 ops.add(LANG.matcher(lang).matches() ? run("sub-add", src, "select", title, lang.toLowerCase(Locale.US)) : run("sub-add", src, "select", title)); return ops;
             }
+            // 1.17.19: surround formats sent to the receiver untouched; "" decodes everything here (the default)
+            case "spdif": ops.add(set("audio-spdif", AudioOut.clean(arg))); return ops;
             case "play": ops.add(set("pause", "no")); return ops;
             case "pause": ops.add(set("pause", "yes")); return ops;
             case "stop": ops.add(run("stop")); return ops;

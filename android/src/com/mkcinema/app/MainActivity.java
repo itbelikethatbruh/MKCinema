@@ -793,6 +793,8 @@ public class MainActivity extends Activity {
         /** a programme from the guide: {id, url, headers, name, channel, logo, start, end}; an exact alarm starts it, app open or not */
         @JavascriptInterface public boolean recPlan(String k, String json) { return ok(k) && json != null && json.length() < 20000 && RecService.plan(getApplicationContext(), json); }
         @JavascriptInterface public boolean recUnplan(String k, String id) { return ok(k) && id != null && RecService.unplan(getApplicationContext(), id); }
+        // 1.17.19: what the HDMI connection says it takes, for Settings > Sound to a receiver
+        @JavascriptInterface public String audioCaps(String k) { return ok(k) ? AudioOut.caps(getApplicationContext()).toString() : "{}"; }
         @JavascriptInterface public boolean play(String k, String json) {
             if (!ok(k)) return false;
             try {
@@ -810,6 +812,7 @@ public class MainActivity extends Activity {
                     .putExtra("hasNext", o.optBoolean("hasNext", false)).putExtra("autoSkip", o.optBoolean("autoSkip", false))
                     .putExtra("zap", o.optBoolean("zap", false)).putExtra("zapFlip", o.optBoolean("zapFlip", false))
                     .putExtra("ass", o.optBoolean("ass", true));
+                if (o.has("spdif")) i.putExtra("spdif", AudioOut.clean(o.optString("spdif"))); // 1.17.19: Sound to a receiver
                 runOnUiThread(() -> { try { keepPage(true); startActivityForResult(i, REQ_PLAY); } catch (Exception ignored) { keepPage(false); } });
                 return true;
             } catch (Exception e) { return false; }
@@ -911,7 +914,7 @@ public class MainActivity extends Activity {
         "p2pAvailable", "dlStart", "dlSpace", "setSlow", "epEnable", "epOn", "epSync", "dlList", "dlRemove", "dlPlay", "pipState", "pip", "play",
         "setEngine", "update", "youtube", "exit", "iptvHosts", "recStart", "recStop", "recPlan", "recUnplan",
         "apScan", "apPlay", "apPin", "apCtl", "apForget", "apState", "signIn", "apAdd", "apDiag", "updateAuto", "updateInstall", "updateProgress", "mpv",
-        "mirrorStart", "mirrorSignal", "mirrorStop", "mirrorOn", "widgetOn", "widgetSync", "watchNextAll", "bars" };
+        "mirrorStart", "mirrorSignal", "mirrorStop", "mirrorOn", "widgetOn", "widgetSync", "watchNextAll", "bars", "audioCaps" };
 
     static String newKey() {
         byte[] b = new byte[24]; new SecureRandom().nextBytes(b);
