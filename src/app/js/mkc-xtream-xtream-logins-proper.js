@@ -126,7 +126,7 @@
   };
 
   /* ---------- playing: the app's own player when there is one ---------- */
-  let natCur = null;
+  let natCur = null, natGen = 0;   /* 2.98.4 live wait */ // natGen counts channels opened in the app's player
   /* 2.98 live steady, in the app's own player: a live channel that stopped by itself opens again (three times in three
      minutes), then the same channel from another group or playlist plays; a channel that won't start tries its
      backups in the app's player before the MKCinema player */
@@ -141,10 +141,12 @@
   };
   /* 2.98.3 live fixes */
   // the backup search waits (up to 8 s) for playlists not read yet this session, as the MKCinema player's does
-  const natSwapAll = async (c, k, msg) => {
+  // still(): nothing else started while it waited; false = the person moved on, so nothing plays
+  const natSwapAll = async (c, k, msg, still) => {
     if (natSwap(c, k, msg)) return true;
     if (CFG.chBackup === false || !C.loadAll || !C.lists().some((l) => !C.data.has(l.id))) return false;
     await C.loadAll(8000);
+    if (still && !still()) return true;
     return natSwap(c, k, msg);
   };
   // failed: the last try would not start again
@@ -175,7 +177,12 @@
           if (!X8.mixedBlocked(st.url)) { toast('Playing in the MKCinema player instead', 'info', 3000); playStream({ meta: c.meta, video: null, streams: [st] }, st); }
           else toast(`${c.meta.name} would not play. The service may be busy or the channel offline.`, 'err', 6000);
         };
-        if (live && err && !(pos > 0)) { const view = S.view; natSwapAll(c, keepOf(c), (n) => `That channel would not start. Trying the same channel in ${n}…`).then((ok) => { if (!ok && S.view === view && !natCur) fallback(); }); return; }
+        if (live && err && !(pos > 0)) {
+          const view = S.view, gen = natGen, s0 = P.stream;
+          const still = () => S.view === view && natGen === gen && !natCur && P.stream === s0 && $('#player').hidden && !(typeof TvPlayer !== 'undefined' && TvPlayer.cur);
+          natSwapAll(c, keepOf(c), (n) => `That channel would not start. Trying the same channel in ${n}…`, still).then((ok) => { if (!ok && still()) fallback(); });
+          return;
+        }
         if (err && !(pos > 0)) fallback();
         return;
       }
@@ -190,7 +197,7 @@
     const h = st.behaviorHints && st.behaviorHints.proxyHeaders && st.behaviorHints.proxyHeaders.request;
     let ok = false;
     try { ok = MKAndroid.play(JSON.stringify({ url: st.url, title: meta.name || '', sub, startMs: 0, matchRate: CFG.matchRate !== false, audioLang: CFG.audioOnly || '', headers: h && Object.keys(h).length ? h : undefined, zap: !!(meta && meta._iptv), zapFlip: !!CFG.zapFlip })); } catch (e) { ok = false; }
-    if (ok) natCur = { st, meta, sub };
+    if (ok) { natCur = { st, meta, sub }; natGen++; }
     return ok;
   };
   C.playAny = function (st, meta, sub) {
