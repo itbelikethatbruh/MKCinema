@@ -118,7 +118,10 @@ const DEV = {
   tv: { ctx: { viewport: { width: 960, height: 540 }, userAgent: TV_UA, deviceScaleFactor: 1 }, input: 'remote', cpu: 6 },
 };
 const proxy = process.env.HTTPS_PROXY || process.env.https_proxy;
-const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'], ...(proxy ? { proxy: { server: proxy, bypass: '127.0.0.1,localhost' } } : {}) });
+// JC_PUBLIC=1: treat the proxy as a public address, as on the GitHub runner (no proxy there), so the live page is a
+// public site reaching the test addon on this machine, and the browser's local-network rules apply as they do there
+const PUBLIC = process.env.JC_PUBLIC && proxy ? [`--ip-address-space-overrides=${new URL(proxy).host}=public`] : [];
+const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required', ...PUBLIC], ...(proxy ? { proxy: { server: proxy, bypass: '127.0.0.1,localhost' } } : {}) });
 
 /* ---------- the in-page probe ---------- */
 function probe() {
@@ -286,7 +289,10 @@ class Run {
   constructor(dev) { this.dev = dev; this.D = DEV[dev]; this.tv = dev === 'tv'; }
   async open() {
     const { D } = this;
-    this.ctx = await browser.newContext({ ...D.ctx, serviceWorkers: 'block', ignoreHTTPSErrors: !!proxy });
+    this.ctx = await browser.newContext({ ...D.ctx, serviceWorkers: 'block', ignoreHTTPSErrors: !!proxy,
+      // the test addon runs on this machine; a public page (the live app) may only reach it with the browser's
+      // local-network permission, which a person grants once for a home server. Without it the live run could never play.
+      permissions: ['local-network-access'] });
     await this.ctx.addInitScript(({ addon, extra }) => { try { if (sessionStorage.getItem('jc')) return; sessionStorage.setItem('jc', '1');
       const seed = { 'mkc:toured': 'true', 'mkc:langAsked': '1', 'mkc:whatsNewOff': 'true', 'mkc:seenVer': '"9.99.99"', 'mkc:playerAsked': '1', 'mkc:prompt': '1', 'mkc:addons': JSON.stringify([addon]) };
       Object.assign(seed, extra); for (const [k, v] of Object.entries(seed)) localStorage.setItem(k, v); } catch (e) { /* storage off */ } }, { addon: `${base}/addon/manifest.json`, extra: SEED });
