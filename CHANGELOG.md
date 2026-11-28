@@ -2,6 +2,10 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.98.2 (2026-11-28)
+
+- Live TV: while backup channels are being looked up, a channel you pick in the meantime keeps playing.
+
 ## Web app 2.98.1 (2026-11-28)
 
 - Add a TV playlist from your phone: scan the code on your TV, type the link or login on your phone, and it fills in on the TV.
