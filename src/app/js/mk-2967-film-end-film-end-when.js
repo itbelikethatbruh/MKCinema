@@ -10,6 +10,7 @@
       if (typeof MkChan !== 'undefined' && MkChan.on) return;            // channel surfing plays the next title itself
       if (P.ctx.meta && P.ctx.meta._iptv && /^iptv:/.test(String(P.ctx.meta.id || ''))) return;   // 2.98: a live channel opens again instead (Failover.liveKeep)
       if (typeof Party !== 'undefined' && Party.code) return;            // a watch party decides together
+      if (window.MkQueue && MkQueue.takes(P.ctx)) return;               // 3.0 a list plays the next title
       const ctx = P.ctx, st = P.stream;
       // an episode with a next one: Up next (or autoplay) takes it from here
       if (ctx.video && typeof nextVideo === 'function' && nextVideo(ctx.meta, ctx.video)) return;

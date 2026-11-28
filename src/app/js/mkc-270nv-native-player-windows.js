@@ -200,7 +200,7 @@ const MkNative = {
     this.cmd('zoom', P.zoom || 1).catch(() => {});
     if (typeof PxPicture !== 'undefined') { const p = PxPicture.get(); this.cmd('eq', JSON.stringify({ brightness: p.b - 100, contrast: p.c - 100, saturation: p.s - 100 })).catch(() => {}); }
   },
-  sound() { if (this.active && typeof SoundModes !== 'undefined') this.cmd('sound', { voices: 'voice', night: 'night' }[SoundModes.cur().k] || 'off').then(() => { if (this.vadLvl) this.cmd('vad', String(this.vadLvl)).catch(() => {}); }, () => {}); },
+  sound() { if (this.active && typeof SoundModes !== 'undefined') this.cmd('sound', { voices: 'voice', night: 'night', headphones: 'headphones' }[SoundModes.cur().k] || 'off').then(() => { if (this.vadLvl) this.cmd('vad', String(this.vadLvl)).catch(() => {}); }, () => {}); },
   /* 2.95.9: speech detection for subtitle auto-sync (Android 1.17.15+, Windows 1.6.2+). mpv's silencedetect runs per
      channel at this level (dB, 0 = off) and reports the film times where each channel goes quiet and comes back;
      those are the film's own times, so the audio buffer doesn't shift them. A Sound mode change resets mpv's audio

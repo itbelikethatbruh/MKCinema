@@ -1,0 +1,78 @@
+
+/* 2.97.2 your colour everywhere: the picked colour (--pc-acc) and its partner colour (--pc-acc-2) run through the whole
+   player and its panels; panels read clearly over any film; player buttons hide under an open panel. */
+html.mk-rx #player{--accent:var(--pc-acc,#d8c29a);--rx-gold:var(--pc-acc,#d8c29a)}
+/* panels: deeper, colour-washed glass so a busy film never clashes with the words */
+html.mk-rx #player #optMenu.menu,html.mk-rx #player #subMenu.menu,html.mk-rx #player #dspPop{
+ background:radial-gradient(120% 70% at 100% 0%,rgba(var(--pc-acc-rgb),.16),transparent 60%),radial-gradient(90% 60% at 0% 100%,rgba(var(--pc-acc2-rgb),.12),transparent 65%),linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.02) 40%),rgba(12,12,16,.62)!important;
+ border-color:rgba(var(--pc-acc-rgb),.28)!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 0 0 1px rgba(var(--pc-acc-rgb),.08),0 30px 80px -20px rgba(0,0,0,.7),0 0 60px -20px rgba(var(--pc-acc-rgb),.35)!important}
+html[data-pcglass=clear].mk-rx #player #optMenu.menu,html[data-pcglass=clear].mk-rx #player #subMenu.menu,html[data-pcglass=clear].mk-rx #player #dspPop{
+ background:radial-gradient(120% 70% at 100% 0%,rgba(var(--pc-acc-rgb),.14),transparent 60%),radial-gradient(90% 60% at 0% 100%,rgba(var(--pc-acc2-rgb),.1),transparent 65%),rgba(12,12,16,.42)!important}
+/* no blur (Android touch, the Android app's own player): nearly solid, still colour-washed */
+html.pc-noblur.mk-rx #player #optMenu.menu,html.pc-noblur.mk-rx #player #subMenu.menu,html.pc-noblur.mk-rx #player #dspPop,html.mk-native-on.mk-rx #player #optMenu.menu,html.mk-native-on.mk-rx #player #subMenu.menu,html.mk-native-on.mk-rx #player #dspPop{
+ background:radial-gradient(120% 70% at 100% 0%,rgba(var(--pc-acc-rgb),.2),transparent 60%),radial-gradient(90% 60% at 0% 100%,rgba(var(--pc-acc2-rgb),.14),transparent 65%),linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.01) 40%),rgba(12,12,16,.95)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.pc-noblur[data-pcglass=clear].mk-rx #player #optMenu.menu,html.pc-noblur[data-pcglass=clear].mk-rx #player #subMenu.menu,html.pc-noblur[data-pcglass=clear].mk-rx #player #dspPop,html.mk-native-on[data-pcglass=clear].mk-rx #player #optMenu.menu,html.mk-native-on[data-pcglass=clear].mk-rx #player #subMenu.menu,html.mk-native-on[data-pcglass=clear].mk-rx #player #dspPop{
+ background:radial-gradient(120% 70% at 100% 0%,rgba(var(--pc-acc-rgb),.2),transparent 60%),radial-gradient(90% 60% at 0% 100%,rgba(var(--pc-acc2-rgb),.14),transparent 65%),rgba(12,12,16,.86)!important}
+html[data-pcglass=solid].mk-rx #player #optMenu.menu,html[data-pcglass=solid].mk-rx #player #subMenu.menu,html[data-pcglass=solid].mk-rx #player #dspPop{
+ background:radial-gradient(120% 70% at 100% 0%,rgba(var(--pc-acc-rgb),.14),transparent 60%),radial-gradient(90% 60% at 0% 100%,rgba(var(--pc-acc2-rgb),.1),transparent 65%),#121216!important}
+
+/* one panel at a time (script below); under any open panel or drawer the player's own buttons step back */
+/* a panel open = only the panel and the bottom buttons show, on every screen, so nothing sits under or through it */
+html.mk-rx #player.pc-panel .hud-mid,html.mk-rx #player.pc-panel .rx-ends,html.mk-rx #player.pc-panel .hud-top,html.mk-rx #player.pc-panel .rx-info,html.mk-rx #player.pc-panel .px-seekrow,html.mk-rx #player.pc-panel .rx-time{opacity:0!important;pointer-events:none!important;transition:opacity .18s ease}
+
+/* side drawers (Sources, Episodes, Watch party, Translate) share the panel look and always fit the screen */
+html.mk-rx #player .drawer{top:max(10px,env(safe-area-inset-top,0px))!important;bottom:max(10px,env(safe-area-inset-bottom,0px))!important;right:max(10px,env(safe-area-inset-right,0px))!important;left:auto!important;height:auto!important;max-height:none!important;
+ width:min(460px,calc(100% - 20px))!important;border-radius:28px!important;border:1px solid rgba(var(--pc-acc-rgb),.28)!important;color:#f4f2ee;overflow:hidden;display:flex;flex-direction:column;
+ background:radial-gradient(120% 60% at 100% 0%,rgba(var(--pc-acc-rgb),.2),transparent 60%),radial-gradient(90% 50% at 0% 100%,rgba(var(--pc-acc2-rgb),.14),transparent 65%),linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.01) 40%),rgba(12,12,16,.95)!important;
+ -webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 30px 80px -20px rgba(0,0,0,.7),0 0 60px -20px rgba(var(--pc-acc-rgb),.35)!important}
+html.mk-rx #player .drawer:not(.open){box-shadow:none!important}
+html.mk-rx #player .drawer>*{min-width:0}
+html.mk-rx #player .drawer .streams,html.mk-rx #player .drawer .ep-list,html.mk-rx #player .drawer [class*="list"]{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+html.mk-rx #player .drawer .chips{flex:none;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;max-width:100%}
+html.mk-rx #player .drawer .chips::-webkit-scrollbar{display:none}
+html.mk-rx #player .drawer .chip{flex:none;border-color:rgba(var(--pc-acc-rgb),.22)!important}
+html.mk-rx #player .drawer .chip.on{background:linear-gradient(135deg,var(--pc-acc),var(--pc-acc-2))!important;color:#0d0d10!important;border-color:transparent!important;box-shadow:0 4px 16px -4px rgba(var(--pc-acc-rgb),.6)!important}
+html.mk-rx #player .drawer .chip.on .tag-s{background:rgba(0,0,0,.18)!important;color:#0d0d10!important}
+html.mk-rx #player .drawer header h3{color:#fff}
+html.mk-rx #player .drawer .stream{border-color:rgba(var(--pc-acc-rgb),.16)!important;border-radius:18px!important}
+html.mk-rx #player .drawer .stream.on,html.mk-rx #player .drawer .stream.cur,html.mk-rx #player .drawer .stream[aria-current]{border-color:rgba(var(--pc-acc-rgb),.7)!important;box-shadow:0 0 24px -10px rgba(var(--pc-acc-rgb),.7)}
+html.mk-rx #player .drawer .stream .tag.ok,html.mk-rx #player .drawer .stream .tag.cached{background:rgba(var(--pc-acc-rgb),.85)!important;color:#0d0d10!important}
+
+/* Audio & subtitles on a phone on its side: the same right-hand sheet as Settings, inside the screen */
+@media (pointer:coarse) and (max-height:500px){
+ html.mk-rx #player #subMenu.menu{top:max(10px,env(safe-area-inset-top,0px))!important;bottom:max(10px,env(safe-area-inset-bottom,0px))!important;right:max(10px,env(safe-area-inset-right,0px))!important;left:auto!important;width:min(620px,calc(100% - 20px))!important;max-height:none!important;overflow-y:auto!important;border-radius:26px!important;padding:10px!important}
+ html.mk-rx #player #subMenu.av-on .av-col{max-height:none!important}
+}
+/* every panel stays inside the player on any screen */
+html.mk-rx #player #optMenu.menu,html.mk-rx #player #subMenu.menu,html.mk-rx #player #dspPop{max-width:calc(100% - 20px)!important}
+
+/* inside the panels: colour on the tabs, picks, headings, checks and sliders */
+html.mk-rx #player #optMenu .px-tabs button.on{background:linear-gradient(135deg,var(--pc-acc),var(--pc-acc-2))!important;color:#0d0d10!important;box-shadow:0 4px 16px -4px rgba(var(--pc-acc-rgb),.6)!important}
+html.mk-rx #player #optMenu .px-tabs{border-color:rgba(var(--pc-acc-rgb),.16)!important}
+html.mk-rx #player #optMenu .rs-chips button.on,html.mk-rx #player #optMenu .seg-row>button.on{background:linear-gradient(135deg,rgba(var(--pc-acc-rgb),.34),rgba(var(--pc-acc2-rgb),.26))!important;box-shadow:inset 0 0 0 1px rgba(var(--pc-acc-rgb),.85),0 2px 12px -4px rgba(var(--pc-acc-rgb),.55)!important;color:#fff!important}
+html.mk-rx #player #optMenu .rs-chips,html.mk-rx #player #optMenu .seg-row{border-color:rgba(var(--pc-acc-rgb),.14)!important}
+html.mk-rx #player #optMenu .rs-row>span,html.mk-rx #player #optMenu .px-pane h5,html.mk-rx #player #optMenu .pl-h,html.mk-rx #player #subMenu h5{color:rgba(var(--pc-acc-rgb),.92)!important}
+html.mk-rx #player #optMenu .px-pane>button.on,html.mk-rx #player #subMenu button.on,html.mk-rx #player #subMenu .on>button{box-shadow:inset 3px 0 0 var(--pc-acc)}
+html.mk-rx #player #subMenu svg[data-lucide="check"],html.mk-rx #player #subMenu .lucide-check,html.mk-rx #player #optMenu .lucide-check{color:var(--pc-acc)!important}
+html.mk-rx #player #optMenu input[type=range],html.mk-rx #player #subMenu input[type=range],html.mk-rx #player input[type=range]{accent-color:var(--pc-acc)}
+html.mk-rx #player #optMenu .px-sl b,html.mk-rx #player #optMenu .tnum{color:rgba(var(--pc-acc-rgb),.95)}
+html.mk-rx #player #optMenu .pl-prev i::before{background:linear-gradient(90deg,var(--pc-acc-2),var(--pc-acc))}
+html.mk-rx #player #optMenu .pl-sw button.on::after{border-color:var(--c)!important;box-shadow:0 0 14px -2px var(--c)}
+
+/* across the player: progress bar, knob, rings and the buttons that are on */
+html.mk-rx #player .seek .cur{background:linear-gradient(90deg,var(--pc-acc-2),var(--pc-acc))!important;box-shadow:0 0 12px -2px rgba(var(--pc-acc-rgb),.7)}
+html.mk-rx #player .seek .buf{background:rgba(var(--pc-acc-rgb),.28)!important}
+html.mk-rx #player .seek .knob{background:var(--pc-acc)!important;box-shadow:0 0 0 4px rgba(var(--pc-acc-rgb),.25),0 0 14px rgba(var(--pc-acc-rgb),.6)!important}
+html.mk-rx #player .hud-mid .ibtn{border-color:rgba(var(--pc-acc-rgb),.32)!important;box-shadow:0 0 30px -12px rgba(var(--pc-acc-rgb),.7)}
+html.mk-rx #player .rx-cap{border-color:rgba(var(--pc-acc-rgb),.2)!important}
+html.mk-rx #player .rx-cap .ibtn.on,html.mk-rx #player .rx-cap .ibtn[aria-pressed=true]{color:var(--pc-acc)!important}
+html.mk-rx #player .rx-ends,html.mk-rx #player .rx-time .rx-sl{color:rgba(var(--pc-acc-rgb),.95)!important}
+html.mk-rx #player .skip-btn{border-color:rgba(var(--pc-acc-rgb),.5)!important}
+
+/* simpler Settings: no separate Playback tab (it lives at the top of More), and the Audio & subtitles panel no longer
+   links to Sound settings (Sound is one tab in Settings) */
+html.mk-rx #player #optMenu .px-tabs [data-pxtab="play"],html.mk-rx #player #optMenu .px-tabs [data-rstab="play"]{display:none!important}
+html.mk-rx #player #optMenu .pc-dup{display:none!important}
+html.mk-rx #player #optMenu .pc-play{padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid rgba(var(--pc-acc-rgb),.14)}
+html.mk-rx #player #subMenu [data-avsound]{display:none!important}

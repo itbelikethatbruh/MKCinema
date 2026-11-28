@@ -13,7 +13,7 @@ const isOn=(k,v,x)=>{if(k!=='sleep')return x.classList.contains('on');const l=(m
 const src=(k,v)=>{const e=m();return e&&e.querySelector(`[data-pane] [data-${k}="${v}"]`)};
 const X='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
 const tabs=e=>`<div class="px-tabs rs-tabs" role="tablist"><button type="button" role="tab" data-rstab="quick" class="on" aria-selected="true">Quick</button>`+
- [...e.querySelectorAll('.px-tabs [data-pxtab]')].map(b=>`<button type="button" role="tab" data-rstab="${b.dataset.pxtab}" aria-selected="false">${b.textContent.trim()}</button>`).join('')+
+ [...e.querySelectorAll('.px-tabs [data-pxtab]:not([data-pxtab="play"])')].map(b=>`<button type="button" role="tab" data-rstab="${b.dataset.pxtab}" aria-selected="false">${b.textContent.trim()}</button>`).join('')+
  (tv()?'':`<button type="button" class="px-x rs-x" aria-label="Close">${X}</button>`)+`</div>`;
 function go(k){const e=m();if(!e)return;full=true;paint();if(typeof PxMenu!=='undefined'){PxMenu.tab=k;PxMenu.show()}navTo(e.querySelector(`.px-tabs [data-pxtab="${k}"]`))}
 function paint(){const e=m();if(!e||busy)return;busy=true;try{

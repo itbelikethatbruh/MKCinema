@@ -76,6 +76,7 @@ const DSP = {
       // Haas widener: left straight through, right 14 ms late, blended under the dry signal
       n.makeup.connect(n.split); n.split.connect(n.merge, 0, 0); n.split.connect(n.haas, 1); n.haas.connect(n.merge, 0, 1); n.merge.connect(n.wet); n.wet.connect(n.duck);
       n.duck.connect(n.an); n.an.connect(ctx.destination);
+      if (window.MkPhones) MkPhones.build(ctx, n);   // 3.0 Headphones
       this.attached = true; this.apply(CFG.dsp, true);
       if (ctx.state !== 'running') ctx.resume().catch(() => {});
       return true;

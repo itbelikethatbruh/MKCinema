@@ -3583,7 +3583,7 @@ const Library = {
         ${s.tab !== 'watched' && s.tab !== 'history' && s.tab !== 'unwatched' ? `<button type="button" class="chip${s.hide ? ' on' : ''}" data-nav id="libHide" aria-pressed="${s.hide}">Hide watched</button>` : ''}
         <input class="inp lib-q" id="libQ" type="search" placeholder="Filter" value="${esc(s.q)}" autocomplete="off" aria-label="Filter by title">
         ${s.tab === 'progress' && continueItems().length ? '<button type="button" class="btn btn-ghost btn-sm" data-nav id="libClear"><i data-lucide="trash-2"></i>Clear progress</button>' : ''}
-        ${lists.some((x) => x.id === s.tab) ? '<button type="button" class="btn btn-ghost btn-sm" data-nav id="libDel"><i data-lucide="trash-2"></i>Delete list</button>' : ''}
+        ${window.MkQueue ? MkQueue.html(s.tab) : ''}${lists.some((x) => x.id === s.tab) ? '<button type="button" class="btn btn-ghost btn-sm" data-nav id="libDel"><i data-lucide="trash-2"></i>Delete list</button>' : ''}
       </div>
       <div class="grid lib-grid">${LibGroups.html(list, s) || `<div class="empty">${{ watchlist: 'Use the Watchlist button on any title to save it here.', progress: 'Start something and it shows up here.', watched: 'Finished films and episodes show up here.', history: 'What you start or finish shows up here, newest first.', unwatched: 'Titles in your watchlist that you have not started show up here.' }[s.tab] || 'Add titles from a film page with the Lists button.'}</div>`}</div>`;
     if (old) old.replaceWith(box); else root.prepend(box);

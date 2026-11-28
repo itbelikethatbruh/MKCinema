@@ -8,6 +8,16 @@
    Add each release at the top of RELEASES when its version goes out. */
 /* 2.67.1 tv-playback */
 const RELEASES = [
+  { v: '3.0.0', date: '2026-11-28', items: [
+    ['new', 'Pick for us', 'Can’t decide? Three questions, a coin toss, a knockout, or only what ends before a time you pick. Menu › Pick for us.'],
+    ['new', 'Play a list in order', 'Library › any list › Play in order or Shuffle. Films play one after another and the list remembers where you stopped.'],
+    ['new', 'The story so far', 'Back on a series after a few days? The next episode opens with a short reminder of the last one.'],
+    ['new', 'Your buttons, your keys', 'Hide or move the buttons on the watch screen, and move any key to the one you like (Settings › Playback and Shortcuts).'],
+    ['new', 'Headphones sound', 'A Sound mode that folds surround into your headphones, like speakers in front of you. Hold the mouse on the picture for 2× speed on computers.'],
+    ['new', 'Lights cue and quick jump', 'Dim your smart lights when a film starts (Settings › Devices). Press R for a ring with every place in MKCinema.'],
+    ['better', 'Series status', 'Title pages say whether a series is returning, ended or limited, with the next new episode date and award wins.'],
+    ['better', 'Cleaner watch screen', 'Settings while you watch are simpler, one panel opens at a time, and your highlight colour now shows all through the watch screen.'],
+  ] },
   { v: '2.99.0', date: '2026-11-28', items: [
     ['new', 'More for the whole house', 'Content filters for each seat, Settings only the main seat can change, a quick "who\'s watching?" after a break, and PINs typed with the remote\'s arrows.'],
     ['new', 'About this title', 'Title pages show dates, ages, studios and box office, plus a Ready line. Library adds History and Not watched yet.'],

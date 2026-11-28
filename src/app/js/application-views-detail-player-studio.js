@@ -713,7 +713,7 @@ function renderDetail(loading) {
       ${window.MkLookKit ? MkLookKit.poster(m) : ''}<div class="d-body" style="padding-top:80px;width:100%">
         <div class="logo3d pop${logo ? ' has-logo' : ''}" style="--t0:${t0}s${logo ? `;--logo:url(&quot;${esc(logo)}&quot;)` : ''}">${logo ? imgTag(logo, m.name, m.id, { nofb: true, cls: 'hero-logo', lazy: false }) : ''}<h1 class="hero-title" data-logo-alt ${logo ? 'hidden' : ''}>${esc(m.name)}</h1>${logo ? '<span class="lg-sheen" aria-hidden="true"><i></i></span>' : ''}</div>
         <div class="metaline${loading ? ' ml-wait' : ''}">${[m.imdbRating ? `<span class="imdb ${rateTier(m.imdbRating)}"><b>IMDb</b>${esc(m.imdbRating)}</span>` : '', yearOf(m) ? `<span>${esc(yearOf(m))}</span>` : '', m.runtime ? `<span>${esc(m.runtime)}</span>` : '', genresOf(m).slice(0, 4).map(esc).join(' · '), `<span class="tag-s">${esc(m.type)}</span>`, m._addon ? `<span class="tag-s v">${esc(m._addon)}</span>` : ''].filter(Boolean).join('')}</div>
-        <div class="d-ready" id="dReady"${CFG.readyLine === false ? ' hidden' : ''}></div>${window.MkFilt ? MkFilt.line(m) : ''}
+        <div class="d-ready" id="dReady"${CFG.readyLine === false ? ' hidden' : ''}></div>${window.MkFilt ? MkFilt.line(m) : ''}${window.MkStatusLine ? MkStatusLine.html(m) : ''}
         <div class="actions">
           <button class="btn btn-bolt cta" type="button" id="dSmart" data-nav><span class="cta-ring" aria-hidden="true"></span><i data-lucide="play"></i><span class="sp-l">Smart Play<small>Best stream</small></span></button>
           <button class="btn btn-ghost" type="button" id="dTrailer" data-nav><i data-lucide="clapperboard"></i>Trailer</button>

@@ -1,7 +1,9 @@
 
 (()=>{const d=document,R=d.documentElement;
 /* 2.97 player colours: the viewer picks the player colour and the panel look; both live in CFG (pxAccent, pxGlass) */
-const ACC=[['champagne','#d8c29a','Champagne'],['pearl','#f2f0ea','Pearl'],['ice','#8fd3ff','Ice'],['rose','#ff8fb1','Rose'],['ember','#ff8a4c','Ember'],['jade','#5fe0a8','Jade'],['violet','#b69cff','Violet'],['gold','#ffd24a','Gold']];
+const ACC=[['champagne','#d8c29a','Champagne','#b0874f'],['pearl','#f2f0ea','Pearl','#9fb0c4'],['ice','#8fd3ff','Ice','#7b86ff'],['rose','#ff8fb1','Rose','#c38bff'],['ember','#ff8a4c','Ember','#ff4f6d'],['jade','#5fe0a8','Jade','#2fbfd8'],['violet','#b69cff','Violet','#6f9bff'],['gold','#ffd24a','Gold','#ff9533']];
+/* 2.97.2: each colour has a partner colour for gradients and second touches */
+const rgb=h=>{const n=parseInt(h.slice(1),16);return `${n>>16&255},${n>>8&255},${n&255}`};
 const GL=[['clear','See-through'],['frosted','Frosted glass'],['solid','Solid']];
 const cfg=(k,v)=>{try{return (typeof CFG!=='undefined'&&CFG[k])||v}catch{return v}};
 /* TVs, Low graphics and the lite build always get the solid panel */
@@ -9,7 +11,7 @@ const forced=()=>{try{return (typeof IS_TV!=='undefined'&&IS_TV)||R.classList.co
 const acc=()=>ACC.find(a=>a[0]===cfg('pxAccent','champagne'))||ACC[0];
 const glass=()=>{const g=cfg('pxGlass','frosted');return forced()?'solid':GL.some(x=>x[0]===g)?g:'frosted'};
 const noblur=()=>{try{return /Android/i.test(navigator.userAgent)&&matchMedia('(pointer:coarse)').matches&&!forced()}catch{return false}};
-function apply(){R.classList.toggle('pc-noblur',noblur());const h=acc()[1],n=parseInt(h.slice(1),16);R.style.setProperty('--pc-acc',h);R.style.setProperty('--pc-acc-rgb',`${n>>16&255},${n>>8&255},${n&255}`);R.dataset.pcglass=glass()}
+function apply(){R.classList.toggle('pc-noblur',noblur());const h=acc()[1],n=parseInt(h.slice(1),16);R.style.setProperty('--pc-acc',h);R.style.setProperty('--pc-acc-rgb',`${n>>16&255},${n>>8&255},${n&255}`);R.style.setProperty('--pc-acc-2',acc()[3]);R.style.setProperty('--pc-acc2-rgb',rgb(acc()[3]));R.dataset.pcglass=glass()}
 function set(k,v){if(typeof setCfg==='function')setCfg(k,v);else if(typeof CFG!=='undefined')CFG[k]=v;apply()}
 function html(){const a=acc()[0],g=glass();
  return `<div class="pl-sec"><div class="pl-h"><span>Highlight colour</span></div><div class="pl-sw" role="radiogroup">`+
