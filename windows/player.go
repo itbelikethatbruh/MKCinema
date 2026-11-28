@@ -166,6 +166,13 @@ func (p *nativePlayer) client() (*mpv.Client, error) {
 	}
 	cl.Observe()
 	p.cl = cl
+	// 1.6.3: Sharp upscaling's shaders, and whether the card can upscale films itself
+	if err := mpv.WriteShaders(filepath.Join(dataDir, "mpv", "shaders")); err != nil {
+		log.Printf("player: upscaling shaders: %v", err)
+	}
+	ven, gpu := gpuName()
+	mpv.VSR = vsrMaker(ven, gpu)
+	log.Printf("player: graphics card %q (vendor %04x), super resolution %q", gpu, ven, mpv.VSR)
 	go p.loop(cl)
 	go p.pump(cl)
 	log.Printf("player: libmpv ready (client API %d.%d)", mpv.Version()>>16, mpv.Version()&0xffff)
@@ -230,7 +237,7 @@ func mkPlayer(c, arg string) (string, error) {
 	switch c {
 	case "probe": // can this PC play natively? Loads libmpv once.
 		_, err := np.client()
-		b, _ := json.Marshal(map[string]any{"ok": err == nil, "api": mpv.Version(), "err": errString(err)})
+		b, _ := json.Marshal(map[string]any{"ok": err == nil, "api": mpv.Version(), "err": errString(err), "up": err == nil, "vsr": mpv.VSR})
 		return string(b), nil
 	case "show":
 		np.show(arg != "0")
@@ -261,7 +268,8 @@ func mkPlayer(c, arg string) (string, error) {
 		gen = np.st.Opened()
 	}
 	for _, o := range ops {
-		if e := cl.Do(o); e != nil && (c != "open" || len(o.Args) > 0) {
+		// removing a labelled filter that isn't there may answer an error in some mpv versions: nothing to undo then
+		if e := cl.Do(o); e != nil && (c != "open" || len(o.Args) > 0) && !undoFilter(o) {
 			log.Printf("player: %s: %v", c, e)
 			err = e
 		}
@@ -271,6 +279,10 @@ func mkPlayer(c, arg string) (string, error) {
 		return string(b), err
 	}
 	return "", err
+}
+
+func undoFilter(o mpv.Op) bool {
+	return len(o.Args) == 3 && (o.Args[0] == "vf" || o.Args[0] == "af") && o.Args[1] == "remove" && strings.HasPrefix(o.Args[2], "@")
 }
 
 func errString(err error) string {
