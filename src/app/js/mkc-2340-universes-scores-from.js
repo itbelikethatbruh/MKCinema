@@ -147,6 +147,37 @@ const RateBadges = {
   },
 };
 RateBadges.init();
+/* 2.97.8 hero meta fit */
+// Home banner detail line (IMDb, Rotten Tomatoes, year, length, genres) fits its width on every screen. It is one
+// line that never wraps, so since Rotten Tomatoes joined it the last item ran off the edge on phones ("Acti...").
+// Now the least useful items step aside, whole, until the line fits; nothing is ever cut mid-word.
+{
+  const DROP = ['.tag-s', '.hm-g2', '.hm-g1', '.rbadge[data-s="letterboxd"]', '.rbadge[data-s="trakt"]', '.rbadge[data-s="tmdb"]',
+    '.rbadge[data-s="metacritic"]', '.rbadge[data-s="audience"]', '.hm-len', '.hm-gs', '.hm-yr', '.rbadge[data-s="tomatoes"]']; // first to go first
+  const over = (l) => l.scrollWidth > l.clientWidth;
+  const fit = (l) => {
+    if (!l || !l.clientWidth) return;
+    $$('[data-fit-off]', l).forEach((e) => { e.style.display = ''; delete e.dataset.fitOff; });
+    const off = [];
+    for (const q of DROP) {
+      if (!over(l)) break;
+      const e = $(q, l); if (!e || !e.getClientRects().length) continue;
+      e.style.display = 'none'; e.dataset.fitOff = '1'; off.push(e);
+    }
+    for (let i = off.length - 1; i >= 0; i--) { // give back anything that fits again (a length after a long genre went)
+      const e = off[i]; e.style.display = ''; if (over(l)) e.style.display = 'none'; else delete e.dataset.fitOff;
+    }
+    l.classList.toggle('hm-fit', !over(l)); // fits: no edge fade over the last word
+  };
+  let raf = 0; const later = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => fit(document.getElementById('heroMeta'))); };
+  const l = document.getElementById('heroMeta');
+  if (l) {
+    new MutationObserver(later).observe(l, { childList: true, subtree: true, characterData: true });
+    if (window.ResizeObserver) new ResizeObserver(later).observe(l);
+    try { document.fonts.ready.then(later); } catch (e) { /* older engines: the observers cover it */ }
+    later();
+  }
+}
 /* 2.97.5 rt scores */
 // Rotten Tomatoes for everyone: the critic score (Tomatometer) for films comes from Wikidata, free and with no key
 // (CC0 data, CORS open). An MDBList key still wins (fresher, and it also covers series), and now adds the audience score.

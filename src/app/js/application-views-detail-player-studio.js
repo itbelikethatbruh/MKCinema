@@ -212,7 +212,7 @@ function showHero(i, dir = 1) {
   if (olds.length) setTimeout(() => olds.forEach((o) => o.remove()), 1000);
   const logo = metaLogo(m);
   $('#heroLogoWrap').innerHTML = `${logo ? imgTag(logo, m.name, m.id, { nofb: true, cls: 'hero-logo', lazy: false }) : ''}<h1 class="hero-title" data-logo-alt ${logo ? 'hidden' : ''}>${esc(m.name)}</h1>`;
-  $('#heroMeta').innerHTML = [m.imdbRating ? `<span class="imdb ${rateTier(m.imdbRating)}"><b>IMDb</b>${esc(m.imdbRating)}</span>` : '', yearOf(m) ? `<span>${esc(yearOf(m))}</span>` : '', m.runtime ? `<span>${esc(m.runtime)}</span>` : '', (genresOf(m).length ? `<span class="hm-gs">${genresOf(m).slice(0, 3).map((g, i) => `<span class="hm-g${i}">${i ? ' · ' : ''}${esc(g)}</span>`).join('')}</span>` : ''), `<span class="tag-s">${esc(m.type)}</span>`].filter(Boolean).join('');
+  $('#heroMeta').innerHTML = [m.imdbRating ? `<span class="imdb ${rateTier(m.imdbRating)}"><b>IMDb</b>${esc(m.imdbRating)}</span>` : '', yearOf(m) ? `<span class="hm-yr">${esc(yearOf(m))}</span>` : '', m.runtime ? `<span class="hm-len">${esc(m.runtime)}</span>` : '', (genresOf(m).length ? `<span class="hm-gs">${genresOf(m).slice(0, 3).map((g, i) => `<span class="hm-g${i}">${i ? ' · ' : ''}${esc(g)}</span>`).join('')}</span>` : ''), `<span class="tag-s">${esc(m.type)}</span>`].filter(Boolean).join('');
   $('#heroDesc').textContent = m.description || ''; if (window.MkHeroText) MkHeroText.set();
   { const hb = $('#hero .hero-body'); hb.classList.remove('swap'); requestAnimationFrame(() => hb.classList.add('swap')); }
   $('#heroEyebrow').innerHTML = `<i data-lucide="flame"></i>Featured · ${esc(m._addon || 'Catalog')}`;

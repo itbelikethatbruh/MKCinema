@@ -2,6 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.97.5 (2026-11-28)
+
+- Removed addons stay removed even when this device's list is the newer one.
+- The Home banner details fit on small phones.
+- Starting on Library opens it right away.
+- The series page stays steady while seasons load.
+
 ## Web app 2.97.4 (2026-11-27)
 
 - Rotten Tomatoes ratings now show on films for everyone, next to IMDb. With an MDBList key you also see the audience rating.
