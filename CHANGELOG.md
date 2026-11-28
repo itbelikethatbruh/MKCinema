@@ -2,6 +2,12 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Android 1.17.18 and Windows 1.6.3 (2026-11-28, release v1.39)
+
+- Sharp upscaling now works in the Windows and Android apps. Windows PCs with an NVIDIA RTX or Intel Arc graphics card can use the card's AI upscaling.
+- Android: pause and rewind live channels; a channel that drops reconnects.
+- The website downloads and the in-app update check now point to these versions.
+
 ## Web app 2.98.2 (2026-11-28)
 
 - Live TV: while backup channels are being looked up, a channel you pick in the meantime keeps playing.
