@@ -2,6 +2,13 @@
 
 All notable changes to MKCinema. The web app version and the native app versions are listed separately, because the native apps load the latest web app.
 
+## Web app 2.98.1 (2026-11-28)
+
+- Add a TV playlist from your phone: scan the code on your TV, type the link or login on your phone, and it fills in on the TV.
+- HDHomeRun tuners in the Android and Android TV app: watch your antenna channels next to your playlists.
+- Backup channels are found in every saved playlist, and Split Screen counts a backup channel against the right playlist.
+- Website: two new Live features (279 features).
+
 ## Web app 2.98.0 (2026-11-28)
 
 - Live TV keeps going: if a channel drops while you watch, MKCinema reconnects it, and if it stays down the same channel from your other playlist takes over.

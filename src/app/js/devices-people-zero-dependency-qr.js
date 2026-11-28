@@ -1178,6 +1178,88 @@ const TvLogin = {
     setTimeout(() => bus.close(), 10 * 60000);
   },
 };
+/* 2.98.2 phone and tuner */
+/* 2.98.2 Add a TV playlist from a phone. The TV shows a QR code with a room code and a one-time key. The phone types
+   the playlist (link and guide, or Xtream login) and sends it encrypted with that key (AES-GCM, as TvLogin does); the
+   TV fills in Add playlist with it and the person adds it there. The key is only ever in the QR code, and nothing is
+   kept on the phone. */
+const PhoneList = {
+  bus: null, code: '', key: '', t: 0,
+  open() {
+    this.stop();
+    X8.layer('plPhone', { label: 'Add from your phone', icon: 'smartphone', eyebrow: 'Channels' });
+    X8.onClose.plPhone = () => this.stop();
+    const b = X8.body('plPhone');
+    if (!appLink('x') || !(window.crypto && crypto.subtle)) { b.innerHTML = '<h3 class="x8-h">Type it on your phone</h3><p class="sub">This needs MKCinema opened from its web address, such as app.mkcinema.app.</p>'; X8.open('plPhone'); return; }
+    this.code = roomCode(); this.key = b64url.enc(crypto.getRandomValues(new Uint8Array(16)));
+    const link = appLink(`tvlist=${this.code}.${this.key}`);
+    b.innerHTML = `<h3 class="x8-h">Type it on your phone</h3><p class="sub">Scan this with your phone camera. Type the playlist link or Xtream login there, and it fills in here.</p>
+      <div class="qr-wrap">${QR.svg(link, { margin: 2 })}</div><p class="tour-note" id="plpMsg" role="status">Getting a code ready…</p>
+      <div class="actions"><button class="btn btn-ghost" type="button" data-nav data-x8close>Cancel</button></div>`;
+    icons(); X8.open('plPhone');
+    const say = (t) => { const el = $('#plpMsg'); if (el) el.textContent = t; };
+    const bus = this.bus = new Bus(`pl-${this.code}`, (m) => this.onMsg(m, bus, say));
+    bus.connect().then((ok) => { if (this.bus === bus) say(ok ? 'Waiting for your phone… The code works for 10 minutes.' : 'Could not reach the link service. Check the connection and try again.'); });
+    this.t = setTimeout(() => { if (this.bus === bus) { this.stop(); say('That code expired. Close this and open it again.'); } }, 10 * 60000);
+  },
+  stop() { clearTimeout(this.t); if (this.bus) this.bus.close(); this.bus = null; },
+  async onMsg(m, bus, say) {
+    if (bus !== this.bus) return;
+    if (m.t === 'hello') { say('Phone connected. Type the playlist there.'); return; }
+    if (m.t !== 'list') return;
+    try {
+      const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64url.dec(m.iv) }, await TvLogin.aes(this.key), b64url.dec(m.data));
+      const x = JSON.parse(new TextDecoder().decode(plain)), s = (v) => String(v == null ? '' : v).trim().slice(0, 2000);
+      const kind = ['m3u', 'xtream'].includes(x.kind) ? x.kind : 'm3u';
+      const l = { kind, name: s(x.name).slice(0, 80), url: s(x.url), server: s(x.server), user: s(x.user), pass: s(x.pass), epg: s(x.epg) };
+      bus.send({ t: 'done' });
+      this.stop(); X8.close('plPhone');
+      Channels.openAdd(null, l);
+      toast('Your playlist arrived from your phone. Check it, then add it.', 'ok', 5000);
+    } catch (e) { bus.send({ t: 'fail', msg: 'The TV could not read that. Scan the code again.' }); }
+  },
+  /* the phone, opened from the QR code */
+  join(code, key) {
+    if (!/^[A-Z0-9]{6}$/.test(code) || !key) { toast('That code is not complete. Scan it again.', 'err'); return; }
+    const body = $('#castBody'); openLayer('castLayer');
+    let kind = 'm3u', sent = 0;
+    const msg = (t) => { const el = $('#plp-msg'); if (el) el.textContent = t; };
+    const bus = new Bus(`pl-${code}`, (m) => {
+      if (m.t === 'done') { sent = 0; msg('Sent. Your TV shows the playlist now: press Add playlist there.'); toast('Playlist sent to your TV', 'ok'); setTimeout(() => { bus.close(); closeLayer('castLayer'); }, 2500); }
+      else if (m.t === 'fail') { sent = 0; const s = $('#plp-send'); if (s) s.disabled = false; msg(m.msg || 'The TV could not read that. Scan the code again.'); }
+    });
+    const ready = bus.connect().then((ok) => { bus.send({ t: 'hello' }); return ok; });
+    const paint = () => {
+      body.innerHTML = `<h2>Add a playlist to your TV</h2><p class="sub">What you type here goes straight to your TV, encrypted. Nothing is kept on this phone.</p>
+        <div class="segc" role="radiogroup" aria-label="Playlist type">${[['m3u', 'Playlist link'], ['xtream', 'Xtream login']].map(([v, t]) => `<button type="button" data-plk="${v}" class="${kind === v ? 'on' : ''}">${t}</button>`).join('')}</div>
+        <form id="plpForm" autocomplete="off">
+          <label class="fld"><span>Name (optional)</span><input class="inp" id="plp-name" placeholder="My TV"></label>
+          ${kind === 'm3u' ? '<label class="fld"><span>Playlist address (.m3u or .m3u8)</span><input class="inp mono" id="plp-url" inputmode="url" spellcheck="false" autocapitalize="off" placeholder="https://…/playlist.m3u"></label><label class="fld"><span>TV guide (XMLTV, optional)</span><input class="inp mono" id="plp-epg" inputmode="url" spellcheck="false" autocapitalize="off" placeholder="https://…/guide.xml or .xml.gz"></label>'
+            : '<label class="fld"><span>Server</span><input class="inp mono" id="plp-server" inputmode="url" spellcheck="false" autocapitalize="off" placeholder="https://provider.example:8080"></label><label class="fld"><span>User name</span><input class="inp mono" id="plp-user" spellcheck="false" autocapitalize="off"></label><label class="fld"><span>Password</span><input class="inp mono" id="plp-pass" type="password"></label>'}
+          <p class="tour-note" id="plp-msg" role="status"></p>
+          <div class="actions"><button class="btn btn-prime" type="submit" id="plp-send"><i data-lucide="tv"></i>Send to TV</button></div></form>`;
+      icons();
+      $$('[data-plk]', body).forEach((b) => b.addEventListener('click', () => { kind = b.dataset.plk; paint(); }));
+      $('#plpForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const v = (id) => { const el = $(`#${id}`); return el ? el.value.trim() : ''; };
+        const x = { kind, name: v('plp-name'), url: v('plp-url'), epg: v('plp-epg'), server: v('plp-server'), user: v('plp-user'), pass: v('plp-pass') };
+        if (kind === 'm3u' && !/^https?:\/\//i.test(x.url)) { msg('Paste the full playlist address, starting with https:// or http://'); return; }
+        if (kind === 'xtream' && (!/^https?:\/\//i.test(x.server) || !x.user || !x.pass)) { msg('Fill in the server address (with http:// or https://), the user name and the password.'); return; }
+        const btn = $('#plp-send'); btn.disabled = true; msg('Sending…');
+        try {
+          if (!(await ready)) throw new Error('offline');
+          const iv = crypto.getRandomValues(new Uint8Array(12));
+          const data = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await TvLogin.aes(key), new TextEncoder().encode(JSON.stringify(x)));
+          bus.send({ t: 'list', iv: b64url.enc(iv), data: b64url.enc(new Uint8Array(data)) });
+          const mine = ++sent;
+          setTimeout(() => { if (sent === mine) { sent = 0; const s = $('#plp-send'); if (s) s.disabled = false; msg('No answer from the TV yet. Is the code still on its screen? Try again.'); } }, 12000);
+        } catch (er) { btn.disabled = false; msg('Could not reach your TV. Check this phone’s connection and try again.'); }
+      });
+    };
+    paint();
+  },
+};
 /* ---------------- Deep links: QR handoff, remote and party invites ---------------- */
 const Deep = {
   async handle() {
@@ -1186,6 +1268,7 @@ const Deep = {
     if (h.startsWith('play?')) { history.replaceState(null, '', location.pathname); const q = new URLSearchParams(h.slice(5)); if (await this.askPlay(q)) await this.play(q); }
     else if (h.startsWith('remote=')) { const c = h.slice(7).toUpperCase(); if (RM_CODE.test(c)) { location.replace(Remote.link(c)); return; } history.replaceState(null, '', location.pathname); }
     else if (h.startsWith('login=')) { history.replaceState(null, '', location.pathname); const [code, key, ver] = h.slice(6).split('.'); TvLogin.join((code || '').toUpperCase(), key, ver); }
+    else if (h.startsWith('tvlist=')) { history.replaceState(null, '', location.pathname); const [code, key] = h.slice(7).split('.'); PhoneList.join((code || '').toUpperCase(), key); }
     else if (h.startsWith('keylink=')) { history.replaceState(null, '', location.pathname); if (typeof DevLink !== 'undefined') DevLink.fromLink(h.slice(8)); }
     else if (h.startsWith('lssend=')) { history.replaceState(null, '', location.pathname); LayStudio.sendLink(h.slice(7)); }
     else if (h.startsWith('ambsend=')) { history.replaceState(null, '', location.pathname); AmbStudio.sendLink(h.slice(8)); }
@@ -1215,7 +1298,7 @@ const Deep = {
   },
   async play(q) {},
 };
-addEventListener('hashchange', () => { if (/^#(play\?|resume\?|remote=|party=|mirror=|login=|keylink=|layout=|lssend=|ambsend=|ambient$|studio$)/.test(location.hash)) Deep.handle(); });
+addEventListener('hashchange', () => { if (/^#(play\?|resume\?|remote=|party=|mirror=|login=|tvlist=|keylink=|layout=|lssend=|ambsend=|ambient$|studio$)/.test(location.hash)) Deep.handle(); });
 
 COMMANDS.push(
   { label: 'Start or join a watch party', icon: 'users', run: () => Party.openPanel() },

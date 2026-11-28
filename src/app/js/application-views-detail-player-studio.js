@@ -2888,8 +2888,8 @@ async function boot() {
   icons();
   S.booted = true;
   const views = ['movie', 'series', 'tv', 'library', 'studio', 'calendar'], first = Layout.get().start;
-  if (views.includes(start)) go(start); else if (views.includes(first) && !/^(play\?|resume\?|remote=|party=|mirror=|login=)/.test(start)) go(first); else renderHome();
-  if (!/^login=/.test(start)) maybeTour();
+  if (views.includes(start)) go(start); else if (views.includes(first) && !/^(play\?|resume\?|remote=|party=|mirror=|login=|tvlist=)/.test(start)) go(first); else renderHome();
+  if (!/^(login|tvlist)=/.test(start)) maybeTour();
   Deep.handle(); Governor.init(); PWA.init(); Support.maybe();
   setTimeout(() => Layout.ask(), 1500);
   if (IS_TV) { setTimeout(() => Nav.settle(), 1200); setTimeout(() => Nav.settle(), 3500); }
